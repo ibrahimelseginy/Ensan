@@ -1,0 +1,10 @@
+^D:\ROUTE\PROJECTS\ENSAN_TEST\BUILD\WINDOWS\X64\CMAKEFILES\D0C67B68B5D1912CFE5C95DFAAC82BE7\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,5 @@
+2025/08/17-14:06:19.639 1da4 Reusing MANIFEST C:\Users\ELSEGINY\AppData\Local\Temp\flutter_tools.6ed94741\flutter_tools_chrome_device.e7c66115\Default\shared_proto_db/MANIFEST-000001
+2025/08/17-14:06:19.640 1da4 Recovering log #3
+2025/08/17-14:06:19.641 1da4 (ignoring error) C:\Users\ELSEGINY\AppData\Local\Temp\flutter_tools.6ed94741\flutter_tools_chrome_device.e7c66115\Default\shared_proto_db/000003.log: dropping 16392 bytes; Corruption: checksum mismatch
+2025/08/17-14:06:19.642 1da4 (ignoring error) C:\Users\ELSEGINY\AppData\Local\Temp\flutter_tools.6ed94741\flutter_tools_chrome_device.e7c66115\Default\shared_proto_db/000003.log: dropping 32768 bytes; Corruption: checksum mismatch
+2025/08/17-14:06:19.643 1da4 Reusing old log C:\Users\ELSEGINY\AppData\Local\Temp\flutter_tools.6ed94741\flutter_tools_chrome_device.e7c66115\Default\shared_proto_db/000003.log 

@@ -1,0 +1,10 @@
+^D:\ROUTE\PROJECTS\ENSAN_TEST\BUILD\WINDOWS\X64\CMAKEFILES\D0C67B68B5D1912CFE5C95DFAAC82BE7\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/Route/projects/ensan_test/windows -BD:/Route/projects/ensan_test/build/windows/x64 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Route/projects/ensan_test/build/windows/x64/ensan_test.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
