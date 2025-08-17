@@ -1,40 +1,58 @@
-import 'package:ensan_test/components/custom_text.dart';
-import 'package:ensan_test/core/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
+import 'custom_text.dart';
+import '../core/colors.dart';
 
+class CustomButton extends StatelessWidget {
+  const CustomButton({
+    super.key,
+    required this.title,
+    required this.onTap,
+    this.isLoading = false,
+    this.icon,
+    this.backgroundColor,
+    this.textColor,
+    this.height = 56,
+  });
 
-class Button extends StatelessWidget {
-  const Button({super.key, required this.isSvgg, required this.title,required this.onTap});
-  final bool isSvgg;
   final String title;
-  final Function()? onTap;
-
+  final VoidCallback onTap;
+  final bool isLoading;
+  final Widget? icon;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
-    bool isSvg = isSvgg;
-
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       child: Container(
-        color: AppColors.primary,
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 13,vertical: 16),
+        height: height,
+        decoration: BoxDecoration(color: backgroundColor ?? Color(0xFF00695C)),
         child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              isSvg
-              ? SvgPicture.asset("assets/svgs/shopping bag.svg",width: 20,)
-              : SizedBox.shrink(),
-              Gap(10),
-              CustomText(text: title.toUpperCase(),size: 18),
-            ],
-          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[icon!, const Gap(10)],
+                    CustomText(
+                      text: title.toUpperCase(),
+                      size: 18,
+                      color: textColor ?? Colors.white,
+                      weight: FontWeight.w600,
+                    ),
+                  ],
+                ),
         ),
-
       ),
     );
   }

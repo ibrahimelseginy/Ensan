@@ -7,31 +7,33 @@ class CustomText extends StatelessWidget {
     this.size = 16,
     this.weight = FontWeight.normal,
     this.color = Colors.white,
-    this.max = 1,
+    this.maxLines,
     this.height = 1.0,
-    this.spacing = 1,
+    this.letterSpacing = 1.0,
+    this.textAlign = TextAlign.start,
   });
 
   final String text;
   final double size;
   final FontWeight weight;
   final Color color;
-  final int max;
+  final int? maxLines;
   final double height;
-  final double spacing;
+  final double letterSpacing;
+  final TextAlign textAlign;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      maxLines: max,
+      maxLines: maxLines,
+      textAlign: textAlign,
       style: TextStyle(
-        letterSpacing: spacing,
+        letterSpacing: letterSpacing,
         fontSize: size,
         color: color,
         fontWeight: weight,
         height: height,
-        overflow: TextOverflow.ellipsis,
         fontFamily: "TenorSans",
       ),
     );

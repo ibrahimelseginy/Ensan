@@ -1,27 +1,48 @@
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
+  const CustomTextField({
+    super.key,
+    required this.label,
+    required this.controller,
+    this.onChanged,
+    this.keyboardType = TextInputType.text,
+    this.isPassword = false,
+    this.isPasswordVisible = false,
+    this.onPasswordVisibilityChanged,
+    this.textDirection,
+  });
+
   final String label;
   final TextEditingController controller;
-
-  const CustomTextField({super.key, required this.label, required this.controller});
+  final Function(String)? onChanged;
+  final TextInputType keyboardType;
+  final bool isPassword;
+  final bool isPasswordVisible;
+  final VoidCallback? onPasswordVisibilityChanged;
+  final TextDirection? textDirection;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      validator: (v) => "Please Fill The Field",
+      onChanged: onChanged,
+      keyboardType: keyboardType,
+      obscureText: isPassword && !isPasswordVisible,
+      textDirection: textDirection,
       decoration: InputDecoration(
-        hintText: label,
-        hintStyle: TextStyle(
-          fontFamily: "TenorSans",
-          color: Colors.grey.shade700,
-        ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey),
-        ),
+        labelText: label,
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: onPasswordVisibilityChanged,
+              )
+            : null,
+        border: const UnderlineInputBorder(),
         focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.black),
+          borderSide: BorderSide(color: Colors.teal),
         ),
       ),
     );

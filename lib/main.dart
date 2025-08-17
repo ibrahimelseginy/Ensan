@@ -1,30 +1,32 @@
-import 'package:ensan_test/Home/screens/splash.dart';
-import 'package:ensan_test/auth/forget_password.dart';
-import 'package:ensan_test/auth/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:device_preview/device_preview.dart';
+import 'router/app_router.dart';
+import 'package:provider/provider.dart';
+import 'auth/cubit/register_cubit.dart';
 
 void main() {
-  runApp(Ensan());
+  runApp(
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => MultiProvider(
+        providers: [ChangeNotifierProvider(create: (_) => RegisterCubit())],
+        child: const EnsanApp(),
+      ),
+    ),
+  );
 }
 
-class Ensan extends StatelessWidget {
-  const Ensan({super.key});
+class EnsanApp extends StatelessWidget {
+  const EnsanApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Ensan',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/': (context) => const Splash(),
-        LoginScreen.routeName: (context) => const LoginScreen(),
-        ForgetPassword.routeName: (context) => const ForgetPassword(),
-      },
-      initialRoute: '/',
+      routes: AppRouter.routes,
+      initialRoute: AppRouter.splash,
     );
   }
 }
