@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../components/custom_text_field.dart';
 import '../components/custom_button.dart';
 import '../components/custom_text.dart';
-import '../core/colors.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

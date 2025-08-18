@@ -1,3 +1,4 @@
+import 'package:ensan_test/Home/screens/home_screen.dart';
 import 'package:ensan_test/auth/forget_password.dart';
 import 'package:flutter/material.dart';
 import '../auth/login_screen.dart';
@@ -7,16 +8,16 @@ import '../auth/register_screen.dart';
 class AppRouter {
   static const String splash = '/';
   static const String login = '/login';
-  static const String home = '/home';
+  static const String homeScreen = '/home_screen';
   static const String forgetPassword = '/forget-password';
   static const String register = '/register';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const Splash(),
     login: (context) => const LoginScreen(),
-    home: (context) => const SizedBox(), // Placeholder for home screen
     forgetPassword: (context) => const ForgetPassword(),
-    '/register': (context) => const RegisterScreen(),
+    register: (context) => const RegisterScreen(),
+    homeScreen: (context) => const HomeScreen(),
   };
 
   static void navigateToLogin(BuildContext context) {
@@ -27,10 +28,11 @@ class AppRouter {
     Navigator.pushReplacementNamed(context, splash);
   }
 
-  static void navigateToHome(BuildContext context) {
+  static void navigateToHomeScreen(BuildContext context) {
     // Implement navigation to home screen if needed
-    // Navigator.pushReplacementNamed(context, home);
+    Navigator.pushReplacementNamed(context, homeScreen);
   }
+
   static void navigateToForgetPassword(BuildContext context) {
     Navigator.pushNamed(context, forgetPassword);
   }

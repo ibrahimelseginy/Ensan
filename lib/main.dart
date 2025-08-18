@@ -9,8 +9,8 @@ void main() {
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
-      builder: (context) => MultiProvider(
-        providers: [ChangeNotifierProvider(create: (_) => RegisterCubit())],
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) => RegisterCubit(),
         child: const EnsanApp(),
       ),
     ),
@@ -26,7 +26,7 @@ class EnsanApp extends StatelessWidget {
       title: 'Ensan',
       debugShowCheckedModeBanner: false,
       routes: AppRouter.routes,
-      initialRoute: AppRouter.splash,
+      initialRoute: AppRouter.homeScreen,
     );
   }
 }

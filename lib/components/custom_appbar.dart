@@ -2,62 +2,87 @@ import 'package:ensan_test/components/custom_text.dart';
 import 'package:ensan_test/core/colors.dart';
 import 'package:flutter/material.dart';
 
-class CustomAppbar extends StatefulWidget implements PreferredSizeWidget {
-  CustomAppbar({super.key, required this.isArabic});
+class CustomAppbar extends StatelessWidget implements PreferredSizeWidget {
+  const CustomAppbar({
+    super.key,
+    required this.isArabic,
+    required this.onLanguageChanged,
+    this.title,
+    this.showLanguageToggle = true,
+  });
 
-  bool isArabic = true; // true for Arabic, false for English
-  void toggleLanguage() {
-    isArabic = !isArabic;
-  }
+  final bool isArabic;
+  final Function(bool) onLanguageChanged;
+  final String? title;
+  final bool showLanguageToggle;
 
-  @override
-  State<CustomAppbar> createState() => _CustomAppbarState();
-
-  @override
-  // TODO: implement preferredSize
-  Size get preferredSize => const Size.fromHeight(80);
-}
-
-class _CustomAppbarState extends State<CustomAppbar> {
   @override
   Size get preferredSize => const Size.fromHeight(80);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.primary,
-      actions: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  widget.isArabic = !widget.isArabic;
-                });
-              },
-              child: Container(
-                clipBehavior: Clip.antiAliasWithSaveLayer,
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 212, 212, 212),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: CustomText(
-                    text: widget.isArabic ? "en" : "ع",
-                    size: 18,
-                    weight: FontWeight.bold,
-                    color: Colors.white,
+      backgroundColor: AppColors.primary.withOpacity(0.9),
+      title: title != null
+          ? CustomText(
+              text: title!,
+              size: 20,
+              weight: FontWeight.bold,
+              color: Colors.white,
+            )
+          : null,
+      // عرض زر تبديل اللغة في الجانب الأيمن للعربية والجانب الأيسر للإنجليزية
+      leading: (!isArabic && showLanguageToggle)
+          ? Padding(
+              padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+              child: GestureDetector(
+                onTap: () => onLanguageChanged(!isArabic),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 212, 212, 212),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: CustomText(
+                      text: "ع",
+                      size: 18,
+                      weight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
-      leadingWidth: 25,
+            )
+          : null,
+      actions: (isArabic && showLanguageToggle)
+          ? [
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+                child: GestureDetector(
+                  onTap: () => onLanguageChanged(!isArabic),
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 212, 212, 212),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: CustomText(
+                        text: "en",
+                        size: 18,
+                        weight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]
+          : null,
+      leadingWidth: (!isArabic && showLanguageToggle) ? 80 : 25,
       centerTitle: true,
       scrolledUnderElevation: 0.0,
     );
