@@ -1,122 +1,183 @@
-# Ensan Test - Flutter Authentication App
+# Ensan App - تطبيق إنسان
 
-## Project Overview
+تطبيق Flutter للتبرعات الخيرية والإحسان، مبني بأحدث التقنيات وأفضل الممارسات.
 
-**Ensan Test** is a comprehensive Flutter application that provides a complete authentication system with a modern and beautiful user interface. The app is built using the latest Flutter technologies and follows best practices in app development.
+## 🚀 المميزات
 
-## Key Features
+- واجهة مستخدم عربية احترافية
+- تصميم متجاوب ومتعدد الأجهزة
+- بنية كود نظيفة وقابلة للصيانة
+- نظام تنقل سلس
+- دعم للغة العربية (RTL)
 
-### 🔐 Authentication System
-- **Login**: Secure login interface
-- **User Registration**: New user registration
-- **Forgot Password**: Password reset functionality
-- **Reset Password**: Password update functionality
-
-### 🎨 User Interface
-- Modern and beautiful design
-- Reusable components
-- Consistent color scheme
-- Enhanced user experience
-
-### 🏗️ Technical Architecture
-- **State Management**: Using Cubit for state management
-- **Routing**: Advanced routing system
-- **Provider Pattern**: Data and authentication management
-- **Responsive Design**: Responsive design for all devices
-
-## Technologies Used
-
-- **Flutter**: Main framework
-- **Dart**: Programming language
-- **Cubit**: State management
-- **Provider**: Data management
-- **Material Design**: Material design system
-
-## Project Structure
+## 🏗️ بنية المشروع
 
 ```
 lib/
-├── auth/                    # Authentication system
-│   ├── cubit/              # Authentication state management logic
-│   ├── screens/            # Authentication screens
-│   └── user_provider.dart  # User data provider
-├── components/              # Reusable components
-├── core/                    # Core files
-│   ├── colors.dart         # Color definitions
-│   ├── constants/          # Constants
-│   └── theme/              # Themes
-├── Home/                    # Home screen
-│   ├── cubit/              # Home screen logic
-│   └── screens/            # App screens
-├── router/                  # Routing system
-└── main.dart               # Entry point
+├── core/                           # الملفات الأساسية
+│   ├── colors.dart                # ألوان التطبيق
+│   ├── app_styles.dart            # أنماط التطبيق
+│   ├── common_styles.dart         # الأنماط المشتركة
+│   ├── constants/                 # الثوابت
+│   │   └── app_constants.dart
+│   ├── models/                    # نماذج البيانات
+│   │   └── service_model.dart
+│   └── data/                      # بيانات التطبيق
+│       └── app_data.dart
+├── components/                     # المكونات المشتركة
+│   ├── common_widgets.dart        # الـ widgets المشتركة
+│   ├── custom_button.dart         # زر مخصص
+│   ├── custom_text_field.dart     # حقل نص مخصص
+│   └── ...                        # مكونات أخرى
+├── auth/                          # نظام المصادقة
+│   ├── cubit/                     # إدارة الحالة
+│   ├── login_screen.dart          # شاشة تسجيل الدخول
+│   ├── register_screen.dart       # شاشة التسجيل
+│   └── forget_password.dart       # نسيان كلمة المرور
+├── Home/                          # الشاشة الرئيسية
+│   ├── cubit/                     # إدارة الحالة
+│   └── screens/                   # الشاشات
+│       ├── home_screen.dart       # الشاشة الرئيسية
+│       └── splash.dart            # شاشة البداية
+└── router/                        # نظام التوجيه
+    └── app_router.dart
 ```
 
-## Requirements
+## 🎨 نظام التصميم
 
-- Flutter SDK (latest stable version)
-- Dart SDK
-- Android Studio / VS Code
-- Android emulator or iOS device
+### الألوان
+- **Primary**: `#4FBC85` (أخضر فاتح)
+- **Primary Dark**: `#00695C` (أخضر داكن)
+- **Secondary**: `#2196F3` (أزرق)
+- **Success**: `#4CAF50` (أخضر)
+- **Warning**: `#FFC107` (أصفر)
+- **Error**: `#F44336` (أحمر)
 
-## How to Run
+### المسافات
+- **xs**: 4px
+- **sm**: 8px
+- **md**: 16px
+- **lg**: 20px
+- **xl**: 24px
+- **xxl**: 32px
 
-1. **Clone the project**
-   ```bash
-   git clone [repository URL]
-   cd ensan_test
-   ```
+### أحجام النصوص
+- **xs**: 10px
+- **sm**: 12px
+- **md**: 14px
+- **lg**: 16px
+- **xl**: 18px
+- **xxl**: 20px
+- **title**: 24px
 
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
+## 🔧 التقنيات المستخدمة
 
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
+- **Flutter**: إطار العمل الرئيسي
+- **Provider**: إدارة الحالة
+- **Gap**: إدارة المسافات
+- **Device Preview**: معاينة على أجهزة مختلفة
 
-## Building the App
+## 📱 الشاشات
 
-### For Android
+### الشاشة الرئيسية
+- بانر ترحيبي مع تدرج لوني
+- قائمة الخدمات مع تمرير أفقي
+- بانر ترويجي
+- قسم الحالات الإنسانية
+- شريط التنقل السفلي
+
+### نظام المصادقة
+- تسجيل الدخول
+- التسجيل
+- نسيان كلمة المرور
+
+## 🚀 كيفية التشغيل
+
+1. تأكد من تثبيت Flutter
+2. استنسخ المشروع
+3. قم بتشغيل `flutter pub get`
+4. شغل التطبيق
+
 ```bash
-flutter build apk --release
+flutter pub get
+flutter run
 ```
 
-### For iOS
-```bash
-flutter build ios --release
+## 📦 التبعيات
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.0
+  gap: ^3.0.0
+  device_preview: ^1.1.0
+  flutter_localizations:
+    sdk: flutter
 ```
 
-### For Web
-```bash
-flutter build web
-```
+## 🎯 التحسينات المطبقة
 
-## Contributing
+### 1. إعادة تنظيم البنية
+- فصل الملفات حسب الوظيفة
+- إنشاء مجلدات منظمة
+- إزالة التكرار
 
-We welcome contributions! Please follow these steps:
+### 2. تحسين قابلية القراءة
+- استخدام ثوابت للألوان والأحجام
+- إنشاء أنماط مشتركة
+- تبسيط الكود
 
-1. Fork the project
-2. Create a new feature branch
-3. Make your changes
-4. Submit a Pull Request
+### 3. إعادة استخدام المكونات
+- إنشاء widgets مشتركة
+- فصل المنطق عن العرض
+- تحسين الأداء
 
-## License
+### 4. دعم اللغة العربية
+- إضافة دعم RTL
+- تحسين التمرير من اليمين لليسار
+- استخدام خطوط عربية
 
-This project is licensed under [License Name] - see the LICENSE file for details.
+### 5. تحسين الأداء
+- تقليل إعادة البناء
+- استخدام const constructors
+- تحسين إدارة الذاكرة
 
-## Contact Information
+## 🔍 حل المشاكل
 
-- **Developer**: [Your Name]
-- **Email**: [Your Email]
-- **GitHub**: [GitHub URL]
+### مشكلة المسافات
+تم حل مشكلة المسافات باستخدام:
+- ثوابت موحدة للمسافات
+- نظام مسافات منظم
+- استخدام Gap widget
 
-## Acknowledgments
+### مشكلة الأخطاء
+تم حل الأخطاء من خلال:
+- إصلاح الـ imports
+- تحسين إدارة الحالة
+- تنظيف الكود
 
-Thanks to all contributors and developers who helped in developing this project.
+## 📝 ملاحظات التطوير
 
----
+- استخدم `CommonStyles` للأنماط المشتركة
+- استخدم `CommonWidgets` للمكونات المشتركة
+- استخدم `AppColors` للألوان
+- استخدم `AppConstants` للثوابت
 
-**Note**: This project is in development. Some features may have changes or updates.
+## 🤝 المساهمة
+
+نرحب بالمساهمات! يرجى:
+1. Fork المشروع
+2. إنشاء branch جديد
+3. إجراء التغييرات
+4. إرسال Pull Request
+
+## 📄 الترخيص
+
+هذا المشروع مرخص تحت رخصة MIT.
+
+## 📞 التواصل
+
+للاستفسارات والدعم:
+- البريد الإلكتروني: support@ensan.com
+- الموقع: www.ensan.com
