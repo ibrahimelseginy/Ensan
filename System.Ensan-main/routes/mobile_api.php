@@ -118,3 +118,11 @@ Route::get('/contact-info', [MobileApiController::class, 'getContactInfo']);
 | GET /api/v1/mobile/profile
 */
 Route::get('/profile', [MobileApiController::class, 'getProfile']);
+
+/*
+|--------------------------------------------------------------------------
+| 11. Donation Records (سجل التبرعات)
+|--------------------------------------------------------------------------
+| GET /api/v1/mobile/donation-records?phone=...
+*/
+Route::get('/donation-records', [MobileApiController::class, 'getDonations']);

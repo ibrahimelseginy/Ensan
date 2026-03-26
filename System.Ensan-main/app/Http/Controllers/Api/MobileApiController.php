@@ -410,6 +410,15 @@ class MobileApiController extends Controller
 
         \Log::info('Donation Request Data:', $request->all());
         $data = $request->all();
+        
+        // Fallback for Flutter apps sending camelCase or alternative keys
+        if (!isset($data['account_number'])) {
+            $data['account_number'] = $request->input('accountNumber') ?? $request->input('sender_number') ?? $request->input('from_account');
+        }
+        if (!isset($data['account_name'])) {
+            $data['account_name'] = $request->input('accountName') ?? $request->input('sender_name');
+        }
+
         $donation = \App\Models\MobileDonation::create($data);
 
         // Handle File Upload (Receipt/Proof)
@@ -458,6 +467,40 @@ class MobileApiController extends Controller
                 'phone' => '',
                 'is_verified' => false,
                 'joined_at' => now()->toDateTimeString(),
+            ]
+        ]);
+    }
+
+    /**
+     * Get Donation Records for a specific phone number
+     */
+    public function getDonations(Request $request)
+    {
+        $phone = $request->query('phone');
+        
+        if (!$phone) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Phone number is required'
+            ], 400);
+        }
+
+        $donations = \App\Models\MobileDonation::where('donor_phone', $phone)
+            ->orWhere('phone', $phone)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function($donation) {
+                // Add receipt URL if exists
+                $donation->receipt_url = $donation->receipt_path ? $donation->getFileUrl('receipt_path') : null;
+                return $donation;
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $donations,
+            'stats' => [
+                'total_amount' => $donations->sum('donation_amount'),
+                'total_count' => $donations->count(),
             ]
         ]);
     }

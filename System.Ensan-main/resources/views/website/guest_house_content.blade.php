@@ -191,7 +191,7 @@
                 <div class="card-header-lux d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <div class="header-icon bg-indigo-500"><i class="bi bi-calendar-check-fill"></i></div>
-                        <h5 class="fw-bold mb-0">طلبات الحجز من الموبايل</h5>
+                        <h5 class="fw-bold mb-0">طلبات الحجز من الموقع</h5>
                     </div>
                 </div>
                 <div class="card-body-lux p-4">
