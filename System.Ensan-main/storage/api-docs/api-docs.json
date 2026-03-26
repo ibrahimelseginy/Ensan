@@ -1,0 +1,171 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ensan Charity System API",
+    "version": "1.0.0",
+    "description": "Swagger documentation for Ensan Charity System (Laravel)."
+  },
+  "servers": [
+    {
+      "url": "/System.Ensan-main/public",
+      "description": "Local MAMP server"
+    }
+  ],
+  "paths": {
+    "/api/v1/website": {
+      "get": {
+        "tags": ["Website"],
+        "summary": "Get landing page data",
+        "responses": {
+          "200": {
+            "description": "Successful response with landing page data"
+          }
+        }
+      }
+    },
+    "/api/v1/website/projects": {
+      "get": {
+        "tags": ["Website - Projects"],
+        "summary": "List website projects",
+        "responses": {
+          "200": {
+            "description": "List of projects formatted for website"
+          }
+        }
+      }
+    },
+    "/api/v1/website/projects/{project}": {
+      "get": {
+        "tags": ["Website - Projects"],
+        "summary": "Show single website project",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Project ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project details formatted for website"
+          }
+        }
+      }
+    },
+    "/api/v1/website/campaigns": {
+      "get": {
+        "tags": ["Website - Campaigns"],
+        "summary": "List website campaigns",
+        "responses": {
+          "200": {
+            "description": "List of campaigns formatted for website"
+          }
+        }
+      }
+    },
+    "/api/v1/website/campaigns/{campaign}": {
+      "get": {
+        "tags": ["Website - Campaigns"],
+        "summary": "Show single website campaign",
+        "parameters": [
+          {
+            "name": "campaign",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Campaign ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign details formatted for website"
+          }
+        }
+      }
+    },
+    "/api/v1/website/news": {
+      "get": {
+        "tags": ["Website"],
+        "summary": "Get website news",
+        "responses": {
+          "200": {
+            "description": "List of news items"
+          }
+        }
+      }
+    },
+    "/api/v1/website/faqs": {
+      "get": {
+        "tags": ["Website"],
+        "summary": "Get website FAQs",
+        "responses": {
+          "200": {
+            "description": "List of FAQs"
+          }
+        }
+      }
+    },
+    "/api/v1/website/volunteer": {
+      "get": {
+        "tags": ["Website - Volunteer"],
+        "summary": "Get volunteer page content",
+        "responses": {
+          "200": {
+            "description": "Volunteer hero, stats and wall data"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Website - Volunteer"],
+        "summary": "Submit volunteer request",
+        "responses": {
+          "200": {
+            "description": "Volunteer request submitted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/website/contact": {
+      "get": {
+        "tags": ["Website - Contact"],
+        "summary": "Get contact page data",
+        "responses": {
+          "200": {
+            "description": "Contact info, social links and channels"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Website - Contact"],
+        "summary": "Submit contact message",
+        "responses": {
+          "200": {
+            "description": "Contact message submitted successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/website/guest-house": {
+      "get": {
+        "tags": ["Website - Guest House"],
+        "summary": "Get guest house page content",
+        "responses": {
+          "200": {
+            "description": "Guest house hero, stats and slider"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Website - Guest House"],
+        "summary": "Submit guest house booking request",
+        "responses": {
+          "200": {
+            "description": "Room booking request created successfully"
+          }
+        }
+      }
+    }
+  }
+}

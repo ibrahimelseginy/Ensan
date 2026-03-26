@@ -1,0 +1,46 @@
+@use '../../styles/variables.scss' as *;
+
+.campaign-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+
+    /* Mobile First: 1 Column */
+    grid-template-columns: 1fr;
+
+    /* Tablet: 2 Columns */
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Desktop: 3 Columns */
+    @media (min-width: 1024px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Large Desktop: 4 Columns */
+    @media (min-width: 1400px) {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+    background: var(--surface-hover);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border-color);
+
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        opacity: 0.5;
+        margin-bottom: var(--spacing-md);
+    }
+
+    p {
+        font-weight: 600;
+    }
+}

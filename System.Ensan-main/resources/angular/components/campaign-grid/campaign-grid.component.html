@@ -1,0 +1,14 @@
+<div class="campaign-grid">
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="campaigns.length === 0">
+        <div class="empty-icon">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <p>لا توجد حملات متاحة حالياً.</p>
+    </div>
+
+    <!-- Cards Grid -->
+    <app-campaign-card *ngFor="let campaign of campaigns; trackBy: trackByCampaignId" [campaign]="campaign"
+        (actionClick)="onCardAction($event)">
+    </app-campaign-card>
+</div>

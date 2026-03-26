@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مؤسسة إنسان</title>
+  <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <style>
+      .fade-in { animation: fadeIn 0.4s ease-in-out; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      
+      /* Select2 RTL Fixes */
+      html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single {
+          padding-right: 0.75rem;
+          padding-left: 2.5rem; /* Space for clear button */
+      }
+      html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+          right: auto;
+          left: 0.75rem;
+      }
+      html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+          padding-right: 0;
+          padding-left: 0;
+          text-align: right;
+      }
+  </style>
+    <style>
+        /* Global protection against blurry screens by disabling backdrop filters */
+        * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* ======================================================
+         * Modal: Global Solid Background (Light Mode)
+         * ====================================================== */
+        .modal-content {
+            background-color: #ffffff !important;
+        }
+        .modal-footer {
+            background-color: #ffffff;
+        }
+
+        /* ======================================================
+         * Modal: Dark Mode - All Modal Sections
+         * Targets both theme-dark class (custom) and data-bs-theme (Bootstrap 5)
+         * ====================================================== */
+        body.theme-dark .modal-content,
+        [data-bs-theme="dark"] .modal-content,
+        [data-theme="dark"] .modal-content {
+            background-color: #1a1d21 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.theme-dark .modal-body,
+        [data-bs-theme="dark"] .modal-body,
+        [data-theme="dark"] .modal-body {
+            background-color: #1a1d21 !important;
+            color: #e2e8f0 !important;
+        }
+
+        body.theme-dark .modal-footer,
+        [data-bs-theme="dark"] .modal-footer,
+        [data-theme="dark"] .modal-footer {
+            background-color: #1a1d21 !important;
+            border-top: 1px solid rgba(255,255,255,0.07) !important;
+        }
+
+        /* Fix form labels in modals for dark mode */
+        body.theme-dark .modal .form-label,
+        body.theme-dark .modal label,
+        [data-bs-theme="dark"] .modal .form-label,
+        [data-bs-theme="dark"] .modal label {
+            color: #cbd5e1 !important;
+        }
+
+        /* Fix section headers inside modal body */
+        body.theme-dark .modal h6,
+        [data-bs-theme="dark"] .modal h6 {
+            color: #f1f5f9 !important;
+        }
+
+        /* Fix border-bottom separators in dark modals */
+        body.theme-dark .modal .border-bottom,
+        [data-bs-theme="dark"] .modal .border-bottom {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+    </style>
+  @yield('styles')
+</head>
+
+<body>
+  <div id="global-loader">
+      <div class="spinner-premium"></div>
+  </div>
+
+
+
+  <nav class="navbar border-bottom fixed-top">
+    {{-- ... content ... --}}
+    <div class="container-fluid px-3 px-lg-4 d-flex justify-content-between align-items-center">
+      
+      {{-- Right Side: Toggle & Logo --}}
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-link p-0 text-body" id="sidebarToggle" title="تبديل القائمة">
+          <i class="bi bi-list fs-1"></i>
+        </button>
+        <a class="navbar-brand me-0" href="/">
+          @if(file_exists(public_path('logo.png')))
+            <img src="{{ asset('logo.png') }}" alt="إنسان" loading="lazy" decoding="async" onerror="this.remove()">
+          @else
+            إنسان
+          @endif
+        </a>
+      </div>
+
+      {{-- Left Side: Actions --}}
+      <div class="d-flex align-items-center gap-2 nav-actions">
+          @php $navUser = request()->user(); @endphp
+          
+          @if($navUser && $navUser->hasPermission('reports.view'))
+            <div class="d-none d-lg-flex align-items-center gap-2 me-2">
+                <form action="{{ route('reports.index') }}" method="GET">
+                  <div class="position-relative">
+                    <input type="text" class="form-control rounded-pill ps-5 bg-light-subtle border-0" name="q" placeholder="ابحث..." style="height: 42px; min-width: 220px;">
+                    <button type="submit" class="btn border-0 position-absolute top-50 start-0 translate-middle-y rounded-circle z-1" style="width: 42px; height: 42px;">
+                        <i class="bi bi-search text-muted"></i>
+                    </button>
+                  </div>
+                </form>
+                <a href="{{ route('reports.index') }}" class="btn btn-light-subtle rounded-pill d-inline-flex align-items-center gap-2 px-4 border-0 hover-bg-light" style="height: 42px;">
+                    <i class="bi bi-graph-up text-primary"></i> 
+                    <span class="fw-bold">التقارير</span>
+                </a>
+            </div>
+          @endif
+
+          @if($navUser && $navUser->hasPermission('notifications.view') && !$navUser->roles->contains('key', 'finance'))
+            <button class="btn btn-link text-body position-relative rounded-circle d-flex align-items-center justify-content-center border-0 bg-light-subtle hover-bg-light" 
+              style="width: 42px; height: 42px;" 
+              type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-controls="notifOffcanvas">
+              <i class="bi bi-bell fs-5"></i>
+            </button>
+          @endif
+
+          <button id="themeToggle" class="btn btn-link text-body rounded-circle d-flex align-items-center justify-content-center border-0 bg-light-subtle hover-bg-light"
+             style="width: 42px; height: 42px;" 
+             type="button" aria-label="تبديل الثيم">
+            <i class="bi bi-moon fs-5"></i>
+          </button>
+
+          @if($navUser)
+            <div class="dropdown">
+              <button class="btn btn-link p-0 d-flex align-items-center gap-2 text-decoration-none"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                @if($navUser->profile_photo_path)
+                  <img src="{{ $navUser->image_url }}" alt="{{ $navUser->name }}"
+                    class="rounded-circle border" style="width: 42px; height: 42px; object-fit: cover;"
+                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold\' style=\'width: 42px; height: 42px; font-size: 1.1rem;\'>{{ strtoupper(substr($navUser->name, 0, 1)) }}</div>';">
+                @else
+                  <div
+                    class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                    style="width: 42px; height: 42px; font-size: 1.1rem;">
+                    {{ strtoupper(substr($navUser->name, 0, 1)) }}
+                  </div>
+                @endif
+                <span class="d-none d-md-inline fw-bold small text-body">{{ $navUser->name }}</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                <li class="px-3 py-2 text-center bg-body-tertiary border-bottom mb-2">
+                  <div class="fw-bold text-dark">{{ $navUser->name }}</div>
+                  <div class="small text-muted">{{ $navUser->email }}</div>
+                </li>
+                @if($navUser->hasPermission('users.view'))
+                  <li><a class="dropdown-item" href="{{ route('users.show', $navUser->id) }}"><i
+                        class="bi bi-person me-2"></i> الملف الشخصي</a></li>
+                @endif
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li>
+                  <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger"><i
+                        class="bi bi-box-arrow-right me-2"></i> خروج</button></form>
+                </li>
+              </ul>
+            </div>
+          @else
+            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm">دخول</a>
+          @endif
+      </div>
+    </div>
+  </nav>
+
+  {{-- Sidebar Overlay for Mobile --}}
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="card sidebar-fixed">
+    <div class="list-group list-group-flush">
+      @php $user = request()->user(); @endphp
+
+      <a href="{{ route('dashboard.index') }}"
+        class="list-group-item list-group-item-action {{ request()->routeIs('dashboard.*') ? 'active' : '' }}"><i
+          class="bi bi-speedometer2"></i><span>لوحة التحكم</span></a>
+      {{-- Donors & Donations (Hidden from Finance per request) --}}
+      @if($user && !$user->roles->contains('key', 'finance'))
+        @if($user->hasPermission('donors.view'))
+          <a href="{{ route('donors.index') }}"
+            class="list-group-item list-group-item-action {{ request()->routeIs('donors.*') ? 'active' : '' }}"><i
+              class="bi bi-people"></i><span>المتبرعون</span></a>
+        @endif
+        @if($user->hasPermission('donations.view'))
+          <a href="{{ route('donations.index') }}"
+            class="list-group-item list-group-item-action {{ request()->routeIs('donations.*') ? 'active' : '' }}"><i
+              class="bi bi-gift"></i><span>التبرعات</span></a>
+        @endif
+        @if($user->hasPermission('beneficiaries.view'))
+          <a href="{{ route('beneficiaries.index') }}"
+            class="list-group-item list-group-item-action {{ request()->routeIs('beneficiaries.*') ? 'active' : '' }}"><i
+              class="bi bi-person-heart"></i><span>المستفيدون</span></a>
+        @endif
+      @endif
+
+      @if($user && ($user->hasPermission('delegates.view') || $user->hasPermission('travel_routes.view') || $user->hasPermission('trips.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#delegatesCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*')) ? 'true' : 'false' }}"
+          aria-controls="delegatesCollapse">
+          <span><i class="bi bi-signpost-2"></i> اللوجيستك</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div
+          class="collapse {{ (request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*')) ? 'show' : '' }} sub-list"
+          id="delegatesCollapse">
+          @if($user->hasPermission('delegates.view'))
+            <a href="{{ route('delegates.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('delegates.*') ? 'active' : '' }}"><i
+                class="bi bi-person-badge"></i><span>المندوبون</span></a>
+          @endif
+          @if($user->hasPermission('travel_routes.view'))
+            <a href="{{ route('travel-routes.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('travel-routes.*') ? 'active' : '' }}"><i
+                class="bi bi-geo"></i><span>خطوط السير</span></a>
+          @endif
+          @if($user->hasPermission('trips.view'))
+            <a href="{{ route('trips.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('trips.*') ? 'active' : '' }}"><i
+                class="bi bi-pin-map"></i><span>الرحلات</span></a>
+          @endif
+        </div>
+      @endif
+
+      @if($user && ($user->hasRole('hr') || $user->hasPermission('volunteers.view') || $user->hasPermission('users.view') || $user->hasPermission('hr.evaluations') || $user->hasPermission('payrolls.view') || $user->hasPermission('tasks.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#hrCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*') || request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'true' : 'false' }}"
+          aria-controls="hrCollapse">
+          <span><i class="bi bi-person-lines-fill"></i> الموارد البشرية HR</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div
+          class="collapse {{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*') || request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'show' : '' }}"
+          id="hrCollapse">
+          <div class="list-group list-group-flush ps-3">
+            <!-- Employees Submenu -->
+            @if($user->hasRole('hr') || $user->hasPermission('users.view') || $user->hasPermission('employee_attendance.view') || $user->hasPermission('employee_tasks.view') || $user->hasPermission('payrolls.view'))
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                data-bs-toggle="collapse" href="#empSubCollapse" role="button"
+                aria-expanded="{{ (request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'true' : 'false' }}"
+                aria-controls="empSubCollapse">
+                <span><i class="bi bi-person-badge"></i> الموظفين والمستخدمين</span>
+                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+              </a>
+              <div
+                class="collapse {{ (request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'show' : '' }}"
+                id="empSubCollapse">
+                <div class="list-group list-group-flush ps-3 border-start ms-3">
+                  @if(($user->hasRole('hr') || $user->hasPermission('users.view')) && !$user->hasRole('finance'))
+                    <a href="{{ route('users.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                      <i class="bi bi-people"></i> قائمة الموظفين
+                    </a>
+                  @endif
+                  @if($user->hasRole('hr') || $user->hasPermission('employee_attendance.view') || $user->hasPermission('employee_attendance.view_own'))
+                    <a href="{{ route('employee-attendance.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('employee-attendance.*') ? 'active' : '' }}">
+                      <i class="bi bi-calendar-check"></i> حضور الموظفين
+                    </a>
+                  @endif
+                  <a href="{{ route('leaves.index') }}"
+                    class="list-group-item list-group-item-action border-0 {{ request()->routeIs('leaves.*') ? 'active' : '' }}">
+                    <i class="bi bi-calendar2-week"></i> الإجازات
+                  </a>
+                  @if($user->hasPermission('employee_tasks.view') || $user->hasPermission('employee_tasks.view_own'))
+                    <a href="{{ route('employee-tasks.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('employee-tasks.*') ? 'active' : '' }}">
+                      <i class="bi bi-list-check"></i> مهام الموظفين
+                    </a>
+                  @endif
+                  @if($user->hasRole('hr') || $user->hasPermission('payrolls.view'))
+                    <a href="{{ route('payrolls.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
+                      <i class="bi bi-cash-coin"></i> مسيرات الرواتب
+                    </a>
+                  @endif
+                </div>
+              </div>
+            @endif
+
+            <!-- Volunteers Submenu -->
+            @if($user->hasRole('hr') || $user->hasPermission('volunteers.view') || $user->hasPermission('volunteer_attendance.view') || $user->hasPermission('volunteer_tasks.view') || $user->hasPermission('volunteer_hours.view') || $user->hasPermission('manage_volunteers_hr'))
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                data-bs-toggle="collapse" href="#volSubCollapse" role="button"
+                aria-expanded="{{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*')) ? 'true' : 'false' }}"
+                aria-controls="volSubCollapse">
+                <span><i class="bi bi-person-hearts"></i> المتطوعين</span>
+                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+              </a>
+              <div
+                class="collapse {{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*')) ? 'show' : '' }}"
+                id="volSubCollapse">
+                <div class="list-group list-group-flush ps-3 border-start ms-3">
+                  @if($user->hasRole('hr') || $user->hasPermission('volunteers.view'))
+                    <a href="{{ route('volunteers.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('volunteers.*') ? 'active' : '' }}">
+                      <i class="bi bi-person-lines-fill"></i> قائمة المتطوعين
+                    </a>
+                  @endif
+                  @if($user->hasRole('hr') || $user->hasPermission('volunteer_attendance.view') || $user->hasPermission('volunteer_attendance.view_own'))
+                    <a href="{{ route('volunteer-attendance.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('volunteer-attendance.*') ? 'active' : '' }}">
+                      <i class="bi bi-calendar-event"></i> حضور المتطوعين
+                    </a>
+                  @endif
+
+                  @if($user->hasRole('hr') || $user->hasPermission('volunteer_hours.view'))
+                    <a href="{{ route('volunteer-hours.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('volunteer-hours.*') ? 'active' : '' }}">
+                      <i class="bi bi-clock-history"></i> ساعات التطوع
+                    </a>
+                  @endif
+                </div>
+              </div>
+            @endif
+
+            @if($user->hasRole('hr') || $user->hasPermission('hr.evaluations'))
+              <a href="{{ route('hr.evaluations') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('hr.evaluations') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check"></i> التقييمات
+              </a>
+            @endif
+
+            @if(($user->hasRole('hr') || $user->hasPermission('tasks.view') || $user->hasPermission('tasks.view_own')) && !$user->hasRole('finance'))
+              <a href="{{ route('tasks.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('tasks.*') ? 'active' : '' }}">
+                <i class="bi bi-check2-square"></i> المهام العامة
+              </a>
+            @endif
+          </div>
+        </div>
+      @endif
+
+      {{-- Systems & Settings --}}
+      @if($user && ($user->hasPermission('roles.view') || $user->hasPermission('audits.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#settingsCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('roles.*') || request()->routeIs('audits.*')) ? 'true' : 'false' }}"
+          aria-controls="settingsCollapse">
+          <span><i class="bi bi-gear"></i> الإعدادات والنظام</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ (request()->routeIs('roles.*') || request()->routeIs('audits.*')) ? 'show' : '' }} sub-list" id="settingsCollapse">
+            @if($user->hasPermission('roles.view'))
+              <a href="{{ route('roles.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                <i class="bi bi-shield-lock"></i> الأدوار والصلاحيات
+              </a>
+            @endif
+            @if($user && ($user->hasRole('admin') || $user->hasRole('manager')))
+              <a href="{{ route('change-requests.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('change-requests.*') ? 'active' : '' }}">
+                <i class="bi bi-patch-check"></i> طلبات المراجعة (الإلغاء والتعديل)
+                @php $pendingCount = \App\Models\ChangeRequest::where('status', 'pending')->count(); @endphp
+                @if($pendingCount > 0)
+                  <span class="badge bg-danger rounded-pill float-start ms-2">{{ $pendingCount }}</span>
+                @endif
+              </a>
+            @endif
+            @if($user->hasPermission('audits.view'))
+              <a href="{{ route('audits.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('audits.*') ? 'active' : '' }}">
+                <i class="bi bi-activity"></i> السجلات Logs
+              </a>
+            @endif
+        </div>
+      @endif
+      @php $u = request()->user();
+      $isAdmin = $u && $u->roles()->where('key', 'admin')->exists(); @endphp
+
+      <!-- Accounts Section -->
+      @if($user && ($user->hasRole('finance') || $user->hasPermission('accounts.view') || $user->hasPermission('journal_entries.view') || $user->hasPermission('expenses.view') || $user->hasPermission('financial_closures.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#accCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('expenses.*') || request()->routeIs('closures.*') || request()->routeIs('accounts.*') || request()->routeIs('journal-entries.*') || request()->routeIs('treasuries.*') || request()->routeIs('revenues.*')) ? 'true' : 'false' }}"
+          aria-controls="accCollapse">
+          <span><i class="bi bi-calculator"></i> الحسابات</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div
+          class="collapse {{ (request()->routeIs('expenses.*') || request()->routeIs('closures.*') || request()->routeIs('accounts.*') || request()->routeIs('journal-entries.*') || request()->routeIs('treasuries.*') || request()->routeIs('revenues.*')) ? 'show' : '' }}"
+          id="accCollapse">
+          <div class="list-group list-group-flush ps-3">
+            @if($user->hasRole('finance') || $user->hasPermission('accounts.view'))
+              <a href="{{ route('accounts.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
+                <i class="bi bi-diagram-3"></i> دليل الحسابات
+              </a>
+            @endif
+            @if($user->hasRole('finance') || $user->hasPermission('journal_entries.view'))
+              <a href="{{ route('journal-entries.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('journal-entries.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-text"></i> القيود اليومية
+              </a>
+            @endif
+            @if($user->hasPermission('expenses.view'))
+              <a href="{{ route('expenses.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('expenses.*') ? 'active' : '' }}">
+                <i class="bi bi-cash-stack"></i> المصروفات
+              </a>
+            @endif
+            @if($user->hasRole('finance') || $user->hasPermission('accounts.view'))
+              <a href="{{ route('revenues.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('revenues.*') ? 'active' : '' }}">
+                <i class="bi bi-graph-up-arrow"></i> الإيرادات والتحليل
+              </a>
+            @endif
+            @if($user->hasRole('finance') || $user->hasPermission('accounts.view'))
+              <a href="{{ route('treasuries.dashboard') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('treasuries.*') ? 'active' : '' }}">
+                <i class="bi bi-safe"></i> الخزائن
+              </a>
+            @endif
+            @if($user->hasPermission('financial_closures.view'))
+              <a href="{{ route('closures.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('closures.*') ? 'active' : '' }}">
+                <i class="bi bi-file-earmark-lock"></i> الإقفال المالي
+              </a>
+            @endif
+          </div>
+        </div>
+      @endif
+
+      @if($user && ($user->hasPermission('warehouses.view') || $user->hasPermission('items.view') || $user->hasPermission('inventory_transactions.view') || $user->hasPermission('suppliers.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#invCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('warehouses.*') || request()->routeIs('items.*') || request()->routeIs('inventory-transactions.*') || request()->routeIs('suppliers.*')) ? 'true' : 'false' }}"
+          aria-controls="invCollapse">
+          <span><i class="bi bi-building"></i> إدارة المخازن</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div
+          class="collapse {{ (request()->routeIs('warehouses.*') || request()->routeIs('items.*') || request()->routeIs('inventory-transactions.*') || request()->routeIs('suppliers.*')) ? 'show' : '' }} sub-list"
+          id="invCollapse">
+          @if($user->hasPermission('warehouses.view'))
+            <a href="{{ route('warehouses.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('warehouses.*') ? 'active' : '' }}"><i
+                class="bi bi-building"></i><span>المخازن</span></a>
+          @endif
+          @if($user->hasPermission('items.view'))
+            <a href="{{ route('items.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('items.*') ? 'active' : '' }}"><i
+                class="bi bi-box"></i><span>الأصناف</span></a>
+          @endif
+          <a href="{{ route('suppliers.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i
+                class="bi bi-shop"></i><span>الموردين</span></a>
+          @if($user->hasPermission('inventory_transactions.view'))
+            <a href="{{ route('inventory-transactions.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('inventory-transactions.*') ? 'active' : '' }}"><i
+                class="bi bi-arrow-left-right"></i><span>حركات المخزون</span></a>
+          @endif
+        </div>
+      @endif
+
+      @if($user && !$user->hasRole('hr') && !$user->hasRole('marketer') && ($user->hasPermission('projects.view') || $user->hasPermission('manage_project')))
+        <a href="{{ route('projects.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('projects.*') ? 'active' : '' }}"><i
+            class="bi bi-kanban"></i><span>إدارة المشاريع</span></a>
+      @endif
+
+      @if($user && !$user->hasRole('marketer') && $user->hasPermission('campaigns.view'))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#campaignsCollapse" role="button"
+          aria-expanded="{{ request()->routeIs('campaigns.*') || request()->routeIs('ramadan-bags.*') || request()->routeIs('ramadan-iftars.*') ? 'true' : 'false' }}"
+          aria-controls="campaignsCollapse">
+          <span><i class="bi bi-megaphone"></i> حملات موسمية</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ request()->routeIs('campaigns.*') || request()->routeIs('ramadan-bags.*') || request()->routeIs('ramadan-iftars.*') ? 'show' : '' }} sub-list" id="campaignsCollapse">
+          <div class="list-group list-group-flush ps-3">
+            <a href="{{ route('campaigns.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
+              <i class="bi bi-megaphone"></i><span>إدارة الحملات</span></a>
+            <a href="{{ route('ramadan-bags.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-bags.*') ? 'active' : '' }}">
+              <i class="bi bi-bag-heart"></i><span>شنط رمضان</span></a>
+            <a href="{{ route('ramadan-iftars.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-iftars.*') ? 'active' : '' }}">
+              <i class="bi bi-cup-hot"></i><span>إفطارات رمضان</span></a>
+          </div>
+        </div>
+      @endif
+
+      @if($user && ($user->hasRole('admin') || $user->hasRole('manager')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#collaborationsCollapse" role="button"
+          aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
+          aria-controls="collaborationsCollapse">
+          <span><i class="bi bi-diagram-3"></i> التعاونات والشراكات والعضوية</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
+          <div class="list-group list-group-flush ps-3">
+            <a href="{{ route('school-collaborations.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('school-collaborations.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>تعاونات المدارس</span></a>
+            <a href="{{ route('memberships.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('memberships.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i><span>العضويات</span></a>
+            <a href="{{ route('oncology-medicine-reps.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('oncology-medicine-reps.*') ? 'active' : '' }}"><i class="bi bi-prescription2"></i><span>مناديب أدوية الأورام</span></a>
+            <a href="{{ route('kafr-el-sheikh-brokers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-brokers.*') ? 'active' : '' }}"><i class="bi bi-pin-map"></i><span>سماسرة كفر الشيخ</span></a>
+            <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}"><i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span></a>
+            <a href="{{ route('kafr-el-sheikh-services.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}"><i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span></a>
+            <a href="{{ route('tanta-workers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('tanta-workers.*') ? 'active' : '' }}"><i class="bi bi-people"></i><span>عمال باليومية (طنطا)</span></a>
+          </div>
+        </div>
+      @endif
+
+      @if($user && ($user->hasPermission('visits.view') || $user->roles()->where('name', 'باحث ميداني')->exists() || $user->roles()->where('key', 'field_researcher')->exists()))
+        <a href="{{ route('visits.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('visits.*') ? 'active' : '' }}"><i
+            class="bi bi-geo-alt"></i><span>الزيارات الميدانية</span></a>
+      @endif
+
+      @if($user && ($user->hasPermission('reception.view') || $user->roles()->where('name', 'الاستقبال')->exists() || $user->roles()->where('key', 'receptionist')->exists()))
+        <a href="{{ route('reception.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('reception.*') ? 'active' : '' }}"><i
+            class="bi bi-telephone-inbound"></i><span>الاستقبال</span></a>
+      @endif
+
+      @if($user && $user->hasPermission('guest_houses.view'))
+        <a href="{{ route('guest-houses.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('guest-houses.*') ? 'active' : '' }}"><i
+            class="bi bi-house"></i><span>إدارة دار الضيافة</span></a>
+      @endif
+
+      @if($user && $user->hasPermission('workspaces.view'))
+        <a href="{{ route('workspaces.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('workspaces.*') ? 'active' : '' }}"><i
+            class="bi bi-easel"></i><span>إدارة workspace Ensan</span></a>
+      @endif
+
+      {{-- Website Management Unit --}}
+      @if($user && ($user->hasRole('admin') || $user->hasPermission('website.view') || $user->hasRole('marketer') || $user->hasRole('website_manager')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#websiteCollapse" role="button"
+          aria-expanded="{{ request()->routeIs('website.*') ? 'true' : 'false' }}"
+          aria-controls="websiteCollapse">
+          <span><i class="bi bi-globe"></i> الموقع الإلكتروني</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ request()->routeIs('website.*') ? 'show' : '' }} sub-list" id="websiteCollapse">
+          <div class="list-group list-group-flush ps-3">
+            <a href="{{ route('website.settings.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.settings.*') ? 'active' : '' }}">
+              <i class="bi bi-gear-wide-connected"></i><span>محتوى الصفحة الرئيسية</span>
+            </a>
+
+            <a href="{{ route('website.headquarters.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.headquarters.*') ? 'active' : '' }}">
+              <i class="bi bi-geo-alt fs-5"></i><span>المقر والفروع</span>
+            </a>
+
+            <a href="{{ route('website.partners.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.partners.*') ? 'active' : '' }}">
+              <i class="bi bi-award fs-5"></i><span>جدار الشرف</span>
+            </a>
+
+            <a href="{{ route('website.board.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.board.*') ? 'active' : '' }}">
+              <i class="bi bi-people"></i><span>مجلس الأمناء</span>
+            </a>
+
+            <a href="{{ route('website.content') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.content') ? 'active' : '' }}">
+              <i class="bi bi-window-sidebar"></i><span>محتوى المشاريع</span>
+            </a>
+
+            <a href="{{ route('website.campaigns.content') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.campaigns.content') ? 'active' : '' }}">
+              <i class="bi bi-megaphone fs-5 text-warning"></i><span>محتوى الحملات</span>
+            </a>
+
+            <a href="{{ route('website.guest-house.content') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.guest-house.*') ? 'active' : '' }}">
+              <i class="bi bi-building fs-5 text-primary"></i><span>دار الضيافة</span>
+            </a>
+
+            <a href="{{ route('website.news.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.news.*') ? 'active' : '' }}">
+              <i class="bi bi-newspaper"></i><span>الأخبار والفعاليات</span>
+            </a>
+
+            <a href="{{ route('website.contact-messages.index') }}"
+              class="list-group-item list-group-item-action {{ (request()->routeIs('website.contact-messages.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
+              <i class="bi bi-envelope"></i><span>تواصل معنا</span>
+            </a>
+
+            <a href="{{ route('website.subscriptions.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.subscriptions.*') ? 'active' : '' }}">
+              <i class="bi bi-envelope-paper"></i><span>النشرة الإخبارية</span>
+            </a>
+
+            <a href="{{ route('website.volunteer-requests.index') }}"
+              class="list-group-item list-group-item-action {{ (request()->routeIs('website.volunteer-requests.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
+              <i class="bi bi-person-plus text-primary"></i><span>طلبات التطوع (الموقع)</span>
+            </a>
+
+            <a href="{{ route('website.donation-page.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-page.*') ? 'active' : '' }}">
+              <i class="bi bi-heart-fill text-danger"></i><span>إعدادات صفحة التبرع</span>
+            </a>
+
+            <a href="{{ route('website.donation-settings.unified') }}"
+              class="list-group-item list-group-item-action {{ (request()->routeIs('website.donation-settings.unified') || request()->routeIs('website.donation-settings.categories.*') || request()->routeIs('website.donation-settings.items.*')) ? 'active' : '' }}">
+              <i class="bi bi-ui-checks-grid text-purple"></i><span>مجالات الدعم (الفئات)</span>
+            </a>
+
+            <a href="{{ route('website.accounts.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.accounts.*') ? 'active' : '' }}">
+              <i class="bi bi-person-badge text-info"></i><span>حسابات المتبرعين (دخول)</span>
+            </a>
+
+            <a href="{{ route('website.donation-accounts.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-accounts.*') ? 'active' : '' }}">
+              <i class="bi bi-wallet2 text-success"></i><span>حسابات تبرعات الويبسايت</span>
+            </a>
+          </div>
+        </div>
+      @endif
+
+      {{-- Mobile App Management Unit --}}
+      @if($user && ($user->hasRole('admin') || $user->hasPermission('mobile.view') || $user->hasRole('marketer') || $user->hasRole('mobile_manager')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#mobileCollapse" role="button"
+          aria-expanded="{{ (request()->routeIs('mobile.*') || request()->routeIs('website.volunteer-requests.*') || request()->routeIs('website.news.*') || request()->routeIs('website.bookings.*')) ? 'true' : 'false' }}"
+          aria-controls="mobileCollapse">
+          <span><i class="bi bi-phone"></i> تطبيق الموبايل</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ (request()->routeIs('mobile.*') || request()->routeIs('website.volunteer-requests.*') || request()->routeIs('website.news.*') || request()->routeIs('website.bookings.*')) ? 'show' : '' }} sub-list" id="mobileCollapse">
+          <div class="list-group list-group-flush ps-3">
+            <a href="{{ route('mobile.home_content.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.home_content.*') ? 'active' : '' }}">
+              <i class="bi bi-house-gear"></i><span>محتوى الصفحة الرئيسية</span>
+            </a>
+
+
+            <a href="{{ route('mobile.news.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.news.*') ? 'active' : '' }}">
+              <i class="bi bi-newspaper text-info"></i><span>أخبار التطبيق (منفصل)</span>
+            </a>
+
+            <a href="{{ route('mobile.volunteer-requests.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.volunteer-requests.*') ? 'active' : '' }}">
+              <i class="bi bi-person-heart text-danger"></i><span>طلبات التطوع (الموبايل)</span>
+            </a>
+
+
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+              data-bs-toggle="collapse" href="#mobileCasesCollapse" role="button"
+              aria-expanded="{{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'true' : 'false' }}"
+              aria-controls="mobileCasesCollapse">
+              <span><i class="bi bi-heart-pulse text-danger"></i> طلبات الحالات المستحقة (الموبايل)</span>
+              <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+            </a>
+            <div class="collapse {{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'show' : '' }}" id="mobileCasesCollapse">
+              <div class="list-group list-group-flush ps-3 border-start ms-3">
+                <a href="{{ route('mobile.case-applications.index', ['type' => 'zad']) }}"
+                  class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'zad') ? 'active' : '' }}">
+                  <i class="bi bi-star-fill text-danger"></i><span>طلبات مشروع زاد للموبايل</span>
+                </a>
+
+                <a href="{{ route('mobile.case-applications.index', ['type' => 'hope']) }}"
+                  class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'hope') ? 'active' : '' }}">
+                  <i class="bi bi-brightness-high-fill text-danger"></i><span>طلبات مشروع بعثاء الأمل للموبايل</span>
+                </a>
+
+                <a href="{{ route('mobile.bookings.index') }}"
+                  class="list-group-item list-group-item-action border-0 {{ request()->routeIs('mobile.bookings.*') ? 'active' : '' }}">
+                  <i class="bi bi-buildings text-danger"></i><span>طلبات الحجز من الموبايل</span>
+                </a>
+              </div>
+            </div>
+
+            <a href="{{ route('mobile.donations.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donations.*') ? 'active' : '' }}">
+              <i class="bi bi-cash-coin text-success"></i><span>سجلات التبرعات (الموبايل)</span>
+            </a>
+
+            <a href="{{ route('mobile.notifications.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.notifications.*') ? 'active' : '' }}">
+              <i class="bi bi-bell"></i><span>الإشعارات (Push Notifications)</span>
+            </a>
+          </div>
+        </div>
+      @endif
+
+
+
+      @if($user && ($user->hasPermission('complaints.view') || $user->hasPermission('complaints.create') || $user->roles->contains('key', 'finance')))
+        <a href="{{ route('complaints.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('complaints.*') ? 'active' : '' }}"><i
+            class="bi bi-chat-dots"></i><span>الشكاوى</span></a>
+      @endif
+
+
+      @if($user && $user->hasPermission('audits.view') && false) {{-- Moved to settings group --}}
+        <a href="{{ route('audits.index') }}"
+          class="list-group-item list-group-item-action {{ request()->routeIs('audits.*') ? 'active' : '' }}"><i
+            class="bi bi-activity"></i><span>السجلات Logs</span></a>
+      @endif
+    </div>
+  </div>
+  <div class="container content-wrapper fade-in">
+    @if(!isset($hideGlobalAlerts) || !$hideGlobalAlerts)
+      @include('partials.alerts')
+    @endif
+    @yield('content')
+
+    <footer class="mt-5 pt-4 pb-4 text-center text-muted small">
+      <div class="container">
+        <div class="d-flex justify-content-center align-items-center mb-2">
+          @if(file_exists(public_path('logo.png')))
+            <img src="{{ asset('logo.png') }}" alt="logo" height="120" style="opacity: 1">
+          @endif
+        </div>
+        <p class="mb-0 fw-medium text-secondary">جميع الحقوق محفوظة مؤسسة إنسان {{ date('Y') }} &copy;</p>
+      </div>
+    </footer>
+  </div>
+  @if($navUser && $navUser->hasPermission('notifications.view'))
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 id="notifOffcanvasLabel" class="mb-0">الإشعارات</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="d-flex gap-2 mb-2">
+          <select id="notifSideFilter" class="form-select form-select-sm" style="width:auto">
+            <option value="">الكل</option>
+            <option value="success">نجاح</option>
+            <option value="info">معلومة</option>
+            <option value="warning">تحذير</option>
+            <option value="danger">هام</option>
+            <option value="secondary">عام</option>
+          </select>
+          <a href="{{ route('notifications.index') }}" class="btn btn-light btn-sm">عرض الكل</a>
+        </div>
+        <div id="notifSideList" class="d-flex flex-column gap-2"></div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var off = document.getElementById('notifOffcanvas');
+        var list = document.getElementById('notifSideList');
+        var filter = document.getElementById('notifSideFilter');
+        var fKey = 'sidebar.notifications.filter';
+        var render = function (items) {
+          list.innerHTML = '';
+          if (!items || !items.length) { 
+            list.innerHTML = '<div class="alert alert-secondary text-center py-5 border-0 bg-opacity-10" style="background: var(--gray-100)"><i class="bi bi-bell-slash fs-1 d-block mb-3 opacity-25"></i><p class="mb-0 fw-medium">لا توجد إشعارات حالياً</p></div>'; 
+            return; 
+          }
+          var val = filter.value;
+          items.forEach(function (n) {
+            if (val && n.type !== val) return;
+            
+            var card = document.createElement('div');
+            card.className = 'card border-0 mb-3 notification-card border-' + n.type;
+            
+            var cardBody = document.createElement('div');
+            cardBody.className = 'card-body p-3';
+            
+            var iconMap = {
+              'success': 'check-circle-fill',
+              'info': 'info-circle-fill',
+              'warning': 'exclamation-triangle-fill',
+              'danger': 'exclamation-octagon-fill',
+              'secondary': 'bell-fill'
+            };
+            
+            var labelMap = {
+              'success': 'نجاح',
+              'info': 'معلومة',
+              'warning': 'تحذير',
+              'danger': 'هام',
+              'secondary': 'عام'
+            };
+            
+            // Header: Icon and Label
+            var header = document.createElement('div');
+            header.className = 'd-flex align-items-center justify-content-between mb-3';
+            
+            var headRight = document.createElement('div');
+            headRight.className = 'd-flex align-items-center gap-2';
+            
+            var iconSpan = document.createElement('span');
+            iconSpan.className = 'd-flex align-items-center justify-content-center rounded-circle bg-' + n.type + ' bg-opacity-10 text-' + n.type;
+            iconSpan.style.width = '32px';
+            iconSpan.style.height = '32px';
+            iconSpan.innerHTML = '<i class="bi bi-' + (iconMap[n.type] || 'bell') + ' fs-5"></i>';
+            
+            var badge = document.createElement('span');
+            badge.className = 'notif-label bg-' + n.type + ' bg-opacity-10 text-' + n.type + ' border border-' + n.type + ' border-opacity-25';
+            badge.textContent = labelMap[n.type] || 'إشعار';
+            
+            headRight.appendChild(iconSpan);
+            headRight.appendChild(badge);
+            header.appendChild(headRight);
+            
+            // Text Content
+            var textPara = document.createElement('p');
+            textPara.className = 'mb-3 lh-base fw-medium';
+            textPara.style.fontSize = '0.95rem';
+            textPara.textContent = n.text;
+            
+            // Action
+            var actionDiv = document.createElement('div');
+            actionDiv.className = 'd-flex justify-content-start';
+            var link = document.createElement('a');
+            link.href = n.link;
+            link.className = 'btn btn-' + n.type + ' btn-sm rounded-pill px-4 shadow-sm';
+            link.innerHTML = '<i class="bi bi-box-arrow-up-right me-1"></i> فتح';
+            actionDiv.appendChild(link);
+            
+            cardBody.appendChild(header);
+            cardBody.appendChild(textPara);
+            cardBody.appendChild(actionDiv);
+            card.appendChild(cardBody);
+            list.appendChild(card);
+          });
+        };
+        var load = function () {
+          fetch('{{ route('notifications.index') }}?format=json').then(function (r) { return r.json() }).then(function (d) { render(d.items || []); }).catch(function () { render([]); });
+        };
+        off.addEventListener('shown.bs.offcanvas', load);
+        filter.addEventListener('change', function () { localStorage.setItem(fKey, filter.value || ''); load(); });
+        var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
+      });
+    </script>
+  @endif
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+       var loader = document.getElementById('global-loader');
+       
+       // Show loader on form submit (if not prevented)
+       document.body.addEventListener('submit', function(e) {
+           if (!e.defaultPrevented) {
+               loader.classList.add('show');
+           }
+       });
+
+       // Show loader on link click (if internal and not #/javascript)
+       document.body.addEventListener('click', function(e) {
+           if (e.defaultPrevented) return;
+           var a = e.target.closest('a');
+           if (a && 
+               a.href && 
+               !a.href.startsWith('javascript:') && 
+               !a.href.includes('#') && 
+               !a.hasAttribute('data-bs-toggle') && // Ignore modal/offcanvas triggers
+               !a.hasAttribute('data-bs-dismiss') && // Ignore dismiss buttons
+               a.target !== '_blank' &&
+               !e.ctrlKey && !e.metaKey &&
+               a.hostname === window.location.hostname
+           ) {
+               loader.classList.add('show');
+           }
+       });
+       
+       // Hide loader on pageshow (back button)
+       window.addEventListener('pageshow', function(event) {
+            if (event.persisted && loader) {
+                 loader.classList.remove('show');
+            }
+       });
+
+       // Modern Swal confirmation replacement
+       document.addEventListener('click', function(e) {
+           const btn = e.target.closest('button[type="submit"], button:not([type]), input[type="submit"]');
+           if (!btn) return;
+           
+           const form = btn.closest('form');
+           if (!form) return;
+           
+           const onsubmit = form.getAttribute('onsubmit');
+           if (onsubmit && onsubmit.includes('confirm')) {
+               e.preventDefault();
+               e.stopPropagation();
+               
+               const msgMatch = onsubmit.match(/confirm\('([^']+)'\)/);
+               const message = msgMatch ? msgMatch[1] : 'هل أنت متأكد؟';
+               
+               Swal.fire({
+                   title: 'تأكيد الإجراء',
+                   text: message,
+                   icon: 'warning',
+                   iconColor: '#10b981',
+                   showCancelButton: true,
+                   confirmButtonText: 'نعم، متأكد',
+                   cancelButtonText: 'إلغاء',
+                   background: document.body.classList.contains('theme-dark') ? '#1e293b' : '#fff',
+                   color: document.body.classList.contains('theme-dark') ? '#f8fafc' : '#0f172a',
+                   customClass: {
+                       popup: 'premium-swal-popup rounded-4 border-0 shadow-lg',
+                       title: 'fw-bold mb-3',
+                       confirmButton: 'btn btn-primary px-4 py-2 mx-2',
+                       cancelButton: 'btn btn-secondary px-4 py-2 mx-2'
+                   },
+                   buttonsStyling: false,
+                   backdrop: 'rgba(2, 6, 23, 0.95)',
+                   showClass: { popup: 'fade-in' }
+               }).then((result) => {
+                   if (result.isConfirmed) {
+                       form.removeAttribute('onsubmit'); // Remove original confirm
+                       if(loader) loader.classList.add('show');
+                       form.submit();
+                   }
+               });
+           }
+       });
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      flatpickr(".time-picker", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        altInput: true,
+        altFormat: "h:i K",
+        time_24hr: false
+      });
+
+      // Sidebar Toggle
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+      const sidebar = document.querySelector('.sidebar-fixed');
+      const sidebarKey = 'ui.sidebar.collapsed';
+
+      if (sidebarToggle && sidebar && sidebarOverlay) {
+        // Load initial state
+        const isCollapsed = localStorage.getItem(sidebarKey) === 'true';
+        if (isCollapsed && window.innerWidth >= 992) {
+          document.body.classList.add('sidebar-collapsed');
+        }
+
+        // --- Sidebar Scroll Persistence ---
+        const scrollKey = 'ui.sidebar.scrollPos';
+        const sidebarCard = sidebar; // This is .sidebar-fixed
+        
+        // Restore scroll position
+        const savedScroll = sessionStorage.getItem(scrollKey);
+        if (savedScroll) {
+          sidebarCard.scrollTop = savedScroll;
+        }
+
+        // Also ensure active element is visible if it's a first load or position wasn't saved
+        const activeItem = sidebarCard.querySelector('.list-group-item.active');
+        if (activeItem && !savedScroll) {
+           activeItem.scrollIntoView({ block: 'nearest' });
+        }
+
+        // Save scroll position on scroll
+        sidebarCard.addEventListener('scroll', function() {
+          sessionStorage.setItem(scrollKey, sidebarCard.scrollTop);
+        }, { passive: true });
+
+        function closeSidebar() {
+          if (window.innerWidth < 992) {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+          }
+        }
+
+        sidebarToggle.addEventListener('click', function() {
+          if (window.innerWidth >= 992) {
+            // Desktop toggle: collapse
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem(sidebarKey, document.body.classList.contains('sidebar-collapsed'));
+          } else {
+            // Mobile toggle: slide in/out
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+          }
+        });
+
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        sidebar.querySelectorAll('a:not([data-bs-toggle])').forEach(link => {
+          link.addEventListener('click', () => {
+            // Force save on click just to be sure
+            sessionStorage.setItem(scrollKey, sidebarCard.scrollTop);
+            if (window.innerWidth < 992) closeSidebar();
+          });
+        });
+      }
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var themeKey = 'ui.theme', themeBtn = document.getElementById('themeToggle');
+
+      var applyTheme = function (v) {
+        document.body.classList.toggle('theme-dark', v === 'dark');
+        if (themeBtn) { 
+            themeBtn.innerHTML = v === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon"></i>'; 
+            // Also update the sidebar toggle color if needed
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if(sidebarToggle) {
+                sidebarToggle.classList.toggle('text-white', v === 'dark');
+                sidebarToggle.classList.toggle('text-dark', v !== 'dark');
+            }
+        }
+      };
+
+      var curTheme = localStorage.getItem(themeKey) || 'light';
+      applyTheme(curTheme);
+
+      if (themeBtn) {
+        themeBtn.addEventListener('click', function () {
+          curTheme = (document.body.classList.contains('theme-dark') ? 'light' : 'dark');
+          localStorage.setItem(themeKey, curTheme);
+          applyTheme(curTheme);
+        });
+      }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Cross-Tab Sync Logic ---
+        const syncChannel = new BroadcastChannel('ensan_app_sync');
+        
+        // 1. Notify other tabs if this tab just completed a successful action
+        @if(session('success'))
+            syncChannel.postMessage({ 
+                type: 'REFRESH_DATA', 
+                message: '{{ session('success') }}',
+                url: window.location.href,
+                timestamp: Date.now()
+            });
+        @endif
+
+        // 2. Listen for notifications from other tabs
+        syncChannel.onmessage = (event) => {
+            if (event.data.type === 'REFRESH_DATA') {
+                // If the user is looking at this page, prompt for refresh
+                if (document.visibilityState === 'visible') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: true,
+                        confirmButtonText: '<i class="bi bi-arrow-clockwise me-1"></i> تحديث الآن',
+                        timer: 15000,
+                        timerProgressBar: true,
+                        background: document.body.classList.contains('theme-dark') ? '#1e293b' : '#fff',
+                        color: document.body.classList.contains('theme-dark') ? '#f8fafc' : '#0f172a',
+                        customClass: {
+                            confirmButton: 'btn btn-primary btn-sm px-3 ms-2',
+                            popup: 'rounded-4 shadow-lg border-0'
+                        },
+                        buttonsStyling: false,
+                    });
+
+                    Toast.fire({
+                        icon: 'info',
+                        title: 'تحديثات جديدة متاحة',
+                        text: event.data.message
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loader then reload
+                            const loader = document.getElementById('global-loader');
+                            if(loader) loader.classList.add('show');
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    // If tab is in background, we could optionally mark it for auto-refresh on focus
+                    window._needsRefresh = true;
+                }
+            }
+        };
+
+        // 3. Auto-refresh on focus if data was updated while tab was hidden
+        window.addEventListener('focus', () => {
+            if (window._needsRefresh) {
+                window._needsRefresh = false;
+                window.location.reload();
+            }
+        });
+    });
+  </script>
+  @yield('scripts')
+</body>
+
+</html>

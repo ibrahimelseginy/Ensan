@@ -1,0 +1,64 @@
+<div class="campaign-card animate-fadeIn" [attr.data-status]="campaign.status" dir="rtl">
+    <!-- Image Cover -->
+    <div class="card-cover">
+        <div class="media-aspect-ratio">
+            <img [src]="campaign.imageUrl" [alt]="campaign.title" loading="lazy" class="cover-image" />
+        </div>
+
+        <!-- Dynamic Status Badge -->
+        <div class="status-badge" [ngClass]="getStatusClass(campaign.status)">
+            <span class="status-dot"></span>
+            <span class="status-text">{{ campaign.statusLabel }}</span>
+        </div>
+
+        <div class="category-pill" *ngIf="campaign.category">
+            <i class="bi" [ngClass]="campaign.categoryIcon || 'bi-bookmark'"></i>
+            {{ campaign.category }}
+        </div>
+    </div>
+
+    <!-- Content Body -->
+    <div class="card-body">
+        <!-- Title & Description -->
+        <div class="card-header">
+            <h3 class="card-title text-clamp-2" [title]="campaign.title">{{ campaign.title }}</h3>
+            <p class="card-desc text-clamp-3" [title]="campaign.description">{{ campaign.description }}</p>
+        </div>
+
+        <!-- Quick Stats Row (Dynamic) -->
+        <div class="quick-stats-row" *ngIf="campaign.quickStats?.length">
+            <div class="stat-item" *ngFor="let stat of campaign.quickStats; trackBy: trackByStatLabel">
+                <i class="bi" [ngClass]="stat.icon"></i>
+                <div class="stat-info">
+                    <span class="stat-value">{{ stat.value }}</span>
+                    <span class="stat-label">{{ stat.label }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Section (Optional) -->
+        <div class="progress-section" *ngIf="hasProgressData">
+            <div class="progress-header">
+                <div class="progress-meta">
+                    <span class="collected-amount">{{ campaign.collectedAmount | number }} د.ك</span>
+                    <span class="goal-amount">من {{ campaign.goalAmount | number }} د.ك</span>
+                </div>
+                <span class="percent-badge">{{ progressPercentage }}%</span>
+            </div>
+
+            <div class="progress-track">
+                <div class="progress-bar" [style.width.%]="progressPercentage" [ngClass]="getProgressColorClass()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="card-footer">
+            <button class="action-btn" [disabled]="campaign.isActionDisabled" [ngClass]="getActionBtnClass()"
+                (click)="handleAction()">
+                {{ campaign.actionText }}
+                <i class="bi bi-arrow-left me-2"></i>
+            </button>
+        </div>
+    </div>
+</div>

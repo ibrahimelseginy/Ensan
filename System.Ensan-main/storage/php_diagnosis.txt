@@ -1,0 +1,20 @@
+Array
+(
+    [php_version] => 8.2.14
+    [loaded_ini] => 
+    [scanned_inis] => 
+    [extension_dir] => C:\php\ext
+    [max_execution_time] => 30
+    [php_binary] => C:\MAMP\bin\php\php8.2.14\php.exe
+    [extensions] => Array
+        (
+            [mbstring] => MISSING
+            [gd] => MISSING
+            [pdo_mysql] => MISSING
+            [openssl] => MISSING
+            [fileinfo] => MISSING
+            [curl] => MISSING
+            [intl] => MISSING
+        )
+
+)
