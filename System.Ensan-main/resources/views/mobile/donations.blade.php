@@ -71,7 +71,7 @@
                             </div>
                             <div class="col-md-6 info-group">
                                 <label>رقم الهاتف</label>
-                                <div class="info-val font-outfit text-success-glow">{{ $donation->donor_phone }}</div>
+                                <div class="info-val font-outfit text-primary-glow">{{ $donation->donor_phone }}</div>
                             </div>
                             <div class="col-12 info-group">
                                 <label>عنوان المتبرع</label>
@@ -102,7 +102,7 @@
                         </div>
 
                         <div class="admin-panel mt-5">
-                            <h6 class="panel-title mb-3 text-success-glow"><i class="bi bi-shield-lock me-2"></i> التحكم في حالة الطلب</h6>
+                            <h6 class="panel-title mb-3"><i class="bi bi-shield-lock me-2"></i> التحكم في حالة الطلب</h6>
                             <form action="{{ route('mobile.donations.update', $donation->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <div class="row g-3">
@@ -152,7 +152,7 @@
 
     body { background-color: var(--dark-bg); font-family: 'Tajawal', 'Outfit', sans-serif; }
     .fw-800 { font-weight: 800; }
-    .text-success-glow { color: var(--success-glow); }
+    .text-primary-glow { color: #0066ff; }
     .font-outfit { font-family: 'Outfit', sans-serif; }
 
     .glass-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 100px; color: #fff; backdrop-filter: blur(10px); }
@@ -187,20 +187,91 @@
     .btn-details-glow { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-weight: 600; transition: 0.3s; }
     .btn-details-glow:hover { background: var(--success); border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
 
-    /* Modal Styling - Solid Opaque */
-    .premium-modal { background: #000000 !important; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 30px; overflow: hidden; box-shadow: 0 0 120px #000 !important; }
-    .premium-modal .modal-header { background: #06100c !important; border-bottom: 1px solid rgba(16, 185, 129, 0.1); padding: 25px; }
-    .premium-modal .modal-body { padding: 35px; background: #000000 !important; }
+     /* Modal Styling - Premium Blue */
+    .premium-modal { 
+        background-color: #0b0e14 !important; 
+        border: none !important;
+        border-radius: 24px !important; 
+        overflow: hidden; 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; 
+    }
+    .premium-modal .modal-header { 
+        background-color: #0066ff !important; 
+        border: none !important;
+        padding: 20px 30px; 
+    }
+    .premium-modal .modal-body { 
+        padding: 30px; 
+        background-color: #0b0e14 !important; 
+    }
     
-    .info-group label { display: block; color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
-    .info-val { color: #fff; font-size: 1.1rem; font-weight: 600; }
-    .message-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; color: #94a3b8; line-height: 1.7; font-style: italic; }
+    .info-group label { 
+        display: block; 
+        color: #94a3b8; 
+        font-size: 0.85rem; 
+        font-weight: 500; 
+        margin-bottom: 8px; 
+    }
+    .info-val { 
+        color: #fff; 
+        font-size: 1.1rem; 
+        font-weight: 600; 
+    }
+    .message-box { 
+        background: rgba(15, 23, 42, 0.6); 
+        border: 1px solid rgba(255,255,255,0.08); 
+        border-radius: 12px; 
+        padding: 15px; 
+        color: #94a3b8; 
+        line-height: 1.7; 
+    }
 
-    .admin-panel { background: rgba(16, 185, 129, 0.03); border-radius: 20px; padding: 25px; border: 1px solid rgba(16, 185, 129, 0.1); }
-    .dark-input { background: #0b0e14 !important; border: 1px solid #1e293b !important; color: #fff !important; border-radius: 12px !important; padding: 12px !important; }
-    .btn-save-premium-success { background: var(--success); color: white; border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; transition: 0.3s; }
-    .btn-save-premium-success:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(5, 150, 105, 0.3); }
-    .btn-delete-danger { background: transparent; color: var(--danger); border: none; font-weight: 600; opacity: 0.7; transition: 0.3s; }
+    .admin-panel { 
+        background: rgba(255, 255, 255, 0.02); 
+        border-radius: 20px; 
+        padding: 25px; 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+    }
+    .panel-title {
+        color: #fff !important;
+        font-weight: 700;
+        border-right: 4px solid #0066ff;
+        padding-right: 15px;
+    }
+    .dark-input { 
+        background: rgba(15, 23, 42, 0.8) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+        color: #fff !important; 
+        border-radius: 12px !important; 
+        padding: 12px !important; 
+    }
+    .btn-save-premium-success { 
+        background: #00d1b2; 
+        color: white; 
+        border: none; 
+        border-radius: 12px; 
+        padding: 12px 35px; 
+        font-weight: 700; 
+        transition: 0.3s; 
+    }
+    .btn-save-premium-success:hover { 
+        background: #00bfa5; 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 20px rgba(0, 209, 178, 0.3); 
+    }
+    .btn-delete-danger { 
+        background: #363636; 
+        color: #f8fafc; 
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600; 
+        transition: 0.3s; 
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-delete-danger:hover {
+        background: #ef4444;
+        color: white;
+    }
 
     /* Animations */
     .animate-reveal-down { animation: revealDown 1s both; }
