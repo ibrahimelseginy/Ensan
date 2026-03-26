@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\AuditLogger::class,
         ]);
         $middleware->api(append: [
-            \App\Http\Middleware\CorsMiddleware::class,
+            //
         ]);
         $middleware->append(
             \App\Http\Middleware\CorsMiddleware::class,

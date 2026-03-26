@@ -28,48 +28,43 @@
     </div>
 
     {{-- Stats Row --}}
-    <div class="container-fluid mt-n5 px-4 mb-5">
+    <div class="container-fluid mt-n5 px-4 mb-4">
         <div class="row g-3">
-            <div class="col-md-3">
-                <div class="stat-card glass-card p-4 text-center animate-up">
-                    <div class="text-muted small mb-1">إجمالي طلبات الموبايل</div>
-                    <div class="fs-2 fw-bold text-white">{{ $mobileBookings->count() }}</div>
+            <div class="col-md-6">
+                <div class="stat-card glass-card p-4 animate-up" style="border-right: 5px solid #3b82f6;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-phone"></i>
+                        </div>
+                        <div>
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">إجمالي طلبات الموبايل</div>
+                            <div class="fs-2 fw-bold text-white lh-1">{{ $mobileBookings->count() }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card glass-card p-4 text-center animate-up" style="animation-delay:0.1s">
-                    <div class="text-info small mb-1">إجمالي طلبات الموقع</div>
-                    <div class="fs-2 fw-bold text-info">{{ $webBookings->count() }}</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card glass-card p-4 text-center animate-up" style="animation-delay:0.2s">
-                    <div class="text-warning small mb-1">قيد الانتظار (الكل)</div>
-                    <div class="fs-2 fw-bold text-warning">{{ $mobileBookings->where('status', 'pending')->count() + $webBookings->where('status', 'pending')->count() }}</div>
+            <div class="col-md-6">
+                <div class="stat-card glass-card p-4 animate-up" style="animation-delay:0.1s; border-right: 5px solid #f59e0b;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-circle bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">طلبات قيد الانتظار</div>
+                            <div class="fs-2 fw-bold text-warning lh-1">{{ $mobileBookings->where('status', 'pending')->count() }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="container-fluid px-4 pb-5">
-        {{-- Tabs for switching between App and Web --}}
-        <ul class="nav nav-pills mb-4 gap-2 justify-content-center" id="bookingTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill px-5 py-3 fw-bold shadow-sm border border-white border-opacity-10" id="app-tab" data-bs-toggle="pill" data-bs-target="#app-bookings" type="button" role="tab">
-                    طلبات التطبيق (App) <span class="badge bg-white bg-opacity-10 ms-2">{{ $mobileBookings->count() }}</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill px-5 py-3 fw-bold shadow-sm border border-white border-opacity-10" id="web-tab" data-bs-toggle="pill" data-bs-target="#web-bookings" type="button" role="tab">
-                    طلبات الموقع (Web) <span class="badge bg-white bg-opacity-10 ms-2">{{ $webBookings->count() }}</span>
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="bookingTabsContent">
-            {{-- App Bookings Tab --}}
-            <div class="tab-pane fade show active" id="app-bookings" role="tabpanel">
-                <div class="glass-card overflow-hidden">
+        <div class="glass-card overflow-hidden">
+            <div class="p-4 border-bottom border-white border-opacity-5 d-flex justify-content-between align-items-center bg-white bg-opacity-5">
+                <h5 class="mb-0 fw-bold text-white"><i class="bi bi-list-stars me-2 text-primary"></i> قائمة الطلبات الحالية</h5>
+                <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-20 rounded-pill px-3">مزامنة تلقائية</span>
+            </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0 text-white">
                             <thead class="bg-white bg-opacity-5">
@@ -180,123 +175,6 @@
                 </div>
             </div>
 
-            {{-- Web Bookings Tab --}}
-            <div class="tab-pane fade" id="web-bookings" role="tabpanel">
-                <div class="glass-card overflow-hidden">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 text-white">
-                            <thead class="bg-white bg-opacity-5">
-                                <tr>
-                                    <th class="py-4 ps-4">المستفيد (Web)</th>
-                                    <th class="py-4">تاريخ الوصول</th>
-                                    <th class="py-4 text-center">الحالة</th>
-                                    <th class="py-4 text-center">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($webBookings as $booking)
-                                <tr class="border-white border-opacity-5">
-                                    <td class="py-4 ps-4">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="avatar-text bg-info bg-opacity-20 text-info rounded-circle">
-                                                {{ mb_substr($booking->name, 0, 1) }}
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold fs-5 d-flex align-items-center gap-2">
-                                                    {{ $booking->name }}
-                                                    @if($booking->source == 'mobile')
-                                                        <span class="badge bg-primary bg-opacity-10 text-primary x-small">M</span>
-                                                    @else
-                                                        <span class="badge bg-info bg-opacity-10 text-info x-small">W</span>
-                                                    @endif
-                                                </div>
-                                                <div class="text-muted small"><i class="bi bi-telephone me-1"></i> {{ $booking->phone }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>{{ $booking->arrival_date }}</div>
-                                        <div class="badge bg-info bg-opacity-10 text-info mt-1 small">{{ $booking->expected_duration_arabic }}</div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge rounded-pill px-3 py-2 {{ $booking->status == 'pending' ? 'bg-warning text-dark' : ($booking->status == 'approved' ? 'bg-success' : 'bg-danger') }}">
-                                            {{ $booking->status == 'pending' ? 'قيد الانتظار' : ($booking->status == 'approved' ? 'مقبول' : 'مرفوض') }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-glass-secondary btn-sm rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#modalWeb{{ $booking->id }}">
-                                            <i class="bi bi-eye me-1"></i> عرض التفاصيل
-                                        </button>
-
-                                        {{-- Web Booking Detail Modal --}}
-                                        <div class="modal fade" id="modalWeb{{ $booking->id }}" tabindex="-1">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
-                                                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
-                                                        <h5 class="modal-title fw-bold">
-                                                            <i class="bi bi-globe me-2"></i> تفاصيل طلب الحجز (Web)
-                                                        </h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
-                                                        <div class="row g-4 mb-4">
-                                                            <div class="col-12">
-                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم المستفيد</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->name }}</div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
-                                                                <div style="color: #0066ff; font-size: 1.1rem; font-weight: 600;">{{ $booking->phone }}</div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الوصول المتوقع</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->arrival_date }}</div>
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدة المتوقعة</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->expected_duration_arabic }}</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="admin-panel mt-4 pt-4 border-top border-white border-opacity-10">
-                                                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;">اتخاذ قرار</h6>
-                                                            <div class="d-grid gap-2">
-                                                                <div class="row g-2">
-                                                                    <div class="col-6">
-                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
-                                                                            @csrf @method('PATCH')
-                                                                            <input type="hidden" name="status" value="approved">
-                                                                            <button type="submit" class="btn w-100" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
-                                                                        </form>
-                                                                    </div>
-                                                                    <div class="col-6">
-                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
-                                                                            @csrf @method('PATCH')
-                                                                            <input type="hidden" name="status" value="rejected">
-                                                                            <button type="submit" class="btn w-100" style="background: #dc2626; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
-                                                                        </form>
-                                                                    </div>
-                                                                    <div class="col-12">
-                                                                        <form action="{{ route('mobile.web_bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
-                                                                            @csrf @method('DELETE')
-                                                                            <button type="submit" class="btn w-100 mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">حذف السجل</button>
-                                                                        </form>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="4" class="py-5 text-center text-muted">لا توجد طلبات من الموقع</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -313,14 +191,13 @@
     .stat-card { transition: 0.3s; }
     .stat-card:hover { transform: translateY(-5px); border-color: rgba(59, 130, 246, 0.3); }
     
+    .icon-circle { width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    
     .avatar-text { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; }
     
     .btn-glass-secondary { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }
     
-    .nav-pills .nav-link { background: rgba(255,255,255,0.05); color: #cbd5e1; transition: 0.3s; }
-    .nav-pills .nav-link.active { background: #3b82f6; color: white; border-color: #3b82f6 !important; }
-    
-    .mt-n5 { margin-top: -3rem !important; }
+    .mt-n5 { margin-top: -3.5rem !important; }
     .animate-up { animation: fadeInUp 0.5s both; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>

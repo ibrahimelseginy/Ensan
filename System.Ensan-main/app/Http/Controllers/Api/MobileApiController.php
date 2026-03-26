@@ -391,24 +391,41 @@ class MobileApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'donor_name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20', // legacy
             'donor_phone' => 'required|string|max:20',
             'donor_address' => 'nullable|string',
             'donation_amount' => 'required|numeric|min:1',
             'donation_for' => 'required|string',
             'payment_method' => 'required|string',
             'notes' => 'nullable|string',
+            'account_number' => 'nullable|string',
+            'account_name' => 'nullable|string',
+            'proof' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:10240',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
-        $donation = \App\Models\MobileDonation::create($request->all());
+        \Log::info('Donation Request Data:', $request->all());
+        $data = $request->all();
+        $donation = \App\Models\MobileDonation::create($data);
+
+        // Handle File Upload (Receipt/Proof)
+        $file = $request->file('proof') ?: $request->file('image');
+        if ($file) {
+            try {
+                $donation->uploadImage($file, 'mobile/donations/receipts');
+            } catch (\Exception $e) {
+                \Log::error('Donation receipt upload failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Donation submitted successfully',
-            'data' => $donation
+            'data' => $donation->fresh()
         ], 201);
     }
 
@@ -424,6 +441,24 @@ class MobileApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $contacts
+        ]);
+    }
+
+    /**
+     * Get Profile Info for Mobile App (Currenty Guest)
+     */
+    public function getProfile()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => 0,
+                'name' => 'Guest User',
+                'email' => 'guest@ensan.app',
+                'phone' => '',
+                'is_verified' => false,
+                'joined_at' => now()->toDateTimeString(),
+            ]
         ]);
     }
 }

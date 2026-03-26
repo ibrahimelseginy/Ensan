@@ -78,20 +78,27 @@
                                 <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->donor_address ?? 'غير محدد' }}</div>
                             </div>
                             
-                            <hr class="my-2" style="opacity: 0.1; color: #fff;">
+                            <div class="col-md-6 info-group">
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم الحساب (انستاباي/فودافون)</label>
+                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->account_name ?? 'غير متوفر' }}</div>
+                            </div>
+                            <div class="col-md-6 info-group">
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الحساب المحول منه</label>
+                                <div class="info-val font-outfit" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->account_number ?? 'غير متوفر' }}</div>
+                            </div>
 
-                            <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">مبلغ التبرع</label>
-                                <div class="info-val text-success" style="color: #10b981 !important;">{{ number_format($donation->donation_amount) }} ج.م</div>
+                            @if($donation->receipt_path)
+                            <div class="col-12 info-group">
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">صورة إثبات التحويل</label>
+                                <div class="receipt-preview" style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                                    <a href="{{ asset('storage/' . $donation->receipt_path) }}" target="_blank">
+                                        <img src="{{ asset('storage/' . $donation->receipt_path) }}" class="img-fluid w-100" style="max-height: 400px; object-fit: contain; cursor: zoom-in;" alt="Receipt">
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">طريقة الدفع</label>
-                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->payment_method }}</div>
-                            </div>
-                            <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">التبرع موجه لـ</label>
-                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->donation_for }}</div>
-                            </div>
+                            @endif
+                            
+                            <hr class="my-2" style="opacity: 0.1; color: #fff;">
 
                             <div class="col-12 info-group">
                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">ملاحظات المتبرع</label>

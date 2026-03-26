@@ -5,6 +5,9 @@ $uri = urldecode(
 );
 
 if ($uri !== '/' && file_exists(__DIR__.'/public'.$uri)) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cache-Control, Accept, Origin");
     return false;
 }
 
