@@ -78,131 +78,101 @@
         {{-- Detail Modal --}}
         <div class="modal fade" id="modal{{ $request->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content premium-modal">
-                    <div class="modal-header">
+                <div class="modal-content border-0 shadow-lg" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
                         <h5 class="modal-title fw-bold">
-                            <i class="bi bi-person-lines-fill me-2"></i> تفاصيل مقدم الطلب
+                            <i class="bi bi-person-lines-fill me-2"></i> تفاصيل مقدم طلب التطوع
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
                         <div class="row g-4">
                             {{-- Basic Info --}}
                             <div class="col-md-4 info-group">
-                                <label>الإسم بالكامل</label>
-                                <div class="info-val">{{ $request->name }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الإسم بالكامل</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->name }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>رقم الهاتف</label>
-                                <div class="info-val font-outfit text-primary-glow">{{ $request->phone }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
+                                <div class="font-outfit" style="color: #0066ff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $request->phone }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>البريد الإلكتروني</label>
-                                <div class="info-val text-truncate">{{ $request->email ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">البريد الإلكتروني</label>
+                                <div class="text-truncate" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->email ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-4 info-group">
-                                <label>الرقم القومي</label>
-                                <div class="info-val font-outfit">{{ $request->national_id ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الرقم القومي</label>
+                                <div class="font-outfit" style="color: #fff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $request->national_id ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>تاريخ الميلاد</label>
-                                <div class="info-val">{{ $request->birth_date ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الميلاد</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->birth_date ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>النوع</label>
-                                <div class="info-val">{{ $request->gender == 'male' ? 'ذكر' : ($request->gender == 'female' ? 'أنثى' : ($request->gender ?? '-')) }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">النوع</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->gender == 'male' ? 'ذكر' : ($request->gender == 'female' ? 'أنثى' : ($request->gender ?? '-')) }}</div>
                             </div>
 
                             <div class="col-md-6 info-group">
-                                <label>العنوان الأصلي</label>
-                                <div class="info-val">{{ $request->address ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان الأصلي</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->address ?? '-' }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label>العنوان الحالي</label>
-                                <div class="info-val">{{ $request->current_address ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان الحالي</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->current_address ?? '-' }}</div>
                             </div>
 
-                            <hr class="my-2 opacity-10">
+                            <hr class="my-2" style="opacity: 0.1; color: #fff;">
 
                             {{-- Education & Work --}}
                             <div class="col-md-4 info-group">
-                                <label>المؤهل الدراسي</label>
-                                <div class="info-val">{{ $request->education_level ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المؤهل الدراسي</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->education_level ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>الكلية</label>
-                                <div class="info-val">{{ $request->faculty ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الكلية</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->faculty ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>الجامعة</label>
-                                <div class="info-val">{{ $request->university ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الجامعة</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->university ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-6 info-group">
-                                <label>الوظيفة الحالية</label>
-                                <div class="info-val">{{ $request->current_job ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الوظيفة الحالية</label>
+                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $request->current_job ?? '-' }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label>خبرة سابقة في التطوع</label>
-                                <div class="info-val">{{ $request->previous_experience == '1' ? 'نعم' : 'لا يوجد' }}</div>
-                            </div>
-
-                            <hr class="my-2 opacity-10">
-
-                            {{-- Skills and Motivation --}}
-                            <div class="col-md-6 info-group">
-                                <label>المهارات الشخصية</label>
-                                <div class="info-val small text-white-50">{{ $request->skills ?? '-' }}</div>
-                            </div>
-                            <div class="col-md-6 info-group">
-                                <label>توقعك من التطوع</label>
-                                <div class="info-val small text-white-50">{{ $request->expectations ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">اهتمامات التطوع</label>
+                                <div style="color: #0066ff; font-size: 1.1rem; font-weight: 700;">{{ $request->area_of_interest ?? '-' }}</div>
                             </div>
 
                             <div class="col-12 info-group">
-                                <label>الهدف من الانضمام إلينا</label>
-                                <div class="info-val small text-white-50">{{ $request->goal ?? '-' }}</div>
-                            </div>
-
-                            <div class="col-md-6 info-group">
-                                <label>ساعات التطوع المتاحة</label>
-                                <div class="info-val">{{ $request->volunteer_hours ?? '-' }}</div>
-                            </div>
-                            <div class="col-md-6 info-group">
-                                <label>اهتمامات التطوع</label>
-                                <div class="info-val text-primary-glow fw-bold">{{ $request->area_of_interest ?? '-' }}</div>
-                            </div>
-
-                            <div class="col-12 info-group">
-                                <label>الرسالة الإضافية</label>
-                                <div class="message-box">
-                                    "{{ $request->message ?? 'لا توجد رسالة مرفقة.' }}"
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الهدف من الانضمام</label>
+                                <div class="message-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #94a3b8; line-height: 1.7;">
+                                    "{{ $request->goal ?? '-' }}"
                                 </div>
                             </div>
                         </div>
 
-                        <div class="admin-panel mt-5">
-                            <h6 class="panel-title mb-3"><i class="bi bi-shield-lock me-2"></i> لوحة الإدارة</h6>
+                        <div class="admin-panel mt-5" style="background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;"><i class="bi bi-shield-lock me-2"></i> لوحة الإدارة</h6>
                             <form action="{{ route('mobile.volunteer-requests.update', $request->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label small opacity-75">الحالة الحالية</label>
-                                        <select name="status" class="form-select dark-input">
+                                        <label class="form-label small opacity-75" style="color: #94a3b8;">الحالة الحالية</label>
+                                        <select name="status" class="form-select" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-radius: 12px !important; padding: 12px !important;">
                                             <option value="new" {{ $request->status == 'new' ? 'selected' : '' }}>جديد (New)</option>
                                             <option value="contacted" {{ $request->status == 'contacted' ? 'selected' : '' }}>تم التواصل (Contacted)</option>
                                             <option value="accepted" {{ $request->status == 'accepted' ? 'selected' : '' }}>مقبول (Accepted)</option>
                                             <option value="rejected" {{ $request->status == 'rejected' ? 'selected' : '' }}>مرفوض (Rejected)</option>
                                         </select>
                                     </div>
-                                    <div class="col-12">
-                                        <label class="form-label small opacity-75">ملاحظات الإدارة الداخلية</label>
-                                        <textarea name="admin_notes" class="form-control dark-input" rows="3">{{ $request->admin_notes }}</textarea>
-                                    </div>
                                     <div class="col-12 mt-4 d-flex justify-content-between">
-                                        <button type="submit" class="btn btn-save-premium">حفظ التعديلات</button>
-                                        <button type="button" class="btn btn-delete-danger" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $request->id }}').submit()">حذف الطلب</button>
+                                        <button type="submit" class="btn" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px 35px; font-weight: 700;">حفظ التعديلات</button>
+                                        <button type="button" class="btn" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px 20px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $request->id }}').submit()">حذف الطلب</button>
                                     </div>
                                 </div>
                             </form>

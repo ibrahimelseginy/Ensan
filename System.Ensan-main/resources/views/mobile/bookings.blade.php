@@ -104,31 +104,70 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-glass-secondary btn-sm rounded-3" data-bs-toggle="dropdown">تحكم <i class="bi bi-chevron-down ms-1"></i></button>
-                                            <ul class="dropdown-menu dropdown-menu-dark">
-                                                <li>
-                                                    <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="approved">
-                                                        <button type="submit" class="dropdown-item text-success"><i class="bi bi-check-circle me-1"></i> قبول</button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="rejected">
-                                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle me-1"></i> رفض</button>
-                                                    </form>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <form action="{{ route('mobile.bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="dropdown-item text-muted"><i class="bi bi-trash me-1"></i> حذف</button>
-                                                    </form>
-                                                </li>
-                                            </ul>
+                                        <button class="btn btn-glass-secondary btn-sm rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#modalApp{{ $booking->id }}">
+                                            <i class="bi bi-eye me-1"></i> عرض التفاصيل
+                                        </button>
+
+                                        {{-- App Booking Detail Modal --}}
+                                        <div class="modal fade" id="modalApp{{ $booking->id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                                                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
+                                                        <h5 class="modal-title fw-bold">
+                                                            <i class="bi bi-house-heart me-2"></i> تفاصيل طلب الحجز (App)
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
+                                                        <div class="row g-4 mb-4">
+                                                            <div class="col-12">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم المستفيد</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->name }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
+                                                                <div style="color: #0066ff; font-size: 1.1rem; font-weight: 600;">{{ $booking->phone }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الوصول المتوقع</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->arrival_date }}</div>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدة المتوقعة</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->expected_duration_arabic }}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="admin-panel mt-4 pt-4 border-top border-white border-opacity-10">
+                                                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;">اتخاذ قرار</h6>
+                                                            <div class="d-grid gap-2">
+                                                                <div class="row g-2">
+                                                                    <div class="col-6">
+                                                                        <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
+                                                                            @csrf @method('PATCH')
+                                                                            <input type="hidden" name="status" value="approved">
+                                                                            <button type="submit" class="btn w-100" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
+                                                                            @csrf @method('PATCH')
+                                                                            <input type="hidden" name="status" value="rejected">
+                                                                            <button type="submit" class="btn w-100" style="background: #dc2626; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <form action="{{ route('mobile.bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
+                                                                            @csrf @method('DELETE')
+                                                                            <button type="submit" class="btn w-100 mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">حذف السجل</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -185,31 +224,70 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-glass-secondary btn-sm rounded-3" data-bs-toggle="dropdown">تحكم <i class="bi bi-chevron-down ms-1"></i></button>
-                                            <ul class="dropdown-menu dropdown-menu-dark">
-                                                <li>
-                                                    <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="approved">
-                                                        <button type="submit" class="dropdown-item text-success"><i class="bi bi-check-circle me-1"></i> قبول</button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="rejected">
-                                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle me-1"></i> رفض</button>
-                                                    </form>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <form action="{{ route('mobile.web_bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="dropdown-item text-muted"><i class="bi bi-trash me-1"></i> حذف</button>
-                                                    </form>
-                                                </li>
-                                            </ul>
+                                        <button class="btn btn-glass-secondary btn-sm rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#modalWeb{{ $booking->id }}">
+                                            <i class="bi bi-eye me-1"></i> عرض التفاصيل
+                                        </button>
+
+                                        {{-- Web Booking Detail Modal --}}
+                                        <div class="modal fade" id="modalWeb{{ $booking->id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                                                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
+                                                        <h5 class="modal-title fw-bold">
+                                                            <i class="bi bi-globe me-2"></i> تفاصيل طلب الحجز (Web)
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
+                                                        <div class="row g-4 mb-4">
+                                                            <div class="col-12">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم المستفيد</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->name }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
+                                                                <div style="color: #0066ff; font-size: 1.1rem; font-weight: 600;">{{ $booking->phone }}</div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الوصول المتوقع</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->arrival_date }}</div>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدة المتوقعة</label>
+                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->expected_duration_arabic }}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="admin-panel mt-4 pt-4 border-top border-white border-opacity-10">
+                                                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;">اتخاذ قرار</h6>
+                                                            <div class="d-grid gap-2">
+                                                                <div class="row g-2">
+                                                                    <div class="col-6">
+                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
+                                                                            @csrf @method('PATCH')
+                                                                            <input type="hidden" name="status" value="approved">
+                                                                            <button type="submit" class="btn w-100" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
+                                                                            @csrf @method('PATCH')
+                                                                            <input type="hidden" name="status" value="rejected">
+                                                                            <button type="submit" class="btn w-100" style="background: #dc2626; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <form action="{{ route('mobile.web_bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
+                                                                            @csrf @method('DELETE')
+                                                                            <button type="submit" class="btn w-100 mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">حذف السجل</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

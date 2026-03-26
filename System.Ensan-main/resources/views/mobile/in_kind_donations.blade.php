@@ -73,18 +73,18 @@
 
                             {{-- Donation Detail Modal --}}
                             <div class="modal fade" id="viewDonation{{ $donation->id }}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content glass-card border-0">
-                                        <div class="modal-header border-0 bg-orange text-dark">
-                                            <h5 class="modal-title fw-bold">إدارة استلام التبرع</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                                        <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
+                                            <h5 class="modal-title fw-bold">إدارة استلام التبرع العيني</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                         </div>
-                                        <div class="modal-body p-4 bg-light bg-opacity-25">
+                                        <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
                                             <div class="text-center mb-4">
                                                 @if($donation->image_path)
-                                                    <img src="{{ $donation->image_url }}" class="rounded-3 shadow-sm w-100 object-fit-cover" style="height: 200px;">
+                                                    <img src="{{ $donation->image_url }}" class="rounded-3 shadow-sm w-100 object-fit-cover" style="height: 200px; border: 1px solid rgba(255,255,255,0.1);">
                                                 @else
-                                                    <div class="bg-light border rounded-3 d-flex align-items-center justify-content-center text-muted" style="height: 150px;">
+                                                    <div class="rounded-3 d-flex align-items-center justify-content-center text-muted" style="height: 150px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
                                                         <div class="text-center">
                                                             <i class="bi bi-box-seam display-1 opacity-25"></i>
                                                             <p class="mb-0 small">لا توجد صورة للتبرع</p>
@@ -94,26 +94,26 @@
                                             </div>
                                             
                                             <div class="mb-3">
-                                                <label class="form-label x-small fw-bold text-uppercase text-muted">وصف العنصر</label>
-                                                <div class="bg-white p-3 rounded border">{{ $donation->item_description ?? 'لا يوجد وصف' }}</div>
+                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">وصف العنصر</label>
+                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #fff;">{{ $donation->item_description ?? 'لا يوجد وصف' }}</div>
                                             </div>
 
                                             <div class="mb-3">
-                                                <label class="form-label x-small fw-bold text-uppercase text-muted">العنوان بالتفصيل</label>
-                                                <div class="bg-white p-3 rounded border">{{ $donation->pickup_address }}</div>
+                                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان بالتفصيل</label>
+                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #fff;">{{ $donation->pickup_address }}</div>
                                                 <div class="d-grid mt-2">
-                                                    <a href="https://maps.google.com/?q={{ urlencode($donation->pickup_address) }}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> فتح الموقع في خرائط Google</a>
+                                                    <a href="https://maps.google.com/?q={{ urlencode($donation->pickup_address) }}" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> عرض على الخريطة</a>
                                                 </div>
                                             </div>
 
-                                            <hr class="my-4">
+                                            <hr class="my-4" style="opacity: 0.1; color: #fff;">
                                             
                                             <form action="{{ route('mobile.inkind.update', $donation) }}" method="POST">
                                                 @csrf @method('PATCH')
                                                 <div class="d-grid gap-2">
-                                                    <button type="submit" name="status" value="scheduled" class="btn btn-info text-white fw-bold py-2"><i class="bi bi-calendar-check me-2"></i> جدولة موعد الاستلام</button>
-                                                    <button type="submit" name="status" value="collected" class="btn btn-success fw-bold py-2"><i class="bi bi-check-circle-fill me-2"></i> تم استلام التبرع</button>
-                                                    <button type="submit" name="status" value="rejected" class="btn btn-outline-danger btn-sm mt-2">رفض التبرع</button>
+                                                    <button type="submit" name="status" value="scheduled" class="btn" style="background: #0066ff; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-calendar-check me-2"></i> جدولة موعد الاستلام</button>
+                                                    <button type="submit" name="status" value="collected" class="btn" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-check-circle-fill me-2"></i> تم استلام التبرع</button>
+                                                    <button type="submit" name="status" value="rejected" class="btn btn-sm mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 8px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">رفض التبرع</button>
                                                 </div>
                                             </form>
                                         </div>

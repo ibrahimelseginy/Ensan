@@ -90,55 +90,55 @@
         {{-- Detail Modal --}}
         <div class="modal fade" id="modal{{ $app->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content premium-modal shadow-danger">
-                    <div class="modal-header header-danger">
+                <div class="modal-content border-0 shadow-lg" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
                         <h5 class="modal-title fw-bold">
                             <i class="bi bi-heart-pulse-fill me-2"></i> دراسة حالة مستحقة (تطبيق)
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
                         <div class="row g-4 mb-4">
                             <div class="col-md-6 info-group">
-                                <label>إسم مقدم الطلب</label>
-                                <div class="info-val">{{ $app->applicant_name }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم مقدم الطلب</label>
+                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $app->applicant_name }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label>رقم الهاتف</label>
-                                <div class="info-val font-outfit text-danger-glow">{{ $app->applicant_phone }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
+                                <div class="info-val font-outfit" style="color: #0066ff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $app->applicant_phone }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>نوع المشروع</label>
-                                <div class="info-val text-uppercase">{{ $app->case_type }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">نوع المشروع</label>
+                                <div class="info-val text-uppercase" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $app->case_type }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>المحافظة</label>
-                                <div class="info-val">{{ $app->governorate ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المحافظة</label>
+                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $app->governorate ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>المدينة/المركز</label>
-                                <div class="info-val">{{ $app->city ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدينة/المركز</label>
+                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $app->city ?? '-' }}</div>
                             </div>
                             <div class="col-12 info-group">
-                                <label>العنوان بالتفصيل</label>
-                                <div class="info-val">{{ $app->address ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان بالتفصيل</label>
+                                <div class="info-val" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $app->address ?? '-' }}</div>
                             </div>
                             <div class="col-12 info-group">
-                                <label>وصف الحالة والإحتياجات</label>
-                                <div class="message-box">
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">وصف الحالة والإحتياجات</label>
+                                <div class="message-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #94a3b8; line-height: 1.7;">
                                     {{ $app->description }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="admin-panel mt-5">
-                            <h6 class="panel-title mb-3 text-danger-glow"><i class="bi bi-shield-lock me-2"></i> قرار الإدارة</h6>
+                        <div class="admin-panel mt-5" style="background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;"><i class="bi bi-shield-lock me-2"></i> قرار الإدارة</h6>
                             <form action="{{ route('mobile.case-applications.update', $app->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label small opacity-75">تغيير حالة الطلب</label>
-                                        <select name="status" class="form-select dark-input">
+                                        <label class="form-label small opacity-75" style="color: #94a3b8;">تغيير حالة الطلب</label>
+                                        <select name="status" class="form-select" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-radius: 12px !important; padding: 12px !important;">
                                             <option value="pending" {{ $app->status == 'pending' ? 'selected' : '' }}>بانتظار المراجعة</option>
                                             <option value="reviewed" {{ $app->status == 'reviewed' ? 'selected' : '' }}>قيد الدراسة</option>
                                             <option value="accepted" {{ $app->status == 'accepted' ? 'selected' : '' }}>مقبول (Accepted)</option>
@@ -146,12 +146,12 @@
                                         </select>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label small opacity-75">ملاحظات الباحث الاجتماعي / الإدارة</label>
-                                        <textarea name="admin_notes" class="form-control dark-input" rows="3">{{ $app->admin_notes }}</textarea>
+                                        <label class="form-label small opacity-75" style="color: #94a3b8;">ملاحظات الباحث الاجتماعي / الإدارة</label>
+                                        <textarea name="admin_notes" class="form-control" rows="3" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-radius: 12px !important; padding: 12px !important;">{{ $app->admin_notes }}</textarea>
                                     </div>
                                     <div class="col-12 mt-4 d-flex justify-content-between">
-                                        <button type="submit" class="btn btn-save-premium-danger">حفظ القرار التعديلات</button>
-                                        <button type="button" class="btn btn-delete-danger" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $app->id }}').submit()">حذف الطلب</button>
+                                        <button type="submit" class="btn" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px 35px; font-weight: 700;">حفظ القرار والتعديلات</button>
+                                        <button type="button" class="btn" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px 20px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $app->id }}').submit()">حذف الطلب</button>
                                     </div>
                                 </div>
                             </form>
