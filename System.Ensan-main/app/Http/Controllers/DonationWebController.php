@@ -22,7 +22,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-final readonly class DonationWebController extends Controller
+final class DonationWebController extends Controller
 {
     public function __construct(
         private DonationService $donationService

@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class DonationController extends Controller
+final class DonationController extends Controller
 {
     public function __construct(
         private DonationService $donationService

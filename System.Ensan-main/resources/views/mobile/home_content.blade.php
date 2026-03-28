@@ -186,11 +186,10 @@
                                 </div>
                                 <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->description }}</small>
                             </div>
-                            <div class="d-flex gap-1">
-                                <button class="btn btn-sm btn-link text-primary p-0" data-bs-toggle="modal" data-bs-target="#editShareModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
-                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST">
+                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editShareModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('حذف؟')"><i class="bi bi-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -222,11 +221,11 @@
                                 <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
                                 <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->details }}</small>
                             </div>
-                            <div class="d-flex gap-1">
-                                <button class="btn btn-sm btn-link text-primary p-0" data-bs-toggle="modal" data-bs-target="#editCampModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
-                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editCampModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" onclick="return confirm('حذف؟')"><i class="bi bi-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
                                 </form>
                             </div>
                         </div>

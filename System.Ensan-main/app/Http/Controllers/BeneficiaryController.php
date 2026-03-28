@@ -12,7 +12,7 @@ use App\Http\Requests\UpdateBeneficiaryRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final readonly class BeneficiaryController extends Controller
+final class BeneficiaryController extends Controller
 {
     public function __construct(
         private BeneficiaryService $beneficiaryService
