@@ -21,6 +21,17 @@ final readonly class TaskRepository
             ->paginate($perPage);
     }
 
+    public function paginateVolunteerTasks(array $filters, int $perPage = 50): LengthAwarePaginator
+    {
+        $assignedTo = $filters['assigned_to'] ?? null;
+
+        return Task::whereHas('assignee', fn($q) => $q->where('is_volunteer', true))
+            ->with(['assignee', 'assigner'])
+            ->when($assignedTo, fn($q) => $q->where('assigned_to', $assignedTo))
+            ->orderByDesc('id')
+            ->paginate($perPage);
+    }
+
     public function findById(int $id): ?Task
     {
         return Task::with(['assignee', 'assigner', 'project', 'campaign', 'guestHouse'])->find($id);

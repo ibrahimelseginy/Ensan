@@ -22,6 +22,11 @@ final readonly class TaskService
         return $this->taskRepository->paginateEmployeeTasks($filters, $perPage);
     }
 
+    public function getVolunteerTasks(array $filters, int $perPage = 50): LengthAwarePaginator
+    {
+        return $this->taskRepository->paginateVolunteerTasks($filters, $perPage);
+    }
+
     public function findTaskById(int $id): ?Task
     {
         return $this->taskRepository->findById($id);
