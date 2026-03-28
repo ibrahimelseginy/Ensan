@@ -28,7 +28,7 @@
     </div>
 
     {{-- Stats Row --}}
-    <div class="container-fluid mt-n5 px-4 mb-4">
+    <div class="container-fluid pt-4 px-4 mb-4">
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="stat-card glass-card p-4 animate-up" style="border-right: 5px solid #3b82f6;">

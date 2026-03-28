@@ -11,7 +11,7 @@ use App\Http\Requests\UpdateDonorRequest;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class DonorController extends Controller
+final class DonorController extends Controller
 {
     public function __construct(
         private DonorService $donorService

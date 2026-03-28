@@ -125,7 +125,7 @@ final class MobileApiController extends Controller
             ->get()
             ->map(function($item) {
                 // Ensure image_url is returned for the mobile app dynamically based on host
-                $item->image_url = $item->image_path ? asset('storage/' . $item->image_path) : null;
+                $item->image_url = $item->image_path ? url('/api/media?path=' . $item->image_path) : null;
                 return $item;
             });
 
@@ -391,9 +391,27 @@ final class MobileApiController extends Controller
      */
     public function submitDonation(Request $request)
     {
+        // 🛠️ ذكاء اصطناعي لتحويل البيانات القادمة من الموبايل (لتجنب الـ 422)
+        // إذا أرسل المبرمج حقول بأسماء مختلفة، نقوم بتوحيدها قبل الـ Validation
+        $input = $request->all();
+        
+        // التحويلات الشائعة (Mapping)
+        if (!isset($input['donor_name']) && isset($input['name'])) $input['donor_name'] = $input['name'];
+        if (!isset($input['donor_phone']) && isset($input['phone'])) $input['donor_phone'] = $input['phone'];
+        if (!isset($input['donor_phone']) && isset($input['phoneNumber'])) $input['donor_phone'] = $input['phoneNumber'];
+        
+        if (!isset($input['donation_amount']) && isset($input['amount'])) $input['donation_amount'] = $input['amount'];
+        
+        if (!isset($input['donation_for']) && isset($input['project_id'])) $input['donation_for'] = "Project ID: " . $input['project_id'];
+        if (!isset($input['donation_for']) && isset($input['campaign_id'])) $input['donation_for'] = "Campaign ID: " . $input['campaign_id'];
+        
+        if (!isset($input['payment_method']) && isset($input['method'])) $input['payment_method'] = $input['method'];
+
+        // دمج الحقول المحولة في طلب جديد لتطبيق الـ Validation عليها
+        $request->merge($input);
+
         $validator = Validator::make($request->all(), [
             'donor_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20', // legacy
             'donor_phone' => 'required|string|max:20',
             'donor_address' => 'nullable|string',
             'donation_amount' => 'required|numeric|min:1',
@@ -407,18 +425,27 @@ final class MobileApiController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            \Log::warning('Mobile Donation Validation Failed:', [
+                'errors' => $validator->errors()->toArray(),
+                'input' => $request->all()
+            ]);
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'بيانات التبرع غير مكتملة أو غير صالحة',
+                'errors' => $validator->errors(),
+                'received_data' => $request->all() // مفيد جداً للمبرمج لتصحيح الخطأ
+            ], 422);
         }
 
         \Log::info('Donation Request Data:', $request->all());
         $data = $request->all();
         
-        // Fallback for Flutter apps sending camelCase or alternative keys
-        if (!isset($data['account_number'])) {
-            $data['account_number'] = $request->input('accountNumber') ?? $request->input('sender_number') ?? $request->input('from_account');
+        // Fallback for Flutter apps sending alternative keys for digital payments (Instapay / Vodafone Cash)
+        if (!isset($data['account_number']) || empty($data['account_number'])) {
+            $data['account_number'] = $request->input('accountNumber') ?? $request->input('sender_number') ?? $request->input('senderNumber') ?? $request->input('from_account');
         }
-        if (!isset($data['account_name'])) {
-            $data['account_name'] = $request->input('accountName') ?? $request->input('sender_name');
+        if (!isset($data['account_name']) || empty($data['account_name'])) {
+            $data['account_name'] = $request->input('accountName') ?? $request->input('sender_name') ?? $request->input('senderName');
         }
 
         $donation = \App\Models\MobileDonation::create($data);
@@ -506,5 +533,17 @@ final class MobileApiController extends Controller
             ]
         ]);
     }
-}
 
+    /**
+     * Get Single Donation Details
+     */
+    public function showDonation(\App\Models\MobileDonation $donation)
+    {
+        $donation->receipt_url = $donation->receipt_path ? $donation->getFileUrl('receipt_path') : null;
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $donation
+        ]);
+    }
+}

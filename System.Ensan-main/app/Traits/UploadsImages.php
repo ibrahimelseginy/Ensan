@@ -87,7 +87,12 @@ trait UploadsImages
             return null;
         }
 
-        // استخدام asset لضمان إنتاج الرابط بشكل ديناميكي بناءً على الـ Host الذي دخل منه الطلب (مفيد جداً للموبايل)
+        // استخدام المسار المباشر إن أمكن، أو المسار عبر الميديا بروكسي (CORS fix for Mobile/Flutter)
+        // إذا كان الطلب من API أو نحن في البيئة المحلية، نفضل استخدام الميديا بروكسي لضمان الـ CORS
+        if (request()->is('api/*') || app()->environment('local')) {
+            return url('/api/media?path=' . $path);
+        }
+
         return asset('storage/' . $path);
     }
     

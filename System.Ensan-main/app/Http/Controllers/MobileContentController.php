@@ -268,6 +268,36 @@ final class MobileContentController extends Controller
         return back()->with('success', 'News added');
     }
 
+    public function newsUpdate(Request $request, \App\Models\MobileNews $news)
+    {
+        $data = $request->validate([
+            'title'                  => 'required|string',
+            'content'                => 'required|string',
+            'category'               => 'nullable|string',
+            'image'                  => 'nullable|image|max:5120',
+            'delete_image'           => 'nullable|boolean',
+            'published_at'           => 'nullable|date',
+            'views_count'            => 'nullable|string',
+            'shares_count'           => 'nullable|string',
+            'statistic_number'       => 'nullable|string',
+            'statistic_description'  => 'nullable|string',
+            'contact_name'           => 'nullable|string',
+            'contact_number'         => 'nullable|string',
+        ]);
+
+        unset($data['image'], $data['delete_image']);
+        $news->update($data);
+
+        if ($request->hasFile('image')) {
+            $news->uploadImage($request->file('image'), 'mobile/news');
+        } elseif ($request->input('delete_image') == '1' && $news->image_path) {
+            Storage::disk('public')->delete($news->image_path);
+            $news->update(['image_path' => null]);
+        }
+
+        return back()->with('success', 'تم تحديث الخبر بنجاح');
+    }
+
     public function newsDestroy(\App\Models\MobileNews $news)
     {
         $news->delete();

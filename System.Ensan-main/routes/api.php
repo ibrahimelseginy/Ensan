@@ -33,6 +33,9 @@ use App\Http\Controllers\Api\DonationController as ApiDonationController;
 use App\Http\Controllers\Api\AdminDonationController as ApiAdminDonationController;
 // Mobile API routes are in routes/mobile_api.php (loaded via bootstrap/app.php)
 
+use App\Http\Controllers\MediaController;
+
+Route::get('/media', [MediaController::class, 'serve'])->name('media.serve');
 Route::prefix('v1')->group(function () {
     Route::get('/', function () {
             return response()->json(['status' => 'ok']);

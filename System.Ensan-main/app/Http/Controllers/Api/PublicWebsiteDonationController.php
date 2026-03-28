@@ -55,12 +55,44 @@ final class PublicWebsiteDonationController extends Controller
         }
 
         try {
+            $paymentMethod = strtolower($request->payment_method);
+            $isMobileMethod = in_array($paymentMethod, ['instapay', 'vodafone_cash', 'vodafone']);
+
             $data = $request->only(['donor_name', 'donor_phone', 'amount', 'category_id', 'target_id', 'payment_method', 'notes']);
+            
+            if ($isMobileMethod) {
+                // Route to MobileDonation model for specific dashboard tracking
+                $mobileData = [
+                    'donor_name'      => $request->donor_name,
+                    'donor_phone'     => $request->donor_phone,
+                    'donation_amount' => $request->amount,
+                    'payment_method'  => $request->payment_method,
+                    'notes'           => $request->notes,
+                    'donation_for'    => \App\Models\DonationCategory::find($request->category_id)?->name ?? 'عام',
+                    'status'          => 'pending',
+                    'account_number'  => $request->account_number ?? $request->sender_number ?? $request->from_account,
+                    'account_name'    => $request->account_name ?? $request->sender_name,
+                ];
+                
+                $mobileDonation = \App\Models\MobileDonation::create($mobileData);
+                
+                if ($request->hasFile('proof')) {
+                    $mobileDonation->uploadImage($request->file('proof'), 'mobile/donations/receipts');
+                }
+                
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'تم استلام طلب التبرع عبر ' . $request->payment_method . ' بنجاح، بانتظار المراجعة.',
+                    'donation_id' => $mobileDonation->id
+                ], 201);
+            }
+
+            // Standard donation flow for other methods
             if ($request->hasFile('proof')) {
                 $data['proof_file'] = $request->file('proof');
             }
 
-            // Link with authenticated user if present (resolved by AnasenApiAuth middleware)
+            // Link with authenticated user if present
             $user = $request->user();
             if ($user && $user instanceof \App\Models\WebDonor) {
                 $data['web_donor_id'] = $user->id;

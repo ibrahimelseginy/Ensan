@@ -387,6 +387,7 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             // News
             Route::get('/news', [MobileContentController::class, 'newsIndex'])->name('news.index');
             Route::post('/news', [MobileContentController::class, 'newsStore'])->name('news.store');
+            Route::match(['put', 'post'], '/news/{news}', [MobileContentController::class, 'newsUpdate'])->name('news.update');
             Route::delete('/news/{news}', [MobileContentController::class, 'newsDestroy'])->name('news.destroy');
 
             // Contact Messages

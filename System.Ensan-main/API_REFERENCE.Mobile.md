@@ -504,6 +504,9 @@
 | `donation_amount` | `numeric` | ✅ | min: 1 | مبلغ التبرع |
 | `donation_for` | `string` | ✅ | — | التبرع موجه لـ (عام، مشروع معين، إلخ) |
 | `payment_method` | `string` | ✅ | — | طريقة الدفع (Cash, Fawry, Card...) |
+| `account_number` | `string` | ❌ | — | رقم الحساب في حال الدفع (موبايل) |
+| `account_name` | `string` | ❌ | — | اسم الحساب في حال الدفع (موبايل) |
+| `proof` | `file` | ❌ | image, max: 10MB | صورة إثبات التحويل (سكرين شوت) |
 | `notes` | `string` | ❌ | — | ملاحظات إضافية |
 
 **Response `201`:**
@@ -517,21 +520,71 @@
     "donor_phone": "01012345678",
     "donation_amount": 1000,
     "donation_for": "مشروع زاد الأيتام",
+    "payment_method": "Instapay",
+    "account_number": "0101xxx",
+    "account_name": "Ibrahim",
+    "receipt_path": "mobile/donations/receipts/abc.jpg",
     "status": "pending",
     "created_at": "2026-03-11T14:30:00.000000Z"
   }
 }
 ```
 
-**القيم المحتملة لـ `target_audience`:**
+---
 
-| القيمة | الوصف |
-|--------|-------|
-| `all` | جميع مستخدمي التطبيق |
-| `donors` | المتبرعون فقط |
-| `beneficiaries` | المستفيدون فقط |
+## 💰 11. سجلات التبرع (Donation Records)
 
-> **ملاحظة:** الإشعارات تُضاف وتُدار حصرياً من لوحة التحكم ← تطبيق الموبايل ← الإشعارات.
+### 11a. قائمة التبرعات
+> `GET /api/v1/mobile/donation-records?phone=010...`
+
+يسترجع جميع التبرعات المرتبطة برقم الهاتف.
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 5,
+      "donor_name": "إبراهيم الفيل",
+      "donation_amount": 1000,
+      "receipt_url": "http://192.168.1.112:8000/api/media?path=mobile/donations/receipts/abc.jpg",
+      "status": "pending",
+      "created_at": "2026-03-11T14:30:00.000000Z"
+    }
+  ],
+  "stats": {
+    "total_amount": 1000,
+    "total_count": 1
+  }
+}
+```
+
+---
+
+### 11b. تفاصيل التبرع
+> `GET /api/v1/mobile/donation/{id}`
+
+يسترجع تفاصيل كاملة لتبرع معين.
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 5,
+    "donor_name": "إبراهيم الفيل",
+    "donation_amount": 1000,
+    "donation_for": "مشروع زاد الأيتام",
+    "payment_method": "Instapay",
+    "account_number": "010xxx",
+    "account_name": "Ibrahim",
+    "receipt_url": "http://192.168.1.112:8000/api/media?path=mobile/donations/receipts/abc.jpg",
+    "status": "pending",
+    "created_at": "2026-03-11T14:30:00.000000Z"
+  }
+}
+```
 
 ---
 

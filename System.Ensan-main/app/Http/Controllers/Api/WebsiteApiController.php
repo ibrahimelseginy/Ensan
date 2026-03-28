@@ -107,7 +107,7 @@ final class WebsiteApiController extends Controller
             for ($i = 1; $i <= 6; $i++) {
                 $path = $settings['gallery_image_' . $i] ?? null;
                 if ($path) {
-                    $gallery[] = asset('storage/' . $path);
+                    $gallery[] = url('/api/media?path=' . $path);
                 }
             }
 
@@ -116,7 +116,7 @@ final class WebsiteApiController extends Controller
                 for ($i = 1; $i <= 10; $i++) {
                     $path = $settings["gh_slider_$i"] ?? null;
                     if ($path) {
-                        $gallery[] = asset('storage/' . $path);
+                        $gallery[] = url('/api/media?path=' . $path);
                     }
                 }
             }
@@ -126,7 +126,7 @@ final class WebsiteApiController extends Controller
             for ($i = 1; $i <= 10; $i++) {
                 $path = $settings["news_slider_$i"] ?? null;
                 if ($path) {
-                    $newsSlider[] = asset('storage/' . $path);
+                    $newsSlider[] = url('/api/media?path=' . $path);
                 }
             }
 
@@ -137,7 +137,7 @@ final class WebsiteApiController extends Controller
                 'description' => $s('hero_description'),
                 'primary_button_text' => $s('hero_primary_button_text', 'تبرع الان'),
                 'primary_button_link' => $s('hero_primary_button_link', 'http://127.0.0.1:4200/donate'),
-                'image' => !empty($settings['hero_image']) ? asset('storage/' . $settings['hero_image']) : null,
+                'image' => !empty($settings['hero_image']) ? url('/api/media?path=' . $settings['hero_image']) : null,
                 'stat_beneficiaries' => $s('stats_beneficiaries', '300K'),
                 'stat_donations' => $s('stats_donations', '13M+'),
                 'stat_projects' => $s('stats_projects', '400K'),
