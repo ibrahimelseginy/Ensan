@@ -1,34 +1,39 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\FinancialClosure;
-use App\Models\JournalEntry;
+use App\Services\FinancialClosureService;
+use App\Http\Requests\StoreFinancialClosureRequest;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-final class FinancialClosureController extends Controller
+final readonly class FinancialClosureController extends Controller
 {
-    public function index() { return FinancialClosure::orderByDesc('date')->paginate(20); }
-    public function store(Request $request)
+    public function __construct(
+        private FinancialClosureService $financialClosureService
+    ) {}
+
+    public function index(): LengthAwarePaginator
     {
-        $data = $request->validate([
-            'date' => 'required|date',
-            'branch' => 'nullable|string'
-        ]);
-        $data['closed_by'] = $request->user() ? $request->user()->id : null;
-        $closure = FinancialClosure::create($data);
-        JournalEntry::whereDate('date','<=',$data['date'])
-            ->when($data['branch'] ?? null, function($q,$b){ $q->where('branch',$b); })
-            ->update(['locked' => true]);
-        return $closure;
+        return $this->financialClosureService->getAllClosures(20);
     }
-    public function approve(Request $request, FinancialClosure $closure)
+
+    public function store(StoreFinancialClosureRequest $request): mixed
     {
-        $closure->update([
-            'approved' => true,
-            'approved_by' => $request->user() ? $request->user()->id : null,
-        ]);
-        return $closure;
+        $userId = $request->user()?->id;
+        // API often approves immediately or follows specific rules.
+        // For simplicity, let's keep the core closure creation.
+        return $this->financialClosureService->createClosure($request->validated(), $userId, true);
+    }
+
+    public function approve(Request $request, FinancialClosure $closure): FinancialClosure
+    {
+        $userId = (int)($request->user()?->id ?? 0);
+        $this->financialClosureService->approveClosure($closure, $userId);
+        
+        return $closure->fresh();
     }
 }

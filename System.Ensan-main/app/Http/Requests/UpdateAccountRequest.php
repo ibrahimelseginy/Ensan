@@ -16,10 +16,13 @@ final class UpdateAccountRequest extends FormRequest
     public function rules(): array
     {
         $accountId = $this->route('account')?->id;
+
         return [
-            'code' => 'sometimes|string|unique:accounts,code,' . ($accountId ?? ''),
-            'name' => 'sometimes|string',
-            'type' => 'sometimes|in:asset,liability,equity,revenue,expense'
+            'code'        => 'required|string|max:20|unique:accounts,code,' . ($accountId ?? ''),
+            'name'        => 'required|string|max:255',
+            'type'        => 'required|in:asset,liability,equity,revenue,expense',
+            'parent_id'   => 'nullable|exists:accounts,id',
+            'description' => 'nullable|string'
         ];
     }
 }

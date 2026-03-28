@@ -5,75 +5,47 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\ChangeRequest;
+use App\Services\SupplierService;
+use App\Http\Requests\StoreSupplierRequest;
+use App\Http\Requests\UpdateSupplierRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
-final class SupplierWebController extends Controller
+final readonly class SupplierWebController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Supplier::query();
-        if ($request->has('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%')
-                ->orWhere('phone', 'like', '%' . $request->q . '%');
-        }
-        $suppliers = $query->latest()->paginate(20);
+    public function __construct(
+        private SupplierService $supplierService
+    ) {}
 
-        // Add pending check for each supplier
-        $suppliers->each(function ($s) {
-            $s->pendingRequest = \App\Models\ChangeRequest::where('model_type', \App\Models\Supplier::class)
-                ->where('model_id', $s->id)
-                ->where('status', 'pending')
-                ->first();
-        });
+    public function index(Request $request): View
+    {
+        $filters   = $request->only(['q']);
+        $suppliers = $this->supplierService->getFilteredSuppliers($filters, 20);
 
         return view('suppliers.index', compact('suppliers'));
     }
 
-    public function create()
+    public function create(): View
     {
         return view('suppliers.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreSupplierRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'merchant_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'source_name' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'website' => 'nullable|url|max:255'
-        ]);
+        $result = $this->supplierService->createSupplier($request->validated());
 
-        $executor = function () use ($data) {
-            return Supplier::create($data);
-        };
-
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Supplier::class ,
-            null,
-            'create',
-            $data,
-            $executor,
-            true // Force Request logic
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('suppliers.index')->with('success', 'تم إرسال طلب إضافة المورد للمراجعة');
         }
 
         return redirect()->route('suppliers.index')->with('success', 'تم إضافة المورد بنجاح');
     }
 
-    public function show(Supplier $supplier)
+    public function show(Supplier $supplier): View|RedirectResponse
     {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Supplier::class)
-            ->where('model_id', $supplier->id)
-            ->where('status', 'pending')
-            ->first();
-
-        if ($pending) {
+        if ($this->hasPendingRequest($supplier)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المورد لديه طلب مراجعة حالياً');
         }
 
@@ -81,73 +53,50 @@ final class SupplierWebController extends Controller
         return view('suppliers.show', compact('supplier', 'purchases'));
     }
 
-    public function edit(Supplier $supplier)
+    public function edit(Supplier $supplier): View|RedirectResponse
     {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Supplier::class)
-            ->where('model_id', $supplier->id)
-            ->where('status', 'pending')
-            ->first();
-
-        if ($pending) {
+        if ($this->hasPendingRequest($supplier)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المورد لديه طلب مراجعة حالياً');
         }
 
         return view('suppliers.edit', compact('supplier'));
     }
 
-    public function update(Request $request, Supplier $supplier)
+    public function update(UpdateSupplierRequest $request, Supplier $supplier): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'merchant_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'source_name' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'website' => 'nullable|url|max:255'
-        ]);
+        if ($this->hasPendingRequest($supplier)) {
+            return redirect()->route('change-requests.index')->with('info', 'هذا المورد لديه طلب مراجعة حالياً');
+        }
 
-        $executor = function () use ($supplier, $data) {
-            $supplier->update($data);
-            return $supplier;
-        };
+        $result = $this->supplierService->updateSupplier($supplier, $request->validated());
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Supplier::class ,
-            $supplier->id,
-            'update',
-            $data,
-            $executor,
-            true // Force Request logic
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('suppliers.index')->with('success', 'تم إرسال طلب تحديث بيانات المورد للمراجعة');
         }
 
         return redirect()->route('suppliers.index')->with('success', 'تم تحديث بيانات المورد');
     }
 
-    public function destroy(Supplier $supplier)
+    public function destroy(Supplier $supplier): RedirectResponse
     {
-        $executor = function () use ($supplier) {
-            $supplier->delete();
-            return true;
-        };
+        if ($this->hasPendingRequest($supplier)) {
+            return redirect()->route('change-requests.index')->with('info', 'هذا المورد لديه طلب مراجعة حالياً');
+        }
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Supplier::class ,
-            $supplier->id,
-            'delete',
-        ['name' => $supplier->name],
-            $executor,
-            true // Force Request logic
-        );
+        $result = $this->supplierService->deleteSupplier($supplier);
 
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('suppliers.index')->with('success', 'تم إرسال طلب حذف المورد للمراجعة');
         }
 
         return redirect()->route('suppliers.index')->with('success', 'تم حذف المورد');
+    }
+
+    private function hasPendingRequest(Supplier $supplier): bool
+    {
+        return ChangeRequest::where('model_type', Supplier::class)
+            ->where('model_id', $supplier->id)
+            ->where('status', 'pending')
+            ->exists();
     }
 }

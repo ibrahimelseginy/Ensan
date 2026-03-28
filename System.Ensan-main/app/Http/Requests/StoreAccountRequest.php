@@ -16,9 +16,11 @@ final class StoreAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => 'required|string|unique:accounts,code',
-            'name' => 'required|string',
-            'type' => 'required|in:asset,liability,equity,revenue,expense'
+            'code'        => 'required|string|max:20|unique:accounts,code',
+            'name'        => 'required|string|max:255',
+            'type'        => 'required|in:asset,liability,equity,revenue,expense',
+            'parent_id'   => 'nullable|exists:accounts,id',
+            'description' => 'nullable|string'
         ];
     }
 }

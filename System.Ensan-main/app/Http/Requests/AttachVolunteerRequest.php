@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+final class AttachVolunteerRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'user_id'    => 'required|exists:users,id',
+            'role'       => 'nullable|string|max:255',
+            'started_at' => 'nullable|date',
+            'hours'      => 'nullable|numeric|min:0'
+        ];
+    }
+}

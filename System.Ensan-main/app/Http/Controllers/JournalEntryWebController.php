@@ -1,97 +1,57 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
-use App\Models\JournalEntryLine;
 use App\Models\Account;
+use App\Models\ChangeRequest;
+use App\Services\JournalEntryService;
+use App\Http\Requests\StoreJournalEntryRequest;
+use App\Http\Requests\UpdateJournalEntryRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
-final class JournalEntryWebController extends Controller
+final readonly class JournalEntryWebController extends Controller
 {
-    public function index()
+    public function __construct(
+        private JournalEntryService $journalEntryService
+    ) {}
+
+    public function index(): View
     {
-        $entries = JournalEntry::with('lines.account')->orderByDesc('date')->orderByDesc('id')->paginate(20);
+        $entries = $this->journalEntryService->getAllEntries(20);
         return view('journal_entries.index', compact('entries'));
     }
 
-    public function create()
+    public function create(): View
     {
         $accounts = Account::orderBy('code')->get();
         return view('journal_entries.create', compact('accounts'));
     }
 
-    public function store(Request $request)
+    public function store(StoreJournalEntryRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'date' => 'required|date',
-            'branch' => 'nullable|string',
-            'gate' => 'nullable|string',
-            'entry_type' => 'required|string',
-            'description' => 'nullable|string',
-            'locked' => 'boolean',
-            'lines' => 'required|array|min:2',
-            'lines.*.account_id' => 'required|exists:accounts,id',
-            'lines.*.debit' => 'nullable|numeric',
-            'lines.*.credit' => 'nullable|numeric',
-        ]);
+        $result = $this->journalEntryService->createEntry($request->validated());
 
-        $totalDebit = collect($data['lines'])->sum('debit');
-        $totalCredit = collect($data['lines'])->sum('credit');
-        
-        if (abs($totalDebit - $totalCredit) > 0.01) {
-            return back()->withErrors(['lines' => 'القيد غير متزن. إجمالي المدين: ' . $totalDebit . ' - إجمالي الدائن: ' . $totalCredit])->withInput();
-        }
-
-        $executor = function() use ($data) {
-            $entry = JournalEntry::create([
-                'date' => $data['date'],
-                'branch' => $data['branch'],
-                'gate' => $data['gate'],
-                'entry_type' => $data['entry_type'],
-                'description' => $data['description'],
-                'locked' => $data['locked'] ?? false,
-            ]);
-
-            foreach ($data['lines'] as $line) {
-                JournalEntryLine::create([
-                    'journal_entry_id' => $entry->id,
-                    'account_id' => $line['account_id'],
-                    'debit' => $line['debit'] ?? 0,
-                    'credit' => $line['credit'] ?? 0,
-                ]);
-            }
-            return $entry;
-        };
-
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            JournalEntry::class,
-            null,
-            'create',
-            $data,
-            $executor,
-            true // Force Request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('journal-entries.index')->with('success', 'تم إرسال طلب إضافة القيد للموافقة');
         }
 
         return redirect()->route('journal-entries.index');
     }
 
-    public function show(JournalEntry $journalEntry)
+    public function show(JournalEntry $journalEntry): View
     {
         $journalEntry->load('lines.account');
-        $pendingRequest = \App\Models\ChangeRequest::where('model_type', JournalEntry::class)
-            ->where('model_id', $journalEntry->id)
-            ->where('status', 'pending')
-            ->first();
+        $pendingRequest = $this->getPendingRequest($journalEntry);
+
         return view('journal_entries.show', compact('journalEntry', 'pendingRequest'));
     }
 
-    public function edit(JournalEntry $journalEntry)
+    public function edit(JournalEntry $journalEntry): View|RedirectResponse
     {
         if ($journalEntry->locked) {
             return back()->with('error', 'هذا القيد مرحل ولا يمكن تعديله');
@@ -102,100 +62,41 @@ final class JournalEntryWebController extends Controller
         return view('journal_entries.edit', compact('journalEntry', 'accounts'));
     }
 
-    public function update(Request $request, JournalEntry $journalEntry)
+    public function update(UpdateJournalEntryRequest $request, JournalEntry $journalEntry): RedirectResponse
     {
-        if ($journalEntry->locked) {
-            return back()->with('error', 'هذا القيد مرحل ولا يمكن تعديله');
-        }
+        try {
+            $result = $this->journalEntryService->updateEntry($journalEntry, $request->validated());
 
-        $data = $request->validate([
-            'date' => 'required|date',
-            'branch' => 'nullable|string',
-            'gate' => 'nullable|string',
-            'entry_type' => 'required|string',
-            'description' => 'nullable|string',
-            'locked' => 'boolean',
-            'lines' => 'required|array|min:2',
-            'lines.*.account_id' => 'required|exists:accounts,id',
-            'lines.*.debit' => 'nullable|numeric',
-            'lines.*.credit' => 'nullable|numeric',
-        ]);
-
-        $totalDebit = collect($data['lines'])->sum('debit');
-        $totalCredit = collect($data['lines'])->sum('credit');
-        
-        if (abs($totalDebit - $totalCredit) > 0.01) {
-            return back()->withErrors(['lines' => 'القيد غير متزن. إجمالي المدين: ' . $totalDebit . ' - إجمالي الدائن: ' . $totalCredit])->withInput();
-        }
-
-        $executor = function () use ($journalEntry, $data) {
-            $journalEntry->update([
-                'date' => $data['date'],
-                'branch' => $data['branch'],
-                'gate' => $data['gate'],
-                'entry_type' => $data['entry_type'],
-                'description' => $data['description'],
-                'locked' => $data['locked'] ?? false,
-            ]);
-
-            $journalEntry->lines()->delete();
-
-            foreach ($data['lines'] as $line) {
-                JournalEntryLine::create([
-                    'journal_entry_id' => $journalEntry->id,
-                    'account_id' => $line['account_id'],
-                    'debit' => $line['debit'] ?? 0,
-                    'credit' => $line['credit'] ?? 0,
-                ]);
+            if ($result instanceof ChangeRequest) {
+                return redirect()->route('journal-entries.index')->with('success', 'تم إرسال طلب تعديل القيد للموافقة');
             }
 
-            return $journalEntry;
-        };
-
-        $isAdminOrManager = auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager');
-
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            JournalEntry::class,
-            $journalEntry->id,
-            'update',
-            $data,
-            $executor,
-            true // Force Request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
-            return redirect()->route('journal-entries.index')->with('success', 'تم إرسال طلب تعديل القيد للموافقة');
+            return redirect()->route('journal-entries.show', $journalEntry)->with('success', 'تم تحديث القيد بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        return redirect()->route('journal-entries.show', $journalEntry)->with('success', 'تم تحديث القيد بنجاح');
     }
 
-    public function destroy(JournalEntry $journalEntry)
+    public function destroy(JournalEntry $journalEntry): RedirectResponse
     {
-        if ($journalEntry->locked) {
-            return back()->with('error', 'هذا القيد مرحل ولا يمكن حذفه');
+        try {
+            $result = $this->journalEntryService->deleteEntry($journalEntry);
+
+            if ($result instanceof ChangeRequest) {
+                return redirect()->route('journal-entries.index')->with('success', 'تم إرسال طلب حذف القيد للموافقة');
+            }
+
+            return redirect()->route('journal-entries.index')->with('success', 'تم حذف القيد بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
+    }
 
-        $executor = function () use ($journalEntry) {
-            $journalEntry->delete();
-            return true;
-        };
-
-        $isAdminOrManager = auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager');
-
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            JournalEntry::class,
-            $journalEntry->id,
-            'delete',
-            [],
-            $executor,
-            true // Force Request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
-            return redirect()->route('journal-entries.index')->with('success', 'تم إرسال طلب حذف القيد للموافقة');
-        }
-
-        return redirect()->route('journal-entries.index')->with('success', 'تم حذف القيد بنجاح');
+    private function getPendingRequest(JournalEntry $entry): ?ChangeRequest
+    {
+        return ChangeRequest::where('model_type', JournalEntry::class)
+            ->where('model_id', $entry->id)
+            ->where('status', 'pending')
+            ->first();
     }
 }

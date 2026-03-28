@@ -6,210 +6,129 @@ namespace App\Http\Controllers;
 
 use App\Models\Leave;
 use App\Models\User;
+use App\Models\ChangeRequest;
+use App\Services\LeaveService;
+use App\Http\Requests\StoreLeaveRequest;
+use App\Http\Requests\UpdateLeaveRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
-final class LeaveWebController extends Controller
+final readonly class LeaveWebController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(
+        private LeaveService $leaveService
+    ) {}
+
+    public function index(Request $request): View
     {
-        $query = Leave::with(['user', 'changeRequests' => function($q) {
-            $q->where('status', 'pending');
-        }])->orderByDesc('start_date');
+        $user    = request()->user();
+        $filters = $request->only(['status']);
 
-        $user = request()->user();
         if (!$user || !$user->hasPermission('leaves.manage')) {
-            $query->where('user_id', request()->user()->id);
+            $filters['user_id'] = (int)$user?->id;
         }
 
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
+        $leaves = $this->leaveService->getFilteredLeaves($filters, 20);
 
-        $leaves = $query->paginate(20);
         return view('leaves.index', compact('leaves'));
     }
 
-    public function create()
+    public function create(): View
     {
         return view('leaves.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreLeaveRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'type' => 'required|in:annual,sick,unpaid,emergency,other',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string|max:500',
-        ]);
-
         $user = request()->user();
         if (!$user) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
-        $data['user_id'] = $user->id;
-        $data['status'] = 'pending';
 
-        // Integrate with ChangeRequest system
-        $executor = function() use ($data) {
-            return Leave::create($data);
-        };
+        $result = $this->leaveService->createLeave($request->validated(), (int)$user->id);
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Leave::class,
-            null, // model_id is null for create
-            'create',
-            $data,
-            $executor,
-            true // Force Request so it shows in the approval list
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('leaves.index')->with('success', 'تم إرسال طلب الإجازة للمراجعة');
         }
 
         return redirect()->route('leaves.index')->with('success', 'تم تقديم طلب الإجازة بنجاح');
     }
 
-    public function edit(Leave $leave)
+    public function show(Leave $leave): View
     {
-        if ($leave->user_id !== request()->user()->id && !request()->user()->hasPermission('leaves.manage')) {
-            abort(403);
-        }
-        return view('leaves.edit', compact('leave'));
-    }
-
-    public function show(Leave $leave)
-    {
-        /*
-        if ($leave->user_id !== request()->user()->id && !request()->user()->hasPermission('leaves.manage')) {
-            abort(403);
-        }
-        */
-        // Assuming public view or minimal check for now, can refine later
         return view('leaves.show', compact('leave'));
     }
 
-    public function update(Request $request, Leave $leave)
+    public function edit(Leave $leave): View
     {
-        // Permission check: Owners or Managers
-        if ($leave->user_id !== request()->user()->id && !request()->user()->hasPermission('leaves.manage')) {
+        $user = request()->user();
+        if (!$user) {
+            abort(401);
+        }
+
+        if ($leave->user_id !== $user->id && !$user->hasPermission('leaves.manage')) {
             abort(403);
         }
 
-        // Validate
-        $data = $request->validate([
-            'type' => 'sometimes|in:annual,sick,unpaid,emergency,other',
-            'start_date' => 'sometimes|date',
-            'end_date' => 'sometimes|date|after_or_equal:start_date',
-            'reason' => 'sometimes|string|max:500',
-            'status' => 'sometimes|in:pending,approved,rejected',
-            'rejection_reason' => 'nullable|string'
-        ]);
+        return view('leaves.edit', compact('leave'));
+    }
 
-        $executor = function () use ($leave, $data) {
-            if (isset($data['status']) && $data['status'] === 'approved') {
-                $data['approved_by'] = auth()->id();
-            }
-            $leave->update($data);
-            return $leave;
-        };
-
-        // DECISION LOGIC: 
-        // If it is a STATUS change (Approval/Rejection) by a Manager, execute immediately.
-        if (request()->user()->hasPermission('leaves.manage') && isset($data['status']) && $leave->status == 'pending') {
-             $executor();
-             return redirect()->route('leaves.index')->with('success', 'تم تحديث حالة الطلب بنجاح');
+    public function update(UpdateLeaveRequest $request, Leave $leave): RedirectResponse
+    {
+        $user = request()->user();
+        if (!$user) {
+            abort(401);
         }
 
-        // DATA CHANGE LOGIC (Edit):
-        // For any data change (Dates, Type, Reason), OR if a user is trying to "Cancel" (which might be a status change to something else, or a delete request), 
-        // OR if changing an already approved request -> Force Change Request.
-        
-        $action = 'update';
-        // If regular user wants to cancel pending request? Usually they delete it.
-        // If regular user wants to cancel APPROVED request? They need to request cancel.
-        
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Leave::class,
-            $leave->id,
-            $action,
-            $data,
-            $executor,
-            true // Force Request for everyone (even admins editing data) to ensure audit trail
-        );
+        if ($leave->user_id !== $user->id && !$user->hasPermission('leaves.manage')) {
+            abort(403);
+        }
 
-        if ($result instanceof \App\Models\ChangeRequest) {
+        $isManager = $user->hasPermission('leaves.manage');
+        $result    = $this->leaveService->updateLeave($leave, $request->validated(), $isManager);
+
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب التعديل للموافقة');
         }
 
         return redirect()->route('leaves.index')->with('success', 'تم تحديث الإجازة');
     }
 
-    public function destroy(Leave $leave)
+    public function destroy(Leave $leave): RedirectResponse
     {
-        // Permission check
-        if ($leave->user_id !== request()->user()->id && !request()->user()->hasPermission('leaves.manage')) {
+        $user = request()->user();
+        if (!$user) {
+            abort(401);
+        }
+
+        if ($leave->user_id !== $user->id && !$user->hasPermission('leaves.manage')) {
             abort(403);
         }
 
-        $executor = function () use ($leave) {
-            $leave->delete();
-            return true;
-        };
+        $result = $this->leaveService->deleteLeave($leave);
 
-        // Always create a Change Request for deletion to allow for approval/review
-        // This handles "Request Cancellation" logic effectively.
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Leave::class,
-            $leave->id,
-            'delete',
-            ['note' => 'طلب حذف/إلغاء إجازة'],
-            $executor,
-            true // Force Request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب إلغاء الإجازة للموافقة');
         }
 
-        $leave->delete();
         return redirect()->route('leaves.index')->with('success', 'تم حذف الطلب بنجاح');
     }
-    public function bulkDestroy(Request $request)
+
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
-            'ids' => 'required|array',
+            'ids'   => 'required|array',
             'ids.*' => 'exists:leaves,id'
         ]);
 
-        $ids = $request->input('ids');
-        $count = 0;
-
-        foreach ($ids as $id) {
-            $leave = Leave::find($id);
-            if (!$leave) continue;
-            
-            // Basic Permission Logic: Must be owner or manager
-            if ($leave->user_id !== request()->user()->id && !request()->user()->hasPermission('leaves.manage')) {
-                continue; 
-            }
-
-            $executor = function () use ($leave) {
-                $leave->delete();
-                return true;
-            };
-
-            \App\Services\ChangeRequestService::handleRequest(
-                \App\Models\Leave::class,
-                $leave->id,
-                'delete',
-                ['note' => 'حذف جماعي لطلبات الإجازة'],
-                $executor,
-                true // Force Request
-            );
-            $count++;
+        $user = request()->user();
+        if (!$user) {
+            abort(401);
         }
+
+        $isManager = $user->hasPermission('leaves.manage');
+        $count     = $this->leaveService->bulkDelete($request->input('ids'), (int)$user->id, $isManager);
 
         return back()->with('success', "تم إرسال طلبات الحذف لـ $count من الطلبات للموافقة");
     }

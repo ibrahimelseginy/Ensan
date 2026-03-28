@@ -1,183 +1,109 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Donor;
 use App\Models\Donation;
-use Illuminate\Support\Facades\DB;
+use App\Models\ChangeRequest;
+use App\Models\Project;
+use App\Models\Campaign;
+use App\Models\Warehouse;
+use App\Models\GuestHouse;
+use App\Models\Beneficiary;
+use App\Services\DonorService;
+use App\Http\Requests\StoreDonorRequest;
+use App\Http\Requests\UpdateDonorRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
-final class DonorWebController extends Controller
+final readonly class DonorWebController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(
+        private DonorService $donorService
+    ) {}
+
+    public function index(Request $request): View
     {
-        $q = trim((string)$request->input('q'));
-        $type = $request->input('type');
-        $classification = $request->input('classification');
-        $active = $request->input('active');
+        $filters = $request->only(['q', 'type', 'classification', 'active']);
+        $donors  = $this->donorService->searchDonors($filters, 12);
 
-        $donors = Donor::query()
-            ->when($q !== '', function ($q2) use ($q) {
-            $q2->where(function ($w) use ($q) {
-                    $w->where('name', 'like', "%$q%")
-                        ->orWhere('phone', 'like', "%$q%");
-                }
-                );
-            })
-            ->when($type, function ($q2, $t) {
-            $q2->where('type', $t);
-        })
-            ->when($classification, function ($q2, $c) {
-            $q2->where('classification', $c);
-        })
-            ->when(!is_null($active) && $active !== '', function ($q2, $a) {
-            $q2->where('active', (bool)$a);
-        })
-            ->orderByDesc('id')->paginate(12)->withQueryString();
-
-        // Add pending check for each donor
-        $donors->each(function ($d) {
-            $d->pendingRequest = \App\Models\ChangeRequest::where('model_type', \App\Models\Donor::class)
-                ->where('model_id', $d->id)
-                ->where('status', 'pending')
-                ->first();
-        });
-
+        $donorIds = $donors->pluck('id');
         $donStats = Donation::select('donor_id', DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))
+            ->whereIn('donor_id', $donorIds)
             ->where('status', '!=', 'cancelled')
-            ->groupBy('donor_id')->get()->keyBy('donor_id');
+            ->groupBy('donor_id')
+            ->get()
+            ->keyBy('donor_id');
 
-        $totals = [
-            'all' => Donor::count(),
-            'active' => Donor::where('active', true)->count(),
-            'recurring' => Donor::where('classification', 'recurring')->count(),
-            'one_time' => Donor::where('classification', 'one_time')->count(),
-        ];
+        $totals = $this->donorService->getGlobalStats();
 
-        $allDonors = Donor::orderBy('name')->get();
-        $selectedDonorId = $request->input('selected_donor_id');
-        $selectedDonor = null;
+        $allDonors        = $this->donorService->getAllDonors();
+        $selectedDonorId  = $request->input('selected_donor_id');
+        $selectedDonor    = null;
         $donationsHistory = collect();
-        $paidThisMonth = 0.0;
+        $paidThisMonth    = 0.0;
+
         if ($selectedDonorId) {
-            $selectedDonor = Donor::find($selectedDonorId);
+            $selectedDonor = $this->donorService->findDonorById((int)$selectedDonorId);
             if ($selectedDonor) {
                 $donationsHistory = Donation::with(['project', 'campaign'])
                     ->where('donor_id', $selectedDonor->id)
                     ->where('status', '!=', 'cancelled')
                     ->orderByDesc('received_at')->orderByDesc('id')
                     ->limit(10)->get();
-                $paidThisMonth = Donation::where('donor_id', $selectedDonor->id)
-                    ->where('type', 'cash')
-                    ->where('status', '!=', 'cancelled')
-                    ->when($selectedDonor->sponsorship_project_id, function ($q) use ($selectedDonor) {
-                    $q->where('project_id', $selectedDonor->sponsorship_project_id);
-                })
-                    ->whereBetween('received_at', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->sum('amount');
+                $paidThisMonth = $this->donorService->getPaidThisMonth($selectedDonor);
             }
         }
 
-        $warehouses = \App\Models\Warehouse::orderBy('name')->get();
-        $projects = \App\Models\Project::query()
-            ->where(function ($q) {
-            $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%');
-        })
-            ->where(function ($q) {
-            $q->where('name', 'not like', '%ضياف%')
-                ->where('name', 'not like', '%دار الضيا%')
-                ->where('name', 'not like', '%Guest%');
-        })
+        $warehouses = Warehouse::orderBy('name')->get();
+        $projects   = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))
+            ->where(fn($q) => $q->where('name', 'not like', '%ضياف%')->where('name', 'not like', '%دار الضيا%')->where('name', 'not like', '%Guest%'))
             ->orderBy('name')->get();
-        $campaigns = \App\Models\Campaign::orderByDesc('season_year')->orderBy('name')->get();
-        $guestHouses = \App\Models\GuestHouse::where(function ($q) {
-            $q->where('location', 'like', '%كفر%')
-                ->orWhere('location', 'like', '%طنطا%')
-                ->orWhere('name', 'like', '%كفر%')
-                ->orWhere('name', 'like', '%طنطا%');
-        })->orderBy('name')->get();
-        $beneficiaries = \App\Models\Beneficiary::orderBy('full_name')->get();
-        return view('donors.index', compact('donors', 'donStats', 'totals', 'q', 'type', 'classification', 'active', 'allDonors', 'selectedDonor', 'donationsHistory', 'selectedDonorId', 'warehouses', 'paidThisMonth', 'projects', 'campaigns', 'guestHouses', 'beneficiaries'));
+        $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
+        $guestHouses   = GuestHouse::where(fn($q) => $q->where('location', 'like', '%كفر%')->orWhere('location', 'like', '%طنطا%')->orWhere('name', 'like', '%كفر%')->orWhere('name', 'like', '%طنطا%'))->orderBy('name')->get();
+        $beneficiaries = Beneficiary::orderBy('full_name')->get();
+
+        return view('donors.index', compact(
+            'donors', 'donStats', 'totals', 'allDonors', 
+            'selectedDonor', 'donationsHistory', 'selectedDonorId', 
+            'warehouses', 'paidThisMonth', 'projects', 'campaigns', 
+            'guestHouses', 'beneficiaries'
+        ));
     }
-    public function create()
+
+    public function create(): View
     {
-        $beneficiaries = \App\Models\Beneficiary::orderBy('full_name')->get();
-        $projects = \App\Models\Project::query()
-            ->where(function ($q) {
-            $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%');
-        })
+        $beneficiaries = Beneficiary::orderBy('full_name')->get();
+        $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))
             ->orderBy('name')->get();
         return view('donors.create', compact('beneficiaries', 'projects'));
     }
-    public function store(Request $request)
+
+    public function store(StoreDonorRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|unique:donors,name',
-            'type' => 'required|in:individual,organization',
-            'phone' => ['required', 'string', 'unique:donors,phone', 'regex:/^(01[0125][0-9]{8})$/'],
-            'address' => 'required|string',
-            'classification' => 'required|in:one_time,recurring',
-            'recurring_cycle' => 'nullable|in:monthly,yearly',
-            'active' => 'boolean',
-            'sponsorship_type' => 'nullable|in:none,monthly_sponsor,yearly_sponsor,sadaqa_jariya',
-            'sponsored_beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'sponsorship_project_id' => 'nullable|exists:projects,id',
-            'sponsorship_monthly_amount' => 'nullable|numeric',
-            'allocation_type' => 'nullable|in:project,campaign,guest_house,sponsorship,sadaqa_jariya',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'guest_house_id' => 'nullable|exists:guest_houses,id',
-        ], [
-            'name.unique' => 'اسم المتبرع هذا مسجل مسبقاً، الرجاء اختيار اسم آخر أو البحث عنه.',
-            'phone.unique' => 'رقم الهاتف هذا مسجل مسبقاً لمتبرع آخر.',
-            'phone.regex' => 'رقم الهاتف يجب أن يكون رقم مصري صحيح (010, 011, 012, 015).',
-        ]);
-        // ... validation ...
-        $phone = isset($data['phone']) ? trim((string)$data['phone']) : null;
-
-        // Handle logic for allocation type if needed
-        if (($data['sponsorship_type'] ?? 'none') !== 'none' && empty($data['sponsorship_project_id'])) {
-            $defaultProjId = \App\Models\Project::where('name', 'بعثاء الأمل')->value('id');
-            if ($defaultProjId) {
-                $data['sponsorship_project_id'] = $defaultProjId;
-            }
-        }
-
-        // Map quick form inputs (alloc_type, alloc_id) to model attributes if provided via quick form
-        if ($request->filled('alloc_type') && empty($data['allocation_type'])) {
+        $data = $request->validated();
+        
+        // Handle quick form inputs (alloc_type, alloc_id) to model attributes if provided via quick form
+        if ($request->filled('alloc_type')) {
             $data['allocation_type'] = $request->input('alloc_type');
             $aid = $request->input('alloc_id');
 
             if ($data['allocation_type'] === 'project' || $data['allocation_type'] === 'sadaqa_jariya') {
                 $data['sponsorship_project_id'] = $aid;
-            }
-            elseif ($data['allocation_type'] === 'campaign') {
+            } elseif ($data['allocation_type'] === 'campaign') {
                 $data['campaign_id'] = $aid;
-            }
-            elseif ($data['allocation_type'] === 'guest_house') {
+            } elseif ($data['allocation_type'] === 'guest_house') {
                 $data['guest_house_id'] = $aid;
             }
         }
 
-        $executor = function () use ($data) {
-            return Donor::create($data);
-        };
+        $result = $this->donorService->createDonor($data);
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Donor::class ,
-            null,
-            'create',
-            $data,
-            $executor
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب إضافة المتبرع للموافقة.');
         }
 
@@ -185,32 +111,25 @@ final class DonorWebController extends Controller
 
         if ($request->input('return_to') === 'donations.create') {
             $allocType = $request->input('alloc_type');
-            $allocId = $request->input('alloc_id');
-
-            $params = ['donor_id' => $donor->id];
+            $allocId   = $request->input('alloc_id');
+            $params    = ['donor_id' => $donor->id];
 
             if ($allocType && $allocId) {
                 if ($allocType === 'project') {
                     $params['project_id'] = $allocId;
-                }
-                elseif ($allocType === 'guest_house') {
+                } elseif ($allocType === 'guest_house') {
                     $params['guest_house_id'] = $allocId;
-                }
-                elseif ($allocType === 'campaign') {
+                } elseif ($allocType === 'campaign') {
                     $params['campaign_id'] = $allocId;
                 }
-            }
-            else {
-                // Check internal fields if alloc_type hidden inputs failed
+            } else {
                 if ($request->filled('guest_house_id')) {
                     $params['guest_house_id'] = $request->input('guest_house_id');
-                }
-                elseif ($request->filled('campaign_id')) {
+                } elseif ($request->filled('campaign_id')) {
                     $params['campaign_id'] = $request->input('campaign_id');
                 }
             }
 
-            // Pass sponsorship info if available
             if ($request->filled('sponsorship_type') && $request->input('sponsorship_type') !== 'none') {
                 $params['sponsorship_type'] = $request->input('sponsorship_type');
                 if ($request->filled('sponsored_beneficiary_id')) {
@@ -220,123 +139,59 @@ final class DonorWebController extends Controller
 
             return redirect()->route('donations.create', $params);
         }
+        
         return redirect()->route('donors.show', $donor);
     }
-    public function show(Donor $donor)
-    {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Donor::class)
-            ->where('model_id', $donor->id)
-            ->where('status', 'pending')
-            ->first();
 
-        if ($pending) {
+    public function show(Donor $donor): View|RedirectResponse
+    {
+        if ($this->hasPendingRequest($donor)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
-        $stats = Donation::select(DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))
-            ->where('donor_id', $donor->id)
-            ->where('status', '!=', 'cancelled')
-            ->first();
-        $paidThisMonth = Donation::where('donor_id', $donor->id)
-            ->where('type', 'cash')
-            ->where('status', '!=', 'cancelled')
-            ->when($donor->sponsorship_project_id, function ($q) use ($donor) {
-            $q->where('project_id', $donor->sponsorship_project_id);
-        })
-            ->whereBetween('received_at', [now()->startOfMonth(), now()->endOfMonth()])
-            ->sum('amount');
-        $history = Donation::with(['project', 'campaign', 'warehouse'])
+        $stats         = $this->donorService->getDonorStats($donor->id);
+        $paidThisMonth = $this->donorService->getPaidThisMonth($donor);
+        $history       = Donation::with(['project', 'campaign', 'warehouse'])
             ->where('donor_id', $donor->id)
             ->orderByDesc('received_at')->orderByDesc('id')
             ->get();
+            
         return view('donors.show', compact('donor', 'stats', 'paidThisMonth', 'history'));
     }
-    public function edit(Donor $donor)
-    {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Donor::class)
-            ->where('model_id', $donor->id)
-            ->where('status', 'pending')
-            ->first();
 
-        if ($pending) {
+    public function edit(Donor $donor): View|RedirectResponse
+    {
+        if ($this->hasPendingRequest($donor)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
-        $beneficiaries = \App\Models\Beneficiary::orderBy('full_name')->get();
-        $projects = \App\Models\Project::query()
-            ->where(function ($q) {
-            $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%');
-        })
-            ->orderBy('name')->get();
-        $campaigns = \App\Models\Campaign::orderByDesc('season_year')->orderBy('name')->get();
-        $guestHouses = \App\Models\GuestHouse::orderBy('name')->get();
+        $beneficiaries = Beneficiary::orderBy('full_name')->get();
+        $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))->orderBy('name')->get();
+        $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
+        $guestHouses   = GuestHouse::orderBy('name')->get();
+        
         return view('donors.edit', compact('donor', 'beneficiaries', 'projects', 'campaigns', 'guestHouses'));
     }
-    public function update(Request $request, Donor $donor)
-    {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Donor::class)
-            ->where('model_id', $donor->id)
-            ->where('status', 'pending')
-            ->first();
 
-        if ($pending) {
+    public function update(UpdateDonorRequest $request, Donor $donor): RedirectResponse
+    {
+        if ($this->hasPendingRequest($donor)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|unique:donors,name,' . $donor->id,
-            'type' => 'sometimes|in:individual,organization',
-            'phone' => ['nullable', 'string', 'unique:donors,phone,' . $donor->id, 'regex:/^(01[0125][0-9]{8})$/'],
-            'address' => 'nullable|string',
-            'classification' => 'sometimes|in:one_time,recurring',
-            'recurring_cycle' => 'nullable|in:monthly,yearly',
-            'active' => 'boolean',
-            'sponsorship_type' => 'nullable|in:none,monthly_sponsor,yearly_sponsor,sadaqa_jariya',
-            'sponsored_beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'sponsorship_project_id' => 'nullable|exists:projects,id',
-            'sponsorship_monthly_amount' => 'nullable|numeric',
-            'allocation_type' => 'nullable|in:project,campaign,guest_house,sponsorship,sadaqa_jariya',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'guest_house_id' => 'nullable|exists:guest_houses,id',
-        ], [
-            'name.unique' => 'اسم المتبرع هذا مسجل مسبقاً لمتبرع آخر.',
-            'phone.unique' => 'رقم الهاتف هذا مسجل مسبقاً لمتبرع آخر.',
-            'phone.regex' => 'رقم الهاتف يجب أن يكون رقم مصري صحيح (010, 011, 012, 015).',
-        ]);
-        if (($data['sponsorship_type'] ?? $donor->sponsorship_type ?? 'none') !== 'none' && empty($data['sponsorship_project_id'])) {
-            $defaultProjId = \App\Models\Project::where('name', 'بعثاء الأمل')->value('id');
-            if ($defaultProjId) {
-                $data['sponsorship_project_id'] = $defaultProjId;
-            }
-        }
+        $result = $this->donorService->updateDonor($donor, $request->validated());
 
-        $executor = function () use ($donor, $data) {
-            $donor->update($data);
-            return $donor;
-        };
-
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Donor::class ,
-            $donor->id,
-            'update',
-            $data,
-            $executor,
-            true // Force request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب تعديل المتبرع للموافقة.');
         }
 
         return redirect()->route('donors.show', $donor)->with('success', 'تم تعديل المتبرع بنجاح.');
     }
-    public function bulkDestroy(Request $request)
+
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
-            'ids' => 'required|array',
+            'ids'   => 'required|array',
             'ids.*' => 'exists:donors,id'
         ]);
 
@@ -345,35 +200,26 @@ final class DonorWebController extends Controller
         return back()->with('success', 'تم حذف المتبرعين المحددين بنجاح');
     }
 
-    public function destroy(Donor $donor)
+    public function destroy(Donor $donor): RedirectResponse
     {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\Donor::class)
-            ->where('model_id', $donor->id)
-            ->where('status', 'pending')
-            ->first();
-
-        if ($pending) {
+        if ($this->hasPendingRequest($donor)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
-        $executor = function () use ($donor) {
-            $donor->delete();
-            return true;
-        };
+        $result = $this->donorService->deleteDonor($donor);
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\Donor::class ,
-            $donor->id,
-            'delete',
-            request()->all(), // Capture reason if sent
-            $executor,
-            true
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب حذف المتبرع للموافقة.');
         }
 
         return redirect()->route('donors.index')->with('success', 'تم حذف المتبرع بنجاح.');
+    }
+
+    private function hasPendingRequest(Donor $donor): bool
+    {
+        return ChangeRequest::where('model_type', Donor::class)
+            ->where('model_id', $donor->id)
+            ->where('status', 'pending')
+            ->exists();
     }
 }

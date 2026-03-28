@@ -1,40 +1,45 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Payroll;
-use Illuminate\Http\Request;
+use App\Services\PayrollService;
+use App\Http\Requests\StorePayrollRequest;
+use App\Http\Requests\UpdatePayrollRequest;
+use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-final class PayrollController extends Controller
+final readonly class PayrollController extends Controller
 {
-    public function index() { return Payroll::with('user')->paginate(50); }
-    public function store(Request $request)
+    public function __construct(
+        private PayrollService $payrollService
+    ) {}
+
+    public function index(): LengthAwarePaginator
     {
-        $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'month' => 'required|string',
-            'amount' => 'required|numeric',
-            'currency' => 'nullable|string',
-            'paid_at' => 'nullable|date'
-        ]);
-        return Payroll::create($data);
+        return $this->payrollService->getAllPayrolls(50);
     }
-    public function show(Payroll $payroll) { return $payroll->load('user'); }
-    public function update(Request $request, Payroll $payroll)
+
+    public function store(StorePayrollRequest $request): mixed
     {
-        $data = $request->validate([
-            'month' => 'nullable|string',
-            'amount' => 'nullable|numeric',
-            'currency' => 'nullable|string',
-            'paid_at' => 'nullable|date'
-        ]);
-        $payroll->update($data);
+        return $this->payrollService->createPayroll($request->validated());
+    }
+
+    public function show(Payroll $payroll): Payroll
+    {
         return $payroll->load('user');
     }
-    public function destroy(Payroll $payroll)
+
+    public function update(UpdatePayrollRequest $request, Payroll $payroll): mixed
     {
-        $payroll->delete();
+        return $this->payrollService->updatePayroll($payroll, $request->validated());
+    }
+
+    public function destroy(Payroll $payroll): Response
+    {
+        $this->payrollService->deletePayroll($payroll);
         return response()->noContent();
     }
 }

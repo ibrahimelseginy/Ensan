@@ -1,74 +1,68 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
+use App\Models\ChangeRequest;
+use App\Services\BeneficiaryService;
+use App\Http\Requests\StoreBeneficiaryRequest;
+use App\Http\Requests\UpdateBeneficiaryRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final class BeneficiaryController extends Controller
+final readonly class BeneficiaryController extends Controller
 {
-    public function index()
+    public function __construct(
+        private BeneficiaryService $beneficiaryService
+    ) {}
+
+    public function index(Request $request): JsonResponse
     {
-        return Beneficiary::with(['project','campaign'])->paginate(20);
+        $beneficiaries = $this->beneficiaryService->getFilteredBeneficiaries($request->all(), 20);
+        return response()->json($beneficiaries);
     }
 
-    public function store(Request $request)
+    public function store(StoreBeneficiaryRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'full_name' => 'required|string',
-            'national_id' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-            'assistance_type' => 'required|in:financial,in_kind,service',
-            'status' => 'in:new,under_review,accepted',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id'
-        ]);
-        return Beneficiary::create($data);
-    }
+        $result = $this->beneficiaryService->createBeneficiary($request->validated());
 
-    public function show(Beneficiary $beneficiary)
-    {
-        return $beneficiary->load(['project','campaign']);
-    }
-
-    public function update(Request $request, Beneficiary $beneficiary)
-    {
-        $data = $request->validate([
-            'full_name' => 'sometimes|string',
-            'national_id' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-            'assistance_type' => 'sometimes|in:financial,in_kind,service',
-            'status' => 'in:new,under_review,accepted',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id'
-        ]);
-        if (isset($data['status'])) {
-            $allowed = [
-                'new' => ['under_review'],
-                'under_review' => ['accepted'],
-                'accepted' => [],
-            ];
-            $current = $beneficiary->status;
-            $next = $data['status'];
-            if ($current === $next) {
-                unset($data['status']);
-            } else {
-                $can = in_array($next, $allowed[$current] ?? [], true);
-                if (!$can) {
-                    return response()->json(['message' => 'invalid status transition'], 422);
-                }
-            }
+        if ($result instanceof ChangeRequest) {
+            return response()->json(['message' => 'تم إرسال طلب إضافة المستفيد للموافقة', 'change_request_id' => $result->id], 202);
         }
-        $beneficiary->update($data);
-        return $beneficiary->load(['project','campaign']);
+
+        return response()->json(['message' => 'تم إضافة المستفيد بنجاح', 'data' => $result], 201);
     }
 
-    public function destroy(Beneficiary $beneficiary)
+    public function show(Beneficiary $beneficiary): JsonResponse
     {
-        $beneficiary->delete();
-        return response()->noContent();
+        return response()->json($beneficiary->load(['project', 'campaign', 'attachments']));
+    }
+
+    public function update(UpdateBeneficiaryRequest $request, Beneficiary $beneficiary): JsonResponse
+    {
+        try {
+            $result = $this->beneficiaryService->updateBeneficiary($beneficiary, $request->validated());
+
+            if ($result instanceof ChangeRequest) {
+                return response()->json(['message' => 'تم إرسال طلب تعديل المستفيد للمراجعة', 'change_request_id' => $result->id], 202);
+            }
+
+            return response()->json(['message' => 'تم تعديل المستفيد بنجاح', 'data' => $result]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroy(Beneficiary $beneficiary): JsonResponse
+    {
+        $result = $this->beneficiaryService->deleteBeneficiary($beneficiary);
+
+        if ($result instanceof ChangeRequest) {
+            return response()->json(['message' => 'تم إرسال طلب حذف المستفيد للمراجعة', 'change_request_id' => $result->id], 202);
+        }
+
+        return response()->json(['message' => 'تم حذف المستفيد بنجاح']);
     }
 }

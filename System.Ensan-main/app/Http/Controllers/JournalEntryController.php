@@ -1,61 +1,54 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
-use App\Models\JournalEntryLine;
-use Illuminate\Http\Request;
+use App\Services\JournalEntryService;
+use App\Http\Requests\StoreJournalEntryRequest;
+use App\Http\Requests\UpdateJournalEntryRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-final class JournalEntryController extends Controller
+final readonly class JournalEntryController extends Controller
 {
-    public function index() { return JournalEntry::with('lines')->paginate(20); }
-    public function store(Request $request)
+    public function __construct(
+        private JournalEntryService $journalEntryService
+    ) {}
+
+    public function index(): LengthAwarePaginator
     {
-        $data = $request->validate([
-            'date' => 'required|date',
-            'branch' => 'nullable|string',
-            'gate' => 'nullable|string',
-            'entry_type' => 'required|string',
-            'locked' => 'boolean',
-            'lines' => 'required|array',
-            'lines.*.account_id' => 'required|exists:accounts,id',
-            'lines.*.debit' => 'nullable|numeric',
-            'lines.*.credit' => 'nullable|numeric'
-        ]);
-        $entry = JournalEntry::create($data);
-        foreach ($data['lines'] as $line) {
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->id,
-                'account_id' => $line['account_id'],
-                'debit' => $line['debit'] ?? 0,
-                'credit' => $line['credit'] ?? 0,
-            ]);
-        }
-        return $entry->load('lines');
+        return $this->journalEntryService->getAllJournalEntries(20);
     }
-    public function show(JournalEntry $journalEntry) { return $journalEntry->load('lines'); }
-    public function update(Request $request, JournalEntry $journalEntry)
+
+    public function store(StoreJournalEntryRequest $request): JournalEntry
     {
-        if ($journalEntry->locked) {
-            return response()->json(['message' => 'entry is locked'], 423);
-        }
-        $data = $request->validate([
-            'date' => 'nullable|date',
-            'branch' => 'nullable|string',
-            'gate' => 'nullable|string',
-            'entry_type' => 'nullable|string',
-            'locked' => 'boolean'
-        ]);
-        $journalEntry->update($data);
+        return $this->journalEntryService->createJournalEntry($request->validated());
+    }
+
+    public function show(JournalEntry $journalEntry): JournalEntry
+    {
         return $journalEntry->load('lines');
     }
-    public function destroy(JournalEntry $journalEntry)
+
+    public function update(UpdateJournalEntryRequest $request, JournalEntry $journalEntry): JournalEntry|JsonResponse
     {
-        if ($journalEntry->locked) {
-            return response()->json(['message' => 'entry is locked'], 423);
+        try {
+            return $this->journalEntryService->updateJournalEntry($journalEntry, $request->validated());
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], (int)$e->getCode() ?: 400);
         }
-        $journalEntry->delete();
-        return response()->noContent();
+    }
+
+    public function destroy(JournalEntry $journalEntry): Response|JsonResponse
+    {
+        try {
+            $this->journalEntryService->deleteJournalEntry($journalEntry);
+            return response()->noContent();
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], (int)$e->getCode() ?: 400);
+        }
     }
 }

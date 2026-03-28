@@ -1,52 +1,68 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\InventoryTransaction;
+use App\Models\ChangeRequest;
+use App\Services\InventoryTransactionService;
+use App\Http\Requests\StoreInventoryTransactionRequest;
+use App\Http\Requests\UpdateInventoryTransactionRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final class InventoryTransactionController extends Controller
+final readonly class InventoryTransactionController extends Controller
 {
-    public function index()
+    public function __construct(
+        private InventoryTransactionService $transactionService
+    ) {}
+
+    public function index(Request $request): JsonResponse
     {
-        return InventoryTransaction::with(['item','warehouse','sourceDonation','beneficiary','project','campaign'])->paginate(20);
+        $transactions = $this->transactionService->getFilteredTransactions($request->all(), 20);
+        return response()->json($transactions);
     }
-    public function store(Request $request)
+
+    public function store(StoreInventoryTransactionRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'item_id' => 'required|exists:items,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'type' => 'required|in:in,transfer,out',
-            'quantity' => 'required|numeric',
-            'source_donation_id' => 'nullable|exists:donations,id',
-            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'reference' => 'nullable|string'
-        ]);
-        return InventoryTransaction::create($data);
+        try {
+            $result = $this->transactionService->createTransaction($request->validated());
+
+            if ($result instanceof ChangeRequest) {
+                return response()->json(['message' => 'تم إرسال طلب إضافة الحركة للموافقة', 'change_request_id' => $result->id], 202);
+            }
+
+            return response()->json(['message' => 'تم إضافة الحركة بنجاح', 'data' => $result], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
-    public function show(InventoryTransaction $inventoryTransaction)
+
+    public function show(InventoryTransaction $inventory_transaction): JsonResponse
     {
-        return $inventoryTransaction->load(['item','warehouse','sourceDonation','beneficiary','project','campaign']);
+        return response()->json($inventory_transaction->load(['item', 'warehouse', 'beneficiary', 'project', 'campaign', 'sourceDonation']));
     }
-    public function update(Request $request, InventoryTransaction $inventoryTransaction)
+
+    public function update(UpdateInventoryTransactionRequest $request, InventoryTransaction $inventory_transaction): JsonResponse
     {
-        $data = $request->validate([
-            'type' => 'sometimes|in:in,transfer,out',
-            'quantity' => 'nullable|numeric',
-            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'reference' => 'nullable|string'
-        ]);
-        $inventoryTransaction->update($data);
-        return $inventoryTransaction->load(['item','warehouse','sourceDonation','beneficiary','project','campaign']);
+        $result = $this->transactionService->updateTransaction($inventory_transaction, $request->validated());
+
+        if ($result instanceof ChangeRequest) {
+            return response()->json(['message' => 'تم إرسال طلب تعديل الحركة للمراجعة', 'change_request_id' => $result->id], 202);
+        }
+
+        return response()->json(['message' => 'تم تعديل الحركة بنجاح', 'data' => $result]);
     }
-    public function destroy(InventoryTransaction $inventoryTransaction)
+
+    public function destroy(InventoryTransaction $inventory_transaction): JsonResponse
     {
-        $inventoryTransaction->delete();
-        return response()->noContent();
+        $result = $this->transactionService->deleteTransaction($inventory_transaction);
+
+        if ($result instanceof ChangeRequest) {
+            return response()->json(['message' => 'تم إرسال طلب حذف الحركة للمراجعة', 'change_request_id' => $result->id], 202);
+        }
+
+        return response()->json(['message' => 'تم حذف الحركة بنجاح']);
     }
 }

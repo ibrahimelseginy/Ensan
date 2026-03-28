@@ -1,235 +1,135 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Project;
+use App\Models\ChangeRequest;
+use App\Services\UserService;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 
-final class UserWebController extends Controller
+final readonly class UserWebController extends Controller
 {
-    public function index()
+    public function __construct(
+        private UserService $userService
+    ) {}
+
+    public function index(Request $request): View
     {
-        // Statistics for Employees
-        $totalEmployees = User::where('is_employee', true)->count();
+        $totalEmployees  = User::where('is_employee', true)->count();
         $activeEmployees = User::where('is_employee', true)->where('active', true)->count();
 
         $projectCounts = User::where('is_employee', true)
             ->whereNotNull('project_id')
-            ->select('project_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+            ->select('project_id', DB::raw('count(*) as total'))
             ->groupBy('project_id')
             ->pluck('total', 'project_id');
 
-        $projectsWithStats = \App\Models\Project::orderBy('name')->get()->map(function ($p) use ($projectCounts) {
+        $projectsWithStats = Project::orderBy('name')->get()->map(function ($p) use ($projectCounts) {
             $p->employees_count = $projectCounts[$p->id] ?? 0;
             return $p;
         });
 
-        // List all users, excluding volunteers (they are managed in the Volunteers page)
-        $query = User::where('is_volunteer', false)->with('roles')->orderBy('name');
-
-        if (request('active') === '1') {
-            $query->where('active', true);
-        }
-        elseif (request('active') === '0') {
-            $query->where('active', false);
-        }
-
-        if (request('project_id')) {
-            $query->where('project_id', request('project_id'));
-        }
-
-        if (request('type') === 'employee') {
-            $query->where('is_employee', true);
-        }
-
-        $users = $query->paginate(20);
-
-        // Add pending check for each user
-        $users->each(function ($u) {
-            $u->pendingRequest = \App\Models\ChangeRequest::where('model_type', \App\Models\User::class)
-                ->where('model_id', $u->id)
-                ->where('status', 'pending')
-                ->first();
-        });
+        $filters = $request->only(['active', 'project_id', 'type']);
+        $users   = $this->userService->getFilteredUsers($filters, 20);
 
         return view('users.index', compact('users', 'totalEmployees', 'activeEmployees', 'projectsWithStats'));
     }
-    public function create()
+
+    public function create(): View
     {
         $roles = Role::orderBy('name')->get();
         return view('users.create', compact('roles'));
     }
-    public function store(Request $request)
+
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'phone' => 'nullable|string',
-            'is_employee' => 'boolean',
-            'is_volunteer' => 'boolean',
-            'active' => 'boolean',
-            'roles' => 'array',
-            'department' => 'nullable|string',
-            'job_title' => 'nullable|string',
-            'salary' => 'nullable|numeric',
-            'join_date' => 'nullable|date',
-            'contract_start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date|after:contract_start_date',
-            'profile_photo' => 'nullable|image|max:10240',
-            'contract_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'criminal_record_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'id_card_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'annual_leave_quota' => 'nullable|integer',
-            'leave_balance' => 'nullable|integer'
-        ]);
-        $data['password'] = Hash::make($data['password']);
+        $files = [
+            'profile_photo'         => $request->file('profile_photo'),
+            'contract_image'        => $request->file('contract_image'),
+            'criminal_record_image' => $request->file('criminal_record_image'),
+            'id_card_image'         => $request->file('id_card_image'),
+        ];
+        
+        $user = $this->userService->createUser($request->validated(), array_filter($files));
 
-        $user = User::create($data);
-
-        if ($request->hasFile('profile_photo')) {
-            $user->uploadImage($request->file('profile_photo'), 'profile-photos', 'profile_photo_path');
-        }
-
-        foreach (['contract_image', 'criminal_record_image', 'id_card_image'] as $field) {
-            if ($request->hasFile($field)) {
-                $user->uploadImage($request->file($field), 'user-docs', $field);
-            }
-        }
-
-        if (!empty($data['roles'])) {
-            $user->roles()->sync($data['roles']);
-        }
         return redirect()->route('users.show', $user);
     }
-    public function show(User $user)
+
+    public function show(User $user): View
     {
-        $pendingRequest = \App\Models\ChangeRequest::where('model_type', User::class)
+        $pendingRequest = ChangeRequest::where('model_type', User::class)
             ->where('model_id', $user->id)
             ->where('status', 'pending')
             ->first();
 
         return view('users.show', compact('user', 'pendingRequest'));
     }
-    public function edit(User $user)
-    {
-        $pending = \App\Models\ChangeRequest::where('model_type', \App\Models\User::class)
-            ->where('model_id', $user->id)
-            ->where('status', 'pending')
-            ->first();
 
-        if ($pending) {
+    public function edit(User $user): View|RedirectResponse
+    {
+        if ($this->hasPendingRequest($user)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المستخدم لديه طلب مراجعة حالياً');
         }
 
         $roles = Role::orderBy('name')->get();
         return view('users.edit', compact('user', 'roles'));
     }
-    public function update(Request $request, User $user)
+
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => 'sometimes|string',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:6',
-            'phone' => 'nullable|string',
-            'is_employee' => 'boolean',
-            'is_volunteer' => 'boolean',
-            'active' => 'boolean',
-            'roles' => 'array',
-            'department' => 'nullable|string',
-            'job_title' => 'nullable|string',
-            'salary' => 'nullable|numeric',
-            'join_date' => 'nullable|date',
-            'contract_start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date|after:contract_start_date',
-            'profile_photo' => 'nullable|image|max:10240',
-            'contract_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'criminal_record_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'id_card_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'annual_leave_quota' => 'nullable|integer',
-            'leave_balance' => 'nullable|integer'
-        ]);
-        // كلمة المرور: تُحفظ فوراً فقط إذا تم إدخال قيمة جديدة فعلاً
-        $newPassword = trim($request->input('password', ''));
-        if ($newPassword !== '' && strlen($newPassword) >= 6) {
-            $user->password = Hash::make($newPassword);
-            $user->saveQuietly();
-        }
-        unset($data['password']);
-
-        unset($data['profile_photo']);
-
-        foreach (['contract_image', 'criminal_record_image', 'id_card_image'] as $field) {
-            unset($data[$field]);
+        if ($this->hasPendingRequest($user)) {
+            return redirect()->route('change-requests.index')->with('info', 'هذا المستخدم لديه طلب مراجعة حالياً');
         }
 
-        // حفظ الأدوار
-        if (isset($data['roles'])) {
-            $user->roles()->sync($data['roles']);
-        }
-        unset($data['roles']);
+        $files = [
+            'profile_photo'         => $request->file('profile_photo'),
+            'contract_image'        => $request->file('contract_image'),
+            'criminal_record_image' => $request->file('criminal_record_image'),
+            'id_card_image'         => $request->file('id_card_image'),
+        ];
 
-        // حفظ باقي البيانات مباشرة
-        if (!empty($data)) {
-            $user->update($data);
-        }
-
-        // الصورة الشخصية
-        if ($request->hasFile('profile_photo')) {
-            $user->uploadImage($request->file('profile_photo'), 'profile-photos', 'profile_photo_path');
-        }
-
-        // المستندات (عقد - سجل جنائي - بطاقة)
-        foreach (['contract_image', 'criminal_record_image', 'id_card_image'] as $field) {
-            if ($request->hasFile($field)) {
-                $user->uploadImage($request->file($field), 'user-docs', $field);
-            }
-        }
+        $this->userService->updateUser($user, $request->validated(), array_filter($files));
 
         return redirect()->route('users.show', $user)->with('success', 'تم تحديث بيانات المستخدم بنجاح');
     }
-    public function destroy(User $user)
+
+    public function destroy(User $user): RedirectResponse
     {
-        $executor = function () use ($user) {
-            $user->delete();
-            return true;
-        };
+        $result = $this->userService->deleteUser($user);
 
-        $result = \App\Services\ChangeRequestService::handleRequest(
-            \App\Models\User::class ,
-            $user->id,
-            'delete',
-        [
-            'note' => 'حذف مستخدم',
-            'name' => $user->name,
-            'job_title' => $user->job_title,
-            'phone' => $user->phone,
-            'is_employee' => $user->is_employee,
-            'is_volunteer' => $user->is_volunteer,
-        ],
-            $executor,
-            true // Force Request
-        );
-
-        if ($result instanceof \App\Models\ChangeRequest) {
+        if ($result instanceof ChangeRequest) {
             return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب حذف المستخدم للموافقة');
         }
 
-        $user->delete();
         return redirect()->route('users.index')->with('success', 'تم حذف المستخدم بنجاح');
     }
-    public function attachRole(User $user, Role $role)
+
+    public function attachRole(User $user, Role $role): RedirectResponse
     {
-        $user->roles()->syncWithoutDetaching([$role->id]);
+        $this->userService->attachRole($user, (int)$role->id);
         return back();
     }
-    public function detachRole(User $user, Role $role)
+
+    public function detachRole(User $user, Role $role): RedirectResponse
     {
-        $user->roles()->detach($role->id);
+        $this->userService->detachRole($user, (int)$role->id);
         return back();
+    }
+
+    private function hasPendingRequest(User $user): bool
+    {
+        return ChangeRequest::where('model_type', User::class)
+            ->where('model_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
     }
 }

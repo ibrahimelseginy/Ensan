@@ -1,52 +1,46 @@
 <?php
 
 declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
-use Illuminate\Http\Request;
+use App\Services\ExpenseService;
+use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
+use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-final class ExpenseController extends Controller
+final readonly class ExpenseController extends Controller
 {
-    public function index() { return Expense::with(['project','campaign','beneficiary','creator'])->paginate(20); }
-    public function store(Request $request)
+    public function __construct(
+        private ExpenseService $expenseService
+    ) {}
+
+    public function index(): LengthAwarePaginator
     {
-        $data = $request->validate([
-            'type' => 'required|in:operational,aid,logistics',
-            'amount' => 'required|numeric',
-            'currency' => 'nullable|string',
-            'description' => 'nullable|string',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'paid_at' => 'nullable|date',
-            'attachment_path' => 'nullable|string'
-        ]);
-        $data['created_by'] = $request->user() ? $request->user()->id : null;
-        $expense = Expense::create($data);
-        \App\Services\ExpenseService::postCreate($expense);
-        return $expense->load(['project','campaign','beneficiary','creator']);
+        return $this->expenseService->getAllExpenses(20);
     }
-    public function show(Expense $expense) { return $expense->load(['project','campaign','beneficiary','creator']); }
-    public function update(Request $request, Expense $expense)
+
+    public function store(StoreExpenseRequest $request): Expense
     {
-        $data = $request->validate([
-            'type' => 'sometimes|in:operational,aid,logistics',
-            'amount' => 'nullable|numeric',
-            'currency' => 'nullable|string',
-            'description' => 'nullable|string',
-            'project_id' => 'nullable|exists:projects,id',
-            'campaign_id' => 'nullable|exists:campaigns,id',
-            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
-            'paid_at' => 'nullable|date',
-            'attachment_path' => 'nullable|string'
-        ]);
-        $expense->update($data);
-        return $expense->load(['project','campaign','beneficiary','creator']);
+        $userId = $request->user()?->id;
+        return $this->expenseService->createExpense($request->validated(), $userId);
     }
-    public function destroy(Expense $expense)
+
+    public function show(Expense $expense): Expense
     {
-        $expense->delete();
+        return $expense->load(['project', 'campaign', 'beneficiary', 'creator']);
+    }
+
+    public function update(UpdateExpenseRequest $request, Expense $expense): Expense
+    {
+        return $this->expenseService->updateExpense($expense, $request->validated());
+    }
+
+    public function destroy(Expense $expense): Response
+    {
+        $this->expenseService->deleteExpense($expense);
         return response()->noContent();
     }
 }
