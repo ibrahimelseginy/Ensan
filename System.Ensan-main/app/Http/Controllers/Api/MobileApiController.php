@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -16,7 +18,7 @@ use App\Models\MobileInKindDonation;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class MobileApiController extends Controller
+final class MobileApiController extends Controller
 {
     /**
      * Get Home Page Content for Mobile App

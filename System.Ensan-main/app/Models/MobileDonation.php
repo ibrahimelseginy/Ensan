@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\UploadsImages;
 
-class MobileDonation extends Model
+final class MobileDonation extends Model
 {
     use HasFactory, UploadsImages;
 

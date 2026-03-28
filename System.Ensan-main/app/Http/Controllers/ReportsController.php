@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
@@ -9,7 +11,7 @@ use App\Models\Beneficiary;
 use App\Models\JournalEntryLine;
 use App\Models\Account;
 
-class ReportsController extends Controller
+final class ReportsController extends Controller
 {
     public function donors()
     {

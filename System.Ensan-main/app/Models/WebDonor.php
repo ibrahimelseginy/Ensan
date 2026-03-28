@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class WebDonor extends Authenticatable
+final class WebDonor extends Authenticatable
 {
     use Notifiable, \App\Traits\UploadsImages;
 

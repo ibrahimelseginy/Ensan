@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Campaign extends Model
+final class Campaign extends Model
 {
     use \App\Traits\UploadsImages;
 

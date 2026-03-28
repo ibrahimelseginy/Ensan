@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class AttachmentWebController extends Controller
+final class AttachmentWebController extends Controller
 {
     public function store(Request $request)
     {

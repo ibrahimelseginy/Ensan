@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class WebsiteWebController extends Controller
+final class WebsiteWebController extends Controller
 {
     // --- Dynamic Pages (API & Management) ---
     public function pages()

@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use App\Models\CampaignDailyMenu;
 use Illuminate\Http\Request;
 
-class CampaignWebController extends Controller
+final class CampaignWebController extends Controller
 {
     public function index(Request $request)
     {

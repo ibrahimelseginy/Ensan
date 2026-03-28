@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -7,7 +9,7 @@ use App\Models\Campaign;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
-class PublicContentController extends Controller
+final class PublicContentController extends Controller
 {
     public function campaigns()
     {

@@ -1,9 +1,11 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class GuestHouse extends Model
+final class GuestHouse extends Model
 {
     protected $fillable = ['name','location','phone','capacity','status','description','manager_user_id','manager_photo_url'];
 

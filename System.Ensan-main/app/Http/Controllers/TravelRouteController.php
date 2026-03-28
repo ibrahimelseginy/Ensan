@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\TravelRoute;
 use Illuminate\Http\Request;
 
-class TravelRouteController extends Controller
+final class TravelRouteController extends Controller
 {
     public function index() { return TravelRoute::paginate(50); }
     public function store(Request $request)

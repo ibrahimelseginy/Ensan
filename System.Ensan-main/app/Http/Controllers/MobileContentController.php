@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -12,7 +14,7 @@ use App\Models\MobileInKindDonation;
 use App\Models\MobileHomeItem;
 use Illuminate\Support\Facades\Storage;
 
-class MobileContentController extends Controller
+final class MobileContentController extends Controller
 {
     // --- Dashboard View to Manage All Mobile Content ---
     public function index()

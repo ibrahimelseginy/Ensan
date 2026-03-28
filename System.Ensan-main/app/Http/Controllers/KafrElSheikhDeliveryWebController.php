@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\KafrElSheikhDelivery;
 use Illuminate\Http\Request;
 
-class KafrElSheikhDeliveryWebController extends Controller
+final class KafrElSheikhDeliveryWebController extends Controller
 {
     public function index()
     {

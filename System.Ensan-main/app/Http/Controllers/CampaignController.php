@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use Illuminate\Http\Request;
 
-class CampaignController extends Controller
+final class CampaignController extends Controller
 {
     public function index() { return Campaign::paginate(20); }
     public function store(Request $request)

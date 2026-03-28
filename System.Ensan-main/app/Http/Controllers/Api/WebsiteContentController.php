@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -10,7 +12,7 @@ use App\Models\WebPage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class WebsiteContentController extends Controller
+final class WebsiteContentController extends Controller
 {
     // --- Projects ---
     public function indexProjects()

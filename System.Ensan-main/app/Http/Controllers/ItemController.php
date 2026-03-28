@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Item;
 use Illuminate\Http\Request;
 
-class ItemController extends Controller
+final class ItemController extends Controller
 {
     public function index() { return Item::paginate(20); }
     public function store(Request $request)

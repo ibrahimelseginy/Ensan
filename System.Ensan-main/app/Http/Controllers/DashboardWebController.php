@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,7 @@ use App\Models\Expense;
 use App\Models\Audit;
 use App\Models\EmployeeAttendance;
 
-class DashboardWebController extends Controller
+final class DashboardWebController extends Controller
 {
     public function index()
     {

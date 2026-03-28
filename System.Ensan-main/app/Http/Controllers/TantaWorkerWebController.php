@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\TantaWorker;
 use Illuminate\Http\Request;
 
-class TantaWorkerWebController extends Controller
+final class TantaWorkerWebController extends Controller
 {
     public function index()
     {

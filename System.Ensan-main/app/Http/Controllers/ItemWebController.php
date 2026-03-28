@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Item;
@@ -6,7 +8,7 @@ use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ItemWebController extends Controller
+final class ItemWebController extends Controller
 {
     public function index(Request $request)
     {

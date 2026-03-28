@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\FinancialClosure;
 use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 
-class FinancialClosureController extends Controller
+final class FinancialClosureController extends Controller
 {
     public function index() { return FinancialClosure::orderByDesc('date')->paginate(20); }
     public function store(Request $request)

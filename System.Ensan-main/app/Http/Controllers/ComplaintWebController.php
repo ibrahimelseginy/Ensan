@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
@@ -7,7 +9,7 @@ use App\Models\Donor;
 use App\Models\Beneficiary;
 use Illuminate\Http\Request;
 
-class ComplaintWebController extends Controller
+final class ComplaintWebController extends Controller
 {
     public function index() { 
         $complaints = Complaint::orderByDesc('id')->paginate(20); 

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PersonalAccessToken extends Model
+final class PersonalAccessToken extends Model
 {
     protected $table = 'anasen_personal_access_tokens';
 

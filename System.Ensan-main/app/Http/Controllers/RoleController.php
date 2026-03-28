@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Role;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+final class RoleController extends Controller
 {
     public function index() { return Role::paginate(50); }
     public function store(Request $request)

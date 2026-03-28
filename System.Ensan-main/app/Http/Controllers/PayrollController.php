@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Payroll;
 use Illuminate\Http\Request;
 
-class PayrollController extends Controller
+final class PayrollController extends Controller
 {
     public function index() { return Payroll::with('user')->paginate(50); }
     public function store(Request $request)

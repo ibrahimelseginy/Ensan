@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\UploadsImages;
 
-class MobileVolunteerRequest extends Model
+final class MobileVolunteerRequest extends Model
 {
     use UploadsImages;
 

@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class TaskWebController extends Controller
+final class TaskWebController extends Controller
 {
     public function index() 
     { 

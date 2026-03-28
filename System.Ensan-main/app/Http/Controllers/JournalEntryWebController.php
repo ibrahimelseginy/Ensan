@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
@@ -6,7 +8,7 @@ use App\Models\JournalEntryLine;
 use App\Models\Account;
 use Illuminate\Http\Request;
 
-class JournalEntryWebController extends Controller
+final class JournalEntryWebController extends Controller
 {
     public function index()
     {

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Membership extends Model
+final class Membership extends Model
 {
     protected $fillable = [
         'entity_name', 'entity_type', 'service_provided', 'discount_percentage',

@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use Illuminate\Http\Request;
 
-class ExpenseController extends Controller
+final class ExpenseController extends Controller
 {
     public function index() { return Expense::with(['project','campaign','beneficiary','creator'])->paginate(20); }
     public function store(Request $request)

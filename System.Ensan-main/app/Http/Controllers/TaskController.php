@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
 
-class TaskController extends Controller
+final class TaskController extends Controller
 {
     public function index() { return Task::with(['assignee','assigner'])->paginate(20); }
     public function store(Request $request)

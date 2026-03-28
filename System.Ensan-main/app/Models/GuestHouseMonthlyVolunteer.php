@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class GuestHouseMonthlyVolunteer extends Model
+final class GuestHouseMonthlyVolunteer extends Model
 {
     protected $fillable = ['guest_house_id', 'user_id', 'month', 'year', 'notes'];
 

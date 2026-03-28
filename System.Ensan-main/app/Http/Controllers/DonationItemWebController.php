@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\DonationCategory;
@@ -7,7 +9,7 @@ use App\Models\DonationItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class DonationItemWebController extends Controller
+final class DonationItemWebController extends Controller
 {
     public function index()
     {

@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Account;
 use Illuminate\Http\Request;
 
-class AccountWebController extends Controller
+final class AccountWebController extends Controller
 {
     public function index()
     {

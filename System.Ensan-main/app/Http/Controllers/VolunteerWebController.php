@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -9,7 +11,7 @@ use App\Models\VolunteerHour;
 use App\Models\Task;
 use App\Models\Campaign;
 
-class VolunteerWebController extends Controller
+final class VolunteerWebController extends Controller
 {
     public function index() { 
         $volunteers = User::where('is_volunteer',true)->orderBy('name')->paginate(20);

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MobileInKindDonation extends Model
+final class MobileInKindDonation extends Model
 {
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];

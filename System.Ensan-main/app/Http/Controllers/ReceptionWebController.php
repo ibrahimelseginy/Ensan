@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ReceptionLog;
 
-class ReceptionWebController extends Controller
+final class ReceptionWebController extends Controller
 {
     public function index()
     {

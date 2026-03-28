@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -8,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 use Carbon\Carbon;
 
-class AuthController extends Controller
+final class AuthController extends Controller
 {
     public function loginByPhone(Request $request)
     {

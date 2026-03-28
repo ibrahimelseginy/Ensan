@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MobileBanner extends Model
+final class MobileBanner extends Model
     use \App\Traits\UploadsImages;
 
     protected $fillable = [

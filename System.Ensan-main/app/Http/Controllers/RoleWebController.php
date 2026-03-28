@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 
-class RoleWebController extends Controller
+final class RoleWebController extends Controller
 {
     public function index(Request $request)
     {

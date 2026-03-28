@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\SchoolCollaboration;
 use Illuminate\Http\Request;
 
-class SchoolCollaborationWebController extends Controller
+final class SchoolCollaborationWebController extends Controller
 {
     public function index()
     {

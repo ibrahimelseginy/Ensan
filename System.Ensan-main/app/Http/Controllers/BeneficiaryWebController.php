@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
@@ -6,7 +8,7 @@ use App\Models\Project;
 use App\Models\Campaign;
 use Illuminate\Http\Request;
 
-class BeneficiaryWebController extends Controller
+final class BeneficiaryWebController extends Controller
 {
     public function index(Request $request)
     {

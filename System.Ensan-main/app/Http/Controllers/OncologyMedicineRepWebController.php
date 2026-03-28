@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\OncologyMedicineRep;
 use Illuminate\Http\Request;
 
-class OncologyMedicineRepWebController extends Controller
+final class OncologyMedicineRepWebController extends Controller
 {
     public function index()
     {

@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Delegate;
 use Illuminate\Http\Request;
 
-class DelegateController extends Controller
+final class DelegateController extends Controller
 {
     public function index() { return Delegate::with('route')->paginate(20); }
     public function store(Request $request)

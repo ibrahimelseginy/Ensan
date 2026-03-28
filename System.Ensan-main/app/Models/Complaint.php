@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Complaint extends Model
+final class Complaint extends Model
 {
     protected $fillable = ['source_type','source_id','against_user_id','status','subject','message','attachment_path'];
 

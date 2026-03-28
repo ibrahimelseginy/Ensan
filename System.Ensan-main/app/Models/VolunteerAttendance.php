@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class VolunteerAttendance extends Model
+final class VolunteerAttendance extends Model
 {
     protected $fillable = ['user_id','date','check_in_at','check_out_at','notes','rating','evaluation_notes'];
     protected $casts = ['date' => 'date'];

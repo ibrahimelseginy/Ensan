@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Workspace;
@@ -7,7 +9,7 @@ use App\Models\WorkspaceRental;
 use App\Models\Expense;
 use Illuminate\Http\Request;
 
-class WorkspaceWebController extends Controller
+final class WorkspaceWebController extends Controller
 {
     public function index()
     {

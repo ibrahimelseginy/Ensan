@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
 use Illuminate\Http\Request;
 
-class BeneficiaryController extends Controller
+final class BeneficiaryController extends Controller
 {
     public function index()
     {

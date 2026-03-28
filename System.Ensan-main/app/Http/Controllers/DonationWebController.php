@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Donation;
@@ -12,7 +14,7 @@ use App\Models\TravelRoute;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-class DonationWebController extends Controller
+final class DonationWebController extends Controller
 {
     public function index()
     {

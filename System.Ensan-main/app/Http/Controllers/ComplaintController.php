@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 
-class ComplaintController extends Controller
+final class ComplaintController extends Controller
 {
     public function index() { return Complaint::paginate(20); }
     public function store(Request $request)

@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Task extends Model
+final class Task extends Model
 {
     protected $fillable = ['title','volunteer_activity_name','description','assigned_to','assigned_by','due_date','status','project_id','campaign_id','guest_house_id','rating','evaluation_notes'];
 

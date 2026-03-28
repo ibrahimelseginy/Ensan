@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Donor;
@@ -6,7 +8,7 @@ use App\Models\Donation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-class DonorWebController extends Controller
+final class DonorWebController extends Controller
 {
     public function index(Request $request)
     {

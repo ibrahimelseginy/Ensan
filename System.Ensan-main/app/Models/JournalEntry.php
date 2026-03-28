@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class JournalEntry extends Model
+final class JournalEntry extends Model
 {
     protected $fillable = ['date','branch','gate','entry_type','locked','description'];
 

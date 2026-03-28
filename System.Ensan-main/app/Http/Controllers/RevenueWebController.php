@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -6,7 +8,7 @@ use App\Models\Donation;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class RevenueWebController extends Controller
+final class RevenueWebController extends Controller
 {
     public function index(Request $request)
     {

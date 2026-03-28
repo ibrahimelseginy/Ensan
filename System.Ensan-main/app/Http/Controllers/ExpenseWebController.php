@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
@@ -10,7 +12,7 @@ use App\Models\GuestHouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class ExpenseWebController extends Controller
+final class ExpenseWebController extends Controller
 {
     public function index(Request $request)
     {

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
-class SupplierWebController extends Controller
+final class SupplierWebController extends Controller
 {
     public function index(Request $request)
     {

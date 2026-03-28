@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
 use Illuminate\Http\Request;
 
-class AdminDonationController extends Controller
+final class AdminDonationController extends Controller
 {
     public function index()
     {

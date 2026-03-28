@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WebPartner extends Model
+final class WebPartner extends Model
 {
     use \App\Traits\UploadsImages;
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -7,7 +9,7 @@ use App\Models\Donation;
 use App\Models\Donor;
 use Illuminate\Http\Request;
 
-class AdminWebsiteDonationController extends Controller
+final class AdminWebsiteDonationController extends Controller
 {
     protected $processor;
 

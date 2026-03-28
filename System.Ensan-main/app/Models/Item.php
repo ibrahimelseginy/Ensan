@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Item extends Model
+final class Item extends Model
 {
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];

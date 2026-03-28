@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Project;
@@ -11,7 +13,7 @@ use Illuminate\Http\Request;
 use App\Services\ChangeRequestService;
 use App\Models\ChangeRequest;
 
-class ProjectWebController extends Controller
+final class ProjectWebController extends Controller
 {
     public function index(Request $request)
     {

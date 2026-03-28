@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Leave;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class LeaveWebController extends Controller
+final class LeaveWebController extends Controller
 {
     public function index(Request $request)
     {

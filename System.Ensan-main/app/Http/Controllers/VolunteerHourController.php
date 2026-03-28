@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\VolunteerHour;
 use Illuminate\Http\Request;
 
-class VolunteerHourController extends Controller
+final class VolunteerHourController extends Controller
 {
     public function index() { return VolunteerHour::with('user')->paginate(50); }
     public function store(Request $request)

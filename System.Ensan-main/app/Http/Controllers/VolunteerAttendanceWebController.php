@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\VolunteerAttendance;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class VolunteerAttendanceWebController extends Controller
+final class VolunteerAttendanceWebController extends Controller
 {
     public function index(Request $request) { 
         $query = VolunteerAttendance::with('user')->orderByDesc('date');

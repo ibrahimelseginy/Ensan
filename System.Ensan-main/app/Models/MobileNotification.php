@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MobileNotification extends Model
+final class MobileNotification extends Model
 {
     use \App\Traits\UploadsImages;
 

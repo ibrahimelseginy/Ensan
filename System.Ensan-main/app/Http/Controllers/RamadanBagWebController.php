@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\RamadanBag;
@@ -7,7 +9,7 @@ use App\Models\Campaign;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
-class RamadanBagWebController extends Controller
+final class RamadanBagWebController extends Controller
 {
     public function index(Request $request)
     {

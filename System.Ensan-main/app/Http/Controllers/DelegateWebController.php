@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Delegate;
@@ -7,7 +9,7 @@ use App\Models\TravelRoute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class DelegateWebController extends Controller
+final class DelegateWebController extends Controller
 {
     public function index(Request $request)
     {

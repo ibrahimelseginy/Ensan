@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
@@ -8,7 +10,7 @@ use App\Models\InventoryTransaction;
 use App\Models\Beneficiary;
 use App\Models\JournalEntryLine;
 
-class ReportsWebController extends Controller
+final class ReportsWebController extends Controller
 {
     public function index()
     {

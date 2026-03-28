@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ use App\Models\User;
 use App\Models\InventoryTransaction;
 use App\Models\ChangeRequest;
 
-class NotificationWebController extends Controller
+final class NotificationWebController extends Controller
 {
     public function index(Request $request)
     {

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Payroll;
@@ -6,7 +8,7 @@ use App\Models\User;
 use App\Services\PayrollAccountingService;
 use Illuminate\Http\Request;
 
-class PayrollWebController extends Controller
+final class PayrollWebController extends Controller
 {
     protected $payrollAccountingService;
 

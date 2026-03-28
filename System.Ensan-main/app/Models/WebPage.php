@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class WebPage extends Model
+final class WebPage extends Model
 {
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\TravelRoute;
@@ -7,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 
-class TravelRouteWebController extends Controller
+final class TravelRouteWebController extends Controller
 {
     public function index() {
         $q = trim((string) request()->input('q'));

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\UploadsImages;
 use Illuminate\Support\Facades\Storage;
 
-class MobileNews extends Model
+final class MobileNews extends Model
 {
     use UploadsImages;
 

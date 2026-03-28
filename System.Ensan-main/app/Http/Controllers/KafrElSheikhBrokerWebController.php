@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\KafrElSheikhBroker;
 use Illuminate\Http\Request;
 
-class KafrElSheikhBrokerWebController extends Controller
+final class KafrElSheikhBrokerWebController extends Controller
 {
     public function index()
     {

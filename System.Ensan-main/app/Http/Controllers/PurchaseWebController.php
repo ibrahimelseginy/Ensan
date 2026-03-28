@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
-class PurchaseWebController extends Controller
+final class PurchaseWebController extends Controller
 {
     public function store(Request $request, Supplier $supplier)
     {

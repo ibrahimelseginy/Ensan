@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -7,7 +9,7 @@ use App\Models\FieldVisit;
 use App\Models\Beneficiary;
 use App\Models\User;
 
-class VisitWebController extends Controller
+final class VisitWebController extends Controller
 {
     public function index()
     {

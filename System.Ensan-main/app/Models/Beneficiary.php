@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Beneficiary extends Model
+final class Beneficiary extends Model
 {
     protected $fillable = [
         'code', 'full_name', 'national_id', 'phone', 'address', 'assistance_type', 'status', 'project_id', 'campaign_id', 'guest_house_id', 'notes', 'rejection_reason',

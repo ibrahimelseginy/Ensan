@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WebRoomBooking extends Model
+final class WebRoomBooking extends Model
 {
     use \App\Traits\UploadsImages;
 

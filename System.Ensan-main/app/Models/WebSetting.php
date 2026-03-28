@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WebSetting extends Model
+final class WebSetting extends Model
 {
     protected $fillable = ['key', 'value', 'group', 'type'];
 

@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 
-class InventoryTransactionController extends Controller
+final class InventoryTransactionController extends Controller
 {
     public function index()
     {

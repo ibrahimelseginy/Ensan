@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use Illuminate\Http\Request;
 
-class JournalEntryController extends Controller
+final class JournalEntryController extends Controller
 {
     public function index() { return JournalEntry::with('lines')->paginate(20); }
     public function store(Request $request)

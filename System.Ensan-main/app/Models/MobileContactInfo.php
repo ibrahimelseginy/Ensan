@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MobileContactInfo extends Model
+final class MobileContactInfo extends Model
 {
     protected $fillable = ['name', 'sort_order'];
 

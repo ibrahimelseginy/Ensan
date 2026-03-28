@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
@@ -6,7 +8,7 @@ use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class WarehouseWebController extends Controller
+final class WarehouseWebController extends Controller
 {
     public function index() { 
         $warehouses = Warehouse::withCount('transactions')->orderBy('name')->paginate(20);

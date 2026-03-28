@@ -1,10 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Expense extends Model
+final class Expense extends Model
 {
     protected $fillable = ['type','category','amount','currency','payment_method','description','project_id','campaign_id','guest_house_id','workspace_id','beneficiary_id','created_by','paid_at','status','cancelled_at','cancelled_by','cancellation_reason','attachment_path'];
 

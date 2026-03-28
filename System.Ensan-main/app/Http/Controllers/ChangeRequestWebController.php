@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\ChangeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ChangeRequestWebController extends Controller
+final class ChangeRequestWebController extends Controller
 {
     public function index(Request $request)
     {

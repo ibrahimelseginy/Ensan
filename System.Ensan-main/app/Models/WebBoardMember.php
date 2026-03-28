@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class WebBoardMember extends Model
+final class WebBoardMember extends Model
 {
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];

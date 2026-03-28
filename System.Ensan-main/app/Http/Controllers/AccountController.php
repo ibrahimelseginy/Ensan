@@ -1,35 +1,46 @@
 <?php
+
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Account;
-use Illuminate\Http\Request;
+use App\Services\AccountService;
+use App\Http\Requests\StoreAccountRequest;
+use App\Http\Requests\UpdateAccountRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-class AccountController extends Controller
+final readonly class AccountController extends Controller
 {
-    public function index() { return Account::paginate(50); }
-    public function store(Request $request)
+    public function __construct(
+        private AccountService $accountService
+    ) {}
+
+    public function index(): LengthAwarePaginator
     {
-        $data = $request->validate([
-            'code' => 'required|string|unique:accounts,code',
-            'name' => 'required|string',
-            'type' => 'required|in:asset,liability,equity,revenue,expense'
-        ]);
-        return Account::create($data);
+        return $this->accountService->getAllAccounts(50);
     }
-    public function show(Account $account) { return $account; }
-    public function update(Request $request, Account $account)
+
+    public function store(StoreAccountRequest $request): Account
     {
-        $data = $request->validate([
-            'code' => 'sometimes|string|unique:accounts,code,' . $account->id,
-            'name' => 'sometimes|string',
-            'type' => 'sometimes|in:asset,liability,equity,revenue,expense'
-        ]);
-        $account->update($data);
+        return $this->accountService.createAccount($request->validated());
+    }
+
+    public function show(Account $account): Account
+    {
         return $account;
     }
-    public function destroy(Account $account)
+
+    public function update(UpdateAccountRequest $request, Account $account): Account
     {
-        $account->delete();
+        return $this->accountService.updateAccount($account, $request->validated());
+    }
+
+    public function destroy(Account $account): Response
+    {
+        $this->accountService.deleteAccount($account);
         return response()->noContent();
     }
 }

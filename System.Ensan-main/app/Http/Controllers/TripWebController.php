@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -13,7 +15,7 @@ use App\Models\Campaign;
 use App\Models\GuestHouse;
 use App\Models\Beneficiary;
 
-class TripWebController extends Controller
+final class TripWebController extends Controller
 {
     public function index(Request $request)
     {

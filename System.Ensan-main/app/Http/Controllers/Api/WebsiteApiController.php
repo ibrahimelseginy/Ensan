@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -24,7 +26,7 @@ use App\Models\WebEvent;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 
-class WebsiteApiController extends Controller
+final class WebsiteApiController extends Controller
 {
     protected $donationSettings;
 

@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\VolunteerHour;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class VolunteerHourWebController extends Controller
+final class VolunteerHourWebController extends Controller
 {
     public function index() { $hours = VolunteerHour::with('user')->orderByDesc('date')->paginate(50); return view('vhours.index', compact('hours')); }
     public function create() { $users = User::orderBy('name')->get(); return view('vhours.create', compact('users')); }

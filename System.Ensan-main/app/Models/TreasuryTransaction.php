@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TreasuryTransaction extends Model
+final class TreasuryTransaction extends Model
 {
     protected $fillable = [
         'treasury_id',

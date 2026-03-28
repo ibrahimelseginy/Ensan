@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MobileContactMessage extends Model
+final class MobileContactMessage extends Model
 {
     protected $fillable = ['name', 'phone', 'email', 'subject', 'message', 'status', 'admin_notes'];
 }

@@ -1,11 +1,13 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\FinancialClosure;
 use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 
-class FinancialClosureWebController extends Controller
+final class FinancialClosureWebController extends Controller
 {
     public function index()
     {

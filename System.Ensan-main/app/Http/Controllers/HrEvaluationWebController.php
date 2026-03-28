@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -10,7 +12,7 @@ use App\Models\EmployeeAttendance;
 use App\Models\User;
 use Carbon\Carbon;
 
-class HrEvaluationWebController extends Controller
+final class HrEvaluationWebController extends Controller
 {
     public function index()
     {
