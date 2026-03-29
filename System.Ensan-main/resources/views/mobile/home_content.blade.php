@@ -303,6 +303,53 @@
                             </div>
                         @endif
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">صورة بداية الصفحة (اختياري)</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        @if($item->image_path)
+                            <div class="mt-2 text-center">
+                                <img src="{{ $item->image_url }}" class="rounded shadow-sm p-1 border bg-white" style="max-height: 50px;">
+                            </div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوصف (اختياري)</label>
+                        <textarea name="description" class="form-control" rows="2">{{ $item->description }}</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom border-secondary pb-2">
+                        <h6 class="fw-bold text-warning mb-0">الكروت الداخلية (اختياري)</h6>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="addHeroCard('editHeroCardsContainer{{ $item->id }}')">+ إضافة كارت جديد</button>
+                    </div>
+                    <div id="editHeroCardsContainer{{ $item->id }}">
+                        @foreach($item->cards as $index => $card)
+                            <div class="card bg-dark border-secondary mb-3 hero-card-item">
+                                <div class="card-body p-3">
+                                    <input type="hidden" name="cards[{{ $index }}][id]" value="{{ $card->id }}">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <h6 class="text-white">كارت #{{ $index + 1 }}</h6>
+                                        <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="this.closest('.hero-card-item').remove()">حذف</button>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold" style="font-size: 0.85rem">اسم الكارت</label>
+                                        <input type="text" name="cards[{{ $index }}][title]" class="form-control form-control-sm" value="{{ $card->title }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold" style="font-size: 0.85rem">الوصــف</label>
+                                        <textarea name="cards[{{ $index }}][description]" class="form-control form-control-sm" rows="2">{{ $card->description }}</textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold" style="font-size: 0.85rem">الصـــورة</label>
+                                        <input type="file" name="cards[{{ $index }}][image]" class="form-control form-control-sm" accept="image/*">
+                                        @if($card->image_path)
+                                            <div class="mt-2">
+                                                <img src="{{ $card->image_url }}" class="rounded shadow-sm p-1 border bg-white" style="max-height: 40px;">
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold">حفظ التغييرات</button>
@@ -452,6 +499,14 @@
             <div class="modal-body p-4">
                 <div class="mb-3"><label class="form-label fw-bold">العنوان (اسم المشروع)</label><input type="text" name="title" class="form-control" placeholder="مثلاً: زاد الأيتام" required></div>
                 <div class="mb-3"><label class="form-label fw-bold">الأيقونة (Icon)</label><input type="file" name="icon" class="form-control" accept="image/*" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">صورة بداية الصفحة (اختياري)</label><input type="file" name="image" class="form-control" accept="image/*"></div>
+                <div class="mb-3"><label class="form-label fw-bold">الوصف (اختياري)</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom border-secondary pb-2">
+                    <h6 class="fw-bold text-warning mb-0">الكروت الداخلية (اختياري)</h6>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="addHeroCard('addHeroCardsContainer')">+ إضافة كارت جديد</button>
+                </div>
+                <div id="addHeroCardsContainer"></div>
             </div>
             <div class="modal-footer border-0">
                 <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill w-100 py-3">حفظ</button>
@@ -607,4 +662,35 @@
     .animate-slide-up { animation: slideUp 0.5s ease-out; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+<script>
+    let heroCardIndex = 1000;
+    function addHeroCard(containerId) {
+        const container = document.getElementById(containerId);
+        const currentIndex = heroCardIndex++;
+        
+        const html = `
+            <div class="card bg-dark border-secondary mb-3 hero-card-item">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h6 class="text-white mb-0">كارت جديد</h6>
+                        <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="this.closest('.hero-card-item').remove()">حذف</button>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold" style="font-size: 0.85rem">اسم الكارت</label>
+                        <input type="text" name="cards[${currentIndex}][title]" class="form-control form-control-sm">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold" style="font-size: 0.85rem">الوصــف</label>
+                        <textarea name="cards[${currentIndex}][description]" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold" style="font-size: 0.85rem">الصـــورة</label>
+                        <input type="file" name="cards[${currentIndex}][image]" class="form-control form-control-sm" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>
 @endsection

@@ -16,22 +16,38 @@ final class AuthController extends Controller
     {
         $request->validate(['phone' => 'required|string']);
 
-        $user = User::firstOrCreate(
-            ['phone' => $request->phone],
-            [
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            $user = User::create([
+                'phone' => $request->phone,
                 'name' => 'Donor ' . substr($request->phone, -4),
                 'role' => 'donor',
                 'active' => true,
+                'registration_source' => 'mobile',
                 'email' => $request->phone . '@anasen.charity',
-                'password' => Hash::make(str_random(16))
-            ]
-        );
+                'password' => Hash::make(\Illuminate\Support\Str::random(16))
+            ]);
 
-        $user->otp_code = '12345'; // MVP OTP
+            // Assign donor role from Roles table if exists
+            $donorRole = \App\Models\Role::where('key', 'donor')->first();
+            if ($donorRole) {
+                $user->roles()->attach($donorRole->id);
+            }
+        }
+
+        $user->otp_code = (string) random_int(100000, 999999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
-        return response()->json(['message' => 'OTP sent successfully']);
+        // In production, send SMS here. For now, we log it.
+        \Illuminate\Support\Facades\Log::info("OTP for {$request->phone}: {$user->otp_code}");
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'OTP sent successfully',
+            'debug_otp' => config('app.debug') ? $user->otp_code : null
+        ]);
     }
 
     public function verifyOtp(Request $request)
@@ -47,7 +63,10 @@ final class AuthController extends Controller
                     ->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Invalid or expired OTP'], 401);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid or expired OTP'
+            ], 401);
         }
 
         $user->otp_code = null;
@@ -59,7 +78,11 @@ final class AuthController extends Controller
             'token' => bin2hex(random_bytes(32)),
         ]);
 
-        return response()->json(['token' => $token->token, 'user' => $user]);
+        return response()->json([
+            'status' => 'success',
+            'token' => $token->token,
+            'user' => $user
+        ]);
     }
 
     public function register(Request $request)
@@ -69,17 +92,32 @@ final class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6'
         ]);
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'active' => true
+            'active' => true,
+            'registration_source' => 'mobile',
+            'role' => 'donor'
         ]);
+
+        // Assign donor role from Roles table
+        $donorRole = \App\Models\Role::where('key', 'donor')->first();
+        if ($donorRole) {
+            $user->roles()->attach($donorRole->id);
+        }
+
         $token = Token::create([
             'user_id' => $user->id,
             'token' => bin2hex(random_bytes(32)),
         ]);
-        return response()->json(['token' => $token->token, 'user' => $user]);
+
+        return response()->json([
+            'status' => 'success',
+            'token' => $token->token,
+            'user' => $user
+        ]);
     }
 
     public function login(Request $request)

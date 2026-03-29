@@ -9,7 +9,7 @@ class User extends Authenticatable
 {
     use \App\Traits\UploadsImages;
 
-    protected $fillable = ['name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'active', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
+    protected $fillable = ['name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
 
     public function tokens(): HasMany
     {

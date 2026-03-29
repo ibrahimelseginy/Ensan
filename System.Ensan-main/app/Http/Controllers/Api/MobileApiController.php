@@ -25,7 +25,7 @@ final class MobileApiController extends Controller
      */
     public function getHomeContent()
     {
-        $heroes = MobileHomeItem::where('type', 'hero')->orderBy('sort_order')->get();
+        $heroes = MobileHomeItem::with('cards')->where('type', 'hero')->orderBy('sort_order')->get();
         $gallery = MobileHomeItem::where('type', 'gallery')->orderBy('sort_order')->get();
         $services = MobileHomeItem::where('type', 'service')->orderBy('sort_order')->get();
         $shareItems = MobileHomeItem::where('type', 'share')->orderBy('sort_order')->get();

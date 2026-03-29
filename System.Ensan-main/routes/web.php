@@ -425,6 +425,8 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             // Web Management inside Mobile Unit
             Route::patch('/web-bookings/{booking}', [MobileContentController::class, 'updateWebBookingStatus'])->name('web_bookings.update');
             Route::delete('/web-bookings/{booking}', [MobileContentController::class, 'destroyWebBooking'])->name('web_bookings.destroy');
+
+            Route::get('/donors-auth', [MobileContentController::class, 'mobileDonorsIndex'])->name('donors_auth.index');
         }
         );
 

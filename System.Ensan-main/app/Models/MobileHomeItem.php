@@ -34,4 +34,9 @@ final class MobileHomeItem extends Model
     }
 
     protected $appends = ['image_url', 'icon_url'];
+
+    public function cards()
+    {
+        return $this->hasMany(MobileHeroCard::class, 'mobile_home_item_id');
+    }
 }

@@ -131,7 +131,7 @@ final class MobileContentController extends Controller
     // --- Home Content Management ---
     public function homeContentIndex()
     {
-        $heroes = MobileHomeItem::where('type', 'hero')->orderBy('sort_order')->get();
+        $heroes = MobileHomeItem::with('cards')->where('type', 'hero')->orderBy('sort_order')->get();
         $gallery = MobileHomeItem::where('type', 'gallery')->orderBy('sort_order')->get();
         $services = MobileHomeItem::where('type', 'service')->orderBy('sort_order')->get();
         $shareItems = MobileHomeItem::where('type', 'share')->orderBy('sort_order')->get();
@@ -153,14 +153,18 @@ final class MobileContentController extends Controller
             'price' => 'nullable|numeric',
             'share_price' => 'nullable|numeric',
             'details' => 'nullable|string',
-            'sort_order' => 'nullable|integer'
+            'sort_order' => 'nullable|integer',
+            'cards' => 'nullable|array',
+            'cards.*.title' => 'nullable|string',
+            'cards.*.description' => 'nullable|string',
+            'cards.*.image' => 'nullable|image|max:5120'
         ]);
 
         if ($request->hasFile('icon')) {
              unset($data['icon']);
         }
 
-        unset($data['image']);
+        unset($data['image'], $data['cards']);
         $item = MobileHomeItem::create($data);
 
         if ($request->hasFile('image')) {
@@ -169,6 +173,21 @@ final class MobileContentController extends Controller
 
         if ($request->hasFile('icon')) {
             $item->uploadImage($request->file('icon'), 'mobile/home/icons', 'icon');
+        }
+
+        if ($request->has('cards') && is_array($request->cards)) {
+            foreach ($request->cards as $index => $cardData) {
+                if (empty($cardData['title']) && empty($cardData['description']) && !$request->hasFile("cards.{$index}.image")) {
+                    continue;
+                }
+                $card = $item->cards()->create([
+                    'title' => $cardData['title'] ?? null,
+                    'description' => $cardData['description'] ?? null,
+                ]);
+                if ($request->hasFile("cards.{$index}.image")) {
+                    $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/home/cards');
+                }
+            }
         }
 
         return back()->with('success', 'Item added successfully');
@@ -184,14 +203,19 @@ final class MobileContentController extends Controller
             'price' => 'nullable|numeric',
             'share_price' => 'nullable|numeric',
             'details' => 'nullable|string',
-            'sort_order' => 'nullable|integer'
+            'sort_order' => 'nullable|integer',
+            'cards' => 'nullable|array',
+            'cards.*.id' => 'nullable|integer',
+            'cards.*.title' => 'nullable|string',
+            'cards.*.description' => 'nullable|string',
+            'cards.*.image' => 'nullable|image|max:5120'
         ]);
 
         if ($request->hasFile('icon')) {
             unset($data['icon']);
         }
 
-        unset($data['image']);
+        unset($data['image'], $data['cards']);
         $item->update($data);
 
         if ($request->hasFile('image')) {
@@ -200,6 +224,46 @@ final class MobileContentController extends Controller
 
         if ($request->hasFile('icon')) {
             $item->uploadImage($request->file('icon'), 'mobile/home/icons', 'icon');
+        }
+
+        $submittedCardIds = [];
+        if ($request->has('cards') && is_array($request->cards)) {
+            foreach ($request->cards as $index => $cardData) {
+                if (empty($cardData['id']) && empty($cardData['title']) && empty($cardData['description']) && !$request->hasFile("cards.{$index}.image")) {
+                    continue;
+                }
+                if (!empty($cardData['id'])) {
+                    $card = $item->cards()->find($cardData['id']);
+                    if ($card) {
+                        $card->update([
+                            'title' => $cardData['title'] ?? null,
+                            'description' => $cardData['description'] ?? null,
+                        ]);
+                        $submittedCardIds[] = $card->id;
+                        if ($request->hasFile("cards.{$index}.image")) {
+                            $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/home/cards');
+                        }
+                    }
+                } else {
+                    $card = $item->cards()->create([
+                        'title' => $cardData['title'] ?? null,
+                        'description' => $cardData['description'] ?? null,
+                    ]);
+                    $submittedCardIds[] = $card->id;
+                    if ($request->hasFile("cards.{$index}.image")) {
+                        $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/home/cards');
+                    }
+                }
+            }
+        }
+        if ($item->type === 'hero') {
+            $cardsToDelete = $item->cards()->whereNotIn('id', $submittedCardIds)->get();
+            foreach ($cardsToDelete as $card) {
+                if ($card->image_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($card->image_path);
+                }
+                $card->delete();
+            }
         }
 
         // Clear landing cache if applicable
@@ -452,5 +516,14 @@ final class MobileContentController extends Controller
     {
         $booking->delete();
         return back()->with('success', 'Web booking deleted');
+    }
+
+    // --- Mobile Donor Auth Management ---
+    public function mobileDonorsIndex()
+    {
+        $donors = \App\Models\User::where('registration_source', 'mobile')
+            ->orderByDesc('created_at')
+            ->get();
+        return view('mobile.donors_auth', compact('donors'));
     }
 }

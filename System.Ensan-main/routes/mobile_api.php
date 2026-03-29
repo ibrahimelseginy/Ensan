@@ -9,6 +9,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MobileApiController;
+use App\Http\Controllers\AuthController;
+
+Route::prefix('auth')->group(function () {
+    Route::post('login-phone', [AuthController::class, 'loginByPhone']);
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('register', [AuthController::class, 'register']);
+});
 
 Route::get('/', function () {
     return response()->json([

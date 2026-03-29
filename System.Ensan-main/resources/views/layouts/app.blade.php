@@ -712,6 +712,11 @@
               <i class="bi bi-cash-coin text-success"></i><span>سجلات التبرعات (الموبايل)</span>
             </a>
 
+            <a href="{{ route('mobile.donors_auth.index') }}"
+              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donors_auth.*') ? 'active' : '' }}">
+              <i class="bi bi-person-badge-fill text-warning"></i><span>تسجيل الدخول للموبايل</span>
+            </a>
+
             <a href="{{ route('mobile.notifications.index') }}"
               class="list-group-item list-group-item-action {{ request()->routeIs('mobile.notifications.*') ? 'active' : '' }}">
               <i class="bi bi-bell"></i><span>الإشعارات (Push Notifications)</span>
