@@ -33,11 +33,22 @@ final class MobileApiController extends Controller
         $finalSection = MobileHomeItem::where('type', 'final')->first();
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
 
-        // Format image URLs
+        // 🛠️ Robust Formatting Helper
         $formatItem = function($item) {
-            if ($item && $item->image_path) {
-                $item->image_url = $item->getFileUrl('image_path');
+            if (!$item) return null;
+            
+            // Ensure URLs are absolute and consistent
+            $item->image_url = $item->image_path ? $item->getFileUrl('image_path') : null;
+            $item->icon_url = $item->icon ? $item->getFileUrl('icon') : null;
+            
+            // If it's a hero, also format its cards
+            if ($item->type === 'hero' && $item->relationLoaded('cards')) {
+                $item->cards->map(function($card) {
+                    $card->image_url = $card->image_path ? $card->getFileUrl('image_path') : null;
+                    return $card;
+                });
             }
+            
             return $item;
         };
 
@@ -51,7 +62,6 @@ final class MobileApiController extends Controller
                 'seasonal_campaigns' => $campaigns->map($formatItem),
                 'final_section' => $formatItem($finalSection),
                 'about_us' => $aboutUs ? [
-                    'id' => $aboutUs->id,
                     'image_url' => $aboutUs->getFileUrl('image_path')
                 ] : null,
             ]
