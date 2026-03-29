@@ -53,6 +53,10 @@ Route::post('/guest-house', [MobileApiController::class , 'submitGuestHouseBooki
 Route::get('/notifications', [MobileApiController::class , 'getNotifications']);
 Route::post('/donation', [MobileApiController::class , 'submitDonation']);
 Route::get('/contact-info', [MobileApiController::class, 'getContactInfo']);
-Route::get('/profile', [MobileApiController::class, 'getProfile']);
-Route::get('/donation-records', [MobileApiController::class, 'getDonations']);
-Route::get('/donation/{donation}', [MobileApiController::class, 'showDonation']);
+
+Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
+    Route::get('/profile', [MobileApiController::class, 'getProfile']);
+    Route::post('/profile', [MobileApiController::class, 'updateProfile']);
+    Route::get('/donation-records', [MobileApiController::class, 'getDonations']);
+    Route::get('/donation/{donation}', [MobileApiController::class, 'showDonation']);
+});

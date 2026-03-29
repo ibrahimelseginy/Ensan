@@ -483,19 +483,83 @@ final class MobileApiController extends Controller
     }
 
     /**
-     * Get Profile Info for Mobile App (Currenty Guest)
+     * Get Profile Info for Mobile App
      */
-    public function getProfile()
+    public function getProfile(Request $request)
     {
+        $user = $request->attributes->get('auth_user');
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => [
-                'id' => 0,
-                'name' => 'Guest User',
-                'email' => 'guest@ensan.app',
-                'phone' => '',
-                'is_verified' => false,
-                'joined_at' => now()->toDateTimeString(),
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'avatar_url' => $user->profile_photo_path ? url(Storage::url($user->profile_photo_path)) : null,
+                'is_verified' => true,
+                'joined_at' => $user->created_at->toDateTimeString(),
+            ]
+        ]);
+    }
+
+    /**
+     * Update Profile Info for Mobile App
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->attributes->get('auth_user');
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'avatar' => 'nullable|image|max:10240',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+        }
+
+        if ($request->hasFile('avatar')) {
+            try {
+                // Using the UploadsImages trait if it handles the 'profile_photo_path' column correctly
+                // The User model has getImageColumn() returning 'profile_photo_path'
+                $user->uploadImage($request->file('avatar'), 'profiles');
+            } catch (\Exception $e) {
+                \Log::error('Profile avatar upload failed: ' . $e->getMessage());
+            }
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Profile updated successfully',
+            'data' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar_url' => $user->profile_photo_path ? url(Storage::url($user->profile_photo_path)) : null,
             ]
         ]);
     }

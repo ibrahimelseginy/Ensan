@@ -12,7 +12,7 @@ use App\Http\Requests\UpdateInventoryTransactionRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final readonly class InventoryTransactionController extends Controller
+final class InventoryTransactionController extends Controller
 {
     public function __construct(
         private InventoryTransactionService $transactionService

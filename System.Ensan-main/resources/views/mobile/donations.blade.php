@@ -87,16 +87,30 @@
                                 <div class="info-val font-outfit" style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $donation->account_number ?? 'غير متوفر' }}</div>
                             </div>
 
-                            @if($donation->receipt_path)
                             <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">صورة إثبات التحويل</label>
-                                <div class="receipt-preview" style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                                    <a href="{{ asset('storage/' . $donation->receipt_path) }}" target="_blank">
-                                        <img src="{{ asset('storage/' . $donation->receipt_path) }}" class="img-fluid w-100" style="max-height: 400px; object-fit: contain; cursor: zoom-in;" alt="Receipt">
-                                    </a>
-                                </div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">
+                                    <i class="bi bi-image me-1"></i> صورة إثبات التحويل (Proof of Transfer)
+                                </label>
+                                @if($donation->receipt_path)
+                                    <div class="receipt-preview-container" style="border-radius: 16px; overflow: hidden; border: 2px solid rgba(0, 102, 255, 0.2); background: rgba(0,0,0,0.2); position: relative;">
+                                        <div class="preview-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 5;">
+                                            <span class="badge bg-primary rounded-pill shadow-sm">تأكيد التحصيل</span>
+                                        </div>
+                                        <a href="{{ $donation->image_url }}" target="_blank" class="d-block text-center p-2">
+                                            <img src="{{ $donation->image_url }}" class="img-fluid rounded" style="max-height: 450px; object-fit: contain; cursor: zoom-in; transition: 0.3s;" alt="Donation Receipt" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                        </a>
+                                        <div class="p-2 text-center border-top border-white border-opacity-10">
+                                            <small class="text-white-50"><i class="bi bi-info-circle me-1"></i> اضغط على الصورة لتكبيرها</small>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="no-receipt-placeholder p-5 text-center" style="background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+                                        <i class="bi bi-camera-fill display-6 text-white-50 mb-3 d-block"></i>
+                                        <h6 class="text-white-50">لم يتم إرفاق صورة إثبات التحويل بعد</h6>
+                                        <p class="small text-muted mb-0">المتبرع لم يقم برفع صورة الوصل/التحويل من الموبايل.</p>
+                                    </div>
+                                @endif
                             </div>
-                            @endif
                             
                             <hr class="my-2" style="opacity: 0.1; color: #fff;">
 
