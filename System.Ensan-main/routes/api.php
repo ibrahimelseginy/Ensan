@@ -129,6 +129,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('journal-entries', JournalEntryController::class);
             Route::apiResource('complaints', ComplaintController::class);
             Route::apiResource('roles', RoleController::class);
+            Route::get('users/mobile-donors', [UserController::class, 'mobileDonors']);
             Route::apiResource('users', UserController::class);
             Route::apiResource('delegates', DelegateController::class);
             Route::apiResource('travel-routes', TravelRouteController::class);

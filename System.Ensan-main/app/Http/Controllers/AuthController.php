@@ -14,19 +14,20 @@ final class AuthController extends Controller
 {
     public function loginByPhone(Request $request)
     {
-        $request->validate(['phone' => 'required|string']);
+        $request->validate([
+            'phone' => 'required|string',
+            'name' => 'nullable|string'
+        ]);
 
         $user = User::where('phone', $request->phone)->first();
 
         if (!$user) {
             $user = User::create([
                 'phone' => $request->phone,
-                'name' => 'Donor ' . substr($request->phone, -4),
+                'name' => $request->name ?? 'Donor ' . substr($request->phone, -4),
                 'role' => 'donor',
                 'active' => true,
-                'registration_source' => 'mobile',
-                'email' => $request->phone . '@anasen.charity',
-                'password' => Hash::make(\Illuminate\Support\Str::random(16))
+                'registration_source' => 'mobile'
             ]);
 
             // Assign donor role from Roles table if exists
@@ -81,7 +82,10 @@ final class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'token' => $token->token,
-            'user' => $user
+            'user' => [
+                'name' => $user->name,
+                'phone' => $user->phone
+            ]
         ]);
     }
 
@@ -89,14 +93,12 @@ final class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6'
+            'phone' => 'required|string|unique:users,phone'
         ]);
 
         $user = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'phone' => $data['phone'],
             'active' => true,
             'registration_source' => 'mobile',
             'role' => 'donor'
@@ -116,7 +118,10 @@ final class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'token' => $token->token,
-            'user' => $user
+            'user' => [
+                'name' => $user->name,
+                'phone' => $user->phone
+            ]
         ]);
     }
 

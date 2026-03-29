@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Hash;
 final class UserController extends Controller
 {
     public function index() { return User::paginate(50); }
+    
+    public function mobileDonors() 
+    { 
+        return User::where('registration_source', 'mobile')->latest()->paginate(50); 
+    }
     public function store(Request $request)
     {
         $data = $request->validate([

@@ -183,6 +183,9 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-secondary rounded-pill">#{{ $item->sort_order }}</span>
                                     <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                    @if($item->share_price)
+                                        <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
+                                    @endif
                                 </div>
                                 <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->description }}</small>
                             </div>
@@ -219,6 +222,9 @@
                             </div>
                             <div class="flex-grow-1">
                                 <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                @if($item->share_price)
+                                    <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
+                                @endif
                                 <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->details }}</small>
                             </div>
                             <div class="d-flex gap-2">
@@ -408,6 +414,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" value="{{ $item->title }}" required></div>
                     <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="2">{{ $item->description }}</textarea></div>
+                    <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control" value="{{ $item->share_price }}"></div>
                     <div class="mb-3"><label class="form-label fw-bold">الترتيب</label><input type="number" name="sort_order" class="form-control" value="{{ $item->sort_order }}"></div>
                     <div class="mb-3"><label class="form-label fw-bold">تغيير الصورة</label><input type="file" name="image" class="form-control"></div>
                 </div>
@@ -432,6 +439,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-3"><label class="form-label fw-bold">اسم الحملة</label><input type="text" name="title" class="form-control" value="{{ $item->title }}" required></div>
                     <div class="mb-3"><label class="form-label fw-bold">تفاصيل الحملة</label><textarea name="details" class="form-control" rows="2">{{ $item->details }}</textarea></div>
+                    <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control" value="{{ $item->share_price }}"></div>
                     <div class="mb-3"><label class="form-label fw-bold">تغيير الصورة</label><input type="file" name="image" class="form-control"></div>
                 </div>
                 <div class="modal-footer border-0">
@@ -549,6 +557,7 @@
             <div class="modal-body p-4">
                 <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" required></div>
                 <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control"></div>
                 <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
             </div>
             <div class="modal-footer border-0">
@@ -570,6 +579,7 @@
             <div class="modal-body p-4">
                 <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" required></div>
                 <div class="mb-3"><label class="form-label fw-bold">التفاصيل</label><textarea name="details" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control"></div>
                 <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
             </div>
             <div class="modal-footer border-0">
