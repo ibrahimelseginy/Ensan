@@ -17,7 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class EmployeeTaskWebController extends Controller
+final class EmployeeTaskWebController extends Controller
 {
     public function __construct(
         private TaskService $taskService

@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-final readonly class BeneficiaryWebController extends Controller
+final class BeneficiaryWebController extends Controller
 {
     public function __construct(
         private BeneficiaryService $beneficiaryService

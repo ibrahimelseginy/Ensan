@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class PayrollWebController extends Controller
+final class PayrollWebController extends Controller
 {
     public function __construct(
         private PayrollService $payrollService

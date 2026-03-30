@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-final readonly class ExpenseWebController extends Controller
+final class ExpenseWebController extends Controller
 {
     public function __construct(
         private ExpenseService $expenseService

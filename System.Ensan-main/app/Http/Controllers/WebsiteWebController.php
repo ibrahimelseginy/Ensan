@@ -306,7 +306,7 @@ final class WebsiteWebController extends Controller
     // --- Room Bookings ---
     public function bookings()
     {
-        $bookings = WebRoomBooking::orderByDesc('created_at')->get();
+        $bookings = WebRoomBooking::whereNull('source')->orWhere('source', '!=', 'mobile')->orderByDesc('created_at')->get();
         return view('website.bookings', compact('bookings'));
     }
 

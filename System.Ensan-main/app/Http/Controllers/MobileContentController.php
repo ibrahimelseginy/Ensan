@@ -487,21 +487,20 @@ final class MobileContentController extends Controller
     // --- Mobile Guest House Bookings (Unified) ---
     public function bookingsIndex()
     {
-        $mobileBookings = \App\Models\MobileRoomBooking::latest()->get();
-        $webBookings = \App\Models\WebRoomBooking::latest()->get();
-        return view('mobile.bookings', compact('mobileBookings', 'webBookings'));
+        $mobileBookings = \App\Models\WebRoomBooking::where('source', 'mobile')->latest()->get();
+        return view('mobile.bookings', compact('mobileBookings'));
     }
 
     public function updateBookingStatus(Request $request, \App\Models\MobileRoomBooking $booking)
     {
-        $request->validate(['status' => 'required|in:pending,approved,rejected']);
+        $request->validate(['status' => 'required|in:pending,confirmed,cancelled']);
         $booking->update(['status' => $request->status]);
         return back()->with('success', 'Mobile booking status updated');
     }
 
     public function updateWebBookingStatus(Request $request, \App\Models\WebRoomBooking $booking)
     {
-        $request->validate(['status' => 'required|in:pending,approved,rejected']);
+        $request->validate(['status' => 'required|in:pending,confirmed,cancelled']);
         $booking->update(['status' => $request->status]);
         return back()->with('success', 'Web booking status updated');
     }

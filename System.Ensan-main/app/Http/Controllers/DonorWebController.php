@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
-final readonly class DonorWebController extends Controller
+final class DonorWebController extends Controller
 {
     public function __construct(
         private DonorService $donorService

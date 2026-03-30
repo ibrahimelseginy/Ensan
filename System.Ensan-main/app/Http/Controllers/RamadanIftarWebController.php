@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class RamadanIftarWebController extends Controller
+final class RamadanIftarWebController extends Controller
 {
     public function __construct(
         private RamadanIftarService $iftarService

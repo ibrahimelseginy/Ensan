@@ -11,7 +11,7 @@ use App\Http\Requests\UpdatePayrollRequest;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class PayrollController extends Controller
+final class PayrollController extends Controller
 {
     public function __construct(
         private PayrollService $payrollService

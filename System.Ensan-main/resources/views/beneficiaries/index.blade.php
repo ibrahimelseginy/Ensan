@@ -15,6 +15,17 @@
     <i class="bi bi-people-fill hero-icon d-none d-md-block"></i>
 </div>
 
+@php
+    // The controller spreads $stats via array_merge, so we reconstruct it here
+    $stats = $stats ?? [
+        'total'        => $total ?? 0,
+        'new'          => $new ?? 0,
+        'under_review' => $under_review ?? 0,
+        'accepted'     => $accepted ?? 0,
+        'rejected'     => $rejected ?? 0,
+    ];
+@endphp
+
 {{-- Stats Row --}}
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg animate-slide-up animate-delay-1">

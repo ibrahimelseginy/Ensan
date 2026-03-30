@@ -25,7 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
-final readonly class InventoryTransactionWebController extends Controller
+final class InventoryTransactionWebController extends Controller
 {
     public function __construct(
         private InventoryTransactionService $transactionService

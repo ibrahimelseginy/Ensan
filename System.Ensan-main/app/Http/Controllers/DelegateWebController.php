@@ -18,7 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-final readonly class DelegateWebController extends Controller
+final class DelegateWebController extends Controller
 {
     public function __construct(
         private DelegateService $delegateService

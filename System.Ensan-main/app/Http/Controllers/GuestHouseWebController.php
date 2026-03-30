@@ -17,7 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class GuestHouseWebController extends Controller
+final class GuestHouseWebController extends Controller
 {
     public function __construct(
         private GuestHouseService $guestHouseService

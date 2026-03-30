@@ -20,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class CampaignWebController extends Controller
+final class CampaignWebController extends Controller
 {
     public function __construct(
         private CampaignService $campaignService

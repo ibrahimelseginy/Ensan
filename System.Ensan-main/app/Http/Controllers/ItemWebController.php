@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class ItemWebController extends Controller
+final class ItemWebController extends Controller
 {
     public function __construct(
         private ItemService $itemService

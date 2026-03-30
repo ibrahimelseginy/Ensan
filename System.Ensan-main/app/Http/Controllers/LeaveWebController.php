@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class LeaveWebController extends Controller
+final class LeaveWebController extends Controller
 {
     public function __construct(
         private LeaveService $leaveService

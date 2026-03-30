@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
-final readonly class TripWebController extends Controller
+final class TripWebController extends Controller
 {
     public function __construct(
         private TripService $tripService

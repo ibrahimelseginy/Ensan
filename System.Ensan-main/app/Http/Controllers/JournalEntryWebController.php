@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class JournalEntryWebController extends Controller
+final class JournalEntryWebController extends Controller
 {
     public function __construct(
         private JournalEntryService $journalEntryService

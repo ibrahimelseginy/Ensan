@@ -24,7 +24,7 @@ final class AuthController extends Controller
         if (!$user) {
             $user = User::create([
                 'phone' => $request->phone,
-                'name' => $request->name ?? 'Donor ' . substr($request->phone, -4),
+                'name' => $request->name ?? 'متبرع ' . substr($request->phone, -4),
                 'role' => 'donor',
                 'active' => true,
                 'registration_source' => 'mobile'

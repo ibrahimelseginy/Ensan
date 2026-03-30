@@ -21,7 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class ProjectWebController extends Controller
+final class ProjectWebController extends Controller
 {
     public function __construct(
         private ProjectService $projectService

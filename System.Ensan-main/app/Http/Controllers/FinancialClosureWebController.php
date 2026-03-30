@@ -12,7 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Schema;
 
-final readonly class FinancialClosureWebController extends Controller
+final class FinancialClosureWebController extends Controller
 {
     public function __construct(
         private FinancialClosureService $financialClosureService

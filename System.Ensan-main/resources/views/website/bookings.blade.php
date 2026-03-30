@@ -24,9 +24,9 @@
                             <i class="bi bi-house-heart-fill me-2"></i> إدارة حجوزات دار الضيافة
                         </div>
                     </div>
-                    <h1 class="display-4 fw-800 text-white mb-3 text-end">طلبات الحجز من الموبايل</h1>
+                    <h1 class="display-4 fw-800 text-white mb-3 text-end">طلبات الحجز (الموقع الإلكتروني)</h1>
                     <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
-                        مراجعة والرد على طلبات حجز الغرف الواردة عبر تطبيق الموبايل
+                        مراجعة والرد على طلبات حجز الغرف الواردة عبر الموقع الإلكتروني
                     </p>
                 </div>
                 <div class="col-lg-4 text-start mt-4 mt-lg-0 animate-reveal-left"></div>

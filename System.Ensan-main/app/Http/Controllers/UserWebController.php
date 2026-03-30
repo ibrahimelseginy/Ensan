@@ -16,7 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
-final readonly class UserWebController extends Controller
+final class UserWebController extends Controller
 {
     public function __construct(
         private UserService $userService

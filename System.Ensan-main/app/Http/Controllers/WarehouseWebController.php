@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class WarehouseWebController extends Controller
+final class WarehouseWebController extends Controller
 {
     public function __construct(
         private WarehouseService $warehouseService

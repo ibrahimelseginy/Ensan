@@ -16,7 +16,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
-final readonly class TreasuryController extends Controller
+final class TreasuryController extends Controller
 {
     public function __construct(
         private TreasuryService $treasuryService

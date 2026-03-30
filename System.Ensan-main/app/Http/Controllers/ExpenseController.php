@@ -11,7 +11,7 @@ use App\Http\Requests\UpdateExpenseRequest;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class ExpenseController extends Controller
+final class ExpenseController extends Controller
 {
     public function __construct(
         private ExpenseService $expenseService

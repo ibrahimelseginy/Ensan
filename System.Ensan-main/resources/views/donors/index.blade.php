@@ -62,22 +62,22 @@
             <label class="form-label fw-bold small text-uppercase text-muted">بحث سريع</label>
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input name="q" value="{{ $q }}" class="form-control border-start-0" placeholder="بحث بالاسم...">
+                <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="بحث بالاسم...">
             </div>
         </div>
         
         <div class="col-md-3">
             <label class="form-label fw-bold small text-uppercase text-muted">نوع الجهة</label>
              <div class="btn-group w-100" role="group">
-                <input type="radio" class="btn-check" name="type" id="typeAll" value="" {{ $type == '' ? 'checked' : '' }} onchange="this.form.submit()">
+                <input type="radio" class="btn-check" name="type" id="typeAll" value="" {{ ($type ?? '') == '' ? 'checked' : '' }} onchange="this.form.submit()">
                 <label class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" for="typeAll">الكل</label>
 
-                <input type="radio" class="btn-check" name="type" id="typeInd" value="individual" {{ $type == 'individual' ? 'checked' : '' }} onchange="this.form.submit()">
+                <input type="radio" class="btn-check" name="type" id="typeInd" value="individual" {{ ($type ?? '') == 'individual' ? 'checked' : '' }} onchange="this.form.submit()">
                 <label class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" for="typeInd">
                     <i class="bi bi-person me-1"></i> فرد
                 </label>
 
-                <input type="radio" class="btn-check" name="type" id="typeOrg" value="organization" {{ $type == 'organization' ? 'checked' : '' }} onchange="this.form.submit()">
+                <input type="radio" class="btn-check" name="type" id="typeOrg" value="organization" {{ ($type ?? '') == 'organization' ? 'checked' : '' }} onchange="this.form.submit()">
                 <label class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" for="typeOrg">
                     <i class="bi bi-building me-1"></i> منظمة
                 </label>
@@ -88,16 +88,16 @@
             <label class="form-label fw-bold small text-uppercase text-muted">تصنيف التبرع</label>
             <select name="classification" class="form-select" onchange="this.form.submit()">
                 <option value="">الكل</option>
-                <option value="one_time" @selected($classification==='one_time')>مرة واحدة</option>
-                <option value="recurring" @selected($classification==='recurring')>متكرر</option>
+                <option value="one_time" @selected(($classification ?? '')==='one_time')>مرة واحدة</option>
+                <option value="recurring" @selected(($classification ?? '')==='recurring')>متكرر</option>
             </select>
         </div>
         <div class="col-md-2">
             <label class="form-label fw-bold small text-uppercase text-muted">حالة الحساب</label>
             <select name="active" class="form-select" onchange="this.form.submit()">
                 <option value="">الكل</option>
-                <option value="1" @selected($active==='1')>نشط</option>
-                <option value="0" @selected($active==='0')>غير نشط</option>
+                <option value="1" @selected(($active ?? '')==='1')>نشط</option>
+                <option value="0" @selected(($active ?? '')==='0')>غير نشط</option>
             </select>
         </div>
         <div class="col-md-2">

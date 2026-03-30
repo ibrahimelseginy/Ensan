@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class AccountController extends Controller
+final class AccountController extends Controller
 {
     public function __construct(
         private AccountService $accountService

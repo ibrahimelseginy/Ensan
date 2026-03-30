@@ -12,7 +12,7 @@ use App\Http\Requests\StorePurchaseRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
-final readonly class PurchaseWebController extends Controller
+final class PurchaseWebController extends Controller
 {
     public function __construct(
         private PurchaseService $purchaseService

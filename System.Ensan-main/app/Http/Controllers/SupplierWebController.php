@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class SupplierWebController extends Controller
+final class SupplierWebController extends Controller
 {
     public function __construct(
         private SupplierService $supplierService

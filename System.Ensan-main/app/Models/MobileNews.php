@@ -19,13 +19,7 @@ final class MobileNews extends Model
         return 'image_path';
     }
 
-    public function getImageUrlAttribute()
-    {
-        if ($this->image_path) {
-            return Storage::disk('public')->url($this->image_path);
-        }
-        return null;
-    }
+
 
     protected $appends = ['image_url'];
 }

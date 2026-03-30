@@ -94,8 +94,8 @@
                                         <div class="badge bg-info bg-opacity-10 text-info mt-1 small">{{ $booking->expected_duration_arabic }}</div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge rounded-pill px-3 py-2 {{ $booking->status == 'pending' ? 'bg-warning text-dark' : ($booking->status == 'approved' ? 'bg-success' : 'bg-danger') }}">
-                                            {{ $booking->status == 'pending' ? 'قيد الانتظار' : ($booking->status == 'approved' ? 'مقبول' : 'مرفوض') }}
+                                        <span class="badge rounded-pill px-3 py-2 {{ $booking->status == 'pending' ? 'bg-warning text-dark' : ($booking->status == 'confirmed' ? 'bg-success' : 'bg-danger') }}">
+                                            {{ $booking->status == 'pending' ? 'قيد الانتظار' : ($booking->status == 'confirmed' ? 'مقبول' : 'مرفوض') }}
                                         </span>
                                     </td>
                                     <td class="text-center">
@@ -138,21 +138,21 @@
                                                             <div class="d-grid gap-2">
                                                                 <div class="row g-2">
                                                                     <div class="col-6">
-                                                                        <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
+                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
                                                                             @csrf @method('PATCH')
-                                                                            <input type="hidden" name="status" value="approved">
+                                                                            <input type="hidden" name="status" value="confirmed">
                                                                             <button type="submit" class="btn w-100" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
                                                                         </form>
                                                                     </div>
                                                                     <div class="col-6">
-                                                                        <form action="{{ route('mobile.bookings.update', $booking) }}" method="POST">
+                                                                        <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
                                                                             @csrf @method('PATCH')
-                                                                            <input type="hidden" name="status" value="rejected">
+                                                                            <input type="hidden" name="status" value="cancelled">
                                                                             <button type="submit" class="btn w-100" style="background: #dc2626; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
                                                                         </form>
                                                                     </div>
                                                                     <div class="col-12">
-                                                                        <form action="{{ route('mobile.bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
+                                                                        <form action="{{ route('mobile.web_bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('حذف؟')">
                                                                             @csrf @method('DELETE')
                                                                             <button type="submit" class="btn w-100 mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">حذف السجل</button>
                                                                         </form>

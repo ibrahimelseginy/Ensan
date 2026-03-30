@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class RoleWebController extends Controller
+final class RoleWebController extends Controller
 {
     public function __construct(
         private RoleService $roleService

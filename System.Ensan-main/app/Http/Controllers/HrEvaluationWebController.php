@@ -8,7 +8,7 @@ use App\Services\HrEvaluationService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-final readonly class HrEvaluationWebController extends Controller
+final class HrEvaluationWebController extends Controller
 {
     public function __construct(
         private HrEvaluationService $hrEvaluationService

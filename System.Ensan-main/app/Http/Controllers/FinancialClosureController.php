@@ -10,7 +10,7 @@ use App\Http\Requests\StoreFinancialClosureRequest;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-final readonly class FinancialClosureController extends Controller
+final class FinancialClosureController extends Controller
 {
     public function __construct(
         private FinancialClosureService $financialClosureService

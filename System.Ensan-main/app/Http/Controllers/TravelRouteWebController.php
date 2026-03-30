@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
-final readonly class TravelRouteWebController extends Controller
+final class TravelRouteWebController extends Controller
 {
     public function __construct(
         private TravelRouteService $travelRouteService
