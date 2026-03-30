@@ -67,6 +67,7 @@ final class MobileContentController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'body' => 'required|string',
+            'category' => 'nullable|string|in:عام,حملات,تبرعات,عاجل',
             'target_audience' => 'nullable|string',
             'image' => 'nullable|image'
         ]);

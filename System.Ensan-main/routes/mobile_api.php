@@ -59,6 +59,7 @@ Route::get('/volunteer', function () {
 Route::post('/volunteer', [MobileApiController::class , 'submitVolunteerRequest']);
 Route::post('/case-application', [MobileApiController::class , 'submitCaseApplication']);
 Route::post('/guest-house', [MobileApiController::class , 'submitGuestHouseBooking']);
+Route::get('/notifications/categories', [MobileApiController::class, 'getNotificationCategories']);
 Route::get('/notifications', [MobileApiController::class , 'getNotifications']);
 Route::post('/donation', [MobileApiController::class , 'submitDonation']);
 Route::get('/contact-info', [MobileApiController::class, 'getContactInfo']);

@@ -395,10 +395,15 @@ final class MobileApiController extends Controller
     /**
      * Get Mobile Notifications
      */
-    public function getNotifications()
+    public function getNotifications(Request $request)
     {
-        $notifications = MobileNotification::where('is_sent', true)
-            ->orderByDesc('sent_at')
+        $query = MobileNotification::where('is_sent', true);
+
+        if ($request->has('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        $notifications = $query->orderByDesc('sent_at')
             ->get()
             ->map(function($notif) {
                 $notif->image_url = $notif->image_path ? $notif->getFileUrl('image_path') : null;
@@ -408,6 +413,17 @@ final class MobileApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $notifications
+        ]);
+    }
+
+    /**
+     * Get Notification Categories for Mobile App
+     */
+    public function getNotificationCategories()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => MobileNotification::getCategories()
         ]);
     }
 

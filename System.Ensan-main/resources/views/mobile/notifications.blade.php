@@ -32,6 +32,9 @@
                         </div>
                         <p class="mb-1 text-muted small">{{ $notif->body }}</p>
                         <div class="d-flex align-items-center justify-content-between mt-2">
+                              <span class="badge bg-success bg-opacity-10 text-success x-small rounded-pill px-2">
+                                <i class="bi bi-tag me-1"></i> {{ $notif->category ?? 'عام' }}
+                            </span>
                              <span class="badge bg-secondary-subtle text-secondary x-small rounded-pill px-2">
                                 <i class="bi bi-people me-1"></i> {{ $notif->target_audience == 'all' ? 'الجميع' : ($notif->target_audience ?? 'مخصص') }}
                             </span>
@@ -71,6 +74,14 @@
                 <div class="mb-3">
                     <label class="form-label small fw-bold">نص الرسالة</label>
                     <textarea name="body" class="form-control" rows="3" placeholder="محتوى الإشعار المختصر..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">تصنيف التنبيه</label>
+                    <select name="category" class="form-select">
+                        @foreach(\App\Models\MobileNotification::getCategories() as $cat)
+                            <option value="{{ $cat['id'] }}">{{ $cat['label'] }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">الجمهور المستهدف</label>
