@@ -74,6 +74,19 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-3">
+            <a href="{{ route('mobile.home_content.index') }}" class="text-decoration-none">
+                <div class="glass-card p-4 d-flex align-items-center gap-3 animate-slide-up hover-tilt" style="animation-delay: 0.5s">
+                    <div class="rounded-4 bg-danger bg-opacity-10 p-3">
+                        <i class="bi bi-layout-wysiwyg fs-2 text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-white">محتوى الصفحة الرئيسية</h5>
+                        <p class="text-muted small mb-0">تخصيص الأقسام والكروت الأساسية</p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <div class="row g-4">

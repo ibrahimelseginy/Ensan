@@ -11,45 +11,57 @@
 
 <div class="container-fluid py-4">
     <div class="row g-4">
-        {{-- 1. Hero Section --}}
-        <div class="col-lg-6">
+        {{-- 0. Integrated Services (Ensan Pillars) --}}
+        <div class="col-lg-12">
             <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
                 <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><i class="bi bi-star-fill me-2 text-warning"></i> قسم الهيرو (Hero)</h5>
-                    <button class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addHeroModal">إضافة هيرو <i class="bi bi-plus"></i></button>
+                    <h5 class="mb-0 fw-bold text-white"><i class="bi bi-grid-fill me-2 text-primary"></i> المبادرات المتكاملة (Ensan Pillars)</h5>
+                    <button class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addPillarModal">إضافة مبادرة جديدة <i class="bi bi-plus-lg"></i></button>
                 </div>
                 <div class="p-4">
-                    @forelse($heroes as $item)
-                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-3">
-                            <div class="d-flex gap-2">
-                                <div class="rounded-circle border bg-white overflow-hidden shadow-sm" style="width: 55px; height: 55px;" title="الأيقونة">
-                                    @if($item->icon)
-                                        <img src="{{ $item->icon_url }}" class="w-100 h-100 object-fit-contain p-2">
-                                    @else
-                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-star"></i></div>
-                                    @endif
+                    <div class="row g-3">
+                        @forelse($pillars as $pillar)
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column shadow-sm">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="rounded-circle border bg-white p-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                                            @if($pillar->icon_path)
+                                                <img src="{{ $pillar->icon_url }}" class="w-100 h-100 object-fit-contain">
+                                            @else
+                                                <i class="bi bi-grid text-muted"></i>
+                                            @endif
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold mb-1 text-white">{{ $pillar->title }}</h6>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary x-small">/{{ $pillar->slug }}</span>
+                                        </div>
+                                        @if(!$pillar->is_active)
+                                            <span class="badge bg-danger bg-opacity-10 text-danger x-small border border-danger border-opacity-25">غير نشط</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $pillar->description }}</p>
+                                    <div class="d-flex gap-2 justify-content-end mt-auto pt-2 border-top border-secondary border-opacity-25">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editPillarModal{{ $pillar->id }}">تعديل <i class="bi bi-pencil ms-1"></i></button>
+                                        <form action="{{ route('mobile.pillars.destroy', $pillar) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه المبادرة؟')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold">{{ $item->title }}</h6>
+                        @empty
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="bi bi-grid-3x3-gap display-4 opacity-25 d-block mb-3"></i>
+                                لا يوجد مبادرات حالياً
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editHeroModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
-                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
-                                </form>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="text-center py-3 text-muted">لا يوجد عناصر هيرو حالياً</div>
-                    @endforelse
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- 6. Final Section --}}
-        <div class="col-lg-6">
+        <div class="col-lg-12">
             <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
                 <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-flag-fill me-2 text-danger"></i> القسم الأخير (Final Section)</h5>
@@ -285,85 +297,140 @@
 
 {{-- Modals --}}
 
-{{-- Heroes --}}
-@foreach($heroes as $item)
-    <div class="modal fade" id="editHeroModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
-        <div class="modal-dialog">
-            <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+{{-- Integrated Services (Ensan Pillars) --}}
+@foreach($pillars as $pillar)
+    <div class="modal fade" id="editPillarModal{{ $pillar->id }}" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form action="{{ route('mobile.pillars.update', $pillar) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 overflow-hidden shadow-lg" style="border-radius: 24px;">
                 @csrf @method('PUT')
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-white">تعديل الهيرو</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                
+                {{-- Premium Header with Pattern --}}
+                <div class="modal-header border-0 position-relative p-4 overflow-hidden" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.4\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E');"></div>
+                    <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i> تعديل مبادرة: {{ $pillar->title }}
+                            </h5>
+                            <p class="text-white-50 small mb-0 mt-1">تحديث بيانات وأيقونات المبادرة الأساسية</p>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">العنوان (اسم المشروع)</label>
-                        <input type="text" name="title" class="form-control" value="{{ $item->title }}" required>
+
+                {{-- Pillar Preview Banner (If cover exists) --}}
+                @if($pillar->cover_path)
+                    <div class="pillar-edit-banner position-relative" style="height: 120px;">
+                        <img src="{{ $pillar->cover_url }}" class="w-100 h-100 object-fit-cover opacity-50">
+                        <div class="position-absolute bottom-0 start-50 translate-middle-x bg-white p-2 rounded-circle shadow-lg border-4 border-white" style="margin-bottom: -30px;">
+                            <img src="{{ $pillar->icon_url }}" style="width: 60px; height: 60px;" class="object-fit-contain p-1">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">الأيقونة (Icon)</label>
-                        <input type="file" name="icon" class="form-control">
-                        @if($item->icon)
-                            <div class="mt-2 text-center">
-                                <img src="{{ $item->icon_url }}" class="rounded shadow-sm p-1 border bg-white" style="max-height: 50px;">
+                @endif
+
+                <div class="modal-body p-4 {{ $pillar->cover_path ? 'pt-5' : '' }}">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-type me-1"></i> اسم المبادرة</label>
+                            <input type="text" name="title" class="form-control form-control-lg bg-light border-0" value="{{ $pillar->title }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-link-45deg me-1"></i> الرابط الفرعي (Slug)</label>
+                            <input type="text" name="slug" class="form-control form-control-lg bg-light border-0" value="{{ $pillar->slug }}" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-text-paragraph me-1"></i> الوصف التفصيلي</label>
+                            <textarea name="description" class="form-control bg-light border-0" rows="3" style="border-radius: 15px;">{{ $pillar->description }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 border bg-faded-success h-100">
+                                <label class="form-label small fw-bold d-block mb-2">الأيقونة (Icon)</label>
+                                <input type="file" name="icon" class="form-control form-control-sm">
+                                <p class="x-small text-muted mt-2 mb-0">يفضل استخدام أيقونة خضراء بخلفية شفافة</p>
                             </div>
-                        @endif
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">صورة بداية الصفحة (اختياري)</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        @if($item->image_path)
-                            <div class="mt-2 text-center">
-                                <img src="{{ $item->image_url }}" class="rounded shadow-sm p-1 border bg-white" style="max-height: 50px;">
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 border bg-faded-primary h-100">
+                                <label class="form-label small fw-bold d-block mb-2">صورة الغلاف (Cover)</label>
+                                <input type="file" name="cover" class="form-control form-control-sm">
+                                <p class="x-small text-muted mt-2 mb-0">الأبعاد الموصى بها: 1200×600 بكسل</p>
                             </div>
-                        @endif
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">الوصف (اختياري)</label>
-                        <textarea name="description" class="form-control" rows="2">{{ $item->description }}</textarea>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom border-secondary pb-2">
-                        <h6 class="fw-bold text-warning mb-0">الكروت الداخلية (اختياري)</h6>
-                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="addHeroCard('editHeroCardsContainer{{ $item->id }}')">+ إضافة كارت جديد</button>
-                    </div>
-                    <div id="editHeroCardsContainer{{ $item->id }}">
-                        @foreach($item->cards as $index => $card)
-                            <div class="card bg-dark border-secondary mb-3 hero-card-item">
-                                <div class="card-body p-3">
-                                    <input type="hidden" name="cards[{{ $index }}][id]" value="{{ $card->id }}">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <h6 class="text-white">كارت #{{ $index + 1 }}</h6>
-                                        <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="this.closest('.hero-card-item').remove()">حذف</button>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label fw-bold" style="font-size: 0.85rem">اسم الكارت</label>
-                                        <input type="text" name="cards[{{ $index }}][title]" class="form-control form-control-sm" value="{{ $card->title }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label fw-bold" style="font-size: 0.85rem">الوصــف</label>
-                                        <textarea name="cards[{{ $index }}][description]" class="form-control form-control-sm" rows="2">{{ $card->description }}</textarea>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label fw-bold" style="font-size: 0.85rem">الصـــورة</label>
-                                        <input type="file" name="cards[{{ $index }}][image]" class="form-control form-control-sm" accept="image/*">
-                                        @if($card->image_path)
-                                            <div class="mt-2">
-                                                <img src="{{ $card->image_url }}" class="rounded shadow-sm p-1 border bg-white" style="max-height: 40px;">
-                                            </div>
-                                        @endif
-                                    </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">الترتيب</label>
+                            <input type="number" name="sort_order" class="form-control border-0 bg-light" value="{{ $pillar->sort_order }}">
+                        </div>
+
+                        <div class="col-md-8 d-flex align-items-end">
+                            <div class="form-check form-switch p-3 bg-success bg-opacity-10 rounded-pill border border-success border-opacity-10 w-100 d-flex align-items-center justify-content-between px-4">
+                                <div>
+                                    <label class="form-check-label fw-bold text-success mb-0" for="activePillar{{ $pillar->id }}">تفعيل المبادرة</label>
+                                    <div class="x-small text-success text-opacity-75">هل تظهر في الشاشة الرئيسية للتطبيق؟</div>
                                 </div>
+                                <input class="form-check-input ms-0" style="width: 3em; height: 1.5em;" type="checkbox" name="is_active" id="activePillar{{ $pillar->id }}" value="1" {{ $pillar->is_active ? 'checked' : '' }}>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold">حفظ التغييرات</button>
+                <div class="modal-footer border-0 p-4 bg-light">
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold shadow-lg">حفظ التعديلات <i class="bi bi-check-circle ms-2"></i></button>
                 </div>
             </form>
         </div>
     </div>
 @endforeach
+
+<div class="modal fade" id="addPillarModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog modal-lg">
+        <form action="{{ route('mobile.pillars.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg">
+            @csrf
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white"><i class="bi bi-plus-square me-2"></i> إضافة مبادرة جديدة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">اسم المبادرة</label>
+                        <input type="text" name="title" class="form-control" placeholder="مثلاً: سُقاء الأمل" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الرابط الفرعي (Slug)</label>
+                        <input type="text" name="slug" class="form-control" placeholder="مثلاً: soqia-hope" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">الوصف التفصيلي (يظهر في صفحة التفاصيل)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="تحدث عن المبادرة وأهدافها ورسالتها..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الأيقونة (Icon - يفضل ستايل أخضر)</label>
+                        <input type="file" name="icon" class="form-control shadow-sm" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">صورة الغلاف (Cover - جودة عالية)</label>
+                        <input type="file" name="cover" class="form-control shadow-sm">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الترتيب</label>
+                        <input type="number" name="sort_order" class="form-control" value="0">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end pb-2">
+                        <div class="form-check form-switch p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary w-100">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="newPillarActive" value="1" checked>
+                            <label class="form-check-label fw-bold ms-2" for="newPillarActive">تفعيل المبادرة فوراً</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold shadow-sm">إنشاء المبادرة الآن <i class="bi bi-save ms-2"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
 
 {{-- Services --}}
 @foreach($services as $item)
@@ -489,35 +556,6 @@
             </div>
             <div class="modal-footer border-0">
                 <button type="submit" class="btn btn-info text-white fw-bold rounded-pill w-100 py-3">رفع</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- Add Modals --}}
-<div class="modal fade" id="addHeroModal" tabindex="-1" style="z-index: 9999;">
-    <div class="modal-dialog">
-        <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
-            @csrf
-            <input type="hidden" name="type" value="hero">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إضافة هيرو جديد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3"><label class="form-label fw-bold">العنوان (اسم المشروع)</label><input type="text" name="title" class="form-control" placeholder="مثلاً: زاد الأيتام" required></div>
-                <div class="mb-3"><label class="form-label fw-bold">الأيقونة (Icon)</label><input type="file" name="icon" class="form-control" accept="image/*" required></div>
-                <div class="mb-3"><label class="form-label fw-bold">صورة بداية الصفحة (اختياري)</label><input type="file" name="image" class="form-control" accept="image/*"></div>
-                <div class="mb-3"><label class="form-label fw-bold">الوصف (اختياري)</label><textarea name="description" class="form-control" rows="2"></textarea></div>
-                
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom border-secondary pb-2">
-                    <h6 class="fw-bold text-warning mb-0">الكروت الداخلية (اختياري)</h6>
-                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="addHeroCard('addHeroCardsContainer')">+ إضافة كارت جديد</button>
-                </div>
-                <div id="addHeroCardsContainer"></div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill w-100 py-3">حفظ</button>
             </div>
         </form>
     </div>
@@ -673,34 +711,5 @@
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 <script>
-    let heroCardIndex = 1000;
-    function addHeroCard(containerId) {
-        const container = document.getElementById(containerId);
-        const currentIndex = heroCardIndex++;
-        
-        const html = `
-            <div class="card bg-dark border-secondary mb-3 hero-card-item">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between mb-2">
-                        <h6 class="text-white mb-0">كارت جديد</h6>
-                        <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="this.closest('.hero-card-item').remove()">حذف</button>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label fw-bold" style="font-size: 0.85rem">اسم الكارت</label>
-                        <input type="text" name="cards[${currentIndex}][title]" class="form-control form-control-sm">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label fw-bold" style="font-size: 0.85rem">الوصــف</label>
-                        <textarea name="cards[${currentIndex}][description]" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label fw-bold" style="font-size: 0.85rem">الصـــورة</label>
-                        <input type="file" name="cards[${currentIndex}][image]" class="form-control form-control-sm" accept="image/*">
-                    </div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-    }
 </script>
 @endsection

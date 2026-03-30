@@ -110,59 +110,79 @@
                             </td>
                         </tr>
 
-                        {{-- Edit Modal --}}
+                        {{-- Edit Donor Modal --}}
                         <div class="modal fade" id="editDonor{{ $donor->id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content glass-card border-0">
-                                    <div class="modal-header border-bottom border-white border-opacity-10">
-                                        <h5 class="modal-title text-white">تعديل بيانات المتبرع</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <div class="modal-content glass-card border-0 overflow-hidden shadow-lg" style="border-radius: 24px;">
+                                    <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                                        <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
+                                            <div>
+                                                <h5 class="modal-title fw-bold text-white mb-0">
+                                                    <i class="bi bi-person-gear me-2"></i> تعديل بيانات المتبرع
+                                                </h5>
+                                                <p class="text-white-50 x-small mb-0 mt-1">تحديث معلومات الحساب وحالة الوصول</p>
+                                            </div>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
                                     </div>
+                                    
                                     <form action="{{ route('mobile.donors_auth.update', $donor->id) }}" method="POST">
                                         @csrf
                                         @method('PUT')
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label text-white-50">اسم المتبرع</label>
-                                                <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="{{ $donor->name }}" required>
+                                        <div class="modal-body p-4">
+                                            <div class="mb-4">
+                                                <label class="form-label small fw-bold text-muted mb-2"><i class="bi bi-person me-1"></i> اسم المتبرع</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0"><i class="bi bi-person-circle text-primary"></i></span>
+                                                    <input type="text" name="name" class="form-control form-control-lg bg-light border-0" value="{{ $donor->name }}" required style="border-radius: 0 12px 12px 0;">
+                                                </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label text-white-50">رقم الهاتف</label>
-                                                <input type="text" name="phone" dir="ltr" class="form-control bg-dark text-white border-secondary text-end" value="{{ $donor->phone }}" required>
+                                            <div class="mb-4">
+                                                <label class="form-label small fw-bold text-muted mb-2"><i class="bi bi-telephone me-1"></i> رقم الهاتف</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0"><i class="bi bi-phone-fill text-primary"></i></span>
+                                                    <input type="text" name="phone" dir="ltr" class="form-control form-control-lg bg-light border-0 text-end" value="{{ $donor->phone }}" required style="border-radius: 0 12px 12px 0;">
+                                                </div>
                                             </div>
-                                            <div class="form-check form-switch mt-3 d-flex align-items-center gap-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" name="active" value="1" id="activeSwitch{{ $donor->id }}" {{ (isset($donor->active) ? $donor->active : true) ? 'checked' : '' }}>
-                                                <label class="form-check-label text-white" for="activeSwitch{{ $donor->id }}">حساب نشط (يمكنه تسجيل الدخول)</label>
+                                            
+                                            <div class="p-3 bg-primary bg-opacity-5 rounded-4 border border-primary border-opacity-10">
+                                                <div class="form-check form-switch d-flex align-items-center justify-content-between px-0">
+                                                    <div>
+                                                        <label class="form-check-label fw-bold text-primary mb-0" for="activeSwitch{{ $donor->id }}">تنشيط الحساب</label>
+                                                        <div class="x-small text-muted">السماح للمستخدم بتسجيل الدخول</div>
+                                                    </div>
+                                                    <input class="form-check-input ms-0" style="width: 2.8em; height: 1.4em;" type="checkbox" role="switch" name="active" value="1" id="activeSwitch{{ $donor->id }}" {{ (isset($donor->active) ? $donor->active : true) ? 'checked' : '' }}>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="modal-footer border-top border-white border-opacity-10">
-                                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">إلغاء</button>
-                                            <button type="submit" class="btn btn-primary px-4">حفظ التغييرات</button>
+                                        <div class="modal-footer border-0 p-4 bg-light">
+                                            <button type="button" class="btn btn-link text-muted decoration-none fw-bold me-auto" data-bs-dismiss="modal">إلغاء</button>
+                                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm">حفظ التغييرات <i class="bi bi-check-lg ms-2"></i></button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Delete Modal --}}
+                        {{-- Delete Donor Modal --}}
                         <div class="modal fade" id="deleteDonor{{ $donor->id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content bg-danger text-white border-0">
-                                    <div class="modal-header border-bottom border-white border-opacity-25">
-                                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i> تأكيد الحذف</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body text-center py-4">
-                                        <p class="fs-5 mb-0">هل أنت متأكد من حذف المتبرع <strong>{{ $donor->name }}</strong> نهائياً؟</p>
-                                        <p class="small text-white-50 mt-2">لا يمكن التراجع عن هذه الخطوة وسيتم مسح بيانات دخوله للتطبيق!</p>
-                                    </div>
-                                    <div class="modal-footer border-top border-white border-opacity-25 justify-content-center">
-                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
-                                        <form action="{{ route('mobile.donors_auth.destroy', $donor->id) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-dark text-danger fw-bold px-4">نعم، احذف المتبرع</button>
-                                        </form>
+                            <div class="modal-dialog modal-dialog-centered modal-sm">
+                                <div class="modal-content border-0 overflow-hidden shadow-lg" style="border-radius: 24px;">
+                                    <div class="modal-body text-center p-5">
+                                        <div class="mb-4">
+                                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                                <i class="bi bi-trash3 fs-1"></i>
+                                            </div>
+                                            <h4 class="fw-bold mb-2">تأكيد الحذف</h4>
+                                            <p class="text-muted small">هل أنت متأكد من حذف المتبرع <strong class="text-dark">{{ $donor->name }}</strong> نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <form action="{{ route('mobile.donors_auth.destroy', $donor->id) }}" method="POST">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-danger rounded-pill w-100 py-3 fw-bold">نعم، احذف الحساب</button>
+                                            </form>
+                                            <button type="button" class="btn btn-light rounded-pill w-100 py-3 fw-bold border" data-bs-dismiss="modal">إلغاء</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -209,6 +229,11 @@
     
     .table > :not(caption) > * > * { background-color: transparent !important; color: inherit; border-bottom-color: rgba(255,255,255,0.05); }
     .table-hover tbody tr:hover { background-color: rgba(255,255,255,0.02) !important; }
+
+    .modal-content { background: white !important; color: #1e293b !important; }
+    .form-control-lg { border-radius: 12px !important; font-size: 1rem !important; }
+    .input-group-text { border-radius: 12px 0 0 12px !important; }
+    .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
     
     .animate-up { animation: fadeInUp 0.5s both; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

@@ -15,6 +15,7 @@ use App\Models\MobileCaseApplication;
 use App\Models\WebRoomBooking;
 use App\Models\MobileNotification;
 use App\Models\MobileInKindDonation;
+use App\Models\EnsanPillar;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -32,6 +33,9 @@ final class MobileApiController extends Controller
         $campaigns = MobileHomeItem::where('type', 'campaign')->orderBy('sort_order')->get();
         $finalSection = MobileHomeItem::where('type', 'final')->first();
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
+        
+        // --- NEW: Integrated Services (Ensan Pillars) ---
+        $pillars = EnsanPillar::where('is_active', true)->orderBy('sort_order')->get();
 
         // 🛠️ Robust Formatting Helper
         $formatItem = function($item) {
@@ -55,7 +59,16 @@ final class MobileApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'heroes' => $heroes->map($formatItem),
+                'integrated_services' => $pillars->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'title' => $p->title,
+                        'slug' => $p->slug,
+                        'description' => $p->description,
+                        'icon_url' => $p->icon_url,
+                        'cover_url' => $p->cover_url,
+                    ];
+                }),
                 'gallery' => $gallery->map($formatItem),
                 'services' => $services->map($formatItem),
                 'share_what_you_dont_need' => $shareItems->map($formatItem),

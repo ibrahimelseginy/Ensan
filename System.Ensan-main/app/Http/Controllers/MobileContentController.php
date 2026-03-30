@@ -12,6 +12,7 @@ use App\Models\MobileBanner;
 use App\Models\MobileCaseApplication;
 use App\Models\MobileInKindDonation;
 use App\Models\MobileHomeItem;
+use App\Models\EnsanPillar;
 use Illuminate\Support\Facades\Storage;
 
 final class MobileContentController extends Controller
@@ -84,6 +85,31 @@ final class MobileContentController extends Controller
         return back()->with('success', 'Notification sent successfully');
     }
 
+    public function notificationUpdate(Request $request, MobileNotification $notification)
+    {
+        $data = $request->validate([
+            'title' => 'required|string',
+            'body' => 'required|string',
+            'category' => 'nullable|string',
+            'target_audience' => 'nullable|string',
+            'image' => 'nullable|image'
+        ]);
+
+        $notification->update($data);
+
+        if ($request->hasFile('image')) {
+            $notification->uploadImage($request->file('image'), 'mobile/notifications');
+        }
+
+        return back()->with('success', 'Notification updated successfully');
+    }
+
+    public function notificationDestroy(MobileNotification $notification)
+    {
+        $notification->delete();
+        return back()->with('success', 'Notification deleted successfully');
+    }
+
     // --- Case Applications (e.g. needy cases applying) ---
     public function casesIndex()
     {
@@ -139,8 +165,10 @@ final class MobileContentController extends Controller
         $campaigns = MobileHomeItem::where('type', 'campaign')->orderBy('sort_order')->get();
         $finalSection = MobileHomeItem::where('type', 'final')->first();
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
+        
+        $pillars = EnsanPillar::orderBy('sort_order')->get();
 
-        return view('mobile.home_content', compact('heroes', 'gallery', 'services', 'shareItems', 'campaigns', 'finalSection', 'aboutUs'));
+        return view('mobile.home_content', compact('heroes', 'gallery', 'services', 'shareItems', 'campaigns', 'finalSection', 'aboutUs', 'pillars'));
     }
 
     public function homeContentStore(Request $request)
@@ -548,5 +576,60 @@ final class MobileContentController extends Controller
     {
         $user->delete();
         return back()->with('success', 'تم حذف المتبرع بنجاح');
+    }
+
+    // --- Ensan Pillars (Integrated Services) Management ---
+    public function pillarStore(Request $request)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|unique:ensan_pillars,slug',
+            'description' => 'nullable|string',
+            'icon' => 'required|image|max:2048',
+            'cover' => 'nullable|image|max:5120',
+            'sort_order' => 'nullable|integer',
+            'is_active' => 'boolean'
+        ]);
+
+        $pillar = EnsanPillar::create($data);
+
+        if ($request->hasFile('icon')) {
+            $pillar->uploadImage($request->file('icon'), 'mobile/pillars/icons', 'icon_path');
+        }
+        if ($request->hasFile('cover')) {
+            $pillar->uploadImage($request->file('cover'), 'mobile/pillars/covers', 'cover_path');
+        }
+
+        return back()->with('success', 'تم إضافة المبادرة بنجاح');
+    }
+
+    public function pillarUpdate(Request $request, EnsanPillar $pillar)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|unique:ensan_pillars,slug,' . $pillar->id,
+            'description' => 'nullable|string',
+            'icon' => 'nullable|image|max:2048',
+            'cover' => 'nullable|image|max:5120',
+            'sort_order' => 'nullable|integer',
+            'is_active' => 'boolean'
+        ]);
+
+        $pillar->update($data);
+
+        if ($request->hasFile('icon')) {
+            $pillar->uploadImage($request->file('icon'), 'mobile/pillars/icons', 'icon_path');
+        }
+        if ($request->hasFile('cover')) {
+            $pillar->uploadImage($request->file('cover'), 'mobile/pillars/covers', 'cover_path');
+        }
+
+        return back()->with('success', 'تم تحديث المبادرة بنجاح');
+    }
+
+    public function pillarDestroy(EnsanPillar $pillar)
+    {
+        $pillar->delete();
+        return back()->with('success', 'تم حذف المبادرة بنجاح');
     }
 }

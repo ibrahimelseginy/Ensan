@@ -365,6 +365,8 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             // Notifications
             Route::get('/notifications', [MobileContentController::class , 'notificationsIndex'])->name('notifications.index');
             Route::post('/notifications', [MobileContentController::class , 'notificationStore'])->name('notifications.store');
+            Route::put('/notifications/{notification}', [MobileContentController::class , 'notificationUpdate'])->name('notifications.update');
+            Route::delete('/notifications/{notification}', [MobileContentController::class , 'notificationDestroy'])->name('notifications.destroy');
 
             // Case Applications (from App)
             Route::get('/cases', [MobileContentController::class , 'casesIndex'])->name('cases.index');
@@ -429,6 +431,11 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             Route::get('/donors-auth', [MobileContentController::class, 'mobileDonorsIndex'])->name('donors_auth.index');
             Route::put('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
             Route::delete('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorDestroy'])->name('donors_auth.destroy');
+
+            // Ensan Pillars (Integrated Services)
+            Route::post('/pillars', [MobileContentController::class, 'pillarStore'])->name('pillars.store');
+            Route::put('/pillars/{pillar}', [MobileContentController::class, 'pillarUpdate'])->name('pillars.update');
+            Route::delete('/pillars/{pillar}', [MobileContentController::class, 'pillarDestroy'])->name('pillars.destroy');
         }
         );
 
