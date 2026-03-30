@@ -25,6 +25,8 @@ final class AuthController extends Controller
             $user = User::create([
                 'phone' => $request->phone,
                 'name' => $request->name ?? 'متبرع ' . substr($request->phone, -4),
+                'email' => 'mobile_' . time() . '_' . rand(1000, 9999) . '@ensan.app',
+                'password' => Hash::make(\Illuminate\Support\Str::random(16)),
                 'role' => 'donor',
                 'active' => true,
                 'registration_source' => 'mobile'
@@ -37,7 +39,7 @@ final class AuthController extends Controller
             }
         }
 
-        $user->otp_code = (string) random_int(100000, 999999);
+        $user->otp_code = '123456'; // الثابت المطلوب للاختبار بتطبيق الموبايل
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
@@ -99,6 +101,8 @@ final class AuthController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'phone' => $data['phone'],
+            'email' => 'mobile_' . time() . '_' . rand(1000, 9999) . '@ensan.app',
+            'password' => Hash::make(\Illuminate\Support\Str::random(16)),
             'active' => true,
             'registration_source' => 'mobile',
             'role' => 'donor'

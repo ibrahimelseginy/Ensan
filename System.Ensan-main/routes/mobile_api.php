@@ -9,6 +9,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MobileApiController;
+use App\Http\Controllers\Api\EnsanPillarController;
 use App\Http\Controllers\AuthController;
 
 Route::prefix('auth')->group(function () {
@@ -44,6 +45,7 @@ Route::get('/home', [MobileApiController::class , 'getHomeContent']);
 Route::get('/about-us', [MobileApiController::class , 'getAboutUs']);
 Route::get('/projects', [MobileApiController::class , 'getProjects']);
 Route::get('/campaigns', [MobileApiController::class , 'getCampaigns']);
+Route::get('/news/categories', [MobileApiController::class, 'getNewsCategories']);
 Route::get('/news', [MobileApiController::class , 'getNews']);
 Route::post('/news', [MobileApiController::class , 'storeNews']);
 Route::get('/volunteer-requests', [MobileApiController::class , 'getVolunteerRequests']);
@@ -60,6 +62,10 @@ Route::post('/guest-house', [MobileApiController::class , 'submitGuestHouseBooki
 Route::get('/notifications', [MobileApiController::class , 'getNotifications']);
 Route::post('/donation', [MobileApiController::class , 'submitDonation']);
 Route::get('/contact-info', [MobileApiController::class, 'getContactInfo']);
+
+// Integrated Service Pillars (Zad, Midrar, etc.)
+Route::get('/integrated-services', [EnsanPillarController::class, 'index']);
+Route::get('/integrated-services/{slug}', [EnsanPillarController::class, 'show']);
 
 Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
     Route::get('/profile', [MobileApiController::class, 'getProfile']);

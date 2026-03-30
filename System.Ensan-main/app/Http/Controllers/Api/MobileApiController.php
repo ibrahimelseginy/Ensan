@@ -129,10 +129,15 @@ final class MobileApiController extends Controller
     /**
      * Get App News
      */
-    public function getNews()
+    public function getNews(Request $request)
     {
-        $news = \App\Models\MobileNews::orderByDesc('created_at')
-            ->get()
+        $query = \App\Models\MobileNews::orderByDesc('created_at');
+
+        if ($request->has('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+
+        $news = $query->get()
             ->map(function($item) {
                 // Ensure image_url is returned for the mobile app dynamically based on host
                 $item->image_url = $item->image_path ? url('/api/media?path=' . $item->image_path) : null;
@@ -146,6 +151,17 @@ final class MobileApiController extends Controller
     }
 
     /**
+     * Get News Categories for Mobile App
+     */
+    public function getNewsCategories()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => \App\Models\MobileNews::getCategories()
+        ]);
+    }
+
+    /**
      * Store App News (Endpoint requested for 'Adding new news part')
      */
     public function storeNews(Request $request)
@@ -154,7 +170,7 @@ final class MobileApiController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'image' => 'nullable|image|max:10240',
-            'category' => 'nullable|string'
+            'category' => 'nullable|string|in:عام,حملات,تبرعات,عاجل'
         ]);
 
         if ($validator->fails()) {
@@ -458,6 +474,7 @@ final class MobileApiController extends Controller
             $data['account_name'] = $request->input('accountName') ?? $request->input('sender_name') ?? $request->input('senderName');
         }
 
+        $data['status'] = 'pending';
         $donation = \App\Models\MobileDonation::create($data);
 
         // Handle File Upload (Receipt/Proof)
@@ -569,7 +586,7 @@ final class MobileApiController extends Controller
             'data' => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatar_url' => $user->profile_photo_path ? url(Storage::url($user->profile_photo_path)) : null,
+                'avatar_url' => $user->image_url,
             ]
         ]);
     }
@@ -589,12 +606,27 @@ final class MobileApiController extends Controller
         }
 
         $donations = \App\Models\MobileDonation::where('donor_phone', $phone)
-            ->orWhere('phone', $phone)
             ->orderByDesc('created_at')
             ->get()
             ->map(function($donation) {
                 // Add receipt URL if exists
                 $donation->receipt_url = $donation->receipt_path ? $donation->getFileUrl('receipt_path') : null;
+
+                // Link project or campaign image if available
+                $projectName = trim((string) $donation->donation_for);
+                $project = \App\Models\Project::withoutGlobalScopes()->where('name', $projectName)->first();
+                
+                if ($project && $project->image_path) {
+                    $donation->donation_image_url = $project->image_url;
+                } else {
+                    $campaign = \App\Models\Campaign::where('name', $projectName)->first();
+                    if ($campaign && $campaign->image_path) {
+                        $donation->donation_image_url = $campaign->image_url;
+                    } else {
+                        $donation->donation_image_url = null;
+                    }
+                }
+
                 return $donation;
             });
 

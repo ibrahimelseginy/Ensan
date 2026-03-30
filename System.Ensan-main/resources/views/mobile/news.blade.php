@@ -119,11 +119,9 @@
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">نوع الخبر</label>
                                 <select name="category" class="form-select">
-                                    <option value="طبي" {{ $item->category == 'طبي' ? 'selected' : '' }}>طبي</option>
-                                    <option value="تعليمي" {{ $item->category == 'تعليمي' ? 'selected' : '' }}>تعليمي</option>
-                                    <option value="مساعدات" {{ $item->category == 'مساعدات' ? 'selected' : '' }}>مساعدات</option>
-                                    <option value="فعاليات" {{ $item->category == 'فعاليات' ? 'selected' : '' }}>فعاليات</option>
-                                    <option value="عام" {{ ($item->category == 'عام' || !$item->category) ? 'selected' : '' }}>عام</option>
+                                    @foreach(\App\Models\MobileNews::getCategories() as $cat)
+                                        <option value="{{ $cat['id'] }}" {{ $item->category == $cat['id'] ? 'selected' : '' }}>{{ $cat['label'] }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -252,11 +250,9 @@
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">نوع الخبر</label>
                         <select name="category" class="form-select">
-                            <option value="طبي">طبي</option>
-                            <option value="تعليمي">تعليمي</option>
-                            <option value="مساعدات">مساعدات</option>
-                            <option value="فعاليات">فعاليات</option>
-                            <option value="عام" selected>عام</option>
+                            @foreach(\App\Models\MobileNews::getCategories() as $cat)
+                                <option value="{{ $cat['id'] }}" {{ $cat['id'] == 'عام' ? 'selected' : '' }}>{{ $cat['label'] }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-12">

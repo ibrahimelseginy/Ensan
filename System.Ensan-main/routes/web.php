@@ -427,6 +427,8 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             Route::delete('/web-bookings/{booking}', [MobileContentController::class, 'destroyWebBooking'])->name('web_bookings.destroy');
 
             Route::get('/donors-auth', [MobileContentController::class, 'mobileDonorsIndex'])->name('donors_auth.index');
+            Route::put('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
+            Route::delete('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorDestroy'])->name('donors_auth.destroy');
         }
         );
 

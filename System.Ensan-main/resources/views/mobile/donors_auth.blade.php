@@ -63,6 +63,7 @@
                             <th class="py-4">رقم الهاتف</th>
                             <th class="py-4 text-center">تاريخ الانضمام</th>
                             <th class="py-4 text-center">الحالة</th>
+                            <th class="py-4 text-center">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,7 +98,75 @@
                                     </span>
                                 @endif
                             </td>
+                            <td class="text-center">
+                                <div class="btn-group gap-2">
+                                    <button class="btn btn-sm btn-outline-light rounded-2 border-opacity-25" style="backdrop-filter: blur(5px);" data-bs-toggle="modal" data-bs-target="#editDonor{{ $donor->id }}">
+                                        <i class="bi bi-pencil-square"></i> تعديل
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-2 border-opacity-25" style="backdrop-filter: blur(5px);" data-bs-toggle="modal" data-bs-target="#deleteDonor{{ $donor->id }}">
+                                        <i class="bi bi-trash3-fill"></i> مسح
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
+
+                        {{-- Edit Modal --}}
+                        <div class="modal fade" id="editDonor{{ $donor->id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content glass-card border-0">
+                                    <div class="modal-header border-bottom border-white border-opacity-10">
+                                        <h5 class="modal-title text-white">تعديل بيانات المتبرع</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="{{ route('mobile.donors_auth.update', $donor->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label text-white-50">اسم المتبرع</label>
+                                                <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="{{ $donor->name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-white-50">رقم الهاتف</label>
+                                                <input type="text" name="phone" dir="ltr" class="form-control bg-dark text-white border-secondary text-end" value="{{ $donor->phone }}" required>
+                                            </div>
+                                            <div class="form-check form-switch mt-3 d-flex align-items-center gap-2">
+                                                <input class="form-check-input" type="checkbox" role="switch" name="active" value="1" id="activeSwitch{{ $donor->id }}" {{ (isset($donor->active) ? $donor->active : true) ? 'checked' : '' }}>
+                                                <label class="form-check-label text-white" for="activeSwitch{{ $donor->id }}">حساب نشط (يمكنه تسجيل الدخول)</label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top border-white border-opacity-10">
+                                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">إلغاء</button>
+                                            <button type="submit" class="btn btn-primary px-4">حفظ التغييرات</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Delete Modal --}}
+                        <div class="modal fade" id="deleteDonor{{ $donor->id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content bg-danger text-white border-0">
+                                    <div class="modal-header border-bottom border-white border-opacity-25">
+                                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i> تأكيد الحذف</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center py-4">
+                                        <p class="fs-5 mb-0">هل أنت متأكد من حذف المتبرع <strong>{{ $donor->name }}</strong> نهائياً؟</p>
+                                        <p class="small text-white-50 mt-2">لا يمكن التراجع عن هذه الخطوة وسيتم مسح بيانات دخوله للتطبيق!</p>
+                                    </div>
+                                    <div class="modal-footer border-top border-white border-opacity-25 justify-content-center">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                                        <form action="{{ route('mobile.donors_auth.destroy', $donor->id) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-dark text-danger fw-bold px-4">نعم، احذف المتبرع</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         @empty
                         <tr>
                             <td colspan="4" class="py-5 text-center text-muted border-0">

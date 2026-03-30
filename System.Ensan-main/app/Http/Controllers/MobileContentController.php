@@ -322,7 +322,7 @@ final class MobileContentController extends Controller
         $data = $request->validate([
             'title' => 'required',
             'content' => 'required',
-            'category' => 'nullable',
+            'category' => 'nullable|in:عام,حملات,تبرعات,عاجل',
             'image' => 'nullable|image'
         ]);
         $news = \App\Models\MobileNews::create($data);
@@ -337,7 +337,7 @@ final class MobileContentController extends Controller
         $data = $request->validate([
             'title'                  => 'required|string',
             'content'                => 'required|string',
-            'category'               => 'nullable|string',
+            'category'               => 'nullable|string|in:عام,حملات,تبرعات,عاجل',
             'image'                  => 'nullable|image|max:5120',
             'delete_image'           => 'nullable|boolean',
             'published_at'           => 'nullable|date',
@@ -524,5 +524,28 @@ final class MobileContentController extends Controller
             ->orderByDesc('created_at')
             ->get();
         return view('mobile.donors_auth', compact('donors'));
+    }
+
+    public function mobileDonorUpdate(Request $request, \App\Models\User $user)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
+            'active' => 'boolean'
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'active' => $request->boolean('active', false)
+        ]);
+
+        return back()->with('success', 'تم تحديث بيانات المتبرع بنجاح');
+    }
+
+    public function mobileDonorDestroy(\App\Models\User $user)
+    {
+        $user->delete();
+        return back()->with('success', 'تم حذف المتبرع بنجاح');
     }
 }
