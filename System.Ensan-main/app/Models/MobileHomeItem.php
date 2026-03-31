@@ -39,4 +39,12 @@ final class MobileHomeItem extends Model
     {
         return $this->hasMany(MobileHeroCard::class, 'mobile_home_item_id');
     }
+
+    /**
+     * Many-to-Many relationship with Ensan Pillars (Integrated Services)
+     */
+    public function pillars(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(EnsanPillar::class, 'ensan_pillar_service_item', 'mobile_home_item_id', 'ensan_pillar_id');
+    }
 }

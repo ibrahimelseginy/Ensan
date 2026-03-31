@@ -23,22 +23,32 @@ class EnsanPillar extends Model
     /**
      * Get the full URL for the icon
      */
-    public function getIconUrlAttribute()
+    public function getIconUrlAttribute(): ?string
     {
-        return $this->icon_path ? url('/api/media?path=' . $this->icon_path) : null;
+        return $this->getFileUrl('icon_path');
     }
 
     /**
      * Get the full URL for the cover image
      */
-    public function getCoverUrlAttribute()
+    public function getCoverUrlAttribute(): ?string
     {
-        return $this->cover_path ? url('/api/media?path=' . $this->cover_path) : null;
+        return $this->getFileUrl('cover_path');
     }
     
     /**
-     * Relationship with related projects (conceptually)
-     * In a real implementation, you might have a many-to-many 
-     * or use a category/tag system.
+     * Relationship with related projects
      */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'ensan_pillar_project');
+    }
+
+    /**
+     * Relationship with related service items
+     */
+    public function services()
+    {
+        return $this->belongsToMany(MobileHomeItem::class, 'ensan_pillar_service_item', 'ensan_pillar_id', 'mobile_home_item_id');
+    }
 }

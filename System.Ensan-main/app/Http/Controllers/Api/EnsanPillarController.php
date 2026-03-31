@@ -21,7 +21,9 @@ class EnsanPillarController extends Controller
                     'id' => $pillar->id,
                     'title' => $pillar->title,
                     'slug' => $pillar->slug,
-                    'icon_url' => $pillar->icon_url_attribute,
+                    'description' => $pillar->description,
+                    'icon_url' => $pillar->icon_url,
+                    'cover_url' => $pillar->cover_url,
                     'sort_order' => $pillar->sort_order,
                 ];
             });
@@ -37,7 +39,8 @@ class EnsanPillarController extends Controller
      */
     public function show($slug)
     {
-        $pillar = EnsanPillar::where('slug', $slug)
+        $pillar = EnsanPillar::with(['projects', 'services'])
+            ->where('slug', $slug)
             ->where('is_active', true)
             ->first();
 
@@ -48,23 +51,30 @@ class EnsanPillarController extends Controller
             ], 404);
         }
 
-        // Logic to link related projects (can be based on tags or category)
-        $relatedProjects = \App\Models\Project::where('show_on_mobile', true)
-            ->where('name', 'like', '%' . $pillar->title . '%') // Simple heuristic
-            ->get()
-            ->map(function ($project) {
-                $project->image_url = $project->image_path ? $project->getFileUrl('image_path') : null;
-                return $project;
-            });
-
         return response()->json([
             'status' => 'success',
             'data' => [
                 'id' => $pillar->id,
                 'title' => $pillar->title,
+                'slug' => $pillar->slug,
                 'description' => $pillar->description,
-                'cover_url' => $pillar->cover_url_attribute,
-                'projects' => $relatedProjects,
+                'icon_url' => $pillar->icon_url,
+                'cover_url' => $pillar->cover_url,
+                'projects' => $pillar->projects->map(function ($proj) {
+                    return [
+                        'id' => $proj->id,
+                        'name' => $proj->name,
+                        'image_url' => $proj->image_url,
+                    ];
+                }),
+                'services' => $pillar->services->map(function ($serv) {
+                    return [
+                        'id' => $serv->id,
+                        'title' => $serv->title,
+                        'image_url' => $serv->image_url,
+                        'share_price' => $serv->share_price,
+                    ];
+                }),
             ]
         ]);
     }

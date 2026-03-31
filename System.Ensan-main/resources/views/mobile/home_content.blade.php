@@ -1,5 +1,39 @@
 @extends('layouts.app')
 
+@section('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" />
+    <style>
+        .select2-container--bootstrap-5 .select2-selection {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            color: #f8fafc !important;
+            border-radius: 12px !important;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+            background-color: #3b82f6 !important;
+            border: none !important;
+            color: white !important;
+            border-radius: 6px !important;
+            padding: 2px 8px !important;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        .select2-container--bootstrap-5 .select2-search__field {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: #3b82f6 !important;
+        }
+    </style>
+@endsection
 @section('content')
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
     <div class="hero-content">
@@ -39,7 +73,11 @@
                                             <span class="badge bg-danger bg-opacity-10 text-danger x-small border border-danger border-opacity-25">غير نشط</span>
                                         @endif
                                     </div>
-                                    <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $pillar->description }}</p>
+                                    <p class="text-muted small mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $pillar->description }}</p>
+                                    <div class="d-flex gap-2 small mb-3">
+                                        <span class="text-info"><i class="bi bi-folder2-open me-1"></i> {{ $pillar->projects->count() }} مشاريع</span>
+                                        <span class="text-success"><i class="bi bi-gear me-1"></i> {{ $pillar->services->count() }} خدمات</span>
+                                    </div>
                                     <div class="d-flex gap-2 justify-content-end mt-auto pt-2 border-top border-secondary border-opacity-25">
                                         <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editPillarModal{{ $pillar->id }}">تعديل <i class="bi bi-pencil ms-1"></i></button>
                                         <form action="{{ route('mobile.pillars.destroy', $pillar) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه المبادرة؟')">
@@ -364,6 +402,24 @@
                             <input type="number" name="sort_order" class="form-control border-0 bg-light" value="{{ $pillar->sort_order }}">
                         </div>
 
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-folder-check me-1"></i> مشاريع متعلقة</label>
+                            <select name="project_ids[]" class="form-select border-0 bg-light select2" multiple data-placeholder="اختر المشاريع المتعلقة...">
+                                @foreach($allProjects as $project)
+                                    <option value="{{ $project->id }}" {{ $pillar->projects->contains($project->id) ? 'selected' : '' }}>{{ $project->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-gear-wide-connected me-1"></i> خدمات متعلقة</label>
+                            <select name="service_ids[]" class="form-select border-0 bg-light select2" multiple data-placeholder="اختر الخدمات المتعلقة...">
+                                @foreach($serviceItems as $service)
+                                    <option value="{{ $service->id }}" {{ $pillar->services->contains($service->id) ? 'selected' : '' }}>{{ $service->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="col-md-8 d-flex align-items-end">
                             <div class="form-check form-switch p-3 bg-success bg-opacity-10 rounded-pill border border-success border-opacity-10 w-100 d-flex align-items-center justify-content-between px-4">
                                 <div>
@@ -416,6 +472,24 @@
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">الترتيب</label>
                         <input type="number" name="sort_order" class="form-control" value="0">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold"><i class="bi bi-folder-check me-1"></i> مشاريع متعلقة</label>
+                        <select name="project_ids[]" class="form-select select2" multiple data-placeholder="اختر المشاريع المتعلقة...">
+                            @foreach($allProjects as $project)
+                                <option value="{{ $project->id }}">{{ $project->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold"><i class="bi bi-gear-wide-connected me-1"></i> خدمات متعلقة</label>
+                        <select name="service_ids[]" class="form-select select2" multiple data-placeholder="اختر الخدمات المتعلقة...">
+                            @foreach($serviceItems as $service)
+                                <option value="{{ $service->id }}">{{ $service->title }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-6 d-flex align-items-end pb-2">
                         <div class="form-check form-switch p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary w-100">
@@ -710,6 +784,25 @@
     .animate-slide-up { animation: slideUp 0.5s ease-out; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('.modal:visible').length ? $('.modal:visible').first() : $('body'),
+            dir: 'rtl'
+        });
+
+        // Re-initialize select2 when modal is shown (crucial for modals)
+        $('.modal').on('shown.bs.modal', function () {
+            $(this).find('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $(this),
+                dir: 'rtl'
+            });
+        });
+    });
 </script>
 @endsection

@@ -166,9 +166,11 @@ final class MobileContentController extends Controller
         $finalSection = MobileHomeItem::where('type', 'final')->first();
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
         
-        $pillars = EnsanPillar::orderBy('sort_order')->get();
+        $pillars = EnsanPillar::with(['projects', 'services'])->orderBy('sort_order')->get();
+        $allProjects = Project::where('show_on_mobile', true)->get();
+        $serviceItems = MobileHomeItem::where('type', 'service')->orderBy('sort_order')->get();
 
-        return view('mobile.home_content', compact('heroes', 'gallery', 'services', 'shareItems', 'campaigns', 'finalSection', 'aboutUs', 'pillars'));
+        return view('mobile.home_content', compact('heroes', 'gallery', 'services', 'shareItems', 'campaigns', 'finalSection', 'aboutUs', 'pillars', 'allProjects', 'serviceItems'));
     }
 
     public function homeContentStore(Request $request)
@@ -593,6 +595,13 @@ final class MobileContentController extends Controller
 
         $pillar = EnsanPillar::create($data);
 
+        if ($request->has('project_ids')) {
+            $pillar->projects()->sync($request->project_ids);
+        }
+        if ($request->has('service_ids')) {
+            $pillar->services()->sync($request->service_ids);
+        }
+
         if ($request->hasFile('icon')) {
             $pillar->uploadImage($request->file('icon'), 'mobile/pillars/icons', 'icon_path');
         }
@@ -616,6 +625,18 @@ final class MobileContentController extends Controller
         ]);
 
         $pillar->update($data);
+
+        if ($request->has('project_ids')) {
+            $pillar->projects()->sync($request->project_ids);
+        } else {
+            $pillar->projects()->detach();
+        }
+
+        if ($request->has('service_ids')) {
+            $pillar->services()->sync($request->service_ids);
+        } else {
+            $pillar->services()->detach();
+        }
 
         if ($request->hasFile('icon')) {
             $pillar->uploadImage($request->file('icon'), 'mobile/pillars/icons', 'icon_path');

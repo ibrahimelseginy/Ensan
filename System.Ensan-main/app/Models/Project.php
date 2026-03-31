@@ -113,4 +113,12 @@ final class Project extends Model
     {
         return $this->hasMany(Supplier::class);
     }
+
+    /**
+     * Many-to-Many relationship with Ensan Pillars (Integrated Services)
+     */
+    public function pillars(): BelongsToMany
+    {
+        return $this->belongsToMany(EnsanPillar::class, 'ensan_pillar_project');
+    }
 }

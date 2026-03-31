@@ -35,7 +35,7 @@ final class MobileApiController extends Controller
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
         
         // --- NEW: Integrated Services (Ensan Pillars) ---
-        $pillars = EnsanPillar::where('is_active', true)->orderBy('sort_order')->get();
+        $pillars = EnsanPillar::with(['projects', 'services'])->where('is_active', true)->orderBy('sort_order')->get();
 
         // 🛠️ Robust Formatting Helper
         $formatItem = function($item) {
@@ -67,6 +67,21 @@ final class MobileApiController extends Controller
                         'description' => $p->description,
                         'icon_url' => $p->icon_url,
                         'cover_url' => $p->cover_url,
+                        'related_projects' => $p->projects->map(function($proj) {
+                            return [
+                                'id' => $proj->id,
+                                'name' => $proj->name,
+                                'image_url' => $proj->image_url,
+                            ];
+                        }),
+                        'related_services' => $p->services->map(function($serv) {
+                            return [
+                                'id' => $serv->id,
+                                'title' => $serv->title,
+                                'image_url' => $serv->image_url,
+                                'share_price' => $serv->share_price,
+                            ];
+                        }),
                     ];
                 }),
                 'gallery' => $gallery->map($formatItem),
@@ -152,8 +167,7 @@ final class MobileApiController extends Controller
 
         $news = $query->get()
             ->map(function($item) {
-                // Ensure image_url is returned for the mobile app dynamically based on host
-                $item->image_url = $item->image_path ? url('/api/media?path=' . $item->image_path) : null;
+                $item->image_url = $item->getFileUrl('image_path');
                 return $item;
             });
 
@@ -555,13 +569,13 @@ final class MobileApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar_url' => $user->profile_photo_path ? url(Storage::url($user->profile_photo_path)) : null,
-                'is_verified' => true,
-                'joined_at' => $user->created_at->toDateTimeString(),
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'phone'       => $user->phone,
+                'avatar_url'  => $user->getFileUrl('profile_photo_path'),
+                'is_active'   => (bool) $user->active,
+                'joined_at'   => $user->created_at->toDateTimeString(),
             ]
         ]);
     }
@@ -581,26 +595,33 @@ final class MobileApiController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'avatar' => 'nullable|image|max:10240',
+            'name'   => 'nullable|string|max:255',
+            'phone'  => 'nullable|string|max:20|unique:users,phone,' . $user->id,
+            'email'  => 'nullable|email|unique:users,email,' . $user->id,
+            'avatar' => 'nullable|image|max:10240', // max 10MB
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        if ($request->has('name')) {
+        if ($request->filled('name')) {
             $user->name = $request->name;
         }
-        if ($request->has('email')) {
+        if ($request->filled('phone')) {
+            $user->phone = $request->phone;
+        }
+        if ($request->filled('email')) {
             $user->email = $request->email;
         }
 
+        // Handle avatar image upload
         if ($request->hasFile('avatar')) {
             try {
-                // Using the UploadsImages trait if it handles the 'profile_photo_path' column correctly
-                // The User model has getImageColumn() returning 'profile_photo_path'
+                // uploadImage uses getImageColumn() which returns 'profile_photo_path'
                 $user->uploadImage($request->file('avatar'), 'profiles');
             } catch (\Exception $e) {
                 \Log::error('Profile avatar upload failed: ' . $e->getMessage());
@@ -610,12 +631,14 @@ final class MobileApiController extends Controller
         $user->save();
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Profile updated successfully',
             'data' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar_url' => $user->image_url,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+                'avatar_url' => $user->getFileUrl('profile_photo_path'),
             ]
         ]);
     }
