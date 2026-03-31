@@ -59,11 +59,11 @@
                 <table class="table table-hover align-middle mb-0 text-white">
                     <thead class="bg-white bg-opacity-5">
                         <tr>
-                            <th class="py-4 ps-4">المتبرع</th>
-                            <th class="py-4">رقم الهاتف</th>
-                            <th class="py-4 text-center">تاريخ الانضمام</th>
-                            <th class="py-4 text-center">الحالة</th>
-                            <th class="py-4 text-center">الإجراءات</th>
+                            <th class="py-4 ps-4" style="width: 30%;">المتبرع</th>
+                            <th class="py-4" style="width: 25%;">رقم الهاتف</th>
+                            <th class="py-4 text-center" style="width: 15%;">تاريخ الانضمام</th>
+                            <th class="py-4 text-center" style="width: 15%;">الحالة</th>
+                            <th class="py-4 text-center" style="width: 15%;">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,54 +113,44 @@
                         {{-- Edit Donor Modal --}}
                         <div class="modal fade" id="editDonor{{ $donor->id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content glass-card border-0 overflow-hidden shadow-lg" style="border-radius: 24px;">
-                                    <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-                                        <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
-                                            <div>
-                                                <h5 class="modal-title fw-bold text-white mb-0">
-                                                    <i class="bi bi-person-gear me-2"></i> تعديل بيانات المتبرع
-                                                </h5>
-                                                <p class="text-white-50 x-small mb-0 mt-1">تحديث معلومات الحساب وحالة الوصول</p>
-                                            </div>
+                                <form action="{{ route('mobile.donors_auth.update', $donor->id) }}" method="POST" class="modal-content glass-card border-0 overflow-hidden shadow-lg" style="border-radius: 20px; background: #111827 !important;">
+                                    @csrf @method('PUT')
+                                    <div class="modal-header border-0 bg-primary text-white p-4">
+                                        <div class="d-flex align-items-center justify-content-between w-100">
+                                            <h5 class="modal-title fw-bold mb-0">
+                                                <i class="bi bi-pencil-square me-2"></i> تعديل بيانات المتبرع
+                                            </h5>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                     </div>
                                     
-                                    <form action="{{ route('mobile.donors_auth.update', $donor->id) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="modal-body p-4">
-                                            <div class="mb-4">
-                                                <label class="form-label small fw-bold text-muted mb-2"><i class="bi bi-person me-1"></i> اسم المتبرع</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-light border-0"><i class="bi bi-person-circle text-primary"></i></span>
-                                                    <input type="text" name="name" class="form-control form-control-lg bg-light border-0" value="{{ $donor->name }}" required style="border-radius: 0 12px 12px 0;">
+                                    <div class="modal-body p-4">
+                                        <div class="mb-4">
+                                            <label class="form-label small fw-bold text-white-50 mb-2">اسم المتبرع</label>
+                                            <input type="text" name="name" class="form-control form-control-lg bg-dark border-secondary border-opacity-25 text-white" value="{{ $donor->name }}" required style="border-radius: 12px !important;">
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <label class="form-label small fw-bold text-white-50 mb-2">رقم الهاتف</label>
+                                            <input type="text" name="phone" value="{{ $donor->phone }}" dir="ltr" class="form-control form-control-lg bg-dark border-secondary border-opacity-25 text-white text-end" required style="border-radius: 12px !important;">
+                                        </div>
+                                        
+                                        <div class="p-3 bg-white bg-opacity-5 rounded-3 border border-white border-opacity-5">
+                                            <div class="form-check form-switch d-flex align-items-center justify-content-between px-0">
+                                                <div>
+                                                    <label class="form-check-label fw-bold text-white mb-0" for="activeSwitch{{ $donor->id }}">تنشيط الحساب</label>
+                                                    <div class="small text-white-50">السماح للمستخدم بتسجيل الدخول للتطبيق</div>
                                                 </div>
-                                            </div>
-                                            <div class="mb-4">
-                                                <label class="form-label small fw-bold text-muted mb-2"><i class="bi bi-telephone me-1"></i> رقم الهاتف</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-light border-0"><i class="bi bi-phone-fill text-primary"></i></span>
-                                                    <input type="text" name="phone" dir="ltr" class="form-control form-control-lg bg-light border-0 text-end" value="{{ $donor->phone }}" required style="border-radius: 0 12px 12px 0;">
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="p-3 bg-primary bg-opacity-5 rounded-4 border border-primary border-opacity-10">
-                                                <div class="form-check form-switch d-flex align-items-center justify-content-between px-0">
-                                                    <div>
-                                                        <label class="form-check-label fw-bold text-primary mb-0" for="activeSwitch{{ $donor->id }}">تنشيط الحساب</label>
-                                                        <div class="x-small text-muted">السماح للمستخدم بتسجيل الدخول</div>
-                                                    </div>
-                                                    <input class="form-check-input ms-0" style="width: 2.8em; height: 1.4em;" type="checkbox" role="switch" name="active" value="1" id="activeSwitch{{ $donor->id }}" {{ (isset($donor->active) ? $donor->active : true) ? 'checked' : '' }}>
-                                                </div>
+                                                <input class="form-check-input ms-0" style="width: 2.8em; height: 1.4em;" type="checkbox" role="switch" name="active" value="1" id="activeSwitch{{ $donor->id }}" {{ (isset($donor->active) ? $donor->active : true) ? 'checked' : '' }}>
                                             </div>
                                         </div>
-                                        <div class="modal-footer border-0 p-4 bg-light">
-                                            <button type="button" class="btn btn-link text-muted decoration-none fw-bold me-auto" data-bs-dismiss="modal">إلغاء</button>
-                                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm">حفظ التغييرات <i class="bi bi-check-lg ms-2"></i></button>
-                                        </div>
-                                    </form>
-                                </div>
+                                    </div>
+                                    
+                                    <div class="modal-footer border-0 p-4 pt-0">
+                                        <button type="submit" class="btn btn-emerald rounded-pill px-5 shadow-sm fw-bold w-100 py-3" style="background-color: #10b981; border: none; color: white;">حفظ التغييرات <i class="bi bi-check-lg ms-2"></i></button>
+                                        <button type="button" class="btn btn-link text-white-50 decoration-none fw-bold w-100 mt-2" data-bs-dismiss="modal">إلغاء</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
 

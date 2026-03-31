@@ -131,7 +131,7 @@
             <div class="d-none d-lg-flex align-items-center gap-2 me-2">
                 <form action="{{ route('reports.index') }}" method="GET">
                   <div class="position-relative">
-                    <input type="text" class="form-control rounded-pill ps-5 bg-light-subtle border-0" name="q" placeholder="ابحث..." style="height: 42px; min-width: 220px;">
+                    <input type="text" class="form-control rounded-pill bg-light-subtle border-0" name="q" placeholder="ابحث..." style="height: 42px; min-width: 220px; padding-right: 48px;">
                     <button type="submit" class="btn border-0 position-absolute top-50 start-0 translate-middle-y rounded-circle z-1" style="width: 42px; height: 42px;">
                         <i class="bi bi-search text-muted"></i>
                     </button>
