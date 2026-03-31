@@ -562,14 +562,21 @@ final class MobileContentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
+            'password' => 'nullable|string|min:6',
             'active' => 'boolean'
         ]);
 
-        $user->update([
+        $updateData = [
             'name' => $request->name,
             'phone' => $request->phone,
             'active' => $request->boolean('active', false)
-        ]);
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $user->update($updateData);
 
         return back()->with('success', 'تم تحديث بيانات المتبرع بنجاح');
     }

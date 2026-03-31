@@ -12,6 +12,32 @@ use Carbon\Carbon;
 
 final class AuthController extends Controller
 {
+    public function checkPhone(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string'
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+
+        if ($user) {
+            return response()->json([
+                'status' => 'success',
+                'exists' => true,
+                'user' => [
+                    'name' => $user->name,
+                    'phone' => $user->phone
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'exists' => false,
+            'message' => 'رقم الهاتف غير مسجل مسبقاً'
+        ]);
+    }
+
     public function loginByPhone(Request $request)
     {
         $request->validate([
@@ -95,14 +121,15 @@ final class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'phone' => 'required|string|unique:users,phone'
+            'phone' => 'required|string|unique:users,phone',
+            'password' => 'required|string|min:6'
         ]);
-
+        
         $user = User::create([
             'name' => $data['name'],
             'phone' => $data['phone'],
             'email' => 'mobile_' . time() . '_' . rand(1000, 9999) . '@ensan.app',
-            'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+            'password' => Hash::make($data['password']),
             'active' => true,
             'registration_source' => 'mobile',
             'role' => 'donor'
@@ -114,30 +141,34 @@ final class AuthController extends Controller
             $user->roles()->attach($donorRole->id);
         }
 
-        $token = Token::create([
-            'user_id' => $user->id,
-            'token' => bin2hex(random_bytes(32)),
-        ]);
+        // Set OTP for verification
+        $user->otp_code = '123456'; // Default for testing
+        $user->otp_expires_at = Carbon::now()->addMinutes(15);
+        $user->save();
+
+        // In production, send SMS here.
+        \Illuminate\Support\Facades\Log::info("Register OTP for {$user->phone}: {$user->otp_code}");
 
         return response()->json([
             'status' => 'success',
-            'token' => $token->token,
-            'user' => [
-                'name' => $user->name,
-                'phone' => $user->phone
-            ]
+            'message' => 'تم إنشاء الحساب بنجاح، يرجى تفعيل رقم الهاتف برمز التحقق المرسل إليك',
+            'phone' => $user->phone,
+            'debug_otp' => config('app.debug') ? $user->otp_code : null
         ]);
     }
 
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => 'required|email',
+            'phone' => 'required|string',
             'password' => 'required|string'
         ]);
-        $user = User::where('email', $data['email'])->first();
+        $user = User::where('phone', $data['phone'])->first();
         if (!$user || !Hash::check($data['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'بيانات الدخول غير صحيحة'
+            ], 401);
         }
         $token = Token::create([
             'user_id' => $user->id,

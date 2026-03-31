@@ -557,14 +557,17 @@ final class MobileApiController extends Controller
      */
     public function getProfile(Request $request)
     {
-        $user = $request->attributes->get('auth_user');
+        $user = $request->auth_user;
         
         if (!$user) {
+            \Log::warning('Mobile API: getProfile called without auth_user in request');
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized'
             ], 401);
         }
+
+        \Log::info('Mobile API: Fetching profile for user', ['id' => $user->id, 'phone' => $user->phone]);
 
         return response()->json([
             'status' => 'success',
@@ -585,9 +588,10 @@ final class MobileApiController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = $request->attributes->get('auth_user');
+        $user = $request->auth_user;
         
         if (!$user) {
+            \Log::warning('Mobile API: updateProfile called without auth_user');
             return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized'
@@ -644,11 +648,46 @@ final class MobileApiController extends Controller
     }
 
     /**
+     * Change Password for authenticated mobile user
+     */
+    public function changePassword(Request $request)
+    {
+        $user = $request->auth_user;
+
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password'     => 'required|string|min:6',
+        ]);
+
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'كلمة المرور الحالية غير صحيحة'
+            ], 422);
+        }
+
+        $user->password = \Hash::make($request->new_password);
+        $user->save();
+
+        \Log::info('Mobile API: Password changed for user', ['id' => $user->id]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تغيير كلمة المرور بنجاح'
+        ]);
+    }
+
+    /**
      * Get Donation Records for a specific phone number
      */
     public function getDonations(Request $request)
     {
         $phone = $request->query('phone');
+        \Log::info('Mobile API: Fetching donations for phone', ['phone' => $phone]);
         
         if (!$phone) {
             return response()->json([

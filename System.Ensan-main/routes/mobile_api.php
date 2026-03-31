@@ -13,9 +13,11 @@ use App\Http\Controllers\Api\EnsanPillarController;
 use App\Http\Controllers\AuthController;
 
 Route::prefix('auth')->group(function () {
+    Route::post('check-phone', [AuthController::class, 'checkPhone']);
     Route::post('login-phone', [AuthController::class, 'loginByPhone']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
 });
 
 Route::get('/', function () {
@@ -71,6 +73,11 @@ Route::get('/integrated-services/{slug}', [EnsanPillarController::class, 'show']
 Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
     Route::get('/profile', [MobileApiController::class, 'getProfile']);
     Route::post('/profile', [MobileApiController::class, 'updateProfile']);
+    
+    Route::prefix('auth')->group(function () {
+        Route::post('/change-password', [MobileApiController::class, 'changePassword']);
+    });
+    
     Route::get('/donation-records', [MobileApiController::class, 'getDonations']);
     Route::get('/donation/{donation}', [MobileApiController::class, 'showDonation']);
 });
