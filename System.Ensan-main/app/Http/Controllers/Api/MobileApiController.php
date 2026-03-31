@@ -682,6 +682,84 @@ final class MobileApiController extends Controller
     }
 
     /**
+     * Delete account for authenticated mobile user
+     */
+    public function deleteProfile(Request $request)
+    {
+        $user = $request->auth_user;
+
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            \Log::info('Mobile API: Deleting user account', ['id' => $user->id, 'phone' => $user->phone]);
+
+            // Revoke all tokens
+            $user->tokens()->delete();
+
+            // Soft delete the user
+            $user->delete();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم حذف الحساب بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Mobile API: Account deletion failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'حدث خطأ أثناء حذف الحساب'
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload/Update profile photo independently
+     */
+    public function uploadProfilePhoto(Request $request)
+    {
+        $user = $request->auth_user;
+
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'avatar' => 'required|image|max:10240', // Max 10MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            if ($request->hasFile('avatar')) {
+                $user->uploadImage($request->file('avatar'), 'profiles');
+                $user->save();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'تم تحديث الصورة الشخصية بنجاح',
+                    'data'    => [
+                        'avatar_url' => $user->getFileUrl('profile_photo_path')
+                    ]
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Mobile API: Profile photo upload failed', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'فشل تحميل الصورة'
+        ], 500);
+    }
+
+    /**
      * Get Donation Records for a specific phone number
      */
     public function getDonations(Request $request)

@@ -71,8 +71,12 @@ Route::get('/integrated-services', [EnsanPillarController::class, 'index']);
 Route::get('/integrated-services/{slug}', [EnsanPillarController::class, 'show']);
 
 Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
-    Route::get('/profile', [MobileApiController::class, 'getProfile']);
-    Route::post('/profile', [MobileApiController::class, 'updateProfile']);
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [MobileApiController::class, 'getProfile']);
+        Route::post('/', [MobileApiController::class, 'updateProfile']);
+        Route::delete('/', [MobileApiController::class, 'deleteProfile']);
+        Route::post('/photo', [MobileApiController::class, 'uploadProfilePhoto']);
+    });
     
     Route::prefix('auth')->group(function () {
         Route::post('/change-password', [MobileApiController::class, 'changePassword']);
