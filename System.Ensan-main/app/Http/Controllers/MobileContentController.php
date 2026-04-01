@@ -453,8 +453,49 @@ final class MobileContentController extends Controller
 
     public function updateDonationStatus(Request $request, \App\Models\MobileDonation $donation)
     {
-        $donation->update(['status' => $request->status]);
+        $oldStatus = $donation->status;
+        $newStatus = $request->status;
+        
+        $donation->update(['status' => $newStatus]);
+        
+        // If the donation is newly verified, update the project/campaign funding stats
+        if ($newStatus === 'verified' && $oldStatus !== 'verified') {
+            $this->updateFundingStats($donation);
+        }
+        
         return back()->with('success', 'Donation status updated');
+    }
+
+    /**
+     * Internal helper to update project or campaign current_amount based on mobile donation string
+     */
+    private function updateFundingStats(\App\Models\MobileDonation $donation): void
+    {
+        $amount = (float) $donation->donation_amount;
+        $targetStr = (string) $donation->donation_for;
+        $target = null;
+
+        // 1. Try to parse "Project ID: X" or "Campaign ID: X"
+        if (preg_match('/Project ID: (\d+)/i', $targetStr, $matches)) {
+            $target = \App\Models\Project::withoutGlobalScopes()->find($matches[1]);
+        } elseif (preg_match('/Campaign ID: (\d+)/i', $targetStr, $matches)) {
+            $target = \App\Models\Campaign::find($matches[1]);
+        } 
+        
+        // 2. Fallback: Search by exact name
+        if (!$target) {
+            $target = \App\Models\Project::withoutGlobalScopes()->where('name', trim($targetStr))->first();
+        }
+        if (!$target) {
+            $target = \App\Models\Campaign::where('name', trim($targetStr))->first();
+        }
+
+        // 3. Update the current_amount if target found
+        if ($target && isset($target->current_amount)) {
+            $target->current_amount += $amount;
+            $target->save();
+            \Log::info("Mobile funding updated for project/campaign: {$target->name} (+{$amount})");
+        }
     }
 
     public function destroyDonation(\App\Models\MobileDonation $donation)

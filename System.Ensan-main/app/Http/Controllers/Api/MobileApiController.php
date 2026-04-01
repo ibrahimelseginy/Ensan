@@ -72,6 +72,9 @@ final class MobileApiController extends Controller
                                 'id' => $proj->id,
                                 'name' => $proj->name,
                                 'image_url' => $proj->image_url,
+                                'goal_amount' => $proj->goal_amount,
+                                'current_amount' => $proj->current_amount,
+                                'progress_percentage' => $proj->progress_percentage,
                             ];
                         }),
                         'related_services' => $p->services->map(function($serv) {
