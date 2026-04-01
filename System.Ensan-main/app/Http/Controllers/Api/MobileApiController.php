@@ -120,12 +120,11 @@ final class MobileApiController extends Controller
     public function getProjects()
     {
         $projects = Project::where('show_on_mobile', true)
-            ->select('id', 'name', 'mobile_content', 'image_path')
+            ->select('id', 'name', 'mobile_content', 'image_path', 'description', 'short_description', 'goal_amount', 'current_amount')
             ->get()
             ->map(function($project) {
                 $project->image_url = $project->image_path ? $project->getFileUrl('image_path') : null;
-                $project->goal_amount = "0.00";
-                $project->current_amount = "0.00";
+                $project->description = $project->short_description ?? $project->description;
                 return $project;
             });
 

@@ -22,7 +22,16 @@ final class Project extends Model
         return $this->getFileUrl('icon_path');
     }
 
-    protected $appends = ['image_url', 'icon_url'];
+    public function getProgressPercentageAttribute(): int
+    {
+        if (!$this->goal_amount || $this->goal_amount <= 0) {
+            return 0;
+        }
+        $percentage = ($this->current_amount / $this->goal_amount) * 100;
+        return (int) min(100, round($percentage));
+    }
+
+    protected $appends = ['image_url', 'icon_url', 'progress_percentage'];
 
     protected $fillable = [
         'name',
@@ -53,7 +62,9 @@ final class Project extends Model
         'action_icon',
         'ui_button_color',
         'show_on_mobile',
-        'mobile_content'
+        'mobile_content',
+        'goal_amount',
+        'current_amount'
     ];
 
     protected $casts = [
@@ -64,6 +75,8 @@ final class Project extends Model
         'is_visible' => 'boolean',
         'show_badge' => 'boolean',
         'show_subcategory' => 'boolean',
+        'goal_amount' => 'decimal:2',
+        'current_amount' => 'decimal:2',
     ];
 
     protected static function booted(): void

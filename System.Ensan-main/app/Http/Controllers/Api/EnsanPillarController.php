@@ -64,7 +64,11 @@ class EnsanPillarController extends Controller
                     return [
                         'id' => $proj->id,
                         'name' => $proj->name,
+                        'description' => $proj->short_description ?? $proj->description,
                         'image_url' => $proj->image_url,
+                        'goal_amount' => $proj->goal_amount,
+                        'current_amount' => $proj->current_amount,
+                        'progress_percentage' => $proj->progress_percentage,
                     ];
                 }),
                 'services' => $pillar->services->map(function ($serv) {

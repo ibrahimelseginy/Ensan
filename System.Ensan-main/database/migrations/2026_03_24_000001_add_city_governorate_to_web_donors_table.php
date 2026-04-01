@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('web_donors', function (Blueprint $table) {
-            $table->string('city')->nullable()->after('email');
-            $table->string('governorate')->nullable()->after('city');
+            if (!Schema::hasColumn('web_donors', 'city')) {
+                $table->string('city')->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('web_donors', 'governorate')) {
+                $table->string('governorate')->nullable()->after('city');
+            }
         });
     }
 
