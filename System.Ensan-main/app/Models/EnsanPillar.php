@@ -51,4 +51,12 @@ class EnsanPillar extends Model
     {
         return $this->belongsToMany(MobileHomeItem::class, 'ensan_pillar_service_item', 'ensan_pillar_id', 'mobile_home_item_id');
     }
+
+    /**
+     * Relationship with custom pillar cards
+     */
+    public function cards()
+    {
+        return $this->hasMany(EnsanPillarCard::class, 'ensan_pillar_id');
+    }
 }

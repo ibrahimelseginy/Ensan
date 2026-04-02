@@ -402,22 +402,46 @@
                             <input type="number" name="sort_order" class="form-control border-0 bg-light" value="{{ $pillar->sort_order }}">
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold text-muted"><i class="bi bi-folder-check me-1"></i> مشاريع متعلقة</label>
-                            <select name="project_ids[]" class="form-select border-0 bg-light select2" multiple data-placeholder="اختر المشاريع المتعلقة...">
-                                @foreach($allProjects as $project)
-                                    <option value="{{ $project->id }}" {{ $pillar->projects->contains($project->id) ? 'selected' : '' }}>{{ $project->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
 
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold text-muted"><i class="bi bi-gear-wide-connected me-1"></i> خدمات متعلقة</label>
-                            <select name="service_ids[]" class="form-select border-0 bg-light select2" multiple data-placeholder="اختر الخدمات المتعلقة...">
-                                @foreach($serviceItems as $service)
-                                    <option value="{{ $service->id }}" {{ $pillar->services->contains($service->id) ? 'selected' : '' }}>{{ $service->title }}</option>
+                            <hr class="border-secondary opacity-25">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label small fw-bold text-muted mb-0"><i class="bi bi-wallet2 me-1"></i> كروت التبرع الخاصة بالمبادرة</label>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="addPillarCard('editCardsContainer{{ $pillar->id }}')"><i class="bi bi-plus"></i> إضافة كارت تبرع</button>
+                            </div>
+                            <div id="editCardsContainer{{ $pillar->id }}">
+                                @foreach($pillar->cards as $index => $card)
+                                    <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <small class="fw-bold text-muted">كارد #{{ $index + 1 }}</small>
+                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this)"><i class="bi bi-x-circle"></i></button>
+                                            </div>
+                                            <input type="hidden" name="cards[{{ $index }}][id]" value="{{ $card->id }}">
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <input type="text" name="cards[{{ $index }}][title]" class="form-control form-control-sm" value="{{ $card->title }}" placeholder="الاسم (مثال: حملة رمضان)" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="number" step="0.01" name="cards[{{ $index }}][price]" class="form-control form-control-sm" value="{{ $card->price }}" placeholder="سعر التبرع (مثال: 200)" required>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <input type="text" name="cards[{{ $index }}][description]" class="form-control form-control-sm" value="{{ $card->description }}" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
+                                                </div>
+                                                <div class="col-md-12 d-flex align-items-center gap-2">
+                                                    @if($card->image_path)
+                                                        <img src="{{ $card->image_url }}" alt="card image" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    @endif
+                                                    <div class="flex-grow-1">
+                                                        <label class="x-small text-muted mb-1 d-block">تغيير الصورة (اختياري)</label>
+                                                        <input type="file" name="cards[{{ $index }}][image]" class="form-control form-control-sm" accept="image/*">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endforeach
-                            </select>
+                            </div>
                         </div>
 
                         <div class="col-md-8 d-flex align-items-end">
@@ -475,22 +499,14 @@
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label small fw-bold"><i class="bi bi-folder-check me-1"></i> مشاريع متعلقة</label>
-                        <select name="project_ids[]" class="form-select select2" multiple data-placeholder="اختر المشاريع المتعلقة...">
-                            @foreach($allProjects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </select>
+                        <hr class="border-secondary opacity-25">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label small fw-bold text-muted mb-0"><i class="bi bi-wallet2 me-1"></i> كروت التبرع الخاصة بالمبادرة</label>
+                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="addPillarCard('addCardsContainer')"><i class="bi bi-plus"></i> إضافة كارت تبرع</button>
+                        </div>
+                        <div id="addCardsContainer"></div>
                     </div>
 
-                    <div class="col-md-12">
-                        <label class="form-label small fw-bold"><i class="bi bi-gear-wide-connected me-1"></i> خدمات متعلقة</label>
-                        <select name="service_ids[]" class="form-select select2" multiple data-placeholder="اختر الخدمات المتعلقة...">
-                            @foreach($serviceItems as $service)
-                                <option value="{{ $service->id }}">{{ $service->title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <div class="col-md-6 d-flex align-items-end pb-2">
                         <div class="form-check form-switch p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary w-100">
                             <input class="form-check-input" type="checkbox" name="is_active" id="newPillarActive" value="1" checked>
@@ -794,7 +810,6 @@
             dir: 'rtl'
         });
 
-        // Re-initialize select2 when modal is shown (crucial for modals)
         $('.modal').on('shown.bs.modal', function () {
             $(this).find('.select2').select2({
                 theme: 'bootstrap-5',
@@ -804,5 +819,40 @@
             });
         });
     });
+
+    function addPillarCard(containerId) {
+        let container = document.getElementById(containerId);
+        let index = container.children.length;
+        let html = `
+            <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="fw-bold text-muted">كارد #${index + 1}</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this)"><i class="bi bi-x-circle"></i></button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" name="cards[${index}][title]" class="form-control form-control-sm" placeholder="الاسم (مثال: حملة رمضان)" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="number" step="0.01" name="cards[${index}][price]" class="form-control form-control-sm" placeholder="سعر التبرع (مثال: 200)" required>
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text" name="cards[${index}][description]" class="form-control form-control-sm" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="x-small text-muted mb-1 d-block">الصورة</label>
+                            <input type="file" name="cards[${index}][image]" class="form-control form-control-sm" accept="image/*" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removePillarCard(btn) {
+        btn.closest('.card-row').remove();
+    }
 </script>
 @endsection

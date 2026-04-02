@@ -35,7 +35,7 @@ final class MobileApiController extends Controller
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
         
         // --- NEW: Integrated Services (Ensan Pillars) ---
-        $pillars = EnsanPillar::with(['projects', 'services'])->where('is_active', true)->orderBy('sort_order')->get();
+        $pillars = EnsanPillar::with(['projects', 'services', 'cards'])->where('is_active', true)->orderBy('sort_order')->get();
 
         // 🛠️ Robust Formatting Helper
         $formatItem = function($item) {
@@ -67,6 +67,15 @@ final class MobileApiController extends Controller
                         'description' => $p->description,
                         'icon_url' => $p->icon_url,
                         'cover_url' => $p->cover_url,
+                        'cards' => $p->cards->map(function($card) {
+                            return [
+                                'id' => $card->id,
+                                'title' => $card->title,
+                                'description' => $card->description,
+                                'price' => $card->price,
+                                'image_url' => $card->image_url,
+                            ];
+                        }),
                         'related_projects' => $p->projects->map(function($proj) {
                             return [
                                 'id' => $proj->id,
@@ -81,8 +90,17 @@ final class MobileApiController extends Controller
                             return [
                                 'id' => $serv->id,
                                 'title' => $serv->title,
+                                'description' => $serv->description,
                                 'image_url' => $serv->image_url,
                                 'share_price' => $serv->share_price,
+                                'cards' => $serv->cards->map(function($card) {
+                                    return [
+                                        'id' => $card->id,
+                                        'title' => $card->title,
+                                        'description' => $card->description,
+                                        'image_url' => $card->image_url,
+                                    ];
+                                }),
                             ];
                         }),
                     ];

@@ -39,7 +39,7 @@ class EnsanPillarController extends Controller
      */
     public function show($slug)
     {
-        $pillar = EnsanPillar::with(['projects', 'services'])
+        $pillar = EnsanPillar::with(['projects', 'services', 'cards'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->first();
@@ -60,6 +60,15 @@ class EnsanPillarController extends Controller
                 'description' => $pillar->description,
                 'icon_url' => $pillar->icon_url,
                 'cover_url' => $pillar->cover_url,
+                'cards' => $pillar->cards->map(function ($card) {
+                    return [
+                        'id' => $card->id,
+                        'title' => $card->title,
+                        'description' => $card->description,
+                        'price' => $card->price,
+                        'image_url' => $card->image_url,
+                    ];
+                }),
                 'projects' => $pillar->projects->map(function ($proj) {
                     return [
                         'id' => $proj->id,
@@ -75,8 +84,17 @@ class EnsanPillarController extends Controller
                     return [
                         'id' => $serv->id,
                         'title' => $serv->title,
+                        'description' => $serv->description,
                         'image_url' => $serv->image_url,
                         'share_price' => $serv->share_price,
+                        'cards' => $serv->cards->map(function ($card) {
+                            return [
+                                'id' => $card->id,
+                                'title' => $card->title,
+                                'description' => $card->description,
+                                'image_url' => $card->image_url,
+                            ];
+                        }),
                     ];
                 }),
             ]

@@ -94,6 +94,20 @@
         [data-bs-theme="dark"] .modal .border-bottom {
             border-color: rgba(255, 255, 255, 0.1) !important;
         }
+
+        /* Search Bar Enhancements */
+        .search-input-group .form-control:focus {
+            background-color: var(--white) !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+            min-width: 300px !important;
+        }
+        .search-input-group button:hover i {
+            transform: scale(1.2);
+            color: var(--primary) !important;
+        }
+        .search-input-group button i {
+            transition: transform 0.2s ease;
+        }
     </style>
   @yield('styles')
 </head>
@@ -129,11 +143,11 @@
           
           @if($navUser && $navUser->hasPermission('reports.view'))
             <div class="d-none d-lg-flex align-items-center gap-2 me-2">
-                <form action="{{ route('reports.index') }}" method="GET">
-                  <div class="position-relative">
-                    <input type="text" class="form-control rounded-pill bg-light-subtle border-0" name="q" placeholder="ابحث..." style="height: 42px; min-width: 220px; padding-right: 48px;">
-                    <button type="submit" class="btn border-0 position-absolute top-50 start-0 translate-middle-y rounded-circle z-1" style="width: 42px; height: 42px;">
-                        <i class="bi bi-search text-muted"></i>
+                <form action="{{ route('reports.index') }}" method="GET" class="search-form">
+                  <div class="position-relative search-input-group">
+                    <input type="text" class="form-control rounded-pill bg-light-subtle border-0" name="q" placeholder="ابحث عن تقارير، متبرعين..." style="height: 42px; min-width: 250px; padding-left: 45px; transition: all 0.3s ease;">
+                    <button type="submit" class="btn border-0 position-absolute top-50 end-0 translate-middle-y rounded-pill d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; padding: 0;">
+                        <i class="bi bi-search text-primary fs-5"></i>
                     </button>
                   </div>
                 </form>
