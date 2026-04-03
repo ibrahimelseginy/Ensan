@@ -414,8 +414,8 @@
                                     <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row">
                                         <div class="card-body p-3">
                                             <div class="d-flex justify-content-between mb-2">
-                                                <small class="fw-bold text-muted">كارد #{{ $index + 1 }}</small>
-                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this)"><i class="bi bi-x-circle"></i></button>
+                                                <small class="fw-bold text-muted card-number">كارد #{{ $index + 1 }}</small>
+                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this, 'editCardsContainer{{ $pillar->id }}')"><i class="bi bi-x-circle"></i></button>
                                             </div>
                                             <input type="hidden" name="cards[{{ $index }}][id]" value="{{ $card->id }}">
                                             <div class="row g-2">
@@ -822,37 +822,52 @@
 
     function addPillarCard(containerId) {
         let container = document.getElementById(containerId);
-        let index = container.children.length;
+        let uniqueIndex = Date.now(); // Use timestamp for absolute uniqueness
         let html = `
-            <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row">
+            <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row animate-slide-up">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <small class="fw-bold text-muted">كارد #${index + 1}</small>
-                        <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this)"><i class="bi bi-x-circle"></i></button>
+                        <small class="fw-bold text-muted card-number">كارد #</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this, '${containerId}')"><i class="bi bi-x-circle"></i></button>
                     </div>
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <input type="text" name="cards[${index}][title]" class="form-control form-control-sm" placeholder="الاسم (مثال: حملة رمضان)" required>
+                            <input type="text" name="cards[${uniqueIndex}][title]" class="form-control form-control-sm" placeholder="الاسم (مثال: حملة رمضان)" required>
                         </div>
                         <div class="col-md-6">
-                            <input type="number" step="0.01" name="cards[${index}][price]" class="form-control form-control-sm" placeholder="سعر التبرع (مثال: 200)" required>
+                            <input type="number" step="0.01" name="cards[${uniqueIndex}][price]" class="form-control form-control-sm" placeholder="سعر التبرع (مثال: 200)" required>
                         </div>
                         <div class="col-md-12">
-                            <input type="text" name="cards[${index}][description]" class="form-control form-control-sm" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
+                            <input type="text" name="cards[${uniqueIndex}][description]" class="form-control form-control-sm" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
                         </div>
-                        <div class="col-md-12">
                             <label class="x-small text-muted mb-1 d-block">الصورة</label>
-                            <input type="file" name="cards[${index}][image]" class="form-control form-control-sm" accept="image/*" required>
+                            <input type="file" name="cards[${uniqueIndex}][image]" class="form-control form-control-sm" accept="image/*">
                         </div>
                     </div>
                 </div>
             </div>
         `;
         container.insertAdjacentHTML('beforeend', html);
+        renumberPillarCards(containerId);
     }
 
-    function removePillarCard(btn) {
+    function removePillarCard(btn, containerId) {
         btn.closest('.card-row').remove();
+        if (containerId) {
+            renumberPillarCards(containerId);
+        }
+    }
+
+    function renumberPillarCards(containerId) {
+        let container = document.getElementById(containerId);
+        if (!container) return;
+        let rows = container.querySelectorAll('.card-row');
+        rows.forEach((row, idx) => {
+            let label = row.querySelector('.card-number');
+            if (label) {
+                label.innerText = `كارد #${idx + 1}`;
+            }
+        });
     }
 </script>
 @endsection

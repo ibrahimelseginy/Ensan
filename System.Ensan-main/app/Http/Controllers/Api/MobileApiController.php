@@ -608,6 +608,12 @@ final class MobileApiController extends Controller
      */
     public function updateProfile(Request $request)
     {
+        \Log::info('Mobile API Profile Update Raw Input:', [
+            'method' => $request->method(),
+            'input' => $request->except(['avatar', 'photo']),
+            'files' => array_keys($request->allFiles())
+        ]);
+
         $user = $request->auth_user;
         
         if (!$user) {
@@ -620,33 +626,42 @@ final class MobileApiController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'   => 'nullable|string|max:255',
-            'phone'  => 'nullable|string|max:20|unique:users,phone,' . $user->id,
-            'email'  => 'nullable|email|unique:users,email,' . $user->id,
-            'avatar' => 'nullable|image|max:10240', // max 10MB
+            'phone'  => 'nullable|string|max:20',
+            'email'  => 'nullable|email',
+            'avatar' => 'nullable|file|max:10240', // Changed image to file for Flutter compatibility
+            'photo'  => 'nullable|file|max:10240', // Changed image to file for Flutter compatibility
         ]);
 
         if ($validator->fails()) {
+            \Log::warning('Mobile API Profile Update Validation Failed', [
+                'user_id' => $user->id,
+                'phone' => $user->phone,
+                'errors' => $validator->errors()->toArray(),
+                'input' => $request->except(['avatar', 'photo', 'auth_user'])
+            ]);
             return response()->json([
                 'status' => 'error',
+                'message' => 'Validation failed: ' . implode(', ', $validator->errors()->all()),
                 'errors' => $validator->errors()
             ], 422);
         }
 
         if ($request->filled('name')) {
-            $user->name = $request->name;
+            $user->name = trim($request->name);
         }
         if ($request->filled('phone')) {
-            $user->phone = $request->phone;
+            $user->phone = trim($request->phone);
         }
         if ($request->filled('email')) {
-            $user->email = $request->email;
+            $user->email = trim($request->email);
         }
 
-        // Handle avatar image upload
-        if ($request->hasFile('avatar')) {
+        // Handle avatar image upload (Check both avatar and photo keys)
+        $avatarFile = $request->file('avatar') ?: $request->file('photo');
+        if ($avatarFile) {
             try {
                 // uploadImage uses getImageColumn() which returns 'profile_photo_path'
-                $user->uploadImage($request->file('avatar'), 'profiles');
+                $user->uploadImage($avatarFile, 'profiles');
             } catch (\Exception $e) {
                 \Log::error('Profile avatar upload failed: ' . $e->getMessage());
             }
@@ -673,24 +688,31 @@ final class MobileApiController extends Controller
     public function changePassword(Request $request)
     {
         $user = $request->auth_user;
+        
+        // Handle alias: if 'password' is provided and 'new_password' is not, use 'password'
+        if ($request->has('password') && !$request->filled('new_password')) {
+            $request->merge(['new_password' => $request->password]);
+        }
 
         if (!$user) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
         }
 
-        $request->validate([
-            'current_password' => 'required|string',
-            'new_password'     => 'required|string|min:6',
-        ]);
+        $currentPassword = trim($request->current_password);
+        $newPassword = trim($request->new_password);
 
-        if (!\Hash::check($request->current_password, $user->password)) {
+        if (!\Hash::check($currentPassword, $user->password)) {
+            \Log::warning('Mobile API: Password check failed for user', [
+                'user_id' => $user->id,
+                'phone' => $user->phone
+            ]);
             return response()->json([
                 'status'  => 'error',
-                'message' => 'كلمة المرور الحالية غير صحيحة'
+                'message' => 'فشل تغيير كلمة المرور، يرجى التأكد من كلمة المرور الحالية'
             ], 422);
         }
 
-        $user->password = \Hash::make($request->new_password);
+        $user->password = \Hash::make($newPassword);
         $user->save();
 
         \Log::info('Mobile API: Password changed for user', ['id' => $user->id]);
@@ -746,7 +768,8 @@ final class MobileApiController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|image|max:10240', // Max 10MB
+            'avatar' => 'nullable|file|max:10240',
+            'photo'  => 'nullable|file|max:10240', 
         ]);
 
         if ($validator->fails()) {
@@ -757,8 +780,21 @@ final class MobileApiController extends Controller
         }
 
         try {
-            if ($request->hasFile('avatar')) {
-                $user->uploadImage($request->file('avatar'), 'profiles');
+            $photoFile = $request->file('avatar') ?: $request->file('photo');
+            
+            if (!$photoFile) {
+                if ($request->isMethod('PUT') || $request->isMethod('PATCH')) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'PHP does not support file uploads via PUT/PATCH directly. Please use POST with _method=PUT in the request body instead.',
+                        'debug_info' => 'If you are sending multipart/form-data, PHP only populates $_FILES for POST requests.'
+                    ], 400);
+                }
+                return response()->json(['status' => 'error', 'message' => 'No file provided'], 400);
+            }
+
+            if ($photoFile) {
+                $user->uploadImage($photoFile, 'profiles');
                 $user->save();
 
                 return response()->json([

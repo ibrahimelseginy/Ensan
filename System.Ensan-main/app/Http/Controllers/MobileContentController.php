@@ -729,36 +729,43 @@ final class MobileContentController extends Controller
         $submittedCardIds = [];
         if ($request->has('cards') && is_array($request->cards)) {
             foreach ($request->cards as $index => $cardData) {
-                if (empty($cardData['id']) && empty($cardData['title']) && empty($cardData['description']) && empty($cardData['price']) && !$request->hasFile("cards.{$index}.image")) {
-                    continue;
-                }
+                // If it's an existing card
                 if (!empty($cardData['id'])) {
                     $card = $pillar->cards()->find($cardData['id']);
                     if ($card) {
                         $card->update([
-                            'title' => $cardData['title'] ?? null,
-                            'description' => $cardData['description'] ?? null,
-                            'price' => $cardData['price'] ?? null,
+                            'title' => $cardData['title'] ?? $card->title,
+                            'description' => $cardData['description'] ?? $card->description,
+                            'price' => $cardData['price'] ?? $card->price,
                         ]);
                         $submittedCardIds[] = $card->id;
+                        
                         if ($request->hasFile("cards.{$index}.image")) {
                             $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/pillars/cards');
                         }
                     }
-                } else {
+                } 
+                // If it's a new card (skip if totally empty)
+                else {
+                    if (empty($cardData['title']) && empty($cardData['description']) && empty($cardData['price']) && !$request->hasFile("cards.{$index}.image")) {
+                        continue;
+                    }
+                    
                     $card = $pillar->cards()->create([
                         'title' => $cardData['title'] ?? null,
                         'description' => $cardData['description'] ?? null,
                         'price' => $cardData['price'] ?? null,
                     ]);
                     $submittedCardIds[] = $card->id;
+                    
                     if ($request->hasFile("cards.{$index}.image")) {
                         $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/pillars/cards');
                     }
                 }
             }
         }
-        
+
+        // Correctly identify and delete removed cards
         $cardsToDelete = $pillar->cards()->whereNotIn('id', $submittedCardIds)->get();
         foreach ($cardsToDelete as $card) {
             if ($card->image_path) {

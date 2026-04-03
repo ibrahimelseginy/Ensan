@@ -73,13 +73,13 @@ Route::get('/integrated-services/{slug}', [EnsanPillarController::class, 'show']
 Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('/', [MobileApiController::class, 'getProfile']);
-        Route::post('/', [MobileApiController::class, 'updateProfile']);
+        Route::match(['POST', 'PUT', 'PATCH'], '/', [MobileApiController::class, 'updateProfile']);
         Route::delete('/', [MobileApiController::class, 'deleteProfile']);
         Route::post('/photo', [MobileApiController::class, 'uploadProfilePhoto']);
     });
     
     Route::prefix('auth')->group(function () {
-        Route::post('/change-password', [MobileApiController::class, 'changePassword']);
+        Route::match(['POST', 'PUT', 'PATCH'], '/change-password', [MobileApiController::class, 'changePassword']);
     });
     
     Route::get('/donation-records', [MobileApiController::class, 'getDonations']);

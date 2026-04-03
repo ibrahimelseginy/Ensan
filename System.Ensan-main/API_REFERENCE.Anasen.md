@@ -122,6 +122,41 @@ php artisan serve --host=0.0.0.0 --port=8000
 }
 ```
 
+
+---
+
+## 🏛️ Ensan Pillars (Integrated Services)
+
+### 1. List All Active Pillars
+**Endpoint:** `GET /api/v1/mobile/home`  
+**Description:** Returns the mobile home content including active integrated service pillars. Each pillar now contains a `cards` array for dynamic donation options.
+**Response snippet:**
+```json
+{
+  "status": "success",
+  "data": {
+    "integrated_services": [
+      {
+        "id": 1,
+        "title": "...",
+        "cards": [
+          {
+            "id": 5,
+            "title": "حملة رمضان",
+            "price": "200.00",
+            "image_url": "..."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 2. Get Pillar Details
+**Endpoint:** `GET /api/v1/mobile/integrated-services/{slug}`  
+**Description:** Returns full details of a specific pillar, including its related projects, services, and custom donation cards.
+
 ---
 
 ## 💡 Integration Tips (Angular)

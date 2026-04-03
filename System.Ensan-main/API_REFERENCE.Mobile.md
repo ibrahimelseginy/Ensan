@@ -26,6 +26,12 @@
 | 8 | إشعارات التطبيق | `GET` | `/notifications` | ✅ عام |
 | 9 | بيانات التواصل | `GET` | `/contact-info` | ✅ عام |
 | 10| معلومات عنا (About Us) | `GET` | `/about-us` | ✅ عام |
+| 11| تبرعاتي (Donation Records) | `GET` | `/donation-records` | 🔐 خاص |
+| 12| الملف الشخصي — استرجاع | `GET` | `/profile` | 🔐 خاص |
+| 13| الملف الشخصي — تحديث | `POST` | `/profile` | 🔐 خاص |
+| 14| الملف الشخصي — الصورة | `POST` | `/profile/photo` | 🔐 خاص |
+| 15| تغيير كلمة المرور | `POST` | `/auth/change-password` | 🔐 خاص |
+| 16| حذف الحساب | `DELETE` | `/profile` | 🔐 خاص |
 
 ---
 
@@ -769,4 +775,110 @@ CACHE_STORE=file
 
 ---
 
-*آخر تحديث: 2026-03-12 | إنسان للخير — وحدة تطبيق الموبايل (إضافة بيانات التواصل)*
+---
+
+## 👤 12. إدارة الملف الشخصي (Profile Management)
+
+تتطلب هذه الوظائف إرسال تبارك المصادقة في الـ Header:
+`Authorization: Bearer {token}`
+
+### 12a. استرجاع بيانات الملف الشخصي
+> `GET /api/v1/mobile/profile`
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "name": "اسم المستخدم",
+    "email": "user@example.com",
+    "phone": "01012345678",
+    "avatar_url": "http://127.0.0.1:8000/storage/profiles/abc.jpg",
+    "is_active": true,
+    "joined_at": "2026-03-01 12:00:00"
+  }
+}
+```
+
+---
+
+### 12b. تحديث بيانات الملف الشخصي
+> `POST /api/v1/mobile/profile`
+> **ملاحظة:** لدعم التحديث (PUT) عبر Flutter/React، يمكن إرسال `_method: PUT` في الـ Body.
+
+| الحقل | النوع | مطلوب | الوصف |
+|-------|-------|:------:|-------|
+| `name` | `string` | ❌ | الاسم الجديد |
+| `phone` | `string` | ❌ | رقم الهاتف الجديد (يجب أن يكون فريداً) |
+| `email` | `string` | ❌ | البريد الإلكتروني الجديد |
+| `photo` | `file` | ❌ | الصورة الشخصية (يمكن استخدام مفتاح `avatar` أيضاً) |
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "message": "Profile updated successfully",
+  "data": { ... }
+}
+```
+
+---
+
+### 12c. تحديث الصورة الشخصية (منفصل)
+> `POST /api/v1/mobile/profile/photo`
+
+| الحقل | النوع | مطلوب | الوصف |
+|-------|-------|:------:|-------|
+| `photo` | `file` | ✅ | ملف الصورة (يُقبل أيضاً مفتاح `avatar`) |
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "message": "تم تحديث الصورة الشخصية بنجاح",
+  "data": {
+    "avatar_url": "..."
+  }
+}
+```
+
+---
+
+## 🔐 13. المصادقة والأمان (Auth & Security)
+
+### 13a. تغيير كلمة المرور
+> `POST /api/v1/mobile/auth/change-password`
+
+| الحقل | النوع | مطلوب | الوصف |
+|-------|-------|:------:|-------|
+| `current_password` | `string` | ✅ | كلمة المرور الحالية |
+| `password` | `string` | ✅ | كلمة المرور الجديدة (يُقبل أيضاً `new_password`) |
+| `password_confirmation` | `string` | ❌ | تأكيد كلمة المرور الجديدة |
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "message": "تم تغيير كلمة المرور بنجاح"
+}
+```
+
+---
+
+### 13b. حذف الحساب
+> `DELETE /api/v1/mobile/profile`
+
+يؤدي هذا الإجراء إلى حذف الحساب نهائياً (Soft Delete) وإلغاء جميع التوكنات البرمجية.
+
+**Response `200`:**
+```json
+{
+  "status": "success",
+  "message": "تم حذف الحساب بنجاح"
+}
+```
+
+---
+
+*آخر تحديث: 2026-04-02 | إنسان للخير — وحدة تطبيق الموبايل (إضافة الملف الشخصي والأمان)*
