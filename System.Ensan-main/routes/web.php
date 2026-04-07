@@ -405,6 +405,7 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
 
             // Case Applications
             Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
+            Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
             Route::patch('/case-applications/{application}', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
             Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
 

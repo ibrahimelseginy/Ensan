@@ -21,7 +21,7 @@
                         </span>
                     </div>
                     <h1 class="display-3 fw-900 text-white mb-3">أخبار التطبيق <span class="text-gradient-cyan">(News)</span></h1>
-                    <p class="lead text-white-700 font-outfit mb-0 max-w-600 ms-auto text-end opacity-80">
+                    <p class="lead text-azure-mist font-outfit mb-0 max-w-600 ms-auto text-end opacity-90">
                         تحكم كامل في القصص والفعاليات التي تصل حصرياً لمستخدمي تطبيق الهواتف الذكية بنظام Ensan.
                     </p>
                 </div>
@@ -336,6 +336,7 @@
     .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     .text-gradient-cyan { background: linear-gradient(90deg, #06b6d4, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .text-azure-mist { color: rgba(219, 234, 254, 0.85); text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .btn-elite-action { background: #6366f1; color: #fff; border: none; box-shadow: 0 15px 35px rgba(99,102,241,0.35); transition: 0.4s; }
     .btn-elite-action:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(99,102,241,0.5); color: #fff; }
 

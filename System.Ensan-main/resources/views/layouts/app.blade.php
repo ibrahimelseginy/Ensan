@@ -205,51 +205,214 @@
           border-radius: var(--radius-sm);
       }
 
-      /* Navbar Improvements */
+      /* --- ELITE NAVBAR DESIGN SYSTEM --- */
       .navbar {
           background-color: var(--bg) !important;
           border-bottom: 1px solid var(--border) !important;
-          box-shadow: var(--shadow-sm) !important;
-          height: 70px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+          height: 75px;
+          transition: var(--sidebar-transition);
+          padding: 0 1.5rem !important;
       }
-      
-      /* Sidebar Improvements */
-      .sidebar-fixed {
-          background-color: var(--bg) !important;
-          border-left: 1px solid var(--border) !important;
-          box-shadow: var(--shadow-sm);
-          width: 260px;
+
+      .search-wrapper-elite {
+          position: relative;
+          transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+          width: 320px;
       }
-      
-      .list-group-item {
-          border: none !important;
-          margin: 4px 12px;
-          border-radius: var(--radius-sm);
-          color: var(--text-muted) !important;
-          transition: all 0.2s ease;
+      .search-wrapper-elite:focus-within {
+          width: 450px;
+      }
+
+      .search-input-elite {
+          height: 44px;
+          padding-right: 45px !important;
+          background: var(--bg-soft) !important;
+          border: 1.5px solid transparent !important;
+          border-radius: 50px !important;
+          font-size: 0.92rem;
+          transition: all 0.3s ease;
+      }
+      .search-input-elite:focus {
+          background: var(--bg) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12) !important;
+      }
+
+      .btn-glass-pill {
+          width: 44px;
+          height: 44px;
+          border-radius: 50px !important;
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 10px 16px;
+          justify-content: center;
+          background: var(--bg-soft) !important;
+          border: 1px solid var(--border) !important;
+          color: var(--text-muted) !important;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          padding: 0 !important;
       }
-      
-      .list-group-item i {
-          font-size: 1.1rem;
-          color: var(--text-muted);
-      }
-      
-      .list-group-item:hover {
-          background-color: var(--bg-soft) !important;
+      .btn-glass-pill:hover {
+          background: var(--bg) !important;
           color: var(--primary) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+          border-color: var(--primary) !important;
       }
-      .list-group-item:hover i { color: var(--primary); }
-      
-      .list-group-item.active {
-          background-color: var(--primary-light) !important;
+
+      .btn-reports-elite {
+          background: var(--primary-light) !important;
           color: var(--primary) !important;
           border: none !important;
+          height: 44px;
+          border-radius: 50px !important;
+          padding: 0 20px !important;
+          font-weight: 700;
+          font-size: 0.88rem;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          transition: all 0.3s ease;
       }
-      .list-group-item.active i { color: var(--primary); }
+      .btn-reports-elite:hover {
+          background: var(--primary) !important;
+          color: white !important;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+      }
+
+      .navbar-logo-elite img {
+          height: 42px;
+          width: auto;
+          transition: transform 0.3s ease;
+      }
+      .navbar-logo-elite:hover img { transform: scale(1.05); }
+      
+      /* --- ELITE SIDEBAR DESIGN SYSTEM --- */
+      :root {
+          --sidebar-width: 280px;
+          --sidebar-collapsed-width: 80px;
+          --sidebar-bg: var(--bg);
+          --sidebar-border: var(--border);
+          --sidebar-item-radius: 12px;
+          --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          
+          /* Domain Colors */
+          --clr-finance: #10b981;
+          --clr-logistics: #3b82f6;
+          --clr-hr: #f59e0b;
+          --clr-digital: #8b5cf6;
+          --clr-social: #ec4899;
+          --clr-admin: #64748b;
+      }
+
+      .sidebar-fixed {
+          background-color: var(--sidebar-bg) !important;
+          border-left: 1px solid var(--sidebar-border) !important;
+          box-shadow: 10px 0 30px rgba(0,0,0,0.02);
+          width: var(--sidebar-width);
+          transition: var(--sidebar-transition);
+          z-index: 1030;
+          overflow-x: hidden;
+          scrollbar-width: thin;
+          scrollbar-color: var(--border) transparent;
+      }
+
+      .sidebar-fixed::-webkit-scrollbar { width: 4px; }
+      .sidebar-fixed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+      .sidebar-section-header {
+          padding: 1.5rem 1.5rem 0.6rem 1.5rem;
+          font-size: 0.72rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--text-muted);
+          opacity: 0.6;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+      .sidebar-section-header::after { content: ''; flex: 1; height: 1px; background: var(--border); opacity: 0.5; }
+
+      .elite-nav-container { padding: 0.5rem 0.8rem; }
+
+      .elite-sidebar-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 18px;
+          margin-bottom: 4px;
+          border-radius: var(--sidebar-item-radius);
+          color: var(--text-muted) !important;
+          text-decoration: none !important;
+          font-weight: 500;
+          font-size: 0.94rem;
+          transition: var(--sidebar-transition);
+          border: 1px solid transparent;
+      }
+
+      .elite-sidebar-item i {
+          font-size: 1.25rem;
+          transition: var(--sidebar-transition);
+          min-width: 24px;
+          display: flex;
+          justify-content: center;
+      }
+
+      .elite-sidebar-item:hover {
+          background-color: var(--bg-soft) !important;
+          color: var(--primary) !important;
+          transform: translateX(-4px);
+      }
+
+      .elite-sidebar-item.active {
+          background-color: var(--primary-light) !important;
+          color: var(--primary) !important;
+          font-weight: 700;
+      }
+
+      .elite-sidebar-item.active::before {
+          content: '';
+          position: absolute;
+          right: 0;
+          top: 20%;
+          height: 60%;
+          width: 4px;
+          background: var(--primary);
+          border-radius: 4px 0 0 4px;
+          box-shadow: -2px 0 10px var(--primary);
+      }
+
+      /* Domain Icon Coloring */
+      .icon-finance { color: var(--clr-finance) !important; }
+      .icon-logistics { color: var(--clr-logistics) !important; }
+      .icon-hr { color: var(--clr-hr) !important; }
+      .icon-digital { color: var(--clr-digital) !important; }
+      .icon-social { color: var(--clr-social) !important; }
+      .icon-admin { color: var(--clr-admin) !important; }
+
+      /* Submenu Elite Styling */
+      .elite-submenu {
+          padding-right: 2.2rem;
+          border-right: 1px solid var(--border);
+          margin-right: 1.5rem;
+          margin-bottom: 10px;
+          margin-top: -2px;
+      }
+
+      .elite-submenu .elite-sidebar-item {
+          padding: 8px 14px;
+          font-size: 0.88rem;
+          opacity: 0.85;
+      }
+
+      /* Toggle Icon Rotation */
+      .elite-sidebar-item[aria-expanded="true"] .sidebar-toggle-icon {
+          transform: rotate(180deg);
+      }
+      .sidebar-toggle-icon { transition: transform 0.3s ease; font-size: 0.8rem; }
 </style>
 </style>
     <style>
@@ -459,97 +622,84 @@
 
 
 
+  @php $navUser = auth()->user(); @endphp
   <nav class="navbar border-bottom fixed-top">
-    {{-- ... content ... --}}
-    <div class="container-fluid px-3 px-lg-4 d-flex justify-content-between align-items-center">
-      
-      {{-- Right Side: Toggle & Logo --}}
-      <div class="d-flex align-items-center gap-3">
-        <button class="btn btn-link p-0 text-body" id="sidebarToggle" title="تبديل القائمة">
-          <i class="bi bi-list fs-1"></i>
-        </button>
-        <a class="navbar-brand me-0" href="/">
-          @if(file_exists(public_path('logo.png')))
-            <img src="{{ asset('logo.png') }}" alt="إنسان" loading="lazy" decoding="async" onerror="this.remove()">
-          @else
-            إنسان
-          @endif
-        </a>
-      </div>
-
-      {{-- Left Side: Actions --}}
-      <div class="d-flex align-items-center gap-2 nav-actions">
-          @php $navUser = request()->user(); @endphp
-          
-          @if($navUser && $navUser->hasPermission('reports.view'))
-            <div class="d-none d-lg-flex align-items-center gap-2 me-2">
-                <form action="{{ route('reports.index') }}" method="GET" class="search-form">
-                  <div class="position-relative search-input-group">
-                    <input type="text" class="form-control rounded-pill bg-light-subtle border-0" name="q" placeholder="ابحث عن تقارير، متبرعين..." style="height: 42px; min-width: 250px; padding-left: 45px; transition: all 0.3s ease;">
-                    <button type="submit" class="btn border-0 position-absolute top-50 end-0 translate-middle-y rounded-pill d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; padding: 0;">
-                        <i class="bi bi-search text-primary fs-5"></i>
-                    </button>
-                  </div>
-                </form>
-                <a href="{{ route('reports.index') }}" class="btn btn-light-subtle rounded-pill d-inline-flex align-items-center gap-2 px-4 border-0 hover-bg-light" style="height: 42px;">
-                    <i class="bi bi-graph-up text-primary"></i> 
-                    <span class="fw-bold">التقارير</span>
-                </a>
-            </div>
-          @endif
-
-          @if($navUser && $navUser->hasPermission('notifications.view') && !$navUser->roles->contains('key', 'finance'))
-            <button class="btn btn-link text-body position-relative rounded-circle d-flex align-items-center justify-content-center border-0 bg-light-subtle hover-bg-light" 
-              style="width: 42px; height: 42px;" 
-              type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-controls="notifOffcanvas">
-              <i class="bi bi-bell fs-5"></i>
-            </button>
-          @endif
-
-          <button id="themeToggle" class="btn btn-link text-body rounded-circle d-flex align-items-center justify-content-center border-0 bg-light-subtle hover-bg-light"
-             style="width: 42px; height: 42px;" 
-             type="button" aria-label="تبديل الثيم">
-            <i class="bi bi-moon fs-5"></i>
+    <div class="container-fluid px-0 h-100">
+      <div class="d-flex align-items-center justify-content-between w-100 h-100">
+        
+        {{-- Right Side: Toggle & Brand --}}
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-link p-0 text-body elite-sidebar-toggle" id="sidebarToggle" title="تبديل القائمة">
+            <i class="bi bi-list fs-2"></i>
           </button>
+          <a class="navbar-brand navbar-logo-elite me-0" href="/">
+            @if(file_exists(public_path('logo.png')))
+              <img src="{{ asset('logo.png') }}" alt="إنسان" loading="lazy">
+            @else
+              <span class="fw-800 text-primary">إنسان</span>
+            @endif
+          </a>
+        </div>
 
-          @if($navUser)
-            <div class="dropdown">
-              <button class="btn btn-link p-0 d-flex align-items-center gap-2 text-decoration-none"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                @if($navUser->profile_photo_path)
-                  <img src="{{ $navUser->image_url }}" alt="{{ $navUser->name }}"
-                    class="rounded-circle border" style="width: 42px; height: 42px; object-fit: cover;"
-                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold\' style=\'width: 42px; height: 42px; font-size: 1.1rem;\'>{{ strtoupper(substr($navUser->name, 0, 1)) }}</div>';">
-                @else
-                  <div
-                    class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                    style="width: 42px; height: 42px; font-size: 1.1rem;">
-                    {{ strtoupper(substr($navUser->name, 0, 1)) }}
-                  </div>
-                @endif
-                <span class="d-none d-md-inline fw-bold small text-body">{{ $navUser->name }}</span>
+        {{-- Center: Search --}}
+        <div class="d-none d-lg-flex flex-grow-1 justify-content-center px-5">
+            <form action="{{ route('reports.index') }}" method="GET" class="search-wrapper-elite">
+              <div class="position-relative">
+                <input type="text" class="form-control search-input-elite" name="q" placeholder="ابحث عن تقارير، متبرعين، أو مهام...">
+                <button type="submit" class="btn border-0 position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                    <i class="bi bi-search text-primary"></i>
+                </button>
+              </div>
+            </form>
+        </div>
+
+        {{-- Left Side: Actions --}}
+        <div class="d-flex align-items-center gap-2">
+            @if($navUser && $navUser->hasPermission('reports.view'))
+              <a href="{{ route('reports.index') }}" class="btn btn-reports-elite d-none d-md-flex">
+                  <i class="bi bi-graph-up"></i> 
+                  <span>التقارير</span>
+              </a>
+            @endif
+
+            @if($navUser && $navUser->hasPermission('notifications.view') && !$navUser->roles->contains('key', 'finance'))
+              <button class="btn btn-glass-pill position-relative" 
+                type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas">
+                <i class="bi bi-bell fs-5"></i>
               </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
-                <li class="px-3 py-2 text-center bg-body-tertiary border-bottom mb-2">
-                  <div class="fw-bold text-dark">{{ $navUser->name }}</div>
-                  <div class="small text-muted">{{ $navUser->email }}</div>
-                </li>
-                @if($navUser->hasPermission('users.view'))
-                  <li><a class="dropdown-item" href="{{ route('users.show', $navUser->id) }}"><i
-                        class="bi bi-person me-2"></i> الملف الشخصي</a></li>
-                @endif
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
-                <li>
-                  <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger"><i
-                        class="bi bi-box-arrow-right me-2"></i> خروج</button></form>
-                </li>
-              </ul>
-            </div>
-          @else
-            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm">دخول</a>
-          @endif
+            @endif
+
+            <button id="themeToggle" class="btn btn-glass-pill" type="button" aria-label="تبديل الثيم">
+              <i class="bi bi-moon fs-5"></i>
+            </button>
+
+            @if($navUser)
+              <div class="dropdown ms-2">
+                <button class="btn btn-link p-0 d-flex align-items-center gap-2 text-decoration-none shadow-none" data-bs-toggle="dropdown">
+                  <div class="elite-avatar-wrapper shadow-premium border-2 border-primary-subtle rounded-circle" style="width: 42px; height: 42px; padding: 2px; background: var(--ws-bg-card);">
+                    @if($navUser->profile_photo_path)
+                      <img src="{{ $navUser->image_url }}" alt="{{ $navUser->name }}" class="rounded-circle w-100 h-100 object-fit-cover shadow-sm">
+                    @else
+                      <div class="bg-gradient-primary text-white rounded-circle w-100 h-100 d-flex align-items-center justify-content-center fw-bold fs-6 shadow-sm">
+                        {{ strtoupper(substr($navUser->name, 0, 1)) }}
+                      </div>
+                    @endif
+                  </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 p-2 rounded-4">
+                  <li class="px-3 py-3 text-center bg-light rounded-4 mb-2">
+                    <div class="fw-bold text-dark">{{ $navUser->name }}</div>
+                    <div class="small text-muted">{{ $navUser->email }}</div>
+                  </li>
+                  <li><a class="dropdown-item rounded-3" href="{{ route('users.show', $navUser->id) }}"><i class="bi bi-person me-2"></i> الملف الشخصي</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger rounded-3"><i class="bi bi-box-arrow-right me-2"></i> خروج</button></form>
+                  </li>
+                </ul>
+              </div>
+            @endif
+        </div>
       </div>
     </div>
   </nav>

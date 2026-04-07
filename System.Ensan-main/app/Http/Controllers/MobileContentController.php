@@ -782,4 +782,19 @@ final class MobileContentController extends Controller
         $pillar->delete();
         return back()->with('success', 'تم حذف المبادرة بنجاح');
     }
+
+    public function bulkDestroyCaseApplications(Request $request)
+    {
+        $ids = $request->input('ids');
+        if (!$ids || !is_array($ids)) {
+            return back()->with('error', 'لم يتم تحديد أي عناصر للحذف');
+        }
+
+        $applications = \App\Models\MobileCaseApplication::whereIn('id', $ids)->get();
+        
+        // Use each->delete() to ensure Model Events (and thus file deletion) are triggered
+        $applications->each->delete();
+
+        return back()->with('success', 'تم حذف الطلبات المختارة بنجاح');
+    }
 }
