@@ -3,479 +3,253 @@
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-<style>
-    :root {
-        --primary-green: #22c55e;
-        --primary-hover: #16a34a;
-        --bg-light: #f9fafb;
-        --text-main: #111111;
-        --text-muted: #64748b;
-        --border-color: #e5e7eb;
-        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    }
-
-    body {
-        background-color: var(--bg-light) !important;
-        color: var(--text-main);
-        font-family: 'Tajawal', sans-serif;
-    }
-
-    /* Premium Hero Section */
-    .premium-hero-sleek {
-        background: white;
-        padding: 4rem 2rem;
-        border-radius: 0 0 40px 40px;
-        box-shadow: var(--card-shadow);
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 3rem;
-        position: relative;
-    }
-
-    .hero-bg-visuals {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .glow-orb-1 {
-        position: absolute;
-        top: -10%;
-        right: -5%;
-        width: 300px;
-        height: 300px;
-        background: rgba(34, 197, 94, 0.05);
-        filter: blur(80px);
-        border-radius: 50%;
-    }
-
-    .hero-content-wrapper {
-        position: relative;
-        z-index: 1;
-    }
-
-    .badge-glass-premium {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--primary-green);
-        padding: 0.5rem 1rem;
-        border-radius: 100px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-    }
-
-    /* News Cards */
-    .news-card-premium {
-        background: white;
-        border-radius: 24px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--card-shadow);
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .news-card-premium:hover {
-        transform: translateY(-8px);
-        border-color: var(--primary-green);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-
-    .news-card-image {
-        position: relative;
-        height: 220px;
-        overflow: hidden;
-    }
-
-    .news-card-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-    }
-
-    .news-card-premium:hover .news-card-image img {
-        transform: scale(1.05);
-    }
-
-    .news-category-pill {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: white;
-        color: var(--primary-green);
-        padding: 0.4rem 1rem;
-        border-radius: 100px;
-        font-weight: 800;
-        font-size: 0.75rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .news-card-actions {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        display: flex;
-        gap: 0.5rem;
-        opacity: 0;
-        transform: translateY(10px);
-        transition: all 0.3s ease;
-    }
-
-    .news-card-premium:hover .news-card-actions {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .btn-action-sm {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        color: var(--text-main);
-        border: none;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-
-    .btn-action-sm:hover {
-        background: var(--primary-green);
-        color: white;
-        transform: scale(1.1);
-    }
-
-    .btn-action-danger-sm:hover {
-        background: #ef4444;
-    }
-
-    .news-card-body {
-        padding: 1.5rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .news-card-body h5 {
-        font-weight: 800;
-        line-height: 1.4;
-        margin-bottom: 0.75rem;
-        color: var(--text-main);
-    }
-
-    .news-card-body p {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .stat-highlight-box {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 0.75rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Modal Styling */
-    .modal-content-premium {
-        border-radius: 24px;
-        border: none;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-
-    .modal-header-premium {
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid var(--border-color);
-        background: white;
-        border-radius: 24px 24px 0 0;
-    }
-
-    .modal-body-premium {
-        padding: 2rem;
-    }
-
-    .modal-footer-premium {
-        padding: 1.5rem 2rem;
-        border-top: 1px solid var(--border-color);
-        background: #f8fafc;
-        border-radius: 0 0 24px 24px;
-    }
-
-    /* Form Controls */
-    .form-control-p {
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        padding: 0.75rem 1rem;
-        background: #f8fafc;
-    }
-
-    .form-control-p:focus {
-        border-color: var(--primary-green);
-        background: white;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-    }
-
-    .btn-primary-p {
-        background: var(--primary-green);
-        color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 12px;
-        font-weight: 700;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary-p:hover {
-        background: var(--primary-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
-    }
-
-    /* Animations */
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-up { animation: fadeInUp 0.5s ease forwards; }
-</style>
-
 <div class="news-mgmt-page">
-    {{-- Hero Section --}}
+    {{-- Premium Hero Section --}}
     <div class="premium-hero-sleek">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1"></div>
+            <div class="glow-orb-1" style="background: #7c3aed;"></div>
+            <div class="glow-orb-2" style="background: #a855f7;"></div>
+            <div class="noise-overlay"></div>
         </div>
         <div class="hero-content-wrapper container-fluid">
             <div class="row align-items-center">
-                <div class="col-lg-8 text-end">
-                    <nav aria-label="breadcrumb" class="mb-3">
-                        <ol class="breadcrumb mb-0 justify-content-end">
-                            <li class="breadcrumb-item"><a href="{{ route('mobile.dashboard') }}" class="text-muted text-decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-success fw-bold">أخبار التطبيق</li>
+                <div class="col-lg-8 animate-reveal-right text-end">
+                    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{{ route('mobile.dashboard') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
+                            <li class="breadcrumb-item active text-white" aria-current="page">أخبار التطبيق</li>
                         </ol>
                     </nav>
-                    <div class="badge-glass-premium">
-                        <i class="bi bi-newspaper me-2"></i> آخر المستجدات والفعاليات
+                    <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
+                        <div class="badge-glass-premium">
+                            <i class="bi bi-newspaper me-2"></i> آخر المستجدات والفعاليات
+                        </div>
                     </div>
-                    <h1 class="display-5 fw-800 text-main mb-3">أخبار الموبايل</h1>
-                    <p class="lead text-muted mb-0">إدارة الأخبار والقصص التي تظهر حصرياً لمستخدمي تطبيق الهاتف المحمول.</p>
+                    <h1 class="display-4 fw-800 text-white mb-3 text-end">أخبار الموبايل</h1>
+                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
+                        إدارة الأخبار والقصص التي تظهر حصرياً لمستخدمي تطبيق الهاتف المحمول.
+                    </p>
                 </div>
-                <div class="col-lg-4 text-start mt-4 mt-lg-0">
-                    <button class="btn btn-primary-p px-4 py-3" data-bs-toggle="modal" data-bs-target="#addNewsModal">
-                        <i class="bi bi-plus-lg me-2"></i> إضافة خبر للموبايل
-                    </button>
+                <div class="col-lg-4 text-start mt-4 mt-lg-0 animate-reveal-left">
+                    <div class="d-flex flex-column gap-3 align-items-lg-start">
+                        <button class="btn btn-action-glow rounded-pill px-4 py-3 fw-bold shadow-lg" data-bs-toggle="modal" data-bs-target="#addNewsModal">
+                            <i class="bi bi-plus-lg me-2"></i> إضافة خبر للموبايل
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show mb-4 mx-lg-4 rounded-4 shadow-sm border-0" role="alert" style="background: #ecfdf5; color: #065f46; border-right: 6px solid var(--primary-green) !important;">
-                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
 
-        <div class="row g-4 px-lg-4">
-            @forelse($news as $item)
-            <div class="col-md-6 col-lg-4">
-                <div class="news-card-premium animate-up" style="animation-delay: {{ $loop->index * 0.05 }}s">
-                    <div class="news-card-image">
-                        @if($item->image_path)
-                            <img src="{{ $item->image_url }}" alt="{{ $item->title }}">
-                        @else
-                            <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: #f1f5f9;">
-                                <i class="bi bi-camera display-4 text-muted opacity-25"></i>
-                            </div>
-                        @endif
-                        <div class="news-card-actions">
-                            <button type="button" class="btn-action-sm" title="تعديل" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ $item->id }}">
-                                <i class="bi bi-pencil"></i>
+<div class="container-fluid py-4">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="row g-4">
+        @forelse($news as $item)
+        <div class="col-md-6 col-lg-4">
+            <div class="news-card-premium animate-up" style="animation-delay: {{ $loop->index * 0.05 }}s">
+                <div class="news-card-image">
+                    @if($item->image_path)
+                        <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover">
+                    @else
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #1e1b4b, #4c1d95);"><i class="bi bi-camera display-4 text-white-50"></i></div>
+                    @endif
+                    <div class="news-card-actions">
+                        {{-- Edit Button --}}
+                        <button type="button" class="btn btn-glass-sm" title="تعديل" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ $item->id }}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        {{-- Delete Button --}}
+                        <form action="{{ route('mobile.news.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-glass-sm btn-glass-danger-sm" title="حذف">
+                                <i class="bi bi-trash"></i>
                             </button>
-                            <form action="{{ route('mobile.news.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')" class="d-inline">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-action-sm btn-action-danger-sm" title="حذف">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                        @if($item->category)
-                        <div class="news-category-pill">{{ $item->category }}</div>
-                        @endif
+                        </form>
                     </div>
-                    <div class="news-card-body">
-                        <h5 class="text-truncate" title="{{ $item->title }}">{{ $item->title }}</h5>
-                        <p class="small mb-3">{{ Str::limit($item->content, 90) }}</p>
+                    @if($item->category)
+                    <div class="news-category-pill">{{ $item->category }}</div>
+                    @endif
+                </div>
+                <div class="news-card-body">
+                    <h5 class="fw-bold mb-3 text-white lh-base text-truncate" title="{{ $item->title }}">{{ $item->title }}</h5>
+                    <p class="ws-label small mb-3">{{ Str::limit($item->content, 100) }}</p>
 
-                        @if($item->statistic_number)
-                        <div class="stat-highlight-box">
-                            <div class="fw-bold text-success fs-5">{{ $item->statistic_number }}</div>
-                            <div class="text-muted small">{{ $item->statistic_description }}</div>
-                        </div>
-                        @endif
+                    @if($item->statistic_number)
+                    <div class="stat-highlight-box mb-3">
+                        <div class="fw-bold text-emerald fs-5">{{ $item->statistic_number }}</div>
+                        <div class="text-slate-500 x-small">{{ $item->statistic_description }}</div>
+                    </div>
+                    @endif
 
-                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                            <div class="d-flex align-items-center gap-3 text-muted small">
-                                <span><i class="bi bi-calendar3 me-1"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : 'مسودة' }}</span>
-                                <span><i class="bi bi-eye me-1"></i> {{ $item->views_count ?? '0' }}</span>
-                            </div>
-                            <button class="btn btn-outline-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#viewNewsModal{{ $item->id }}">
-                                التفاصيل <i class="bi bi-arrow-left ms-1"></i>
-                            </button>
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-white border-opacity-5">
+                        <div class="d-flex align-items-center gap-3 text-slate-500 x-small">
+                            <span><i class="bi bi-calendar3 text-purple me-1"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : 'مسودة' }}</span>
+                            <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? '0' }}</span>
                         </div>
+                        <button class="btn btn-glass-purple btn-sm rounded-pill px-3 py-1 x-small fw-bold" data-bs-toggle="modal" data-bs-target="#viewNewsModal{{ $item->id }}">
+                            اقرأ المزيد <i class="bi bi-arrow-left ms-1"></i>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Edit Modal --}}
-            <div class="modal fade" id="editNewsModal{{ $item->id }}" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <form action="{{ route('mobile.news.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content modal-content-premium">
-                        @csrf @method('PUT')
-                        <div class="modal-header modal-header-premium">
-                            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-success"></i>تعديل الخبر</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body modal-body-premium">
-                            <div class="row g-3">
-                                <div class="col-md-8">
-                                    <label class="form-label small fw-bold text-main">عنوان الخبر</label>
-                                    <input type="text" name="title" class="form-control form-control-p" required value="{{ $item->title }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-main">نوع الخبر</label>
-                                    <select name="category" class="form-select form-control-p">
-                                        @foreach(\App\Models\MobileNews::getCategories() as $cat)
-                                            <option value="{{ $cat['id'] }}" {{ $item->category == $cat['id'] ? 'selected' : '' }}>{{ $cat['label'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label small fw-bold text-main">صورة الخبر</label>
-                                    <input type="file" name="image" class="form-control form-control-p">
-                                    @if($item->image_path)
-                                        <div class="mt-2 d-flex align-items-center gap-3">
-                                            <img src="{{ $item->image_url }}" class="rounded shadow-sm" style="max-height: 60px;">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('del_img_{{ $item->id }}').value='1'; this.closest('.d-flex').remove();">
-                                                <i class="bi bi-trash"></i> حذف
-                                            </button>
-                                        </div>
-                                    @endif
-                                    <input type="hidden" name="delete_image" id="del_img_{{ $item->id }}" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-main">تاريخ النشر</label>
-                                    <input type="date" name="published_at" class="form-control form-control-p" value="{{ $item->published_at ? $item->published_at->format('Y-m-d') : date('Y-m-d') }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-main">المشاهدات</label>
-                                    <input type="text" name="views_count" class="form-control form-control-p" value="{{ $item->views_count }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-main">المشاركات</label>
-                                    <input type="text" name="shares_count" class="form-control form-control-p" value="{{ $item->shares_count }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-main">رقم إحصائي (اختياري)</label>
-                                    <input type="text" name="statistic_number" class="form-control form-control-p" value="{{ $item->statistic_number }}" placeholder="95%">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-main">وصف الإحصائية</label>
-                                    <input type="text" name="statistic_description" class="form-control form-control-p" value="{{ $item->statistic_description }}">
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label small fw-bold text-main">نص الخبر</label>
-                                    <textarea name="content" class="form-control form-control-p" rows="6" required>{{ $item->content }}</textarea>
-                                </div>
+        {{-- ===== Edit Modal (per item) ===== --}}
+        <div class="modal fade" id="editNewsModal{{ $item->id }}" tabindex="-1" style="z-index: 1070;">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <form action="{{ route('mobile.news.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content dark-glass-card border-0">
+                    @csrf @method('PUT')
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-purple"></i>تعديل الخبر</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">عنوان الخبر</label>
+                                <input type="text" name="title" class="form-control" required value="{{ $item->title }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">نوع الخبر</label>
+                                <select name="category" class="form-select">
+                                    @foreach(\App\Models\MobileNews::getCategories() as $cat)
+                                        <option value="{{ $cat['id'] }}" {{ $item->category == $cat['id'] ? 'selected' : '' }}>{{ $cat['label'] }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
-                        <div class="modal-footer modal-footer-premium text-end">
-                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
-                            <button type="submit" class="btn btn-primary-p">حفظ التعديلات</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
 
-            {{-- View Modal --}}
-            <div class="modal fade" id="viewNewsModal{{ $item->id }}" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content modal-content-premium overflow-hidden">
-                        <div class="modal-header modal-header-premium">
-                            <h5 class="modal-title fw-bold text-truncate" style="max-width: 80%;">{{ $item->title }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-0">
-                            @if($item->image_path)
-                                <img src="{{ $item->image_url }}" class="w-100 object-fit-cover" style="height: 350px;">
-                            @endif
-                            <div class="p-4">
-                                <div class="d-flex gap-4 text-muted small mb-4 pb-3 border-bottom">
-                                    <span><i class="bi bi-calendar3 text-success me-1"></i> {{ $item->published_at ? $item->published_at->format('Y-m-d') : '' }}</span>
-                                    <span><i class="bi bi-folder-fill text-success me-1"></i> {{ $item->category ?? 'عام' }}</span>
-                                    <span><i class="bi bi-eye-fill text-success me-1"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
-                                </div>
-                                <div class="text-main lh-lg" style="white-space: pre-wrap;">{{ $item->content }}</div>
-                                
-                                @if($item->statistic_number)
-                                <div class="mt-4 p-3 rounded-4 bg-success bg-opacity-5 border border-success border-opacity-10 d-inline-flex align-items-center gap-3">
-                                    <span class="fs-2 fw-bold text-success">{{ $item->statistic_number }}</span>
-                                    <span class="text-muted fw-bold">{{ $item->statistic_description }}</span>
-                                </div>
+                        <div class="mt-3">
+                            <label class="form-label small fw-bold">صورة الخبر</label>
+                            <div class="input-group">
+                                <input type="file" name="image" class="form-control">
+                                @if($item->image_path)
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('del_img_{{ $item->id }}').value='1'; this.closest('.input-group').nextElementSibling.remove(); this.closest('.input-group').querySelector('input[type=file]').value='';">
+                                        <i class="bi bi-trash"></i> حذف الصورة
+                                    </button>
                                 @endif
                             </div>
+                            <input type="hidden" name="delete_image" id="del_img_{{ $item->id }}" value="0">
+                            @if($item->image_path)
+                                <div class="mt-2 text-center">
+                                    <img src="{{ $item->image_url }}" class="rounded shadow-sm" style="max-height: 100px;">
+                                </div>
+                            @endif
                         </div>
-                        <div class="modal-footer modal-footer-premium">
-                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
-                            <button class="btn btn-outline-success rounded-pill px-4" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ $item->id }}">
-                                <i class="bi bi-pencil me-1"></i> تعديل الخبر
-                            </button>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">تاريخ النشر</label>
+                                <input type="date" name="published_at" class="form-control" value="{{ $item->published_at ? $item->published_at->format('Y-m-d') : date('Y-m-d') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">المشاهدات</label>
+                                <input type="text" name="views_count" class="form-control" value="{{ $item->views_count }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">المشاركات</label>
+                                <input type="text" name="shares_count" class="form-control" value="{{ $item->shares_count }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">رقم إحصائي</label>
+                                <input type="text" name="statistic_number" class="form-control" value="{{ $item->statistic_number }}" placeholder="95%">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">وصف الإحصائية</label>
+                                <input type="text" name="statistic_description" class="form-control" value="{{ $item->statistic_description }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">اسم جهة الاتصال</label>
+                                <input type="text" name="contact_name" class="form-control" value="{{ $item->contact_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">رقم التواصل</label>
+                                <input type="text" name="contact_number" class="form-control" value="{{ $item->contact_number }}">
+                            </div>
                         </div>
+
+                        <div class="mt-3">
+                            <label class="form-label small fw-bold">نص الخبر</label>
+                            <textarea name="content" class="form-control" rows="8" required>{{ $item->content }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold">
+                            <i class="bi bi-save me-2"></i>حفظ التعديلات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- ===== View Modal (per item) ===== --}}
+        <div class="modal fade" id="viewNewsModal{{ $item->id }}" tabindex="-1" style="z-index: 1060;">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content dark-glass-card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background-color: var(--ws-bg-card-header) !important;">
+                    <div class="modal-header border-0" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+                        <h5 class="modal-title fw-bold text-white">{{ $item->title }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        @if($item->image_path)
+                            <img src="{{ $item->image_url }}" class="w-100 object-fit-cover" style="height: 300px;">
+                        @endif
+                        <div class="p-4">
+                            <div class="d-flex gap-3 ws-label small mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+                                <span><i class="bi bi-calendar3 text-purple me-1"></i> {{ $item->published_at ? $item->published_at->format('Y-m-d') : '' }}</span>
+                                <span><i class="bi bi-folder text-purple me-1"></i> {{ $item->category ?? 'عام' }}</span>
+                                <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
+                            </div>
+                            <div class="text-white lh-lg" style="white-space: pre-wrap;">{{ $item->content }}</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ $item->id }}">
+                            <i class="bi bi-pencil me-2"></i>تعديل
+                        </button>
                     </div>
                 </div>
             </div>
-
-            @empty
-            <div class="col-12">
-                <div class="text-center py-5 bg-white rounded-4 shadow-sm border mt-4">
-                    <i class="bi bi-newspaper display-1 text-muted opacity-25"></i>
-                    <p class="text-muted mt-3 fs-5">لا توجد أخبار بعد. أضف أول خبر الآن!</p>
-                </div>
-            </div>
-            @endforelse
         </div>
+
+        @empty
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-newspaper display-1 text-white-50"></i>
+                <p class="text-white-50 mt-3">لا توجد أخبار بعد. أضف أول خبر الآن!</p>
+            </div>
+        </div>
+        @endforelse
     </div>
 </div>
 
-{{-- Add News Modal --}}
+{{-- ===== Add News Modal ===== --}}
 <div class="modal fade" id="addNewsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <form action="{{ route('mobile.news.store') }}" method="POST" enctype="multipart/form-data" class="modal-content modal-content-premium">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <form action="{{ route('mobile.news.store') }}" method="POST" enctype="multipart/form-data" class="modal-content dark-glass-card border-0">
             @csrf
-            <div class="modal-header modal-header-premium">
-                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2 text-success"></i>إضافة خبر جديد</h5>
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2 text-purple"></i>إضافة خبر جديد للتطبيق</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body modal-body-premium">
+            <div class="modal-body p-4">
                 <div class="row g-3">
                     <div class="col-md-8">
                         <label class="form-label small fw-bold">عنوان الخبر</label>
-                        <input type="text" name="title" class="form-control form-control-p" placeholder="أدخل العنوان هنا..." required>
+                        <input type="text" name="title" class="form-control" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">نوع الخبر</label>
-                        <select name="category" class="form-select form-control-p">
+                        <select name="category" class="form-select">
                             @foreach(\App\Models\MobileNews::getCategories() as $cat)
                                 <option value="{{ $cat['id'] }}" {{ $cat['id'] == 'عام' ? 'selected' : '' }}>{{ $cat['label'] }}</option>
                             @endforeach
@@ -483,40 +257,232 @@
                     </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-bold">صورة الخبر</label>
-                        <input type="file" name="image" class="form-control form-control-p">
+                        <input type="file" name="image" class="form-control">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">تاريخ النشر</label>
-                        <input type="date" name="published_at" class="form-control form-control-p" value="{{ date('Y-m-d') }}">
+                        <input type="date" name="published_at" class="form-control" value="{{ date('Y-m-d') }}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-bold">المشاهدات (تخيلي)</label>
-                        <input type="text" name="views_count" class="form-control form-control-p" placeholder="مثلاً: 12K">
+                        <label class="form-label small fw-bold">المشاهدات</label>
+                        <input type="text" name="views_count" class="form-control" placeholder="50K+">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-bold">المشاركات (تخيلي)</label>
-                        <input type="text" name="shares_count" class="form-control form-control-p" placeholder="مثلاً: 500">
+                        <label class="form-label small fw-bold">المشاركات</label>
+                        <input type="text" name="shares_count" class="form-control" placeholder="10K+">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">رقم إحصائي (اختياري)</label>
-                        <input type="text" name="statistic_number" class="form-control form-control-p" placeholder="95%">
+                        <label class="form-label small fw-bold">رقم إحصائي</label>
+                        <input type="text" name="statistic_number" class="form-control" placeholder="95%">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">وصف الإحصائية</label>
-                        <input type="text" name="statistic_description" class="form-control form-control-p" placeholder="نسبة الرضا">
+                        <input type="text" name="statistic_description" class="form-control" placeholder="نسبة الإنجاز">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">اسم المسؤول</label>
+                        <input type="text" name="contact_name" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">رقم التواصل</label>
+                        <input type="text" name="contact_number" class="form-control" placeholder="0123456789">
                     </div>
                     <div class="col-12">
-                        <label class="form-label small fw-bold">نص الخبر بالكامل</label>
-                        <textarea name="content" class="form-control form-control-p" rows="6" placeholder="اكتب تفاصيل الخبر هنا..." required></textarea>
+                        <label class="form-label small fw-bold">نص الخبر</label>
+                        <textarea name="content" class="form-control" rows="8" required></textarea>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer modal-footer-premium">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
-                <button type="submit" class="btn btn-primary-p px-5">نشر الخبر الآن <i class="bi bi-send ms-2"></i></button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">
+                    <i class="bi bi-send me-2"></i>نشر الخبر
+                </button>
             </div>
         </form>
     </div>
 </div>
+</div>
+
+<style>
+    :root {
+        --purple-primary: #7c3aed;
+        --purple-dark: #6d28d9;
+        --dark-bg: var(--ws-bg-page);
+        --card-dark: #1a1f2e;
+        --slate-900: var(--ws-bg-card-header);
+        --slate-400: #94a3b8;
+        --slate-500: #64748b;
+    }
+
+    body { background-color: var(--dark-bg) !important; }
+    .news-mgmt-page { min-height: 100vh; }
+
+    .premium-hero-sleek { position: relative; padding: 100px 0 120px; background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); border-radius: 0 0 60px 60px; overflow: hidden; z-index: 10; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; pointer-events: none; }
+    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
+    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
+    .noise-overlay { position: absolute; inset: 0; opacity: 0.05; }
+    .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
+    .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #ddd6fe; font-weight: 700; font-size: 0.85rem; }
+    .fw-800 { font-weight: 800; }
+    .max-w-600 { max-width: 600px; }
+    .btn-action-glow { background: var(--purple-primary); color: var(--ws-text-primary); border: none; font-weight: 700; box-shadow: 0 0 20px rgba(124,58,237,0.4); transition: 0.4s; }
+    .btn-action-glow:hover { background: var(--purple-dark); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(124,58,237,0.6); color: var(--ws-text-primary); }
+
+    .news-card-premium { background: var(--card-dark); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%; display: flex; flex-direction: column; }
+    .news-card-premium:hover { transform: translateY(-10px); border-color: var(--purple-primary); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    .news-card-image { position: relative; height: 220px; overflow: hidden; }
+    .news-card-actions { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 8px; opacity: 0; transition: 0.3s; }
+    .news-card-premium:hover .news-card-actions { opacity: 1; }
+    .btn-glass-sm { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: var(--ws-text-primary); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transition: 0.3s; padding: 0; }
+    .btn-glass-sm:hover { background: var(--purple-primary); color: var(--ws-text-primary); }
+    .btn-glass-danger-sm:hover { background: #ef4444 !important; }
+    .news-category-pill { position: absolute; top: 12px; left: 12px; background: rgba(124,58,237,0.8); backdrop-filter: blur(10px); color: var(--ws-text-primary); font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 100px; }
+    .news-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+    .stat-highlight-box { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 10px 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .ws-label { color: var(--slate-400); }
+    .text-slate-500 { color: var(--slate-500); }
+    .text-purple { color: #a78bfa !important; }
+    .text-emerald { color: #34d399 !important; }
+    .btn-glass-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); transition: 0.3s; }
+    .btn-glass-purple:hover { background: var(--purple-primary); color: var(--ws-text-primary); }
+
+    .dark-glass-card { background: var(--slate-900); color: #f8fafc; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .dark-glass-card .form-control, .dark-glass-card .form-select { background-color: var(--ws-bg-input); border: 2px solid var(--ws-border); color: var(--ws-text-primary); border-radius: 14px; padding: 12px 16px; transition: 0.3s; }
+    .dark-glass-card .form-control:focus, .dark-glass-card .form-select:focus { background-color: var(--ws-bg-input); border-color: var(--purple-primary); color: var(--ws-text-primary); box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
+    .dark-glass-card .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+    .dark-glass-card .form-label { color: #94a3b8; font-weight: 700; font-size: 0.85rem; }
+    .dark-glass-card option { background-color: var(--ws-bg-card-header) !important; color: #f8fafc !important; }
+
+    .x-small { font-size: 0.7rem; }
+
+    .animate-reveal-right { animation: revealRight 1s both; }
+    .animate-reveal-left { animation: revealLeft 1s both; }
+    .animate-up { animation: fadeInUp 0.8s both; }
+    @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes revealLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 991px) {
+        .premium-hero-sleek { border-radius: 0 0 30px 30px; padding: 60px 0 80px; }
+        .display-4 { font-size: 2.2rem; }
+    }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+</style>
 
 @endsection
+
+
+

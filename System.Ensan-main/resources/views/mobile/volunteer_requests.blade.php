@@ -3,292 +3,21 @@
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-<style>
-    :root {
-        --primary-green: #22c55e;
-        --primary-hover: #16a34a;
-        --bg-light: #f9fafb;
-        --text-main: #111111;
-        --text-muted: #64748b;
-        --border-color: #e5e7eb;
-        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    }
-
-    body {
-        background-color: var(--bg-light) !important;
-        color: var(--text-main);
-        font-family: 'Tajawal', sans-serif;
-    }
-
-    /* Page Header */
-    .premium-header-section {
-        background: white;
-        padding: 3rem 2rem;
-        border-radius: 0 0 40px 40px;
-        box-shadow: var(--card-shadow);
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 3rem;
-    }
-
-    .glass-badge {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--primary-green);
-        padding: 0.6rem 1.25rem;
-        border-radius: 100px;
-        font-weight: 800;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-    }
-
-    /* Volunteer Cards */
-    .premium-volunteer-card {
-        background: white;
-        border-radius: 28px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--card-shadow);
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .premium-volunteer-card:hover {
-        transform: translateY(-10px);
-        border-color: var(--primary-green);
-        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-inner-top {
-        padding: 2rem;
-        flex-grow: 1;
-    }
-
-    .card-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .badge-premium {
-        padding: 0.5rem 1rem;
-        border-radius: 100px;
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-    }
-
-    .status-new { background: #eff6ff; color: #3b82f6; }
-    .status-warn { background: #fffbeb; color: #d97706; }
-    .status-success { background: #f0fdf4; color: #16a34a; }
-    .status-danger { background: #fef2f2; color: #dc2626; }
-
-    .card-date {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 600;
-    }
-
-    .card-user-info {
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .user-avatar-placeholder {
-        width: 70px;
-        height: 70px;
-        background: linear-gradient(135deg, var(--primary-green), #059669);
-        border-radius: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.25rem;
-        font-size: 2rem;
-        font-weight: 800;
-        color: white;
-        box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
-    }
-
-    .user-name {
-        font-weight: 800;
-        color: var(--text-main);
-        margin-bottom: 0.25rem;
-        font-size: 1.25rem;
-    }
-
-    .user-phone {
-        color: var(--primary-green);
-        font-size: 1rem;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 600;
-    }
-
-    .interest-tag {
-        background: #f8fafc;
-        border-radius: 14px;
-        padding: 0.75rem 1rem;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        border: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-details-glow {
-        background: white;
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        border-radius: 14px;
-        padding: 0.9rem;
-        font-weight: 800;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-    .btn-details-glow:hover {
-        background: var(--primary-green);
-        color: white;
-        border-color: var(--primary-green);
-        transform: scale(1.02);
-    }
-
-    .card-inner-bottom {
-        padding: 1.25rem;
-        background: #f8fafc;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .btn-action-card {
-        border-radius: 12px;
-        padding: 0.75rem;
-        font-weight: 700;
-        font-size: 0.85rem;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-
-    .id-card-btn { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-    .id-card-btn:hover { background: #e2e8f0; transform: translateY(-2px); }
-    .cv-btn { background: #fff1f2; color: #e11d48; border: 1px solid #fecaca; }
-    .cv-btn:hover { background: #ffe4e6; transform: translateY(-2px); }
-
-    /* Modal Styling */
-    .modal-content-premium {
-        border-radius: 32px;
-        border: none;
-        overflow: hidden;
-    }
-
-    .modal-header-premium {
-        background: var(--primary-green);
-        padding: 2rem;
-        color: white;
-        border: none;
-    }
-
-    .modal-body-premium {
-        padding: 2.5rem;
-        background: white;
-    }
-
-    .info-group label {
-        display: block;
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
-        letter-spacing: 1px;
-    }
-
-    .info-val {
-        color: var(--text-main);
-        font-size: 1.1rem;
-        font-weight: 700;
-    }
-
-    .message-box {
-        background: #f8fafc;
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        color: var(--text-muted);
-        line-height: 1.7;
-        font-style: italic;
-    }
-
-    .admin-actions-panel {
-        background: #fdfdfd;
-        border: 2px dashed var(--border-color);
-        border-radius: 20px;
-        padding: 1.75rem;
-        margin-top: 2rem;
-    }
-
-    .form-select-p {
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        padding: 0.75rem;
-        background: white;
-        font-weight: 700;
-    }
-
-    .btn-save-p {
-        background: var(--primary-green);
-        color: white;
-        border: none;
-        padding: 0.85rem 2.5rem;
-        border-radius: 12px;
-        font-weight: 800;
-        transition: all 0.3s ease;
-    }
-
-    .btn-save-p:hover {
-        background: var(--primary-hover);
-        box-shadow: 0 10px 15px rgba(34, 197, 94, 0.2);
-    }
-
-    /* Animations */
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-up { animation: fadeInUp 0.6s ease forwards; }
-</style>
-
-<div class="container-fluid py-4 min-vh-100">
-    {{-- Header --}}
-    <div class="premium-header-section animate-up">
-        <div class="row align-items-center">
-            <div class="col-md-7 text-end">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2 justify-content-end">
-                        <li class="breadcrumb-item"><a href="{{ route('mobile.dashboard') }}" class="text-muted text-decoration-none small">لوحة التحكم</a></li>
-                        <li class="breadcrumb-item active text-success fw-bold small">طلبات التطوع الموبايل</li>
-                    </ol>
-                </nav>
-                <h1 class="h2 fw-800 text-main mb-1">طلبات التطوع <span style="color: var(--primary-green)">(الموبايل)</span></h1>
-                <p class="text-muted mb-0">إدارة ومتابعة طلبات الانضمام القادمة من تطبيق الهاتف</p>
-            </div>
-            <div class="col-md-5 text-start mt-3 mt-md-0">
-                <div class="glass-badge px-4 py-2">
-                    <i class="bi bi-people-fill me-2 fs-5"></i>
-                    <span class="fw-bold">إجمالي الطلبات:</span> <span class="ms-1 fs-5">{{ $requests->count() }}</span>
-                </div>
-            </div>
+<div class="container-fluid py-4 min-vh-100" style="background-color: #05070a;">
+    <div class="d-flex justify-content-between align-items-center mb-5 animate-reveal-down">
+        <div>
+            <h1 class="h2 fw-800 text-white mb-1">طلبات التطوع <span class="text-primary-glow">(تطبيق الموبايل)</span></h1>
+            <p class="text-white-50 small mb-0">إدارة ومتابعة طلبات الانضمام القادمة حصرياً من تطبيق الهاتف</p>
+        </div>
+        <div class="glass-badge px-4 py-2">
+            <i class="bi bi-people-fill me-2 text-primary"></i>
+            <span class="fw-bold">إجمالي الطلبات:</span> {{ $requests->count() }}
         </div>
     </div>
 
-    <div class="row g-4 px-lg-4">
+    <div class="row g-4">
         @forelse($requests as $request)
-        <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.08 }}s">
+        <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
             <div class="premium-volunteer-card">
                 <div class="card-inner-top">
                     <div class="card-meta">
@@ -296,7 +25,7 @@
                             {{ $request->status == 'new' ? 'جديد' : ($request->status == 'contacted' ? 'تم التواصل' : ($request->status == 'accepted' ? 'مقبول' : 'مرفوض')) }}
                         </span>
                         <div class="card-date">
-                            <i class="bi bi-calendar3 me-1"></i> {{ $request->created_at->format('Y-m-d') }}
+                            <i class="bi bi-calendar3"></i> {{ $request->created_at->format('Y-m-d') }}
                         </div>
                     </div>
                     
@@ -305,18 +34,18 @@
                             {{ mb_substr($request->name, 0, 1) }}
                         </div>
                         <h4 class="user-name text-truncate" title="{{ $request->name }}">{{ $request->name }}</h4>
-                        <p class="user-phone">{{ $request->phone }}</p>
+                        <p class="user-phone font-outfit">{{ $request->phone }}</p>
                     </div>
 
                     @if($request->area_of_interest)
-                    <div class="interest-tag mb-4">
-                        <i class="bi bi-bookmark-star-fill text-success me-2"></i> {{ $request->area_of_interest }}
+                    <div class="interest-tag">
+                        <i class="bi bi-bookmark-star me-2"></i> {{ $request->area_of_interest }}
                     </div>
                     @endif
 
-                    <div class="mt-2">
+                    <div class="mt-4">
                         <button class="btn btn-details-glow w-100" data-bs-toggle="modal" data-bs-target="#modal{{ $request->id }}">
-                            <i class="bi bi-eye-fill me-2"></i> عرض كامل التفاصيل
+                            <i class="bi bi-eye me-2"></i> عرض كامل التفاصيل
                         </button>
                     </div>
                 </div>
@@ -325,20 +54,20 @@
                     <div class="row g-2">
                         <div class="col-6">
                             @if($request->id_card_path)
-                            <a href="{{ Storage::disk('public')->url($request->id_card_path) }}" target="_blank" class="btn-action-card id-card-btn w-100">
-                                <i class="bi bi-person-vcard"></i> البطاقة
+                            <a href="{{ Storage::disk('public')->url($request->id_card_path) }}" target="_blank" class="btn btn-action-card id-card-btn w-100">
+                                <i class="bi bi-person-badge"></i> البطاقة
                             </a>
                             @else
-                            <button disabled class="btn-action-card w-100 text-muted border-0 bg-light">مفقود</button>
+                            <button disabled class="btn btn-action-card disabled-btn w-100">مفقود</button>
                             @endif
                         </div>
                         <div class="col-6">
                             @if($request->cv_path)
-                            <a href="{{ route('mobile.volunteer-requests.cv', $request->id) }}" target="_blank" class="btn-action-card cv-btn w-100">
-                                <i class="bi bi-file-earmark-pdf-fill"></i> السيرة الذاتية
+                            <a href="{{ route('mobile.volunteer-requests.cv', $request->id) }}" target="_blank" class="btn btn-action-card cv-btn w-100">
+                                <i class="bi bi-file-earmark-pdf"></i> السيرة الذاتية
                             </a>
                             @else
-                            <button disabled class="btn-action-card w-100 text-muted border-0 bg-light">مفقود</button>
+                            <button disabled class="btn btn-action-card disabled-btn w-100">مفقود</button>
                             @endif
                         </div>
                     </div>
@@ -349,105 +78,101 @@
         {{-- Detail Modal --}}
         <div class="modal fade" id="modal{{ $request->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content modal-content-premium">
-                    <div class="modal-header modal-header-premium">
-                        <h5 class="modal-title fw-800">
+                <div class="modal-content border-0 shadow-lg" style="background-color: var(--ws-bg-page) !important; border-radius: 24px !important; overflow: hidden;">
+                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
+                        <h5 class="modal-title fw-bold">
                             <i class="bi bi-person-lines-fill me-2"></i> تفاصيل مقدم طلب التطوع
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body modal-body-premium">
+                    <div class="modal-body p-4" style="background-color: var(--ws-bg-page) !important;">
                         <div class="row g-4">
                             {{-- Basic Info --}}
                             <div class="col-md-4 info-group">
-                                <label>الإسم بالكامل</label>
-                                <div class="info-val">{{ $request->name }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الإسم بالكامل</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->name }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>رقم الهاتف</label>
-                                <div class="info-val" style="color: var(--primary-green);">{{ $request->phone }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
+                                <div class="font-outfit" style="color: #0066ff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $request->phone }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>البريد الإلكتروني</label>
-                                <div class="info-val text-truncate">{{ $request->email ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">البريد الإلكتروني</label>
+                                <div class="text-truncate" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->email ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-4 info-group">
-                                <label>الرقم القومي</label>
-                                <div class="info-val font-outfit">{{ $request->national_id ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الرقم القومي</label>
+                                <div class="font-outfit" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $request->national_id ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>تاريخ الميلاد</label>
-                                <div class="info-val">{{ $request->birth_date ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الميلاد</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->birth_date ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>النوع</label>
-                                <div class="info-val">{{ $request->gender == 'male' ? 'ذكر' : ($request->gender == 'female' ? 'أنثى' : ($request->gender ?? '-')) }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">النوع</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->gender == 'male' ? 'ذكر' : ($request->gender == 'female' ? 'أنثى' : ($request->gender ?? '-')) }}</div>
                             </div>
 
                             <div class="col-md-6 info-group">
-                                <label>العنوان الأصلي</label>
-                                <div class="info-val">{{ $request->address ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان الأصلي</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->address ?? '-' }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label>العنوان الحالي</label>
-                                <div class="info-val">{{ $request->current_address ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان الحالي</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->current_address ?? '-' }}</div>
                             </div>
 
-                            <div class="col-12"><hr class="opacity-25" style="border-style: dashed;"></div>
+                            <hr class="my-2" style="opacity: 0.1; color: var(--ws-text-primary);">
 
                             {{-- Education & Work --}}
                             <div class="col-md-4 info-group">
-                                <label>المؤهل الدراسي</label>
-                                <div class="info-val">{{ $request->education_level ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المؤهل الدراسي</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->education_level ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>الكلية / التخصص</label>
-                                <div class="info-val">{{ $request->faculty ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الكلية</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->faculty ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label>الجامعة</label>
-                                <div class="info-val">{{ $request->university ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الجامعة</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->university ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-6 info-group">
-                                <label>الوظيفة الحالية</label>
-                                <div class="info-val">{{ $request->current_job ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الوظيفة الحالية</label>
+                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $request->current_job ?? '-' }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label>اهتمامات التطوع</label>
-                                <div class="info-val text-success">{{ $request->area_of_interest ?? '-' }}</div>
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">اهتمامات التطوع</label>
+                                <div style="color: #0066ff; font-size: 1.1rem; font-weight: 700;">{{ $request->area_of_interest ?? '-' }}</div>
                             </div>
 
                             <div class="col-12 info-group">
-                                <label>الهدف من الانضمام</label>
-                                <div class="message-box">
+                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">الهدف من الانضمام</label>
+                                <div class="message-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #94a3b8; line-height: 1.7;">
                                     "{{ $request->goal ?? '-' }}"
                                 </div>
                             </div>
                         </div>
 
-                        <div class="admin-actions-panel">
-                            <h6 class="mb-4 fw-800 text-main"><i class="bi bi-shield-lock-fill me-2 text-success"></i> إجراءات الإدارة</h6>
+                        <div class="admin-panel mt-5" style="background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <h6 class="mb-3" style="color: var(--ws-text-primary) !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;"><i class="bi bi-shield-lock me-2"></i> لوحة الإدارة</h6>
                             <form action="{{ route('mobile.volunteer-requests.update', $request->id) }}" method="POST">
                                 @csrf @method('PATCH')
-                                <div class="row align-items-end g-3">
+                                <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label-p x-small fw-bold text-muted text-uppercase mb-2">تحديث حالة الطلب</label>
-                                        <select name="status" class="form-select form-select-p w-100">
+                                        <label class="form-label small opacity-75" style="color: #94a3b8;">الحالة الحالية</label>
+                                        <select name="status" class="form-select" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important;">
                                             <option value="new" {{ $request->status == 'new' ? 'selected' : '' }}>جديد (New)</option>
                                             <option value="contacted" {{ $request->status == 'contacted' ? 'selected' : '' }}>تم التواصل (Contacted)</option>
                                             <option value="accepted" {{ $request->status == 'accepted' ? 'selected' : '' }}>مقبول (Accepted)</option>
                                             <option value="rejected" {{ $request->status == 'rejected' ? 'selected' : '' }}>مرفوض (Rejected)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6 d-flex gap-2">
-                                        <button type="submit" class="btn btn-save-p flex-grow-1">
-                                            <i class="bi bi-check-lg me-1"></i> حفظ التعديلات
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger border-0 rounded-3" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $request->id }}').submit()">
-                                            <i class="bi bi-trash3 fs-5"></i>
-                                        </button>
+                                    <div class="col-12 mt-4 d-flex justify-content-between">
+                                        <button type="submit" class="btn" style="background: #00d1b2; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px 35px; font-weight: 700;">حفظ التعديلات</button>
+                                        <button type="button" class="btn" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px 20px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $request->id }}').submit()">حذف الطلب</button>
                                     </div>
                                 </div>
                             </form>
@@ -460,15 +185,231 @@
             </div>
         </div>
         @empty
-        <div class="col-12 text-center py-5">
-            <div class="bg-white rounded-4 shadow-sm border p-5">
-                <i class="bi bi-inbox display-1 text-muted opacity-25"></i>
-                <h5 class="text-muted mt-4">لا يوجد طلبات حالياً</h5>
-                <p class="text-muted small">لم يتم استلام أي طلبات تطوع عبر التطبيق حتى اللحظة.</p>
+        <div class="col-12 animate-up">
+            <div class="glass-card text-center py-5">
+                <i class="bi bi-inbox display-4 text-white-50"></i>
+                <h5 class="text-white mt-4">لا يوجد طلبات حالياً</h5>
+                <p class="text-white-50">لم يقم أي مستخدم بإرسال طلبات تطوع عبر تطبيق الموبايل بعد.</p>
             </div>
         </div>
         @endforelse
     </div>
 </div>
 
+<style>
+    :root {
+        --dark-bg: #05070a;
+        --card-bg: var(--ws-bg-card-header);
+        --card-inner: var(--ws-border);
+        --primary: #3b82f6;
+        --primary-glow: #60a5fa;
+        --danger: #ef4444;
+        --success: #10b981;
+        --warning: #f59e0b;
+    }
+
+    body { background-color: var(--dark-bg); font-family: 'Tajawal', 'Outfit', sans-serif; }
+    .fw-800 { font-weight: 800; }
+    .text-primary-glow { color: var(--primary-glow); }
+    .font-outfit { font-family: 'Outfit', sans-serif; }
+
+    /* Header & Badge */
+    .glass-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 100px; color: var(--ws-text-primary); backdrop-filter: blur(10px); }
+
+    /* Premium Card Design */
+    .premium-volunteer-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .premium-volunteer-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary);
+        box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
+    }
+
+    .card-inner-top { padding: 24px; flex-grow: 1; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    
+    .badge-premium { padding: 6px 16px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .status-new { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+    .status-warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .status-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    .card-date { color: rgba(255,255,255,0.4); font-size: 0.8rem; font-family: 'Outfit'; }
+
+    .card-user-info { text-align: center; margin-bottom: 20px; }
+    .user-avatar-placeholder { width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #1e40af); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.8rem; font-weight: 800; color: var(--ws-text-primary); box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3); }
+    .user-name { font-weight: 700; color: var(--ws-text-primary); margin-bottom: 4px; }
+    .user-phone { color: var(--primary-glow); font-size: 0.95rem; }
+
+    .interest-tag { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 15px; color: #94a3b8; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05); }
+
+    .btn-details-glow { background: rgba(255,255,255,0.05); color: var(--ws-text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-weight: 600; transition: 0.3s; }
+    .btn-details-glow:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+
+    .card-inner-bottom { background: rgba(0,0,0,0.3); padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .btn-action-card { border-radius: 12px; padding: 10px; font-weight: 700; font-size: 0.85rem; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+    .id-card-btn { background: #3b82f6; color: var(--ws-text-primary); }
+    .id-card-btn:hover { background: #2563eb; transform: scale(1.03); }
+    .cv-btn { background: #ef4444; color: var(--ws-text-primary); }
+    .cv-btn:hover { background: #dc2626; transform: scale(1.03); }
+    .disabled-btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.2); }
+
+    /* Modal Styling */
+    .premium-modal { background: #000000 !important; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 30px; overflow: hidden; box-shadow: 0 0 120px #000 !important; }
+    .premium-modal .modal-header { background: #0a0e17 !important; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px; }
+    .premium-modal .modal-body { padding: 35px; background: #000000 !important; position: relative; z-index: 1000; }
+    
+    .info-group label { display: block; color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+    .info-val { color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600; }
+    .message-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; color: #94a3b8; line-height: 1.7; font-style: italic; }
+
+    .admin-panel { background: rgba(0,0,0,0.25); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); }
+    .panel-title { color: var(--primary-glow); font-weight: 700; }
+    .dark-input { background: var(--ws-bg-page) !important; border: 1px solid var(--ws-border) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important; }
+    .dark-input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important; }
+
+    .btn-save-premium { background: var(--primary); color: var(--ws-text-primary); border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; transition: 0.3s; }
+    .btn-save-premium:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
+    .btn-delete-danger { background: transparent; color: var(--danger); border: none; font-weight: 600; opacity: 0.7; transition: 0.3s; }
+    .btn-delete-danger:hover { opacity: 1; color: #f87171; }
+
+    /* Empty state */
+    .glass-card { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 30px; }
+
+    /* Animations */
+    .animate-reveal-down { animation: revealDown 1s both; }
+    .animate-up { animation: fadeInUp 0.8s both; }
+    @keyframes revealDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Custom Scrollbar for dark theme */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--dark-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--ws-border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+</style>
 @endsection
+
+
+

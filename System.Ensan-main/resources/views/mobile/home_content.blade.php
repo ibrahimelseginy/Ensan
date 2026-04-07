@@ -1,468 +1,1097 @@
 @extends('layouts.app')
 
-@section('content')
-<style>
-    :root {
-        --primary-green: #22c55e;
-        --primary-hover: #16a34a;
-        --bg-light: #f9fafb;
-        --text-main: #111111;
-        --text-muted: #64748b;
-        --border-color: #e5e7eb;
-        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Base Layout */
-    body {
-        background-color: var(--bg-light) !important;
-        color: var(--text-main);
-        font-family: 'Tajawal', sans-serif;
-    }
-
-    .mobile-content-mgmt {
-        padding: 2rem 0;
-    }
-
-    /* Premium Header */
-    .premium-page-header {
-        background: white;
-        padding: 2.5rem 2rem;
-        border-radius: 24px;
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2.5rem;
-        border: 1px solid var(--border-color);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .premium-page-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 6px;
-        height: 100%;
-        background: var(--primary-green);
-    }
-
-    .header-icon {
-        width: 60px;
-        height: 60px;
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--primary-green);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.75rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Section Cards */
-    .section-card-p {
-        background: white;
-        border-radius: 24px;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2.5rem;
-        overflow: hidden;
-        transition: transform 0.3s ease;
-    }
-
-    .section-card-p:hover {
-        transform: translateY(-4px);
-    }
-
-    .card-header-premium {
-        background: #fff;
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .card-header-premium h5 {
-        margin: 0;
-        font-weight: 800;
-        color: var(--text-main);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .card-header-premium h5 i {
-        color: var(--primary-green);
-    }
-
-    .card-body-p {
-        padding: 2rem;
-    }
-
-    /* Form Controls */
-    .form-label-p {
-        font-weight: 700;
-        color: var(--text-main);
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .form-control-p {
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        padding: 0.75rem 1rem;
-        background: #f8fafc;
-        transition: all 0.2s ease;
-    }
-
-    .form-control-p:focus {
-        border-color: var(--primary-green);
-        background: white;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-    }
-
-    /* Multi-Card Grid for Pillars */
-    .pillar-item-card {
-        background: #f9fafb;
-        border-radius: 18px;
-        padding: 1.5rem;
-        border: 1px solid var(--border-color);
-        height: 100%;
-    }
-
-    .submit-btn-premium {
-        background: var(--primary-green);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 12px;
-        font-weight: 700;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        text-decoration: none;
-    }
-
-    .submit-btn-premium:hover {
-        background: var(--primary-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
-        color: white;
-    }
-
-    /* Image Upload Placeholder */
-    .image-preview-wrapper {
-        border: 2px dashed var(--border-color);
-        border-radius: 16px;
-        padding: 1rem;
-        text-align: center;
-        background: #f8fafc;
-        margin-top: 0.5rem;
-    }
-
-    .image-preview-wrapper img {
-        max-width: 100%;
-        max-height: 120px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Breadcrumbs */
-    .custom-breadcrumb {
-        background: transparent;
-        padding: 0;
-        margin-bottom: 0.5rem;
-    }
-
-    .custom-breadcrumb .breadcrumb-item a {
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.85rem;
-    }
-
-    .custom-breadcrumb .breadcrumb-item.active {
-        color: var(--primary-green);
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-
-    /* Animations */
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-up {
-        animation: slideUp 0.5s ease forwards;
-    }
-
-    /* Custom Checkbox/Switch */
-    .form-check-input:checked {
-        background-color: var(--primary-green);
-        border-color: var(--primary-green);
-    }
+@section('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" />
+    <style>
+        .select2-container--bootstrap-5 .select2-selection {
+            background-color: var(--bg-body) !important;
+            border: 1px solid var(--gray-200) !important;
+            color: var(--dark) !important;
+            border-radius: 12px !important;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+            background-color: var(--primary) !important;
+            border: none !important;
+            color: var(--ws-text-primary); !important;
+            border-radius: 6px !important;
+            padding: 2px 8px !important;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            background-color: var(--bg-card) !important;
+            border-color: var(--gray-200) !important;
+            color: var(--dark) !important;
+        }
+        .select2-container--bootstrap-5 .select2-search__field {
+            background-color: var(--bg-body) !important;
+            color: var(--dark) !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: var(--primary) !important;
+        }
+          /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
-
-<div class="container-fluid mobile-content-mgmt">
-    {{-- Header Section --}}
-    <div class="row px-lg-4">
-        <div class="col-12">
-            <div class="premium-page-header animate-up">
-                <nav aria-label="breadcrumb" class="custom-breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('mobile.dashboard') }}">لوحة التحكم</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">محتوى الصفحة الرئيسية</li>
-                    </ol>
-                </nav>
-                <div class="header-icon">
-                    <i class="bi bi-phone-vibrate"></i>
-                </div>
-                <h1 class="h2 fw-800 text-main mb-1">محتوى الصفحة الرئيسية <span style="color: var(--primary-green)">(الموبايل)</span></h1>
-                <p class="text-muted mb-0">تخصيص وإدارة الأقسام التي تظهر في شاشة التطبيق الرئيسية</p>
-            </div>
-        </div>
+@endsection
+@section('content')
+<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+    <div class="hero-content">
+        <div class="hero-greeting text-white-50">إدارة تطبيق الموبايل API Unit 📱</div>
+        <h1 class="hero-title">محتوى الصفحة الرئيسية</h1>
+        <p class="hero-subtitle">تخصيص الأقسام والكروت التي تظهر في شاشة التطبيق الرئيسية</p>
     </div>
+</div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show mb-4 mx-lg-4 rounded-4 shadow-sm border-0" role="alert" style="background: #ecfdf5; color: #065f46; border-right: 6px solid var(--primary-green) !important;">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div class="row px-lg-4 mt-2">
-        <div class="col-12">
-            
-            {{-- Ensan Pillars Section --}}
-            <div class="section-card-p animate-up" style="animation-delay: 0.1s">
-                <div class="card-header-premium">
-                    <h5><i class="bi bi-columns-gap"></i> أركان إنسان (Ensan Pillars)</h5>
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        {{-- 0. Integrated Services (Ensan Pillars) --}}
+        <div class="col-lg-12">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-grid-fill me-2 text-primary"></i> المبادرات المتكاملة (Ensan Pillars)</h5>
+                    <button class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addPillarModal">إضافة مبادرة جديدة <i class="bi bi-plus-lg"></i></button>
                 </div>
-                <div class="card-body-p">
-                    <div class="row g-4">
-                        @foreach($pillars as $pillar)
-                        <div class="col-lg-4">
-                            <form action="{{ route('mobile.pillars.update', $pillar->id) }}" method="POST" enctype="multipart/form-data">
-                                @csrf @method('PUT')
-                                <div class="pillar-item-card">
-                                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                                        <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: rgba(34, 197, 94, 0.1); color: var(--primary-green);">{{ $pillar->title }}</span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-p">عنوان الركن</label>
-                                        <input type="text" name="title" class="form-control form-control-p" 
-                                               value="{{ $pillar->title }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-p">الرابط الفريد (Slug)</label>
-                                        <input type="text" name="slug" class="form-control form-control-p" 
-                                               value="{{ $pillar->slug }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-p">وصف مختصر</label>
-                                        <textarea name="description" class="form-control form-control-p" rows="2" 
-                                                  placeholder="وصف للخدمة...">{{ $pillar->description }}</textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-p">أيقونة (Image)</label>
-                                        <input type="file" name="icon" class="form-control form-control-p mb-2">
-                                        @if($pillar->icon_path)
-                                        <div class="image-preview-wrapper mt-2">
-                                            <img src="{{ Storage::disk('public')->url($pillar->icon_path) }}" alt="preview">
-                                        </div>
-                                        @endif
-                                    </div>
-                                    <div class="mt-3 text-center">
-                                        <button type="submit" class="submit-btn-premium btn-sm py-2">
-                                            <i class="bi bi-save"></i> حفظ الركن
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- Campaigns Section --}}
-            <div class="section-card-p animate-up" style="animation-delay: 0.2s">
-                <div class="card-header-premium">
-                    <h5><i class="bi bi-megaphone"></i> حملات الصفحة الرئيسية (Campaigns Grid)</h5>
-                </div>
-                <div class="card-body-p">
-                    <div class="row g-4">
-                        @foreach($campaigns as $campaign)
-                        <div class="col-md-6 col-lg-3">
-                            <form action="{{ route('mobile.home_content.update', $campaign->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="pillar-item-card" style="background: #fff; border-style: dashed;">
-                                    <div class="mb-3">
-                                        <label class="form-label-p">عنوان الحملة</label>
-                                        <input type="text" name="title" class="form-control form-control-p" 
-                                               value="{{ $campaign->title }}">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-p">الرابط / الفلتر</label>
-                                        <input type="text" name="details" class="form-control form-control-p" 
-                                               value="{{ $campaign->details }}" placeholder="campaign_{{ $loop->index + 1 }}">
-                                    </div>
-                                    <div class="text-center">
-                                        <button type="submit" class="submit-btn-premium btn-sm py-2">
-                                            <i class="bi bi-arrow-repeat"></i> تحديث
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- Services Grid Section --}}
-            <div class="section-card-p animate-up" style="animation-delay: 0.3s">
-                <div class="card-header-premium">
-                    <h5><i class="bi bi-grid-3x3-gap"></i> الخدمات الرئيسية (Services Grid)</h5>
-                </div>
-                <div class="card-body-p">
+                <div class="p-4">
                     <div class="row g-3">
-                        @foreach($serviceItems as $service)
-                        <div class="col-md-4 col-lg-2">
-                            <form action="{{ route('mobile.home_content.update', $service->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="pillar-item-card p-3 text-center">
-                                    <label class="form-label-p d-block mb-2">اسم الخدمة</label>
-                                    <input type="text" name="title" class="form-control form-control-p text-center mb-2" 
-                                           value="{{ $service->title }}" placeholder="الاسم">
-                                    <button type="submit" class="btn btn-sm btn-outline-success border-0 p-0" title="حفظ"><i class="bi bi-check-circle"></i></button>
+                        @forelse($pillars as $pillar)
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column shadow-sm">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="rounded-circle border bg-white p-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                                            @if($pillar->icon_path)
+                                                <img src="{{ $pillar->icon_url }}" class="w-100 h-100 object-fit-contain">
+                                            @else
+                                                <i class="bi bi-grid text-muted"></i>
+                                            @endif
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold mb-1">{{ $pillar->title }}</h6>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary x-small">/{{ $pillar->slug }}</span>
+                                        </div>
+                                        @if(!$pillar->is_active)
+                                            <span class="badge bg-danger bg-opacity-10 text-danger x-small border border-danger border-opacity-25">غير نشط</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-muted small mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ $pillar->description }}</p>
+                                    <div class="d-flex gap-2 small mb-3">
+                                        <span class="text-info"><i class="bi bi-folder2-open me-1"></i> {{ $pillar->projects->count() }} مشاريع</span>
+                                        <span class="text-success"><i class="bi bi-gear me-1"></i> {{ $pillar->services->count() }} خدمات</span>
+                                    </div>
+                                    <div class="d-flex gap-2 justify-content-end mt-auto pt-2 border-top border-secondary border-opacity-25">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editPillarModal{{ $pillar->id }}">تعديل <i class="bi bi-pencil ms-1"></i></button>
+                                        <form action="{{ route('mobile.pillars.destroy', $pillar) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه المبادرة؟')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
-                            </form>
-                        </div>
-                        @endforeach
+                            </div>
+                        @empty
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="bi bi-grid-3x3-gap display-4 opacity-25 d-block mb-3"></i>
+                                لا يوجد مبادرات حالياً
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Gallery & Share Section --}}
-            <div class="row g-4 mb-4">
-                {{-- Gallery Section --}}
-                <div class="col-lg-6">
-                    <div class="section-card-p h-100 mb-0 animate-up">
-                        <div class="card-header-premium">
-                            <h5><i class="bi bi-images"></i> معرض الصور الرئيسي</h5>
-                        </div>
-                        <div class="card-body-p">
-                            <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <input type="hidden" name="type" value="gallery">
-                                <div class="mb-4">
-                                    <label class="form-label-p">أضف صور جديدة للمعرض</label>
-                                    <input type="file" name="image" class="form-control form-control-p mb-1">
-                                    <small class="text-muted">ارفع صورة واحدة في كل مرة للإضافة</small>
-                                </div>
-                                <div class="mt-4">
-                                    <button type="submit" class="submit-btn-premium w-100 justify-content-center">
-                                        <i class="bi bi-cloud-upload"></i> إضافة صورة للمعرض
-                                    </button>
-                                </div>
-                            </form>
-                                
-                            @if($gallery->count() > 0)
-                            <div class="row g-2 mt-4 p-3 bg-light rounded-4">
-                                <div class="col-12 mb-2"><label class="form-label-p">الصور الحالية</label></div>
-                                @foreach($gallery as $img)
-                                <div class="col-4">
-                                    <div class="position-relative group">
-                                        @if($img->image_path)
-                                        <img src="{{ Storage::disk('public')->url($img->image_path) }}" class="img-fluid rounded-3 border" style="height: 80px; width: 100%; object-fit: cover;">
-                                        <form action="{{ route('mobile.home_content.destroy', $img->id) }}" method="POST" class="position-absolute top-0 start-0 m-1">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm p-0 px-1 rounded-circle border-0" onclick="return confirm('حذف الصورة؟')">
-                                                <i class="bi bi-x"></i>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
-                    </div>
+        {{-- 6. Final Section --}}
+        <div class="col-lg-12">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-flag-fill me-2 text-danger"></i> القسم الأخير (Final Section)</h5>
                 </div>
-
-                {{-- Share Section --}}
-                <div class="col-lg-6">
-                    @php $share = $shareItems->first(); @endphp
-                    @if($share)
-                    <div class="section-card-p h-100 mb-0 animate-up">
-                        <div class="card-header-premium">
-                            <h5><i class="bi bi-share"></i> قسم "{{ $share->title }}"</h5>
+                <div class="p-4">
+                    @if($finalSection)
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border">
+                            <div class="rounded border bg-white overflow-hidden" style="width: 60px; height: 60px;">
+                                @if($finalSection->image_path)
+                                    <img src="{{ $finalSection->image_url }}" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-image"></i></div>
+                                @endif
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ $finalSection->title }}</h6>
+                                <p class="small text-muted mb-0 text-truncate" style="max-width: 200px;">{{ $finalSection->description }}</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary ms-auto rounded-pill" data-bs-toggle="modal" data-bs-target="#editFinalModal">تعديل</button>
                         </div>
-                        <div class="card-body-p">
-                            <form action="{{ route('mobile.home_content.update', $share->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="mb-4">
-                                    <label class="form-label-p">العنوان الرئيسي</label>
-                                    <input type="text" name="title" class="form-control form-control-p" 
-                                           value="{{ $share->title }}">
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label-p">النص الوصفي</label>
-                                    <textarea name="description" class="form-control form-control-p" rows="4">{{ $share->description }}</textarea>
-                                </div>
-                                <div class="mb-0">
-                                    <label class="form-label-p">نص زر المشاركة / الاتصال (تفاصيل)</label>
-                                    <input type="text" name="details" class="form-control form-control-p" 
-                                           value="{{ $share->details }}" placeholder="اتصل بنا">
-                                </div>
-                                <div class="mt-4">
-                                    <button type="submit" class="submit-btn-premium w-100 justify-content-center">
-                                        <i class="bi bi-check2-circle"></i> حفظ قسم المشاركة
-                                    </button>
-                                </div>
-                            </form>
+                    @else
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-3">لم يتم إعداد القسم الأخير بعد</p>
+                            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addFinalModal">إضافة القسم الأخير</button>
                         </div>
-                    </div>
                     @endif
                 </div>
             </div>
+        </div>
 
-            {{-- Final Footer Section --}}
-            <div class="section-card-p animate-up" style="animation-delay: 0.4s">
-                @if($finalSection)
-                <div class="card-header-premium">
-                    <h5><i class="bi bi-layout-text-window-reverse"></i> القسم الختامي (Final Section)</h5>
+        {{-- 2. Gallery Section --}}
+        <div class="col-lg-12">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-images me-2 text-info"></i> صور المعرض (Gallery)</h5>
+                    <button class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addGalleryModal">إضافة صورة <i class="bi bi-plus"></i></button>
                 </div>
-                <div class="card-body-p">
-                    <form action="{{ route('mobile.home_content.update', $finalSection->id) }}" method="POST">
-                        @csrf @method('PUT')
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label-p">العنوان الختامي</label>
-                                <input type="text" name="title" class="form-control form-control-p" 
-                                       value="{{ $finalSection->title }}">
+                <div class="p-4">
+                    <div class="row g-3">
+                        @forelse($gallery as $img)
+                            <div class="col-md-3 col-6">
+                                <div class="position-relative rounded-3 overflow-hidden border group" style="height: 150px;">
+                                    <img src="{{ $img->image_url }}" class="w-100 h-100 object-fit-cover">
+                                    <div class="position-absolute top-0 end-0 p-2">
+                                        <form action="{{ route('mobile.home_content.destroy', $img) }}" method="POST" onsubmit="return confirm('هل أنت متأكد؟')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger rounded-circle shadow-sm"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label-p">نص التذييل / الحقوق</label>
-                                <input type="text" name="description" class="form-control form-control-p" 
-                                       value="{{ $finalSection->description }}">
+                        @empty
+                            <div class="col-12 text-center py-4 text-muted">لا يوجد صور حالياً</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 3. Our Services Section --}}
+        <div class="col-lg-12">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-gear-fill me-2 text-success"></i> قسم خدماتنا</h5>
+                    <button class="btn btn-sm btn-success rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addServiceModal">إضافة خدمة <i class="bi bi-plus"></i></button>
+                </div>
+                <div class="p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>الصورة</th>
+                                    <th>الخدمة</th>
+                                    <th>سعر السهم</th>
+                                    <th class="text-center">الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($services as $item)
+                                    <tr>
+                                        <td>
+                                            <div class="rounded border bg-light overflow-hidden" style="width: 50px; height: 50px;">
+                                                @if($item->image_path)
+                                                    <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover">
+                                                @else
+                                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-image"></i></div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-white">{{ $item->title }}</div>
+                                            <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ $item->description }}</small>
+                                        </td>
+                                        <td class="text-white">{{ number_format($item->share_price) }} ج.م</td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editItemModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد؟')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 4. Share Section --}}
+        <div class="col-lg-6">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-heart-fill me-2 text-danger"></i> شارك بما لا تحتاجه</h5>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addShareModal">إضافة <i class="bi bi-plus"></i></button>
+                </div>
+                <div class="p-4">
+                    @forelse($shareItems as $item)
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-2">
+                             <div class="rounded border bg-white overflow-hidden" style="width: 50px; height: 50px;">
+                                @if($item->image_path)
+                                    <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-image"></i></div>
+                                @endif
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary rounded-pill">#{{ $item->sort_order }}</span>
+                                    <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                    @if($item->share_price)
+                                        <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
+                                    @endif
+                                </div>
+                                <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->description }}</small>
+                            </div>
+                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editShareModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                </form>
                             </div>
                         </div>
-                        <div class="mt-4 text-end">
-                            <button type="submit" class="submit-btn-premium">
-                                <i class="bi bi-save2"></i> حفظ القسم الأخير
-                            </button>
-                        </div>
-                    </form>
+                    @empty
+                        <p class="text-muted text-center py-3">لا يوجد عناصر</p>
+                    @endforelse
                 </div>
-                @endif
+            </div>
+        </div>
+
+        {{-- 5. Seasonal Campaigns Section --}}
+        <div class="col-lg-6">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event-fill me-2 text-warning"></i> حملات موسمية</h5>
+                    <button class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addCampaignModal">إضافة <i class="bi bi-plus"></i></button>
+                </div>
+                <div class="p-4">
+                    @forelse($campaigns as $item)
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 border mb-2">
+                             <div class="rounded border bg-white overflow-hidden" style="width: 50px; height: 50px;">
+                                @if($item->image_path)
+                                    <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-image"></i></div>
+                                @endif
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                @if($item->share_price)
+                                    <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
+                                @endif
+                                <small class="text-muted text-truncate d-block" style="max-width: 150px;">{{ $item->details }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editCampModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('mobile.home_content.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-muted text-center py-3">لا يوجد حملات حالياً</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        {{-- 7. About Us Section --}}
+        <div class="col-lg-12" id="about_us_section">
+            <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
+                <div class="p-4 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle-fill me-2 text-primary"></i> معلومات عنا (About Us)</h5>
+                </div>
+                <div class="p-4">
+                    @if($aboutUs)
+                        <div class="d-flex align-items-center gap-4 p-3 bg-body-quaternary rounded-3 border">
+                            <div class="rounded border bg-white overflow-hidden shadow-sm" style="width: 120px; height: 120px;">
+                                @if($aboutUs->image_path)
+                                    <img src="{{ $aboutUs->image_url }}" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted"><i class="bi bi-image fs-1"></i></div>
+                                @endif
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold fs-5">صورة "معلومات عنا" المعتمدة</h6>
+                                <p class="text-muted mb-0">تظهر هذه الصورة في شاشة "عن المؤسسة" في التطبيق.</p>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editAboutModal">تعديل <i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('mobile.home_content.destroy', $aboutUs) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا القسم؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 w-100">حذف <i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="bi bi-info-circle display-4 text-muted mb-3 d-block"></i>
+                            <p class="text-muted mb-3">لم يتم إعداد قسم "معلومات عنا" لهذا التطبيق</p>
+                            <button class="btn btn-primary rounded-pill px-5 shadow-sm" data-bs-toggle="modal" data-bs-target="#addAboutModal">إنشاء قسم معلومات عنا <i class="bi bi-plus-lg"></i></button>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+{{-- Modals --}}
+
+{{-- Integrated Services (Ensan Pillars) --}}
+@foreach($pillars as $pillar)
+    <div class="modal fade" id="editPillarModal{{ $pillar->id }}" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form action="{{ route('mobile.pillars.update', $pillar) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 overflow-hidden shadow-lg" style="border-radius: 24px;">
+                @csrf @method('PUT')
+                
+                {{-- Premium Header with Pattern --}}
+                <div class="modal-header border-0 position-relative p-4 overflow-hidden" style="background: linear-gradient(135deg, var(--ws-border) 0%, var(--ws-bg-card-header) 100%);">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.4\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E');"></div>
+                    <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i> تعديل مبادرة: {{ $pillar->title }}
+                            </h5>
+                            <p class="text-white-50 small mb-0 mt-1">تحديث بيانات وأيقونات المبادرة الأساسية</p>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+
+                {{-- Pillar Preview Banner (If cover exists) --}}
+                @if($pillar->cover_path)
+                    <div class="pillar-edit-banner position-relative" style="height: 120px;">
+                        <img src="{{ $pillar->cover_url }}" class="w-100 h-100 object-fit-cover opacity-50">
+                        <div class="position-absolute bottom-0 start-50 translate-middle-x bg-white p-2 rounded-circle shadow-lg border-4 border-white" style="margin-bottom: -30px;">
+                            <img src="{{ $pillar->icon_url }}" style="width: 60px; height: 60px;" class="object-fit-contain p-1">
+                        </div>
+                    </div>
+                @endif
+
+                <div class="modal-body p-4 {{ $pillar->cover_path ? 'pt-5' : '' }}">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-type me-1"></i> اسم المبادرة</label>
+                            <input type="text" name="title" class="form-control form-control-lg bg-light border-0" value="{{ $pillar->title }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-link-45deg me-1"></i> الرابط الفرعي (Slug)</label>
+                            <input type="text" name="slug" class="form-control form-control-lg bg-light border-0" value="{{ $pillar->slug }}" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted"><i class="bi bi-text-paragraph me-1"></i> الوصف التفصيلي</label>
+                            <textarea name="description" class="form-control bg-light border-0" rows="3" style="border-radius: 15px;">{{ $pillar->description }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 border bg-faded-success h-100">
+                                <label class="form-label small fw-bold d-block mb-2">الأيقونة (Icon)</label>
+                                <input type="file" name="icon" class="form-control form-control-sm">
+                                <p class="x-small text-muted mt-2 mb-0">يفضل استخدام أيقونة خضراء بخلفية شفافة</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 border bg-faded-primary h-100">
+                                <label class="form-label small fw-bold d-block mb-2">صورة الغلاف (Cover)</label>
+                                <input type="file" name="cover" class="form-control form-control-sm">
+                                <p class="x-small text-muted mt-2 mb-0">الأبعاد الموصى بها: 1200×600 بكسل</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">الترتيب</label>
+                            <input type="number" name="sort_order" class="form-control border-0 bg-light" value="{{ $pillar->sort_order }}">
+                        </div>
+
+
+                        <div class="col-md-12">
+                            <hr class="border-secondary opacity-25">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label small fw-bold text-muted mb-0"><i class="bi bi-wallet2 me-1"></i> كروت التبرع الخاصة بالمبادرة</label>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="addPillarCard('editCardsContainer{{ $pillar->id }}')"><i class="bi bi-plus"></i> إضافة كارت تبرع</button>
+                            </div>
+                            <div id="editCardsContainer{{ $pillar->id }}">
+                                @foreach($pillar->cards as $index => $card)
+                                    <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <small class="fw-bold text-muted card-number">كارد #{{ $index + 1 }}</small>
+                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this, 'editCardsContainer{{ $pillar->id }}')"><i class="bi bi-x-circle"></i></button>
+                                            </div>
+                                            <input type="hidden" name="cards[{{ $index }}][id]" value="{{ $card->id }}">
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <input type="text" name="cards[{{ $index }}][title]" class="form-control form-control-sm" value="{{ $card->title }}" placeholder="الاسم (مثال: حملة رمضان)" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="number" step="0.01" name="cards[{{ $index }}][price]" class="form-control form-control-sm" value="{{ $card->price }}" placeholder="سعر التبرع (مثال: 200)" required>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <input type="text" name="cards[{{ $index }}][description]" class="form-control form-control-sm" value="{{ $card->description }}" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
+                                                </div>
+                                                <div class="col-md-12 d-flex align-items-center gap-2">
+                                                    @if($card->image_path)
+                                                        <img src="{{ $card->image_url }}" alt="card image" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    @endif
+                                                    <div class="flex-grow-1">
+                                                        <label class="x-small text-muted mb-1 d-block">تغيير الصورة (اختياري)</label>
+                                                        <input type="file" name="cards[{{ $index }}][image]" class="form-control form-control-sm" accept="image/*">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="col-md-8 d-flex align-items-end">
+                            <div class="form-check form-switch p-3 bg-success bg-opacity-10 rounded-pill border border-success border-opacity-10 w-100 d-flex align-items-center justify-content-between px-4">
+                                <div>
+                                    <label class="form-check-label fw-bold text-success mb-0" for="activePillar{{ $pillar->id }}">تفعيل المبادرة</label>
+                                    <div class="x-small text-success text-opacity-75">هل تظهر في الشاشة الرئيسية للتطبيق؟</div>
+                                </div>
+                                <input class="form-check-input ms-0" style="width: 3em; height: 1.5em;" type="checkbox" name="is_active" id="activePillar{{ $pillar->id }}" value="1" {{ $pillar->is_active ? 'checked' : '' }}>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-light">
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold shadow-lg">حفظ التعديلات <i class="bi bi-check-circle ms-2"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
+<div class="modal fade" id="addPillarModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog modal-lg">
+        <form action="{{ route('mobile.pillars.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg">
+            @csrf
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white"><i class="bi bi-plus-square me-2"></i> إضافة مبادرة جديدة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">اسم المبادرة</label>
+                        <input type="text" name="title" class="form-control" placeholder="مثلاً: سُقاء الأمل" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الرابط الفرعي (Slug)</label>
+                        <input type="text" name="slug" class="form-control" placeholder="مثلاً: soqia-hope" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">الوصف التفصيلي (يظهر في صفحة التفاصيل)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="تحدث عن المبادرة وأهدافها ورسالتها..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الأيقونة (Icon - يفضل ستايل أخضر)</label>
+                        <input type="file" name="icon" class="form-control shadow-sm" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">صورة الغلاف (Cover - جودة عالية)</label>
+                        <input type="file" name="cover" class="form-control shadow-sm">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">الترتيب</label>
+                        <input type="number" name="sort_order" class="form-control" value="0">
+                    </div>
+
+                    <div class="col-md-12">
+                        <hr class="border-secondary opacity-25">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label small fw-bold text-muted mb-0"><i class="bi bi-wallet2 me-1"></i> كروت التبرع الخاصة بالمبادرة</label>
+                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill" onclick="addPillarCard('addCardsContainer')"><i class="bi bi-plus"></i> إضافة كارت تبرع</button>
+                        </div>
+                        <div id="addCardsContainer"></div>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end pb-2">
+                        <div class="form-check form-switch p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary w-100">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="newPillarActive" value="1" checked>
+                            <label class="form-check-label fw-bold ms-2" for="newPillarActive">تفعيل المبادرة فوراً</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold shadow-sm">إنشاء المبادرة الآن <i class="bi bi-save ms-2"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Services --}}
+@foreach($services as $item)
+    <div class="modal fade" id="editItemModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog">
+            <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+                @csrf @method('PUT')
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-white">تعديل الخدمة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">اسم الخدمة</label>
+                        <input type="text" name="title" class="form-control" value="{{ $item->title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الوصف</label>
+                        <textarea name="description" class="form-control" rows="3">{{ $item->description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">سعر سهم التبرع</label>
+                        <input type="number" name="share_price" class="form-control" value="{{ $item->share_price }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">تغيير الصورة</label>
+                        <input type="file" name="image" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 py-3 fw-bold">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
+{{-- Share Items --}}
+@foreach($shareItems as $item)
+    <div class="modal fade" id="editShareModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog">
+            <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+                @csrf @method('PUT')
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-white">تعديل العنصر</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" value="{{ $item->title }}" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="2">{{ $item->description }}</textarea></div>
+                    <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control" value="{{ $item->share_price }}"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">الترتيب</label><input type="number" name="sort_order" class="form-control" value="{{ $item->sort_order }}"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">تغيير الصورة</label><input type="file" name="image" class="form-control"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 py-3 fw-bold">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
+{{-- Campaigns --}}
+@foreach($campaigns as $item)
+    <div class="modal fade" id="editCampModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
+        <div class="modal-dialog">
+            <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+                @csrf @method('PUT')
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-white">تعديل الحملة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">اسم الحملة</label><input type="text" name="title" class="form-control" value="{{ $item->title }}" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">تفاصيل الحملة</label><textarea name="details" class="form-control" rows="2">{{ $item->details }}</textarea></div>
+                    <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control" value="{{ $item->share_price }}"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">تغيير الصورة</label><input type="file" name="image" class="form-control"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 w-100 py-3">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
+{{-- Final Section --}}
+<div class="modal fade" id="{{ $finalSection ? 'editFinalModal' : 'addFinalModal' }}" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ $finalSection ? route('mobile.home_content.update', $finalSection) : route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            @if($finalSection) @method('PUT') @endif
+            <input type="hidden" name="type" value="final">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">القسم الأخير</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3"><label class="form-label fw-bold">العنوان</label><input type="text" name="title" class="form-control" value="{{ $finalSection ? $finalSection->title : '' }}" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="3" required>{{ $finalSection ? $finalSection->description : '' }}</textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Gallery --}}
+<div class="modal fade" id="addGalleryModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            <input type="hidden" name="type" value="gallery">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">إضافة صورة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">الترتيب</label><input type="number" name="sort_order" class="form-control" value="0"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-info text-white fw-bold rounded-pill w-100 py-3">رفع</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="addServiceModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            <input type="hidden" name="type" value="service">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">إضافة خدمة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">سعر سهم التبرع</label><input type="number" name="share_price" class="form-control"></div>
+                <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-success fw-bold rounded-pill w-100 py-3">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="addShareModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            <input type="hidden" name="type" value="share">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">إضافة عنصر جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control"></div>
+                <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-danger fw-bold rounded-pill w-100 py-3">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="addCampaignModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            <input type="hidden" name="type" value="campaign">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">إضافة حملة موسمية</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3"><label class="form-label fw-bold">الاسم</label><input type="text" name="title" class="form-control" required></div>
+                <div class="mb-3"><label class="form-label fw-bold">التفاصيل</label><textarea name="details" class="form-control" rows="2"></textarea></div>
+                <div class="mb-3"><label class="form-label fw-bold">سعر السهم</label><input type="number" name="share_price" class="form-control"></div>
+                <div class="mb-3"><label class="form-label fw-bold">الصورة</label><input type="file" name="image" class="form-control" required></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill w-100 py-3">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="{{ $aboutUs ? 'editAboutModal' : 'addAboutModal' }}" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog">
+        <form action="{{ $aboutUs ? route('mobile.home_content.update', $aboutUs) : route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
+            @csrf
+            @if($aboutUs) @method('PUT') @endif
+            <input type="hidden" name="type" value="about_us">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-white">إدارة قسم "معلومات عنا"</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الصورة الرئيسية</label>
+                    <input type="file" name="image" class="form-control" accept="image/*" required>
+                    <div class="form-text small text-muted">يرجى اختيار الصورة التي تريد عرضها في قسم "معلومات عنا" بالكامل.</div>
+                </div>
+                @if($aboutUs && $aboutUs->image_path)
+                    <div class="mt-2 text-center">
+                        <img src="{{ $aboutUs->image_url }}" class="rounded shadow-sm" style="max-height: 100px;">
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer border-0">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 shadow-sm py-3 fw-bold">{{ $aboutUs ? 'حفظ التغييرات' : 'إنشاء القسم' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .glass-card { 
+        background: var(--bg-card) !important; 
+        border: 1px solid var(--gray-200) !important; 
+        border-radius: 20px; 
+        box-shadow: var(--shadow-sm); 
+    }
+    .modal-content { 
+        background-color: var(--bg-card) !important; 
+        border: 1px solid var(--gray-200) !important; 
+        border-radius: 20px !important; 
+        color: var(--dark) !important;
+        box-shadow: var(--shadow-lg) !important;
+        overflow: hidden;
+    }
+    .modal-header {
+        background: var(--bg-body) !important;
+        border-bottom: 1px solid var(--gray-200) !important;
+        color: var(--dark) !important;
+        padding: 1.5rem !important;
+    }
+    .modal-footer {
+        background: var(--bg-body) !important;
+        border-top: 1px solid var(--gray-200) !important;
+        padding: 1.2rem !important;
+    }
+    .modal-body {
+        background-color: var(--bg-card) !important;
+        color: var(--dark) !important;
+    }
+    .form-control, .form-select {
+        background-color: var(--bg-body) !important;
+        border: 1px solid var(--gray-200) !important;
+        color: var(--dark) !important;
+        padding: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+    .form-control:focus {
+        background-color: var(--bg-body) !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+    }
+    .modal-backdrop.show { 
+        backdrop-filter: blur(10px) !important; 
+        -webkit-backdrop-filter: blur(10px) !important; 
+        opacity: 0.9 !important; 
+        background-color: #000000 !important;
+    }
+    .animate-slide-up { animation: slideUp 0.5s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('.modal:visible').length ? $('.modal:visible').first() : $('body'),
+            dir: 'rtl'
+        });
+
+        $('.modal').on('shown.bs.modal', function () {
+            $(this).find('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $(this),
+                dir: 'rtl'
+            });
+        });
+    });
+
+    function addPillarCard(containerId) {
+        let container = document.getElementById(containerId);
+        let uniqueIndex = Date.now(); // Use timestamp for absolute uniqueness
+        let html = `
+            <div class="card bg-dark bg-opacity-25 border-secondary mb-3 shadow-sm card-row animate-slide-up">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="fw-bold text-muted card-number">كارد #</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 border-0" onclick="removePillarCard(this, '${containerId}')"><i class="bi bi-x-circle"></i></button>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" name="cards[${uniqueIndex}][title]" class="form-control form-control-sm" placeholder="الاسم (مثال: حملة رمضان)" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="number" step="0.01" name="cards[${uniqueIndex}][price]" class="form-control form-control-sm" placeholder="سعر التبرع (مثال: 200)" required>
+                        </div>
+                        <div class="col-md-12">
+                            <input type="text" name="cards[${uniqueIndex}][description]" class="form-control form-control-sm" placeholder="الوصف (مثال: الحملة جاهزة للبدء)">
+                        </div>
+                            <label class="x-small text-muted mb-1 d-block">الصورة</label>
+                            <input type="file" name="cards[${uniqueIndex}][image]" class="form-control form-control-sm" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        renumberPillarCards(containerId);
+    }
+
+    function removePillarCard(btn, containerId) {
+        btn.closest('.card-row').remove();
+        if (containerId) {
+            renumberPillarCards(containerId);
+        }
+    }
+
+    function renumberPillarCards(containerId) {
+        let container = document.getElementById(containerId);
+        if (!container) return;
+        let rows = container.querySelectorAll('.card-row');
+        rows.forEach((row, idx) => {
+            let label = row.querySelector('.card-number');
+            if (label) {
+                label.innerText = `كارد #${idx + 1}`;
+            }
+        });
+    }
+</script>
 @endsection
+
+
+
