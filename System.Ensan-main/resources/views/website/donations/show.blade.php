@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -186,146 +186,106 @@
     .x-small { font-size: 0.7rem; }
     .animate-reveal-right { animation: revealRight 1s both; }
     @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-      /* --- LIGHT MODE ADAPTATION --- */
+      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
       body:not(.theme-dark) {
           background-color: var(--ws-bg-page) !important;
           color: var(--ws-text-primary) !important;
       }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- GLOBAL LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .text-white, body:not(.theme-dark) .text-white-50 { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .premium-hero-sleek .text-white, body:not(.theme-dark) .premium-hero-sleek .text-white-50 { color: #fff !important; }
-      body:not(.theme-dark) .glass-card, 
+
+      /* Card & Container Overrides */
+      body:not(.theme-dark) .premium-card-dark,
+      body:not(.theme-dark) .news-card-premium,
+      body:not(.theme-dark) .request-card-premium,
+      body:not(.theme-dark) .dark-glass-card,
+      body:not(.theme-dark) .glass-card,
+      body:not(.theme-dark) .detail-box-lux,
+      body:not(.theme-dark) .stat-input-box,
+      body:not(.theme-dark) .gallery-card-lux,
+      body:not(.theme-dark) .empty-state-card-lux,
+      body:not(.theme-dark) .modal-content,
       body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .card,
-      body:not(.theme-dark) .stats-card-dark,
-      body:not(.theme-dark) .stats-inner-card,
-      body:not(.theme-dark) .project-card-admin,
-      body:not(.theme-dark) .campaign-card-lux,
-      body:not(.theme-dark) .guest-card-lux,
-      body:not(.theme-dark) .article-card-lux,
-      body:not(.theme-dark) .message-card-lux,
-      body:not(.theme-dark) .donation-card-lux,
-      body:not(.theme-dark) .bg-dark,
-      body:not(.theme-dark) .bg-slate-800,
-      body:not(.theme-dark) .bg-slate-900,
-      body:not(.theme-dark) .modal-content {
+      body:not(.theme-dark) .profile-strip-lux,
+      body:not(.theme-dark) .info-strip-premium,
+      body:not(.theme-dark) .modal-premium-dark {
           background: var(--ws-bg-card) !important;
+          background-color: var(--ws-bg-card) !important;
           border-color: var(--ws-border) !important;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+          color: var(--ws-text-primary) !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
       }
-      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control { background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
-      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
-      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
-      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
+
+      /* Input & Form Overrides */
+      body:not(.theme-dark) .field-lux,
+      body:not(.theme-dark) .form-control,
+      body:not(.theme-dark) .form-select,
+      body:not(.theme-dark) .stat-value-field,
+      body:not(.theme-dark) .stat-label-field,
+      body:not(.theme-dark) .field-value-lux {
+          background: var(--ws-bg-input) !important;
+          background-color: var(--ws-bg-input) !important;
+          color: var(--ws-text-primary) !important;
+          border-color: var(--ws-border) !important;
+      }
+
+      body:not(.theme-dark) .field-lux:focus {
+          border-color: var(--ws-primary) !important;
+          background: #fff !important;
+      }
+
+      /* Typography & Labels */
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50,
+      body:not(.theme-dark) .text-slate-300,
+      body:not(.theme-dark) .text-slate-400,
+      body:not(.theme-dark) .text-slate-500,
+      body:not(.theme-dark) .label-lux,
+      body:not(.theme-dark) .detail-label-sleek,
+      body:not(.theme-dark) .form-label {
+          color: var(--ws-text-secondary) !important;
+      }
+
+      body:not(.theme-dark) h1, 
+      body:not(.theme-dark) h2, 
+      body:not(.theme-dark) h3, 
+      body:not(.theme-dark) h4, 
+      body:not(.theme-dark) h5, 
+      body:not(.theme-dark) h6,
+      body:not(.theme-dark) .fw-bold.text-white {
+          color: var(--ws-text-primary) !important;
+      }
+
+      /* Hero Section (Keep Dark for Contrast) */
+      body:not(.theme-dark) .premium-hero-sleek h1,
+      body:not(.theme-dark) .premium-hero-sleek p,
+      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
+      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
+      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
+          color: #fff !important;
+      }
+
+      /* Table Overrides */
+      body:not(.theme-dark) .premium-table-dark thead th,
+      body:not(.theme-dark) .table thead th {
+          background: rgba(0,0,0,0.03) !important;
+          color: var(--ws-text-secondary) !important;
+      }
+
+      body:not(.theme-dark) .premium-table-dark tbody td,
+      body:not(.theme-dark) .table tbody td {
+          color: var(--ws-text-primary) !important;
+          border-bottom-color: var(--ws-border) !important;
+      }
+
+      /* Modal Specifics */
+      body:not(.theme-dark) .modal-header {
+          border-bottom-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .modal-footer {
+          border-top-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .btn-close {
+          filter: none !important;
+      }
 </style>
 @endsection
 

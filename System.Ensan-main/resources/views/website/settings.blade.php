@@ -15,17 +15,17 @@
                 <div class="col-lg-8 animate-reveal-right text-end">
                     <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="decoration-none" style="color: var(--ws-text-muted);">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active" style="color: var(--ws-text-primary);" aria-current="page">محتوى الصفحة الرئيسية</li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="decoration-none">لوحة التحكم</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">محتوى الصفحة الرئيسية</li>
                         </ol>
                     </nav>
                     <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium" style="color: var(--primary) !important;">
+                        <div class="badge-glass-premium">
                             <i class="bi bi-gear-wide-connected me-2"></i> إعدادات الموقع العام
                         </div>
                     </div>
-                    <h1 class="display-4 fw-800 mb-3 text-end" style="color: var(--ws-text-primary);">محتوى الصفحة الرئيسية</h1>
-                    <p class="lead mb-0 max-w-600 ms-auto me-0 text-end" style="color: var(--ws-text-secondary);">
+                    <h1 class="display-4 fw-800 mb-3 text-end">محتوى الصفحة الرئيسية</h1>
+                    <p class="lead mb-0 max-w-600 ms-auto me-0 text-end">
                         تحديث أرقام الإنجاز المباشرة والإعدادات العامة للموقع
                     </p>
                 </div>
@@ -114,7 +114,7 @@
                 </form>
 
                 {{-- Statistics Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.15s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="card-colored-premium mb-4 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.15s;">
                     @csrf
                     <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center ws-card-header">
                         <h5 class="mb-0 fw-bold text-white"><i class="bi bi-graph-up-arrow me-2 text-info"></i> أرقام الإنجازات (Stats)</h5>
@@ -145,10 +145,11 @@
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg">
-                                <div class="p-4 rounded-4 bg-light border text-center statistics-box h-100">
-                                    <input type="text" name="stats_volunteers_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_volunteers_label'] ?? 'المتطوعون' }}" placeholder="العنوان">
-                                    <input type="text" name="stats_volunteers" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_volunteers'] ?? '' }}">
-                                    <div class="mt-2 text-info"><i class="bi bi-heart fs-5"></i></div>
+                                    <div class="statistics-box p-4 rounded-4 bg-light border text-center h-100">
+                                        <input type="text" name="stats_volunteers_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_volunteers_label'] ?? 'المتطوعون' }}" placeholder="العنوان">
+                                        <input type="text" name="stats_volunteers" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_volunteers'] ?? '' }}">
+                                        <div class="mt-2 text-info"><i class="bi bi-heart fs-5"></i></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -443,12 +444,12 @@
     .premium-hero-sleek { 
         position: relative; 
         padding: 100px 0 120px; 
-        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-body) 100%); 
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
         border-radius: 0 0 60px 60px; 
         overflow: hidden; 
         z-index: 10; 
         box-shadow: var(--shadow-lg);
-        border-bottom: 1px solid var(--gray-200);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.1; pointer-events: none; }
     .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
@@ -512,15 +513,110 @@
         box-shadow: 0 10px 20px rgba(0,0,0,0.05);
     }
 
-    /* Dark Mode Support */
-    [data-bs-theme="dark"] .glass-card {
-        background: rgba(30, 41, 59, 0.7) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: #f8fafc;
+    .card-colored-premium {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
     }
-    [data-bs-theme="dark"] .bg-light { background-color: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.1) !important; }
-    [data-bs-theme="dark"] .statistics-box { border-color: rgba(255,255,255,0.1) !important; }
-    [data-bs-theme="dark"] input.form-control { color: var(--ws-text-primary) !important; }
+    .card-colored-premium .text-white,
+    .card-colored-premium h5,
+    .card-colored-premium .form-label,
+    .card-colored-premium input {
+        color: #fff !important;
+    }
+    .card-colored-premium .statistics-box {
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+
+      /* Card & Container Overrides */
+      body:not(.theme-dark) .premium-card-dark,
+      body:not(.theme-dark) .news-card-premium,
+      body:not(.theme-dark) .request-card-premium,
+      body:not(.theme-dark) .dark-glass-card,
+      body:not(.theme-dark) .glass-card:not(.card-colored-premium),
+      body:not(.theme-dark) .detail-box-lux,
+      body:not(.theme-dark) .stat-input-box,
+      body:not(.theme-dark) .gallery-card-lux,
+      body:not(.theme-dark) .empty-state-card-lux,
+      body:not(.theme-dark) .modal-content,
+      body:not(.theme-dark) .premium-modal-dark,
+      body:not(.theme-dark) .profile-strip-lux,
+      body:not(.theme-dark) .info-strip-premium,
+      body:not(.theme-dark) .modal-premium-dark {
+          background: var(--ws-bg-card) !important;
+          background-color: var(--ws-bg-card) !important;
+          border-color: var(--ws-border) !important;
+          color: var(--ws-text-primary) !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+      }
+
+      /* Input & Form Overrides */
+      body:not(.theme-dark) .field-lux,
+      body:not(.theme-dark) .form-control,
+      body:not(.theme-dark) .form-select,
+      body:not(.theme-dark) .stat-value-field,
+      body:not(.theme-dark) .stat-label-field,
+      body:not(.theme-dark) .ws-input {
+          background: var(--ws-bg-input) !important;
+          background-color: var(--ws-bg-input) !important;
+          color: var(--ws-text-primary) !important;
+          border-color: var(--ws-border) !important;
+      }
+
+      body:not(.theme-dark) .field-lux:focus {
+          border-color: var(--ws-primary) !important;
+          background: #fff !important;
+      }
+
+      /* Typography & Labels */
+      body:not(.theme-dark) .text-white:not(.card-colored-premium *),
+      body:not(.theme-dark) .text-white-50:not(.card-colored-premium *),
+      body:not(.theme-dark) .text-slate-300,
+      body:not(.theme-dark) .text-slate-400,
+      body:not(.theme-dark) .text-slate-500,
+      body:not(.theme-dark) .label-lux,
+      body:not(.theme-dark) .detail-label-sleek,
+      body:not(.theme-dark) .form-label:not(.card-colored-premium *),
+      body:not(.theme-dark) .ws-label {
+          color: var(--ws-text-secondary) !important;
+      }
+
+      body:not(.theme-dark) h1, 
+      body:not(.theme-dark) h2, 
+      body:not(.theme-dark) h3, 
+      body:not(.theme-dark) h4, 
+      body:not(.theme-dark) h5:not(.card-colored-premium *), 
+      body:not(.theme-dark) h6,
+      body:not(.theme-dark) .fw-bold.text-white:not(.card-colored-premium *) {
+          color: var(--ws-text-primary) !important;
+      }
+
+      /* Hero Section (Keep Dark for Contrast) */
+      body:not(.theme-dark) .premium-hero-sleek h1,
+      body:not(.theme-dark) .premium-hero-sleek p,
+      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
+      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
+      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
+          color: #fff !important;
+      }
+
+      /* Modal Specifics */
+      body:not(.theme-dark) .modal-header {
+          border-bottom-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .modal-footer {
+          border-top-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .btn-close {
+          filter: none !important;
+      }
 
     /* Campaign Card Preview Styles */
     .campaign-card {
