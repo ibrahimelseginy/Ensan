@@ -1,229 +1,149 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-<div class="donation-mgmt-page">
+<div class="website-donations-index">
     {{-- Premium Hero Section --}}
-    <div class="premium-hero-sleek" style="background: linear-gradient(135deg, #064e3b 0%, #059669 100%);">
+    <div class="premium-hero-sleek mb-4">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1" style="background: #10b981;"></div>
-            <div class="glow-orb-2" style="background: #34d399;"></div>
-            <div class="noise-overlay"></div>
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
         </div>
-        <div class="hero-content-wrapper container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8 animate-reveal-right text-end">
-                    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-white" aria-current="page">حسابات تبرعات الويبسايت</li>
-                        </ol>
-                    </nav>
-                    <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium">
-                            <i class="bi bi-wallet2 me-2"></i> تبرعات الموقع الإلكتروني
-                        </div>
-                    </div>
-                    <h1 class="display-4 fw-800 text-white mb-3 text-end">حسابات متبرعي الويب</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
-                        متابعة سجلات التبرعات القادمة عبر الموقع الإلكتروني والتحقق من المرفقات.
-                    </p>
-                </div>
+        <div class="container hero-content-wrapper text-center">
+            <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-center">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">سجلات تبرعات الموقع</li>
+                </ol>
+            </nav>
+            <div class="badge-glass-premium mb-3">
+                <i class="bi bi-wallet2 me-2"></i> سجلات التبرع الإلكتروني 💳
             </div>
+            <h1 class="display-5 fw-800 text-dark mb-3">متبرعو الموقع الإلكتروني</h1>
+            <p class="lead text-muted mb-0 max-w-600 mx-auto">
+                متابعة وإدارة نشاط المتبرعين عبر المنصة، تدقيق المرفقات، وإحصائيات الدعم الرقمي.
+            </p>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
-        <div class="card dark-glass-card border-0 shadow-lg">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" style="color: #e2e8f0;">
-                        <thead style="background: rgba(255,255,255,0.03);">
+    <div class="container-fluid py-4 px-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden animate-slide-up">
+            <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-activity me-2 text-primary"></i> النشاط المباشر للمتبرعين</h6>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-end">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-muted x-small fw-bold">اسم المتبرع</th>
+                            <th class="px-4 py-3 text-muted x-small fw-bold">رقم الهاتف</th>
+                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">عدد العمليات</th>
+                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">إجمالي المساهمات</th>
+                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        @forelse($donors as $donor)
                             <tr>
-                                <th class="px-4 py-3 border-0 text-end">اسم المتبرع</th>
-                                <th class="px-4 py-3 border-0 text-end">رقم الهاتف</th>
-                                <th class="px-4 py-3 border-0 text-end">عدد التبرعات</th>
-                                <th class="px-4 py-3 border-0 text-end">إجمالي التبرعات (الموثقة)</th>
-                                <th class="px-4 py-3 border-0 text-center">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($donors as $donor)
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <td class="px-4 py-3 text-end fw-bold">{{ $donor->name }}</td>
-                                <td class="px-4 py-3 text-end">{{ $donor->phone }}</td>
-                                <td class="px-4 py-3 text-end">
-                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ $donor->web_donations_count }}</span>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-circle-sm bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-person-check-fill"></i>
+                                        </div>
+                                        <span class="fw-bold text-dark">{{ $donor->name }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 text-end text-emerald fw-bold">
-                                    {{ number_format($donor->web_donations_sum_amount ?? 0, 2) }} ج.م
+                                <td class="px-4 py-3">
+                                    <span class="text-muted font-monospace x-small">{{ $donor->phone }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <a href="{{ route('website.donation-accounts.show', $donor) }}" class="btn btn-glass-purple btn-sm rounded-pill px-3">
-                                        <i class="bi bi-eye-fill me-1"></i> سجل التبرعات
+                                    <span class="badge bg-light text-primary border rounded-pill px-3 py-1 x-small fw-bold">
+                                        {{ $donor->web_donations_count }} مساهمة
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="fw-bold text-success">
+                                        {{ number_format($donor->web_donations_sum_amount ?? 0, 2) }}
+                                        <span class="x-small fw-normal">ج.م</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <a href="{{ route('website.donation-accounts.show', $donor) }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-xs x-small transition-all">
+                                        <i class="bi bi-receipt-cutoff me-1"></i> عرض السجل الكامل
                                     </a>
                                 </td>
                             </tr>
-                            @empty
+                        @empty
                             <tr>
-                                <td colspan="5" class="py-5 text-center text-muted">
-                                    <i class="bi bi-inbox display-4 d-block mb-3 opacity-25"></i>
-                                    لا توجد تبرعات مسجلة من الموقع حالياً
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="opacity-25 mb-3">
+                                        <i class="bi bi-clipboard2-x display-4"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-muted">لا يوجد سجلات تبرع حالياً</h6>
                                 </td>
                             </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="p-4 d-flex justify-content-center">
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($donors->hasPages())
+                <div class="p-4 border-top bg-light">
                     {{ $donors->links() }}
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 </div>
 
 <style>
-    :root {
-        --emerald-primary: #10b981;
-        --dark-bg: #0b0e14;
-        --card-dark: #1a1f2e;
-        --slate-900: #0f172a;
-        --slate-400: #94a3b8;
+    .website-donations-index { min-height: 100vh; }
+    .fw-800 { font-weight: 800; }
+    .x-small { font-size: 0.75rem; }
+    .max-w-600 { max-width: 600px; }
+    .transition-all { transition: all 0.3s ease; }
+    .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
+
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 80px 0 100px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
     }
-
-    .donation-mgmt-page { min-height: 100vh; background-color: var(--dark-bg); }
-
-    .premium-hero-sleek { position: relative; padding: 80px 0 100px; border-radius: 0 0 40px 40px; overflow: hidden; z-index: 10; }
-    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
     .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
     .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
-    .noise-overlay { position: absolute; inset: 0; opacity: 0.1; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3BaseFilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/baseFilter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
-    .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
-    .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #d1fae5; font-weight: 700; font-size: 0.85rem; }
-    .fw-800 { font-weight: 800; }
-    .max-w-600 { max-width: 600px; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
 
-    .dark-glass-card { background: var(--card-dark); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-    .btn-glass-purple { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); transition: 0.3s; }
-    .btn-glass-purple:hover { background: #7c3aed; color: white; transform: translateY(-2px); }
-    .text-emerald { color: #34d399 !important; }
+    .badge-glass-premium { 
+        background: var(--primary-light); 
+        border: 1px solid rgba(34, 197, 94, 0.1); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        display: inline-block;
+    }
 
-    .animate-reveal-right { animation: revealRight 1s both; }
-    @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-      
-      
-            
-      
+    .avatar-circle-sm {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
 
-      
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Card & Container Overrides */
-      body:not(.theme-dark) .premium-card-dark,
-      body:not(.theme-dark) .news-card-premium,
-      body:not(.theme-dark) .request-card-premium,
-      body:not(.theme-dark) .dark-glass-card,
-      body:not(.theme-dark) .glass-card,
-      body:not(.theme-dark) .detail-box-lux,
-      body:not(.theme-dark) .stat-input-box,
-      body:not(.theme-dark) .gallery-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .profile-strip-lux,
-      body:not(.theme-dark) .info-strip-premium,
-      body:not(.theme-dark) .modal-premium-dark {
-          background: var(--ws-bg-card) !important;
-          background-color: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          color: var(--ws-text-primary) !important;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
-      }
-
-      /* Input & Form Overrides */
-      body:not(.theme-dark) .field-lux,
-      body:not(.theme-dark) .form-control,
-      body:not(.theme-dark) .form-select,
-      body:not(.theme-dark) .stat-value-field,
-      body:not(.theme-dark) .stat-label-field {
-          background: var(--ws-bg-input) !important;
-          background-color: var(--ws-bg-input) !important;
-          color: var(--ws-text-primary) !important;
-          border-color: var(--ws-border) !important;
-      }
-
-      body:not(.theme-dark) .field-lux:focus {
-          border-color: var(--ws-primary) !important;
-          background: #fff !important;
-      }
-
-      /* Typography & Labels */
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50,
-      body:not(.theme-dark) .text-slate-300,
-      body:not(.theme-dark) .text-slate-400,
-      body:not(.theme-dark) .text-slate-500,
-      body:not(.theme-dark) .label-lux,
-      body:not(.theme-dark) .detail-label-sleek,
-      body:not(.theme-dark) .form-label {
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) h1, 
-      body:not(.theme-dark) h2, 
-      body:not(.theme-dark) h3, 
-      body:not(.theme-dark) h4, 
-      body:not(.theme-dark) h5, 
-      body:not(.theme-dark) h6,
-      body:not(.theme-dark) .fw-bold.text-white {
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Hero Section (Keep Dark for Contrast) */
-      body:not(.theme-dark) .premium-hero-sleek h1,
-      body:not(.theme-dark) .premium-hero-sleek p,
-      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-
-      /* Table Overrides */
-      body:not(.theme-dark) .premium-table-dark thead th,
-      body:not(.theme-dark) .table thead th {
-          background: rgba(0,0,0,0.03) !important;
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) .premium-table-dark tbody td,
-      body:not(.theme-dark) .table tbody td {
-          color: var(--ws-text-primary) !important;
-          border-bottom-color: var(--ws-border) !important;
-      }
-
-      /* Modal Specifics */
-      body:not(.theme-dark) .modal-header {
-          border-bottom-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .modal-footer {
-          border-top-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .btn-close {
-          filter: none !important;
-      }
-      </style>
+    .table thead th { border-bottom: none; }
+    .table tbody td { border-bottom: 1px solid #f2f2f2; }
+    .table-hover tbody tr:hover { background-color: rgba(34, 197, 94, 0.02); }
+</style>
 @endsection
-
-
-
-
-
-
-

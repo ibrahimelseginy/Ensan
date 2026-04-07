@@ -1,29 +1,295 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-<div class="container-fluid py-4 min-vh-100" style="background-color: #05070a;">
-    <div class="d-flex justify-content-between align-items-center mb-5 animate-reveal-down">
-        <div>
-            @if(isset($type) && $type == 'zad')
-                <h1 class="h2 fw-800 text-white mb-1">طلبات مشروع زاد <span class="text-danger-glow">(الموبايل)</span></h1>
-                <p class="text-white-50 small mb-0">إدارة طلبات المساعدة لمشروع زاد الأيتام القادمة من تطبيق الهاتف</p>
-            @elseif(isset($type) && $type == 'hope')
-                <h1 class="h2 fw-800 text-white mb-1">طلبات مشروع بعثاء الأمل <span class="text-danger-glow">(الموبايل)</span></h1>
-                <p class="text-white-50 small mb-0">إدارة طلبات المساعدة لمشروع بعثاء الأمل القادمة من تطبيق الهاتف</p>
-            @else
-                <h1 class="h2 fw-800 text-white mb-1">طلبات الحالات المستحقة <span class="text-danger-glow">(الموبايل)</span></h1>
-                <p class="text-white-50 small mb-0">إدارة طلبات المساعدة (زاد، الأمل، وغيرها) القادمة من تطبيق الهاتف</p>
-            @endif
-        </div>
-        <div class="glass-badge px-4 py-2">
-            <i class="bi bi-heart-fill me-2 text-danger"></i>
-            <span class="fw-bold">إجمالي الحالات:</span> {{ $applications->count() }}
+<style>
+    :root {
+        --primary-green: #22c55e;
+        --primary-hover: #16a34a;
+        --bg-light: #f9fafb;
+        --text-main: #111111;
+        --text-muted: #64748b;
+        --border-color: #e5e7eb;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        --danger: #ef4444;
+    }
+
+    body {
+        background-color: var(--bg-light) !important;
+        color: var(--text-main);
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    /* Page Header */
+    .premium-header-section {
+        background: white;
+        padding: 3rem 2rem;
+        border-radius: 0 0 40px 40px;
+        box-shadow: var(--card-shadow);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 3rem;
+    }
+
+    .glass-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        padding: 0.6rem 1.25rem;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    /* Case Application Cards */
+    .premium-case-card {
+        background: white;
+        border-radius: 28px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .premium-case-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--danger);
+        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-inner-top {
+        padding: 2rem;
+        flex-grow: 1;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .badge-premium {
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .status-pending { background: #f1f5f9; color: #64748b; }
+    .status-review { background: #fffbeb; color: #d97706; }
+    .status-success { background: #f0fdf4; color: #16a34a; }
+    .status-danger { background: #fef2f2; color: #dc2626; }
+
+    .case-type-pill {
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 800;
+        background: rgba(239, 68, 68, 0.05);
+        padding: 0.4rem 1rem;
+        border-radius: 100px;
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+
+    .card-user-info {
+        margin-bottom: 1.5rem;
+    }
+
+    .user-name {
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.25rem;
+        font-size: 1.25rem;
+    }
+
+    .user-phone {
+        color: var(--danger);
+        font-size: 1rem;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+    }
+
+    .location-tag {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .description-box {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1.25rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        border: 1px solid var(--border-color);
+        min-height: 80px;
+        line-height: 1.6;
+    }
+
+    .btn-details-glow {
+        background: white;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 0.9rem;
+        font-weight: 800;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-details-glow:hover {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+        transform: scale(1.02);
+    }
+
+    .card-inner-bottom {
+        padding: 1.25rem;
+        background: #f8fafc;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-action-card {
+        border-radius: 12px;
+        padding: 0.75rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .id-card-btn { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .id-card-btn:hover { background: #e2e8f0; transform: translateY(-2px); }
+    .report-btn { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .report-btn:hover { background: #fee2e2; transform: translateY(-2px); }
+
+    /* Modal Styling */
+    .modal-content-premium {
+        border-radius: 32px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header-premium {
+        background: #0066ff;
+        padding: 2rem;
+        color: white;
+        border: none;
+    }
+
+    .modal-body-premium {
+        padding: 2.5rem;
+        background: white;
+    }
+
+    .info-group label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+    }
+
+    .info-val {
+        color: var(--text-main);
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .message-box {
+        background: #f8fafc;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: var(--text-muted);
+        line-height: 1.7;
+    }
+
+    .admin-decisions-panel {
+        background: #fdfdfd;
+        border: 2px dashed var(--border-color);
+        border-radius: 20px;
+        padding: 1.75rem;
+        margin-top: 2rem;
+    }
+
+    .form-select-p {
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 0.75rem;
+        background: white;
+        font-weight: 700;
+    }
+
+    .btn-save-decision {
+        background: #00d1b2;
+        color: white;
+        border: none;
+        padding: 0.85rem 2.5rem;
+        border-radius: 12px;
+        font-weight: 800;
+        transition: all 0.3s ease;
+    }
+
+    .btn-save-decision:hover {
+        background: #00bfa5;
+        box-shadow: 0 10px 15px rgba(0, 209, 178, 0.2);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-up { animation: fadeInUp 0.6s ease forwards; }
+</style>
+
+<div class="container-fluid py-4 min-vh-100">
+    {{-- Header Content --}}
+    <div class="premium-header-section animate-up">
+        <div class="row align-items-center">
+            <div class="col-md-7 text-end">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2 justify-content-end">
+                        <li class="breadcrumb-item"><a href="{{ route('mobile.dashboard') }}" class="text-muted text-decoration-none small">لوحة التحكم</a></li>
+                        <li class="breadcrumb-item active text-danger fw-bold small">طلبات الحالات (الموبايل)</li>
+                    </ol>
+                </nav>
+                @if(isset($type) && $type == 'zad')
+                    <h1 class="h2 fw-800 text-main mb-1">طلبات مشروع <span style="color: var(--danger)">زاد الأيتام</span></h1>
+                    <p class="text-muted mb-0 small">إدارة طلبات المساعدة القادمة من تطبيق الهاتف</p>
+                @elseif(isset($type) && $type == 'hope')
+                    <h1 class="h2 fw-800 text-main mb-1">طلبات مشروع <span style="color: var(--danger)">بعثاء الأمل</span></h1>
+                    <p class="text-muted mb-0 small">إدارة طلبات المساعدة لبعثاء الأمل من التطبيق</p>
+                @else
+                    <h1 class="h2 fw-800 text-main mb-1">طلبات الحالات <span style="color: var(--danger)">المستحقة</span></h1>
+                    <p class="text-muted mb-0 small">إدارة طلبات المساعدة (زاد، الأمل، وغيرها) القادمة من الموبايل</p>
+                @endif
+            </div>
+            <div class="col-md-5 text-start mt-3 mt-md-0">
+                <div class="glass-badge px-4 py-2">
+                    <i class="bi bi-heart-pulse-fill me-2 fs-5"></i>
+                    <span class="fw-bold">إجمالي الحالات:</span> <span class="ms-1 fs-5">{{ $applications->count() }}</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 px-lg-4">
         @forelse($applications as $app)
         <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
             <div class="premium-case-card">
@@ -32,11 +298,11 @@
                         <span class="badge-premium @if($app->status == 'pending') status-pending @elseif($app->status == 'reviewed') status-review @elseif($app->status == 'accepted') status-success @else status-danger @endif">
                             {{ $app->status == 'pending' ? 'بانتظار المراجعة' : ($app->status == 'reviewed' ? 'قيد الدراسة' : ($app->status == 'accepted' ? 'مقبول' : 'مرفوض')) }}
                         </span>
-                        <div class="case-type-badge">
+                        <div class="case-type-pill text-uppercase">
                             @if($app->case_type == 'zad')
-                                <i class="bi bi-star-fill me-1"></i> زاد الأيتام
+                                <i class="bi bi-star-fill me-1"></i> زاد
                             @elseif($app->case_type == 'hope')
-                                <i class="bi bi-brightness-high-fill me-1"></i> بعثاء الأمل
+                                <i class="bi bi-brightness-high-fill me-1"></i> الأمل
                             @else
                                 <i class="bi bi-folder-fill me-1"></i> {{ $app->case_type }}
                             @endif
@@ -46,18 +312,18 @@
                     <div class="card-user-info">
                         <h4 class="user-name text-truncate" title="{{ $app->applicant_name }}">{{ $app->applicant_name }}</h4>
                         <p class="user-phone font-outfit">{{ $app->applicant_phone }}</p>
-                        <div class="location-tag x-small text-white-50">
-                            <i class="bi bi-geo-alt me-1"></i> {{ $app->governorate ?? 'غير محدد' }} - {{ $app->city ?? 'غير محدد' }}
+                        <div class="location-tag">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ $app->governorate ?? 'غير محدد' }} - {{ $app->city ?? 'غير محدد' }}
                         </div>
                     </div>
 
                     <div class="description-box mt-3">
-                        <p class="small mb-0">{{ Str::limit($app->description, 120) }}</p>
+                        <p class="small mb-0">{{ Str::limit($app->description, 100) }}</p>
                     </div>
 
                     <div class="mt-4">
                         <button class="btn btn-details-glow w-100" data-bs-toggle="modal" data-bs-target="#modal{{ $app->id }}">
-                            <i class="bi bi-file-earmark-medical me-2"></i> مراجعة الطلب بالكامل
+                            <i class="bi bi-clipboard2-pulse-fill me-2"></i> مراجعة الطلب بالتفصيل
                         </button>
                     </div>
                 </div>
@@ -66,20 +332,20 @@
                     <div class="row g-2">
                         <div class="col-6">
                             @if($app->id_image_path)
-                            <a href="{{ Storage::disk('public')->url($app->id_image_path) }}" target="_blank" class="btn btn-action-card id-card-btn w-100">
-                                <i class="bi bi-person-bounding-box"></i> صورة الهوية
+                            <a href="{{ Storage::disk('public')->url($app->id_image_path) }}" target="_blank" class="btn-action-card id-card-btn w-100">
+                                <i class="bi bi-person-video"></i> الهوية
                             </a>
                             @else
-                            <button disabled class="btn btn-action-card disabled-btn w-100">لا توجد صورة</button>
+                            <button disabled class="btn-action-card w-100 text-muted border-0 bg-light">لا توجد</button>
                             @endif
                         </div>
                         <div class="col-6">
                             @if($app->medical_report_path)
-                            <a href="{{ Storage::disk('public')->url($app->medical_report_path) }}" target="_blank" class="btn btn-action-card report-btn w-100">
-                                <i class="bi bi-file-earmark-medical-fill"></i> التقرير
+                            <a href="{{ Storage::disk('public')->url($app->medical_report_path) }}" target="_blank" class="btn-action-card report-btn w-100">
+                                <i class="bi bi-file-medical"></i> التقرير
                             </a>
                             @else
-                            <button disabled class="btn btn-action-card disabled-btn w-100">لا يوجد تقرير</button>
+                            <button disabled class="btn-action-card w-100 text-muted border-0 bg-light">لا يوجد</button>
                             @endif
                         </div>
                     </div>
@@ -90,68 +356,72 @@
         {{-- Detail Modal --}}
         <div class="modal fade" id="modal{{ $app->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="background-color: var(--ws-bg-page) !important; border-radius: 24px !important; overflow: hidden;">
-                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-heart-pulse-fill me-2"></i> دراسة حالة مستحقة (تطبيق)
+                <div class="modal-content modal-content-premium">
+                    <div class="modal-header modal-header-premium shadow-sm">
+                        <h5 class="modal-title fw-800">
+                            <i class="bi bi-heart-pulse-fill me-2"></i> دراسة حالة مستحقة من التطبيق
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-4" style="background-color: var(--ws-bg-page) !important;">
-                        <div class="row g-4 mb-4">
+                    <div class="modal-body modal-body-premium">
+                        <div class="row g-4 mb-4 pb-2 border-bottom border-light">
                             <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم مقدم الطلب</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $app->applicant_name }}</div>
+                                <label>إسم مقدم الطلب</label>
+                                <div class="info-val">{{ $app->applicant_name }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
-                                <div class="info-val font-outfit" style="color: #0066ff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $app->applicant_phone }}</div>
+                                <label>رقم الهاتف</label>
+                                <div class="info-val font-outfit" style="color: #0066ff;">{{ $app->applicant_phone }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">نوع المشروع</label>
-                                <div class="info-val text-uppercase" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $app->case_type }}</div>
+                                <label>نوع المشروع</label>
+                                <div class="info-val text-uppercase text-danger fw-800">{{ $app->case_type }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المحافظة</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $app->governorate ?? '-' }}</div>
+                                <label>المحافظة</label>
+                                <div class="info-val">{{ $app->governorate ?? '-' }}</div>
                             </div>
                             <div class="col-md-4 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدينة/المركز</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $app->city ?? '-' }}</div>
+                                <label>المدينة / المركز</label>
+                                <div class="info-val">{{ $app->city ?? '-' }}</div>
                             </div>
                             <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان بالتفصيل</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $app->address ?? '-' }}</div>
+                                <label>العنوان التفصيلي</label>
+                                <div class="info-val small">{{ $app->address ?? '-' }}</div>
                             </div>
                             <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">وصف الحالة والإحتياجات</label>
-                                <div class="message-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #94a3b8; line-height: 1.7;">
+                                <label>وصف الحالة والإحتياجات الاجتماعية / الصحية</label>
+                                <div class="message-box">
                                     {{ $app->description }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="admin-panel mt-5" style="background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.05);">
-                            <h6 class="mb-3" style="color: var(--ws-text-primary) !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;"><i class="bi bi-shield-lock me-2"></i> قرار الإدارة</h6>
+                        <div class="admin-decisions-panel">
+                            <h6 class="mb-4 fw-800 text-main"><i class="bi bi-shield-check-fill me-2 text-primary"></i> لجنة مراجعة الحالات</h6>
                             <form action="{{ route('mobile.case-applications.update', $app->id) }}" method="POST">
                                 @csrf @method('PATCH')
-                                <div class="row g-3">
+                                <div class="row g-4">
                                     <div class="col-md-6">
-                                        <label class="form-label small opacity-75" style="color: #94a3b8;">تغيير حالة الطلب</label>
-                                        <select name="status" class="form-select" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important;">
+                                        <label class="form-label small fw-bold text-muted mb-2">تحديث الحالة</label>
+                                        <select name="status" class="form-select form-select-p">
                                             <option value="pending" {{ $app->status == 'pending' ? 'selected' : '' }}>بانتظار المراجعة</option>
                                             <option value="reviewed" {{ $app->status == 'reviewed' ? 'selected' : '' }}>قيد الدراسة</option>
-                                            <option value="accepted" {{ $app->status == 'accepted' ? 'selected' : '' }}>مقبول (Accepted)</option>
-                                            <option value="rejected" {{ $app->status == 'rejected' ? 'selected' : '' }}>مرفوض (Rejected)</option>
+                                            <option value="accepted" {{ $app->status == 'accepted' ? 'selected' : '' }}>مقبول للتمويل</option>
+                                            <option value="rejected" {{ $app->status == 'rejected' ? 'selected' : '' }}>مرفوض (عدم استحقاق)</option>
                                         </select>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label small opacity-75" style="color: #94a3b8;">ملاحظات الباحث الاجتماعي / الإدارة</label>
-                                        <textarea name="admin_notes" class="form-control" rows="3" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important;">{{ $app->admin_notes }}</textarea>
+                                        <label class="form-label small fw-bold text-muted mb-2">ملاحظات الإدارة / الباحث</label>
+                                        <textarea name="admin_notes" class="form-control form-select-p" rows="3" placeholder="أدخل تفاصيل التقييم هنا...">{{ $app->admin_notes }}</textarea>
                                     </div>
-                                    <div class="col-12 mt-4 d-flex justify-content-between">
-                                        <button type="submit" class="btn" style="background: #00d1b2; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px 35px; font-weight: 700;">حفظ القرار والتعديلات</button>
-                                        <button type="button" class="btn" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px 20px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $app->id }}').submit()">حذف الطلب</button>
+                                    <div class="col-12 mt-4 d-flex justify-content-between align-items-center">
+                                        <button type="submit" class="btn btn-save-decision">
+                                            <i class="bi bi-save me-1"></i> حفظ القرار النهائي
+                                        </button>
+                                        <button type="button" class="btn btn-link text-danger text-decoration-none fw-bold" onclick="if(confirm('هل أنت متأكد من حذف هذا الطلب؟')) document.getElementById('del-form-{{ $app->id }}').submit()">
+                                            <i class="bi bi-trash3 me-1"></i> حذف الطلب نهائياً
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -164,221 +434,15 @@
             </div>
         </div>
         @empty
-        <div class="col-12 animate-up">
-            <div class="glass-card text-center py-5">
-                <i class="bi bi-heart-break display-4 text-white-50"></i>
-                <h5 class="text-white mt-4">لا توجد حالات حالياً</h5>
-                <p class="text-white-50">لم يقم أي مستخدم بطلب مساعدة لحالة مستحقة عبر التطبيق بعد.</p>
+        <div class="col-12 text-center py-5">
+            <div class="bg-white rounded-4 shadow-sm border p-5">
+                <i class="bi bi-clipboard-x display-1 text-muted opacity-25"></i>
+                <h5 class="text-muted mt-4">لا توجد طلبات حالات بانتظار الدراسة</h5>
+                <p class="text-muted small">لم يتم تقديم أي طلبات للحالات المستحقة عبر التطبيق حتى اللحظة.</p>
             </div>
         </div>
         @endforelse
     </div>
 </div>
 
-<style>
-    :root {
-        --dark-bg: #05070a;
-        --card-bg: var(--ws-bg-card-header);
-        --card-inner: var(--ws-border);
-        --primary: #3b82f6;
-        --danger: #ef4444;
-        --danger-glow: #f87171;
-        --success: #10b981;
-        --warning: #f59e0b;
-    }
-
-    body { background-color: var(--dark-bg); font-family: 'Tajawal', 'Outfit', sans-serif; }
-    .fw-800 { font-weight: 800; }
-    .text-danger-glow { color: var(--danger-glow); }
-    .font-outfit { font-family: 'Outfit', sans-serif; }
-
-    /* Header & Badge */
-    .glass-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 100px; color: var(--ws-text-primary); backdrop-filter: blur(10px); }
-
-    /* Premium Card Design */
-    .premium-case-card {
-        background: var(--card-bg);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 24px;
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .premium-case-card:hover {
-        transform: translateY(-10px);
-        border-color: var(--danger);
-        box-shadow: 0 20px 50px rgba(239, 68, 68, 0.15);
-    }
-
-    .card-inner-top { padding: 24px; flex-grow: 1; }
-    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    
-    .badge-premium { padding: 6px 14px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; }
-    .status-pending { background: rgba(255,255,255,0.1); color: var(--ws-text-primary); }
-    .status-review { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-    .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .status-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-
-    .case-type-badge { color: var(--danger-glow); font-size: 0.8rem; font-weight: 700; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 8px; }
-
-    .card-user-info { margin-bottom: 15px; }
-    .user-name { font-weight: 700; color: var(--ws-text-primary); margin-bottom: 2px; }
-    .user-phone { color: var(--danger-glow); font-size: 0.9rem; margin-bottom: 5px; }
-
-    .description-box { background: rgba(0,0,0,0.2); border-radius: 14px; padding: 15px; color: #94a3b8; border: 1px solid rgba(255,255,255,0.03); min-height: 80px; }
-
-    .btn-details-glow { background: rgba(255,255,255,0.05); color: var(--ws-text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-weight: 600; transition: 0.3s; }
-    .btn-details-glow:hover { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-
-    .card-inner-bottom { background: rgba(0,0,0,0.3); padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .btn-action-card { border-radius: 12px; padding: 10px; font-weight: 700; font-size: 0.8rem; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
-    .id-card-btn { background: #334155; color: var(--ws-text-primary); }
-    .id-card-btn:hover { background: #475569; transform: scale(1.03); }
-    .report-btn { background: #991b1b; color: var(--ws-text-primary); }
-    .report-btn:hover { background: #b91c1c; transform: scale(1.03); }
-    .disabled-btn { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.2); }
-
-    /* Modal Styling */
-    .premium-modal { background: #000000 !important; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 30px; overflow: hidden; box-shadow: 0 0 120px #000 !important; }
-    .shadow-danger { box-shadow: 0 0 100px rgba(0, 0, 0, 0.9) !important; }
-    .premium-modal .modal-header { background: #1a0505 !important; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px; }
-    .premium-modal .modal-body { padding: 35px; background: #000000 !important; position: relative; z-index: 1000; }
-    
-    .info-group label { display: block; color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
-    .info-val { color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600; }
-    .message-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; color: #94a3b8; line-height: 1.7; }
-
-    .admin-panel { background: rgba(0,0,0,0.25); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); }
-    .dark-input { background: var(--ws-bg-page) !important; border: 1px solid var(--ws-border) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important; }
-    .btn-save-premium-danger { background: var(--danger); color: var(--ws-text-primary); border: none; border-radius: 100px; padding: 12px 35px; font-weight: 700; transition: 0.3s; }
-    .btn-save-premium-danger:hover { background: #dc2626; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3); }
-    .btn-delete-danger { background: transparent; color: var(--danger); border: none; font-weight: 600; opacity: 0.7; transition: 0.3s; }
-
-    .glass-card { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 30px; }
-
-    /* Animations */
-    .animate-reveal-down { animation: revealDown 1s both; }
-    .animate-up { animation: fadeInUp 0.8s both; }
-    @keyframes revealDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-</style>
 @endsection
-
-
-

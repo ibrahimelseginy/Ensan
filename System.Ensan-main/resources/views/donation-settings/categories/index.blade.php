@@ -1,156 +1,178 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-<div class="donation-settings-page">
-    {{-- Hero --}}
-    <div class="premium-hero-sleek" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);">
+<div class="donation-categories-page">
+    {{-- Premium Hero Section --}}
+    <div class="premium-hero-sleek mb-4">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1" style="background:#7c3aed;"></div>
-            <div class="glow-orb-2" style="background:#a78bfa;"></div>
-            <div class="noise-overlay"></div>
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
         </div>
-        <div class="hero-content-wrapper container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8 animate-reveal text-end">
-                    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-white">إعدادات التبرع</li>
-                        </ol>
-                    </nav>
-                    <h1 class="display-5 fw-800 text-white mb-2">تصنيفات التبرع</h1>
-                    <p class="lead text-white-50 mb-0">إدارة وترتيب تصنيفات التبرع التي تظهر على صفحة التبرع.</p>
-                </div>
+        <div class="container hero-content-wrapper text-center">
+            <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-center">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تصنيفات التبرع</li>
+                </ol>
+            </nav>
+            <div class="badge-glass-premium mb-3">
+                <i class="bi bi-tag-fill me-2"></i> هيكلة أوجه العطاء 🏷️
             </div>
+            <h1 class="display-5 fw-800 text-dark mb-3">تصنيفات التبرع</h1>
+            <p class="lead text-muted mb-0 max-w-600 mx-auto">
+                إدارة التصنيفات الرئيسية التي تظهر للمتبرع، وترتيب ظهورها في قوائم "أوجه التبرع".
+            </p>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 px-lg-5">
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                    <div>{{ session('success') }}</div>
+                </div>
             </div>
         @endif
 
         <div class="row g-4">
-            {{-- Add Category Card --}}
+            {{-- Add Category Column --}}
             <div class="col-lg-4">
-                <div class="card dark-glass-card border-0 shadow-lg h-100">
-                    <div class="card-header-lux">
-                        <h5 class="mb-0 text-white fw-bold"><i class="bi bi-plus-circle me-2 text-purple"></i> إضافة تصنيف جديد</h5>
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="p-4 border-bottom bg-white">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-primary"></i> إضافة تصنيف جديد</h6>
                     </div>
-                    <div class="card-body-lux">
+                    <div class="card-body p-4">
                         <form action="{{ route('website.donation-settings.categories.store') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label class="label-lux">اسم التصنيف *</label>
-                                <input type="text" name="name" class="form-control form-input-dark" placeholder="مثال: المشاريع" required>
+                                <label class="form-label x-small fw-bold text-muted">اسم التصنيف (مثل: الإطعام، الوقف)</label>
+                                <input type="text" name="name" class="form-control" placeholder="أدخل الاسم..." required>
                             </div>
                             <div class="mb-3">
-                                <label class="label-lux">الترتيب</label>
-                                <input type="number" name="sort_order" class="form-control form-input-dark" value="0">
+                                <label class="form-label x-small fw-bold text-muted">ترتيب الظهور</label>
+                                <input type="number" name="sort_order" class="form-control" value="0">
                             </div>
                             <div class="mb-4">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="status" id="catStatus" checked>
-                                    <label class="form-check-label text-white-50" for="catStatus">مفعّل</label>
+                                <div class="form-check form-switch custom-switch">
+                                    <input class="form-check-input" type="checkbox" name="status" id="catStatus" value="1" checked>
+                                    <label class="form-check-label x-small fw-bold text-muted ms-2" for="catStatus">تفعيل الظهور في الموقع</label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-purple-solid w-100"><i class="bi bi-plus me-2"></i>إضافة</button>
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">
+                                <i class="bi bi-plus-lg me-1"></i> إضافة التصنيف
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {{-- Categories List --}}
+            {{-- Categories List Column --}}
             <div class="col-lg-8">
-                <div class="card dark-glass-card border-0 shadow-lg">
-                    <div class="card-header-lux d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-white fw-bold"><i class="bi bi-tags me-2 text-warning"></i> التصنيفات الحالية ({{ $categories->count() }})</h5>
-                        <a href="{{ route('website.donation-settings.items.index') }}" class="btn btn-sm btn-outline-info rounded-pill px-3">
-                            <i class="bi bi-grid me-1"></i> عناصر التبرع
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden animate-slide-up">
+                    <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-tags-fill me-2 text-primary"></i> التصنيفات الحالية</h6>
+                        <a href="{{ route('website.donation-settings.items.index') }}" class="btn btn-outline-primary rounded-pill px-3 py-1 x-small fw-bold transition-all">
+                            إدارة البنود الفرعية <i class="bi bi-arrow-left ms-1"></i>
                         </a>
                     </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0" style="color:#e2e8f0;">
-                            <thead style="background:rgba(255,255,255,0.03);">
+                        <table class="table table-hover align-middle mb-0 text-end">
+                            <thead class="bg-light">
                                 <tr>
-                                    <th class="px-4 py-3 border-0">الاسم</th>
-                                    <th class="px-4 py-3 border-0">المعرف (Slug)</th>
-                                    <th class="px-4 py-3 border-0 text-center">العناصر</th>
-                                    <th class="px-4 py-3 border-0 text-center">الترتيب</th>
-                                    <th class="px-4 py-3 border-0 text-center">الحالة</th>
-                                    <th class="px-4 py-3 border-0 text-center">الإجراءات</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold font-tajawal">التصنيف</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold font-tajawal">الرابط (Slug)</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center font-tajawal">البنود</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center font-tajawal">الحالة</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center font-tajawal">الإجراءات</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="border-top-0">
                                 @forelse($categories as $category)
-                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                                    <td class="px-4 py-3 fw-bold">{{ $category->name }}</td>
-                                    <td class="px-4 py-3"><code class="text-info">{{ $category->slug }}</code></td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $category->items->count() }}</span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">{{ $category->sort_order }}</td>
-                                    <td class="px-4 py-3 text-center">
-                                        <form action="{{ route('website.donation-settings.categories.toggle', $category) }}" method="POST" class="d-inline">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="badge border-0 {{ $category->status ? 'bg-success-glass text-emerald' : 'bg-danger-glass text-danger' }} rounded-pill px-3 py-2">
-                                                {{ $category->status ? 'مفعّل' : 'معطّل' }}
-                                            </button>
-                                        </form>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button class="btn btn-sm btn-outline-warning rounded-pill px-2"
-                                                data-bs-toggle="modal" data-bs-target="#editCat{{ $category->id }}"
-                                                title="تعديل"><i class="bi bi-pencil"></i></button>
-                                            <form action="{{ route('website.donation-settings.categories.destroy', $category) }}" method="POST"
-                                                onsubmit="return confirm('حذف هذا التصنيف وجميع عناصره؟')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2" title="حذف">
-                                                    <i class="bi bi-trash"></i>
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="dot {{ $category->status ? 'bg-primary' : 'bg-secondary opacity-25' }}"></div>
+                                                <span class="fw-bold text-dark">{{ $category->name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <code class="x-small text-muted bg-light px-2 py-1 rounded">{{ $category->slug }}</code>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 x-small fw-bold">
+                                                {{ $category->items->count() }} عنصر
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <form action="{{ route('website.donation-settings.categories.toggle', $category) }}" method="POST">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" class="btn btn-sm border-0 bg-transparent p-0">
+                                                    @if($category->status)
+                                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 x-small fw-bold">نشط</span>
+                                                    @else
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 x-small fw-bold">معطّل</span>
+                                                    @endif
                                                 </button>
                                             </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {{-- Edit Modal --}}
-                                <div class="modal fade" id="editCat{{ $category->id }}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content" style="background:#1a1f2e;color:#e2e8f0;">
-                                            <div class="modal-header border-0">
-                                                <h5 class="modal-title">تعديل: {{ $category->name }}</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-icon-light rounded-pill" data-bs-toggle="modal" data-bs-target="#editCat{{ $category->id }}">
+                                                    <i class="bi bi-pencil-fill text-warning"></i>
+                                                </button>
+                                                <form action="{{ route('website.donation-settings.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('حذف هذا التصنيف وجميع البنود الفرعية التابعة له؟')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-icon-light rounded-pill">
+                                                        <i class="bi bi-trash-fill text-danger"></i>
+                                                    </button>
+                                                </form>
                                             </div>
-                                            <form action="{{ route('website.donation-settings.categories.update', $category) }}" method="POST">
-                                                @csrf @method('PUT')
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="label-lux">الاسم</label>
-                                                        <input type="text" name="name" value="{{ $category->name }}" class="form-control form-input-dark" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="label-lux">الترتيب</label>
-                                                        <input type="number" name="sort_order" value="{{ $category->sort_order }}" class="form-control form-input-dark">
-                                                    </div>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox" name="status" {{ $category->status ? 'checked' : '' }}>
-                                                        <label class="form-check-label text-white-50">مفعّل</label>
-                                                    </div>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Edit Modal --}}
+                                    <div class="modal fade" id="editCat{{ $category->id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                                <div class="modal-header border-0 p-4 pb-0">
+                                                    <h5 class="modal-title fw-bold">تعديل التصنيف: {{ $category->name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <div class="modal-footer border-0">
-                                                    <button type="submit" class="btn btn-purple-solid">حفظ التعديلات</button>
-                                                </div>
-                                            </form>
+                                                <form action="{{ route('website.donation-settings.categories.update', $category) }}" method="POST">
+                                                    @csrf @method('PUT')
+                                                    <div class="modal-body p-4 text-end">
+                                                        <div class="mb-3">
+                                                            <label class="form-label x-small fw-bold text-muted">اسم التصنيف</label>
+                                                            <input type="text" name="name" value="{{ $category->name }}" class="form-control" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label x-small fw-bold text-muted">ترتيب الظهور</label>
+                                                            <input type="number" name="sort_order" value="{{ $category->sort_order }}" class="form-control">
+                                                        </div>
+                                                        <div class="form-check form-switch custom-switch">
+                                                            <input class="form-check-input" type="checkbox" name="status" id="editCatStatus{{ $category->id }}" value="1" {{ $category->status ? 'checked' : '' }}>
+                                                            <label class="form-check-label x-small fw-bold text-muted ms-2" for="editCatStatus{{ $category->id }}">تفعيل التصنيف</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0 p-4 pt-0">
+                                                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold x-small" data-bs-dismiss="modal">إلغاء</button>
+                                                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold x-small shadow-sm">تحديث التصنيف</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                                 @empty
-                                <tr><td colspan="6" class="py-5 text-center text-muted">لا توجد تصنيفات بعد</td></tr>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="opacity-25 mb-3">
+                                                <i class="bi bi-tag display-4"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-muted">لا يوجد تصنيفات حالياً</h6>
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -162,142 +184,57 @@
 </div>
 
 <style>
-    .donation-settings-page { min-height:100vh; background:#0b0e14; font-family:'Tajawal',sans-serif; }
-    .premium-hero-sleek { position:relative; padding:60px 0 80px; border-radius:0 0 30px 30px; overflow:hidden; }
-    .hero-bg-visuals div { position:absolute; border-radius:50%; filter:blur(100px); opacity:0.4; }
-    .glow-orb-1 { width:400px; height:400px; top:-100px; right:-50px; }
-    .glow-orb-2 { width:300px; height:300px; bottom:-150px; left:-50px; }
-    .noise-overlay { position:absolute; inset:0; opacity:0.05; }
-    .hero-content-wrapper { position:relative; z-index:5; padding:0 5%; }
-    .fw-800 { font-weight:800; }
-    .animate-reveal { animation:revealRight 1s both; }
-    @keyframes revealRight { from{opacity:0;transform:translateX(50px)} to{opacity:1;transform:translateX(0)} }
+    .donation-categories-page { min-height: 100vh; }
+    .fw-800 { font-weight: 800; }
+    .x-small { font-size: 0.75rem; }
+    .max-w-600 { max-width: 600px; }
+    .transition-all { transition: all 0.3s ease; }
+    .font-tajawal { font-family: 'Tajawal', sans-serif !important; }
 
-    .dark-glass-card { background:#1a1f2e; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); }
-    .card-header-lux { padding:20px; border-bottom:1px solid rgba(255,255,255,0.05); }
-    .card-body-lux { padding:20px; }
-    .label-lux { color:#94a3b8; font-weight:700; font-size:0.8rem; margin-bottom:5px; display:block; }
-    .form-input-dark { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#f8fafc; border-radius:10px; }
-    .form-input-dark:focus { background:rgba(255,255,255,0.08); border-color:#7c3aed; color:#f8fafc; box-shadow:0 0 0 3px rgba(124,58,237,0.2); }
-    .btn-purple-solid { background:#7c3aed; border:none; color:#fff; border-radius:12px; padding:10px 20px; font-weight:700; transition:0.3s; }
-    .btn-purple-solid:hover { background:#6d28d9; color:#fff; transform:translateY(-2px); }
-    .text-purple { color:#a78bfa; }
-    .bg-success-glass { background:rgba(16,185,129,0.15); }
-    .bg-danger-glass { background:rgba(239,68,68,0.15); }
-    .text-emerald { color:#34d399!important; }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 50px 0 70px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
+    }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
+    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
+    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
+
+    .badge-glass-premium { 
+        background: var(--primary-light); 
+        border: 1px solid rgba(34, 197, 94, 0.1); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        display: inline-block;
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .btn-icon-light {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #eee;
+    }
+    .btn-icon-light:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-light); }
+
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .custom-switch .form-check-input { width: 2.8rem; height: 1.4rem; cursor: pointer; }
+    .table thead th { border-bottom: none; }
+    .table tbody td { border-bottom: 1px solid #f2f2f2; }
 </style>
 @endsection
-
-

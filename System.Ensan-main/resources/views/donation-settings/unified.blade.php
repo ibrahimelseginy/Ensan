@@ -1,452 +1,176 @@
 @extends('layouts.app')
 
-@section('styles')
-<style>
-    :root {
-        --glass-bg: rgba(255, 255, 255, 0.03);
-        --glass-border: rgba(255, 255, 255, 0.08);
-        --purple-glow: rgba(139, 92, 246, 0.3);
-        --cyan-glow: rgba(6, 182, 212, 0.3);
-        --emerald-glow: rgba(16, 185, 129, 0.3);
-    }
-
-    .unified-layout {
-        display: grid;
-        grid-template-columns: 320px 1fr;
-        gap: 2rem;
-        min-height: calc(100vh - 120px);
-    }
-
-    /* Left Sidebar: Categories */
-    .categories-sidebar {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 24px;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        backdrop-filter: blur(10px);
-    }
-
-    .category-item {
-        padding: 1.2rem;
-        border-radius: 16px;
-        border: 1px solid transparent;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: rgba(255, 255, 255, 0.02);
-        color: #94a3b8;
-        text-decoration: none;
-    }
-
-    .category-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: var(--glass-border);
-        transform: translateX(-5px);
-        color: #fff;
-    }
-
-    .category-item.active {
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.1));
-        border-color: rgba(139, 92, 246, 0.3);
-        color: #fff;
-        box-shadow: 0 0 20px var(--purple-glow);
-    }
-
-    /* Premium Modal Styling */
-    .btn-save-premium {
-        background-color: #00d1b2 !important;
-        border: none !important;
-        color: white !important;
-        font-weight: 700 !important;
-        padding: 10px 25px !important;
-        border-radius: 8px !important;
-    }
-    .btn-cancel-premium {
-        background-color: #363636 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        color: white !important;
-        font-weight: 700 !important;
-        padding: 10px 20px !important;
-        border-radius: 8px !important;
-    }
-
-    /* Main Content Area */
-    .items-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .sector-header {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 24px;
-        padding: 2.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .sector-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, var(--purple-glow) 0%, transparent 70%);
-        opacity: 0.1;
-        z-index: 0;
-    }
-
-    .item-card {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        position: relative;
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-    }
-
-    .item-card:hover {
-        border-color: rgba(6, 182, 212, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-        transform: translateY(-5px);
-    }
-
-    .item-card-dark {
-        background: rgba(15, 23, 42, 0.9) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-
-    .item-card-dark .item-info h5 {
-        color: #fff !important;
-    }
-
-    .item-card-dark .item-info p {
-        color: #94a3b8 !important;
-    }
-
-    /* Missing Premium Styles */
-    .label-lux {
-        display: block;
-        margin-bottom: 8px;
-        color: #94a3b8;
-        font-weight: 500;
-        font-size: 0.9rem;
-    }
-
-    .form-input-dark {
-        background: rgba(15, 23, 42, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-        border-radius: 12px !important;
-        padding: 12px 15px !important;
-        transition: all 0.3s ease;
-    }
-
-    .form-input-dark:focus {
-        background: rgba(15, 23, 42, 0.8) !important;
-        border-color: var(--primary-accent) !important;
-        box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1) !important;
-        outline: none;
-    }
-
-    .dark-glass-card {
-        background: rgba(15, 23, 42, 0.9) !important;
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 24px !important;
-    }
-
-    .modal-header.border-0 {
-        padding: 30px 30px 10px;
-    }
-
-    .modal-body.p-4 {
-        padding: 30px !important;
-    }
-
-    .modal-footer.border-0 {
-        padding: 10px 30px 30px;
-    }
-
-    .btn-lux {
-        background: var(--primary-accent);
-        color: #0f172a;
-        border: none;
-        padding: 12px 25px;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .btn-lux:hover {
-        background: #22d3ee;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
-    }
-
-    .item-icon-box {
-        width: 80px;
-        height: 80px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.05);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        border: 1px solid var(--glass-border);
-    }
-
-    .item-icon-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .item-info {
-        flex: 1;
-    }
-
-    .item-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn-lux {
-        padding: 0.6rem 1.2rem;
-        border-radius: 12px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border: 1px solid transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn-lux-primary {
-        background: linear-gradient(135deg, #8b5cf6, #06b6d4);
-        color: white;
-        border: none;
-    }
-
-    .btn-lux-primary:hover {
-        box-shadow: 0 0 15px var(--purple-glow);
-        transform: scale(1.02);
-    }
-
-    .empty-state {
-        padding: 5rem;
-        text-align: center;
-        border: 2px dashed var(--glass-border);
-        border-radius: 24px;
-        color: #64748b;
-    }
-
-    @media (max-width: 992px) {
-        .unified-layout {
-            grid-template-columns: 1fr;
-        }
-    }
-      
-      
-      
-
-      
-
-      /* --- SYSTEM LIGHT MODE PATCH --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .text-white, 
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white, 
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50,
-      body:not(.theme-dark) .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .glass-card, 
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .card,
-      body:not(.theme-dark) .stats-card-dark,
-      body:not(.theme-dark) .stats-inner-card,
-      body:not(.theme-dark) .project-card-admin,
-      body:not(.theme-dark) .campaign-card-lux,
-      body:not(.theme-dark) .guest-card-lux,
-      body:not(.theme-dark) .article-card-lux,
-      body:not(.theme-dark) .message-card-lux,
-      body:not(.theme-dark) .donation-card-lux,
-      body:not(.theme-dark) .member-card-premium,
-      body:not(.theme-dark) .partner-card-lux,
-      body:not(.theme-dark) .leader-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .bg-dark,
-      body:not(.theme-dark) .bg-slate-800,
-      body:not(.theme-dark) .bg-slate-900,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .categories-sidebar,
-      body:not(.theme-dark) .sector-header,
-      body:not(.theme-dark) .item-card,
-      body:not(.theme-dark) .dark-glass-card {
-          background: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-      }
-      body:not(.theme-dark) .category-item {
-          color: var(--ws-text-secondary);
-          background: rgba(0,0,0,0.02);
-      }
-      body:not(.theme-dark) .category-item:hover { background: var(--ws-bg-page); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .category-item.active { background: var(--ws-bg-page); border-color: var(--ws-primary); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control, body:not(.theme-dark) .form-select, body:not(.theme-dark) .form-input-dark { 
-          background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; 
-      }
-      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
-      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
-      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
-      </style>
-@endsection
-
 @section('content')
-<div class="row align-items-center mb-5">
-    <div class="col-md-6">
-        <h1 class="display-5 fw-bold text-white mb-2">مجالات الدعم</h1>
-        <p class="text-white-50 lead">إدارة قطاعات التبرع والعناصر التابعة لها من مكان واحد.</p>
-    </div>
-    <div class="col-md-6 text-md-end">
-        <button class="btn btn-lux btn-lux-primary py-3 px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            <i class="bi bi-folder-plus fs-5"></i>
-            إضافة مجال جديد
-        </button>
-    </div>
-</div>
-
-<div class="unified-layout">
-    {{-- Categories Sidebar --}}
-    <div class="categories-sidebar">
-        <h6 class="text-white-50 px-2 mb-3 small text-uppercase tracking-wider fw-bold">المجالات المتاحة</h6>
-        <div class="list-group list-group-flush border-0">
-            @foreach($categories as $cat)
-                <a href="?category={{ $cat->id }}" class="category-item {{ (request('category') == $cat->id || (!request('category') && $loop->first)) ? 'active' : '' }}">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="fw-bold">{{ $cat->name }}</span>
-                    </div>
-                    <span class="badge rounded-pill bg-white bg-opacity-10 text-white-50">{{ $cat->items->count() }}</span>
-                </a>
-            @endforeach
+<div class="donation-settings-mgmt">
+    {{-- Header Section --}}
+    <div class="premium-hero-sleek mb-4">
+        <div class="hero-bg-visuals">
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
+        </div>
+        <div class="container-fluid hero-content-wrapper px-lg-5">
+            <div class="row align-items-center">
+                <div class="col-lg-7 text-end">
+                    <nav aria-label="breadcrumb" class="mb-3 d-flex justify-content-end">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">مجالات الدعم</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-5 fw-800 text-dark mb-2">مجالات الدعم والعطاء</h1>
+                    <p class="lead text-muted mb-0">تخصيص قطاعات التبرع وبنود الصرف المتاحة للمتبرعين عبر الموقع.</p>
+                </div>
+                <div class="col-lg-5 text-lg-start mt-4 mt-lg-0">
+                    <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="bi bi-folder-plus me-2"></i> إضافة مجال دعم جديد
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Items Content Area --}}
-    <div class="items-content">
-        @php
-            $currentCatId = request('category') ?: ($categories->first()?->id);
-            $currentCat = $categories->find($currentCatId);
-        @endphp
-
-        @if($currentCat)
-            <div class="items-container">
-                <div class="sector-header d-flex justify-content-between align-items-end">
-                    <div class="position-relative z-1">
-                        <span class="badge bg-purple-solid mb-3">مجال الدعم</span>
-                        <h2 class="display-6 fw-bold text-white mb-0">{{ $currentCat->name }}</h2>
+    <div class="container-fluid py-4 px-lg-5">
+        <div class="unified-layout">
+            {{-- Categories Sidebar --}}
+            <div class="categories-sidebar-wrapper">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 sticky-top" style="top: 100px;">
+                    <div class="p-3 border-bottom bg-light">
+                        <h6 class="mb-0 fw-bold text-muted x-small text-uppercase tracking-wider">قائمة المجالات</h6>
                     </div>
-                    <div class="position-relative z-1">
-                        <button class="btn btn-lux btn-lux-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                            <i class="bi bi-plus-lg"></i> إضافة جزء لهذا المجال
-                        </button>
+                    <div class="list-group list-group-flush">
+                        @foreach($categories as $cat)
+                            <a href="?category={{ $cat->id }}" class="list-group-item list-group-item-action border-0 py-3 px-4 d-flex align-items-center justify-content-between transition-all {{ (request('category') == $cat->id || (!request('category') && $loop->first)) ? 'active bg-primary bg-opacity-10 text-primary fw-bold' : 'text-muted' }}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="dot {{ (request('category') == $cat->id || (!request('category') && $loop->first)) ? 'bg-primary' : 'bg-secondary bg-opacity-25' }}"></div>
+                                    <span>{{ $cat->name }}</span>
+                                </div>
+                                <span class="badge rounded-pill {{ (request('category') == $cat->id || (!request('category') && $loop->first)) ? 'bg-primary text-white' : 'bg-light text-muted border' }}">
+                                    {{ $cat->items->count() }}
+                                </span>
+                            </a>
+                        @endforeach
                     </div>
+                    @if($categories->isEmpty())
+                        <div class="p-4 text-center">
+                            <p class="x-small text-muted mb-0 opacity-50">لا يوجد مجالات مضافة</p>
+                        </div>
+                    @endif
                 </div>
+            </div>
 
-                @if($currentCat->items->isEmpty())
-                    <div class="empty-state">
-                        <i class="bi bi-grid-3x3-gap display-1 opacity-10 mb-4 d-block"></i>
-                        <h4>لا توجد عناصر في هذا المجال بعد</h4>
-                        <p>ابدأ بإضافة أول جزء (عنصر تبرع) لهذا القطاع ليظهر في صفحة التبرعات.</p>
+            {{-- Items Content Area --}}
+            <div class="items-content-area">
+                @php
+                    $currentCatId = request('category') ?: ($categories->first()?->id);
+                    $currentCat = $categories->find($currentCatId);
+                @endphp
+
+                @if($currentCat)
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 animate-slide-up">
+                        <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 x-small fw-bold mb-2">المجال الحالي</span>
+                                <h3 class="fw-800 text-dark mb-0">{{ $currentCat->name }}</h3>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary rounded-pill px-3 py-2 fw-bold x-small" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $currentCat->id }}">
+                                    <i class="bi bi-pencil me-1"></i> تعديل المجال
+                                </button>
+                                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold x-small shadow-sm" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                                    <i class="bi bi-plus-lg me-1"></i> إضافة بند فرعي
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 p-md-5">
+                            @if($currentCat->items->isEmpty())
+                                <div class="empty-state text-center py-5">
+                                    <div class="empty-icon-circle bg-light mx-auto mb-4">
+                                        <i class="bi bi-grid-3x3-gap display-4 text-muted opacity-25"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-2">لا توجد بنود فرعية حالياً</h5>
+                                    <p class="text-muted x-small mb-4 max-w-400 mx-auto">ابدأ بإضافة أول بند لهذا المجال ليظهر في قائمة "أوجه التبرع" بالموقع العام.</p>
+                                    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm x-small" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                                        إضافة أول بند تبرع
+                                    </button>
+                                </div>
+                            @else
+                                <div class="row g-4">
+                                    @foreach($currentCat->items->sortBy('sort_order') as $item)
+                                        <div class="col-12">
+                                            <div class="item-card-premium p-3 p-md-4 rounded-4 border transition-all hover-shadow">
+                                                <div class="row align-items-center">
+                                                    <div class="col-auto">
+                                                        <div class="item-icon-circle bg-primary bg-opacity-10 text-primary">
+                                                            @if($item->icon)
+                                                                <img src="{{ Str::startsWith($item->icon, 'http') ? $item->icon : Storage::url($item->icon) }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                                                            @else
+                                                                <i class="bi bi-gift fs-4"></i>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="col ms-2">
+                                                        <h6 class="fw-bold text-dark mb-1">{{ $item->title }}</h6>
+                                                        <p class="x-small text-muted mb-0">{{ Str::limit($item->description, 120) }}</p>
+                                                    </div>
+                                                    <div class="col-md-auto text-end mt-3 mt-md-0">
+                                                        <div class="d-flex gap-2 justify-content-end">
+                                                            <button class="btn btn-icon-light rounded-pill" data-bs-toggle="modal" data-bs-target="#editItemModal{{ $item->id }}">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <form action="{{ route('website.donation-settings.items.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا البند؟')">
+                                                                @csrf @method('DELETE')
+                                                                <button type="submit" class="btn btn-icon-danger rounded-pill">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @else
-                    <div class="row g-4">
-                        @foreach($currentCat->items->sortBy('sort_order') as $item)
-                            <div class="col-12">
-                                <div class="item-card {{ $item->bg_style === 'dark' ? 'item-card-dark' : '' }}">
-                                    <div class="item-icon-box">
-                                        @if($item->icon)
-                                            <img src="{{ Str::startsWith($item->icon, 'http') ? $item->icon : Storage::url($item->icon) }}" alt="icon">
-                                        @else
-                                            <i class="bi bi-image text-white-50 fs-2"></i>
-                                        @endif
-                                    </div>
-                                    <div class="item-info">
-                                        <h5 class="text-white fw-bold mb-1">{{ $item->title }}</h5>
-                                        <p class="text-white-50 mb-0 small">{{ Str::limit($item->description, 100) }}</p>
-                                    </div>
-                                    <div class="item-actions">
-                                        <button class="btn btn-sm btn-outline-info rounded-pill px-3" 
-                                                data-bs-toggle="modal" data-bs-target="#editItem{{ $item->id }}">
-                                            <i class="bi bi-pencil me-1"></i> تعديل
-                                        </button>
-                                        <form action="{{ route('website.donation-settings.items.destroy', $item) }}" method="POST" onsubmit="return confirm('حذف هذا الجزء؟')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                        <div class="card-body">
+                            <i class="bi bi-cursor-fill display-1 text-muted opacity-10 mb-4"></i>
+                            <h4 class="fw-bold text-dark">يرجى اختيار مجال دعم</h4>
+                            <p class="text-muted small">اختر من القائمة الجانبية لعرض وتعديل البنود الفرعية.</p>
+                        </div>
                     </div>
                 @endif
             </div>
-        @else
-            <div class="empty-state">
-                <h4>يرجى اختيار مجال من القائمة الجانبية</h4>
-            </div>
-        @endif
+        </div>
     </div>
 </div>
 
-{{-- Modals from previous views should be included here or kept separately --}}
-{{-- For speed, I will include the Add Category and Add Item modals here briefly --}}
-
-<!-- Add Category Modal -->
+{{-- Category Modals --}}
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content dark-glass-card shadow-lg border-0" style="background-color: #0b0e14 !important; opacity: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
-            <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
                 <h5 class="modal-title fw-bold">إضافة مجال دعم جديد</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('website.donation-settings.categories.store') }}" method="POST">
                 @csrf
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="label-lux">اسم المجال *</label>
-                        <input type="text" name="name" class="form-control form-input-dark" required>
+                        <label class="form-label x-small fw-bold text-muted">اسم المجال (مثل: مشروع زاد، صدقة جارية)</label>
+                        <input type="text" name="name" class="form-control" placeholder="أدخل الاسم..." required>
                     </div>
-                    <div class="mb-3">
-                        <label class="label-lux">الترتيب</label>
-                        <input type="number" name="sort_order" class="form-control form-input-dark" value="0">
+                    <div class="mb-0">
+                        <label class="form-label x-small fw-bold text-muted">ترتيب الظهور</label>
+                        <input type="number" name="sort_order" class="form-control" value="0">
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-body" style="background-color: #0b0e14 !important;">
-                    <button type="submit" class="btn btn-save-premium px-4">حفظ المجال</button>
-                    <button type="button" class="btn btn-cancel-premium px-4" data-bs-dismiss="modal">إلغاء</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold x-small" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold x-small shadow-sm">حفظ المجال</button>
                 </div>
             </form>
         </div>
@@ -454,103 +178,156 @@
 </div>
 
 @if($currentCat)
-<!-- Add Item Modal -->
-<div class="modal fade" id="addItemModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content dark-glass-card shadow-lg border-0" style="background-color: #0b0e14 !important; opacity: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
-            <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px;">
-                <h5 class="modal-title fw-bold">إضافة جزء جديد لـ: {{ $currentCat->name }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="editCategoryModal{{ $currentCat->id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold">تعديل مجال: {{ $currentCat->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('website.donation-settings.items.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="category_id" value="{{ $currentCat->id }}">
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="label-lux">العنوان *</label>
-                            <input type="text" name="title" class="form-control form-input-dark" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الأيقونة (Icon)</label>
-                            <input type="file" name="icon" class="form-control form-input-dark">
-                        </div>
-                        <div class="col-12">
-                            <label class="label-lux">وصف قصير *</label>
-                            <textarea name="description" class="form-control form-input-dark" rows="3" required></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الصورة (اختياري)</label>
-                            <input type="file" name="image" class="form-control form-input-dark">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">تنسيق الكارد</label>
-                            <select name="bg_style" class="form-select form-input-dark">
-                                <option value="light">فاتح (Glassmorphism)</option>
-                                <option value="dark">داكن (Deep Dark)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الترتيب</label>
-                            <input type="number" name="sort_order" class="form-control form-input-dark" value="0">
-                        </div>
+            <form action="{{ route('website.donation-settings.categories.update', $currentCat) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted">اسم المجال</label>
+                        <input type="text" name="name" class="form-control" value="{{ $currentCat->name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label x-small fw-bold text-muted">الترتيب</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ $currentCat->sort_order }}">
+                    </div>
+                    <div class="form-check form-switch custom-switch">
+                        <input class="form-check-input" type="checkbox" name="status" id="statusSwitch" value="1" {{ $currentCat->status ? 'checked' : '' }}>
+                        <label class="form-check-label x-small fw-bold text-muted" for="statusSwitch">نشط ويظهر في الموقع</label>
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-body" style="background-color: #0b0e14 !important;">
-                    <button type="submit" class="btn btn-save-premium px-4">حفظ الجزء</button>
-                    <button type="button" class="btn btn-cancel-premium px-4" data-bs-dismiss="modal">إلغاء</button>
+                <div class="modal-footer border-0 p-4 pt-0 d-flex justify-content-between">
+                    <form action="{{ route('website.donation-settings.categories.destroy', $currentCat) }}" method="POST" onsubmit="return confirm('تحذير: سيتم حذف المجال وجميع البنود التابعة له!')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-link text-danger text-decoration-none x-small p-0 fw-bold">حذف المجال نهائياً</button>
+                    </form>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold x-small" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold x-small shadow-sm">تحديث</button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+{{-- Add Item Modal --}}
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold">إضافة بند جديد لـ {{ $currentCat->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('website.donation-settings.items.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="category_id" value="{{ $currentCat->id }}">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label class="form-label x-small fw-bold text-muted">عنوان البند (مثل: إطعام عائلة، سهم وقف)</label>
+                                <input type="text" name="title" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label x-small fw-bold text-muted">وصف البند وكيفية الصرف</label>
+                                <textarea name="description" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold text-muted">التنسيق البصري</label>
+                                    <select name="bg_style" class="form-select">
+                                        <option value="light">كلاسيك (Light)</option>
+                                        <option value="dark">مميز (Premium Black)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold text-muted">ترتيب الظهور</label>
+                                    <input type="number" name="sort_order" class="form-control" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="p-4 bg-light rounded-4 text-center border h-100 d-flex flex-column justify-content-center">
+                                <label class="form-label x-small fw-bold text-muted d-block mb-3">أيقونة البند</label>
+                                <div class="preview-upload-box mx-auto mb-3">
+                                    <i class="bi bi-cloud-arrow-up fs-2 text-primary opacity-50"></i>
+                                </div>
+                                <input type="file" name="icon" class="form-control form-control-sm">
+                                <p class="x-small text-muted mt-2 mb-0 opacity-75">دقة مفضلة 128x128 بيكسل</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold x-small" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold x-small shadow-sm">إضافة البند</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Edit Item Modals --}}
 @foreach($currentCat->items as $item)
-<!-- Edit Item Modal -->
-<div class="modal fade" id="editItem{{ $item->id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content dark-glass-card shadow-lg border-0" style="background-color: #0b0e14 !important; opacity: 1 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
-            <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px;">
-                <h5 class="modal-title fw-bold">تعديل جزء: {{ $item->title }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="editItemModal{{ $item->id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold">تعديل بند: {{ $item->title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('website.donation-settings.items.update', $item) }}" method="POST" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <input type="hidden" name="category_id" value="{{ $currentCat->id }}">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="label-lux">العنوان *</label>
-                            <input type="text" name="title" class="form-control form-input-dark" value="{{ $item->title }}" required>
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label class="form-label x-small fw-bold text-muted">عنوان البند</label>
+                                <input type="text" name="title" class="form-control" value="{{ $item->title }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label x-small fw-bold text-muted">الوصف</label>
+                                <textarea name="description" class="form-control" rows="4" required>{{ $item->description }}</textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold text-muted">التنسيق البصري</label>
+                                    <select name="bg_style" class="form-select">
+                                        <option value="light" {{ $item->bg_style == 'light' ? 'selected' : '' }}>كلاسيك (Light)</option>
+                                        <option value="dark" {{ $item->bg_style == 'dark' ? 'selected' : '' }}>مميز (Premium Black)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold text-muted">الترتيب</label>
+                                    <input type="number" name="sort_order" class="form-control" value="{{ $item->sort_order }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الأيقونة (تغيير؟)</label>
-                            <input type="file" name="icon" class="form-control form-input-dark">
-                        </div>
-                        <div class="col-12">
-                            <label class="label-lux">وصف قصير *</label>
-                            <textarea name="description" class="form-control form-input-dark" rows="3" required>{{ $item->description }}</textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الصورة (تغيير؟)</label>
-                            <input type="file" name="image" class="form-control form-input-dark">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">تنسيق الكارد</label>
-                            <select name="bg_style" class="form-select form-input-dark">
-                                <option value="light" {{ $item->bg_style === 'light' ? 'selected' : '' }}>فاتح (Glassmorphism)</option>
-                                <option value="dark" {{ $item->bg_style === 'dark' ? 'selected' : '' }}>داكن (Deep Dark)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="label-lux">الترتيب</label>
-                            <input type="number" name="sort_order" class="form-control form-input-dark" value="{{ $item->sort_order }}">
+                        <div class="col-md-5">
+                            <div class="p-4 bg-light rounded-4 text-center border h-100 d-flex flex-column justify-content-center">
+                                <label class="form-label x-small fw-bold text-muted d-block mb-3">تحديث الأيقونة</label>
+                                <div class="preview-upload-box mx-auto mb-3 overflow-hidden border-primary">
+                                    @if($item->icon)
+                                        <img src="{{ Str::startsWith($item->icon, 'http') ? $item->icon : Storage::url($item->icon) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    @else
+                                        <i class="bi bi-image fs-2 text-primary opacity-50"></i>
+                                    @endif
+                                </div>
+                                <input type="file" name="icon" class="form-control form-control-sm">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-body" style="background-color: #0b0e14 !important;">
-                    <button type="submit" class="btn btn-save-premium px-4">تحديث</button>
-                    <button type="button" class="btn btn-cancel-premium px-4" data-bs-dismiss="modal">إلغاء</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold x-small" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold x-small shadow-sm">تحديث البند</button>
                 </div>
             </form>
         </div>
@@ -559,68 +336,102 @@
 @endforeach
 @endif
 
-
 <style>
-      /* --- SYSTEM LIGHT MODE PATCH --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .text-white, 
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white, 
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50,
-      body:not(.theme-dark) .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .glass-card, 
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .card,
-      body:not(.theme-dark) .stats-card-dark,
-      body:not(.theme-dark) .stats-inner-card,
-      body:not(.theme-dark) .project-card-admin,
-      body:not(.theme-dark) .campaign-card-lux,
-      body:not(.theme-dark) .guest-card-lux,
-      body:not(.theme-dark) .article-card-lux,
-      body:not(.theme-dark) .message-card-lux,
-      body:not(.theme-dark) .donation-card-lux,
-      body:not(.theme-dark) .member-card-premium,
-      body:not(.theme-dark) .partner-card-lux,
-      body:not(.theme-dark) .leader-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .bg-dark,
-      body:not(.theme-dark) .bg-slate-800,
-      body:not(.theme-dark) .bg-slate-900,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .categories-sidebar,
-      body:not(.theme-dark) .sector-header,
-      body:not(.theme-dark) .item-card,
-      body:not(.theme-dark) .dark-glass-card {
-          background: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-      }
-      body:not(.theme-dark) .category-item {
-          color: var(--ws-text-secondary);
-          background: rgba(0,0,0,0.02);
-      }
-      body:not(.theme-dark) .category-item:hover { background: var(--ws-bg-page); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .category-item.active { background: var(--ws-bg-page); border-color: var(--ws-primary); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control, body:not(.theme-dark) .form-select, body:not(.theme-dark) .form-input-dark { 
-          background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; 
-      }
-      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
-      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
-      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
+    .donation-settings-mgmt { min-height: 100vh; }
+    .fw-800 { font-weight: 800; }
+    .x-small { font-size: 0.75rem; }
+    .max-w-400 { max-width: 400px; }
+    .transition-all { transition: all 0.3s ease; }
+    .hover-shadow:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important; transform: translateY(-3px); }
+
+    .unified-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .unified-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 60px 0 80px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
+    }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
+    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
+    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .empty-icon-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .item-icon-circle {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .item-card-premium {
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .btn-icon-light {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #eee;
+    }
+    .btn-icon-light:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-light); }
+    
+    .btn-icon-danger {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff5f5;
+        color: #e03131;
+        border: 1px solid #ffc9c9;
+    }
+    .btn-icon-danger:hover { background: #e03131; color: white; border-color: #e03131; }
+
+    .preview-upload-box {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        background: white;
+        border: 2px dashed #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .custom-switch .form-check-input { width: 3rem; height: 1.5rem; }
 </style>
 @endsection
-
-
-
-
-

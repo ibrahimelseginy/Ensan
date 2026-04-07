@@ -1,119 +1,123 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-<div class="donation-mgmt-page">
+<div class="donor-details-page">
     {{-- Premium Hero Section --}}
-    <div class="premium-hero-sleek" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+    <div class="premium-hero-sleek mb-4">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1" style="background: #2563eb;"></div>
-            <div class="glow-orb-2" style="background: #60a5fa;"></div>
-            <div class="noise-overlay"></div>
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
         </div>
-        <div class="hero-content-wrapper container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8 animate-reveal-right text-end">
-                    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('website.donation-accounts.index') }}" class="text-white-50 decoration-none">حسابات تبرعات الويبسايت</a></li>
-                            <li class="breadcrumb-item active text-white" aria-current="page">{{ $donor->name }}</li>
-                        </ol>
-                    </nav>
-                    <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium">
-                            <i class="bi bi-person-fill me-2"></i> ملف المتبرع
-                        </div>
-                    </div>
-                    <h1 class="display-4 fw-800 text-white mb-3 text-end">{{ $donor->name }}</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
-                        عرض كافة التبرعات التي قام بها المتبرع من خلال الموقع الإلكتروني.
-                    </p>
-                </div>
+        <div class="container hero-content-wrapper text-center">
+            <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-center">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('website.donation-accounts.index') }}" class="text-primary text-decoration-none">سجلات الويب</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تفاصيل المتبرع</li>
+                </ol>
+            </nav>
+            <div class="badge-glass-premium mb-3">
+                <i class="bi bi-person-badge me-2"></i> ملف المتبرع الرقمي 🔖
             </div>
+            <h1 class="display-5 fw-800 text-dark mb-2">{{ $donor->name }}</h1>
+            <p class="lead text-muted mb-0 max-w-600 mx-auto">
+                استعراض سجل المعاملات المالية، تدقيق الإثباتات، وتأكيد عمليات الدعم المقدمة.
+            </p>
         </div>
     </div>
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 px-lg-5">
         <div class="row g-4">
-            {{-- Donor Info Card --}}
+            {{-- Donor Profile Card --}}
             <div class="col-lg-4">
-                <div class="card dark-glass-card border-0 shadow-lg h-100">
-                    <div class="card-header-lux">
-                        <h5 class="mb-0 text-white fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i> بيانات المتبرع</h5>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 100px;">
+                    <div class="p-4 border-bottom bg-light">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> هويّة المتبرع</h6>
                     </div>
-                    <div class="card-body-lux">
-                        <div class="mb-4">
-                            <label class="label-lux">الاسم</label>
-                            <div class="field-value-lux">{{ $donor->name }}</div>
+                    <div class="card-body p-4">
+                        <div class="mb-4 text-center pb-4 border-bottom">
+                            <div class="avatar-large-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1">{{ $donor->name }}</h5>
+                            <span class="text-muted font-monospace x-small">{{ $donor->phone }}</span>
                         </div>
-                        <div class="mb-4">
-                            <label class="label-lux">الهاتف</label>
-                            <div class="field-value-lux">{{ $donor->phone }}</div>
+
+                        <div class="donor-stats-grid grid-2 gap-3 mb-4">
+                            <div class="p-3 bg-light rounded-4 text-center">
+                                <span class="x-small text-muted d-block mb-1">العمليات</span>
+                                <span class="fw-bold text-dark">{{ $history->count() }}</span>
+                            </div>
+                            <div class="p-3 bg-light rounded-4 text-center">
+                                <span class="x-small text-muted d-block mb-1">الموثقة</span>
+                                <span class="fw-bold text-success">{{ $history->where('status', 'verified')->count() }}</span>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="label-lux">إجمالي العمليات</label>
-                            <div class="field-value-lux">{{ $history->count() }} عملية</div>
-                        </div>
-                        <div class="mb-0">
-                            <label class="label-lux">إجمالي المبالغ الموثقة</label>
-                            <div class="field-value-lux text-emerald fs-4 fw-bold">{{ number_format($history->where('status', 'verified')->sum('amount'), 2) }} ج.م</div>
+
+                        <div class="p-4 bg-primary bg-opacity-5 rounded-4 border border-primary border-opacity-10">
+                            <label class="x-small text-muted fw-bold d-block mb-2 text-uppercase tracking-wider">إجمالي الدعم الموثق</label>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <span class="display-6 fw-800 text-primary">{{ number_format($history->where('status', 'verified')->sum('amount'), 2) }}</span>
+                                <span class="fw-bold text-primary opacity-75">ج.م</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- History Table --}}
+            {{-- Transactions History --}}
             <div class="col-lg-8">
-                <div class="card dark-glass-card border-0 shadow-lg">
-                    <div class="card-header-lux d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-white fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i> سجل العمليات</h5>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden animate-slide-up">
+                    <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-warning"></i> سجل العمليات التفصيلي</h6>
+                        <span class="badge bg-light text-muted border rounded-pill px-3 py-1 x-small fw-bold">{{ $history->count() }} سجل</span>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0" style="color: #e2e8f0;">
-                                <thead style="background: rgba(255,255,255,0.03);">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-end">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold">التاريخ</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold">المبلغ والقيمة</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold">نوع التبرع</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center">الحالة</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center">إثبات الدفع</th>
+                                    <th class="px-4 py-3 text-muted x-small fw-bold text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0">
+                                @forelse($history as $donation)
                                     <tr>
-                                        <th class="px-4 py-3 border-0 text-end">التاريخ</th>
-                                        <th class="px-4 py-3 border-0 text-end">المبلغ</th>
-                                        <th class="px-4 py-3 border-0 text-end">النوع</th>
-                                        <th class="px-4 py-3 border-0 text-end">طريقة الدفع</th>
-                                        <th class="px-4 py-3 border-0 text-center">الحالة</th>
-                                        <th class="px-4 py-3 border-0 text-center">الإثبات</th>
-                                        <th class="px-4 py-3 border-0 text-center">الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($history as $donation)
-                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                        <td class="px-4 py-3 text-end">{{ $donation->created_at->format('Y-m-d H:i') }}</td>
-                                        <td class="px-4 py-3 text-end fw-bold">{{ number_format($donation->amount, 2) }} ج.م</td>
-                                        <td class="px-4 py-3 text-end">
-                                            <div class="d-flex flex-column">
-                                                <span class="fw-bold">{{ $donation->category_label }}</span>
-                                                @if($donation->donationable)
-                                                    <span class="x-small text-white-50">{{ $donation->donationable->title ?? $donation->donationable->name }}</span>
-                                                @endif
-                                            </div>
+                                        <td class="px-4 py-3">
+                                            <div class="fw-bold text-dark mb-0">{{ $donation->created_at->format('Y-m-d') }}</div>
+                                            <div class="x-small text-muted">{{ $donation->created_at->format('H:i A') }}</div>
                                         </td>
-                                        <td class="px-4 py-3 text-end small">{{ $donation->payment_method_label }}</td>
+                                        <td class="px-4 py-3">
+                                            <div class="fw-bold text-dark">{{ number_format($donation->amount, 2) }} <span class="x-small fw-normal">ج.م</span></div>
+                                            <div class="x-small text-muted">{{ $donation->payment_method_label }}</div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="fw-bold text-primary mb-0">{{ $donation->category_label }}</div>
+                                            @if($donation->donationable)
+                                                <div class="x-small text-muted text-truncate" style="max-width: 150px;">{{ $donation->donationable->title ?? $donation->donationable->name }}</div>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-3 text-center">
                                             @if($donation->status == 'verified')
-                                                <span class="badge bg-success-glass text-emerald rounded-pill px-3">مؤكد</span>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 x-small fw-bold">مؤكد ✅</span>
                                             @elseif($donation->status == 'pending')
-                                                <span class="badge bg-warning-glass text-warning rounded-pill px-3">قيد المراجعة</span>
+                                                <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1 x-small fw-bold">قيد المراجعة ⏳</span>
                                             @else
-                                                <span class="badge bg-danger-glass text-danger rounded-pill px-3">مرفوض</span>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 x-small fw-bold">مرفوض ❌</span>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             @if($donation->proof)
-                                                <a href="{{ $donation->proof->image_url }}" target="_blank" class="btn btn-outline-info btn-sm rounded-pill px-3">
-                                                    <i class="bi bi-image me-1"></i> عرض
+                                                <a href="{{ $donation->proof->image_url }}" target="_blank" class="btn btn-icon-light rounded-pill" title="عرض الإيصال">
+                                                    <i class="bi bi-file-earmark-image"></i>
                                                 </a>
                                             @else
-                                                <span class="text-muted x-small">لا يوجد</span>
+                                                <i class="bi bi-dash-circle text-muted opacity-25"></i>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-center">
@@ -121,26 +125,34 @@
                                                 <div class="d-flex justify-content-center gap-2">
                                                     <form action="{{ route('website.donation-accounts.verify', $donation->id) }}" method="POST" onsubmit="return confirm('تأكيد استلام هذا التبرع؟')">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-emerald-glass btn-sm rounded-pill px-3" title="تأكيد">
+                                                        <button type="submit" class="btn btn-icon-success rounded-pill" title="تأكيد">
                                                             <i class="bi bi-check-lg"></i>
                                                         </button>
                                                     </form>
                                                     <form action="{{ route('website.donation-accounts.reject', $donation->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من رفض هذا التبرع؟')">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-danger-glass btn-sm rounded-pill px-3" title="رفض">
+                                                        <button type="submit" class="btn btn-icon-danger rounded-pill" title="رفض">
                                                             <i class="bi bi-x-lg"></i>
                                                         </button>
                                                     </form>
                                                 </div>
                                             @else
-                                                <span class="text-white-50 small">---</span>
+                                                <span class="text-muted x-small">تمت المعالجة</span>
                                             @endif
                                         </td>
                                     </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="opacity-25 mb-3">
+                                                <i class="bi bi-inbox display-4"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-muted">لا يوجد عمليات مسجلة لهذا المتبرع</h6>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -149,145 +161,89 @@
 </div>
 
 <style>
-    :root {
-        --dark-bg: #0b0e14;
-        --card-dark: #1a1f2e;
-        --slate-400: #94a3b8;
+    .donor-details-page { min-height: 100vh; }
+    .fw-800 { font-weight: 800; }
+    .x-small { font-size: 0.75rem; }
+    .max-w-600 { max-width: 600px; }
+    .transition-all { transition: all 0.3s ease; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
+
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 50px 0 70px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
     }
-
-    .btn-emerald-glass { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399; transition: all 0.3s; }
-    .btn-emerald-glass:hover { background: rgba(16,185,129,0.25); color: #6ee7b7; transform: translateY(-2px); }
-    
-    .btn-danger-glass { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171; transition: all 0.3s; }
-    .btn-danger-glass:hover { background: rgba(239,68,68,0.25); color: #fca5a5; transform: translateY(-2px); }
-
-    .donation-mgmt-page { min-height: 100vh; background-color: var(--dark-bg); }
-
-    .premium-hero-sleek { position: relative; padding: 60px 0 80px; border-radius: 0 0 30px 30px; overflow: hidden; z-index: 10; }
-    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
     .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
     .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
-    .noise-overlay { position: absolute; inset: 0; opacity: 0.1; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3BaseFilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/baseFilter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
-    .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
-    .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #bfdbfe; font-weight: 700; font-size: 0.85rem; }
-    .fw-800 { font-weight: 800; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
 
-    .dark-glass-card { background: var(--card-dark); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-    .card-header-lux { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .card-body-lux { padding: 20px; }
-    .label-lux { color: var(--slate-400); font-weight: 700; font-size: 0.8rem; margin-bottom: 5px; display: block; }
-    .field-value-lux { color: #f8fafc; font-weight: 600; }
-    
-    .bg-success-glass { background: rgba(16,185,129,0.15); }
-    .bg-warning-glass { background: rgba(245,158,11,0.15); }
-    .bg-danger-glass { background: rgba(239,68,68,0.15); }
-    .text-emerald { color: #34d399 !important; }
+    .badge-glass-premium { 
+        background: var(--primary-light); 
+        border: 1px solid rgba(34, 197, 94, 0.1); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        display: inline-block;
+    }
 
-    .x-small { font-size: 0.7rem; }
-    .animate-reveal-right { animation: revealRight 1s both; }
-    @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
+    .avatar-large-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
 
-      /* Card & Container Overrides */
-      body:not(.theme-dark) .premium-card-dark,
-      body:not(.theme-dark) .news-card-premium,
-      body:not(.theme-dark) .request-card-premium,
-      body:not(.theme-dark) .dark-glass-card,
-      body:not(.theme-dark) .glass-card,
-      body:not(.theme-dark) .detail-box-lux,
-      body:not(.theme-dark) .stat-input-box,
-      body:not(.theme-dark) .gallery-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .profile-strip-lux,
-      body:not(.theme-dark) .info-strip-premium,
-      body:not(.theme-dark) .modal-premium-dark {
-          background: var(--ws-bg-card) !important;
-          background-color: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          color: var(--ws-text-primary) !important;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
-      }
+    .btn-icon-light {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #eee;
+    }
+    .btn-icon-light:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-light); }
 
-      /* Input & Form Overrides */
-      body:not(.theme-dark) .field-lux,
-      body:not(.theme-dark) .form-control,
-      body:not(.theme-dark) .form-select,
-      body:not(.theme-dark) .stat-value-field,
-      body:not(.theme-dark) .stat-label-field,
-      body:not(.theme-dark) .field-value-lux {
-          background: var(--ws-bg-input) !important;
-          background-color: var(--ws-bg-input) !important;
-          color: var(--ws-text-primary) !important;
-          border-color: var(--ws-border) !important;
-      }
+    .btn-icon-success {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0fff4;
+        color: #22c55e;
+        border: 1px solid #c6f6d5;
+    }
+    .btn-icon-success:hover { background: #22c55e; color: white; border-color: #22c55e; }
 
-      body:not(.theme-dark) .field-lux:focus {
-          border-color: var(--ws-primary) !important;
-          background: #fff !important;
-      }
+    .btn-icon-danger {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff5f5;
+        color: #e03131;
+        border: 1px solid #ffc9c9;
+    }
+    .btn-icon-danger:hover { background: #e03131; color: white; border-color: #e03131; }
 
-      /* Typography & Labels */
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50,
-      body:not(.theme-dark) .text-slate-300,
-      body:not(.theme-dark) .text-slate-400,
-      body:not(.theme-dark) .text-slate-500,
-      body:not(.theme-dark) .label-lux,
-      body:not(.theme-dark) .detail-label-sleek,
-      body:not(.theme-dark) .form-label {
-          color: var(--ws-text-secondary) !important;
-      }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-      body:not(.theme-dark) h1, 
-      body:not(.theme-dark) h2, 
-      body:not(.theme-dark) h3, 
-      body:not(.theme-dark) h4, 
-      body:not(.theme-dark) h5, 
-      body:not(.theme-dark) h6,
-      body:not(.theme-dark) .fw-bold.text-white {
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Hero Section (Keep Dark for Contrast) */
-      body:not(.theme-dark) .premium-hero-sleek h1,
-      body:not(.theme-dark) .premium-hero-sleek p,
-      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-
-      /* Table Overrides */
-      body:not(.theme-dark) .premium-table-dark thead th,
-      body:not(.theme-dark) .table thead th {
-          background: rgba(0,0,0,0.03) !important;
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) .premium-table-dark tbody td,
-      body:not(.theme-dark) .table tbody td {
-          color: var(--ws-text-primary) !important;
-          border-bottom-color: var(--ws-border) !important;
-      }
-
-      /* Modal Specifics */
-      body:not(.theme-dark) .modal-header {
-          border-bottom-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .modal-footer {
-          border-top-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .btn-close {
-          filter: none !important;
-      }
+    .table thead th { border-bottom: none; }
+    .table tbody td { border-bottom: 1px solid #f2f2f2; }
+    .table-hover tbody tr:hover { background-color: rgba(34, 197, 94, 0.02); }
 </style>
 @endsection
-
-
-
