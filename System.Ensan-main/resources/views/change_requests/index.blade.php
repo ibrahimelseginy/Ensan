@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 
 {{-- Hero Section --}}
@@ -636,3 +636,5 @@
     @csrf
 </form>
 @endsection
+
+

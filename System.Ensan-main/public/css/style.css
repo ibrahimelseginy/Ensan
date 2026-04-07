@@ -3950,3 +3950,127 @@ body {
   border-radius: 6px;
   letter-spacing: 0.3px;
 }
+
+/* --- Website Admin Pages - Theme-Aware Variables --- */
+:root {
+  --ws-bg-page: #f1f5f9;
+  --ws-bg-card: #ffffff;
+  --ws-bg-card-header: #f8fafc;
+  --ws-bg-input: #ffffff;
+  --ws-text-primary: #0f172a;
+  --ws-text-secondary: #475569;
+  --ws-text-muted: #94a3b8;
+  --ws-text-label: #64748b;
+  --ws-border: #e2e8f0;
+  --ws-border-card: rgba(0, 0, 0, 0.08);
+  --ws-table-header-bg: #f8fafc;
+  --ws-table-hover-bg: #f1f5f9;
+  --ws-stats-box-bg: #f8fafc;
+  --ws-hero-gradient-start: #10b981;
+  --ws-hero-gradient-end: #059669;
+}
+
+body.theme-dark {
+  --ws-bg-page: #0b0e14;
+  --ws-bg-card: #0f172a;
+  --ws-bg-card-header: #0f172a;
+  --ws-bg-input: #1e293b;
+  --ws-text-primary: #f8fafc;
+  --ws-text-secondary: #cbd5e1;
+  --ws-text-muted: #94a3b8;
+  --ws-text-label: #94a3b8;
+  --ws-border: rgba(255, 255, 255, 0.1);
+  --ws-border-card: rgba(255, 255, 255, 0.1);
+  --ws-table-header-bg: rgba(255, 255, 255, 0.03);
+  --ws-table-hover-bg: rgba(255, 255, 255, 0.02);
+  --ws-stats-box-bg: rgba(30, 41, 59, 0.5);
+  --ws-hero-gradient-start: #164e63;
+  --ws-hero-gradient-end: #0891b2;
+}
+
+/* Website Unified Classes */
+.ws-card {
+  background-color: var(--ws-bg-card) !important;
+  border: 1px solid var(--ws-border-card) !important;
+  color: var(--ws-text-primary) !important;
+}
+
+.ws-card-header {
+  background-color: var(--ws-bg-card-header) !important;
+  border-bottom: 1px solid var(--ws-border-card) !important;
+  color: var(--ws-text-primary) !important;
+}
+
+.ws-card-header h5,
+.ws-card-header h6 {
+  color: var(--ws-text-primary) !important;
+}
+
+.ws-input {
+  background-color: var(--ws-bg-input) !important;
+  color: var(--ws-text-primary) !important;
+  border: 1px solid var(--ws-border) !important;
+}
+
+.ws-input::placeholder {
+  color: var(--ws-text-muted) !important;
+}
+
+.ws-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px var(--primary-subtle) !important;
+  background-color: var(--ws-bg-input) !important;
+}
+
+body.theme-dark .ws-input:focus {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+.ws-label {
+  color: var(--ws-text-label) !important;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.ws-heading {
+  color: var(--ws-text-primary) !important;
+}
+
+.ws-text-muted {
+  color: var(--ws-text-muted) !important;
+}
+
+.ws-table {
+  color: var(--ws-text-secondary) !important;
+  border-color: var(--ws-border) !important;
+}
+
+.ws-table thead th {
+  background-color: var(--ws-table-header-bg) !important;
+  color: var(--ws-text-primary) !important;
+  border-bottom: 2px solid var(--ws-border) !important;
+}
+
+.ws-table tbody td {
+  border-bottom: 1px solid var(--ws-border) !important;
+  color: var(--ws-text-secondary) !important;
+}
+
+.ws-table-hover tbody tr:hover {
+  background-color: var(--ws-table-hover-bg) !important;
+}
+
+.ws-stats-box {
+  background-color: var(--ws-stats-box-bg) !important;
+  border: 1px solid var(--ws-border-card) !important;
+}
+
+/* Modal Inner support */
+.modal-content.ws-card {
+  background-color: var(--ws-bg-card) !important;
+}
+
+/* Base override for hardcoded bodies if any are missed */
+body.ws-theme {
+  background-color: var(--ws-bg-page) !important;
+}

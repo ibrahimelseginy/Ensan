@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
     <div class="page-header">
         <h4 class="mb-0">تفاصيل الإجازة</h4>
@@ -156,3 +156,5 @@
         </div>
     </div>
 @endsection
+
+

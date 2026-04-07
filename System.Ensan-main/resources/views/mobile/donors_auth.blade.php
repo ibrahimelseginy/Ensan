@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'المتبرعين المسجلين من الموبايل')
 
@@ -210,9 +210,7 @@
     </div>
 </div>
 
-<style>
-    body { background-color: #0b0e14 !important; }
-    .donors-page { min-height: 100vh; }
+<style>.donors-page { min-height: 100vh; }
 
     /* Premium Hero */
     .premium-hero-sleek { padding: 80px 5%; border-radius: 0 0 40px 40px; position: relative; overflow: hidden; z-index: 1; }
@@ -225,7 +223,7 @@
     .z-index-10 { z-index: 10; }
     .mt-n5 { margin-top: -3.5rem !important; }
     
-    .glass-card { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .glass-card { background: var(--ws-bg-card-header) !important; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
     .stat-card { transition: 0.3s; }
     .stat-card:hover { transform: translateY(-5px); border-color: rgba(59, 130, 246, 0.3) !important; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1); }
     
@@ -238,12 +236,127 @@
     .table > :not(caption) > * > * { background-color: transparent !important; color: inherit; border-bottom-color: rgba(255,255,255,0.05); }
     .table-hover tbody tr:hover { background-color: rgba(255,255,255,0.02) !important; }
 
-    .modal-content { background: white !important; color: #1e293b !important; }
+    .modal-content { background: white !important; color: var(--ws-border) !important; }
     .form-control-lg { border-radius: 12px !important; font-size: 1rem !important; }
     .input-group-text { border-radius: 12px 0 0 12px !important; }
     .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
     
     .animate-up { animation: fadeInUp 0.5s both; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
+
+
+

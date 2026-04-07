@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid p-0">
@@ -165,3 +165,5 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 @endsection
+
+

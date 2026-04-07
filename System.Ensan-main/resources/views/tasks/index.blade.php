@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   {{-- Page Header --}}
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -105,3 +105,4 @@
 
   <div class="mt-3">{{ $tasks->links() }}</div>
 @endsection
+

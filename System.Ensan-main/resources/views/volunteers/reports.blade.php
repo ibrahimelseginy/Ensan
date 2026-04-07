@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 <div class="card p-4">
   <div class="d-flex justify-content-between align-items-center">
@@ -56,4 +56,6 @@
   @endif
 </div>
 @endsection
+
+
 

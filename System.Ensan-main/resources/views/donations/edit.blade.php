@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   {{-- Page Header --}}
   <div class="page-header">
@@ -278,3 +278,4 @@
     var sben = document.getElementById('sponsorshipBeneficiary'); if (sben) { sben.addEventListener('change', updateAllocationNote); }
   </script>
 @endsection
+

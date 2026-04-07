@@ -15,17 +15,17 @@
                 <div class="col-lg-8 animate-reveal-right text-end">
                     <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-white" aria-current="page">محتوى الصفحة الرئيسية</li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="decoration-none" style="color: var(--ws-text-muted);">لوحة التحكم</a></li>
+                            <li class="breadcrumb-item active" style="color: var(--ws-text-primary);" aria-current="page">محتوى الصفحة الرئيسية</li>
                         </ol>
                     </nav>
                     <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium">
+                        <div class="badge-glass-premium" style="color: var(--primary) !important;">
                             <i class="bi bi-gear-wide-connected me-2"></i> إعدادات الموقع العام
                         </div>
                     </div>
-                    <h1 class="display-4 fw-800 text-white mb-3 text-end">محتوى الصفحة الرئيسية</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
+                    <h1 class="display-4 fw-800 mb-3 text-end" style="color: var(--ws-text-primary);">محتوى الصفحة الرئيسية</h1>
+                    <p class="lead mb-0 max-w-600 ms-auto me-0 text-end" style="color: var(--ws-text-secondary);">
                         تحديث أرقام الإنجاز المباشرة والإعدادات العامة للموقع
                     </p>
                 </div>
@@ -56,71 +56,71 @@
         <div class="row g-4">
             {{-- Notification Bar Section --}}
             <div class="col-lg-8">
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.05s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up" style="animation-delay: 0.05s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
-                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-megaphone me-2 text-success"></i> شريط الإشعارات (Breaking News)</h5>
+                    <div class="p-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-body-tertiary">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-megaphone me-2 text-success"></i> شريط الإشعارات (Breaking News)</h5>
                         <button type="submit" class="btn btn-sm btn-success text-white rounded-pill px-4 shadow-sm">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 bg-transparent">
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" name="notification_active" id="notifActive" {{ ($settings['notification_active'] ?? '') == 'on' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold text-white" for="notifActive">تفعيل الشريط العلوي</label>
+                            <label class="form-check-label fw-bold" for="notifActive">تفعيل الشريط العلوي</label>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">النص المميز (Label)</label>
-                                <input type="text" name="notification_label" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="مثلاً: جديد" value="{{ $settings['notification_label'] ?? 'جديد' }}">
+                                <label class="form-label small fw-bold text-muted">النص المميز (Label)</label>
+                                <input type="text" name="notification_label" class="form-control form-control-sm" placeholder="مثلاً: جديد" value="{{ $settings['notification_label'] ?? 'جديد' }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">نص الإشعار</label>
-                                <input type="text" name="notification_text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="مثلاً: انطلاق حملة الشتاء..." value="{{ $settings['notification_text'] ?? '' }}">
+                                <label class="form-label small fw-bold text-muted">نص الإشعار</label>
+                                <input type="text" name="notification_text" class="form-control form-control-sm" placeholder="مثلاً: انطلاق حملة الشتاء..." value="{{ $settings['notification_text'] ?? '' }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">نص الزر</label>
-                                <input type="text" name="notification_link_text" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="مثلاً: اعرف المزيد" value="{{ $settings['notification_link_text'] ?? 'اعرف المزيد' }}">
+                                <label class="form-label small fw-bold text-muted">نص الزر</label>
+                                <input type="text" name="notification_link_text" class="form-control form-control-sm" placeholder="مثلاً: اعرف المزيد" value="{{ $settings['notification_link_text'] ?? 'اعرف المزيد' }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">رابط الزر (URL)</label>
-                                <input type="text" name="notification_link_url" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="https://..." value="{{ $settings['notification_link_url'] ?? '#' }}">
+                                <label class="form-label small fw-bold text-muted">رابط الزر (URL)</label>
+                                <input type="text" name="notification_link_url" class="form-control form-control-sm" placeholder="https://..." value="{{ $settings['notification_link_url'] ?? '#' }}">
                             </div>
                         </div>
                     </div>
                 </form>
 
                 {{-- Hero Content Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.1s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up" style="animation-delay: 0.1s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
-                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-layout-text-window me-2 text-primary"></i> محتوى الواجهة الرئيسية (Hero)</h5>
+                    <div class="p-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-body-tertiary">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-layout-text-window me-2 text-primary"></i> محتوى الواجهة الرئيسية (Hero)</h5>
                         <button type="submit" class="btn btn-sm btn-primary text-white rounded-pill px-4 shadow-sm fw-bold">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 bg-transparent">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">العنوان الرئيسي (الجزء الأول)</label>
-                                <input type="text" name="hero_title_primary" class="form-control bg-dark text-white border-secondary" value="{{ $settings['hero_title_primary'] ?? '' }}">
+                                <label class="form-label small fw-bold ws-label">العنوان الرئيسي (الجزء الأول)</label>
+                                <input type="text" name="hero_title_primary" class="form-control ws-input" value="{{ $settings['hero_title_primary'] ?? '' }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">العنوان الرئيسي (الجزء الثاني - لون أخضر)</label>
-                                <input type="text" name="hero_title_secondary" class="form-control bg-dark text-white border-secondary" value="{{ $settings['hero_title_secondary'] ?? '' }}">
+                                <label class="form-label small fw-bold ws-label">العنوان الرئيسي (الجزء الثاني - لون أخضر)</label>
+                                <input type="text" name="hero_title_secondary" class="form-control ws-input" value="{{ $settings['hero_title_secondary'] ?? '' }}">
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">وصف المؤسسة (عن إنسان)</label>
-                                <textarea name="hero_description" class="form-control bg-dark text-white border-secondary" rows="4">{{ $settings['hero_description'] ?? '' }}</textarea>
+                                <label class="form-label small fw-bold ws-label">وصف المؤسسة (عن إنسان)</label>
+                                <textarea name="hero_description" class="form-control ws-input" rows="4">{{ $settings['hero_description'] ?? '' }}</textarea>
                             </div>
                         </div>
                     </div>
                 </form>
 
                 {{-- Statistics Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.15s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.15s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
+                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center ws-card-header">
                         <h5 class="mb-0 fw-bold text-white"><i class="bi bi-graph-up-arrow me-2 text-info"></i> أرقام الإنجازات (Stats)</h5>
                         <button type="submit" class="btn btn-sm btn-info text-white rounded-pill px-4 shadow-sm">حفظ الإحصائيات</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 ws-card-header">
                         <div class="row g-3">
                             <div class="col-md-6 col-lg">
                                 <div class="p-4 rounded-4 bg-light border text-center statistics-box h-100">
@@ -156,17 +156,17 @@
                 </form>
 
                 {{-- Main Slider Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.2s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up" style="animation-delay: 0.2s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
-                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-images me-2 text-warning"></i> صور شريط الإعلانات الرئيسي (Slider)</h5>
+                    <div class="p-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-body-tertiary">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-images me-2 text-warning"></i> صور شريط الإعلانات الرئيسي (Slider)</h5>
                         <button type="submit" class="btn btn-sm btn-warning text-dark rounded-pill px-4 shadow-sm fw-bold">حفظ الصور</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 bg-transparent">
                         <div class="row g-3">
                             @for($i = 1; $i <= 6; $i++)
                             <div class="col-6">
-                                <label class="form-label d-block text-slate-400 small fw-bold">الصورة #{{ $i }}</label>
+                                <label class="form-label d-block ws-label small fw-bold">الصورة #{{ $i }}</label>
                                 <div class="position-relative shadow-sm rounded-3 overflow-hidden" 
                                      style="height: 100px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2);">
                                     @php 
@@ -195,45 +195,45 @@
                 </form>
 
                 {{-- Ongoing Campaigns Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.25s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up" style="animation-delay: 0.25s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
-                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-megaphone me-2 text-warning"></i> قسم حملاتنا الجارية (Campaigns Section)</h5>
+                    <div class="p-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-body-tertiary">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-megaphone me-2 text-warning"></i> قسم حملاتنا الجارية (Campaigns Section)</h5>
                         <button type="submit" class="btn btn-sm btn-warning text-dark rounded-pill px-4 shadow-sm fw-bold">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 bg-transparent">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">عنوان القسم الرئيسي</label>
-                                <input type="text" name="campaigns_title" class="form-control bg-dark text-white border-secondary" value="{{ $settings['campaigns_title'] ?? 'حملاتنا الجارية تنتظر مساهمتك' }}">
+                                <label class="form-label small fw-bold text-muted">عنوان القسم الرئيسي</label>
+                                <input type="text" name="campaigns_title" class="form-control" value="{{ $settings['campaigns_title'] ?? 'حملاتنا الجارية تنتظر مساهمتك' }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-slate-400">العنوان الفرعي</label>
-                                <input type="text" name="campaigns_subtitle" class="form-control bg-dark text-white border-secondary" value="{{ $settings['campaigns_subtitle'] ?? 'مساهمتك قد تغير حياة الآخرين للأفضل' }}">
+                                <label class="form-label small fw-bold text-muted">العنوان الفرعي</label>
+                                <input type="text" name="campaigns_subtitle" class="form-control" value="{{ $settings['campaigns_subtitle'] ?? 'مساهمتك قد تغير حياة الآخرين للأفضل' }}">
                             </div>
                         </div>
                     </div>
                 </form>
 
                 {{-- Guest House Home Content --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.3s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up" style="animation-delay: 0.3s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
-                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-house-heart me-2 text-danger"></i> قسم ضيافة إنسان (الصفحة الرئيسية)</h5>
+                    <div class="p-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-body-tertiary">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-house-heart me-2 text-danger"></i> قسم ضيافة إنسان (الصفحة الرئيسية)</h5>
                         <button type="submit" class="btn btn-sm btn-danger text-white rounded-pill px-4 shadow-sm fw-bold">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 bg-transparent">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">عنوان القسم</label>
-                                <input type="text" name="gh_home_title" class="form-control bg-dark text-white border-secondary" value="{{ $settings['gh_home_title'] ?? 'ضيافة إنسان' }}">
+                                <label class="form-label small fw-bold text-muted">عنوان القسم</label>
+                                <input type="text" name="gh_home_title" class="form-control" value="{{ $settings['gh_home_title'] ?? 'ضيافة إنسان' }}">
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">المحتوى المختصر</label>
-                                <textarea name="gh_home_content" class="form-control bg-dark text-white border-secondary" rows="3">{{ $settings['gh_home_content'] ?? '' }}</textarea>
+                                <label class="form-label small fw-bold text-muted">المحتوى المختصر</label>
+                                <textarea name="gh_home_content" class="form-control" rows="3">{{ $settings['gh_home_content'] ?? '' }}</textarea>
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">صورة القسم</label>
+                                <label class="form-label small fw-bold text-muted">صورة القسم</label>
                                 @php $ghImg = $settings['gh_home_image'] ?? null; @endphp
                                 @if($ghImg)
                                     <div class="mb-2 position-relative d-inline-block">
@@ -246,27 +246,27 @@
                                     </div>
                                     <div class="text-success small mb-2"><i class="bi bi-check-circle"></i> صورة مرفوعة بنجاح</div>
                                 @endif
-                                <input type="file" name="gh_home_image" class="form-control bg-dark text-white border-secondary">
+                                <input type="file" name="gh_home_image" class="form-control">
                             </div>
                         </div>
                     </div>
                 </form>
 
                 {{-- Ideal Partner Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.35s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.35s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
+                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center ws-card-header">
                         <h5 class="mb-0 fw-bold text-white"><i class="bi bi-patch-check me-2 text-info"></i> قسم الشريك الأمثل لتبرعاتك (Ideal Partner)</h5>
                         <button type="submit" class="btn btn-sm btn-info text-white rounded-pill px-4 shadow-sm fw-bold">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 ws-card-header">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">العنوان الرئيسي للقسم</label>
-                                <input type="text" name="ideal_partner_title" class="form-control bg-dark text-white border-secondary" value="{{ $settings['ideal_partner_title'] ?? 'الشريك الأمثل لتبرعاتك' }}">
+                                <label class="form-label small fw-bold ws-label">العنوان الرئيسي للقسم</label>
+                                <input type="text" name="ideal_partner_title" class="form-control ws-input" value="{{ $settings['ideal_partner_title'] ?? 'الشريك الأمثل لتبرعاتك' }}">
                             </div>
                             
-                            <h6 class="mt-4 mb-2 small fw-bold text-slate-400">العناصر الأربعة</h6>
+                            <h6 class="mt-4 mb-2 small fw-bold ws-label">العناصر الأربعة</h6>
                             
                             @for($i = 1; $i <= 4; $i++)
                             @php
@@ -274,14 +274,14 @@
                                 $defValues = ['', '100%', '200+', '200', 'معتمدة'];
                             @endphp
                             <div class="col-md-6">
-                                <div class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary">
-                                    <label class="form-label x-small text-slate-400 mb-1">العنصر {{ $i }}</label>
+                                <div class="p-3 rounded-4" style="background: var(--ws-stats-box-bg); border: 1px solid var(--ws-border-card);">
+                                    <label class="form-label x-small ws-label mb-1">العنصر {{ $i }}</label>
                                     <div class="row g-2">
                                         <div class="col-6">
-                                            <input type="text" name="ideal_partner_item{{ $i }}_value" class="form-control form-control-sm bg-slate-800 text-white border-secondary text-center fw-bold" placeholder="القيمة (مثلاً: 100%)" value="{{ $settings['ideal_partner_item'.$i.'_value'] ?? $defValues[$i] }}">
+                                            <input type="text" name="ideal_partner_item{{ $i }}_value" class="form-control form-control-sm ws-input text-center fw-bold" placeholder="القيمة (مثلاً: 100%)" value="{{ $settings['ideal_partner_item'.$i.'_value'] ?? $defValues[$i] }}">
                                         </div>
                                         <div class="col-6">
-                                            <input type="text" name="ideal_partner_item{{ $i }}_label" class="form-control form-control-sm bg-slate-800 text-white border-secondary text-center opacity-75" placeholder="الوصف" value="{{ $settings['ideal_partner_item'.$i.'_label'] ?? $defLabels[$i] }}" readonly>
+                                            <input type="text" name="ideal_partner_item{{ $i }}_label" class="form-control form-control-sm ws-input text-center opacity-75" placeholder="الوصف" value="{{ $settings['ideal_partner_item'.$i.'_label'] ?? $defLabels[$i] }}" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -292,17 +292,17 @@
                 </form>
 
                 {{-- Field Images --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.4s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.4s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
+                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center ws-card-header">
                         <h5 class="mb-0 fw-bold text-white"><i class="bi bi-camera me-2 text-primary"></i> صور من الميدان (Field)</h5>
                         <button type="submit" class="btn btn-sm btn-primary text-white rounded-pill px-4 shadow-sm fw-bold">حفظ الصور</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 ws-card-header">
                         <div class="row g-3">
                             @for($i = 1; $i <= 4; $i++)
                             <div class="col-6">
-                                <label class="form-label d-block text-slate-400 small fw-bold">صورة الميدان #{{ $i }}</label>
+                                <label class="form-label d-block ws-label small fw-bold">صورة الميدان #{{ $i }}</label>
                                 <div class="position-relative shadow-sm rounded-3 overflow-hidden" 
                                      style="height: 100px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2);">
                                     @php 
@@ -330,37 +330,37 @@
                 </form>
 
                 {{-- Bottom CTA Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-5 overflow-hidden border-0 shadow-sm animate-slide-up stats-card-dark" style="animation-delay: 0.45s;">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="glass-card mb-5 overflow-hidden border-0 shadow-sm animate-slide-up ws-card" style="animation-delay: 0.45s;">
                     @csrf
-                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center bg-slate-900">
+                    <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center ws-card-header">
                         <h5 class="mb-0 fw-bold text-white"><i class="bi bi-megaphone-fill me-2 text-success"></i> قسم الدعوة للعمل (Bottom CTA)</h5>
                         <button type="submit" class="btn btn-sm btn-success text-white rounded-pill px-4 shadow-sm fw-bold">حفظ</button>
                     </div>
-                    <div class="p-4 bg-slate-900">
+                    <div class="p-4 ws-card-header">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">العنوان الرئيسي</label>
-                                <input type="text" name="cta_title" class="form-control bg-dark text-white border-secondary" value="{{ $settings['cta_title'] ?? 'كن جزءاً من قصة نجاح' }}">
+                                <label class="form-label small fw-bold ws-label">العنوان الرئيسي</label>
+                                <input type="text" name="cta_title" class="form-control ws-input" value="{{ $settings['cta_title'] ?? 'كن جزءاً من قصة نجاح' }}">
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold text-slate-400">النص التحفيزي</label>
-                                <textarea name="cta_text" class="form-control bg-dark text-white border-secondary" rows="3">{{ $settings['cta_text'] ?? '' }}</textarea>
+                                <label class="form-label small fw-bold ws-label">النص التحفيزي</label>
+                                <textarea name="cta_text" class="form-control ws-input" rows="3">{{ $settings['cta_text'] ?? '' }}</textarea>
                             </div>
-                            <h6 class="mt-3 mb-2 small fw-bold text-slate-400">إحصائيات CTA</h6>
+                            <h6 class="mt-3 mb-2 small fw-bold ws-label">إحصائيات CTA</h6>
                             <div class="col-md-4">
-                                <label class="form-label x-small text-slate-400">قيمة 1</label>
-                                <input type="text" name="cta_stat1_value" class="form-control form-control-sm mb-1 bg-dark text-white border-secondary" value="{{ $settings['cta_stat1_value'] ?? '50M+' }}">
-                                <input type="text" name="cta_stat1_label" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ $settings['cta_stat1_label'] ?? 'تبرعات' }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label x-small text-slate-400">قيمة 2</label>
-                                <input type="text" name="cta_stat2_value" class="form-control form-control-sm mb-1 bg-dark text-white border-secondary" value="{{ $settings['cta_stat2_value'] ?? '150K+' }}">
-                                <input type="text" name="cta_stat2_label" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ $settings['cta_stat2_label'] ?? 'ابتسامة' }}">
+                                <label class="form-label x-small ws-label">قيمة 1</label>
+                                <input type="text" name="cta_stat1_value" class="form-control form-control-sm mb-1 ws-input" value="{{ $settings['cta_stat1_value'] ?? '50M+' }}">
+                                <input type="text" name="cta_stat1_label" class="form-control form-control-sm ws-input" value="{{ $settings['cta_stat1_label'] ?? 'تبرعات' }}">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label x-small text-slate-400">قيمة 3</label>
-                                <input type="text" name="cta_stat3_value" class="form-control form-control-sm mb-1 bg-dark text-white border-secondary" value="{{ $settings['cta_stat3_value'] ?? '8+' }}">
-                                <input type="text" name="cta_stat3_label" class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ $settings['cta_stat3_label'] ?? 'سنوات' }}">
+                                <label class="form-label x-small ws-label">قيمة 2</label>
+                                <input type="text" name="cta_stat2_value" class="form-control form-control-sm mb-1 ws-input" value="{{ $settings['cta_stat2_value'] ?? '150K+' }}">
+                                <input type="text" name="cta_stat2_label" class="form-control form-control-sm ws-input" value="{{ $settings['cta_stat2_label'] ?? 'ابتسامة' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label x-small ws-label">قيمة 3</label>
+                                <input type="text" name="cta_stat3_value" class="form-control form-control-sm mb-1 ws-input" value="{{ $settings['cta_stat3_value'] ?? '8+' }}">
+                                <input type="text" name="cta_stat3_label" class="form-control form-control-sm ws-input" value="{{ $settings['cta_stat3_label'] ?? 'سنوات' }}">
                             </div>
                         </div>
                     </div>
@@ -436,17 +436,35 @@
 </div> {{-- Closing settings-page started at line 6 --}}
 
 <style>
-    body { background-color: #0b0e14 !important; }
+    body { font-family: 'Tajawal', sans-serif; }
     .settings-page { min-height: 100vh; }
 
     /* Premium Hero */
-    .premium-hero-sleek { position: relative; padding: 100px 0 120px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 0 0 60px 60px; overflow: hidden; z-index: 10; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; pointer-events: none; }
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 100px 0 120px; 
+        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-body) 100%); 
+        border-radius: 0 0 60px 60px; 
+        overflow: hidden; 
+        z-index: 10; 
+        box-shadow: var(--shadow-lg);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.1; pointer-events: none; }
     .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
     .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
     .noise-overlay { position: absolute; inset: 0; opacity: 0.05; }
     .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
-    .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #a5f3fc; font-weight: 700; font-size: 0.85rem; }
+    .badge-glass-premium { 
+        background: var(--bg-glass); 
+        backdrop-filter: blur(12px); 
+        border: 1px solid var(--gray-200); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+    }
     .fw-800 { font-weight: 800; }
     .max-w-600 { max-width: 600px; }
     .animate-reveal-right { animation: revealRight 1s both; }
@@ -461,10 +479,7 @@
         border: 1px solid rgba(255,255,255,0.08); 
         border-radius: 20px; 
     }
-    
-    .stats-card-dark { background-color: #0f172a !important; border: 1px solid rgba(255,255,255,0.1); }
-    .bg-slate-900 { background-color: #0f172a !important; }
-    .text-slate-400 { color: #94a3b8 !important; }
+.ws-label { color: #94a3b8 !important; }
     .border-secondary { border-color: rgba(255,255,255,0.1) !important; }
     
     .x-small { font-size: 0.7rem; }
@@ -505,7 +520,7 @@
     }
     [data-bs-theme="dark"] .bg-light { background-color: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.1) !important; }
     [data-bs-theme="dark"] .statistics-box { border-color: rgba(255,255,255,0.1) !important; }
-    [data-bs-theme="dark"] input.form-control { color: #fff !important; }
+    [data-bs-theme="dark"] input.form-control { color: var(--ws-text-primary) !important; }
 
     /* Campaign Card Preview Styles */
     .campaign-card {
@@ -593,3 +608,5 @@
     });
 </script>
 @endsection
+
+

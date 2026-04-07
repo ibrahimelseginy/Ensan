@@ -1,38 +1,150 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" />
     <style>
         .select2-container--bootstrap-5 .select2-selection {
-            background-color: #1e293b !important;
-            border: 1px solid #334155 !important;
-            color: #f8fafc !important;
+            background-color: var(--bg-body) !important;
+            border: 1px solid var(--gray-200) !important;
+            color: var(--dark) !important;
             border-radius: 12px !important;
             min-height: 45px;
             display: flex;
             align-items: center;
         }
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-            background-color: #3b82f6 !important;
+            background-color: var(--primary) !important;
             border: none !important;
-            color: white !important;
+            color: var(--ws-text-primary); !important;
             border-radius: 6px !important;
             padding: 2px 8px !important;
         }
         .select2-container--bootstrap-5 .select2-dropdown {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f8fafc !important;
+            background-color: var(--bg-card) !important;
+            border-color: var(--gray-200) !important;
+            color: var(--dark) !important;
         }
         .select2-container--bootstrap-5 .select2-search__field {
-            background-color: #0f172a !important;
-            color: #f8fafc !important;
+            background-color: var(--bg-body) !important;
+            color: var(--dark) !important;
         }
         .select2-container--bootstrap-5 .select2-results__option--highlighted {
-            background-color: #3b82f6 !important;
+            background-color: var(--primary) !important;
         }
-    </style>
+          /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+</style>
 @endsection
 @section('content')
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
@@ -48,8 +160,8 @@
         {{-- 0. Integrated Services (Ensan Pillars) --}}
         <div class="col-lg-12">
             <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
-                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-white"><i class="bi bi-grid-fill me-2 text-primary"></i> المبادرات المتكاملة (Ensan Pillars)</h5>
+                <div class="p-4 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-grid-fill me-2 text-primary"></i> المبادرات المتكاملة (Ensan Pillars)</h5>
                     <button class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addPillarModal">إضافة مبادرة جديدة <i class="bi bi-plus-lg"></i></button>
                 </div>
                 <div class="p-4">
@@ -66,7 +178,7 @@
                                             @endif
                                         </div>
                                         <div class="flex-grow-1">
-                                            <h6 class="fw-bold mb-1 text-white">{{ $pillar->title }}</h6>
+                                            <h6 class="fw-bold mb-1">{{ $pillar->title }}</h6>
                                             <span class="badge bg-primary bg-opacity-10 text-primary x-small">/{{ $pillar->slug }}</span>
                                         </div>
                                         @if(!$pillar->is_active)
@@ -295,12 +407,12 @@
         {{-- 7. About Us Section --}}
         <div class="col-lg-12" id="about_us_section">
             <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
-                <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
+                <div class="p-4 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle-fill me-2 text-primary"></i> معلومات عنا (About Us)</h5>
                 </div>
                 <div class="p-4">
                     @if($aboutUs)
-                        <div class="d-flex align-items-center gap-4 p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center gap-4 p-3 bg-body-quaternary rounded-3 border">
                             <div class="rounded border bg-white overflow-hidden shadow-sm" style="width: 120px; height: 120px;">
                                 @if($aboutUs->image_path)
                                     <img src="{{ $aboutUs->image_url }}" class="w-100 h-100 object-fit-cover">
@@ -309,7 +421,7 @@
                                 @endif
                             </div>
                             <div class="flex-grow-1">
-                                <h6 class="mb-1 fw-bold fs-5 text-white">صورة "معلومات عنا" المعتمدة</h6>
+                                <h6 class="mb-1 fw-bold fs-5">صورة "معلومات عنا" المعتمدة</h6>
                                 <p class="text-muted mb-0">تظهر هذه الصورة في شاشة "عن المؤسسة" في التطبيق.</p>
                             </div>
                             <div class="d-flex flex-column gap-2">
@@ -343,7 +455,7 @@
                 @csrf @method('PUT')
                 
                 {{-- Premium Header with Pattern --}}
-                <div class="modal-header border-0 position-relative p-4 overflow-hidden" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                <div class="modal-header border-0 position-relative p-4 overflow-hidden" style="background: linear-gradient(135deg, var(--ws-border) 0%, var(--ws-bg-card-header) 100%);">
                     <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.4\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E');"></div>
                     <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
                         <div>
@@ -748,48 +860,45 @@
 
 <style>
     .glass-card { 
-        background: #0f172a !important; 
-        border: 1px solid #1e293b !important; 
+        background: var(--bg-card) !important; 
+        border: 1px solid var(--gray-200) !important; 
         border-radius: 20px; 
-        box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
+        box-shadow: var(--shadow-sm); 
     }
     .modal-content { 
-        background-color: #0f172a !important; 
-        border: 2px solid #3b82f6 !important; 
+        background-color: var(--bg-card) !important; 
+        border: 1px solid var(--gray-200) !important; 
         border-radius: 20px !important; 
-        color: #ffffff !important;
-        box-shadow: 0 0 60px rgba(59, 130, 246, 0.4) !important;
+        color: var(--dark) !important;
+        box-shadow: var(--shadow-lg) !important;
         overflow: hidden;
-        opacity: 1 !important;
     }
     .modal-header {
-        background: #1e293b !important;
-        border-bottom: 1px solid #334155 !important;
-        color: #ffffff !important;
+        background: var(--bg-body) !important;
+        border-bottom: 1px solid var(--gray-200) !important;
+        color: var(--dark) !important;
         padding: 1.5rem !important;
     }
     .modal-footer {
-        background: #1e293b !important;
-        border-top: 1px solid #334155 !important;
+        background: var(--bg-body) !important;
+        border-top: 1px solid var(--gray-200) !important;
         padding: 1.2rem !important;
     }
     .modal-body {
-        background-color: #0f172a !important;
-        color: #f8fafc !important;
-        opacity: 1 !important;
+        background-color: var(--bg-card) !important;
+        color: var(--dark) !important;
     }
     .form-control, .form-select {
-        background-color: #1e293b !important;
-        border: 1px solid #334155 !important;
-        color: #f8fafc !important;
+        background-color: var(--bg-body) !important;
+        border: 1px solid var(--gray-200) !important;
+        color: var(--dark) !important;
         padding: 0.75rem !important;
         border-radius: 12px !important;
     }
     .form-control:focus {
-        background-color: #0f172a !important;
-        border-color: #3b82f6 !important;
+        background-color: var(--bg-body) !important;
+        border-color: var(--primary) !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
-        color: #ffffff !important;
     }
     .modal-backdrop.show { 
         backdrop-filter: blur(10px) !important; 
@@ -799,6 +908,118 @@
     }
     .animate-slide-up { animation: slideUp 0.5s ease-out; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
@@ -871,3 +1092,6 @@
     }
 </script>
 @endsection
+
+
+

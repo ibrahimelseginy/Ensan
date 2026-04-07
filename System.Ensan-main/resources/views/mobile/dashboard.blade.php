@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
@@ -275,49 +275,49 @@
 
 <style>
     .glass-card { 
-        background: #0f172a !important; 
-        border: 1px solid #1e293b !important; 
+        background: var(--ws-bg-card-header) !important; 
+        border: 1px solid var(--ws-border) !important; 
         border-radius: 20px; 
         box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
     }
     .modal-content { 
-        background-color: #0f172a !important; 
+        background-color: var(--ws-bg-card-header) !important; 
         border: 2px solid #3b82f6 !important; 
         border-radius: 20px !important; 
-        color: #ffffff !important;
+        color: var(--ws-text-primary) !important;
         box-shadow: 0 0 60px rgba(59, 130, 246, 0.4) !important;
         overflow: hidden;
         opacity: 1 !important;
     }
     .modal-header {
-        background: #1e293b !important;
+        background: var(--ws-border) !important;
         border-bottom: 1px solid #334155 !important;
-        color: #ffffff !important;
+        color: var(--ws-text-primary) !important;
         padding: 1.5rem !important;
     }
     .modal-footer {
-        background: #1e293b !important;
+        background: var(--ws-border) !important;
         border-top: 1px solid #334155 !important;
         padding: 1.2rem !important;
     }
     .modal-body {
-        background-color: #0f172a !important;
+        background-color: var(--ws-bg-card-header) !important;
         color: #f8fafc !important;
         opacity: 1 !important;
     }
-    .bg-light { background-color: #1e293b !important; }
+    .bg-light { background-color: var(--ws-border) !important; }
     .border { border-color: #334155 !important; }
     .text-muted { color: #94a3b8 !important; }
     .form-control {
-        background-color: #1e293b !important;
+        background-color: var(--ws-border) !important;
         border: 1px solid #334155 !important;
         color: #f8fafc !important;
         border-radius: 12px !important;
     }
     .form-control:focus {
-        background-color: #0f172a !important;
+        background-color: var(--ws-bg-card-header) !important;
         border-color: #3b82f6 !important;
-        color: #ffffff !important;
+        color: var(--ws-text-primary) !important;
     }
     .modal-backdrop.show { 
         backdrop-filter: blur(10px) !important; 
@@ -327,6 +327,121 @@
     }
     .x-small { font-size: 0.7rem; }
     .animate-delay-1 { animation-delay: 0.1s; }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
+
+
+
 

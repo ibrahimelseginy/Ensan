@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -289,5 +289,148 @@
         color: #a5b4fc;
         transform: translateY(-2px);
     }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- GLOBAL LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; }
+      body:not(.theme-dark) .text-white, body:not(.theme-dark) .text-white-50 { color: var(--ws-text-primary) !important; }
+      body:not(.theme-dark) .premium-hero-sleek .text-white, body:not(.theme-dark) .premium-hero-sleek .text-white-50 { color: #fff !important; }
+      body:not(.theme-dark) .glass-card, 
+      body:not(.theme-dark) .premium-modal-dark,
+      body:not(.theme-dark) .card,
+      body:not(.theme-dark) .stats-card-dark,
+      body:not(.theme-dark) .stats-inner-card,
+      body:not(.theme-dark) .project-card-admin,
+      body:not(.theme-dark) .campaign-card-lux,
+      body:not(.theme-dark) .guest-card-lux,
+      body:not(.theme-dark) .article-card-lux,
+      body:not(.theme-dark) .message-card-lux,
+      body:not(.theme-dark) .donation-card-lux,
+      body:not(.theme-dark) .bg-dark,
+      body:not(.theme-dark) .bg-slate-800,
+      body:not(.theme-dark) .bg-slate-900,
+      body:not(.theme-dark) .modal-content {
+          background: var(--ws-bg-card) !important;
+          border-color: var(--ws-border) !important;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+      }
+      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control { background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
+      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
+      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
+      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
+      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
 </style>
 @endsection
+
+
+

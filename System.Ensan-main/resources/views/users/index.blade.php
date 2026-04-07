@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);">
@@ -152,3 +152,4 @@
 
     <div class="mt-4">{{ $users->links() }}</div>
 @endsection
+

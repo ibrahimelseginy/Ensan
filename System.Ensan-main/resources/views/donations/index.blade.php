@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);">
@@ -355,3 +355,4 @@
         form.submit();
     }
 </script>
+

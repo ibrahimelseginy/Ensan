@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);">
@@ -74,12 +74,12 @@
                             {{-- Donation Detail Modal --}}
                             <div class="modal fade" id="viewDonation{{ $donation->id }}" tabindex="-1">
                                 <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                                    <div class="modal-content border-0 shadow-lg text-start" style="background-color: var(--ws-bg-page) !important; border-radius: 24px !important; overflow: hidden;">
                                         <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
                                             <h5 class="modal-title fw-bold">إدارة استلام التبرع العيني</h5>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                         </div>
-                                        <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
+                                        <div class="modal-body p-4" style="background-color: var(--ws-bg-page) !important;">
                                             <div class="text-center mb-4">
                                                 @if($donation->image_path)
                                                     <img src="{{ $donation->image_url }}" class="rounded-3 shadow-sm w-100 object-fit-cover" style="height: 200px; border: 1px solid rgba(255,255,255,0.1);">
@@ -95,24 +95,24 @@
                                             
                                             <div class="mb-3">
                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">وصف العنصر</label>
-                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #fff;">{{ $donation->item_description ?? 'لا يوجد وصف' }}</div>
+                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: var(--ws-text-primary);">{{ $donation->item_description ?? 'لا يوجد وصف' }}</div>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">العنوان بالتفصيل</label>
-                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #fff;">{{ $donation->pickup_address }}</div>
+                                                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: var(--ws-text-primary);">{{ $donation->pickup_address }}</div>
                                                 <div class="d-grid mt-2">
                                                     <a href="https://maps.google.com/?q={{ urlencode($donation->pickup_address) }}" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> عرض على الخريطة</a>
                                                 </div>
                                             </div>
 
-                                            <hr class="my-4" style="opacity: 0.1; color: #fff;">
+                                            <hr class="my-4" style="opacity: 0.1; color: var(--ws-text-primary);">
                                             
                                             <form action="{{ route('mobile.inkind.update', $donation) }}" method="POST">
                                                 @csrf @method('PATCH')
                                                 <div class="d-grid gap-2">
-                                                    <button type="submit" name="status" value="scheduled" class="btn" style="background: #0066ff; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-calendar-check me-2"></i> جدولة موعد الاستلام</button>
-                                                    <button type="submit" name="status" value="collected" class="btn" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-check-circle-fill me-2"></i> تم استلام التبرع</button>
+                                                    <button type="submit" name="status" value="scheduled" class="btn" style="background: #0066ff; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-calendar-check me-2"></i> جدولة موعد الاستلام</button>
+                                                    <button type="submit" name="status" value="collected" class="btn" style="background: #00d1b2; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px; font-weight: 700;"><i class="bi bi-check-circle-fill me-2"></i> تم استلام التبرع</button>
                                                     <button type="submit" name="status" value="rejected" class="btn btn-sm mt-2" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 8px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);">رفض التبرع</button>
                                                 </div>
                                             </form>
@@ -144,7 +144,122 @@
     .bg-orange { background-color: #f97316 !important; }
     .text-orange { color: #c2410c !important; }
     .bg-orange-subtle { background-color: #ffedd5 !important; }
-    .donation-row:hover { background-color: #fff7ed !important; }
+    .donation-row:hover { background-color: var(--ws-text-primary)7ed !important; }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
+
+
+
 

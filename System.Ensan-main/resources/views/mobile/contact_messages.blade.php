@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@
                     
                     <div class="card-body-lux p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0 premium-table-dark">
+                            <table class="table table-hover align-middle mb-0 premium-ws-table">
                                 <thead>
                                     <tr>
                                         <th class="ps-4">المرسل</th>
@@ -89,7 +89,7 @@
                                             <div class="x-small text-slate-500 text-truncate" style="max-width: 300px;">{{ $msg->message }}</div>
                                         </td>
                                         <td>
-                                            <div class="small text-slate-400">
+                                            <div class="small ws-label">
                                                 <i class="bi bi-calendar-event ms-1"></i>
                                                 {{ $msg->created_at->translatedFormat('d M Y - h:i a') }}
                                             </div>
@@ -132,7 +132,7 @@
                                                     <i class="bi bi-mailbox2-flag empty-icon-vibe"></i>
                                                 </div>
                                                 <h5 class="fw-bold text-white mt-4">لا يوجد رسائل حالياً</h5>
-                                                <p class="text-slate-400">صندوق الوارد الخاص بك فارغ، لم تتصل أي رسائل جديدة.</p>
+                                                <p class="ws-label">صندوق الوارد الخاص بك فارغ، لم تتصل أي رسائل جديدة.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -340,7 +340,7 @@
                         </div>
                         <div class="text-end">
                             <h5 class="fw-bold text-white mb-1">{{ $msg->name }}</h5>
-                            <p class="mb-0 x-small text-slate-400">{{ $msg->email }} | {{ $msg->phone }}</p>
+                            <p class="mb-0 x-small ws-label">{{ $msg->email }} | {{ $msg->phone }}</p>
                         </div>
                     </div>
 
@@ -387,7 +387,7 @@
 
 <style>
     :root {
-        --dark-bg: #0b0e14;
+        --dark-bg: var(--ws-bg-page);
         --card-dark: #1a2332;
         --indigo-500: #6366f1;
         --indigo-600: #4f46e5;
@@ -402,7 +402,7 @@
     .premium-hero-sleek {
         position: relative;
         padding: 100px 0 120px;
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        background: linear-gradient(135deg, var(--ws-bg-card-header) 0%, #1e1b4b 100%);
         border-radius: 0 0 60px 60px;
         overflow: hidden;
         z-index: 10;
@@ -433,15 +433,15 @@
         font-weight: 700;
         transition: 0.4s;
     }
-    .btn-glass-indigo:hover { background: rgba(99, 102, 241, 0.2); color: white; transform: translateY(-3px); }
+    .btn-glass-indigo:hover { background: rgba(99, 102, 241, 0.2); color: var(--ws-text-primary); transform: translateY(-3px); }
     
     .btn-indigo-solid {
         background: var(--indigo-600);
-        color: white; border: none; font-weight: 700;
+        color: var(--ws-text-primary); border: none; font-weight: 700;
         box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
         transition: 0.4s;
     }
-    .btn-indigo-solid:hover { background: #4338ca; color: white; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4); }
+    .btn-indigo-solid:hover { background: #4338ca; color: var(--ws-text-primary); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4); }
 
     .btn-glass-danger {
         background: rgba(ef, 68, 68, 0.1);
@@ -451,7 +451,7 @@
         font-weight: 700;
         transition: 0.4s;
     }
-    .btn-glass-danger:hover { background: rgba(239, 68, 68, 0.2); color: white; transform: translateY(-3px); }
+    .btn-glass-danger:hover { background: rgba(239, 68, 68, 0.2); color: var(--ws-text-primary); transform: translateY(-3px); }
 
     /* Content Area */
     .content-shift-up { margin-top: -60px; position: relative; z-index: 20; padding: 0 5%; }
@@ -465,16 +465,16 @@
         overflow: hidden;
     }
     .card-header-lux { padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01); }
-    .header-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; }
+    .header-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--ws-text-primary); font-size: 1.2rem; }
     .bg-indigo-500 { background: var(--indigo-500); }
 
     /* Tables */
-    .premium-table-dark { background: transparent; }
-    .premium-table-dark thead th { 
+    .premium-ws-table { background: transparent; }
+    .premium-ws-table thead th { 
         background: rgba(0,0,0,0.2); color: var(--slate-400); 
         text-transform: uppercase; font-size: 0.75rem; font-weight: 800; border: none; padding: 20px;
     }
-    .premium-table-dark tbody td { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 20px; color: #f8fafc; }
+    .premium-ws-table tbody td { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 20px; color: #f8fafc; }
     .bg-unread { background: rgba(99, 102, 241, 0.05) !important; }
     .bg-unread td { border-bottom-color: rgba(99, 102, 241, 0.1) !important; }
 
@@ -506,7 +506,7 @@
         background: rgba(255, 255, 255, 0.03); 
         padding: 20px; border-radius: 25px; display: flex; align-items: center; justify-content: space-between;
     }
-    .strip-avatar { width: 55px; height: 55px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; font-weight: 800; }
+    .strip-avatar { width: 55px; height: 55px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: var(--ws-text-primary); font-size: 1.4rem; font-weight: 800; }
 
     .detail-box-lux { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.03); }
     .detail-label-sleek { font-size: 0.75rem; color: var(--slate-500); font-weight: 800; margin-bottom: 10px; display: block; }
@@ -514,8 +514,8 @@
 
     .channel-icon-circle { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
     .field-lux {
-        width: 100%; background: #0b0e14; border: 1px solid #2d3748;
-        border-radius: 14px; padding: 12px 20px; color: white; font-weight: 600; transition: 0.3s;
+        width: 100%; background: var(--ws-bg-input); border: 1px solid #2d3748;
+        border-radius: 14px; padding: 12px 20px; color: var(--ws-text-primary); font-weight: 600; transition: 0.3s;
     }
     .field-lux:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
     .label-lux { color: var(--slate-400); font-weight: 700; margin-bottom: 8px; display: block; }
@@ -580,6 +580,121 @@
         text-align: center;
         color: var(--slate-500);
     }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
+
+
+
 

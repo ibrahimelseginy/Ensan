@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'شنط رمضان')
 
@@ -140,3 +140,5 @@
     @endif
 </div>
 @endsection
+
+

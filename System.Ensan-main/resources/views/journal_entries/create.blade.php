@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 <div class="card p-4">
     <h5 class="mb-3">إضافة قيد يومية</h5>
@@ -126,3 +126,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+

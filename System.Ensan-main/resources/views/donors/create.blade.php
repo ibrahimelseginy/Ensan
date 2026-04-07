@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   {{-- Page Header --}}
   <div class="page-header">
@@ -108,3 +108,4 @@
       (function () { var s = document.getElementById('sType'); function t() { var on = s.value !== 'none'; document.querySelectorAll('.s-fields').forEach(e => e.style.display = on ? 'block' : 'none'); } t(); s.addEventListener('change', t); })();
     </script>
 @endsection
+

@@ -1,4 +1,4 @@
-
+﻿
 <div class="modal fade" id="createProjectModal" tabindex="-1" aria-hidden="true" style="z-index: 2050;">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <form action="{{ route('website.projects.store') }}" method="POST" enctype="multipart/form-data" class="modal-content modal-premium-dark border-0 text-white">
@@ -21,7 +21,7 @@
                     </div>
 
                     {{-- Tabs Content --}}
-                    <div class="col-md-9 p-4 bg-slate-900" style="max-height: 70vh; overflow-y: auto; background-color: #0f172a !important;">
+                    <div class="col-md-9 p-4 ws-card-header" style="max-height: 70vh; overflow-y: auto; background-color: var(--ws-bg-card-header) !important;">
                         <div class="tab-content" id="v-pills-tabContent">
                             
                             {{-- Tab 1: Basic Info --}}
@@ -29,7 +29,7 @@
                                 <h6 class="fw-bold mb-3 border-bottom border-white border-opacity-10 pb-2">المعلومات الأساسية</h6>
                                 <div class="row g-3">
                                     <div class="col-md-12">
-                                        <div class="p-3 rounded-4 bg-slate-800 border border-info border-opacity-30 mb-3" style="background-color: #1e293b !important;">
+                                        <div class="p-3 rounded-4 bg-slate-800 border border-info border-opacity-30 mb-3" style="background-color: var(--ws-border) !important;">
                                             <div class="d-flex align-items-center justify-content-between mb-3">
                                                 <h6 class="x-small fw-bold text-info mb-0"><i class="bi bi-star-fill me-1"></i> الشارة المميزة (Badge) - التي في الصورة</h6>
                                                 <div class="form-check form-switch mb-0">
@@ -39,37 +39,37 @@
                                             </div>
                                             <div class="row g-2">
                                                 <div class="col-md-6">
-                                                    <label class="form-label x-small fw-bold text-slate-400">نص الشارة (مثلاً: مميز)</label>
-                                                    <input type="text" name="badge_text" class="form-control form-control-sm bg-dark text-white border-secondary shadow-none" placeholder="مثلاً: مميز">
+                                                    <label class="form-label x-small fw-bold ws-label">نص الشارة (مثلاً: مميز)</label>
+                                                    <input type="text" name="badge_text" class="form-control form-control-sm ws-input shadow-none" placeholder="مثلاً: مميز">
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label x-small fw-bold text-slate-400">أيقونة الشارة (اختر من المعرض)</label>
-                                                    <input type="file" name="badge_icon_file" class="form-control form-control-sm bg-dark text-white border-secondary shadow-none">
+                                                    <label class="form-label x-small fw-bold ws-label">أيقونة الشارة (اختر من المعرض)</label>
+                                                    <input type="file" name="badge_icon_file" class="form-control form-control-sm ws-input shadow-none">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-12">
-                                        <label class="form-label x-small fw-bold text-slate-400">اسم المشروع (العنوان)</label>
-                                        <input type="text" name="name" class="form-control bg-dark text-white border-secondary" required placeholder="مثلاً: مشروع كفالة اليتيم">
+                                        <label class="form-label x-small fw-bold ws-label">اسم المشروع (العنوان)</label>
+                                        <input type="text" name="name" class="form-control ws-input" required placeholder="مثلاً: مشروع كفالة اليتيم">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-slate-400">التصنيف الرئيسي (Category)</label>
-                                        <input type="text" name="category" class="form-control bg-dark text-white border-secondary" placeholder="مثلاً: كفالات">
+                                        <label class="form-label x-small fw-bold ws-label">التصنيف الرئيسي (Category)</label>
+                                        <input type="text" name="category" class="form-control ws-input" placeholder="مثلاً: كفالات">
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-slate-400">قيمة الكفالة الشهرية (بالأرقام)</label>
-                                        <input type="text" name="sponsorship_details" class="form-control bg-dark text-white border-secondary shadow-none" placeholder="مثلاً: 500">
+                                        <label class="form-label x-small fw-bold ws-label">قيمة الكفالة الشهرية (بالأرقام)</label>
+                                        <input type="text" name="sponsorship_details" class="form-control ws-input shadow-none" placeholder="مثلاً: 500">
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label x-small fw-bold text-slate-400">وصف مختصر (حتى سطرين)</label>
-                                        <textarea name="short_description" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="وصف قصير يظهر في البطاقة الرئيسية..."></textarea>
+                                        <label class="form-label x-small fw-bold ws-label">وصف مختصر (حتى سطرين)</label>
+                                        <textarea name="short_description" class="form-control ws-input" rows="2" placeholder="وصف قصير يظهر في البطاقة الرئيسية..."></textarea>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label x-small fw-bold text-slate-400">الوصف الكامل (محتوى الصفحة)</label>
-                                        <textarea name="website_content" class="form-control bg-dark text-white border-secondary" rows="4" placeholder="التفاصيل الكاملة التي تظهر عند الضغط على البطاقة..."></textarea>
+                                        <label class="form-label x-small fw-bold ws-label">الوصف الكامل (محتوى الصفحة)</label>
+                                        <textarea name="website_content" class="form-control ws-input" rows="4" placeholder="التفاصيل الكاملة التي تظهر عند الضغط على البطاقة..."></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -79,30 +79,30 @@
                                 <h6 class="fw-bold mb-3 border-bottom border-white border-opacity-10 pb-2">الهوية البصرية والألوان</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-slate-400">صورة الخلفية (Cover Image)</label>
-                                        <input type="file" name="image" class="form-control bg-dark text-white border-secondary" accept="image/*">
+                                        <label class="form-label x-small fw-bold ws-label">صورة الخلفية (Cover Image)</label>
+                                        <input type="file" name="image" class="form-control ws-input" accept="image/*">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label x-small fw-bold text-slate-400">أيقونة المشروع (Icon)</label>
-                                        <input type="file" name="icon" class="form-control bg-dark text-white border-secondary" accept="image/*">
+                                        <label class="form-label x-small fw-bold ws-label">أيقونة المشروع (Icon)</label>
+                                        <input type="file" name="icon" class="form-control ws-input" accept="image/*">
                                     </div>
                                     <div class="col-md-12 mt-4">
                                         <h6 class="x-small fw-bold text-info mb-3"><i class="bi bi-palette me-1"></i> ثيم الألوان (Theme Colors)</h6>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label x-small fw-bold text-slate-400">اللون الأساسي</label>
+                                        <label class="form-label x-small fw-bold ws-label">اللون الأساسي</label>
                                         <input type="color" name="theme_colors[primaryColor]" class="form-control form-control-sm bg-dark border-secondary h-auto" value="#0d6efd">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label x-small fw-bold text-slate-400">لون شفاف (Tint)</label>
+                                        <label class="form-label x-small fw-bold ws-label">لون شفاف (Tint)</label>
                                         <input type="color" name="theme_colors[lightTint]" class="form-control form-control-sm bg-dark border-secondary h-auto" value="#e7f1ff">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label x-small fw-bold text-slate-400">لون الإطار</label>
+                                        <label class="form-label x-small fw-bold ws-label">لون الإطار</label>
                                         <input type="color" name="theme_colors[borderColor]" class="form-control form-control-sm bg-dark border-secondary h-auto" value="#cfe2ff">
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label x-small fw-bold text-slate-400">لون الأيقونة</label>
+                                        <label class="form-label x-small fw-bold ws-label">لون الأيقونة</label>
                                         <input type="color" name="theme_colors[iconColor]" class="form-control form-control-sm bg-dark border-secondary h-auto" value="#0d6efd">
                                     </div>
                                 </div>
@@ -117,12 +117,12 @@
                                         <div id="features-container">
                                             <div class="row g-2 mb-2 feature-row animate-slide-up align-items-center">
                                                 <div class="col-md-4">
-                                                    <input type="text" name="features[0][text]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="نص الميزة (مثلاً: دعم طبي)">
+                                                    <input type="text" name="features[0][text]" class="form-control form-control-sm ws-input" placeholder="نص الميزة (مثلاً: دعم طبي)">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="input-group input-group-sm">
                                                         <label class="input-group-text bg-slate-800 text-info border-secondary x-small py-0">أيقونة</label>
-                                                        <input type="file" name="features[0][icon_file]" class="form-control bg-dark text-white border-secondary">
+                                                        <input type="file" name="features[0][icon_file]" class="form-control ws-input">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2">
@@ -139,15 +139,15 @@
                                         <div id="stats-container">
                                             <div class="row g-2 mb-3 stat-row animate-slide-up align-items-center">
                                                 <div class="col-md-3">
-                                                    <input type="text" name="stats[0][value]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="القيمة">
+                                                    <input type="text" name="stats[0][value]" class="form-control form-control-sm ws-input" placeholder="القيمة">
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <input type="text" name="stats[0][label]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="الوصف">
+                                                    <input type="text" name="stats[0][label]" class="form-control form-control-sm ws-input" placeholder="الوصف">
                                                 </div>
                                                 <div class="col-md-5">
                                                     <div class="input-group input-group-sm">
                                                         <label class="input-group-text bg-slate-800 text-warning border-secondary x-small py-0">أيقونة</label>
-                                                        <input type="file" name="stats[0][icon_file]" class="form-control bg-dark text-white border-secondary">
+                                                        <input type="file" name="stats[0][icon_file]" class="form-control ws-input">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-1">
@@ -172,11 +172,11 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <div class="p-3 rounded-4 bg-slate-800 border border-warning border-opacity-30 mb-3" style="background-color: #1e293b !important;">
+                                        <div class="p-3 rounded-4 bg-slate-800 border border-warning border-opacity-30 mb-3" style="background-color: var(--ws-border) !important;">
                                             <div class="row g-2 align-items-center">
                                                 <div class="col-md-6">
-                                                    <label class="form-label x-small fw-bold text-slate-400">أيقونة الزر (اختر من المعرض)</label>
-                                                    <input type="file" name="action_icon_file" class="form-control form-control-sm bg-dark text-white border-secondary" accept="image/*"
+                                                    <label class="form-label x-small fw-bold ws-label">أيقونة الزر (اختر من المعرض)</label>
+                                                    <input type="file" name="action_icon_file" class="form-control form-control-sm ws-input" accept="image/*"
                                                         onchange="document.getElementById('createActionIconPreview').src = window.URL.createObjectURL(this.files[0]); document.getElementById('createActionIconPreview').classList.remove('d-none');">
                                                 </div>
                                                 <div class="col-md-2 mt-4 text-center">
@@ -217,12 +217,12 @@
         row.className = 'row g-2 mb-2 feature-row animate-slide-up align-items-center';
         row.innerHTML = `
             <div class="col-md-4">
-                <input type="text" name="features[${featureIdx}][text]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="نص الميزة">
+                <input type="text" name="features[${featureIdx}][text]" class="form-control form-control-sm ws-input" placeholder="نص الميزة">
             </div>
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <label class="input-group-text bg-slate-800 text-info border-secondary x-small py-0">أيقونة</label>
-                    <input type="file" name="features[${featureIdx}][icon_file]" class="form-control bg-dark text-white border-secondary">
+                    <input type="file" name="features[${featureIdx}][icon_file]" class="form-control ws-input">
                 </div>
             </div>
             <div class="col-md-2">
@@ -239,15 +239,15 @@
         row.className = 'row g-2 mb-3 stat-row animate-slide-up align-items-center';
         row.innerHTML = `
             <div class="col-md-3">
-                <input type="text" name="stats[${statIdx}][value]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="القيمة">
+                <input type="text" name="stats[${statIdx}][value]" class="form-control form-control-sm ws-input" placeholder="القيمة">
             </div>
             <div class="col-md-3">
-                <input type="text" name="stats[${statIdx}][label]" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="الوصف">
+                <input type="text" name="stats[${statIdx}][label]" class="form-control form-control-sm ws-input" placeholder="الوصف">
             </div>
             <div class="col-md-5">
                 <div class="input-group input-group-sm">
                     <label class="input-group-text bg-slate-800 text-warning border-secondary x-small py-0">أيقونة</label>
-                    <input type="file" name="stats[${statIdx}][icon_file]" class="form-control bg-dark text-white border-secondary">
+                    <input type="file" name="stats[${statIdx}][icon_file]" class="form-control ws-input">
                 </div>
             </div>
             <div class="col-md-1">
@@ -258,3 +258,8 @@
         statIdx++;
     }
 </script>
+
+
+
+
+

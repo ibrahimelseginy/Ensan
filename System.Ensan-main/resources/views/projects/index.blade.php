@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   {{-- Welcome Card --}}
   <div class="card welcome-card mb-4 border-0"
@@ -31,36 +31,36 @@
       <form method="GET">
         <div class="row g-3 align-items-end">
           <div class="col-md-4">
-            <label class="form-label fw-bold">بحث</label>
-            <div class="input-group">
+            <label class="form-label fw-bold small mb-1">بحث</label>
+            <div class="input-group input-group-sm">
               <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-              <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="اسم المشروع...">
+              <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0 py-2" placeholder="اسم المشروع...">
             </div>
           </div>
-          <div class="col-md-3">
-            <label class="form-label fw-bold">الحالة</label>
-            <select name="status" class="form-select">
+          <div class="col-md-2">
+            <label class="form-label fw-bold small mb-1">الحالة</label>
+            <select name="status" class="form-select form-select-sm py-2">
               <option value="">الجميع</option>
               <option value="active" @selected(($status ?? '') === 'active')>نشط</option>
               <option value="archived" @selected(($status ?? '') === 'archived')>مؤرشف</option>
             </select>
           </div>
-          <div class="col-md-3">
-            <label class="form-label fw-bold">النوع</label>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small mb-1">النوع</label>
             <div class="btn-group w-100" role="group">
                 <input type="radio" class="btn-check" name="fixed" id="fixed_all" value="" @checked(($fixed ?? '') === '') autocomplete="off">
-                <label class="btn btn-outline-secondary" for="fixed_all">الكل</label>
+                <label class="btn btn-sm btn-outline-secondary py-2" for="fixed_all">الكل</label>
 
                 <input type="radio" class="btn-check" name="fixed" id="fixed_yes" value="1" @checked(($fixed ?? '') == '1') autocomplete="off">
-                <label class="btn btn-outline-secondary" for="fixed_yes">ثابت</label>
+                <label class="btn btn-sm btn-outline-secondary py-2" for="fixed_yes">ثابت</label>
 
                 <input type="radio" class="btn-check" name="fixed" id="fixed_no" value="0" @checked(($fixed ?? '') == '0') autocomplete="off">
-                <label class="btn btn-outline-secondary" for="fixed_no">غير ثابت</label>
+                <label class="btn btn-sm btn-outline-secondary py-2" for="fixed_no">غير ثابت</label>
             </div>
           </div>
           <div class="col-md-2">
-            <button class="btn btn-primary w-100 fw-bold">
-              تطبيق
+            <button class="btn btn-sm btn-primary w-100 fw-bold py-2">
+              <i class="bi bi-funnel me-1"></i> تطبيق
             </button>
           </div>
         </div>
@@ -194,3 +194,4 @@
         });
     });
 </script>
+

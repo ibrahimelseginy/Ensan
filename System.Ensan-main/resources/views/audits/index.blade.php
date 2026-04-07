@@ -1,25 +1,24 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 
 {{-- Premium Security Dashboard Hero --}}
-<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
+<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #0c4a6e 0%, #155e75 50%, #164e63 100%); border-bottom: 1px solid rgba(56,189,248,0.2);">
     <div class="hero-content">
-        <div class="hero-greeting text-info">الأمان والرقابة ًں›،ï¸ڈ</div>
+        <div class="hero-greeting" style="color: #67e8f9;">الأمان والرقابة 🛡️</div>
         <h1 class="hero-title">مركز مراقبة النشاطات</h1>
         <p class="hero-subtitle">تتبع كامل لجميع العمليات التي تتم عبر النظام لضمان الامتثال والأمان</p>
         <div class="hero-actions d-flex gap-2">
-            <a class="btn btn-sm rounded-pill px-4 btn-info text-white"
+            <a class="btn btn-sm rounded-pill px-4 shadow-sm"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: #fff; border: none;"
                 href="{{ route('audits.index', array_merge(request()->query(), ['export' => 'csv'])) }}">
                 <i class="bi bi-cloud-download me-1"></i> تحميل السجلات (CSV)
             </a>
-            <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light">
+            <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light" style="border-color: rgba(255,255,255,0.3);">
                 <i class="bi bi-arrow-right me-1"></i> الرجوع للرئيسية
             </a>
         </div>
     </div>
-    <div class="d-none d-lg-block position-absolute top-50 end-0 translate-middle-y me-5 opacity-25">
-        <i class="bi bi-shield-check" style="font-size: 10rem; color: #38bdf8;"></i>
-    </div>
+    <i class="bi bi-shield-check hero-icon d-none d-md-block" style="color: #22d3ee;"></i>
 </div>
 
 @php
@@ -85,8 +84,8 @@
     ];
 
     $valueMaps = [
-        'active' => 'نشط âœ…',
-        'inactive' => 'غير نشط â‌Œ',
+        'active' => 'نشط ✅',
+        'inactive' => 'غير نشط ❌',
         'asset' => 'أصول',
         'liability' => 'خصوم',
         'equity' => 'حقوق ملكية',
@@ -123,26 +122,26 @@
         <div class="col-xl-3">
             <div class="glass-card mb-4 animate-slide-up animate-delay-1">
                 <h6 class="fw-bold mb-3 section-title-sm">ملخص العمليات</h6>
-                <div class="list-group list-group-flush bg-transparent">
+                <div class="list-group list-group-flush bg-transparent audit-stats">
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => ''])) }}" 
                        class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="bi bi-layers me-2"></i>الإجمالي</span>
-                        <span class="fw-bold text-dark">{{ number_format($stats['total']) }}</span>
+                        <span style="color: #94a3b8;"><i class="bi bi-layers me-2" style="color: #22d3ee;"></i>الإجمالي</span>
+                        <span class="fw-bold" style="color: #e2e8f0; font-size: 1.1rem;">{{ number_format($stats['total']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'POST'])) }}"
                        class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="text-success small"><i class="bi bi-plus-circle me-2"></i>إضافة (POST)</span>
-                        <span class="badge bg-success-subtle text-success rounded-pill">{{ number_format($stats['POST']) }}</span>
+                        <span class="small" style="color: #4ade80;"><i class="bi bi-plus-circle me-2"></i>إضافة (POST)</span>
+                        <span class="badge rounded-pill" style="background: rgba(74,222,128,0.12); color: #4ade80;">{{ number_format($stats['POST']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'PUT'])) }}"
                        class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="text-primary small"><i class="bi bi-pencil me-2"></i>تعديل (PUT)</span>
-                        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ number_format($stats['PUT'] + $stats['PATCH']) }}</span>
+                        <span class="small" style="color: #60a5fa;"><i class="bi bi-pencil me-2"></i>تعديل (PUT)</span>
+                        <span class="badge rounded-pill" style="background: rgba(96,165,250,0.12); color: #60a5fa;">{{ number_format($stats['PUT'] + $stats['PATCH']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'DELETE'])) }}"
                        class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="text-danger small"><i class="bi bi-trash me-2"></i>حذف (DELETE)</span>
-                        <span class="badge bg-danger-subtle text-danger rounded-pill">{{ number_format($stats['DELETE']) }}</span>
+                        <span class="small" style="color: #f87171;"><i class="bi bi-trash me-2"></i>حذف (DELETE)</span>
+                        <span class="badge rounded-pill" style="background: rgba(248,113,113,0.12); color: #f87171;">{{ number_format($stats['DELETE']) }}</span>
                     </a>
                 </div>
             </div>
@@ -151,21 +150,21 @@
                 <h6 class="fw-bold mb-3 section-title-sm">أكثر المسارات نشاطاً</h6>
                 <div class="small">
                     @forelse($topPaths as $tp)
-                        <div class="mb-3 p-2 rounded bg-light bg-opacity-50 border-start border-4 border-info">
+                        <div class="top-path-item">
                             <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
-                                <a href="{{ url($tp->path) }}" target="_blank" class="text-dark fw-bold text-decoration-none d-block overflow-hidden" style="font-size: 11px;">
-                                    <i class="bi bi-box-arrow-up-right me-1 text-info"></i>
+                                <a href="{{ url($tp->path) }}" target="_blank" class="fw-bold text-decoration-none d-block overflow-hidden" style="font-size: 11px;">
+                                    <i class="bi bi-box-arrow-up-right me-1" style="color: #22d3ee;"></i>
                                     {{ $getLabel($tp->path) }} 
-                                    <div class="text-muted fw-normal font-monospace x-small">/{{ ltrim($tp->path, '/') }}</div>
+                                    <div class="fw-normal font-monospace x-small">/{{ ltrim($tp->path, '/') }}</div>
                                 </a>
-                                <span class="badge bg-info text-white rounded-pill x-small">{{ $tp->c }}</span>
+                                <span class="badge rounded-pill x-small" style="background: rgba(6,182,212,0.15); color: #22d3ee;">{{ $tp->c }}</span>
                             </div>
-                            <div class="progress" style="height: 3px; background: rgba(0,0,0,0.05);">
-                                <div class="progress-bar bg-info" style="width: {{ ($tp->c / max($topPaths->pluck('c')->all())) * 100 }}%"></div>
+                            <div class="progress" style="height: 3px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                                <div class="progress-bar" style="width: {{ ($tp->c / max($topPaths->pluck('c')->all())) * 100 }}%; background: linear-gradient(90deg, #06b6d4, #22d3ee); border-radius: 4px;"></div>
                             </div>
                         </div>
                     @empty
-                        <p class="text-muted text-center py-2">لا يوجد بيانات ع©افغŒة</p>
+                        <p class="text-muted text-center py-2">لا يوجد بيانات كافية</p>
                     @endforelse
                 </div>
             </div>
@@ -175,25 +174,25 @@
         <div class="col-xl-9">
             {{-- Search & Filters --}}
             {{-- Search & Filters --}}
-            <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-0 overflow-hidden border-0 shadow-sm" style="background: rgba(255,255,255,0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05) !important;">
-                <div class="p-3 border-bottom border-light border-opacity-10 bg-white bg-opacity-5">
+            <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-0 overflow-hidden" style="border: 1px solid rgba(6,182,212,0.1) !important;">
+                <div class="p-3" style="border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(6,182,212,0.04);">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-filter-right text-info"></i>
-                        <span class="fw-bold small text-muted">تصفية السجلات والبحث</span>
+                        <i class="bi bi-funnel-fill" style="color: #22d3ee;"></i>
+                        <span class="fw-bold small" style="color: #94a3b8;">تصفية السجلات والبحث</span>
                     </div>
                 </div>
-                <div class="p-4">
+                <div class="p-4 audits-filter">
                     <form method="GET" class="row g-3 align-items-end">
                         <div class="col-md-5">
-                            <label class="form-label x-small text-muted fw-bold mb-2">البحث في المسار (Path)</label>
+                            <label class="form-label x-small fw-bold mb-2">البحث في المسار (Path)</label>
                             <div class="input-group input-group-sm shadow-none">
-                                <span class="input-group-text bg-white bg-opacity-5 border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                                <input type="text" name="q" class="form-control bg-white bg-opacity-5 border-start-0 py-2" value="{{ $q }}" placeholder="مثلاً: users أو donations...">
+                                <span class="input-group-text border-end-0"><i class="bi bi-search" style="color: #22d3ee;"></i></span>
+                                <input type="text" name="q" class="form-control border-start-0 py-2" value="{{ $q }}" placeholder="مثلاً: users أو donations...">
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label x-small text-muted fw-bold mb-2">نوع العملية</label>
-                            <select name="method" class="form-select form-select-sm bg-white bg-opacity-5 py-2 shadow-none">
+                            <label class="form-label x-small fw-bold mb-2">نوع العملية</label>
+                            <select name="method" class="form-select form-select-sm py-2 shadow-none">
                                 <option value="">الكل</option>
                                 @foreach(['GET', 'POST', 'PUT', 'DELETE'] as $m)
                                     <option value="{{ $m }}" @selected($method === $m)>{{ $m }}</option>
@@ -201,21 +200,21 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label x-small text-muted fw-bold mb-2">خلال (يوم)</label>
+                            <label class="form-label x-small fw-bold mb-2">خلال (يوم)</label>
                             <div class="input-group input-group-sm shadow-none">
-                                <span class="input-group-text bg-white bg-opacity-5 border-end-0 text-muted"><i class="bi bi-calendar3"></i></span>
-                                <input type="number" name="days" class="form-control bg-white bg-opacity-5 border-start-0 py-2" value="{{ $days }}" placeholder="14">
+                                <span class="input-group-text border-end-0"><i class="bi bi-calendar3" style="color: #22d3ee;"></i></span>
+                                <input type="number" name="days" class="form-control border-start-0 py-2" value="{{ $days }}" placeholder="14">
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label x-small text-muted fw-bold mb-2">رقم المستخدم</label>
+                            <label class="form-label x-small fw-bold mb-2">رقم المستخدم</label>
                             <div class="input-group input-group-sm shadow-none">
-                                <span class="input-group-text bg-white bg-opacity-5 border-end-0 text-muted"><i class="bi bi-person-badge"></i></span>
-                                <input type="number" name="user_id" class="form-control bg-white bg-opacity-5 border-start-0 py-2" value="{{ $uid }}" placeholder="ID">
+                                <span class="input-group-text border-end-0"><i class="bi bi-person-badge" style="color: #22d3ee;"></i></span>
+                                <input type="number" name="user_id" class="form-control border-start-0 py-2" value="{{ $uid }}" placeholder="ID">
                             </div>
                         </div>
                         <div class="col-md-1">
-                            <button class="btn btn-info text-white w-100 py-2 rounded shadow-sm border-0 transition-all hover-lift">
+                            <button class="btn audit-filter-btn w-100 py-2">
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
                         </div>
@@ -293,48 +292,262 @@
 </div>
 
 <style>
+    /* ===== Audits Page - Dark Mode Optimized ===== */
     .glass-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: var(--glass-bg, rgba(255,255,255,0.04));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
         border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
         padding: 1.5rem;
     }
+
     .audit-card {
-        background: #ffffff;
-        border: 1px solid #eef2f6;
-        border-radius: 12px;
-        transition: all 0.2s ease;
+        background: var(--glass-bg, rgba(255,255,255,0.03));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.07));
+        border-radius: 14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 3px solid transparent;
     }
     .audit-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        border-color: rgba(6, 182, 212, 0.15);
+        border-right-color: #06b6d4;
+        box-shadow: 0 6px 24px rgba(6, 182, 212, 0.08);
+        transform: translateX(-2px);
     }
+
     .audit-avatar {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
+        font-weight: 700;
+        font-size: 1rem;
         flex-shrink: 0;
     }
+
     .section-title-sm {
         font-size: 0.85rem;
-        text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #64748b;
-        border-bottom: 2px solid #f1f5f9;
-        padding-bottom: 0.5rem;
+        color: #67e8f9;
+        border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        padding-bottom: 0.75rem;
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
+    .section-title-sm::before {
+        content: '';
+        width: 4px;
+        height: 18px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, #06b6d4, #0891b2);
+        flex-shrink: 0;
+    }
+
     .x-small { font-size: 0.75rem; }
-    .text-silver { color: #cbd5e1; }
-    
-    /* Arabic Font Support */
-    body { font-family: 'Inter', 'Noto Sans Arabic', sans-serif; }
+    .text-silver { color: rgba(255,255,255,0.2); }
+
+    /* --- Filter Form Inputs Dark Mode --- */
+    .audits-filter .form-control,
+    .audits-filter .form-select,
+    .audits-filter .input-group-text {
+        background: rgba(255,255,255,0.06) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+        color: var(--text-primary, #e2e8f0) !important;
+        transition: all 0.2s ease;
+    }
+    .audits-filter .form-control:focus,
+    .audits-filter .form-select:focus {
+        background: rgba(255,255,255,0.1) !important;
+        border-color: rgba(6, 182, 212, 0.4) !important;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
+    }
+    .audits-filter .form-control::placeholder {
+        color: rgba(255,255,255,0.3) !important;
+    }
+    .audits-filter .form-label {
+        color: #94a3b8 !important;
+    }
+
+    /* --- Stats Sidebar --- */
+    .audit-stats .list-group-item {
+        color: var(--text-primary, #e2e8f0) !important;
+        padding: 0.75rem 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    .audit-stats .list-group-item:last-child {
+        border-bottom: none !important;
+    }
+    .audit-stats .list-group-item:hover {
+        background: rgba(6, 182, 212, 0.06) !important;
+        border-radius: 8px;
+    }
+
+    /* --- Top Paths --- */
+    .top-path-item {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    .top-path-item:hover {
+        background: rgba(6, 182, 212, 0.06);
+        border-color: rgba(6, 182, 212, 0.15);
+    }
+    .top-path-item a {
+        color: var(--text-primary, #e2e8f0) !important;
+    }
+    .top-path-item .font-monospace {
+        color: #94a3b8 !important;
+    }
+
+    /* --- Audit Card Content Colors --- */
+    .audit-card h6 {
+        color: var(--text-primary, #e2e8f0);
+    }
+    .audit-card .text-primary {
+        color: #22d3ee !important;
+    }
+    .audit-card .text-muted {
+        color: #94a3b8 !important;
+    }
+    .audit-card .font-monospace {
+        color: #64748b !important;
+    }
+
+    /* --- Filter Button --- */
+    .audit-filter-btn {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    .audit-filter-btn:hover {
+        background: linear-gradient(135deg, #22d3ee, #06b6d4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        color: #fff;
+    }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 
 @endsection
+
+

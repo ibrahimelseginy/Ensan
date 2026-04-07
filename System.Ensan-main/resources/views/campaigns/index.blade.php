@@ -1,20 +1,21 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('styles')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;700;800&display=swap" rel="stylesheet">
 <style>
-    body { background-color: #0b0e14 !important; font-family: 'Tajawal', sans-serif; }
-    .campaigns-page { min-height: 100vh; color: white; }
+    body { font-family: 'Tajawal', sans-serif; }
+    .campaigns-page { min-height: 100vh; }
 
     /* Premium Hero Section */
     .premium-hero {
         position: relative;
         padding: 80px 0 110px;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-body) 100%);
         border-radius: 0 0 50px 50px;
         overflow: hidden;
         margin-bottom: -40px;
         z-index: 1;
+        border-bottom: 1px solid var(--gray-200);
     }
     .hero-glow {
         position: absolute;
@@ -25,20 +26,20 @@
     }
 
     .glass-card-premium {
-        background: rgba(30, 41, 59, 0.6);
+        background: var(--bg-glass);
         backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--gray-200);
         border-radius: 20px;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        box-shadow: var(--shadow-lg);
     }
 
     /* Campaign Card */
     .campaign-card-lux {
-        background: #1e293b;
+        background: var(--bg-card);
         border-radius: 28px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--gray-200);
         transition: all 0.4s ease;
         height: 100%;
         display: flex;
@@ -102,21 +103,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        border: 4px solid #1e293b;
+        box-shadow: var(--shadow-sm);
+        border: 4px solid var(--bg-card);
         z-index: 3;
     }
 
     .content-area-lux { padding: 35px 24px 24px; flex-grow: 1; display: flex; flex-direction: column; }
-    .campaign-title-lux { font-size: 1.1rem; font-weight: 800; color: white; margin-bottom: 8px; line-height: 1.4; }
-    .campaign-meta-lux { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+    .campaign-title-lux { font-size: 1.1rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; line-height: 1.4; }
+    .campaign-meta-lux { font-size: 0.8rem; color: var(--gray-600); display: flex; align-items: center; gap: 8px; }
 
     .btn-action-lux {
         width: 32px; height: 32px;
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--bg-body);
+        border: 1px solid var(--gray-200);
         color: #94a3b8;
         transition: all 0.3s ease;
     }
@@ -124,6 +125,118 @@
 
     .x-small { font-size: 0.7rem; }
     .fw-800 { font-weight: 800; }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
 
@@ -169,8 +282,8 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="x-small fw-bold text-slate-500 mb-2">السنة</label>
-                            <input name="season_year" value="{{ $year ?? '' }}" class="form-control bg-slate-900 border-0 text-white rounded-3" type="number" placeholder="2025">
+                            <label class="x-small fw-bold text-muted mb-2">السنة</label>
+                            <input name="season_year" value="{{ $year ?? '' }}" class="form-control rounded-3" type="number" placeholder="2025">
                         </div>
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-indigo-600 w-100 fw-bold rounded-3 shadow-sm border-0 py-2" style="background: #6366f1; color: white;">تطبيق</button>
@@ -186,9 +299,9 @@
             {{-- Filter & Selection Bar --}}
             <div class="glass-card-premium p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="form-check p-0 m-0 d-flex align-items-center bg-white bg-opacity-5 px-3 py-2 rounded-3 border border-white border-opacity-10 shadow-sm">
+                    <div class="form-check p-0 m-0 d-flex align-items-center bg-body-tertiary px-3 py-2 rounded-3 border shadow-sm">
                         <input class="form-check-input ms-2 mt-0 checkbox-lux" type="checkbox" id="selectAll">
-                        <label class="form-check-label fw-bold text-white small cursor-pointer" for="selectAll" style="margin-right: 5px; white-space: nowrap;">تحديد الكل</label>
+                        <label class="form-check-label fw-bold small cursor-pointer" for="selectAll" style="margin-right: 5px; white-space: nowrap;">تحديد الكل</label>
                     </div>
                     <button type="submit" class="btn btn-sm btn-danger d-none px-4 rounded-3 border-0 transition-all shadow-sm" id="btnBulkDelete" onclick="return confirm('هل أنت متأكد من حذف الحملات المحددة؟')">
                         <i class="bi bi-trash me-1"></i> حذف المحدد
@@ -196,13 +309,13 @@
                     
                     {{-- Quick Search (Minimal - JS filtered) --}}
                     <div class="input-group input-group-sm d-none d-md-flex" style="width: 250px;">
-                        <input type="text" class="form-control bg-slate-900 border-0 text-white px-3 rounded-start-3" placeholder="بحث سريع..." onkeyup="filterCampaigns(this)">
-                        <span class="input-group-text bg-slate-900 border-0 text-slate-500 rounded-end-3"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control bg-body-secondary border-0 px-3 rounded-start-3" placeholder="بحث سريع..." onkeyup="filterCampaigns(this)">
+                        <span class="input-group-text bg-body-secondary border-0 text-muted rounded-end-3"><i class="bi bi-search"></i></span>
                     </div>
                 </div>
                 
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-sm bg-slate-800 text-white rounded-3 border border-white border-opacity-10 px-3" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
                         <i class="bi bi-funnel"></i> تصفية متقدمة
                     </button>
                 </div>
@@ -296,7 +409,7 @@
             @csrf
             @method('DELETE')
             <div class="modal-header border-bottom border-white border-opacity-5 bg-slate-900 p-4">
-                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> تأكيد الحذف</h5>
+                <h5 class="modal-title fw-bold text-danger text-end w-100"><i class="bi bi-exclamation-triangle-fill me-2"></i> تأكيد الحذف</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 bg-slate-900 bg-opacity-50 text-center">
@@ -428,3 +541,4 @@
     });
 </script>
 @endsection
+

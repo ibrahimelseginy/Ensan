@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
     <div class="container-fluid p-0">
         <div class="row justify-content-center">
@@ -116,3 +116,4 @@
         </div>
     </div>
 @endsection
+

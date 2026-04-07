@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="bookings-page">
@@ -106,18 +106,18 @@
                                         {{-- App Booking Detail Modal --}}
                                         <div class="modal fade" id="modalApp{{ $booking->id }}" tabindex="-1">
                                             <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow-lg text-start" style="background-color: #0b0e14 !important; border-radius: 24px !important; overflow: hidden;">
+                                                <div class="modal-content border-0 shadow-lg text-start" style="background-color: var(--ws-bg-page) !important; border-radius: 24px !important; overflow: hidden;">
                                                     <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
                                                         <h5 class="modal-title fw-bold">
                                                             <i class="bi bi-house-heart me-2"></i> تفاصيل طلب الحجز (App)
                                                         </h5>
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div class="modal-body p-4" style="background-color: #0b0e14 !important;">
+                                                    <div class="modal-body p-4" style="background-color: var(--ws-bg-page) !important;">
                                                         <div class="row g-4 mb-4">
                                                             <div class="col-12">
                                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم المستفيد</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->name }}</div>
+                                                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $booking->name }}</div>
                                                             </div>
                                                             <div class="col-md-6">
                                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
@@ -125,30 +125,30 @@
                                                             </div>
                                                             <div class="col-md-6">
                                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">تاريخ الوصول المتوقع</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->arrival_date }}</div>
+                                                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $booking->arrival_date }}</div>
                                                             </div>
                                                             <div class="col-12">
                                                                 <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">المدة المتوقعة</label>
-                                                                <div style="color: #fff; font-size: 1.1rem; font-weight: 600;">{{ $booking->expected_duration_arabic }}</div>
+                                                                <div style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $booking->expected_duration_arabic }}</div>
                                                             </div>
                                                         </div>
 
                                                         <div class="admin-panel mt-4 pt-4 border-top border-white border-opacity-10">
-                                                            <h6 class="mb-3" style="color: #fff !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;">اتخاذ قرار</h6>
+                                                            <h6 class="mb-3" style="color: var(--ws-text-primary) !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;">اتخاذ قرار</h6>
                                                             <div class="d-grid gap-2">
                                                                 <div class="row g-2">
                                                                     <div class="col-6">
                                                                         <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
                                                                             @csrf @method('PATCH')
                                                                             <input type="hidden" name="status" value="confirmed">
-                                                                            <button type="submit" class="btn w-100" style="background: #00d1b2; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
+                                                                            <button type="submit" class="btn w-100" style="background: #00d1b2; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px; font-weight: 700;">قبول الحجز</button>
                                                                         </form>
                                                                     </div>
                                                                     <div class="col-6">
                                                                         <form action="{{ route('mobile.web_bookings.update', $booking) }}" method="POST">
                                                                             @csrf @method('PATCH')
                                                                             <input type="hidden" name="status" value="cancelled">
-                                                                            <button type="submit" class="btn w-100" style="background: #dc2626; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
+                                                                            <button type="submit" class="btn w-100" style="background: #dc2626; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px; font-weight: 700;">رفض الحجز</button>
                                                                         </form>
                                                                     </div>
                                                                     <div class="col-12">
@@ -187,7 +187,7 @@
     .glow-orb-1 { width: 300px; height: 300px; top: -50px; right: -50px; }
     .glow-orb-2 { width: 200px; height: 200px; bottom: -50px; left: 50px; }
     
-    .glass-card { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.05); border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .glass-card { background: var(--ws-bg-card-header) !important; border: 1px solid rgba(255,255,255,0.05); border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
     .stat-card { transition: 0.3s; }
     .stat-card:hover { transform: translateY(-5px); border-color: rgba(59, 130, 246, 0.3); }
     
@@ -200,5 +200,120 @@
     .mt-n5 { margin-top: -3.5rem !important; }
     .animate-up { animation: fadeInUp 0.5s both; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 @endsection
+
+
+

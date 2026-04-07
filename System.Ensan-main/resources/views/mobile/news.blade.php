@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -79,7 +79,7 @@
                 </div>
                 <div class="news-card-body">
                     <h5 class="fw-bold mb-3 text-white lh-base text-truncate" title="{{ $item->title }}">{{ $item->title }}</h5>
-                    <p class="text-slate-400 small mb-3">{{ Str::limit($item->content, 100) }}</p>
+                    <p class="ws-label small mb-3">{{ Str::limit($item->content, 100) }}</p>
 
                     @if($item->statistic_number)
                     <div class="stat-highlight-box mb-3">
@@ -193,7 +193,7 @@
         {{-- ===== View Modal (per item) ===== --}}
         <div class="modal fade" id="viewNewsModal{{ $item->id }}" tabindex="-1" style="z-index: 1060;">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content dark-glass-card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background-color: #0f172a !important;">
+                <div class="modal-content dark-glass-card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background-color: var(--ws-bg-card-header) !important;">
                     <div class="modal-header border-0" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
                         <h5 class="modal-title fw-bold text-white">{{ $item->title }}</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -203,7 +203,7 @@
                             <img src="{{ $item->image_url }}" class="w-100 object-fit-cover" style="height: 300px;">
                         @endif
                         <div class="p-4">
-                            <div class="d-flex gap-3 text-slate-400 small mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+                            <div class="d-flex gap-3 ws-label small mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
                                 <span><i class="bi bi-calendar3 text-purple me-1"></i> {{ $item->published_at ? $item->published_at->format('Y-m-d') : '' }}</span>
                                 <span><i class="bi bi-folder text-purple me-1"></i> {{ $item->category ?? 'عام' }}</span>
                                 <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
@@ -308,9 +308,9 @@
     :root {
         --purple-primary: #7c3aed;
         --purple-dark: #6d28d9;
-        --dark-bg: #0b0e14;
+        --dark-bg: var(--ws-bg-page);
         --card-dark: #1a1f2e;
-        --slate-900: #0f172a;
+        --slate-900: var(--ws-bg-card-header);
         --slate-400: #94a3b8;
         --slate-500: #64748b;
     }
@@ -327,33 +327,33 @@
     .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #ddd6fe; font-weight: 700; font-size: 0.85rem; }
     .fw-800 { font-weight: 800; }
     .max-w-600 { max-width: 600px; }
-    .btn-action-glow { background: var(--purple-primary); color: white; border: none; font-weight: 700; box-shadow: 0 0 20px rgba(124,58,237,0.4); transition: 0.4s; }
-    .btn-action-glow:hover { background: var(--purple-dark); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(124,58,237,0.6); color: white; }
+    .btn-action-glow { background: var(--purple-primary); color: var(--ws-text-primary); border: none; font-weight: 700; box-shadow: 0 0 20px rgba(124,58,237,0.4); transition: 0.4s; }
+    .btn-action-glow:hover { background: var(--purple-dark); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(124,58,237,0.6); color: var(--ws-text-primary); }
 
     .news-card-premium { background: var(--card-dark); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%; display: flex; flex-direction: column; }
     .news-card-premium:hover { transform: translateY(-10px); border-color: var(--purple-primary); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     .news-card-image { position: relative; height: 220px; overflow: hidden; }
     .news-card-actions { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 8px; opacity: 0; transition: 0.3s; }
     .news-card-premium:hover .news-card-actions { opacity: 1; }
-    .btn-glass-sm { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transition: 0.3s; padding: 0; }
-    .btn-glass-sm:hover { background: var(--purple-primary); color: white; }
+    .btn-glass-sm { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: var(--ws-text-primary); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transition: 0.3s; padding: 0; }
+    .btn-glass-sm:hover { background: var(--purple-primary); color: var(--ws-text-primary); }
     .btn-glass-danger-sm:hover { background: #ef4444 !important; }
-    .news-category-pill { position: absolute; top: 12px; left: 12px; background: rgba(124,58,237,0.8); backdrop-filter: blur(10px); color: white; font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 100px; }
+    .news-category-pill { position: absolute; top: 12px; left: 12px; background: rgba(124,58,237,0.8); backdrop-filter: blur(10px); color: var(--ws-text-primary); font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 100px; }
     .news-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
     .stat-highlight-box { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 10px 16px; border: 1px solid rgba(255,255,255,0.05); }
-    .text-slate-400 { color: var(--slate-400); }
+    .ws-label { color: var(--slate-400); }
     .text-slate-500 { color: var(--slate-500); }
     .text-purple { color: #a78bfa !important; }
     .text-emerald { color: #34d399 !important; }
     .btn-glass-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); transition: 0.3s; }
-    .btn-glass-purple:hover { background: var(--purple-primary); color: white; }
+    .btn-glass-purple:hover { background: var(--purple-primary); color: var(--ws-text-primary); }
 
     .dark-glass-card { background: var(--slate-900); color: #f8fafc; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .dark-glass-card .form-control, .dark-glass-card .form-select { background-color: #0b0e14; border: 2px solid #1e293b; color: #f8fafc; border-radius: 14px; padding: 12px 16px; transition: 0.3s; }
-    .dark-glass-card .form-control:focus, .dark-glass-card .form-select:focus { background-color: #0b0e14; border-color: var(--purple-primary); color: #f8fafc; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
+    .dark-glass-card .form-control, .dark-glass-card .form-select { background-color: var(--ws-bg-input); border: 2px solid var(--ws-border); color: var(--ws-text-primary); border-radius: 14px; padding: 12px 16px; transition: 0.3s; }
+    .dark-glass-card .form-control:focus, .dark-glass-card .form-select:focus { background-color: var(--ws-bg-input); border-color: var(--purple-primary); color: var(--ws-text-primary); box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
     .dark-glass-card .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
     .dark-glass-card .form-label { color: #94a3b8; font-weight: 700; font-size: 0.85rem; }
-    .dark-glass-card option { background-color: #0f172a !important; color: #f8fafc !important; }
+    .dark-glass-card option { background-color: var(--ws-bg-card-header) !important; color: #f8fafc !important; }
 
     .x-small { font-size: 0.7rem; }
 
@@ -368,6 +368,121 @@
         .premium-hero-sleek { border-radius: 0 0 30px 30px; padding: 60px 0 80px; }
         .display-4 { font-size: 2.2rem; }
     }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
+      /* --- LIGHT MODE ADAPTATION --- */
+      body:not(.theme-dark) {
+          background-color: var(--ws-bg-page) !important;
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .member-card-premium {
+          background: var(--ws-bg-card);
+          border-color: var(--ws-border-card);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      }
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50 {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .premium-hero-sleek .text-white,
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+          color: #fff !important;
+      }
+      body:not(.theme-dark) .role-pill-premium {
+          color: var(--blue-dark);
+          background: rgba(59,130,246,0.15);
+          border-color: rgba(59,130,246,0.2);
+      }
+      body:not(.theme-dark) .text-slate-400 {
+          color: var(--ws-text-secondary);
+      }
+      body:not(.theme-dark) .btn-glass-blue {
+          color: var(--blue-dark);
+          background: rgba(37, 99, 235, 0.1);
+          border-color: rgba(37, 99, 235, 0.2);
+      }
+      body:not(.theme-dark) .btn-glass-danger {
+          color: #dc2626;
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.2);
+      }
+      body:not(.theme-dark) .premium-modal-dark {
+          background: var(--ws-bg-card);
+      }
+      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
+          color: var(--ws-text-primary) !important;
+      }
+      body:not(.theme-dark) .field-lux {
+          background: var(--ws-bg-input);
+          color: var(--ws-text-primary);
+          border-color: var(--ws-border);
+      }
+      body:not(.theme-dark) .field-lux:focus {
+          background: var(--ws-bg-input);
+      }
+      body:not(.theme-dark) .avatar-placeholder-premium {
+          color: #fff; /* Keep placeholder icon white because of gradient */
+      }
+      body:not(.theme-dark) .btn-close-white {
+          filter: invert(1) grayscale(100%) brightness(200%);
+      }
 </style>
 
 @endsection
+
+
+

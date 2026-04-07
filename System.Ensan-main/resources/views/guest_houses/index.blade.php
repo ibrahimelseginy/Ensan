@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 
   {{-- Page Header --}}
@@ -86,3 +86,4 @@
   </div>
   <div class="mt-3">{{ $houses->links() }}</div>
 @endsection
+

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   <div class="mx-auto" style="max-width: 820px">
     {{-- Page Header --}}
@@ -139,3 +139,4 @@
       });
     </script>
 @endsection
+

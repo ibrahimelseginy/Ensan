@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
 <div class="card p-4">
     <h5 class="mb-3">تعديل حساب</h5>
@@ -44,3 +44,5 @@
     </form>
 </div>
 @endsection
+
+

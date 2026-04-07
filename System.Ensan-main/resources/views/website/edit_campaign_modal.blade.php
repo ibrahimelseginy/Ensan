@@ -1,4 +1,4 @@
-<div class="modal fade" id="editCampaignModal{{ $campaign->id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+﻿<div class="modal fade" id="editCampaignModal{{ $campaign->id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <form action="{{ route('website.campaigns.update', $campaign->id) }}" method="POST" enctype="multipart/form-data" class="modal-content glass-card border-0">
             @csrf
@@ -52,7 +52,7 @@
                             </div>
                             <div class="col-12 mt-2">
                                 <label class="form-label x-small fw-bold">حالة الحملة</label>
-                                <select name="status" class="form-select form-select-sm bg-dark text-white border-secondary">
+                                <select name="status" class="form-select form-select-sm ws-input">
                                     <option value="active" class="text-dark" {{ $campaign->status == 'active' ? 'selected' : '' }}>نشطة الآن</option>
                                     <option value="upcoming" class="text-dark" {{ $campaign->status == 'upcoming' ? 'selected' : '' }}>قادمة (تبدأ قريباً)</option>
                                     <option value="ended" class="text-dark" {{ $campaign->status == 'ended' ? 'selected' : '' }}>منتهية</option>
@@ -68,8 +68,8 @@
                                 <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $campaign->end_date ? \Carbon\Carbon::parse($campaign->end_date)->format('Y-m-d') : '' }}">
                             </div>
                             <div class="col-12 mt-2">
-                                <label class="form-label x-small fw-bold text-slate-400">أيقونة الحملة (Icon)</label>
-                                <input type="file" name="icon" class="form-control form-control-sm bg-dark text-white border-secondary" accept="image/*">
+                                <label class="form-label x-small fw-bold ws-label">أيقونة الحملة (Icon)</label>
+                                <input type="file" name="icon" class="form-control form-control-sm ws-input" accept="image/*">
                             </div>
                         </div>
                     </div>
@@ -104,4 +104,7 @@
         </form>
     </div>
 </div>
+
+
+
 

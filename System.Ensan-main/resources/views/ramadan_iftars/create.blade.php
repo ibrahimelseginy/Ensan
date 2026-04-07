@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'تسجيل إفطار رمضان')
 
@@ -117,3 +117,5 @@
     </div>
 </div>
 @endsection
+
+

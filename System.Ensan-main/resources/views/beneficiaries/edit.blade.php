@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
   {{-- Page Header --}}
   <div class="page-header">
@@ -191,3 +191,4 @@
     });
   </script>
 @endsection
+
