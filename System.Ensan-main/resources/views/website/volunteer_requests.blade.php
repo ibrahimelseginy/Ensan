@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -878,62 +878,107 @@ function previewVolSlider(input, index) {
 
       
 
-      /* --- SYSTEM LIGHT MODE PATCH --- */
+      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
       body:not(.theme-dark) {
           background-color: var(--ws-bg-page) !important;
           color: var(--ws-text-primary) !important;
       }
-      body:not(.theme-dark) .text-white, 
-      body:not(.theme-dark) .text-white-50 {
+
+      /* Card & Container Overrides */
+      body:not(.theme-dark) .premium-card-dark,
+      body:not(.theme-dark) .news-card-premium,
+      body:not(.theme-dark) .request-card-premium,
+      body:not(.theme-dark) .dark-glass-card,
+      body:not(.theme-dark) .glass-card,
+      body:not(.theme-dark) .detail-box-lux,
+      body:not(.theme-dark) .stat-input-box,
+      body:not(.theme-dark) .gallery-card-lux,
+      body:not(.theme-dark) .empty-state-card-lux,
+      body:not(.theme-dark) .modal-content,
+      body:not(.theme-dark) .premium-modal-dark,
+      body:not(.theme-dark) .profile-strip-lux,
+      body:not(.theme-dark) .info-strip-premium,
+      body:not(.theme-dark) .modal-premium-dark {
+          background: var(--ws-bg-card) !important;
+          background-color: var(--ws-bg-card) !important;
+          border-color: var(--ws-border) !important;
+          color: var(--ws-text-primary) !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+      }
+
+      /* Input & Form Overrides */
+      body:not(.theme-dark) .field-lux,
+      body:not(.theme-dark) .form-control,
+      body:not(.theme-dark) .form-select,
+      body:not(.theme-dark) .stat-value-field,
+      body:not(.theme-dark) .stat-label-field {
+          background: var(--ws-bg-input) !important;
+          background-color: var(--ws-bg-input) !important;
+          color: var(--ws-text-primary) !important;
+          border-color: var(--ws-border) !important;
+      }
+
+      body:not(.theme-dark) .field-lux:focus {
+          border-color: var(--ws-primary) !important;
+          background: #fff !important;
+      }
+
+      /* Typography & Labels */
+      body:not(.theme-dark) .text-white,
+      body:not(.theme-dark) .text-white-50,
+      body:not(.theme-dark) .text-slate-300,
+      body:not(.theme-dark) .text-slate-400,
+      body:not(.theme-dark) .text-slate-500,
+      body:not(.theme-dark) .label-lux,
+      body:not(.theme-dark) .detail-label-sleek,
+      body:not(.theme-dark) .form-label {
+          color: var(--ws-text-secondary) !important;
+      }
+
+      body:not(.theme-dark) h1, 
+      body:not(.theme-dark) h2, 
+      body:not(.theme-dark) h3, 
+      body:not(.theme-dark) h4, 
+      body:not(.theme-dark) h5, 
+      body:not(.theme-dark) h6,
+      body:not(.theme-dark) .fw-bold.text-white {
           color: var(--ws-text-primary) !important;
       }
-      body:not(.theme-dark) .premium-hero-sleek .text-white, 
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50,
-      body:not(.theme-dark) .badge-glass-premium,
+
+      /* Hero Section (Keep Dark for Contrast) */
+      body:not(.theme-dark) .premium-hero-sleek h1,
+      body:not(.theme-dark) .premium-hero-sleek p,
+      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
       body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
       body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
           color: #fff !important;
       }
-      body:not(.theme-dark) .glass-card, 
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .card,
-      body:not(.theme-dark) .stats-card-dark,
-      body:not(.theme-dark) .stats-inner-card,
-      body:not(.theme-dark) .project-card-admin,
-      body:not(.theme-dark) .campaign-card-lux,
-      body:not(.theme-dark) .guest-card-lux,
-      body:not(.theme-dark) .article-card-lux,
-      body:not(.theme-dark) .message-card-lux,
-      body:not(.theme-dark) .donation-card-lux,
-      body:not(.theme-dark) .member-card-premium,
-      body:not(.theme-dark) .partner-card-lux,
-      body:not(.theme-dark) .leader-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .bg-dark,
-      body:not(.theme-dark) .bg-slate-800,
-      body:not(.theme-dark) .bg-slate-900,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .categories-sidebar,
-      body:not(.theme-dark) .sector-header,
-      body:not(.theme-dark) .item-card,
-      body:not(.theme-dark) .dark-glass-card {
-          background: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
+
+      /* Table Overrides */
+      body:not(.theme-dark) .premium-table-dark thead th {
+          background: rgba(0,0,0,0.03) !important;
+          color: var(--ws-text-secondary) !important;
       }
-      body:not(.theme-dark) .category-item {
-          color: var(--ws-text-secondary);
-          background: rgba(0,0,0,0.02);
+
+      body:not(.theme-dark) .premium-table-dark tbody td {
+          color: var(--ws-text-primary) !important;
+          border-bottom-color: var(--ws-border) !important;
       }
-      body:not(.theme-dark) .category-item:hover { background: var(--ws-bg-page); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .category-item.active { background: var(--ws-bg-page); border-color: var(--ws-primary); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control, body:not(.theme-dark) .form-select, body:not(.theme-dark) .form-input-dark { 
-          background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; 
+
+      body:not(.theme-dark) .bg-unread {
+          background: rgba(var(--ws-primary-rgb), 0.03) !important;
       }
-      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
-      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
-      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
+
+      /* Modal Specifics */
+      body:not(.theme-dark) .modal-header {
+          border-bottom-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .modal-footer {
+          border-top-color: var(--ws-border) !important;
+      }
+      body:not(.theme-dark) .btn-close {
+          filter: none !important;
+      }
       </style>
 @endsection
 
