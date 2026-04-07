@@ -42,92 +42,64 @@
                         </div>
                     </div>
                     
-                    <div class="card-body p-0 bg-white">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr class="x-small text-uppercase fw-bold text-muted">
-                                        <th class="ps-4 py-3 border-0">المرسل والبيانات</th>
-                                        <th class="py-3 border-0">الموضوع والرسالة</th>
-                                        <th class="py-3 border-0">التاريخ</th>
-                                        <th class="py-3 border-0 text-center">الحالة</th>
-                                        <th class="py-3 border-0 text-center pe-4">الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($messages as $msg)
-                                    <tr class="transition-all {{ !$msg->read ? 'bg-primary bg-opacity-05 fw-bold' : 'opacity-75' }}">
-                                        <td class="ps-4 py-3">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="avatar-soft bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 44px; height: 44px;">
-                                                    {{ mb_substr($msg->name, 0, 1) }}
-                                                </div>
-                                                <div>
-                                                    <div class="text-dark mb-0">{{ $msg->name }}</div>
-                                                    <div class="x-small text-muted d-flex gap-2">
-                                                        <span><i class="bi bi-envelope me-1"></i>{{ $msg->email }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="py-3">
-                                            <div class="small text-dark mb-1">
-                                                @if(($msg->subject ?? '') == 'General')
-                                                    <span class="badge bg-light text-dark border rounded-pill px-2">عام</span>
-                                                @else
-                                                    <span class="badge bg-primary-light text-primary border border-primary border-opacity-10 rounded-pill px-2">{{ $msg->subject ?? 'بلا عنوان' }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="x-small text-muted text-truncate" style="max-width: 250px;">{{ $msg->message }}</div>
-                                        </td>
-                                        <td class="py-3">
-                                            <div class="x-small text-muted">
-                                                <i class="bi bi-clock me-1"></i>
-                                                {{ $msg->created_at->translatedFormat('d M Y - h:i a') }}
-                                            </div>
-                                        </td>
-                                        <td class="py-3 text-center">
-                                            @if($msg->read)
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 rounded-pill px-3 py-1 x-small fw-bold">مقروءة</span>
-                                            @else
-                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10 rounded-pill px-3 py-1 x-small fw-bold pulse-opacity">جديدة</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-3 text-center pe-4">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <button class="btn btn-sm btn-outline-light text-primary border rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#viewMsg{{ $msg->id }}">
-                                                    معاينة <i class="bi bi-eye ms-1"></i>
-                                                </button>
+                    <div class="card-body p-4 bg-inbox-container">
+                        <div class="vstack gap-3">
+                            @forelse($messages as $msg)
+                            <div class="message-card-premium rounded-4 border p-3 transition-all animate-slide-up {{ !$msg->read ? 'msg-unread shadow-sm' : 'msg-read opacity-75' }}" style="animation-delay: {{ $loop->index * 0.05 }}s">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-auto">
+                                        <div class="avatar-message bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 50px; height: 50px; border: 3px solid white;">
+                                            {{ mb_substr($msg->name, 0, 1) }}
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
+                                            <div>
+                                                <h6 class="fw-bold text-inbox-main mb-0 d-inline-block me-2">{{ $msg->name }}</h6>
                                                 @if(!$msg->read)
-                                                    <form action="{{ route('website.contact-messages.read', $msg) }}" method="POST" class="d-inline">
-                                                        @csrf @method('PATCH')
-                                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                                                            تمت <i class="bi bi-check2-all ms-1"></i>
-                                                        </button>
-                                                    </form>
+                                                    <span class="badge bg-success rounded-pill px-2 py-1 x-small pulse-opacity">جديد</span>
                                                 @endif
-                                                <form action="{{ route('website.contact-messages.destroy', $msg) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الرسالة؟')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-light text-danger border rounded-pill px-2">
-                                                        <i class="bi bi-trash"></i>
+                                            </div>
+                                            <span class="x-small text-muted-theme"><i class="bi bi-clock me-1"></i> {{ $msg->created_at->translatedFormat('d M Y - h:i a') }}</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="x-small text-muted-theme"><i class="bi bi-envelope me-1 text-primary"></i> {{ $msg->email }}</span>
+                                            <span class="divider-v"></span>
+                                            <span class="badge bg-primary-light text-primary rounded-pill px-3 x-small fw-bold">
+                                                @if(($msg->subject ?? '') == 'General') عام @else {{ $msg->subject ?? 'بلا عنوان' }} @endif
+                                            </span>
+                                        </div>
+                                        <p class="x-small text-inbox-sub mb-0 text-truncate-2 lh-base">{{ $msg->message }}</p>
+                                    </div>
+                                    <div class="col-auto border-start ps-3 ms-2 d-none d-md-block">
+                                        <div class="d-flex flex-column gap-2">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold x-small" data-bs-toggle="modal" data-bs-target="#viewMsg{{ $msg->id }}">
+                                                معاينة <i class="bi bi-eye ms-1"></i>
+                                            </button>
+                                            @if(!$msg->read)
+                                                <form action="{{ route('website.contact-messages.read', $msg) }}" method="POST">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 py-1 shadow-sm fw-bold x-small w-100">
+                                                        اكتمل <i class="bi bi-check2-all ms-1"></i>
                                                     </button>
                                                 </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5">
-                                            <div class="py-5 opacity-25">
-                                                <i class="bi bi-mailbox2 fs-1 d-block mb-3"></i>
-                                                <h6 class="fw-bold">صندوق الوارد فارغ حالياً</h6>
-                                                <p class="small mb-0">لم تصل أي رسائل جديدة من زوار الموقع</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                            @endif
+                                            <form action="{{ route('website.contact-messages.destroy', $msg) }}" method="POST" onsubmit="return confirm('حذف الرسالة نهائياً؟')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none x-small p-0 w-100 opacity-50 hover-opacity-100 fw-bold">
+                                                    <i class="bi bi-trash-fill me-1"></i> حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="text-center py-5 opacity-25">
+                                <i class="bi bi-mailbox2 fs-1 d-block mb-3"></i>
+                                <h6 class="fw-bold">صندوق الوارد فارغ حالياً</h6>
+                            </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -138,10 +110,10 @@
                 <form action="{{ route('website.contact-settings.update') }}" method="POST">
                     @csrf
                     <div class="card border-0 shadow-sm animate-slide-up overflow-hidden" style="border-radius: 24px;">
-                        <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                        <div class="p-4 border-bottom bg-stats-header d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="header-icon-small bg-warning"><i class="bi bi-gear-fill text-dark"></i></div>
-                                <h5 class="fw-bold mb-0 text-dark">إعدادات قنوات التواصل والبيانات</h5>
+                                <h5 class="fw-bold mb-0 text-stats-title">إعدادات قنوات التواصل والبيانات</h5>
                             </div>
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">حفظ كافة الإعدادات</button>
                         </div>
@@ -227,10 +199,10 @@
                 <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card border-0 shadow-sm animate-slide-up overflow-hidden" style="border-radius: 24px;">
-                        <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                        <div class="p-4 border-bottom bg-stats-header d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="header-icon-small bg-success"><i class="bi bi-images"></i></div>
-                                <h5 class="fw-bold mb-0 text-dark">معرض صور صفحة تواصل معنا (Slider)</h5>
+                                <h5 class="fw-bold mb-0 text-stats-title">معرض صور صفحة تواصل معنا (Slider)</h5>
                             </div>
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">حفظ المعرض</button>
                         </div>
@@ -277,8 +249,8 @@
     <div class="modal fade" id="viewMsg{{ $msg->id }}" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white">
-                <div class="modal-header border-bottom bg-light px-4 py-3">
-                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> تفاصيل الرسالة الواردة</h5>
+                <div class="modal-header border-bottom bg-stats-header px-4 py-3">
+                    <h5 class="modal-title fw-bold text-stats-title"><i class="bi bi-info-circle-fill me-2 text-primary"></i> تفاصيل الرسالة الواردة</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
@@ -369,6 +341,8 @@
     .x-small { font-size: 0.75rem; }
     .fs-xs { font-size: 0.75rem; }
     .bg-primary-light { background-color: rgba(34, 197, 94, 0.1); }
+    .unread-msg-highlight { background-color: rgba(34, 197, 94, 0.08) !important; position: relative; }
+    .unread-msg-highlight::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
     .bg-primary-05 { background-color: rgba(34, 197, 94, 0.04); }
     .transition-all { transition: all 0.3s ease; }
 
@@ -440,6 +414,26 @@
     .group-hover-zoom:hover img { transform: scale(1.05); }
     .pulse-opacity { animation: pulseOp 2s infinite; }
     @keyframes pulseOp { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    /* Modern Inbox Styling */
+    .bg-inbox-container { background-color: #ffffff; }
+    .message-card-premium { background-color: var(--gray-50); border-color: var(--border) !important; position: relative; overflow: hidden; }
+    .message-card-premium.msg-unread { background-color: white; border-right: 4px solid var(--primary) !important; }
+    .text-inbox-main { color: var(--dark); }
+    .text-inbox-sub { color: var(--gray-600); }
+    .text-muted-theme { color: var(--gray-500); }
+    .divider-v { width: 1px; height: 12px; background: var(--gray-300); }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .hover-opacity-100:hover { opacity: 1 !important; }
+
+    body.theme-dark .bg-inbox-container { background-color: var(--bg-card); }
+    body.theme-dark .message-card-premium { background-color: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.05) !important; }
+    body.theme-dark .message-card-premium.msg-unread { background-color: rgba(34, 197, 94, 0.05); border-right: 4px solid #34d399 !important; }
+    body.theme-dark .text-inbox-main { color: #ffffff; }
+    body.theme-dark .text-inbox-sub { color: var(--gray-400); }
+    body.theme-dark .text-muted-theme { color: var(--gray-500); }
+    body.theme-dark .divider-v { background: rgba(255, 255, 255, 0.1); }
+    body.theme-dark .avatar-message { border-color: var(--bg-card) !important; }
 
     @media (min-width: 992px) {
         .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }

@@ -43,34 +43,34 @@
                     </div>
 
                     {{-- HQ Stats --}}
-                    <div class="card mb-4 overflow-hidden shadow-sm animate-slide-up" style="animation-delay: 0.1s; border-right: 4px solid var(--primary);">
-                        <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-primary bg-opacity-5">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-graph-up me-2 text-primary"></i> إحصائيات التغطية (تغطيتنا)</h5>
-                            <button type="submit" class="btn btn-sm btn-primary px-4 shadow-sm">
-                                <i class="bi bi-check-lg me-1"></i> حفظ الإحصائيات
+                    <div class="card mb-4 overflow-hidden shadow-sm animate-slide-up" style="animation-delay: 0.1s;">
+                        <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-primary text-white">
+                            <h5 class="mb-0 fw-bold text-white"><i class="bi bi-graph-up me-2"></i> إحصائيات التغطية (تغطيتنا)</h5>
+                            <button type="submit" class="btn btn-sm btn-light text-primary px-4 shadow-sm fw-bold">
+                                <i class="bi bi-check-lg me-1 text-primary"></i> حفظ الإحصائيات
                             </button>
                         </div>
-                        <div class="p-4 bg-white">
+                        <div class="p-4 bg-stats-container">
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <div class="stats-box-premium p-3 rounded-4 text-center">
-                                        <label class="form-label small fw-bold text-muted mb-1 d-block text-center">محافظات</label>
-                                        <input type="text" name="headquarters_stats_governorates" class="form-control text-center fw-bold fs-4 border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_governorates'] ?? '2' }}">
-                                        <input type="text" name="headquarters_stats_governorates_label" class="form-control form-control-sm text-center text-muted border-0 bg-transparent" value="{{ $settings['headquarters_stats_governorates_label'] ?? 'محافظات' }}">
+                                    <div class="p-3 rounded-4 text-center h-100 transition-all border bg-stats-inner">
+                                        <label class="form-label x-small fw-bold text-muted-theme mb-1 d-block text-center text-uppercase">محافظات</label>
+                                        <input type="text" name="headquarters_stats_governorates" class="form-control text-center fw-bold fs-4 text-primary-theme border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_governorates'] ?? '2' }}">
+                                        <input type="text" name="headquarters_stats_governorates_label" class="form-control form-control-sm text-center text-muted-theme border-0 bg-transparent x-small" value="{{ $settings['headquarters_stats_governorates_label'] ?? 'محافظات' }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="stats-box-premium p-3 rounded-4 text-center">
-                                        <label class="form-label small fw-bold text-muted mb-1 d-block text-center">موظفين</label>
-                                        <input type="text" name="headquarters_stats_employees" class="form-control text-center fw-bold fs-4 border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_employees'] ?? '+200' }}">
-                                        <input type="text" name="headquarters_stats_employees_label" class="form-control form-control-sm text-center text-muted border-0 bg-transparent" value="{{ $settings['headquarters_stats_employees_label'] ?? 'موظف' }}">
+                                    <div class="p-3 rounded-4 text-center h-100 transition-all border bg-stats-inner">
+                                        <label class="form-label x-small fw-bold text-muted-theme mb-1 d-block text-center text-uppercase">موظفين</label>
+                                        <input type="text" name="headquarters_stats_employees" class="form-control text-center fw-bold fs-4 text-primary-theme border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_employees'] ?? '+200' }}">
+                                        <input type="text" name="headquarters_stats_employees_label" class="form-control form-control-sm text-center text-muted-theme border-0 bg-transparent x-small" value="{{ $settings['headquarters_stats_employees_label'] ?? 'موظف' }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="stats-box-premium p-3 rounded-4 text-center">
-                                        <label class="form-label small fw-bold text-muted mb-1 d-block text-center">متبرعين</label>
-                                        <input type="text" name="headquarters_stats_donors" class="form-control text-center fw-bold fs-4 border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_donors'] ?? '+10K' }}">
-                                        <input type="text" name="headquarters_stats_donors_label" class="form-control form-control-sm text-center text-muted border-0 bg-transparent" value="{{ $settings['headquarters_stats_donors_label'] ?? 'متبرع' }}">
+                                    <div class="p-3 rounded-4 text-center h-100 transition-all border bg-stats-inner">
+                                        <label class="form-label x-small fw-bold text-muted-theme mb-1 d-block text-center text-uppercase">متبرعين</label>
+                                        <input type="text" name="headquarters_stats_donors" class="form-control text-center fw-bold fs-4 text-primary-theme border-0 bg-transparent mb-1" value="{{ $settings['headquarters_stats_donors'] ?? '+10K' }}">
+                                        <input type="text" name="headquarters_stats_donors_label" class="form-control form-control-sm text-center text-muted-theme border-0 bg-transparent x-small" value="{{ $settings['headquarters_stats_donors_label'] ?? 'متبرع' }}">
                                     </div>
                                 </div>
                             </div>
@@ -303,5 +303,16 @@
     .table thead th { border-bottom: 0; }
     .custom-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
     .custom-switch .form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
+
+    /* Theme-Aware Stats Styling */
+    .bg-stats-container { background-color: #ffffff; }
+    .bg-stats-inner { background-color: rgba(34, 197, 94, 0.03); border-color: rgba(34, 197, 94, 0.1) !important; }
+    .text-primary-theme { color: var(--primary) !important; }
+    .text-muted-theme { color: var(--text-muted) !important; }
+
+    body.theme-dark .bg-stats-container { background-color: var(--bg-card); }
+    body.theme-dark .bg-stats-inner { background-color: rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.08) !important; }
+    body.theme-dark .text-primary-theme { color: #34d399 !important; }
+    body.theme-dark .text-muted-theme { color: #94a3b8 !important; }
 </style>
 @endsection

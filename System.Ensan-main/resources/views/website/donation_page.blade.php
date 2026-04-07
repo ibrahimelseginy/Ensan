@@ -47,8 +47,8 @@
                 {{-- Banner Section --}}
                 <form action="{{ route('website.donation-page.update') }}" method="POST" enctype="multipart/form-data" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 animate-slide-up">
                     @csrf
-                    <div class="p-4 border-bottom bg-danger bg-opacity-10 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-megaphone-fill me-2"></i> حملة عاجلة (البنر العلوي)</h6>
+                    <div class="p-4 border-bottom bg-danger d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-white"><i class="bi bi-megaphone-fill me-2"></i> حملة عاجلة (البنر العلوي)</h6>
                         <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm x-small">حفظ البنر</button>
                     </div>
                     <div class="card-body p-4 p-md-5">
@@ -91,26 +91,26 @@
                 {{-- Statistics Section --}}
                 <form action="{{ route('website.donation-page.update') }}" method="POST" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 animate-slide-up" style="animation-delay: 0.2s">
                     @csrf
-                    <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-graph-up me-2 text-success"></i> إحصائيات الإنجاز</h6>
-                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm x-small">حفظ الإحصائيات</button>
+                    <div class="p-4 border-bottom bg-success d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-white"><i class="bi bi-graph-up me-2"></i> إحصائيات الإنجاز</h6>
+                        <button type="submit" class="btn btn-light text-success rounded-pill px-4 fw-bold shadow-sm x-small">حفظ الإحصائيات</button>
                     </div>
                     <div class="card-body p-4 p-md-5">
                         <div class="row g-4">
                             <div class="col-md-6">
-                                <div class="p-4 rounded-4 border bg-light text-center h-100">
-                                    <div class="header-icon-small bg-primary mx-auto mb-3 shadow-sm"><i class="bi bi-people-fill"></i></div>
-                                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-2">إجمالي المتبرعين</label>
-                                    <input type="text" name="donation_page_stats_donors" class="form-control text-center fw-bold fs-4 border-0 bg-transparent" value="{{ $settings['donation_page_stats_donors'] ?? '' }}">
-                                    <p class="x-small text-primary mb-0 mt-2 fw-bold">مساهم كريم في مسيرة العطاء</p>
+                                <div class="p-4 rounded-4 border bg-stats-inner text-center h-100">
+                                    <div class="header-icon-small bg-primary mx-auto mb-3 shadow-sm"><i class="bi bi-people-fill text-white"></i></div>
+                                    <label class="form-label x-small fw-bold text-muted-theme mb-2">إجمالي المتبرعين</label>
+                                    <input type="text" name="donation_page_stats_donors" class="form-control text-center fw-bold fs-4 border-0 bg-transparent text-stats-main" value="{{ $settings['donation_page_stats_donors'] ?? '' }}">
+                                    <p class="x-small text-primary-theme mb-0 mt-2 fw-bold">مساهم كريم في مسيرة العطاء</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="p-4 rounded-4 border bg-light text-center h-100">
-                                    <div class="header-icon-small bg-success mx-auto mb-3 shadow-sm"><i class="bi bi-cash-stack"></i></div>
-                                    <label class="form-label x-small fw-bold text-muted text-uppercase mb-2">تبرعات تم جمعها (اليوم)</label>
-                                    <input type="text" name="donation_page_stats_today_collected" class="form-control text-center fw-bold fs-4 border-0 bg-transparent" value="{{ $settings['donation_page_stats_today_collected'] ?? '' }}">
-                                    <p class="x-small text-success mb-0 mt-2 fw-bold">جنيه مصري اليوم</p>
+                                <div class="p-4 rounded-4 border bg-stats-inner text-center h-100">
+                                    <div class="header-icon-small bg-success mx-auto mb-3 shadow-sm"><i class="bi bi-cash-stack text-white"></i></div>
+                                    <label class="form-label x-small fw-bold text-muted-theme mb-2">تبرعات تم جمعها (اليوم)</label>
+                                    <input type="text" name="donation_page_stats_today_collected" class="form-control text-center fw-bold fs-4 border-0 bg-transparent text-stats-main" value="{{ $settings['donation_page_stats_today_collected'] ?? '' }}">
+                                    <p class="x-small text-success-theme mb-0 mt-2 fw-bold">جنيه مصري اليوم</p>
                                 </div>
                             </div>
                         </div>
@@ -144,9 +144,9 @@
                 <div class="sticky-top" style="top: 100px;">
                     {{-- Categories Preview Card --}}
                     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 animate-reveal-left">
-                        <div class="p-4 border-bottom bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-tags-fill me-2"></i> فئات التبرع</h6>
-                            <a href="{{ route('website.donation-settings.unified') }}" class="btn btn-link text-primary text-decoration-none fw-bold x-small p-0">
+                        <div class="p-4 border-bottom bg-primary d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-white"><i class="bi bi-tags-fill me-2"></i> فئات التبرع</h6>
+                            <a href="{{ route('website.donation-settings.unified') }}" class="btn btn-link text-white text-decoration-none fw-bold x-small p-0 opacity-75">
                                 إدارة الفئات <i class="bi bi-chevron-left ms-1"></i>
                             </a>
                         </div>
@@ -275,5 +275,18 @@
 
     .form-control-lg { border-radius: 16px; border-width: 2px; }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+
+    /* Theme-Aware Stats Styling */
+    .bg-stats-inner { background-color: var(--gray-50); }
+    .text-stats-main { color: var(--dark) !important; }
+    .text-muted-theme { color: var(--gray-500); }
+    .text-primary-theme { color: var(--primary); }
+    .text-success-theme { color: var(--primary-dark); }
+
+    body.theme-dark .bg-stats-inner { background-color: rgba(255, 255, 255, 0.03); }
+    body.theme-dark .text-stats-main { color: #ffffff !important; }
+    body.theme-dark .text-muted-theme { color: var(--gray-400); }
+    body.theme-dark .text-primary-theme { color: var(--primary); }
+    body.theme-dark .text-success-theme { color: #34d399; }
 </style>
 @endsection

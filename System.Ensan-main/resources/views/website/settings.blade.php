@@ -110,42 +110,41 @@
                 </form>
 
                 {{-- Statistics Section --}}
-                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="card mb-4 overflow-hidden border-primary border-opacity-10 shadow-sm animate-slide-up" style="animation-delay: 0.15s; border-right: 4px solid var(--primary);">
+                <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="card mb-4 overflow-hidden shadow-sm animate-slide-up" style="animation-delay: 0.15s; border: 1px solid var(--primary-light);">
                     @csrf
-                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-primary bg-opacity-5">
-                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-graph-up-arrow me-2 text-primary"></i> أرقام الإنجازات (Stats)</h5>
-                        <button type="submit" class="btn btn-sm btn-primary px-4 shadow-sm">حفظ الإحصائيات</button>
+                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-primary text-white">
+                        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-graph-up-arrow me-2"></i> أرقام الإنجازات (Stats)</h5>
+                        <button type="submit" class="btn btn-sm btn-light text-primary px-4 shadow-sm fw-bold">حفظ الإحصائيات</button>
                     </div>
                     <div class="p-4 bg-white">
                         <div class="row g-3">
                             <div class="col-md-6 col-lg">
-                                <div class="p-4 rounded-4 bg-light border text-center statistics-box h-100">
+                                <div class="p-4 rounded-4 text-center h-100 transition-all border" style="background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.1) !important;">
                                     <input type="text" name="stats_beneficiaries_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_beneficiaries_label'] ?? 'المشاريع' }}" placeholder="العنوان">
-                                    <input type="text" name="stats_beneficiaries" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_beneficiaries'] ?? '600K' }}">
-                                    <div class="mt-2 text-success"><i class="bi bi-people-fill fs-5"></i></div>
+                                    <input type="text" name="stats_beneficiaries" class="form-control form-control-lg text-center fw-bold text-primary border-0 bg-transparent p-0" value="{{ $settings['stats_beneficiaries'] ?? '600K' }}">
+                                    <div class="mt-2 text-primary opacity-50"><i class="bi bi-people-fill fs-5"></i></div>
                                 </div>
                             </div>
 
                             <div class="col-md-6 col-lg">
-                                <div class="p-4 rounded-4 bg-light border text-center statistics-box h-100">
+                                <div class="p-4 rounded-4 text-center h-100 transition-all border" style="background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.1) !important;">
                                     <input type="text" name="stats_governorates_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_governorates_label'] ?? 'المحافظات (كفر الشيخ ...)' }}" placeholder="العنوان">
-                                    <input type="text" name="stats_governorates" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_governorates'] ?? '45' }}">
-                                    <div class="mt-2 text-info"><i class="bi bi-geo-alt fs-5"></i></div>
+                                    <input type="text" name="stats_governorates" class="form-control form-control-lg text-center fw-bold text-primary border-0 bg-transparent p-0" value="{{ $settings['stats_governorates'] ?? '45' }}">
+                                    <div class="mt-2 text-primary opacity-50"><i class="bi bi-geo-alt fs-5"></i></div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg">
-                                <div class="p-4 rounded-4 bg-light border text-center statistics-box h-100">
+                                <div class="p-4 rounded-4 text-center h-100 transition-all border" style="background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.1) !important;">
                                     <input type="text" name="stats_donations_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_donations_label'] ?? 'التبرعات' }}" placeholder="العنوان">
-                                    <input type="text" name="stats_donations" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_donations'] ?? '' }}">
-                                    <div class="mt-2 text-info"><i class="bi bi-cash-stack fs-5"></i></div>
+                                    <input type="text" name="stats_donations" class="form-control form-control-lg text-center fw-bold text-primary border-0 bg-transparent p-0" value="{{ $settings['stats_donations'] ?? '' }}">
+                                    <div class="mt-2 text-primary opacity-50"><i class="bi bi-cash-stack fs-5"></i></div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg">
-                                    <div class="statistics-box p-4 rounded-4 bg-light border text-center h-100">
-                                        <input type="text" name="stats_volunteers_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_volunteers_label'] ?? 'المتطوعون' }}" placeholder="العنوان">
-                                        <input type="text" name="stats_volunteers" class="form-control form-control-lg text-center fw-bold border-0 bg-transparent p-0" value="{{ $settings['stats_volunteers'] ?? '' }}">
-                                        <div class="mt-2 text-info"><i class="bi bi-heart fs-5"></i></div>
-                                    </div>
+                                <div class="p-4 rounded-4 text-center h-100 transition-all border" style="background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.1) !important;">
+                                    <input type="text" name="stats_volunteers_label" class="form-control form-control-sm text-center x-small fw-bold text-muted border-0 bg-transparent mb-1 p-0" value="{{ $settings['stats_volunteers_label'] ?? 'المتطوعون' }}" placeholder="العنوان">
+                                    <input type="text" name="stats_volunteers" class="form-control form-control-lg text-center fw-bold text-primary border-0 bg-transparent p-0" value="{{ $settings['stats_volunteers'] ?? '' }}">
+                                    <div class="mt-2 text-primary opacity-50"><i class="bi bi-heart fs-5"></i></div>
                                 </div>
                             </div>
                         </div>

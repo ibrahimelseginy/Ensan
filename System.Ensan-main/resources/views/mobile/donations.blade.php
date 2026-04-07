@@ -3,141 +3,150 @@
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-<div class="container-fluid py-4 min-vh-100" style="background-color: #05070a;">
-    <div class="d-flex justify-content-between align-items-center mb-5 animate-reveal-down">
+<div class="container-fluid py-4 min-vh-100 bg-theme-page">
+    <div class="d-flex justify-content-between align-items-center mb-5 animate-reveal-down px-2">
         <div>
-            <h1 class="h2 fw-800 text-white mb-1">سجلات طلبات التبرع <span class="text-success-glow">(الموبايل)</span></h1>
-            <p class="text-white-50 small mb-0">متابعة عمليات التبرع الواردة من تطبيق الموبايل والحالات الخاصة بها</p>
+            <h1 class="h2 fw-800 text-stats-main mb-1">سجلات التبرع <span class="text-primary">(الموبايل)</span></h1>
+            <p class="text-muted-theme small mb-0">متابعة عمليات التبرع الواردة من تطبيق الموبايل والحالات الخاصة بها</p>
         </div>
-        <div class="glass-badge px-4 py-2">
-            <i class="bi bi-cash-stack me-2 text-success"></i>
-            <span class="fw-bold">إجمالي العمليات:</span> {{ $donations->count() }}
+        <div class="glass-badge-theme px-4 py-2 d-none d-md-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-wallet2 text-primary"></i>
+                <span class="small fw-bold">إجمالي العمليات:</span> {{ $donations->count() }}
+            </div>
+            <div class="vr mx-2 opacity-20"></div>
+            <div class="d-flex align-items-center gap-2 text-success">
+                <i class="bi bi-shield-check"></i>
+                <span class="small fw-bold">تأمين مالي مباشر</span>
+            </div>
         </div>
     </div>
 
     <div class="row g-4">
         @forelse($donations as $donation)
         <div class="col-md-6 col-lg-4 animate-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
-            <div class="premium-donation-card">
+            <div class="premium-donation-card bg-stats-card-main border-light-subtle">
                 <div class="card-inner-top">
-                    <div class="card-meta">
+                    <div class="card-meta mb-4">
                         <span class="badge-premium @if($donation->status == 'pending') status-pending @elseif($donation->status == 'completed') status-success @else status-danger @endif">
                             {{ $donation->status == 'pending' ? 'بانتظار التأكيد' : ($donation->status == 'completed' ? 'تم التبرع' : 'فشلت / ملغاة') }}
                         </span>
-                        <div class="amount-badge">
-                            {{ number_format($donation->donation_amount, 0) }} <small>ج.م</small>
+                        <div class="amount-badge-premium bg-stats-inner-item border-light-subtle">
+                            <span class="num text-primary fw-bold">{{ number_format($donation->donation_amount, 0) }}</span>
+                            <span class="curr x-small text-muted-theme">ج.م</span>
                         </div>
                     </div>
                     
-                    <div class="card-user-info">
-                        <h4 class="user-name text-truncate" title="{{ $donation->donor_name }}">{{ $donation->donor_name }}</h4>
-                        <p class="user-phone font-outfit">{{ $donation->donor_phone }}</p>
-                        <div class="donation-for-tag mt-2">
-                            <i class="bi bi-bullseye me-1"></i> التبرع لـ: <span class="text-white fw-bold">{{ $donation->donation_for }}</span>
+                    <div class="card-user-info mb-4">
+                        <h4 class="user-name text-truncate text-stats-main fw-bold" title="{{ $donation->donor_name }}">{{ $donation->donor_name }}</h4>
+                        <p class="user-phone font-outfit text-primary fw-bold mb-3">{{ $donation->donor_phone }}</p>
+                        <div class="donation-target-box bg-stats-inner-item border border-light-subtle rounded-3 p-2 px-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-bullseye text-danger"></i>
+                            <span class="small text-muted-theme">التبرع لـ:</span>
+                            <span class="small text-stats-main fw-bold">{{ $donation->donation_for }}</span>
                         </div>
                     </div>
 
-                    <div class="payment-method-box mt-3">
-                        <div class="small text-white-50 mb-1">طريقة الدفع</div>
-                        <div class="fw-bold text-success-glow">
-                            <i class="bi bi-credit-card-2-front me-1"></i> {{ $donation->payment_method }}
+                    <div class="payment-method-strip mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted-theme fw-bold">طريقة الدفع</span>
+                            <div class="text-stats-main fw-bold x-small">
+                                <i class="bi bi-credit-card-2-front me-1 text-primary"></i> {{ $donation->payment_method }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <button class="btn btn-details-glow w-100" data-bs-toggle="modal" data-bs-target="#modal{{ $donation->id }}">
-                            <i class="bi bi-eye me-2"></i> عرض تفاصيل المتبرع
+                    <div class="mt-auto">
+                        <button class="btn btn-details-glow w-100 fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#modal{{ $donation->id }}">
+                            <i class="bi bi-eye me-2"></i> عرض تفاصيل العملية
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Detail Modal --}}
         <div class="modal fade" id="modal{{ $donation->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="background-color: var(--ws-bg-page) !important; border-radius: 24px !important; overflow: hidden;">
-                    <div class="modal-header border-0 bg-primary text-white" style="background-color: #0066ff !important; padding: 20px 30px !important;">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi bi-cash-coin me-2"></i> تفاصيل طلب التبرع (تطبيق الموبايل)
+                <div class="modal-content border-0 shadow-lg modal-glass-theme" style="border-radius: 28px; overflow: hidden;">
+                    <div class="modal-header border-0 bg-stats-header px-4 py-3 border-bottom border-light-subtle">
+                        <h5 class="modal-title fw-bold text-stats-title">
+                            <i class="bi bi-cash-coin me-2 text-primary"></i> تفاصيل طلب التبرع (تطبيق الموبايل)
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-4" style="background-color: var(--ws-bg-page) !important;">
-                        <div class="row g-4 mb-4">
+                    <div class="modal-body p-4 bg-stats-card-main">
+                        <div class="row g-4">
                             <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم المتبرع</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $donation->donor_name }}</div>
+                                <label class="text-muted-theme small fw-bold mb-2 d-block">إسم المتبرع</label>
+                                <div class="text-stats-main fw-bold">{{ $donation->donor_name }}</div>
                             </div>
-                            <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الهاتف</label>
-                                <div class="info-val font-outfit" style="color: #0066ff; font-size: 1.1rem; font-weight: 600; font-family: 'Outfit', sans-serif;">{{ $donation->donor_phone }}</div>
+                            <div class="col-md-6 info-group text-end" dir="ltr">
+                                <label class="text-muted-theme small fw-bold mb-2 d-block text-end">رقم الهاتف</label>
+                                <div class="font-outfit text-primary fw-bold text-end fs-5">{{ $donation->donor_phone }}</div>
                             </div>
                             <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">عنوان المتبرع</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $donation->donor_address ?? 'غير محدد' }}</div>
+                                <label class="text-muted-theme small fw-bold mb-2 d-block">عنوان المتبرع</label>
+                                <div class="text-stats-main fw-bold">{{ $donation->donor_address ?? 'غير محدد' }}</div>
                             </div>
                             
                             <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">إسم الحساب (انستاباي/فودافون)</label>
-                                <div class="info-val" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $donation->account_name ?? 'غير متوفر' }}</div>
+                                <label class="text-muted-theme small fw-bold mb-2 d-block">إسم الحساب (انستاباي/فودافون)</label>
+                                <div class="text-stats-main fw-bold">{{ $donation->account_name ?? 'غير متوفر' }}</div>
                             </div>
                             <div class="col-md-6 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">رقم الحساب المحول منه</label>
-                                <div class="info-val font-outfit" style="color: var(--ws-text-primary); font-size: 1.1rem; font-weight: 600;">{{ $donation->account_number ?? 'غير متوفر' }}</div>
+                                <label class="text-muted-theme small fw-bold mb-2 d-block">رقم الحساب المحول منه</label>
+                                <div class="font-outfit text-stats-main fw-bold fs-5">{{ $donation->account_number ?? 'غير متوفر' }}</div>
                             </div>
 
-                            <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">
-                                    <i class="bi bi-image me-1"></i> صورة إثبات التحويل (Proof of Transfer)
+                            <div class="col-12 info-group mt-4">
+                                <label class="text-muted-theme small fw-bold mb-3 d-block">
+                                    <i class="bi bi-image me-1 text-primary"></i> صورة إثبات التحويل (Proof of Transfer)
                                 </label>
                                 @if($donation->receipt_path)
-                                    <div class="receipt-preview-container" style="border-radius: 16px; overflow: hidden; border: 2px solid rgba(0, 102, 255, 0.2); background: rgba(0,0,0,0.2); position: relative;">
-                                        <div class="preview-overlay" style="position: absolute; top: 10px; right: 10px; z-index: 5;">
-                                            <span class="badge bg-primary rounded-pill shadow-sm">تأكيد التحصيل</span>
+                                    <div class="receipt-preview-container bg-stats-inner-item border border-light-subtle rounded-4 p-3 overflow-hidden position-relative shadow-sm">
+                                        <div class="preview-badge position-absolute top-0 start-0 m-3 z-3">
+                                            <span class="badge bg-success rounded-pill fw-bold py-2 px-3 shadow-sm"><i class="bi bi-shield-check me-1"></i> إثبات صالح</span>
                                         </div>
-                                        <a href="{{ $donation->image_url }}" target="_blank" class="d-block text-center p-2">
-                                            <img src="{{ $donation->image_url }}" class="img-fluid rounded" style="max-height: 450px; object-fit: contain; cursor: zoom-in; transition: 0.3s;" alt="Donation Receipt" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                                        <a href="{{ $donation->image_url }}" target="_blank" class="d-block text-center hover-up">
+                                            <img src="{{ $donation->image_url }}" class="img-fluid rounded-3 shadow-lg" style="max-height: 450px; object-fit: contain;" alt="Donation Receipt">
                                         </a>
-                                        <div class="p-2 text-center border-top border-white border-opacity-10">
-                                            <small class="text-white-50"><i class="bi bi-info-circle me-1"></i> اضغط على الصورة لتكبيرها</small>
+                                        <div class="mt-3 text-center">
+                                            <small class="text-muted-theme"><i class="bi bi-zoom-in me-1"></i> انقر على الصورة للمعاينة الكاملة</small>
                                         </div>
                                     </div>
                                 @else
-                                    <div class="no-receipt-placeholder p-5 text-center" style="background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px;">
-                                        <i class="bi bi-camera-fill display-6 text-white-50 mb-3 d-block"></i>
-                                        <h6 class="text-white-50">لم يتم إرفاق صورة إثبات التحويل بعد</h6>
-                                        <p class="small text-muted mb-0">المتبرع لم يقم برفع صورة الوصل/التحويل من الموبايل.</p>
+                                    <div class="no-receipt-placeholder p-5 text-center bg-stats-inner-item border border-dashed border-light-subtle rounded-4">
+                                        <i class="bi bi-camera-fill display-6 text-muted-theme opacity-30 mb-3 d-block"></i>
+                                        <h6 class="text-muted-theme fw-bold">لم يتم إرفاق صورة إثبات التحويل بعد</h6>
+                                        <p class="small text-muted-theme opacity-75 mb-0">المتبرع لم يقم برفع صورة الوصل من خلال التطبيق.</p>
                                     </div>
                                 @endif
                             </div>
                             
-                            <hr class="my-2" style="opacity: 0.1; color: var(--ws-text-primary);">
-
-                            <div class="col-12 info-group">
-                                <label style="display: block; color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px;">ملاحظات المتبرع</label>
-                                <div class="message-box" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; color: #94a3b8; line-height: 1.7;">
-                                    "{{ $donation->notes ?? 'لا توجد ملاحظات إضافية.' }}"
+                            <div class="col-12 info-group mt-2">
+                                <label class="text-muted-theme small fw-bold mb-2 d-block">ملاحظات المتبرع</label>
+                                <div class="message-box bg-stats-inner-item border border-light-subtle rounded-4 p-4 text-muted-theme italic shadow-inner">
+                                    "{{ $donation->notes ?? 'لا توجد ملاحظات إضافية من المتبرع.' }}"
                                 </div>
                             </div>
                         </div>
 
-                        <div class="admin-panel mt-5" style="background: rgba(255, 255, 255, 0.02); border-radius: 20px; padding: 25px; border: 1px solid rgba(255, 255, 255, 0.05);">
-                            <h6 class="mb-3" style="color: var(--ws-text-primary) !important; font-weight: 700; border-right: 4px solid #0066ff; padding-right: 15px;"><i class="bi bi-shield-lock me-2"></i> التحكم في حالة الطلب</h6>
+                        <div class="admin-panel mt-5 p-4 rounded-4 bg-stats-inner-item border border-light-subtle">
+                            <h6 class="mb-4 text-stats-main fw-bold border-start border-primary border-4 ps-3"><i class="bi bi-shield-lock me-2 text-primary"></i> التحكم في حالة الطلب</h6>
                             <form action="{{ route('mobile.donations.update', $donation->id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label small opacity-75" style="color: #94a3b8;">تغيير الحالة</label>
-                                        <select name="status" class="form-select" style="background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: var(--ws-text-primary) !important; border-radius: 12px !important; padding: 12px !important;">
+                                        <label class="form-label x-small text-muted-theme fw-bold mb-2">تحديث حالة المعاملة</label>
+                                        <select name="status" class="form-select bg-stats-card-main border-light-subtle text-stats-main rounded-3 p-3 fw-bold">
                                             <option value="pending" {{ $donation->status == 'pending' ? 'selected' : '' }}>بانتظار التأكيد (Pending)</option>
                                             <option value="completed" {{ $donation->status == 'completed' ? 'selected' : '' }}>تم التحصيل بنجاح (Completed)</option>
                                             <option value="failed" {{ $donation->status == 'failed' ? 'selected' : '' }}>فشلت / ملغاة (Failed)</option>
                                         </select>
                                     </div>
-                                    <div class="col-12 mt-4 d-flex justify-content-between">
-                                        <button type="submit" class="btn" style="background: #00d1b2; color: var(--ws-text-primary); border: none; border-radius: 12px; padding: 12px 35px; font-weight: 700;">حفظ التغييرات</button>
-                                        <button type="button" class="btn" style="background: #363636; color: #f8fafc; border-radius: 12px; padding: 12px 20px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1);" onclick="if(confirm('هل أنت متأكد من حذف هذا السجل؟')) document.getElementById('del-form-{{ $donation->id }}').submit()">حذف السجل</button>
+                                    <div class="col-12 mt-4 d-flex justify-content-between gap-3">
+                                        <button type="submit" class="btn btn-success flex-grow-1 rounded-pill fw-bold py-3 shadow-sm">حفظ وتأكيد الحالة</button>
+                                        <button type="button" class="btn btn-outline-danger rounded-pill px-5 fw-bold py-3" onclick="if(confirm('هل أنت متأكد من حذف هذا السجل؟')) document.getElementById('del-form-{{ $donation->id }}').submit()">حذف</button>
                                     </div>
                                 </div>
                             </form>
@@ -162,255 +171,65 @@
 </div>
 
 <style>
-    :root {
-        --dark-bg: #05070a;
-        --card-bg: var(--ws-bg-card-header);
-        --primary: #3b82f6;
-        --success: #10b981;
-        --success-glow: #34d399;
-        --danger: #ef4444;
-    }
-
-    body { background-color: var(--dark-bg); font-family: 'Tajawal', 'Outfit', sans-serif; }
+    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'Tajawal', 'Outfit', sans-serif; }
+    .bg-theme-page { background-color: var(--ws-bg-page); }
     .fw-800 { font-weight: 800; }
-    .text-primary-glow { color: #0066ff; }
     .font-outfit { font-family: 'Outfit', sans-serif; }
 
-    .glass-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 100px; color: var(--ws-text-primary); backdrop-filter: blur(10px); }
+    /* Theme-Aware Financial Styling */
+    .bg-stats-card-main { background-color: #ffffff; }
+    .bg-stats-inner-item { background-color: var(--gray-50); }
+    .text-stats-main { color: var(--dark); }
+    .text-muted-theme { color: var(--gray-500); }
+    .bg-stats-header { background-color: var(--gray-50); }
+    .text-stats-title { color: var(--dark); }
 
-    /* Card Styling */
-    .premium-donation-card {
-        background: var(--card-bg);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 24px;
-        overflow: hidden;
-        transition: 0.4s;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .premium-donation-card:hover { transform: translateY(-10px); border-color: var(--success); }
+    body.theme-dark .bg-stats-card-main { background-color: var(--bg-card); }
+    body.theme-dark .bg-stats-inner-item { background-color: rgba(255, 255, 255, 0.03); }
+    body.theme-dark .text-stats-main { color: #ffffff; }
+    body.theme-dark .text-muted-theme { color: var(--gray-400); }
+    body.theme-dark .bg-stats-header { background-color: rgba(255, 255, 255, 0.05); }
+    body.theme-dark .text-stats-title { color: #ffffff; }
 
-    .card-inner-top { padding: 24px; }
-    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    /* Custom Elements */
+    .glass-badge-theme { background: var(--bg-stats-header); border: 1px solid var(--ws-border); border-radius: 100px; color: var(--ws-text-primary); }
     
-    .badge-premium { padding: 6px 14px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; }
-    .status-pending { background: rgba(255,255,255,0.1); color: var(--ws-text-primary); }
-    .status-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .status-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .premium-donation-card { border-radius: 24px; overflow: hidden; height: 100%; display: flex; flex-direction: column; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--ws-border); background: var(--ws-bg-card); }
+    .premium-donation-card:hover { transform: translateY(-10px); border-color: var(--success); box-shadow: 0 20px 50px rgba(16, 185, 129, 0.1); }
 
-    .amount-badge { background: rgba(16, 185, 129, 0.1); color: var(--success-glow); padding: 8px 16px; border-radius: 12px; font-weight: 800; font-family: 'Outfit'; font-size: 1.2rem; }
-
-    .user-name { font-weight: 700; color: var(--ws-text-primary); margin-bottom: 2px; }
-    .user-phone { color: #94a3b8; font-size: 0.9rem; }
-    .donation-for-tag { font-size: 0.85rem; color: #64748b; }
-
-    .payment-method-box { background: rgba(0,0,0,0.2); border-radius: 14px; padding: 12px 18px; border: 1px solid rgba(255,255,255,0.03); }
-
-    .btn-details-glow { background: rgba(255,255,255,0.05); color: var(--ws-text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; font-weight: 600; transition: 0.3s; }
-    .btn-details-glow:hover { background: var(--success); border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-
-     /* Modal Styling - Premium Blue */
-    .premium-modal { 
-        background-color: var(--ws-bg-page) !important; 
-        border: none !important;
-        border-radius: 24px !important; 
-        overflow: hidden; 
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; 
-    }
-    .premium-modal .modal-header { 
-        background-color: #0066ff !important; 
-        border: none !important;
-        padding: 20px 30px; 
-    }
-    .premium-modal .modal-body { 
-        padding: 30px; 
-        background-color: var(--ws-bg-page) !important; 
-    }
+    .card-inner-top { padding: 24px; flex-grow: 1; display: flex; flex-direction: column; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; }
     
-    .info-group label { 
-        display: block; 
-        color: #94a3b8; 
-        font-size: 0.85rem; 
-        font-weight: 500; 
-        margin-bottom: 8px; 
-    }
-    .info-val { 
-        color: var(--ws-text-primary); 
-        font-size: 1.1rem; 
-        font-weight: 600; 
-    }
-    .message-box { 
-        background: rgba(15, 23, 42, 0.6); 
-        border: 1px solid rgba(255,255,255,0.08); 
-        border-radius: 12px; 
-        padding: 15px; 
-        color: #94a3b8; 
-        line-height: 1.7; 
-    }
+    .badge-premium { padding: 6px 16px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+    .status-pending { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2); }
+    .status-success { background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.2); }
+    .status-danger { background: rgba(239, 68, 68, 0.1); color: #dc2626; border-color: rgba(239, 68, 68, 0.2); }
 
-    .admin-panel { 
-        background: rgba(255, 255, 255, 0.02); 
-        border-radius: 20px; 
-        padding: 25px; 
-        border: 1px solid rgba(255, 255, 255, 0.05); 
-    }
-    .panel-title {
-        color: var(--ws-text-primary) !important;
-        font-weight: 700;
-        border-right: 4px solid #0066ff;
-        padding-right: 15px;
-    }
-    .dark-input { 
-        background: rgba(15, 23, 42, 0.8) !important; 
-        border: 1px solid rgba(255, 255, 255, 0.1) !important; 
-        color: var(--ws-text-primary) !important; 
-        border-radius: 12px !important; 
-        padding: 12px !important; 
-    }
-    .btn-save-premium-success { 
-        background: #00d1b2; 
-        color: var(--ws-text-primary); 
-        border: none; 
-        border-radius: 12px; 
-        padding: 12px 35px; 
-        font-weight: 700; 
-        transition: 0.3s; 
-    }
-    .btn-save-premium-success:hover { 
-        background: #00bfa5; 
-        transform: translateY(-2px); 
-        box-shadow: 0 10px 20px rgba(0, 209, 178, 0.3); 
-    }
-    .btn-delete-danger { 
-        background: #363636; 
-        color: #f8fafc; 
-        border-radius: 12px;
-        padding: 12px 20px;
-        font-weight: 600; 
-        transition: 0.3s; 
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn-delete-danger:hover {
-        background: #ef4444;
-        color: var(--ws-text-primary);
-    }
+    .amount-badge-premium { padding: 12px 20px; border-radius: 16px; display: flex; align-items: baseline; gap: 6px; }
+    .amount-badge-premium .num { font-size: 1.4rem; letter-spacing: -1px; }
+
+    .btn-details-glow { background: var(--gray-100); color: var(--dark); border: 1px solid var(--ws-border); border-radius: 12px; transition: 0.3s; }
+    body.theme-dark .btn-details-glow { background: rgba(255,255,255,0.05); color: #ffffff; }
+    .btn-details-glow:hover { background: var(--success); border-color: var(--success); color: #ffffff; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+
+    /* Modal Styling */
+    .modal-glass-theme { background-color: var(--ws-bg-card) !important; }
+    .message-box { line-height: 1.8; position: relative; }
+    .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+    
+    .receipt-preview-container img { transition: 0.4s; }
+    .hover-up:hover img { transform: translateY(-5px); }
+
+    body.theme-dark .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
 
     /* Animations */
     .animate-reveal-down { animation: revealDown 1s both; }
     .animate-up { animation: fadeInUp 0.8s both; }
     @keyframes revealDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
+
+    .x-small { font-size: 0.7rem; }
+    .italic { font-style: italic; }
 </style>
 @endsection
 

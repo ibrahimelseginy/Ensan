@@ -52,32 +52,35 @@
                         </span>
                     </div>
 
-                    <div class="card-body p-4 pt-5">
+                    <div class="card-body p-4 pt-5 bg-stats-card-main">
                         <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="avatar-soft bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 54px; height: 54px; border: 4px solid white;">
+                            <div class="avatar-soft bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm border border-white" style="width: 58px; height: 58px; border: 4px solid white;">
                                 {{ mb_substr($request->name, 0, 1) }}
                             </div>
                             <div class="overflow-hidden">
-                                <h6 class="fw-bold text-dark text-truncate mb-1" title="{{ $request->name }}">{{ $request->name }}</h6>
-                                <div class="x-small text-muted d-flex align-items-center gap-1">
-                                    <i class="bi bi-clock"></i> {{ $request->created_at->translatedFormat('d M Y') }}
+                                <h6 class="fw-800 text-stats-main text-truncate mb-0" title="{{ $request->name }}">{{ $request->name }}</h6>
+                                <div class="x-small text-primary fw-bold text-truncate mt-1">
+                                    <i class="bi bi-briefcase me-1"></i> {{ $request->current_job ?? 'باحث عن عمل' }}
+                                </div>
+                                <div class="x-small text-muted-theme d-flex align-items-center gap-1 mt-1 opacity-75">
+                                    <i class="bi bi-calendar3"></i> {{ $request->created_at->translatedFormat('d M Y') }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-3 bg-light rounded-4 border mb-4">
-                            <div class="x-small text-muted mb-1 fw-bold">مجال الاهتمام</div>
-                            <div class="fw-bold text-dark small"><i class="bi bi-lightning-charge text-primary me-1"></i> {{ $request->area_of_interest ?? 'رغبة عامة' }}</div>
+                        <div class="p-3 bg-stats-inner-item rounded-4 border border-light-subtle mb-4">
+                            <div class="x-small text-muted-theme mb-1 fw-bold opacity-75">مجال التطوع المفضل</div>
+                            <div class="fw-bold text-stats-main small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> {{ $request->area_of_interest ?? 'انضمام عام' }}</div>
                         </div>
 
-                        <div class="vstack gap-2 mb-4">
+                        <div class="vstack gap-2 mb-4 bg-stats-inner-item p-3 rounded-4 border border-light-subtle">
                             <div class="d-flex justify-content-between align-items-center x-small">
-                                <span class="text-muted">الجوال:</span>
-                                <span class="text-dark fw-bold font-outfit" style="direction: ltr;">{{ $request->phone }}</span>
+                                <span class="text-muted-theme">الجوال:</span>
+                                <span class="text-stats-main fw-bold font-outfit" style="direction: ltr;">{{ $request->phone }}</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center x-small overflow-hidden">
-                                <span class="text-muted">البريد:</span>
-                                <span class="text-dark fw-bold text-truncate ms-2" title="{{ $request->email }}">{{ $request->email }}</span>
+                                <span class="text-muted-theme text-nowrap">البريد:</span>
+                                <span class="text-stats-main fw-bold text-truncate ms-2" title="{{ $request->email }}">{{ $request->email }}</span>
                             </div>
                         </div>
 
@@ -124,10 +127,10 @@
             <form action="{{ route('website.volunteer-content.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
-                    <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                    <div class="p-4 border-bottom bg-stats-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-3">
                             <div class="header-icon-small bg-warning"><i class="bi bi-pencil-square text-dark"></i></div>
-                            <h5 class="fw-bold mb-0 text-dark">تخصيص محتوى صفحة تطوع معنا</h5>
+                            <h5 class="fw-bold mb-0 text-stats-title">تخصيص محتوى صفحة تطوع معنا</h5>
                         </div>
                         <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">حفظ التغييرات</button>
                     </div>
@@ -226,8 +229,8 @@
     <div class="modal fade" id="viewReq{{ $request->id }}" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white">
-                <div class="modal-header border-bottom bg-light px-4 py-3">
-                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> تفاصيل طلب المتطوع: {{ $request->name }}</h5>
+                <div class="modal-header border-bottom bg-stats-header px-4 py-3">
+                    <h5 class="modal-title fw-bold text-stats-title"><i class="bi bi-info-circle-fill me-2 text-primary"></i> تفاصيل طلب المتطوع: {{ $request->name }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
@@ -469,6 +472,18 @@
 
     .animate-slide-up { animation: slideUp 0.6s ease-out forwards; opacity: 0; }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Theme-Aware Stats Styling */
+    .bg-stats-card-main { background-color: #ffffff; }
+    .bg-stats-inner-item { background-color: var(--gray-50); }
+    .text-stats-main { color: var(--dark); }
+    .text-muted-theme { color: var(--gray-500); }
+
+    body.theme-dark .bg-stats-card-main { background-color: var(--bg-card); }
+    body.theme-dark .bg-stats-inner-item { background-color: rgba(255, 255, 255, 0.03); }
+    body.theme-dark .text-stats-main { color: #ffffff; }
+    body.theme-dark .text-muted-theme { color: var(--gray-400); }
+    body.theme-dark .avatar-soft { border-color: var(--bg-card) !important; }
 
     @media (min-width: 992px) {
         .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }

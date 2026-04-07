@@ -68,17 +68,17 @@
                             <div class="card h-100 border-0 shadow-sm partner-card-sleek rounded-4 animate-slide-up overflow-hidden" style="animation-delay: {{ $loop->index * 0.05 }}s">
                                 @php
                                     $tiersArr = [
-                                        'platinum' => ['label' => 'بلاتيني', 'color' => 'secondary', 'icon' => 'bi-award-fill'],
-                                        'gold' => ['label' => 'ذهبي', 'color' => 'warning', 'icon' => 'bi-star-fill'],
-                                        'silver' => ['label' => 'فضي', 'color' => 'info', 'icon' => 'bi-shield-fill'],
-                                        'bronze' => ['label' => 'برونزي', 'color' => 'primary', 'icon' => 'bi-patch-check-fill'],
-                                        'corporate' => ['label' => 'شريك مؤسسي', 'color' => 'dark', 'icon' => 'bi-building-fill'],
+                                        'platinum' => ['label' => 'بلاتيني', 'color' => 'platinum', 'icon' => 'bi-award-fill'],
+                                        'gold' => ['label' => 'ذهبي', 'color' => 'gold', 'icon' => 'bi-star-fill'],
+                                        'silver' => ['label' => 'فضي', 'color' => 'silver', 'icon' => 'bi-shield-fill'],
+                                        'bronze' => ['label' => 'برونزي', 'color' => 'bronze', 'icon' => 'bi-patch-check-fill'],
+                                        'corporate' => ['label' => 'شريك مؤسسي', 'color' => 'corporate', 'icon' => 'bi-building-fill'],
                                     ];
                                     $tier = $tiersArr[$partner->type] ?? $tiersArr['bronze'];
                                 @endphp
                                 
                                 <div class="position-absolute top-0 start-0 m-2 z-10">
-                                    <span class="badge bg-{{ $tier['color'] }} bg-opacity-10 text-{{ $tier['color'] }} rounded-pill px-2 py-1 x-small border border-{{ $tier['color'] }} border-opacity-10 fw-800">
+                                    <span class="badge badge-{{ $tier['color'] }} rounded-pill px-3 py-1 x-small fw-800 shadow-sm border border-black border-opacity-10">
                                         <i class="bi {{ $tier['icon'] }} me-1"></i> {{ $tier['label'] }}
                                     </span>
                                 </div>
@@ -312,7 +312,7 @@
                 </div>
                 <div class="modal-footer border-top bg-light p-3">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
-                    <button type="submit" class="btn btn-info rounded-pill px-5 fw-bold shadow-sm text-dark">حفظ السلايدر</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">حفظ السلايدر</button>
                 </div>
             </form>
         </div>
@@ -610,6 +610,28 @@
         border-color: var(--primary) !important;
         background: var(--bg-soft) !important;
     }
+
+    /* Metallic Tier System */
+    .badge-platinum { background: #E5E7EB; color: #374151; }
+    .badge-gold { background: #FEF3C7; color: #92400E; }
+    .badge-silver { background: #F3F4F6; color: #4B5563; }
+    .badge-bronze { background: #FFEDD5; color: #9A3412; }
+    .badge-corporate { background: #F1F5F9; color: #0F172A; }
+
+    body.theme-dark .badge-platinum { background: rgba(229, 231, 235, 0.1); color: #E5E7EB; border-color: rgba(229, 231, 231, 0.2) !important; }
+    body.theme-dark .badge-gold { background: rgba(251, 191, 36, 0.1); color: #FBBF24; border-color: rgba(251, 191, 36, 0.2) !important; }
+    body.theme-dark .badge-silver { background: rgba(156, 163, 175, 0.1); color: #D1D5DB; border-color: rgba(156, 163, 175, 0.2) !important; }
+    body.theme-dark .badge-bronze { background: rgba(205, 127, 50, 0.1); color: #CD7F32; border-color: rgba(205, 127, 50, 0.2) !important; }
+    body.theme-dark .badge-corporate { background: rgba(148, 163, 184, 0.1); color: #94A3B8; border-color: rgba(148, 163, 184, 0.2) !important; }
+
+    /* Theme-Aware Stats Styling */
+    .bg-stats-inner-modern { background-color: var(--gray-50); }
+    .text-primary-theme { color: var(--primary) !important; }
+    .text-muted-theme { color: var(--gray-500) !important; }
+
+    body.theme-dark .bg-stats-inner-modern { background-color: rgba(255, 255, 255, 0.03); }
+    body.theme-dark .text-primary-theme { color: #34d399 !important; }
+    body.theme-dark .text-muted-theme { color: #94a3b8 !important; }
 
     @media (min-width: 992px) {
         .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }

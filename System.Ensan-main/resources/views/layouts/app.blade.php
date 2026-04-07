@@ -34,6 +34,10 @@
           --radius: 12px;
           --radius-sm: 8px;
           
+          /* Bootstrap 5 Native Overrides - Essential for opacity utilities */
+          --bs-primary: #22C55E;
+          --bs-primary-rgb: 34, 197, 94;
+          
           /* Legacy Compatibility */
           --ws-primary: var(--primary);
           --ws-bg-page: var(--bg-soft);
@@ -113,17 +117,91 @@
           border-color: var(--primary-dark) !important;
       }
 
-      .btn-secondary {
-          background-color: white !important;
-          border-color: var(--border) !important;
-          color: var(--text-main) !important;
+      .text-primary { color: var(--primary) !important; }
+      .bg-primary { background-color: var(--primary) !important; }
+      
+      /* Global Visibility Fix: Force white text/icons on SOLID primary backgrounds ONLY */
+      .bg-primary:not([class*="bg-opacity-"]), 
+      .btn-primary, 
+      .badge.bg-primary { 
+          color: #ffffff !important; 
+      }
+      
+      .bg-primary:not([class*="bg-opacity-"]) i,
+      .bg-primary:not([class*="bg-opacity-"]) .text-primary {
+          color: #ffffff !important;
+      }
+
+      /* Transitions and Utility Support */
+      .bg-primary-light { background-color: rgba(var(--bs-primary-rgb), 0.08) !important; }
+      .bg-opacity-10 { --bs-bg-opacity: 0.1 !important; background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity)) !important; }
+      
+      .bg-primary-light.text-primary,
+      .bg-primary-light i,
+      [class*="bg-opacity-"] .text-primary,
+      [class*="bg-opacity-"] i { 
+          color: var(--primary) !important; 
+      }
+
+      .btn-outline-primary {
+          color: var(--primary) !important;
+          border-color: var(--primary) !important;
           border-radius: var(--radius-sm);
+      }
+      .btn-outline-primary:hover {
+          background-color: var(--primary) !important;
+          color: white !important;
+      }
+
+      .btn-secondary {
+          background-color: #F3F4F6 !important;
+          border-color: #E5E7EB !important;
+          color: #111111 !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+      }
+      .btn-secondary:hover {
+          background-color: #E5E7EB !important;
+          border-color: #D1D5DB !important;
+      }
+
+      .btn-success {
+          background-color: #10B981 !important;
+          border-color: #10B981 !important;
+          color: white !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+      }
+      .btn-success:hover {
+          background-color: #059669 !important;
+          border-color: #059669 !important;
       }
 
       .btn-danger {
-          background-color: #fee2e2 !important;
-          border-color: #fecaca !important;
-          color: #dc2626 !important;
+          background-color: #EF4444 !important;
+          border-color: #EF4444 !important;
+          color: white !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+      }
+      .btn-danger:hover {
+          background-color: #DC2626 !important;
+          border-color: #DC2626 !important;
+      }
+
+      .btn-warning {
+          background-color: #F59E0B !important;
+          border-color: #F59E0B !important;
+          color: #111111 !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+      }
+
+      .btn-info {
+          background-color: #3B82F6 !important;
+          border-color: #3B82F6 !important;
+          color: white !important;
+          font-weight: 600;
           border-radius: var(--radius-sm);
       }
 

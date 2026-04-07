@@ -31,34 +31,34 @@
             {{-- Donor Profile Card --}}
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 100px;">
-                    <div class="p-4 border-bottom bg-light">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> هويّة المتبرع</h6>
+                    <div class="p-4 border-bottom bg-stats-header">
+                        <h6 class="mb-0 fw-bold text-stats-title"><i class="bi bi-info-circle-fill me-2 text-primary"></i> هويّة المتبرع</h6>
                     </div>
-                    <div class="card-body p-4">
-                        <div class="mb-4 text-center pb-4 border-bottom">
-                            <div class="avatar-large-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                    <div class="card-body p-4 bg-stats-card-main">
+                        <div class="mb-4 text-center pb-4 border-bottom border-light-subtle">
+                            <div class="avatar-large-circle bg-primary-light text-primary mx-auto mb-3 shadow-sm border border-white">
                                 <i class="bi bi-person-fill"></i>
                             </div>
-                            <h5 class="fw-bold text-dark mb-1">{{ $donor->name }}</h5>
-                            <span class="text-muted font-monospace x-small">{{ $donor->phone }}</span>
+                            <h5 class="fw-bold text-stats-main mb-1">{{ $donor->name }}</h5>
+                            <span class="text-muted-theme font-monospace x-small">{{ $donor->phone }}</span>
                         </div>
 
                         <div class="donor-stats-grid grid-2 gap-3 mb-4">
-                            <div class="p-3 bg-light rounded-4 text-center">
-                                <span class="x-small text-muted d-block mb-1">العمليات</span>
-                                <span class="fw-bold text-dark">{{ $history->count() }}</span>
+                            <div class="p-3 bg-stats-inner-item rounded-4 text-center border">
+                                <span class="x-small text-muted-theme d-block mb-1">العمليات</span>
+                                <span class="fw-bold text-stats-main">{{ $history->count() }}</span>
                             </div>
-                            <div class="p-3 bg-light rounded-4 text-center">
-                                <span class="x-small text-muted d-block mb-1">الموثقة</span>
-                                <span class="fw-bold text-success">{{ $history->where('status', 'verified')->count() }}</span>
+                            <div class="p-3 bg-stats-inner-item rounded-4 text-center border">
+                                <span class="x-small text-muted-theme d-block mb-1">الموثقة</span>
+                                <span class="fw-bold text-success-theme">{{ $history->where('status', 'verified')->count() }}</span>
                             </div>
                         </div>
 
-                        <div class="p-4 bg-primary bg-opacity-5 rounded-4 border border-primary border-opacity-10">
-                            <label class="x-small text-muted fw-bold d-block mb-2 text-uppercase tracking-wider">إجمالي الدعم الموثق</label>
+                        <div class="p-4 bg-stats-highlight rounded-4 border border-primary border-opacity-10 shadow-sm">
+                            <label class="x-small text-muted-theme fw-bold d-block mb-2 text-uppercase tracking-wider">إجمالي الدعم الموثق</label>
                             <div class="d-flex align-items-baseline gap-2">
-                                <span class="display-6 fw-800 text-primary">{{ number_format($history->where('status', 'verified')->sum('amount'), 2) }}</span>
-                                <span class="fw-bold text-primary opacity-75">ج.م</span>
+                                <span class="display-6 fw-800 text-primary-theme">{{ number_format($history->where('status', 'verified')->sum('amount'), 2) }}</span>
+                                <span class="fw-bold text-primary-theme opacity-75 small">ج.م</span>
                             </div>
                         </div>
                     </div>
@@ -245,5 +245,27 @@
     .table thead th { border-bottom: none; }
     .table tbody td { border-bottom: 1px solid #f2f2f2; }
     .table-hover tbody tr:hover { background-color: rgba(34, 197, 94, 0.02); }
+
+    /* Theme-Aware Stats Styling */
+    .bg-stats-header { background-color: var(--gray-50); }
+    .bg-stats-card-main { background-color: #ffffff; }
+    .bg-stats-inner-item { background-color: var(--gray-50); }
+    .bg-stats-highlight { background-color: rgba(34, 197, 94, 0.05); }
+    .text-stats-title { color: var(--dark); }
+    .text-stats-main { color: var(--dark); }
+    .text-muted-theme { color: var(--gray-500); }
+    .text-primary-theme { color: var(--primary); }
+    .text-success-theme { color: var(--primary-dark); }
+
+    body.theme-dark .bg-stats-header { background-color: rgba(255, 255, 255, 0.02); }
+    body.theme-dark .bg-stats-card-main { background-color: var(--bg-card); }
+    body.theme-dark .bg-stats-inner-item { background-color: rgba(255, 255, 255, 0.03); }
+    body.theme-dark .bg-stats-highlight { background-color: rgba(34, 197, 94, 0.1); }
+    body.theme-dark .text-stats-title { color: #ffffff; }
+    body.theme-dark .text-stats-main { color: #ffffff; }
+    body.theme-dark .text-muted-theme { color: var(--gray-400); }
+    body.theme-dark .text-primary-theme { color: #34d399; }
+    body.theme-dark .text-success-theme { color: #34d399; }
+    body.theme-dark .table-hover tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
 </style>
 @endsection

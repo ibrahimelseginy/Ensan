@@ -33,13 +33,13 @@
             
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 text-end">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="px-4 py-3 text-muted x-small fw-bold">اسم المتبرع</th>
-                            <th class="px-4 py-3 text-muted x-small fw-bold">رقم الهاتف</th>
-                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">عدد العمليات</th>
-                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">إجمالي المساهمات</th>
-                            <th class="px-4 py-3 text-muted x-small fw-bold text-center">الإجراءات</th>
+                    <thead class="border-bottom border-light" style="background: rgba(34, 197, 94, 0.03);">
+                        <tr class="x-small text-uppercase fw-800 text-muted">
+                            <th class="px-4 py-3 border-0"><i class="bi bi-person me-1"></i> اسم المتبرع</th>
+                            <th class="px-4 py-3 border-0"><i class="bi bi-telephone me-1"></i> رقم الهاتف</th>
+                            <th class="px-4 py-3 border-0 text-center"><i class="bi bi-activity me-1"></i> عدد العمليات</th>
+                            <th class="px-4 py-3 border-0 text-center"><i class="bi bi-cash-stack me-1"></i> إجمالي المساهمات</th>
+                            <th class="px-4 py-3 border-0 text-center"><i class="bi bi-receipt me-1"></i> الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
