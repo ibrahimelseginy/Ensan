@@ -1,632 +1,455 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
 <div class="news-mgmt-page">
     {{-- Premium Hero Section --}}
-    <div class="premium-hero-sleek">
+    <div class="premium-hero-sleek mb-4">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1" style="background: #7c3aed;"></div>
-            <div class="glow-orb-2" style="background: #a855f7;"></div>
-            <div class="noise-overlay"></div>
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
         </div>
-        <div class="hero-content-wrapper container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8 animate-reveal-right text-end">
-                    <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-white" aria-current="page">الأخبار والفعاليات</li>
-                        </ol>
-                    </nav>
-                    <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium">
-                            <i class="bi bi-newspaper me-2"></i> آخر المستجدات والفعاليات
-                        </div>
-                    </div>
-                    <h1 class="display-4 fw-800 text-white mb-3 text-end">المركز الإعلامي</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
-                        إدارة الأخبار والقصص التي يتم نشرها على واجهة الموقع
-                    </p>
-                </div>
-                <div class="col-lg-4 text-start mt-4 mt-lg-0 animate-reveal-left">
-                    <div class="d-flex flex-column gap-3 align-items-lg-start">
-                        <button class="btn btn-warning-glow rounded-pill px-4 py-3 fw-bold shadow-lg" data-bs-toggle="modal" data-bs-target="#manageSlider">
-                            <i class="bi bi-images me-2"></i> إدارة صور السلايدر
-                        </button>
-                        <button class="btn btn-action-glow rounded-pill px-4 py-3 fw-bold shadow-lg" data-bs-toggle="modal" data-bs-target="#addNews">
-                            <i class="bi bi-plus-lg me-2"></i> إضافة خبر جديد
-                        </button>
-                    </div>
-                </div>
+        <div class="container hero-content-wrapper text-center">
+            <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-center">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">الأخبار والفعاليات</li>
+                </ol>
+            </nav>
+            <div class="badge-glass-premium mb-3">
+                <i class="bi bi-newspaper me-2"></i> إدارة المركز الإعلامي
+            </div>
+            <h1 class="display-5 fw-800 text-dark mb-3">الأخبار والفعاليات</h1>
+            <p class="lead text-muted mb-0 max-w-600 mx-auto">
+                إدارة الأخبار والقصص والفعاليات التي يتم نشرها على واجهة الموقع الإلكتروني الرسمي
+            </p>
+            <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#manageSlider">
+                    <i class="bi bi-images me-2"></i> إدارة صور السلايدر
+                </button>
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addNews">
+                    <i class="bi bi-plus-lg me-2"></i> إضافة خبر جديد
+                </button>
             </div>
         </div>
     </div>
 
-
-<div class="container-fluid py-4">
-    {{-- News Coverage Stats Management --}}
-
-    <div class="row g-4">
-        @foreach($news as $item)
-        <div class="col-md-6 col-lg-4">
-            <div class="news-card-premium animate-up" style="animation-delay: {{ $loop->index * 0.05 }}s">
-                <div class="news-card-image">
-                    @if($item->image_path)
-                        <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover">
-                    @else
-                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #1e1b4b, #4c1d95);"><i class="bi bi-camera display-4 text-white-50"></i></div>
-                    @endif
-                    <div class="news-card-actions">
-                        <button class="btn btn-glass-sm" data-bs-toggle="modal" data-bs-target="#editNews{{ $item->id }}" title="تعديل">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <form action="{{ route('website.news.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-glass-sm btn-glass-danger-sm" title="حذف">
-                                <i class="bi bi-trash"></i>
+    <div class="container-fluid py-4 px-lg-5">
+        <div class="row g-4">
+            @foreach($news as $item)
+            <div class="col-md-6 col-lg-4 col-xxl-3">
+                <div class="card h-100 border-0 shadow-sm news-card-sleek rounded-4 animate-slide-up overflow-hidden" style="animation-delay: {{ $loop->index * 0.05 }}s">
+                    <div class="ratio ratio-16x9 position-relative overflow-hidden group-hover-zoom">
+                        @if($item->image_path)
+                            <img src="{{ $item->image_url }}" class="w-100 h-100 object-fit-cover transition-all">
+                        @else
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light border-bottom">
+                                <i class="bi bi-camera fs-1 text-muted opacity-25"></i>
+                            </div>
+                        @endif
+                        
+                        <div class="news-card-actions-overlay position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 transition-all opacity-0">
+                            <button class="btn btn-white btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#editNews{{ $item->id }}" title="تعديل">
+                                <i class="bi bi-pencil-square text-primary"></i>
                             </button>
+                            <form action="{{ route('website.news.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-white btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="حذف">
+                                    <i class="bi bi-trash text-danger"></i>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        @if($item->category)
+                        <div class="position-absolute top-0 start-0 p-3">
+                            <span class="badge bg-primary rounded-pill px-3 py-1 x-small fw-bold shadow-sm">{{ $item->category }}</span>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    <div class="card-body p-4 d-flex flex-column h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="text-muted x-small"><i class="bi bi-calendar3 me-1"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : 'مسودة' }}</span>
+                            <span class="text-muted x-small fw-bold px-2 py-0 bg-light rounded-pill border">#{{ $item->id }}</span>
+                        </div>
+                        
+                        <h6 class="fw-bold text-dark mb-2 lh-base text-truncate-2 h-news-title" title="{{ $item->title }}">{{ $item->title }}</h6>
+                        <p class="text-muted x-small mb-4 text-truncate-3 opacity-75">{{ Str::limit($item->content, 120) }}</p>
+                        
+                        @if($item->statistic_number)
+                        <div class="stat-highlight-pill d-flex align-items-center gap-2 bg-light border rounded-pill px-3 py-2 mb-4">
+                            <i class="bi bi-graph-up-arrow text-primary"></i>
+                            <div class="fw-bold text-primary x-small lh-1">{{ $item->statistic_number }}</div>
+                            <div class="text-muted x-small border-start ps-2 lh-1 opacity-75">{{ $item->statistic_description }}</div>
+                        </div>
+                        @endif
+
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                            <div class="d-flex align-items-center gap-3 text-muted x-small">
+                                <span><i class="bi bi-eye me-1"></i> {{ $item->views_count ?? '0' }}</span>
+                                <span><i class="bi bi-share me-1"></i> {{ $item->shares_count ?? '0' }}</span>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 x-small fw-bold" data-bs-toggle="modal" data-bs-target="#viewNews{{ $item->id }}">
+                                تفاصيل أكثر <i class="bi bi-arrow-left ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Edit News Modal --}}
+                <div class="modal fade" id="editNews{{ $item->id }}" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <form action="{{ route('website.news.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                            @csrf @method('PUT')
+                            <div class="modal-header border-bottom bg-light px-4 py-3">
+                                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i> تعديل الخبر: {{ Str::limit($item->title, 40) }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4 bg-white">
+                                <div class="row g-3">
+                                    <div class="col-md-8 mb-2">
+                                        <label class="form-label small fw-bold text-muted">عنوان الخبر</label>
+                                        <input type="text" name="title" class="form-control" required value="{{ $item->title }}">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small fw-bold text-muted">القسم / التصنيف</label>
+                                        <select name="category" class="form-select">
+                                            <option value="طبي" {{ $item->category == 'طبي' ? 'selected' : '' }}>طبي</option>
+                                            <option value="تعليمي" {{ $item->category == 'تعليمي' ? 'selected' : '' }}>تعليمي</option>
+                                            <option value="مساعدات" {{ $item->category == 'مساعدات' ? 'selected' : '' }}>مساعدات</option>
+                                            <option value="فعاليات" {{ $item->category == 'فعاليات' ? 'selected' : '' }}>فعاليات</option>
+                                            <option value="عام" {{ ($item->category == 'عام' || !$item->category) ? 'selected' : '' }}>عام</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label small fw-bold text-muted">شريط صورة الخبر</label>
+                                        <div class="p-3 bg-light rounded-4 border">
+                                            <div class="row align-items-center g-3">
+                                                <div class="col-auto">
+                                                    @if($item->image_path)
+                                                        <img src="{{ $item->image_url }}" class="rounded shadow-sm border border-white" style="width: 100px; height: 60px; object-fit: cover;">
+                                                    @else
+                                                        <div class="rounded border p-3 text-muted text-center" style="width: 100px;"><i class="bi bi-image"></i></div>
+                                                    @endif
+                                                </div>
+                                                <div class="col">
+                                                    <input type="file" name="image" class="form-control form-control-sm">
+                                                    <p class="x-small text-muted mt-1 mb-0">اتركه فارغاً للاحتفظ بالصورة الحالية. الحجم المثالي (800x450)</p>
+                                                </div>
+                                                @if($item->image_path)
+                                                <div class="col-auto">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-3" onclick="document.getElementById('delete_image_{{ $item->id }}').value='1'; this.closest('.p-3').querySelector('img').classList.add('opacity-25'); this.remove();">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                    <input type="hidden" name="delete_image" id="delete_image_{{ $item->id }}" value="0">
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small fw-bold text-muted">تاريخ النشر</label>
+                                        <input type="date" name="published_at" class="form-control" value="{{ $item->published_at ? $item->published_at->format('Y-m-d') : date('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small fw-bold text-muted">عدد المشاهدات</label>
+                                        <input type="text" name="views_count" class="form-control" value="{{ $item->views_count }}">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small fw-bold text-muted">عدد المشاركات</label>
+                                        <input type="text" name="shares_count" class="form-control" value="{{ $item->shares_count }}">
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label small fw-bold text-muted">رقم إحصائي بارز (اختياري)</label>
+                                        <input type="text" name="statistic_number" class="form-control" value="{{ $item->statistic_number }}" placeholder="مثلاً: 95% أو +150">
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label small fw-bold text-muted">وصف الإحصائية</label>
+                                        <input type="text" name="statistic_description" class="form-control" value="{{ $item->statistic_description }}" placeholder="مثلاً: نسبة الإنجاز">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">نص الخبر الكامل</label>
+                                    <textarea name="content" class="form-control" rows="8" required>{{ $item->content }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-top bg-light p-3">
+                                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">تجاهل</button>
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">حفظ التغييرات</button>
+                            </div>
                         </form>
                     </div>
-                    @if($item->category)
-                    <div class="news-category-pill">{{ $item->category }}</div>
-                    @endif
                 </div>
-                <div class="news-card-body">
-                    <h5 class="fw-bold mb-3 text-white lh-base text-truncate" title="{{ $item->title }}">{{ $item->title }}</h5>
-                    <p class="text-slate-400 small mb-3">{{ Str::limit($item->content, 100) }}</p>
-                    
-                    @if($item->statistic_number)
-                    <div class="stat-highlight-box mb-3">
-                        <div class="fw-bold text-emerald fs-5">{{ $item->statistic_number }}</div>
-                        <div class="text-slate-500 x-small">{{ $item->statistic_description }}</div>
-                    </div>
-                    @endif
 
-                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-white border-opacity-5">
-                        <div class="d-flex align-items-center gap-3 text-slate-500 x-small">
-                            <span><i class="bi bi-calendar3 text-purple me-1"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : 'مسودة' }}</span>
-                            <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? '0' }}</span>
-                        </div>
-                        <button class="btn btn-glass-purple btn-sm rounded-pill px-3 py-1 x-small fw-bold" data-bs-toggle="modal" data-bs-target="#viewNews{{ $item->id }}">
-                            اقرأ المزيد <i class="bi bi-arrow-left ms-1"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Edit Modal --}}
-            <div class="modal fade" id="editNews{{ $item->id }}" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <form action="{{ route('website.news.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content dark-glass-card border-0">
-                        @csrf @method('PUT')
-                        <div class="modal-header border-0">
-                            <h5 class="modal-title fw-bold">تعديل الخبر: {{ $item->title }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            <div class="row g-3">
-                                <div class="col-md-8 mb-3">
-                                    <label class="form-label small fw-bold">عنوان الخبر</label>
-                                    <input type="text" name="title" class="form-control" required value="{{ $item->title }}">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label small fw-bold">نوع الخبر</label>
-                                    <select name="category" class="form-select">
-                                        <option value="طبي" {{ $item->category == 'طبي' ? 'selected' : '' }}>طبي</option>
-                                        <option value="تعليمي" {{ $item->category == 'تعليمي' ? 'selected' : '' }}>تعليمي</option>
-                                        <option value="مساعدات" {{ $item->category == 'مساعدات' ? 'selected' : '' }}>مساعدات</option>
-                                        <option value="فعاليات" {{ $item->category == 'فعاليات' ? 'selected' : '' }}>فعاليات</option>
-                                        <option value="عام" {{ ($item->category == 'عام' || !$item->category) ? 'selected' : '' }}>عام</option>
-                                    </select>
-                                </div>
+                {{-- View News Modal --}}
+                <div class="modal fade" id="viewNews{{ $item->id }}" tabindex="-1" style="z-index: 2000;">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+                            <div class="modal-header border-bottom bg-light px-4 py-3">
+                                <h5 class="modal-title fw-bold text-dark">{{ $item->title }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">صورة الخبر (اتركه فارغاً للاحتفاظ بالقديمة)</label>
-                                <div class="input-group">
-                                    <input type="file" name="image" class="form-control">
-                                    @if($item->image_path)
-                                        <button type="button" class="btn btn-danger" onclick="document.getElementById('delete_image_{{ $item->id }}').value='1'; this.closest('.mb-3').querySelector('.mt-2').classList.add('d-none'); this.remove();">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                            <div class="modal-body p-0">
+                                @if($item->image_path)
+                                    <img src="{{ $item->image_url }}" class="w-100 object-fit-cover shadow-inner" style="max-height: 400px;">
+                                @endif
+                                <div class="p-4 p-md-5">
+                                    <div class="d-flex flex-wrap gap-4 text-muted small mb-4 pb-3 border-bottom">
+                                        <span class="d-flex align-items-center gap-1"><i class="bi bi-calendar3 text-primary"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : '' }}</span>
+                                        <span class="d-flex align-items-center gap-1"><i class="bi bi-tag text-primary"></i> {{ $item->category ?? 'عام' }}</span>
+                                        <span class="d-flex align-items-center gap-1"><i class="bi bi-eye text-primary"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
+                                    </div>
+                                    <div class="text-dark lh-lg" style="white-space: pre-wrap; font-size: 1.05rem; opacity: 0.9;">{{ $item->content }}</div>
+                                    
+                                    @if($item->contact_name)
+                                    <div class="mt-5 p-4 bg-light rounded-4 border-start border-primary border-4 shadow-sm">
+                                        <h6 class="fw-bold mb-2">للاستفسار / التواصل:</h6>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="fw-bold">{{ $item->contact_name }}</div>
+                                            @if($item->contact_number)
+                                            <div class="text-primary fw-bold"><i class="bi bi-phone me-1"></i> {{ $item->contact_number }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
                                     @endif
                                 </div>
-                                <input type="hidden" name="delete_image" id="delete_image_{{ $item->id }}" value="0">
-                                @if($item->image_path)
-                                    <div class="mt-2 text-center">
-                                        <img src="{{ $item->image_url }}" class="rounded shadow-sm" style="max-height: 100px; border: 1px solid #dee2e6; padding: 3px;">
-                                    </div>
-                                @endif
                             </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label small fw-bold">تاريخ النشر</label>
-                                    <input type="date" name="published_at" class="form-control" value="{{ $item->published_at ? $item->published_at->format('Y-m-d') : date('Y-m-d') }}">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label small fw-bold">عدد المشاهدات (رقم)</label>
-                                    <input type="text" name="views_count" class="form-control" value="{{ $item->views_count }}">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label small fw-bold">عدد المشاركات (رقم)</label>
-                                    <input type="text" name="shares_count" class="form-control" value="{{ $item->shares_count }}">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">رقم إحصائي (اختياري)</label>
-                                    <input type="text" name="statistic_number" class="form-control" value="{{ $item->statistic_number }}" placeholder="مثلاً: 95%">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">وصف الإحصائية (اختياري)</label>
-                                    <input type="text" name="statistic_description" class="form-control" value="{{ $item->statistic_description }}" placeholder="مثلاً: نسبة الإنجاز">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">اسم المسؤول / جهة الاتصال (اختياري)</label>
-                                    <input type="text" name="contact_name" class="form-control" value="{{ $item->contact_name }}" placeholder="اسم الشخص">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold">رقم التواصل (اختياري)</label>
-                                    <input type="text" name="contact_number" class="form-control" value="{{ $item->contact_number }}" placeholder="0123456789">
-                                </div>
+                            <div class="modal-footer border-top bg-light p-3">
+                                <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold" data-bs-dismiss="modal">فهمت</button>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">نص الخبر</label>
-                                <textarea name="content" class="form-control" rows="10" required>{{ $item->content }}</textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0">
-                            <button type="submit" class="btn btn-warning rounded-pill px-5 shadow-sm fw-bold">حفظ التعديلات</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            {{-- View Modal --}}
-            <div class="modal fade" id="viewNews{{ $item->id }}" tabindex="-1" style="z-index: 1060;">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content dark-glass-card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background-color: #0f172a !important;">
-                        <div class="modal-header border-0" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                            <h5 class="modal-title fw-bold text-white">{{ $item->title }}</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-0">
-                            @if($item->image_path)
-                                <img src="{{ $item->image_url }}" class="w-100 object-fit-cover" style="height: 300px;">
-                            @endif
-                            <div class="p-4">
-                                <div class="d-flex gap-3 text-slate-400 small mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                                    <span><i class="bi bi-calendar3 text-purple me-1"></i> {{ $item->published_at ? $item->published_at->format('Y-m-d') : '' }}</span>
-                                    <span><i class="bi bi-folder text-purple me-1"></i> {{ $item->category ?? 'عام' }}</span>
-                                    <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
-                                </div>
-                                <div class="text-white lh-lg" style="white-space: pre-wrap;">{{ $item->content }}</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
-                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
                         </div>
                     </div>
                 </div>
             </div>
+            @endforeach
         </div>
-        @endforeach
     </div>
 
-
-
-
-{{-- Add Modal --}}
-<div class="modal fade" id="addNews" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <form action="{{ route('website.news.store') }}" method="POST" enctype="multipart/form-data" class="modal-content dark-glass-card border-0">
-            @csrf
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">إضافة خبر جديد للموقع</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-8 mb-3">
-                        <label class="form-label small fw-bold">عنوان الخبر</label>
-                        <input type="text" name="title" class="form-control" required>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label small fw-bold">نوع الخبر</label>
-                        <select name="category" class="form-select">
-                            <option value="طبي">طبي</option>
-                            <option value="تعليمي">تعليمي</option>
-                            <option value="مساعدات">مساعدات</option>
-                            <option value="فعاليات">فعاليات</option>
-                            <option value="عام" selected>عام</option>
-                        </select>
-                    </div>
+    {{-- Add News Modal --}}
+    <div class="modal fade" id="addNews" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form action="{{ route('website.news.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                @csrf
+                <div class="modal-header border-bottom bg-primary text-white px-4 py-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i> إضافة خبر جديد للموقع</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label small fw-bold">صورة الخبر</label>
-                        <input type="file" name="image" class="form-control">
-                    </div>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label small fw-bold">تاريخ النشر</label>
-                        <input type="date" name="published_at" class="form-control" value="{{ date('Y-m-d') }}">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label small fw-bold">عدد المشاهدات (رقم)</label>
-                        <input type="text" name="views_count" class="form-control" placeholder="مثلاً: 50K+">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label small fw-bold">عدد المشاركات (رقم)</label>
-                        <input type="text" name="shares_count" class="form-control" placeholder="مثلاً: 10K+">
-                    </div>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-bold">رقم إحصائي (اختياري)</label>
-                        <input type="text" name="statistic_number" class="form-control" placeholder="مثلاً: 95%">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-bold">وصف الإحصائية (اختياري)</label>
-                        <input type="text" name="statistic_description" class="form-control" placeholder="مثلاً: نسبة الإنجاز">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-bold">اسم المسؤول / جهة الاتصال (اختياري)</label>
-                        <input type="text" name="contact_name" class="form-control" placeholder="اسم الشخص">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label small fw-bold">رقم التواصل (اختياري)</label>
-                        <input type="text" name="contact_number" class="form-control" placeholder="0123456789">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">نص الخبر</label>
-                    <textarea name="content" class="form-control" rows="10" required></textarea>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">نشر الخبر على الموقع</button>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
-
-<style>
-    :root {
-        --purple-primary: #7c3aed;
-        --purple-dark: #6d28d9;
-        --dark-bg: #0b0e14;
-        --card-dark: #1a1f2e;
-        --slate-900: #0f172a;
-        --slate-400: #94a3b8;
-        --slate-500: #64748b;
-    }
-
-    body { background-color: var(--dark-bg) !important; }
-    .news-mgmt-page { min-height: 100vh; }
-
-    /* Premium Hero */
-    .premium-hero-sleek { position: relative; padding: 100px 0 120px; background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); border-radius: 0 0 60px 60px; overflow: hidden; z-index: 10; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; pointer-events: none; }
-    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
-    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
-    .noise-overlay { position: absolute; inset: 0; opacity: 0.05; }
-    .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
-    .badge-glass-premium { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); padding: 8px 18px; border-radius: 100px; color: #ddd6fe; font-weight: 700; font-size: 0.85rem; }
-    .fw-800 { font-weight: 800; }
-    .max-w-600 { max-width: 600px; }
-    .btn-action-glow { background: var(--purple-primary); color: white; border: none; font-weight: 700; box-shadow: 0 0 20px rgba(124,58,237,0.4); transition: 0.4s; }
-    .btn-action-glow:hover { background: var(--purple-dark); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(124,58,237,0.6); color: white; }
-    .btn-warning-glow { background: #f59e0b; color: #1a1a2e; border: none; font-weight: 700; box-shadow: 0 0 20px rgba(245,158,11,0.3); transition: 0.4s; }
-    .btn-warning-glow:hover { background: #d97706; transform: translateY(-5px); box-shadow: 0 15px 30px rgba(245,158,11,0.5); color: #1a1a2e; }
-
-    /* Dark Card Base */
-    .premium-card-dark { background: var(--card-dark); border-radius: 30px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; color: white; }
-    .card-header-lux { padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .card-body-lux { padding: 25px; }
-    .header-icon-box-lux { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; }
-    .bg-purple-500 { background: var(--purple-primary); }
-    .label-lux { color: #94a3b8; font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; display: block; }
-    .field-lux { width: 100%; background: #0b0e14; border: 2px solid #1e293b; border-radius: 16px; padding: 14px 20px; color: white; font-weight: 600; transition: 0.3s; }
-    .field-lux:focus { border-color: var(--purple-primary); outline: none; background: #000; box-shadow: 0 0 0 4px rgba(124,58,237,0.1); }
-    .stat-input-box { background: rgba(0,0,0,0.2); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
-    .bg-purple-subtle { background: rgba(124,58,237,0.15); }
-    .text-purple { color: #a78bfa !important; }
-    .bg-success-glass { background: rgba(16,185,129,0.15); }
-    .text-emerald { color: #34d399 !important; }
-
-    /* News Card Premium */
-    .news-card-premium {
-        background: var(--card-dark); border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%; display: flex; flex-direction: column;
-    }
-    .news-card-premium:hover { transform: translateY(-10px); border-color: var(--purple-primary); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-    .news-card-image { position: relative; height: 220px; overflow: hidden; }
-    .news-card-actions { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 8px; opacity: 0; transition: 0.3s; }
-    .news-card-premium:hover .news-card-actions { opacity: 1; }
-    .btn-glass-sm { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-    .btn-glass-sm:hover { background: var(--purple-primary); color: white; }
-    .btn-glass-danger-sm:hover { background: #ef4444 !important; }
-    .news-category-pill { position: absolute; top: 12px; left: 12px; background: rgba(124,58,237,0.8); backdrop-filter: blur(10px); color: white; font-size: 0.7rem; font-weight: 700; padding: 4px 14px; border-radius: 100px; }
-    .news-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
-    .stat-highlight-box { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 10px 16px; border: 1px solid rgba(255,255,255,0.05); }
-    .text-slate-400 { color: var(--slate-400); }
-    .text-slate-500 { color: var(--slate-500); }
-    .btn-glass-purple { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); transition: 0.3s; }
-    .btn-glass-purple:hover { background: var(--purple-primary); color: white; }
-
-    /* Dark Theme Modal Styles */
-    .dark-glass-card { background: var(--slate-900); color: #f8fafc; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .dark-glass-card .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .dark-glass-card .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
-    .dark-glass-card .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
-    .dark-glass-card .form-control, .dark-glass-card .form-select { background-color: #0b0e14; border: 2px solid #1e293b; color: #f8fafc; border-radius: 14px; padding: 12px 16px; transition: 0.3s; }
-    .dark-glass-card .form-control:focus, .dark-glass-card .form-select:focus { background-color: #0b0e14; border-color: var(--purple-primary); color: #f8fafc; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); }
-    .dark-glass-card .form-control::placeholder { color: #64748b; }
-    .dark-glass-card .form-select { color-scheme: dark; }
-    .dark-glass-card option { background-color: #0f172a !important; color: #f8fafc !important; }
-    .dark-glass-card .form-label { color: #94a3b8; font-weight: 700; font-size: 0.85rem; }
-
-    .x-small { font-size: 0.7rem; }
-
-    /* Animations */
-    .animate-reveal-right { animation: revealRight 1s both; }
-    .animate-reveal-left { animation: revealLeft 1s both; }
-    .animate-up { animation: fadeInUp 0.8s both; }
-    @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes revealLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
-    @media (max-width: 991px) {
-        .premium-hero-sleek { border-radius: 0 0 30px 30px; padding: 60px 0 80px; }
-        .display-4 { font-size: 2.2rem; }
-    }
-      
-      
-            
-      
-
-      
-
-      /* --- SYSTEM LIGHT MODE PATCH --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .text-white, 
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white, 
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50,
-      body:not(.theme-dark) .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .glass-card, 
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .card,
-      body:not(.theme-dark) .stats-card-dark,
-      body:not(.theme-dark) .stats-inner-card,
-      body:not(.theme-dark) .project-card-admin,
-      body:not(.theme-dark) .campaign-card-lux,
-      body:not(.theme-dark) .guest-card-lux,
-      body:not(.theme-dark) .article-card-lux,
-      body:not(.theme-dark) .message-card-lux,
-      body:not(.theme-dark) .donation-card-lux,
-      body:not(.theme-dark) .member-card-premium,
-      body:not(.theme-dark) .partner-card-lux,
-      body:not(.theme-dark) .leader-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .bg-dark,
-      body:not(.theme-dark) .bg-slate-800,
-      body:not(.theme-dark) .bg-slate-900,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .categories-sidebar,
-      body:not(.theme-dark) .sector-header,
-      body:not(.theme-dark) .item-card,
-      body:not(.theme-dark) .dark-glass-card {
-          background: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-      }
-      body:not(.theme-dark) .category-item {
-          color: var(--ws-text-secondary);
-          background: rgba(0,0,0,0.02);
-      }
-      body:not(.theme-dark) .category-item:hover { background: var(--ws-bg-page); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .category-item.active { background: var(--ws-bg-page); border-color: var(--ws-primary); color: var(--ws-text-primary); }
-      body:not(.theme-dark) .field-lux, body:not(.theme-dark) .form-control, body:not(.theme-dark) .form-select, body:not(.theme-dark) .form-input-dark { 
-          background: var(--ws-bg-input) !important; color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; 
-      }
-      body:not(.theme-dark) .label-lux, body:not(.theme-dark) .form-label, body:not(.theme-dark) .text-slate-400 { color: var(--ws-text-secondary) !important; }
-      body:not(.theme-dark) .modal-header .text-white { color: var(--ws-text-primary) !important; }
-      body:not(.theme-dark) .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
-      body:not(.theme-dark) .table, body:not(.theme-dark) .table th, body:not(.theme-dark) .table td, body:not(.theme-dark) .table tr { color: var(--ws-text-primary) !important; border-color: var(--ws-border) !important; }
-      </style>
-
-{{-- Manage Slider Modal --}}
-<div class="modal fade" id="manageSlider" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg" style="border-radius: 30px; background: #1e293b; color: white;">
-            @csrf
-            <div class="modal-header border-0 bg-warning text-dark p-4" style="border-radius: 30px 30px 0 0;">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                        <i class="bi bi-images fs-4 text-warning"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0">إدارة صور سلايدر الأخبار</h5>
-                        <p class="small mb-0 opacity-75">تحديث الصور المتحركة في قسم الأخبار</p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-5">
-                <div class="row g-4">
-                    @for($i = 1; $i <= 10; $i++)
-                    <div class="col-md-4">
-                        <label class="fw-bold mb-3 d-block text-center text-warning">الشريحة {{ $i }}</label>
-                        <div class="position-relative border-2 border-dashed border-secondary rounded-4 overflow-hidden" style="height: 200px; transition: 0.3s;">
-                            <input type="file" name="news_slider_{{ $i }}" class="position-absolute w-100 h-100 opacity-0" style="z-index: 10; cursor: pointer;" onchange="previewNewsSlider(this, {{ $i }})">
-                            
-                            {{-- Delete Button --}}
-                            @if(isset($settings["news_slider_$i"]))
-                            <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-lg" 
-                                    style="z-index: 20; width: 30px; height: 30px; padding: 0;"
-                                    onclick="event.stopPropagation(); document.getElementById('delete_news_slider_{{ $i }}').value='1'; this.closest('.position-relative').querySelector('#newsSliderPrev{{ $i }}').innerHTML='<div class=\'text-center text-secondary\'><i class=\'bi bi-cloud-upload fs-1\'></i><p class=\'small mb-0 mt-2\'>محذوف - حفظ للتنفيذ</p></div>'; this.remove();">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            @endif
-                            <input type="hidden" name="delete_news_slider_{{ $i }}" id="delete_news_slider_{{ $i }}" value="0">
-
-                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark" id="newsSliderPrev{{ $i }}">
-                                @if(isset($settings["news_slider_$i"]))
-                                    <img src="{{ asset('storage/' . $settings["news_slider_$i"]) }}" class="w-100 h-100 object-fit-cover">
-                                @else
-                                    <div class="text-center text-secondary">
-                                        <i class="bi bi-cloud-upload fs-1"></i>
-                                        <p class="small mb-0 mt-2">اختر صورة</p>
-                                    </div>
-                                @endif
-                            </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="row g-3">
+                        <div class="col-md-8 mb-2">
+                            <label class="form-label small fw-bold text-muted">عنوان الخبر الرئيسي</label>
+                            <input type="text" name="title" class="form-control" required placeholder="أدخل عنواناً جذاباً...">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small fw-bold text-muted">تصنيف الخبر</label>
+                            <select name="category" class="form-select">
+                                <option value="طبي">طبي</option>
+                                <option value="تعليمي">تعليمي</option>
+                                <option value="مساعدات">مساعدات</option>
+                                <option value="فعاليات">فعاليات</option>
+                                <option value="عام" selected>عام</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <label class="form-label small fw-bold text-muted">صورة الخبر</label>
+                            <input type="file" name="image" class="form-control">
+                            <p class="x-small text-muted mt-1">يفضل أن تكون الصورة بعرض كبير (16:9)</p>
                         </div>
                     </div>
-                    @endfor
+                    <div class="row g-3">
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small fw-bold text-muted">تاريخ النشر</label>
+                            <input type="date" name="published_at" class="form-control" value="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small fw-bold text-muted">مشاهدات وهمية (اختياري)</label>
+                            <input type="text" name="views_count" class="form-control" placeholder="مثلاً: 1.5K">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small fw-bold text-muted">مشاركات وهمية</label>
+                            <input type="text" name="shares_count" class="form-control" placeholder="مثلاً: 250">
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small fw-bold text-muted">رقم إحصائي (مثل 90%)</label>
+                            <input type="text" name="statistic_number" class="form-control" placeholder="يظهر بشكل بارز في الكارت">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small fw-bold text-muted">وصف الإحصائي</label>
+                            <input type="text" name="statistic_description" class="form-control" placeholder="مثلاً: نسبة المساعدات">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">محتوى الخبر بالكامل</label>
+                        <textarea name="content" class="form-control" rows="10" required placeholder="اكتب تفاصيل الخبر هنا..."></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer border-0 p-4">
-                <button type="submit" class="btn btn-warning w-100 py-3 rounded-pill fw-bold shadow">حفظ التغييرات</button>
-            </div>
-        </form>
+                <div class="modal-footer border-top bg-light p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">نشر الخبر الآن</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    {{-- Manage Slider Modal --}}
+    <div class="modal fade" id="manageSlider" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form action="{{ route('website.settings.update') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                @csrf
+                <div class="modal-header border-bottom bg-warning text-dark px-4 py-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-images me-2"></i> إدارة صور سلايدر الأخبار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <p class="x-small text-muted mb-0"><i class="bi bi-info-circle me-1"></i> الصور المضافة هنا تظهر في السلايدر العلوي لصفحة المركز الإعلامي. يمكنك إضافة حتى 10 صور.</p>
+                    </div>
+                    <div class="row g-3">
+                        @for($i = 1; $i <= 10; $i++)
+                        <div class="col-md-4 col-lg-3 col-6">
+                            <div class="position-relative rounded-4 border overflow-hidden bg-light slider-upload-mini ratio ratio-4x3 group-hover-overlay" style="cursor: pointer;">
+                                @php $sliderPath = $settings["news_slider_$i"] ?? null; @endphp
+                                @if($sliderPath)
+                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="newsSliderPrev{{ $i }}">
+                                @else
+                                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="newsSliderPlace{{ $i }}">
+                                        <i class="bi bi-cloud-arrow-up fs-2 mb-1"></i>
+                                        <span class="x-small fw-bold">{{ $i }}</span>
+                                    </div>
+                                    <img src="" class="w-100 h-100 object-fit-cover d-none shadow-sm transition-all" id="newsSliderPrev{{ $i }}">
+                                @endif
+                                
+                                <input type="file" name="news_slider_{{ $i }}" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewNewsSlider(this, {{ $i }})">
+                                
+                                @if($sliderPath)
+                                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-sm d-flex align-items-center justify-content-center z-10" 
+                                        style="width: 26px; height: 26px;"
+                                        onclick="event.stopPropagation(); document.getElementById('delete_news_slider_{{ $i }}').value='1'; this.closest('.slider-upload-mini').querySelector('.d-none').classList.remove('d-none'); document.getElementById('newsSliderPrev{{ $i }}').classList.add('d-none'); this.remove();">
+                                    <i class="bi bi-trash fs-xs"></i>
+                                </button>
+                                @endif
+                                <input type="hidden" name="delete_news_slider_{{ $i }}" id="delete_news_slider_{{ $i }}" value="0">
+                            </div>
+                        </div>
+                        @endfor
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold shadow-sm">حفظ السلايدر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>
-function previewNewsSlider(input, index) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const container = document.getElementById('newsSliderPrev' + index);
-            container.innerHTML = `<img src="${e.target.result}" class="w-100 h-100 object-fit-cover">`;
+    function previewNewsSlider(input, index) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('newsSliderPrev' + index);
+                const place = document.getElementById('newsSliderPlace' + index);
+                if (img) {
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                }
+                if (place) {
+                    place.classList.add('d-none');
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
         }
-        reader.readAsDataURL(input.files[0]);
     }
-}
 </script>
 
 <style>
-      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
+    .news-mgmt-page { min-height: 100vh; }
+    .fw-800 { font-weight: 800; }
+    .max-w-600 { max-width: 600px; }
+    .x-small { font-size: 0.75rem; }
+    .fs-xs { font-size: 0.75rem; }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .text-truncate-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .transition-all { transition: all 0.3s ease; }
 
-      /* Card & Container Overrides */
-      body:not(.theme-dark) .premium-card-dark,
-      body:not(.theme-dark) .news-card-premium,
-      body:not(.theme-dark) .request-card-premium,
-      body:not(.theme-dark) .dark-glass-card,
-      body:not(.theme-dark) .glass-card,
-      body:not(.theme-dark) .detail-box-lux,
-      body:not(.theme-dark) .stat-input-box,
-      body:not(.theme-dark) .gallery-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .profile-strip-lux,
-      body:not(.theme-dark) .info-strip-premium,
-      body:not(.theme-dark) .modal-premium-dark {
-          background: var(--ws-bg-card) !important;
-          background-color: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          color: var(--ws-text-primary) !important;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
-      }
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 80px 0 100px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
+    }
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
+    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
+    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
+    
+    .badge-glass-premium { 
+        background: var(--primary-light); 
+        border: 1px solid rgba(34, 197, 94, 0.1); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        display: inline-block;
+    }
 
-      /* Input & Form Overrides */
-      body:not(.theme-dark) .field-lux,
-      body:not(.theme-dark) .form-control,
-      body:not(.theme-dark) .form-select,
-      body:not(.theme-dark) .stat-value-field,
-      body:not(.theme-dark) .stat-label-field {
-          background: var(--ws-bg-input) !important;
-          background-color: var(--ws-bg-input) !important;
-          color: var(--ws-text-primary) !important;
-          border-color: var(--ws-border) !important;
-      }
+    /* News Card Sleek */
+    .news-card-sleek {
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid var(--border) !important;
+    }
+    .news-card-sleek:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
+        border-color: var(--primary-light) !important;
+    }
+    .news-card-sleek:hover .news-card-actions-overlay {
+        opacity: 1;
+    }
+    .group-hover-zoom:hover img {
+        transform: scale(1.1);
+    }
+    
+    .h-news-title {
+        min-height: 3rem;
+    }
 
-      body:not(.theme-dark) .field-lux:focus {
-          border-color: var(--ws-primary) !important;
-          background: #fff !important;
-      }
+    .slider-upload-mini {
+        transition: all 0.3s ease;
+        border: 2px dashed var(--border) !important;
+    }
+    .slider-upload-mini:hover {
+        border-color: var(--primary) !important;
+        background: var(--bg-soft) !important;
+    }
 
-      /* Typography & Labels */
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50,
-      body:not(.theme-dark) .text-slate-300,
-      body:not(.theme-dark) .text-slate-400,
-      body:not(.theme-dark) .text-slate-500,
-      body:not(.theme-dark) .label-lux,
-      body:not(.theme-dark) .detail-label-sleek,
-      body:not(.theme-dark) .form-label {
-          color: var(--ws-text-secondary) !important;
-      }
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; opacity: 0; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-      body:not(.theme-dark) h1, 
-      body:not(.theme-dark) h2, 
-      body:not(.theme-dark) h3, 
-      body:not(.theme-dark) h4, 
-      body:not(.theme-dark) h5, 
-      body:not(.theme-dark) h6,
-      body:not(.theme-dark) .fw-bold.text-white {
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Hero Section (Keep Dark for Contrast) */
-      body:not(.theme-dark) .premium-hero-sleek h1,
-      body:not(.theme-dark) .premium-hero-sleek p,
-      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-
-      /* Table Overrides */
-      body:not(.theme-dark) .premium-table-dark thead th {
-          background: rgba(0,0,0,0.03) !important;
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) .premium-table-dark tbody td {
-          color: var(--ws-text-primary) !important;
-          border-bottom-color: var(--ws-border) !important;
-      }
-
-      body:not(.theme-dark) .bg-unread {
-          background: rgba(var(--ws-primary-rgb), 0.03) !important;
-      }
-
-      /* Modal Specifics */
-      body:not(.theme-dark) .modal-header {
-          border-bottom-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .modal-footer {
-          border-top-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .btn-close {
-          filter: none !important;
-      }
+    .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important; }
+    
+    .modal-content .form-control:focus, .modal-content .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.1);
+    }
+    
+    .btn-white {
+        background: white;
+        border: none;
+    }
+    .btn-white:hover {
+        background: #f8fafc;
+    }
 </style>
 @endsection
-
-
-
-
-
-
-
-

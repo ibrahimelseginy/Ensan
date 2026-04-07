@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -15,13 +15,42 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
   <style>
+      :root {
+          /* Brand Identity - SaaS Clean Style */
+          --primary: #22C55E;
+          --primary-dark: #16A34A;
+          --primary-light: #f0fdf4;
+          --secondary: #111111;
+          --text-main: #111111;
+          --text-muted: #6B7280;
+          --border: #E5E7EB;
+          --bg: #FFFFFF;
+          --bg-soft: #F9FAFB;
+          --white: #FFFFFF;
+          
+          /* UI Tokens */
+          --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+          --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          --radius: 12px;
+          --radius-sm: 8px;
+          
+          /* Legacy Compatibility */
+          --ws-primary: var(--primary);
+          --ws-bg-page: var(--bg-soft);
+          --ws-bg-card: var(--bg);
+          --ws-bg-input: var(--bg);
+          --ws-text-primary: var(--text-main);
+          --ws-text-secondary: var(--text-muted);
+          --ws-border: var(--border);
+      }
+
       .fade-in { animation: fadeIn 0.4s ease-in-out; }
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       
       /* Select2 RTL Fixes */
       html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single {
           padding-right: 0.75rem;
-          padding-left: 2.5rem; /* Space for clear button */
+          padding-left: 2.5rem;
       }
       html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
           right: auto;
@@ -32,118 +61,118 @@
           padding-left: 0;
           text-align: right;
       }
-        /* --- LIGHT MODE ADAPTATION --- */
+
+      /* Global Layout Improvements */
       body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
+          background-color: var(--bg-soft) !important;
+          color: var(--text-main) !important;
+          font-family: 'Tajawal', sans-serif;
       }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+
+      /* Premium Card System */
+      body:not(.theme-dark) .card,
+      body:not(.theme-dark) .glass-card,
+      body:not(.theme-dark) .ws-card,
+      body:not(.theme-dark) .premium-card-dark {
+          background: var(--bg) !important;
+          border: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-sm) !important;
+          border-radius: var(--radius) !important;
       }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
+
+      /* Forms & Inputs */
+      body:not(.theme-dark) .form-control,
+      body:not(.theme-dark) .form-select,
+      body:not(.theme-dark) .field-lux,
+      body:not(.theme-dark) .ws-input {
+          background: var(--bg) !important;
+          border: 1px solid var(--border) !important;
+          color: var(--text-main) !important;
+          border-radius: var(--radius-sm) !important;
+          padding: 0.6rem 1rem;
+          transition: all 0.2s ease;
       }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
+
+      body:not(.theme-dark) .form-control:focus,
+      body:not(.theme-dark) .ws-input:focus {
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
+          outline: none;
       }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
+
+      /* Buttons Standard */
+      .btn-primary {
+          background-color: var(--primary) !important;
+          border-color: var(--primary) !important;
+          color: white !important;
+          font-weight: 600;
+          border-radius: var(--radius-sm);
       }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
+      .btn-primary:hover {
+          background-color: var(--primary-dark) !important;
+          border-color: var(--primary-dark) !important;
       }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
+
+      .btn-secondary {
+          background-color: white !important;
+          border-color: var(--border) !important;
+          color: var(--text-main) !important;
+          border-radius: var(--radius-sm);
       }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
+
+      .btn-danger {
+          background-color: #fee2e2 !important;
+          border-color: #fecaca !important;
+          color: #dc2626 !important;
+          border-radius: var(--radius-sm);
       }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
+
+      /* Navbar Improvements */
+      .navbar {
+          background-color: var(--bg) !important;
+          border-bottom: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-sm) !important;
+          height: 70px;
       }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
+      
+      /* Sidebar Improvements */
+      .sidebar-fixed {
+          background-color: var(--bg) !important;
+          border-left: 1px solid var(--border) !important;
+          box-shadow: var(--shadow-sm);
+          width: 260px;
       }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
+      
+      .list-group-item {
+          border: none !important;
+          margin: 4px 12px;
+          border-radius: var(--radius-sm);
+          color: var(--text-muted) !important;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 16px;
       }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
+      
+      .list-group-item i {
+          font-size: 1.1rem;
+          color: var(--text-muted);
       }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
+      
+      .list-group-item:hover {
+          background-color: var(--bg-soft) !important;
+          color: var(--primary) !important;
       }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
+      .list-group-item:hover i { color: var(--primary); }
+      
+      .list-group-item.active {
+          background-color: var(--primary-light) !important;
+          color: var(--primary) !important;
+          border: none !important;
       }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
+      .list-group-item.active i { color: var(--primary); }
+</style>
 </style>
     <style>
         /* Global protection against blurry screens by disabling backdrop filters */

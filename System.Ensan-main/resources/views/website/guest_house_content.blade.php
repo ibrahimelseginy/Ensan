@@ -1,42 +1,37 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
 <div class="guest-house-mgmt-page">
     {{-- Dynamic Hero Section --}}
-    <div class="premium-hero-sleek" style="background: @if($page->image_path) linear-gradient(rgba(15, 23, 42, 0.8), rgba(30, 58, 138, 0.8)), url('{{ $page->image_url }}') @else linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) @endif; background-size: cover; background-position: center;">
+    <div class="premium-hero-sleek mb-4">
         <div class="hero-bg-visuals">
-            <div class="glow-orb-1" style="background: #3b82f6;"></div>
-            <div class="glow-orb-2" style="background: #0ea5e9;"></div>
-            <div class="noise-overlay"></div>
+            <div class="glow-orb-1" style="background: var(--primary);"></div>
+            <div class="glow-orb-2" style="background: var(--primary-dark);"></div>
         </div>
-        
-        <div class="hero-content-wrapper container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8 animate-reveal-right text-end">
-                    <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <div class="badge-glass-premium">
-                            <i class="bi bi-hospital me-2"></i> إدارة دار الضيافة
-                        </div>
-                    </div>
-                    <h1 class="display-3 fw-800 text-white mb-3 text-end">إدارة دار الضيافة</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
-                        محتوى الصفحة
-                    </p>
-                </div>
-                <div class="col-lg-4 text-start mt-4 mt-lg-0 animate-reveal-left">
-                    <button type="button" onclick="document.querySelector('#combinedSubmitForm').submit()" class="btn btn-action-glow-blue btn-lg px-5 py-3 rounded-4 shadow-xl">
-                        <i class="bi bi-cloud-check-fill me-2"></i>
-                        <span>حفظ التغييرات النهائية</span>
-                    </button>
-                </div>
+        <div class="container hero-content-wrapper text-center">
+            <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-center">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-primary text-decoration-none">لوحة التحكم</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">إدارة دار الضيافة</li>
+                </ol>
+            </nav>
+            <div class="badge-glass-premium mb-3">
+                <i class="bi bi-hospital me-2"></i> إدارة محتوى دار الضيافة
+            </div>
+            <h1 class="display-5 fw-800 text-dark mb-3">إدارة دار الضيافة</h1>
+            <p class="lead text-muted mb-0 max-w-600 mx-auto">
+                {{ $settings['gh_hero_subtitle'] ?? 'ملاذ آمن للمرضى ومرافقيهم' }}
+            </p>
+            <div class="mt-4">
+                <button type="button" onclick="document.querySelector('#combinedSubmitForm').submit()" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-cloud-check-fill me-2"></i> حفظ التغييرات النهائية
+                </button>
             </div>
         </div>
     </div>
 
     {{-- Main Dashboard Area --}}
-    <div class="container-fluid py-5">
+    <div class="container-fluid py-4 px-lg-5">
         <div class="row g-4">
             {{-- Unified Form --}}
             <div class="col-12">
@@ -45,136 +40,92 @@
                     <div class="row g-4">
                         {{-- Basic Information Card --}}
                         <div class="col-12">
-                            <div class="premium-card-dark animate-up h-100">
-                                <div class="card-header-lux">
-                                    <div class="header-icon bg-blue-500"><i class="bi bi-file-earmark-richtext"></i></div>
+                            <div class="card border-0 shadow-sm animate-slide-up h-100 overflow-hidden">
+                                <div class="p-4 border-bottom bg-light d-flex align-items-center gap-3">
+                                    <div class="header-icon-small bg-primary"><i class="bi bi-file-earmark-richtext"></i></div>
                                     <h5 class="fw-bold mb-0">المحتوى التعريفي والوصف</h5>
                                 </div>
-                                <div class="card-body-lux p-4 p-md-5">
-                                    <div class="form-group-lux mb-4">
-                                        <label class="label-lux">عنوان الصفحة الرئيسي</label>
-                                        <div class="input-glow-wrapper">
-                                            <input type="text" name="title" class="field-lux text-xl" value="{{ $page->title }}" required>
+                                <div class="card-body p-4">
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted">عنوان الصفحة الرئيسي</label>
+                                            <input type="text" name="title" class="form-control" value="{{ $page->title }}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted">العنوان الفرعي (Hero Subtitle)</label>
+                                            <input type="text" name="gh_hero_subtitle" class="form-control" value="{{ $settings['gh_hero_subtitle'] ?? 'ملاذ آمن للمرضى ومرافقيهم' }}">
                                         </div>
                                     </div>
-                                    <div class="form-group-lux mb-4">
-                                        <label class="label-lux">العنوان الفرعي (Hero Subtitle)</label>
-                                        <input type="text" name="gh_hero_subtitle" class="field-lux" value="{{ $settings['gh_hero_subtitle'] ?? 'ملاذ آمن للمرضى ومرافقيهم' }}">
-                                    </div>
-
                                 </div>
                             </div>
                         </div>
 
-
-
-
-
                         {{-- Stats & Gallery Unified Management --}}
                         <div class="col-12">
-                            <div class="premium-card-dark animate-up">
-                                <div class="card-header-lux d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="header-icon bg-emerald-500"><i class="bi bi-columns-gap"></i></div>
-                                        <h5 class="fw-bold mb-0">لوحة الإحصائيات ومعرض الصور</h5>
-                                    </div>
+                            <div class="card border-0 shadow-sm animate-slide-up overflow-hidden">
+                                <div class="p-4 border-bottom bg-light d-flex align-items-center gap-3">
+                                    <div class="header-icon-small bg-success"><i class="bi bi-columns-gap"></i></div>
+                                    <h5 class="fw-bold mb-0">لوحة الإحصائيات ومعرض الصور</h5>
                                 </div>
-                                <div class="card-body-lux p-4 p-md-5">
+                                <div class="card-body p-4">
                                     {{-- Statistics Section --}}
-                                    <h6 class="fw-bold text-white mb-4"><i class="bi bi-bar-chart-fill me-2 text-amber-500"></i> إحصائيات الدار</h6>
+                                    <h6 class="fw-bold text-dark mb-4 border-start border-3 border-warning ps-2"><i class="bi bi-bar-chart-fill me-2 text-warning"></i> إحصائيات الدار العامة</h6>
                                     <div class="row g-4 mb-5">
-                                        {{-- Stat 1: Beds --}}
+                                        @php
+                                            $gh_stats = [
+                                                ['key' => '1', 'icon' => 'bi-hospital', 'color' => 'primary', 'default_val' => '+50', 'default_lab' => 'سرير'],
+                                                ['key' => '2', 'icon' => 'bi-people-fill', 'color' => 'success', 'default_val' => '+3000', 'default_lab' => 'مريض سنوياً'],
+                                                ['key' => '3', 'icon' => 'bi-geo-alt-fill', 'color' => 'warning', 'default_val' => '2', 'default_lab' => 'فرع'],
+                                                ['key' => '4', 'icon' => 'bi-clock-history', 'color' => 'info', 'default_val' => '24/7', 'default_lab' => 'استقبال'],
+                                            ];
+                                        @endphp
+                                        @foreach($gh_stats as $stat)
                                         <div class="col-md-3 col-6">
-                                            <div class="stat-input-box">
-                                                <div class="stat-icon-vibe bg-blue-500 bg-opacity-10 text-blue-500">
-                                                    <i class="bi bi-hospital"></i>
+                                            <div class="stats-input-sleek p-3 rounded-4 border bg-light text-center h-100 transition-all">
+                                                <div class="stat-icon-vibe-small bg-{{ $stat['color'] }} bg-opacity-10 text-{{ $stat['color'] }} mb-3 mx-auto">
+                                                    <i class="bi {{ $stat['icon'] }}"></i>
                                                 </div>
-                                                <div class="w-100">
-                                                    <input type="text" name="gh_stat1_value" class="stat-value-field" value="{{ $settings['gh_stat1_value'] ?? '+50' }}">
-                                                    <input type="text" name="gh_stat1_label" class="stat-label-field" value="{{ $settings['gh_stat1_label'] ?? 'سرير' }}">
-                                                </div>
+                                                <input type="text" name="gh_stat{{ $stat['key'] }}_label" class="form-control form-control-sm text-center x-small text-muted border-0 bg-transparent mb-1 p-0 fw-bold" value="{{ $settings['gh_stat'.$stat['key'].'_label'] ?? $stat['default_lab'] }}">
+                                                <input type="text" name="gh_stat{{ $stat['key'] }}_value" class="form-control text-center fw-bold border-0 bg-transparent text-dark fs-4 p-0" value="{{ $settings['gh_stat'.$stat['key'].'_value'] ?? $stat['default_val'] }}">
                                             </div>
                                         </div>
-
-                                        {{-- Stat 2: Patients --}}
-                                        <div class="col-md-3 col-6">
-                                            <div class="stat-input-box">
-                                                <div class="stat-icon-vibe bg-emerald-500 bg-opacity-10 text-emerald-500">
-                                                    <i class="bi bi-people-fill"></i>
-                                                </div>
-                                                <div class="w-100">
-                                                    <input type="text" name="gh_stat2_value" class="stat-value-field" value="{{ $settings['gh_stat2_value'] ?? '+3000' }}">
-                                                    <input type="text" name="gh_stat2_label" class="stat-label-field" value="{{ $settings['gh_stat2_label'] ?? 'مريض سنوياً' }}">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Stat 3: Branches --}}
-                                        <div class="col-md-3 col-6">
-                                            <div class="stat-input-box">
-                                                <div class="stat-icon-vibe bg-amber-500 bg-opacity-10 text-amber-500">
-                                                    <i class="bi bi-geo-alt-fill"></i>
-                                                </div>
-                                                <div class="w-100">
-                                                    <input type="text" name="gh_stat3_value" class="stat-value-field" value="{{ $settings['gh_stat3_value'] ?? '2' }}">
-                                                    <input type="text" name="gh_stat3_label" class="stat-label-field" value="{{ $settings['gh_stat3_label'] ?? 'فرع' }}">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Stat 4: Reception --}}
-                                        <div class="col-md-3 col-6">
-                                            <div class="stat-input-box">
-                                                <div class="stat-icon-vibe bg-indigo-500 bg-opacity-10 text-indigo-500">
-                                                    <i class="bi bi-clock-history"></i>
-                                                </div>
-                                                <div class="w-100">
-                                                    <input type="text" name="gh_stat4_value" class="stat-value-field" value="{{ $settings['gh_stat4_value'] ?? '24/7' }}">
-                                                    <input type="text" name="gh_stat4_label" class="stat-label-field" value="{{ $settings['gh_stat4_label'] ?? 'استقبال' }}">
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @endforeach
                                     </div>
 
-                                    <div class="divider-lux mb-5"></div>
+                                    <div class="border-top pt-5 mb-5"></div>
+                                    
                                     {{-- Slider Section --}}
-                                    <h6 class="fw-bold text-white mb-4"><i class="bi bi-play-btn me-2 text-indigo-400"></i> سلايدر الصور المتحركة</h6>
-                                    <div class="row g-4 mb-5">
+                                    <h6 class="fw-bold text-dark mb-4 border-start border-3 border-primary ps-2"><i class="bi bi-images me-2 text-primary"></i> سلايدر الصور (Header Slider)</h6>
+                                    <div class="row g-4 mb-3">
                                         @for($i = 1; $i <= 10; $i++)
-                                        <div class="col-md-4">
-                                            <div class="gallery-card-lux position-relative" id="ghSliderZone{{ $i }}" style="height: 160px; border-color: #6366f1;">
-                                                <input type="file" name="gh_slider_{{ $i }}" class="file-hidden" onchange="previewGhSlider(this, {{ $i }})">
+                                        <div class="col-md-4 col-lg-2-4 col-6">
+                                            <div class="gallery-card-sleek ratio ratio-16x9 rounded-4 border bg-light overflow-hidden position-relative group-hover-overlay" style="cursor: pointer;">
+                                                @php $sliderPath = $settings["gh_slider_$i"] ?? null; @endphp
+                                                @if($sliderPath)
+                                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm" id="ghSliderPreview{{ $i }}">
+                                                @else
+                                                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="ghSliderPlaceholder{{ $i }}">
+                                                        <i class="bi bi-image fs-3 mb-1"></i>
+                                                        <span class="x-small fw-bold">شريحة {{ $i }}</span>
+                                                    </div>
+                                                    <img src="" class="w-100 h-100 object-fit-cover d-none" id="ghSliderPreview{{ $i }}">
+                                                @endif
                                                 
-                                                {{-- Delete Button --}}
-                                                @if(isset($settings["gh_slider_$i"]))
-                                                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-lg" 
-                                                        style="z-index: 20; width: 30px; height: 30px; padding: 0;"
-                                                        onclick="event.stopPropagation(); document.getElementById('delete_gh_slider_{{ $i }}').value='1'; this.closest('.gallery-card-lux').querySelector('.gallery-preview-wrapper').innerHTML='<div class=\'gallery-placeholder\'><i class=\'bi bi-images fs-3 text-indigo-400\'></i><p class=\'x-small mb-0 mt-2\'>محذوف - حفظ لتنفيذ</p></div>'; this.remove();">
-                                                    <i class="bi bi-trash"></i>
+                                                <input type="file" name="gh_slider_{{ $i }}" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewGhSlider(this, {{ $i }})">
+                                                
+                                                @if($sliderPath)
+                                                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-sm d-flex align-items-center justify-content-center z-10" 
+                                                        style="width: 28px; height: 28px;"
+                                                        onclick="event.stopPropagation(); document.getElementById('delete_gh_slider_{{ $i }}').value='1'; this.closest('.gallery-card-sleek').querySelector('.d-none').classList.remove('d-none'); document.getElementById('ghSliderPreview{{ $i }}').classList.add('d-none'); this.remove();">
+                                                    <i class="bi bi-trash fs-xs"></i>
                                                 </button>
                                                 @endif
                                                 <input type="hidden" name="delete_gh_slider_{{ $i }}" id="delete_gh_slider_{{ $i }}" value="0">
-
-                                                <div class="gallery-preview-wrapper" id="ghSliderPreview{{ $i }}">
-                                                    @if(isset($settings["gh_slider_$i"]))
-                                                        <img src="{{ asset('storage/' . $settings["gh_slider_$i"]) }}" class="img-fluid rounded-4 h-100 w-100 object-fit-cover">
-                                                    @else
-                                                        <div class="gallery-placeholder">
-                                                            <i class="bi bi-images fs-3 text-indigo-400"></i>
-                                                            <p class="x-small mb-0 mt-2">شريحة {{ $i }}</p>
-                                                        </div>
-                                                    @endif
-                                                </div>
                                             </div>
                                         </div>
                                         @endfor
                                     </div>
-
-                                    <div class="divider-lux mb-5"></div>
-
-
-
-
+                                    <p class="x-small text-muted mt-2"><i class="bi bi-info-circle me-1"></i> يمكنك إضافة حتى 10 صور للسلايدر المتحرك في صفحة دار الضيافة.</p>
                                 </div>
                             </div>
                         </div>
@@ -182,222 +133,198 @@
                 </form>
             </div>
         </div>
-    </div>
 
-    {{-- Room Bookings Section (Added Request) --}}
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="premium-card-dark animate-up">
-                <div class="card-header-lux d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="header-icon bg-indigo-500"><i class="bi bi-calendar-check-fill"></i></div>
-                        <h5 class="fw-bold mb-0">طلبات الحجز من الموقع</h5>
+        {{-- Room Bookings Section --}}
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm animate-slide-up overflow-hidden" style="border-radius: 24px;">
+                    <div class="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="header-icon-small bg-indigo"><i class="bi bi-calendar-check-fill"></i></div>
+                            <h5 class="fw-bold mb-0 text-dark">طلبات الحجز الواردة من الموقع</h5>
+                        </div>
+                        <span class="badge bg-primary rounded-pill px-3 py-2 fw-bold small">{{ $bookings->count() }} طلب</span>
                     </div>
-                </div>
-                <div class="card-body-lux p-4">
-                    {{-- Search Filter Section --}}
-
-
-                    <div class="row g-4">
-                        @forelse($bookings as $booking)
-                        <div class="col-md-6 col-xl-4">
-                            <div class="request-card-premium h-100">
-                                <div class="card-status-pill">
-                                    @php
-                                        $statusClass = [
-                                            'pending' => 'pending',
-                                            'confirmed' => 'approved',
-                                            'cancelled' => 'rejected'
-                                        ][$booking->status] ?? 'pending';
-                                        
-                                        $statusText = [
-                                            'pending' => 'قيد الانتظار',
-                                            'confirmed' => 'مؤكد',
-                                            'cancelled' => 'ملغي'
-                                        ][$booking->status] ?? $booking->status;
-                                    @endphp
-                                    <span class="badge-status {{ $statusClass }}">{{ $statusText }}</span>
-                                </div>
-
-                                <div class="card-top-vibe mt-2">
-                                    <div class="user-avatar-premium shadow-lg bg-indigo-600">
-                                        <div class="avatar-ring"></div>
-                                        <span class="avatar-initials"><i class="bi bi-person"></i></span>
-                                    </div>
-                                    <div class="user-main-info">
-                                        <h6 class="fw-bold mb-1 text-white">{{ $booking->name }}</h6>
-                                        <div class="x-small text-slate-400 d-flex gap-2">
-                                            <span><i class="bi bi-phone me-1"></i>{{ $booking->phone }}</span>
+                    <div class="card-body p-4 bg-white">
+                        <div class="row g-4">
+                            @forelse($bookings as $booking)
+                            <div class="col-md-6 col-xl-4 col-xxl-3">
+                                <div class="card h-100 border shadow-sm booking-request-card rounded-4 transition-all">
+                                    <div class="p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            @php
+                                                $statusInfo = [
+                                                    'pending' => ['class' => 'bg-warning', 'text' => 'قيد الانتظار'],
+                                                    'confirmed' => ['class' => 'bg-success', 'text' => 'مؤكد'],
+                                                    'cancelled' => ['class' => 'bg-danger', 'text' => 'ملغي']
+                                                ][$booking->status] ?? ['class' => 'bg-secondary', 'text' => $booking->status];
+                                            @endphp
+                                            <span class="badge {{ $statusInfo['class'] }} bg-opacity-10 text-{{ str_replace('bg-', '', $statusInfo['class']) }} border border-{{ str_replace('bg-', '', $statusInfo['class']) }} border-opacity-10 rounded-pill px-3 py-1 x-small fw-bold">{{ $statusInfo['text'] }}</span>
+                                            <span class="text-muted x-small">#{{ $booking->id }}</span>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div class="card-mid-vibe mt-4">
-                                    <div class="detail-grid-compact">
-                                        <div class="detail-item-compact">
-                                            <label>الغرفة</label>
-                                            <span>{{ $booking->room_type }}</span>
+                                        <div class="d-flex align-items-center gap-3 mb-4 pt-2">
+                                            <div class="avatar-soft bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                                {{ mb_substr($booking->name, 0, 1) }}
+                                            </div>
+                                            <div class="overflow-hidden">
+                                                <h6 class="fw-bold text-dark mb-0 text-truncate">{{ $booking->name }}</h6>
+                                                <div class="x-small text-muted"><i class="bi bi-phone me-1"></i> {{ $booking->phone }}</div>
+                                            </div>
                                         </div>
-                                        <div class="detail-item-compact">
-                                            <label>المدة</label>
-                                            <span>{{ \Carbon\Carbon::parse($booking->check_in)->diffInDays($booking->check_out) }} ليالي</span>
-                                        </div>
-                                        <div class="detail-item-compact w-100">
-                                            <label>الوصول</label>
-                                            <span class="text-emerald-400">{{ $booking->check_in }}</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="card-bottom-vibe mt-4 pt-3 border-top border-white border-opacity-10">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="text-slate-500 x-small fw-bold">#{{ $booking->id }}</span>
-                                        <span class="text-slate-500 x-small">{{ $booking->created_at->format('d M Y') }}</span>
-                                    </div>
-                                    
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-glass-indigo flex-grow-1 py-2 rounded-pill x-small fw-bold" data-bs-toggle="modal" data-bs-target="#viewBooking{{ $booking->id }}">
-                                            <i class="bi bi-eye ms-1"></i> التفاصيل
-                                        </button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-glass-indigo py-2 px-3 rounded-pill dropdown-toggle" data-bs-toggle="dropdown">
-                                                <i class="bi bi-three-dots"></i>
+                                        <div class="bg-light rounded-4 p-3 mb-4">
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <label class="x-small text-muted d-block fw-bold">نوع الغرفة</label>
+                                                    <span class="small text-dark fw-bold">{{ $booking->room_type }}</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="x-small text-muted d-block fw-bold">المدة</label>
+                                                    <span class="small text-dark fw-bold">{{ \Carbon\Carbon::parse($booking->check_in)->diffInDays($booking->check_out) }} ليالي</span>
+                                                </div>
+                                                <div class="col-12 mt-2 pt-2 border-top">
+                                                    <label class="x-small text-muted d-block fw-bold">تاريخ الوصول</label>
+                                                    <span class="small text-primary fw-bold">{{ $booking->check_in }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-light text-primary border flex-grow-1 py-2 rounded-3 x-small fw-bold btn-view-hover" data-bs-toggle="modal" data-bs-target="#viewBooking{{ $booking->id }}">
+                                                <i class="bi bi-eye me-1"></i> التفاصيل
                                             </button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow-2xl border-0 premium-dropdown-dark">
-                                                <li>
-                                                    <form action="{{ route('website.bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="confirmed">
-                                                        <button type="submit" class="dropdown-item text-success fw-bold x-small"><i class="bi bi-check-circle me-2"></i> تأكيد</button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form action="{{ route('website.bookings.update', $booking) }}" method="POST">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="cancelled">
-                                                        <button type="submit" class="dropdown-item text-danger fw-bold x-small"><i class="bi bi-x-circle me-2"></i> إلغاء</button>
-                                                    </form>
-                                                </li>
-                                            </ul>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-light text-muted border py-2 px-3 rounded-3" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2 rounded-3">
+                                                    <li>
+                                                        <form action="{{ route('website.bookings.update', $booking) }}" method="POST">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="status" value="confirmed">
+                                                            <button type="submit" class="dropdown-item text-success fw-bold x-small py-2 rounded-2"><i class="bi bi-check-circle me-2"></i> تأكيد الحجز</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="{{ route('website.bookings.update', $booking) }}" method="POST">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="status" value="cancelled">
+                                                            <button type="submit" class="dropdown-item text-danger fw-bold x-small py-2 rounded-2"><i class="bi bi-x-circle me-2"></i> إلغاء الحجز</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        @empty
-                        <div class="col-12">
-                            <div class="empty-state-card-lux py-5 text-center">
-                                <i class="bi bi-calendar-x fs-1 text-slate-600 mb-3 d-block"></i>
-                                <p class="text-slate-400 mb-0">لا توجد طلبات حجز حالياً</p>
+                            @empty
+                            <div class="col-12">
+                                <div class="text-center py-5 bg-light bg-opacity-50 border border-dashed rounded-4">
+                                    <i class="bi bi-calendar-x fs-1 text-muted opacity-25 d-block mb-3"></i>
+                                    <p class="text-muted fw-bold mb-0">لا توجد طلبات حجز مسجلة حالياً</p>
+                                </div>
                             </div>
+                            @endforelse
                         </div>
-                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- Booking Detail Modals --}}
     @foreach($bookings as $booking)
     <div class="modal fade" id="viewBooking{{ $booking->id }}" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content modal-premium-dark border-0 shadow-2xl rounded-4 overflow-hidden" style="background-color: #0f172a !important; color: white;">
-                <div class="modal-header border-bottom border-white border-opacity-10 bg-slate-800 px-4 py-3">
-                    <h5 class="modal-title fw-bold text-white"><i class="bi bi-info-circle-fill me-2 text-info"></i> تفاصيل طلب الحجز #{{ $booking->id }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-bottom bg-light px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> تفاصيل حالة الحجز #{{ $booking->id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0" style="background-color: #0f172a !important;">
-                    <div class="row g-0 text-end" dir="rtl">
-                        {{-- Side Info Strip --}}
-                        <div class="col-md-4 bg-slate-800 bg-opacity-50 border-start border-white border-opacity-10 p-4">
-                            <div class="text-center mb-4">
-                                <div class="strip-avatar bg-indigo-600 shadow-lg rounded-20 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 25px; position: relative; border: 2px solid rgba(255,255,255,0.1);">
-                                    <i class="bi bi-person-fill fs-1 text-white opacity-75"></i>
-                                    <div style="position: absolute; inset: -4px; border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 28px;"></div>
-                                </div>
-                                <h6 class="fw-bold mb-1 text-white">{{ $booking->name }}</h6>
-                                <div class="x-small text-slate-400 mb-1"><i class="bi bi-telephone me-1"></i> {{ $booking->phone }}</div>
-                                @if($booking->national_id)
-                                    <div class="badge bg-indigo-500 bg-opacity-20 text-indigo-300 rounded-pill px-3 py-1 x-small mt-2 border border-indigo-500 border-opacity-30">
-                                        {{ $booking->national_id }}
-                                    </div>
-                                @endif
+                <div class="modal-body p-0">
+                    <div class="row g-0 text-start" dir="rtl">
+                        <div class="col-md-4 bg-light border-start p-4 text-center">
+                            <div class="avatar-large bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style="width: 80px; height: 80px; font-size: 2rem; border: 4px solid white;">
+                                {{ mb_substr($booking->name, 0, 1) }}
                             </div>
+                            <h6 class="fw-bold mb-1 text-dark">{{ $booking->name }}</h6>
+                            <div class="small text-muted mb-3"><i class="bi bi-telephone ms-1"></i> {{ $booking->phone }}</div>
+                            @if($booking->national_id)
+                                <div class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 x-small mb-4 border border-primary border-opacity-10">
+                                    {{ $booking->national_id }}
+                                </div>
+                            @endif
 
-                            <div class="vstack gap-3 mt-4">
-                                <div class="p-3 bg-slate-900 bg-opacity-50 rounded-4 border border-white border-opacity-5">
-                                    <div class="x-small text-uppercase text-indigo-400 fw-800 mb-2"><i class="bi bi-people-fill ms-1"></i> بيانات المرافق</div>
-                                    <div class="fw-bold text-white mb-1">{{ $booking->companion_name ?? 'لا يوجد مرافق' }}</div>
+                            <div class="vstack gap-2 mt-2">
+                                <div class="p-3 bg-white rounded-3 border text-start">
+                                    <div class="x-small text-uppercase text-primary fw-bold mb-2"><i class="bi bi-people ms-1"></i> بيانات المرافق</div>
+                                    <div class="fw-bold text-dark small">{{ $booking->companion_name ?? 'لا يوجد مرافق' }}</div>
                                     @if($booking->companion_phone)
-                                        <div class="x-small text-slate-400"><i class="bi bi-telephone ms-1"></i> {{ $booking->companion_phone }}</div>
+                                        <div class="x-small text-muted mt-1"><i class="bi bi-phone ms-1"></i> {{ $booking->companion_phone }}</div>
                                     @endif
                                 </div>
-
-                                <div class="p-3 bg-slate-900 bg-opacity-50 rounded-4 border border-white border-opacity-5">
-                                    <div class="x-small text-uppercase text-emerald-400 fw-800 mb-2"><i class="bi bi-geo-alt-fill ms-1"></i> مكان الإقامة</div>
-                                    <div class="fw-bold text-white small opacity-90">{{ $booking->address ?? 'العنوان غير محدد' }}</div>
+                                <div class="p-3 bg-white rounded-3 border text-start">
+                                    <div class="x-small text-uppercase text-success fw-bold mb-2"><i class="bi bi-geo-alt ms-1"></i> العنوان</div>
+                                    <div class="fw-bold text-dark small">{{ $booking->address ?? 'غير محدد' }}</div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Main Details Area --}}
-                        <div class="col-md-8 p-4">
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-indigo-400 mb-3 d-flex align-items-center"><i class="bi bi-hospital-fill ms-2 fs-5"></i> تفاصيل الإقامة والعلاج</h6>
-                                <div class="row g-3">
-                                    <div class="col-6">
-                                        <label class="x-small text-slate-500 fw-bold d-block mb-1">نوع الغرفة</label>
-                                        <div class="p-2 px-3 bg-slate-800 bg-opacity-40 rounded-3 text-white small border border-white border-opacity-5">{{ $booking->room_type }}</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="x-small text-slate-500 fw-bold d-block mb-1">المدة المتوقعة</label>
-                                        <div class="p-2 px-3 bg-slate-800 bg-opacity-40 rounded-3 text-white small border border-white border-opacity-5">{{ $booking->expected_duration_arabic ?? '-' }}</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="x-small text-slate-500 fw-bold d-block mb-1">تاريخ الوصول</label>
-                                        <div class="p-2 px-3 bg-slate-800 bg-opacity-40 rounded-3 text-emerald-400 small border border-white border-opacity-5 fw-bold">{{ $booking->arrival_date ?? $booking->check_in }}</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="x-small text-slate-500 fw-bold d-block mb-1">المركز الطبي</label>
-                                        <div class="p-2 px-3 bg-slate-800 bg-opacity-40 rounded-3 text-white small border border-white border-opacity-5">{{ $booking->medical_center ?? '-' }}</div>
-                                    </div>
+                        <div class="col-md-8 p-4 bg-white">
+                            <h6 class="fw-bold text-dark mb-4 border-bottom pb-2">تفاصيل الإقامة والعلاج</h6>
+                            <div class="row g-3 mb-5">
+                                <div class="col-6">
+                                    <label class="x-small text-muted fw-bold d-block mb-1">نوع الغرفة</label>
+                                    <div class="p-2 px-3 bg-light rounded-3 text-dark small border">{{ $booking->room_type }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="x-small text-muted fw-bold d-block mb-1">المدة المتوقعة</label>
+                                    <div class="p-2 px-3 bg-light rounded-3 text-dark small border">{{ $booking->expected_duration_arabic ?? '-' }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="x-small text-muted fw-bold d-block mb-1">تاريخ الوصول</label>
+                                    <div class="p-2 px-3 bg-light rounded-3 text-primary small border fw-bold">{{ $booking->arrival_date ?? $booking->check_in }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="x-small text-muted fw-bold d-block mb-1">المركز الطبي</label>
+                                    <div class="p-2 px-3 bg-light rounded-3 text-dark small border">{{ $booking->medical_center ?? '-' }}</div>
                                 </div>
                             </div>
 
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-warning mb-3 d-flex align-items-center"><i class="bi bi-paperclip ms-2 fs-5"></i> المستندات المرفقة</h6>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @php
-                                        $docs = [
-                                            ['label' => 'بطاقة المريض', 'path' => $booking->patient_id_path, 'icon' => 'bi-person-vcard'],
-                                            ['label' => 'بطاقة المرافق', 'path' => $booking->companion_id_path, 'icon' => 'bi-person-badge'],
-                                            ['label' => 'تحويل المستشفى', 'path' => $booking->medical_transfer_path, 'icon' => 'bi-hospital'],
-                                            ['label' => 'كارت المتابعة', 'path' => $booking->followup_card_path, 'icon' => 'bi-card-list'],
-                                            ['label' => 'تقرير الإشعاع', 'path' => $booking->medical_report_path, 'icon' => 'bi-file-earmark-medical'],
-                                        ];
-                                    @endphp
+                            <h6 class="fw-bold text-dark mb-3">المستندات المرفقة</h6>
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                @php
+                                    $docs = [
+                                        ['label' => 'بـطاقة المريض', 'path' => $booking->patient_id_path, 'icon' => 'bi-person-vcard'],
+                                        ['label' => 'بـطاقة المرافق', 'path' => $booking->companion_id_path, 'icon' => 'bi-person-badge'],
+                                        ['label' => 'تـحويل الـمستشفى', 'path' => $booking->medical_transfer_path, 'icon' => 'bi-hospital'],
+                                        ['label' => 'كـارت المتابـعة', 'path' => $booking->followup_card_path, 'icon' => 'bi-card-list'],
+                                        ['label' => 'تـقرير الإشعاع', 'path' => $booking->medical_report_path, 'icon' => 'bi-file-earmark-medical'],
+                                    ];
+                                @endphp
 
-                                    @foreach($docs as $doc)
-                                        @if($doc['path'])
-                                            <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="btn btn-sm btn-glass-premium-doc d-flex align-items-center gap-2 px-3 py-2 rounded-3">
-                                                <i class="bi {{ $doc['icon'] }} text-info"></i>
-                                                <span class="x-small fw-bold text-white">{{ $doc['label'] }}</span>
-                                            </a>
-                                        @endif
-                                    @endforeach
-
-                                    @if(collect($docs)->where('path', '!=', null)->isEmpty())
-                                        <div class="p-3 w-100 bg-slate-800 bg-opacity-30 rounded-3 text-center border border-dashed border-white border-opacity-10 text-slate-500 x-small">
-                                            <i class="bi bi-folder-x ms-1"></i> لا توجد مستندات مرفقة لهذه الحالة
-                                        </div>
+                                @foreach($docs as $doc)
+                                    @if($doc['path'])
+                                        <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="btn btn-outline-light text-primary border d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-bg-light transition-all">
+                                            <i class="bi {{ $doc['icon'] }}"></i>
+                                            <span class="x-small fw-bold">{{ $doc['label'] }}</span>
+                                        </a>
                                     @endif
-                                </div>
+                                @endforeach
+
+                                @if(collect($docs)->where('path', '!=', null)->isEmpty())
+                                    <div class="p-4 w-100 bg-light rounded-3 text-center border border-dashed text-muted x-small">
+                                        <i class="bi bi-folder-x fs-4 d-block mb-2"></i> لا توجد مستندات مرفقة لهذا الطلب
+                                    </div>
+                                @endif
                             </div>
 
                             @if($booking->notes)
-                                <div>
-                                    <h6 class="fw-bold text-white-50 mb-2 x-small text-uppercase"><i class="bi bi-pencil-square ms-1"></i> ملاحظات إضافية</h6>
-                                    <div class="p-3 bg-slate-800 bg-opacity-60 rounded-4 border border-white border-opacity-5 text-slate-300 small italic">
+                                <div class="mt-4 pt-3 border-top">
+                                    <h6 class="fw-bold text-muted x-small text-uppercase mb-2">ملاحظات إضافية من المتقدم</h6>
+                                    <div class="p-3 bg-light rounded-3 text-dark small border italic">
                                         "{{ $booking->notes }}"
                                     </div>
                                 </div>
@@ -405,8 +332,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top border-white border-opacity-10 bg-slate-800 p-3">
-                    <button type="button" class="btn btn-sm btn-glass-indigo px-5 rounded-pill fw-bold" data-bs-dismiss="modal">إغلاق</button>
+                <div class="modal-footer border-top bg-light p-3">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
+                    @if($booking->status == 'pending')
+                    <form action="{{ route('website.bookings.update', $booking) }}" method="POST" class="d-inline">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="confirmed">
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold">تأكيد الحجز الآن</button>
+                    </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -416,477 +350,114 @@
 </div>
 
 <script>
-function previewMain(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('previewMainImg');
-            if (preview) {
-                preview.src = e.target.result;
-            } else {
-                const container = document.querySelector('.preview-area-lux-large');
-                container.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded-4 shadow-2xl" id="previewMainImg">`;
+    function previewGhSlider(input, id) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('ghSliderPreview' + id);
+                const placeholder = document.getElementById('ghSliderPlaceholder' + id);
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+                if (placeholder) {
+                    placeholder.classList.add('d-none');
+                }
             }
+            reader.readAsDataURL(input.files[0]);
         }
-        reader.readAsDataURL(input.files[0]);
     }
-}
-
-function previewGallery(input, id) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const container = document.getElementById('galleryPreviewContainer' + id);
-            container.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded-4 h-100 w-100 object-fit-cover shadow-lg">`;
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function previewGhSlider(input, id) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            const container = document.getElementById('ghSliderPreview' + id);
-            container.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded-4 h-100 w-100 object-fit-cover">`;
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
 </script>
 
 <style>
-    :root {
-        --dark-bg: #0b0e14;
-        --card-dark: #1a2332;
-        --slate-900: #0f172a;
-        --slate-800: #1e293b;
-        --slate-400: #94a3b8;
-        --blue-500: #3b82f6;
-        --cyan-400: #22d3ee;
-        --emerald-500: #10b981;
-        --amber-500: #f59e0b;
-        --indigo-500: #6366f1;
-    }
-
-    body {
-        background-color: var(--dark-bg) !important;
-        font-family: 'Tajawal', sans-serif;
-        color: #f8fafc;
-    }
-
     .guest-house-mgmt-page { min-height: 100vh; }
-
-    /* Premium Hero Sleek */
-    .premium-hero-sleek {
-        position: relative;
-        padding: 100px 0 120px;
-        border-radius: 0;
-        margin: -30px -30px 0 -30px;
-        overflow: hidden;
-        z-index: 10;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-    }
-
-    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3; pointer-events: none; }
-    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
-    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
-    .noise-overlay { position: absolute; inset: 0; opacity: 0.03; background-image: url('data:image/svg+xml,...'); }
-
-    .hero-content-wrapper { position: relative; z-index: 5; padding: 0 5%; }
-    .badge-glass-premium { 
-        background: rgba(255, 255, 255, 0.1); 
-        backdrop-filter: blur(12px); 
-        border: 1px solid rgba(255,255,255,0.1);
-        padding: 8px 18px;
-        border-radius: 100px;
-        color: #e0e7ff;
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-
     .fw-800 { font-weight: 800; }
     .max-w-600 { max-width: 600px; }
+    .x-small { font-size: 0.75rem; }
+    .fs-xs { font-size: 0.8rem; }
+    .btn-view-hover:hover { background: var(--primary-light) !important; color: var(--primary) !important; border-color: var(--primary) !important; }
+    .bg-indigo { background-color: #6366f1; }
+    .bg-primary-light { background-color: rgba(34, 197, 94, 0.1); }
+    .transition-all { transition: all 0.3s ease; }
 
-    .btn-action-glow-blue {
-        background: var(--blue-500);
-        color: white;
-        border: none;
-        font-weight: 800;
-        box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-        transition: 0.4s;
+    /* Premium Hero */
+    .premium-hero-sleek { 
+        position: relative; 
+        padding: 80px 0 100px; 
+        background: white !important; 
+        border-bottom: 1px solid var(--border); 
+        overflow: hidden; 
+        z-index: 10; 
     }
-    .btn-action-glow-blue:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6);
-        color: white;
+    .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
+    .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
+    .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
+    .hero-content-wrapper { position: relative; z-index: 5; }
+    
+    .badge-glass-premium { 
+        background: var(--primary-light); 
+        border: 1px solid rgba(34, 197, 94, 0.1); 
+        padding: 8px 18px; 
+        border-radius: 100px; 
+        color: var(--primary); 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        display: inline-block;
     }
 
-    /* Content Area */
-    .content-shift-up { margin-top: -60px; position: relative; z-index: 20; padding: 0 5%; }
-
-    /* Premium Card Dark */
-    .premium-card-dark {
-        background: var(--card-dark);
-        border-radius: 35px;
-        border: 1px solid rgba(255,255,255,0.05);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        overflow: hidden;
-    }
-
-    .card-header-lux {
-        padding: 25px 30px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+    .header-icon-small {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
-        gap: 15px;
-        background: rgba(255,255,255,0.01);
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
     }
-    .header-icon {
+
+    /* Stats Inputs */
+    .stats-input-sleek:hover {
+        border-color: var(--primary) !important;
+        background-color: white !important;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    .stat-icon-vibe-small {
         width: 44px;
         height: 44px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
         font-size: 1.2rem;
     }
-    .bg-blue-500 { background: var(--blue-500); }
-    .bg-cyan-500 { background: #06b6d4; }
-    .bg-emerald-500 { background: var(--emerald-500); }
 
-    .form-group-lux { position: relative; }
-    .label-lux { color: var(--slate-400); font-weight: 700; font-size: 0.85rem; margin-bottom: 12px; display: block; }
-    
-    .field-lux {
-        width: 100%;
-        background: #0f172a;
-        border: 2px solid #2d3748;
-        border-radius: 18px;
-        padding: 16px 22px;
-        color: white;
-        font-weight: 600;
-        transition: 0.3s;
-    }
-    .field-lux:focus {
-        border-color: var(--blue-500);
-        outline: none;
-        background: #000;
-        box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1);
-    }
-    .text-xl { font-size: 1.4rem; color: var(--cyan-400); }
-
-    /* Large Upload Zone */
-    .upload-zone-lux-large {
-        height: 380px;
-        border: 2px dashed #2d3748;
-        border-radius: 30px;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    .upload-zone-lux-large:hover { border-color: #06b6d4; background: rgba(6, 182, 212, 0.03); }
-    
-    .preview-area-lux-large { height: 100%; display: flex; align-items: center; justify-content: center; }
-    .upload-placeholder-lux { text-align: center; }
-    
-    .upload-hover-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: 0.3s;
-    }
-    .upload-zone-lux-large:hover .upload-hover-overlay { opacity: 1; }
-    .btn-cyan-solid { background: #06b6d4; color: white; border: none; font-weight: 700; }
-
-    .info-alert-lux {
-        background: rgba(6, 182, 212, 0.08);
-        color: #67e8f9;
-        padding: 15px 20px;
-        border-radius: 18px;
-        font-size: 0.8rem;
-    }
-
-    /* Stats Inputs */
-    .stat-input-box {
-        background: #0f172a;
-        border: 1px solid #1e293b;
-        border-radius: 24px;
-        padding: 20px;
-        display: flex;
-        gap: 15px;
-        align-items: center;
-        transition: 0.3s;
-    }
-    .stat-input-box:hover { transform: translateY(-3px); border-color: var(--slate-400); }
-    
-    .stat-icon-vibe {
-        width: 50px;
-        height: 50px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.3rem;
-        flex-shrink: 0;
-    }
-    .stat-label-field {
-        background: transparent;
-        border: none;
-        color: var(--slate-500);
-        font-size: 0.75rem;
-        font-weight: 800;
-        width: 100%;
-        margin-bottom: 2px;
-    }
-    .stat-value-field {
-        background: transparent;
-        border: none;
-        color: white;
-        font-size: 1.25rem;
-        font-weight: 800;
-        width: 100%;
-        font-family: 'Outfit';
-    }
-
-    /* Gallery Card */
-    .gallery-card-lux {
-        height: 200px;
-        border-radius: 20px;
-        position: relative;
-        overflow: hidden;
-        border: 2px dashed #1e293b;
-        cursor: pointer;
-        transition: 0.4s;
-    }
-    .gallery-card-lux:hover { border-color: var(--emerald-500); transform: scale(1.03); }
-    
-    .gallery-preview-wrapper { height: 100%; }
-    .gallery-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--slate-800); }
-    
-    .gallery-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(16, 185, 129, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        opacity: 0;
-        transition: 0.3s;
-    }
-    .gallery-card-lux:hover .gallery-overlay { opacity: 1; }
-
-    .file-hidden {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        cursor: pointer;
-        z-index: 10;
-    }
-
-    .divider-lux { height: 1px; background: rgba(255,255,255,0.05); }
-
-    /* Animations */
-    .animate-reveal-right { animation: revealRight 1s both; }
-    .animate-reveal-left { animation: revealLeft 1s both; }
-    .animate-up { animation: fadeInUp 0.8s both; }
-
-    @keyframes revealRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes revealLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(35px); } to { opacity: 1; transform: translateY(0); } }
-
-    .scroll-thin::-webkit-scrollbar { width: 6px; }
-    .scroll-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
-    .bg-blue-500 { background: #3b82f6; }
-    .bg-emerald-500 { background: #10b981; }
-    .bg-amber-500 { background: #f59e0b; }
-    .bg-indigo-500 { background: #6366f1; }
-
-    @media (max-width: 991px) {
-        .premium-hero-sleek { padding: 60px 0 80px; border-radius: 0 0 35px 35px; }
-        .display-4 { font-size: 2.2rem; }
-    }
-    /* Premium Request Card (Copied & Adapted) */
-    .request-card-premium {
-        background: #1a2332;
-        border-radius: 30px;
-        padding: 30px;
-        border: 1px solid rgba(255,255,255,0.05);
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-    }
-    .request-card-premium:hover {
-        transform: translateY(-8px) scale(1.02);
-        border-color: var(--indigo-500);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    .card-status-pill { position: absolute; top: 25px; left: 25px; }
-    
-    .detail-item-compact label { display: block; font-size: 0.65rem; color: var(--slate-400); font-weight: 700; margin-bottom: 4px; }
-    .detail-item-compact span { display: block; font-size: 0.85rem; color: white; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* Premium Modal Dark Refinement */
-    .modal-premium-dark { background-color: #0f172a !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
-    .rounded-20 { border-radius: 20px; }
-    .fw-800 { font-weight: 800; }
-    .text-indigo-400 { color: #818cf8 !important; }
-    .text-emerald-400 { color: #34d399 !important; }
-    
-    .btn-glass-premium-doc {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(8px);
+    /* Gallery Cards */
+    .gallery-card-sleek {
         transition: all 0.3s ease;
     }
-    .btn-glass-premium-doc:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
+    .gallery-card-sleek:hover {
+        border-color: var(--primary) !important;
+        transform: translateY(-3px);
     }
-    .btn-glass-indigo {
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        color: #818cf8;
-        backdrop-filter: blur(8px);
+
+    /* Booking Request Card */
+    .booking-request-card {
         transition: all 0.3s ease;
     }
-    .btn-glass-indigo:hover {
-        background: rgba(99, 102, 241, 0.2);
-        border-color: rgba(99, 102, 241, 0.4);
-        color: #a5b4fc;
-        transform: translateY(-2px);
+    .booking-request-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+        border-color: var(--primary-light) !important;
     }
-      
-      
-            
-      
 
-      
+    .animate-slide-up { animation: slideUp 0.6s ease-out forwards; opacity: 0; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-      /* --- SYSTEM LIGHT MODE PATCH (ENHANCED) --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Card & Container Overrides */
-      body:not(.theme-dark) .premium-card-dark,
-      body:not(.theme-dark) .news-card-premium,
-      body:not(.theme-dark) .request-card-premium,
-      body:not(.theme-dark) .dark-glass-card,
-      body:not(.theme-dark) .glass-card,
-      body:not(.theme-dark) .detail-box-lux,
-      body:not(.theme-dark) .stat-input-box,
-      body:not(.theme-dark) .gallery-card-lux,
-      body:not(.theme-dark) .empty-state-card-lux,
-      body:not(.theme-dark) .modal-content,
-      body:not(.theme-dark) .premium-modal-dark,
-      body:not(.theme-dark) .profile-strip-lux,
-      body:not(.theme-dark) .info-strip-premium,
-      body:not(.theme-dark) .modal-premium-dark {
-          background: var(--ws-bg-card) !important;
-          background-color: var(--ws-bg-card) !important;
-          border-color: var(--ws-border) !important;
-          color: var(--ws-text-primary) !important;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
-      }
-
-      /* Input & Form Overrides */
-      body:not(.theme-dark) .field-lux,
-      body:not(.theme-dark) .form-control,
-      body:not(.theme-dark) .form-select,
-      body:not(.theme-dark) .stat-value-field,
-      body:not(.theme-dark) .stat-label-field {
-          background: var(--ws-bg-input) !important;
-          background-color: var(--ws-bg-input) !important;
-          color: var(--ws-text-primary) !important;
-          border-color: var(--ws-border) !important;
-      }
-
-      body:not(.theme-dark) .field-lux:focus {
-          border-color: var(--ws-primary) !important;
-          background: #fff !important;
-      }
-
-      /* Typography & Labels */
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50,
-      body:not(.theme-dark) .text-slate-300,
-      body:not(.theme-dark) .text-slate-400,
-      body:not(.theme-dark) .text-slate-500,
-      body:not(.theme-dark) .label-lux,
-      body:not(.theme-dark) .detail-label-sleek,
-      body:not(.theme-dark) .form-label {
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) h1, 
-      body:not(.theme-dark) h2, 
-      body:not(.theme-dark) h3, 
-      body:not(.theme-dark) h4, 
-      body:not(.theme-dark) h5, 
-      body:not(.theme-dark) h6,
-      body:not(.theme-dark) .fw-bold.text-white {
-          color: var(--ws-text-primary) !important;
-      }
-
-      /* Hero Section (Keep Dark for Contrast) */
-      body:not(.theme-dark) .premium-hero-sleek h1,
-      body:not(.theme-dark) .premium-hero-sleek p,
-      body:not(.theme-dark) .premium-hero-sleek .badge-glass-premium,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item,
-      body:not(.theme-dark) .premium-hero-sleek .breadcrumb-item a {
-          color: #fff !important;
-      }
-
-      /* Table Overrides */
-      body:not(.theme-dark) .premium-table-dark thead th {
-          background: rgba(0,0,0,0.03) !important;
-          color: var(--ws-text-secondary) !important;
-      }
-
-      body:not(.theme-dark) .premium-table-dark tbody td {
-          color: var(--ws-text-primary) !important;
-          border-bottom-color: var(--ws-border) !important;
-      }
-
-      body:not(.theme-dark) .bg-unread {
-          background: rgba(var(--ws-primary-rgb), 0.03) !important;
-      }
-
-      /* Modal Specifics */
-      body:not(.theme-dark) .modal-header {
-          border-bottom-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .modal-footer {
-          border-top-color: var(--ws-border) !important;
-      }
-      body:not(.theme-dark) .btn-close {
-          filter: none !important;
-      }
-      </style>
+    /* Fix for 5 columns in grid */
+    @media (min-width: 992px) {
+        .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }
+    }
+</style>
 @endsection
-
-
-
-
-
-
-
-
