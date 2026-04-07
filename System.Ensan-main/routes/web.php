@@ -368,9 +368,6 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
             Route::put('/notifications/{notification}', [MobileContentController::class , 'notificationUpdate'])->name('notifications.update');
             Route::delete('/notifications/{notification}', [MobileContentController::class , 'notificationDestroy'])->name('notifications.destroy');
 
-            // Case Applications (from App)
-            Route::get('/cases', [MobileContentController::class , 'casesIndex'])->name('cases.index');
-            Route::patch('/cases/{application}', [MobileContentController::class , 'caseUpdateStatus'])->name('cases.update');
 
             // In-Kind Donations
             Route::get('/inkind', [MobileContentController::class , 'inKindDonationsIndex'])->name('inkind.index');

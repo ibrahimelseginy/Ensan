@@ -620,6 +620,35 @@
       <div class="spinner-premium"></div>
   </div>
 
+  {{-- Premium Global Notifications (Toasts) --}}
+  <div class="toast-container-elite" id="toast-container">
+      @if(session('success'))
+          <div class="toast-elite success animate-toast-in">
+              <div class="toast-content">
+                  <i class="bi bi-check-circle-fill toast-icon"></i>
+                  <div class="toast-text">
+                      <span class="toast-title">تم بنجاح</span>
+                      <span class="toast-msg">{{ session('success') }}</span>
+                  </div>
+              </div>
+              <button type="button" class="btn-close-toast" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+      @endif
+
+      @if(session('error') || $errors->any())
+          <div class="toast-elite error animate-toast-in">
+              <div class="toast-content">
+                  <i class="bi bi-exclamation-triangle-fill toast-icon"></i>
+                  <div class="toast-text">
+                      <span class="toast-title">خطأ في النظام</span>
+                      <span class="toast-msg">{{ session('error') ?? $errors->first() }}</span>
+                  </div>
+              </div>
+              <button type="button" class="btn-close-toast" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+      @endif
+  </div>
+
 
 
   @php $navUser = auth()->user(); @endphp

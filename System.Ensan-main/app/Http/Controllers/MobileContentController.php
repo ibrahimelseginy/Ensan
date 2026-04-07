@@ -110,18 +110,6 @@ final class MobileContentController extends Controller
         return back()->with('success', 'Notification deleted successfully');
     }
 
-    // --- Case Applications (e.g. needy cases applying) ---
-    public function casesIndex()
-    {
-        $applications = MobileCaseApplication::orderByDesc('created_at')->get();
-        return view('mobile.cases', compact('applications'));
-    }
-
-    public function caseUpdateStatus(Request $request, MobileCaseApplication $application)
-    {
-        $application->update(['status' => $request->status, 'admin_notes' => $request->admin_notes]);
-        return back()->with('success', 'Case status updated');
-    }
 
     // --- In-Kind Donations (e.g. clothes, furniture) ---
     public function inKindDonationsIndex()

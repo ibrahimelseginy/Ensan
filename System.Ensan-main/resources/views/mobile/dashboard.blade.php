@@ -26,7 +26,7 @@
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{{ route('mobile.cases.index') }}" class="text-decoration-none">
+            <a href="{{ route('mobile.case-applications.index') }}" class="text-decoration-none">
                 <div class="glass-card p-4 d-flex align-items-center gap-3 animate-slide-up hover-tilt" style="animation-delay: 0.1s">
                     <div class="rounded-4 bg-info bg-opacity-10 p-3">
                         <i class="bi bi-file-earmark-medical fs-2 text-info"></i>
