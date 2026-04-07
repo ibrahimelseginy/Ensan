@@ -611,6 +611,70 @@
       body:not(.theme-dark) .btn-close-white {
           filter: invert(1) grayscale(100%) brightness(200%);
       }
+
+      /* Premium Global Toasts */
+      .toast-container-elite {
+          position: fixed;
+          top: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          pointer-events: none;
+      }
+      .toast-elite {
+          min-width: 350px;
+          max-width: 500px;
+          padding: 16px 20px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(15px);
+          -webkit-backdrop-filter: blur(15px);
+          box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border: 1px solid rgba(255,255,255,0.2);
+          pointer-events: auto;
+          transition: 0.3s;
+          direction: rtl;
+      }
+      body.theme-dark .toast-elite {
+          background: rgba(30, 41, 59, 0.9);
+          border-color: rgba(255,255,255,0.05);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      }
+      .toast-elite.success { border-right: 6px solid #10b981; }
+      .toast-elite.error { border-right: 6px solid #ef4444; }
+      
+      .toast-content { display: flex; align-items: center; gap: 15px; }
+      .toast-icon { font-size: 1.5rem; }
+      .success .toast-icon { color: #10b981; }
+      .error .toast-icon { color: #ef4444; }
+      
+      .toast-text { display: flex; flex-direction: column; text-align: right; }
+      .toast-title { font-weight: 800; font-size: 0.95rem; color: var(--ws-text-primary); }
+      .toast-msg { font-size: 0.85rem; color: var(--ws-text-secondary); margin-top: 2px; }
+      
+      .btn-close-toast {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          color: var(--ws-text-secondary);
+          opacity: 0.5;
+          transition: 0.2s;
+          padding: 0 10px 0 0;
+      }
+      .btn-close-toast:hover { opacity: 1; transform: scale(1.1); }
+
+      @keyframes toastInSimple {
+          from { opacity: 0; transform: translateY(-40px) scale(0.9); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .animate-toast-in { animation: toastInSimple 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+      .toast-fade-out { opacity: 0; transform: translateY(-20px); pointer-events: none; }
 </style>
   @yield('styles')
 </head>
@@ -1657,7 +1721,45 @@
                 window.location.reload();
             }
         });
-    });
+    // Premium Toast Auto-Hide & Dynamic Show
+    function initToasts() {
+        const toasts = document.querySelectorAll('.toast-elite');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.classList.add('toast-fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        });
+    }
+
+    function showToast(msg, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast-elite ${type} animate-toast-in`;
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+        const title = type === 'success' ? 'تم بنجاح' : 'تنبيه في النظام';
+        
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="bi ${icon} toast-icon"></i>
+                <div class="toast-text">
+                    <span class="toast-title">${title}</span>
+                    <span class="toast-msg">${msg}</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close-toast" onclick="this.parentElement.remove()">&times;</button>
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('toast-fade-out');
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', initToasts);
   </script>
   @yield('scripts')
 </body>
