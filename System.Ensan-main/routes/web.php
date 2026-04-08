@@ -67,14 +67,8 @@ Route::post('login', [LoginWebController::class , 'login'])->name('login.post');
 Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 
 
-// Route groups and protected routes start below
-
-
-
-
-
-
-
+// --- Protected Routes ---
+Route::middleware(['auth'])->group(function () {
 
     // --- Core Dashboard ---
     Route::middleware('permission:dashboard.view')->group(function () {
@@ -89,17 +83,20 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
     // --- Donors & Donations ---
     Route::middleware('permission:donors.view')->group(function () {
         Route::resource('donors', DonorWebController::class);
+        Route::post('donors/bulk-destroy', [DonorWebController::class, 'bulkDestroy'])->name('donors.bulk-destroy');
     });
 
     Route::middleware('permission:donations.view')->group(function () {
         Route::get('donations/export', [DonationWebController::class, 'export'])->name('donations.export');
         Route::resource('donations', DonationWebController::class);
+        Route::post('donations/bulk-destroy', [DonationWebController::class, 'bulkDestroy'])->name('donations.bulk-destroy');
     });
 
     // --- Inventory & Warehouses ---
     Route::middleware('permission:warehouses.view')->group(function () {
         Route::resource('warehouses', WarehouseWebController::class);
         Route::resource('items', ItemWebController::class);
+        Route::resource('suppliers', SupplierWebController::class);
         Route::get('inventory-transactions/transfer', [InventoryTransactionWebController::class, 'createTransfer'])->name('inventory-transactions.create-transfer');
         Route::post('inventory-transactions/transfer', [InventoryTransactionWebController::class, 'storeTransfer'])->name('inventory-transactions.store-transfer');
         Route::get('inventory-transactions/reconcile', [InventoryTransactionWebController::class, 'createReconcile'])->name('inventory-transactions.create-reconcile');
@@ -142,7 +139,29 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
         Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
         Route::post('attachments', [AttachmentWebController::class, 'store'])->name('attachments.store');
         Route::delete('attachments/{attachment}', [AttachmentWebController::class, 'destroy'])->name('attachments.destroy');
-        // ... (other HR routes will be wrapped similarly below or in subsequent chunks)
+        
+        Route::resource('volunteers', VolunteerWebController::class);
+        Route::get('volunteers/reports', [VolunteerWebController::class, 'reports'])->name('volunteers.reports');
+        Route::resource('volunteer-hours', VolunteerHourWebController::class);
+        Route::resource('volunteer-attendance', VolunteerAttendanceWebController::class);
+        Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
+
+        Route::get('hr/evaluations', [HrEvaluationWebController::class, 'index'])->name('hr.evaluations');
+        Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
+        Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
+        Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
+        Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
+        Route::resource('employee-tasks', EmployeeTaskWebController::class);
+        
+        Route::post('leaves/bulk-destroy', [\App\Http\Controllers\LeaveWebController::class, 'bulkDestroy'])->name('leaves.bulk-destroy');
+        Route::resource('leaves', \App\Http\Controllers\LeaveWebController::class)->parameters(['leaves' => 'leave']);
+    });
+
+    // --- Payrolls (Specific Permission) ---
+    Route::middleware('permission:payrolls.view')->group(function () {
+        Route::get('payrolls/dashboard/overview', [PayrollWebController::class, 'dashboard'])->name('payrolls.dashboard');
+        Route::post('payrolls/{payroll}/create-journal-entry', [PayrollWebController::class, 'createJournalEntry'])->name('payrolls.createJournalEntry');
+        Route::resource('payrolls', PayrollWebController::class);
     });
 
     // --- Logistics ---
@@ -163,6 +182,7 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
         Route::get('trips', [TripWebController::class, 'index'])->name('trips.index');
         Route::post('trips', [TripWebController::class, 'store'])->name('trips.store');
     });
+
     Route::get('reports', [ReportsWebController::class, 'index'])->name('reports.index');
 
     // --- Admin & RBAC ---
@@ -179,323 +199,203 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
     Route::middleware('permission:complaints.view')->group(function () {
         Route::resource('complaints', ComplaintWebController::class);
     });
-    Route::resource('volunteer-hours', VolunteerHourWebController::class);
-    Route::get('payrolls/dashboard/overview', [PayrollWebController::class , 'dashboard'])->name('payrolls.dashboard');
-    Route::post('payrolls/{payroll}/create-journal-entry', [PayrollWebController::class , 'createJournalEntry'])->name('payrolls.createJournalEntry');
-    Route::resource('payrolls', PayrollWebController::class);
-    Route::get('hr/evaluations', [HrEvaluationWebController::class , 'index'])->name('hr.evaluations');
-    Route::resource('volunteer-attendance', VolunteerAttendanceWebController::class);
-    Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class , 'checkIn'])->name('employee-attendance.checkIn');
-    Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class , 'checkOut'])->name('employee-attendance.checkOut');
 
-    // Bulk Actions
-    Route::post('donations/bulk-destroy', [\App\Http\Controllers\DonationWebController::class , 'bulkDestroy'])->name('donations.bulk-destroy');
-    Route::post('donors/bulk-destroy', [\App\Http\Controllers\DonorWebController::class , 'bulkDestroy'])->name('donors.bulk-destroy');
-    Route::post('projects/bulk-destroy', [\App\Http\Controllers\ProjectWebController::class , 'bulkDestroy'])->name('projects.bulk-destroy');
-    Route::post('campaigns/bulk-destroy', [\App\Http\Controllers\CampaignWebController::class , 'bulkDestroy'])->name('campaigns.bulk-destroy');
-    Route::post('employee-attendance/bulk-destroy', [\App\Http\Controllers\EmployeeAttendanceWebController::class , 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
-    Route::post('leaves/bulk-destroy', [\App\Http\Controllers\LeaveWebController::class , 'bulkDestroy'])->name('leaves.bulk-destroy');
+    // --- Projects & Campaigns ---
+    Route::middleware('permission:projects.view')->group(function () {
+        Route::resource('projects', ProjectWebController::class);
+        Route::post('projects/bulk-destroy', [ProjectWebController::class, 'bulkDestroy'])->name('projects.bulk-destroy');
+        Route::post('projects/{project}/manager', [ProjectWebController::class, 'setManager'])->name('projects.setManager');
+        Route::post('projects/{project}/deputy', [ProjectWebController::class, 'setDeputy'])->name('projects.setDeputy');
+        Route::post('projects/{project}/volunteers', [ProjectWebController::class, 'attachVolunteer'])->name('projects.attachVolunteer');
+        Route::delete('projects/{project}/volunteers/{user}', [ProjectWebController::class, 'detachVolunteer'])->name('projects.detachVolunteer');
+        
+        // Zad Management
+        Route::post('projects/{project}/zad-families', [ProjectWebController::class, 'storeZadFamily'])->name('projects.storeZadFamily');
+        Route::put('projects/{project}/zad-families/{beneficiary}', [ProjectWebController::class, 'updateZadFamily'])->name('projects.updateZadFamily');
+        Route::delete('projects/{project}/zad-families/{beneficiary}', [ProjectWebController::class, 'destroyZadFamily'])->name('projects.destroyZadFamily');
+    });
 
-    Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
-    Route::resource('leaves', \App\Http\Controllers\LeaveWebController::class)->parameters(['leaves' => 'leave']);
-    Route::resource('suppliers', \App\Http\Controllers\SupplierWebController::class);
-    Route::post('suppliers/{supplier}/purchases', [\App\Http\Controllers\PurchaseWebController::class , 'store'])->name('suppliers.purchases.store');
-    Route::delete('suppliers/{supplier}/purchases/{purchase}', [\App\Http\Controllers\PurchaseWebController::class , 'destroy'])->name('suppliers.purchases.destroy');
+    Route::middleware('permission:campaigns.view')->group(function () {
+        Route::resource('campaigns', CampaignWebController::class);
+        Route::post('campaigns/bulk-destroy', [CampaignWebController::class, 'bulkDestroy'])->name('campaigns.bulk-destroy');
+        Route::post('campaigns/{campaign}/manager', [CampaignWebController::class, 'setManager'])->name('campaigns.setManager');
+    });
 
-    Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
-    Route::resource('reception', \App\Http\Controllers\ReceptionWebController::class);
+    // --- Website Management ---
+    Route::middleware('permission:manage_website')->group(function () {
+        Route::get('admin/website', [WebsiteWebController::class, 'showSettings'])->name('website.settings.index');
+        Route::post('admin/website/settings', [WebsiteWebController::class, 'updateSettings'])->name('website.settings.update');
+        
+        Route::get('admin/website/headquarters', [WebsiteWebController::class, 'headquarters'])->name('website.headquarters.index');
+        Route::post('admin/website/headquarters', [WebsiteWebController::class, 'updateHeadquarters'])->name('website.headquarters.update');
+        
+        Route::resource('admin/website/branches', WebsiteWebController::class, [
+            'names' => 'website.branches',
+            'only' => ['store', 'update', 'destroy']
+        ]);
 
-    Route::resource('tasks', TaskWebController::class);
-    Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
-    Route::resource('employee-tasks', EmployeeTaskWebController::class);
-    Route::resource('volunteers', VolunteerWebController::class);
-    Route::get('volunteers/reports', [VolunteerWebController::class , 'reports'])->name('volunteers.reports');
-    Route::resource('projects', ProjectWebController::class);
-    Route::post('projects/{project}/manager', [ProjectWebController::class , 'setManager'])->name('projects.setManager');
-    Route::post('projects/{project}/deputy', [ProjectWebController::class , 'setDeputy'])->name('projects.setDeputy');
-    Route::post('projects/{project}/volunteers', [ProjectWebController::class , 'attachVolunteer'])->name('projects.attachVolunteer');
-    Route::delete('projects/{project}/volunteers/{user}', [ProjectWebController::class , 'detachVolunteer'])->name('projects.detachVolunteer');
-    Route::post('projects/{project}/monthly-volunteers', [ProjectWebController::class , 'storeMonthlyVolunteer'])->name('projects.storeMonthlyVolunteer');
-    Route::delete('projects/{project}/monthly-volunteers/{monthlyVolunteer}', [ProjectWebController::class , 'destroyMonthlyVolunteer'])->name('projects.destroyMonthlyVolunteer');
-    Route::post('projects/{project}/activities', [ProjectWebController::class , 'storeActivity'])->name('projects.storeActivity');
-    Route::delete('projects/{project}/activities/{activity}', [ProjectWebController::class , 'destroyActivity'])->name('projects.destroyActivity');
+        Route::get('admin/website/partners', [WebsiteWebController::class, 'partners'])->name('website.partners.index');
+        Route::post('admin/website/partners', [WebsiteWebController::class, 'partnerStore'])->name('website.partners.store');
+        Route::put('admin/website/partners/{partner}', [WebsiteWebController::class, 'partnerUpdate'])->name('website.partners.update');
+        Route::delete('admin/website/partners/{partner}', [WebsiteWebController::class, 'partnerDestroy'])->name('website.partners.destroy');
 
-    // Zad Management
-    Route::post('projects/{project}/zad-families', [ProjectWebController::class , 'storeZadFamily'])->name('projects.storeZadFamily');
-    Route::put('projects/{project}/zad-families/{beneficiary}', [ProjectWebController::class , 'updateZadFamily'])->name('projects.updateZadFamily');
-    Route::delete('projects/{project}/zad-families/{beneficiary}', [ProjectWebController::class , 'destroyZadFamily'])->name('projects.destroyZadFamily');
-    Route::post('projects/{project}/zad-resources', [ProjectWebController::class , 'storeZadResource'])->name('projects.storeZadResource');
-    Route::delete('projects/{project}/zad-resources/{supplier}', [ProjectWebController::class , 'destroyZadResource'])->name('projects.destroyZadResource');
-    Route::post('projects/{project}/beneficiaries-file', [ProjectWebController::class , 'storeBeneficiaryFile'])->name('projects.storeBeneficiaryFile');
-    Route::put('projects/{project}/beneficiaries-file/{beneficiary}', [ProjectWebController::class , 'updateBeneficiaryFile'])->name('projects.updateBeneficiaryFile');
-    Route::delete('projects/{project}/beneficiaries-file/{beneficiary}', [ProjectWebController::class , 'destroyBeneficiaryFile'])->name('projects.destroyBeneficiaryFile');
-    Route::resource('campaigns', CampaignWebController::class);
-    Route::post('campaigns/{campaign}/manager', [CampaignWebController::class , 'setManager'])->name('campaigns.setManager');
-    Route::post('campaigns/{campaign}/volunteers', [CampaignWebController::class , 'attachVolunteer'])->name('campaigns.attachVolunteer');
-    Route::delete('campaigns/{campaign}/volunteers/{user}', [CampaignWebController::class , 'detachVolunteer'])->name('campaigns.detachVolunteer');
-    Route::post('campaigns/{campaign}/daily-menus', [CampaignWebController::class , 'storeDailyMenu'])->name('campaigns.storeDailyMenu');
-    Route::delete('campaigns/{campaign}/daily-menus/{dailyMenu}', [CampaignWebController::class , 'destroyDailyMenu'])->name('campaigns.destroyDailyMenu');
-    Route::post('campaigns/{campaign}/monthly-volunteers', [CampaignWebController::class , 'storeMonthlyVolunteer'])->name('campaigns.storeMonthlyVolunteer');
-    Route::delete('campaigns/{campaign}/monthly-volunteers/{monthlyVolunteer}', [CampaignWebController::class , 'destroyMonthlyVolunteer'])->name('campaigns.destroyMonthlyVolunteer');
-    Route::post('campaigns/{campaign}/beneficiaries-file', [CampaignWebController::class , 'storeBeneficiaryFile'])->name('campaigns.storeBeneficiaryFile');
-    Route::put('campaigns/{campaign}/beneficiaries-file/{beneficiary}', [CampaignWebController::class , 'updateBeneficiaryFile'])->name('campaigns.updateBeneficiaryFile');
-    Route::delete('campaigns/{campaign}/beneficiaries-file/{beneficiary}', [CampaignWebController::class , 'destroyBeneficiaryFile'])->name('campaigns.destroyBeneficiaryFile');
-    Route::resource('workspaces', \App\Http\Controllers\WorkspaceWebController::class);
-    Route::post('workspaces/{workspace}/rentals', [\App\Http\Controllers\WorkspaceWebController::class , 'storeRental'])->name('workspaces.storeRental');
-    Route::patch('workspaces/{workspace}/rentals/{rental}/status', [\App\Http\Controllers\WorkspaceWebController::class , 'updateRentalStatus'])->name('workspaces.updateRentalStatus');
-    Route::delete('workspaces/{workspace}/rentals/{rental}', [\App\Http\Controllers\WorkspaceWebController::class , 'destroyRental'])->name('workspaces.destroyRental');
-    Route::resource('guest-houses', GuestHouseWebController::class);
-    Route::post('guest-houses/{guest_house}/manager', [GuestHouseWebController::class , 'setManager'])->name('guest-houses.setManager');
-    Route::post('guest-houses/{guest_house}/volunteers', [GuestHouseWebController::class , 'attachVolunteer'])->name('guest-houses.attachVolunteer');
-    Route::delete('guest-houses/{guest_house}/volunteers/{user}', [GuestHouseWebController::class , 'detachVolunteer'])->name('guest-houses.detachVolunteer');
-    Route::post('guest-houses/{guest_house}/monthly-volunteers', [GuestHouseWebController::class , 'storeMonthlyVolunteer'])->name('guest-houses.storeMonthlyVolunteer');
-    Route::delete('guest-houses/{guest_house}/monthly-volunteers/{monthlyVolunteer}', [GuestHouseWebController::class , 'destroyMonthlyVolunteer'])->name('guest-houses.destroyMonthlyVolunteer');
-    Route::get('admin/change-requests', [\App\Http\Controllers\ChangeRequestWebController::class , 'index'])->name('change-requests.index');
-    // --- Website Management Unit ---
-    Route::group(['prefix' => 'admin/website', 'as' => 'website.'], function () {
-            Route::get('/', [WebsiteWebController::class , 'content'])->name('content');
+        Route::get('admin/website/board', [WebsiteWebController::class, 'boardMembers'])->name('website.board.index');
+        Route::post('admin/website/board', [WebsiteWebController::class, 'boardMemberStore'])->name('website.board.store');
+        Route::put('admin/website/board/{member}', [WebsiteWebController::class, 'boardMemberUpdate'])->name('website.board.update');
+        Route::delete('admin/website/board/{member}', [WebsiteWebController::class, 'boardMemberDestroy'])->name('website.board.destroy');
 
-            // Board Members
-            Route::get('/board', [WebsiteWebController::class , 'boardMembers'])->name('board.index');
-            Route::post('/board', [WebsiteWebController::class , 'boardMemberStore'])->name('board.store');
-            Route::match (['post', 'put'], '/board/{member}', [WebsiteWebController::class , 'boardMemberUpdate'])->name('board.update');
-            Route::delete('/board/{member}', [WebsiteWebController::class , 'boardMemberDestroy'])->name('board.destroy');
+        Route::get('admin/website/pages', [WebsiteWebController::class, 'pages'])->name('website.pages.index');
+        Route::post('admin/website/pages', [WebsiteWebController::class, 'pageStore'])->name('website.pages.store');
+        Route::put('admin/website/pages/{page}', [WebsiteWebController::class, 'pageUpdate'])->name('website.pages.update');
+        Route::delete('admin/website/pages/{page}', [WebsiteWebController::class, 'pageDestroy'])->name('website.pages.destroy');
 
-            // Partners
-            Route::get('/partners', [WebsiteWebController::class , 'partners'])->name('partners.index');
-            Route::post('/partners', [WebsiteWebController::class , 'partnerStore'])->name('partners.store');
-            Route::match (['post', 'put'], '/partners/{partner}', [WebsiteWebController::class , 'partnerUpdate'])->name('partners.update');
-            Route::delete('/partners/{partner}', [WebsiteWebController::class , 'partnerDestroy'])->name('partners.destroy');
+        Route::get('admin/website/news', [WebsiteWebController::class, 'news'])->name('website.news.index');
+        Route::post('admin/website/news', [WebsiteWebController::class, 'newsStore'])->name('website.news.store');
+        Route::put('admin/website/news/{news}', [WebsiteWebController::class, 'newsUpdate'])->name('website.news.update');
+        Route::delete('admin/website/news/{news}', [WebsiteWebController::class, 'newsDestroy'])->name('website.news.destroy');
 
-            // News
-            Route::get('/news', [WebsiteWebController::class , 'news'])->name('news.index');
-            Route::post('/news', [WebsiteWebController::class , 'newsStore'])->name('news.store');
-            Route::match (['post', 'put'], '/news/{news}', [WebsiteWebController::class , 'newsUpdate'])->name('news.update');
-            Route::delete('/news/{news}', [WebsiteWebController::class , 'newsDestroy'])->name('news.destroy');
+        Route::get('admin/website/contact-messages', [WebsiteWebController::class, 'contactMessages'])->name('website.contact-messages.index');
+        Route::post('admin/website/contact-messages/{message}/read', [WebsiteWebController::class, 'contactMessageMarkRead'])->name('website.contact-messages.mark-read');
+        Route::delete('admin/website/contact-messages/{message}', [WebsiteWebController::class, 'contactMessageDestroy'])->name('website.contact-messages.destroy');
 
-            // Volunteer Wall (Leaders of Giving)
-            Route::get('/volunteer-wall', [WebsiteWebController::class , 'volunteerWall'])->name('volunteer-wall.index');
-            Route::post('/volunteer-wall', [WebsiteWebController::class , 'volunteerWallStore'])->name('volunteer-wall.store');
-            Route::match (['post', 'put'], '/volunteer-wall/{leader}', [WebsiteWebController::class , 'volunteerWallUpdate'])->name('volunteer-wall.update');
-            Route::delete('/volunteer-wall/{leader}', [WebsiteWebController::class , 'volunteerWallDestroy'])->name('volunteer-wall.destroy');
+        Route::get('admin/website/subscriptions', [WebsiteWebController::class, 'subscriptions'])->name('website.subscriptions.index');
+        Route::delete('admin/website/subscriptions/{subscription}', [WebsiteWebController::class, 'destroySubscription'])->name('website.subscriptions.destroy');
 
-            // Bookings
-            Route::get('/bookings', [WebsiteWebController::class , 'bookings'])->name('bookings.index');
-            Route::patch('/bookings/{booking}', [WebsiteWebController::class , 'bookingUpdateStatus'])->name('bookings.update');
+        Route::get('admin/website/volunteer-requests', [WebsiteWebController::class, 'volunteerRequests'])->name('website.volunteer-requests.index');
+        Route::post('admin/website/volunteer-requests/content', [WebsiteWebController::class, 'updateVolunteerContent'])->name('website.volunteer-requests.update-content');
+        Route::post('admin/website/volunteer-requests/{volunteerRequest}/status', [WebsiteWebController::class, 'updateVolunteerRequestStatus'])->name('website.volunteer-requests.update-status');
+        Route::delete('admin/website/volunteer-requests/{volunteerRequest}', [WebsiteWebController::class, 'destroyVolunteerRequest'])->name('website.volunteer-requests.destroy');
+        Route::get('admin/website/volunteer-requests/{volunteerRequest}/download-cv', [WebsiteWebController::class, 'downloadCV'])->name('website.volunteer-requests.download-cv');
 
-            // Volunteer Requests & Content
-            Route::get('/volunteer-requests', [WebsiteWebController::class , 'volunteerRequests'])->name('volunteer-requests.index');
-            Route::patch('/volunteer-requests/{request}/status', [WebsiteWebController::class , 'updateVolunteerRequestStatus'])->name('volunteer-requests.status');
-            Route::delete('/volunteer-requests/{volunteerRequest}', [WebsiteWebController::class , 'destroyVolunteerRequest'])->name('volunteer-requests.destroy');
-            Route::get('/volunteer-requests/{volunteerRequest}/cv', [WebsiteWebController::class , 'downloadCV'])->name('volunteer-requests.cv');
-            Route::post('/volunteer-content', [WebsiteWebController::class , 'updateVolunteerContent'])->name('volunteer-content.update');
+        Route::get('admin/website/content', [WebsiteWebController::class, 'content'])->name('website.content');
+        Route::post('admin/website/projects', [WebsiteWebController::class, 'storeProject'])->name('website.projects.store');
+        Route::post('admin/website/projects/{project}', [WebsiteWebController::class, 'updateProjectContent'])->name('website.projects.update');
+        Route::delete('admin/website/projects/{project}', [WebsiteWebController::class, 'destroyProject'])->name('website.projects.destroy');
 
-            // Contact Messages
-            Route::get('/contact-messages', [WebsiteWebController::class , 'contactMessages'])->name('contact-messages.index');
-            Route::patch('/contact-messages/{message}/read', [WebsiteWebController::class , 'contactMessageMarkRead'])->name('contact-messages.read');
-            Route::delete('/contact-messages/{message}', [WebsiteWebController::class , 'contactMessageDestroy'])->name('contact-messages.destroy');
-            Route::post('/contact-settings', [WebsiteWebController::class , 'updateContactSettings'])->name('contact-settings.update');
+        Route::get('admin/website/campaigns-content', [WebsiteWebController::class, 'campaignsContent'])->name('website.campaigns.content');
+        Route::post('admin/website/campaigns', [WebsiteWebController::class, 'storeCampaign'])->name('website.campaigns.store');
+        Route::post('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'updateCampaignContent'])->name('website.campaigns.update');
+        Route::delete('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'destroyCampaign'])->name('website.campaigns.destroy');
 
-            // Newsletter Subscriptions
-            Route::get('/subscriptions', [WebsiteWebController::class , 'subscriptions'])->name('subscriptions.index');
-            Route::delete('/subscriptions/{subscription}', [WebsiteWebController::class , 'destroySubscription'])->name('subscriptions.destroy');
+        Route::get('admin/website/guest-house', [WebsiteWebController::class, 'guestHouseContent'])->name('website.guest-house.content');
+        Route::post('admin/website/guest-house/update', [WebsiteWebController::class, 'guestHouseContentUpdate'])->name('website.guest-house.update');
+        Route::post('admin/website/guest-house/stats', [WebsiteWebController::class, 'updateGuestHouseStats'])->name('website.guest-house.update-stats');
+        Route::post('admin/website/guest-house/booking-status/{booking}', [WebsiteWebController::class, 'bookingUpdateStatus'])->name('website.guest-house.update-booking-status');
 
-            // Dynamic Cards
-            Route::get('/cards', [WebsiteWebController::class , 'cards'])->name('cards.index');
-            Route::post('/cards', [WebsiteWebController::class , 'cardStore'])->name('cards.store');
-            Route::match (['post', 'put'], '/cards/{card}', [WebsiteWebController::class , 'cardUpdate'])->name('cards.update');
-            Route::delete('/cards/{card}', [WebsiteWebController::class , 'cardDestroy'])->name('cards.destroy');
+        Route::get('admin/website/donation-page', [WebsiteWebController::class, 'donationPage'])->name('website.donation-page.index');
+        Route::post('admin/website/donation-page', [WebsiteWebController::class, 'updateDonationPage'])->name('website.donation-page.update');
 
-            // Project/Campaign Content Update
-            Route::post('/projects', [WebsiteWebController::class , 'storeProject'])->name('projects.store');
-            Route::match (['post', 'put'], '/projects/{project}', [WebsiteWebController::class , 'updateProjectContent'])->name('projects.update');
-            Route::delete('/projects/{project}', [WebsiteWebController::class , 'destroyProject'])->name('projects.destroy');
-            Route::post('/projects-stats', [WebsiteWebController::class , 'updateProjectStats'])->name('projects.stats.update');
-            Route::get('/campaigns-content', [WebsiteWebController::class , 'campaignsContent'])->name('campaigns.content');
-            Route::post('/campaigns', [WebsiteWebController::class , 'storeCampaign'])->name('campaigns.store');
-            Route::match (['post', 'put'], '/campaigns/{campaign}', [WebsiteWebController::class , 'updateCampaignContent'])->name('campaigns.update');
-            Route::delete('/campaigns/{campaign}', [WebsiteWebController::class , 'destroyCampaign'])->name('campaigns.destroy');
-            Route::post('/campaigns-stats', [WebsiteWebController::class , 'updateCampaignStats'])->name('campaigns.stats.update');
+        Route::get('admin/website/donation-settings/unified', [DonationCategoryWebController::class, 'unified'])->name('website.donation-settings.unified');
+        Route::resource('admin/website/donation-settings/categories', DonationCategoryWebController::class, ['as' => 'website.donation-settings']);
+        Route::resource('admin/website/donation-settings/items', DonationItemWebController::class, ['as' => 'website.donation-settings']);
 
-            // Guest House Content
-            Route::get('/guest-house-content', [WebsiteWebController::class , 'guestHouseContent'])->name('guest-house.content');
-            Route::post('/guest-house-content', [WebsiteWebController::class , 'guestHouseContentUpdate'])->name('guest-house.update');
-            Route::post('/guest-house-stats', [WebsiteWebController::class , 'updateGuestHouseStats'])->name('guest-house.stats.update');
-            Route::get('/guest-house-slider', [WebsiteWebController::class , 'guestHouseSlider'])->name('guest-house.slider');
-            Route::get('/dummy-bookings', [WebsiteWebController::class , 'createDummyBookings'])->name('guest-house.dummy');
+        Route::get('admin/website/donation-accounts', [AdminWebsiteDonationWebController::class, 'index'])->name('website.donation-accounts.index');
+        Route::get('admin/website/donation-accounts/{donor}', [AdminWebsiteDonationWebController::class, 'show'])->name('website.donation-accounts.show');
+        Route::post('admin/website/donation-accounts/verify/{web_donation}', [AdminWebsiteDonationWebController::class, 'verifyDonation'])->name('website.donation-accounts.verify');
+        Route::post('admin/website/donation-accounts/reject/{web_donation}', [AdminWebsiteDonationWebController::class, 'rejectDonation'])->name('website.donation-accounts.reject');
 
-            // Headquarters/Branches
-            Route::get('/headquarters', [WebsiteWebController::class , 'headquarters'])->name('headquarters.index');
-            Route::post('/headquarters', [WebsiteWebController::class , 'updateHeadquarters'])->name('headquarters.update');
-            Route::post('/headquarters/branches', [WebsiteWebController::class , 'branchStore'])->name('headquarters.branches.store');
-            Route::put('/headquarters/branches/{branch}', [WebsiteWebController::class , 'branchUpdate'])->name('headquarters.branches.update');
-            Route::delete('/headquarters/branches/{branch}', [WebsiteWebController::class , 'branchDestroy'])->name('headquarters.branches.destroy');
+        Route::get('admin/website/accounts', [WebsiteWebController::class, 'accounts'])->name('website.accounts.index');
+        Route::post('admin/website/accounts', [WebsiteWebController::class, 'accountStore'])->name('website.accounts.store');
+        Route::put('admin/website/accounts/{user}', [WebsiteWebController::class, 'accountUpdate'])->name('website.accounts.update');
+        Route::delete('admin/website/accounts/{user}', [WebsiteWebController::class, 'accountDestroy'])->name('website.accounts.destroy');
+    });
 
-            // General Settings & Stats
-            Route::get('/settings', [WebsiteWebController::class , 'showSettings'])->name('settings.index');
-            Route::post('/settings', [WebsiteWebController::class , 'updateSettings'])->name('settings.update');
-
-            // Donation Page
-            Route::get('/donation-page', [WebsiteWebController::class, 'donationPage'])->name('donation-page.index');
-            Route::post('/donation-page', [WebsiteWebController::class, 'updateDonationPage'])->name('donation-page.update');
-
-            // Website Accounts (Donors)
-            Route::get('/accounts', [WebsiteWebController::class, 'accounts'])->name('accounts.index');
-            Route::post('/accounts', [WebsiteWebController::class, 'accountStore'])->name('accounts.store');
-            Route::put('/accounts/{user}', [WebsiteWebController::class, 'accountUpdate'])->name('accounts.update');
-            Route::delete('/accounts/{user}', [WebsiteWebController::class, 'accountDestroy'])->name('accounts.destroy');
-
-            // Website Donation Accounts
-            Route::get('/donation-accounts', [\App\Http\Controllers\AdminWebsiteDonationWebController::class, 'index'])->name('donation-accounts.index');
-            Route::get('/donation-accounts/{donor}', [\App\Http\Controllers\AdminWebsiteDonationWebController::class, 'show'])->name('donation-accounts.show');
-            Route::post('/donation-accounts/{web_donation}/verify', [\App\Http\Controllers\AdminWebsiteDonationWebController::class, 'verifyDonation'])->name('donation-accounts.verify');
-            Route::post('/donation-accounts/{web_donation}/reject', [\App\Http\Controllers\AdminWebsiteDonationWebController::class, 'rejectDonation'])->name('donation-accounts.reject');
-
-            // Donation Settings - Categories & Items
-            Route::prefix('donation-settings')->name('donation-settings.')->group(function () {
-                Route::get('unified', [\App\Http\Controllers\DonationCategoryWebController::class, 'unified'])->name('unified');
-                // Categories
-                Route::get('/categories',                                                        [\App\Http\Controllers\DonationCategoryWebController::class, 'index'])  ->name('categories.index');
-                Route::post('/categories',                                                       [\App\Http\Controllers\DonationCategoryWebController::class, 'store'])  ->name('categories.store');
-                Route::put('/categories/{donationCategory}',                                    [\App\Http\Controllers\DonationCategoryWebController::class, 'update']) ->name('categories.update');
-                Route::delete('/categories/{donationCategory}',                                 [\App\Http\Controllers\DonationCategoryWebController::class, 'destroy'])->name('categories.destroy');
-                Route::patch('/categories/{donationCategory}/toggle',                           [\App\Http\Controllers\DonationCategoryWebController::class, 'toggleStatus'])->name('categories.toggle');
-                // Items
-                Route::get('/items',                                                             [\App\Http\Controllers\DonationItemWebController::class, 'index'])  ->name('items.index');
-                Route::post('/items',                                                            [\App\Http\Controllers\DonationItemWebController::class, 'store'])  ->name('items.store');
-                Route::put('/items/{donationItem}',                                             [\App\Http\Controllers\DonationItemWebController::class, 'update']) ->name('items.update');
-                Route::delete('/items/{donationItem}',                                          [\App\Http\Controllers\DonationItemWebController::class, 'destroy'])->name('items.destroy');
-                Route::patch('/items/{donationItem}/toggle',                                    [\App\Http\Controllers\DonationItemWebController::class, 'toggleStatus'])->name('items.toggle');
-            });
-
-            // Testimonials
-            Route::get('/testimonials', [WebsiteWebController::class , 'testimonials'])->name('testimonials.index');
-            Route::post('/testimonials', [WebsiteWebController::class , 'testimonialStore'])->name('testimonials.store');
-            Route::match (['post', 'put'], '/testimonials/{testimonial}', [WebsiteWebController::class , 'testimonialUpdate'])->name('testimonials.update');
-            Route::delete('/testimonials/{testimonial}', [WebsiteWebController::class , 'testimonialDestroy'])->name('testimonials.destroy');
-
-            Route::get('/share-opinion', [WebsiteWebController::class , 'shareOpinion'])->name('share-opinion.index');
-
-            // Dynamic Pages (Management)
-            Route::get('/pages', [WebsiteWebController::class , 'pages'])->name('pages.index');
-            Route::post('/pages', [WebsiteWebController::class , 'pageStore'])->name('pages.store');
-            Route::match (['post', 'put'], '/pages/{page}', [WebsiteWebController::class , 'pageUpdate'])->name('pages.update');
-            Route::delete('/pages/{page}', [WebsiteWebController::class , 'pageDestroy'])->name('pages.destroy');
-        }
-        );
-
-        // --- Mobile App Management Unit ---
+    // --- Mobile App Management ---
+    Route::middleware('permission:manage_mobile')->group(function () {
         Route::group(['prefix' => 'admin/mobile', 'as' => 'mobile.'], function () {
-            Route::get('/', [MobileContentController::class , 'index'])->name('dashboard');
-
-            // Banners
-            Route::get('/banners', [MobileContentController::class , 'bannersIndex'])->name('banners.index');
-            Route::post('/banners', [MobileContentController::class , 'bannerStore'])->name('banners.store');
-            Route::delete('/banners/{banner}', [MobileContentController::class , 'bannerDestroy'])->name('banners.destroy');
-
-            // Notifications
-            Route::get('/notifications', [MobileContentController::class , 'notificationsIndex'])->name('notifications.index');
-            Route::post('/notifications', [MobileContentController::class , 'notificationStore'])->name('notifications.store');
-            Route::put('/notifications/{notification}', [MobileContentController::class , 'notificationUpdate'])->name('notifications.update');
-            Route::delete('/notifications/{notification}', [MobileContentController::class , 'notificationDestroy'])->name('notifications.destroy');
-
-
-            // In-Kind Donations
-            Route::get('/inkind', [MobileContentController::class , 'inKindDonationsIndex'])->name('inkind.index');
-            Route::patch('/inkind/{donation}', [MobileContentController::class , 'inKindDonationUpdateStatus'])->name('inkind.update');
-
-            // Project/Campaign Updates Mobile
-            Route::put('/projects/{project}/mobile', [MobileContentController::class , 'updateProjectMobileContent'])->name('projects.update.mobile');
-            Route::put('/campaigns/{campaign}/mobile', [MobileContentController::class , 'updateCampaignMobileContent'])->name('campaigns.update.mobile');
-
-            // Home Content
+            Route::get('/', [MobileContentController::class, 'index'])->name('dashboard');
+            
             Route::get('/home-content', [MobileContentController::class, 'homeContentIndex'])->name('home_content.index');
             Route::post('/home-content', [MobileContentController::class, 'homeContentStore'])->name('home_content.store');
-            Route::match(['put', 'post'], '/home-content/{item}', [MobileContentController::class, 'homeContentUpdate'])->name('home_content.update');
+            Route::post('/home-content/{item}', [MobileContentController::class, 'homeContentUpdate'])->name('home_content.update');
             Route::delete('/home-content/{item}', [MobileContentController::class, 'homeContentDestroy'])->name('home_content.destroy');
 
-            // News
+            Route::get('/banners', [MobileContentController::class, 'bannersIndex'])->name('banners.index');
+            Route::post('/banners', [MobileContentController::class, 'bannerStore'])->name('banners.store');
+            Route::delete('/banners/{banner}', [MobileContentController::class, 'bannerDestroy'])->name('banners.destroy');
+
             Route::get('/news', [MobileContentController::class, 'newsIndex'])->name('news.index');
             Route::post('/news', [MobileContentController::class, 'newsStore'])->name('news.store');
-            Route::match(['put', 'post'], '/news/{news}', [MobileContentController::class, 'newsUpdate'])->name('news.update');
+            Route::post('/news/{news}', [MobileContentController::class, 'newsUpdate'])->name('news.update');
             Route::delete('/news/{news}', [MobileContentController::class, 'newsDestroy'])->name('news.destroy');
 
-            // Contact Messages
-            Route::get('/contact-messages', [MobileContentController::class, 'contactMessagesIndex'])->name('contact-messages.index');
-            Route::patch('/contact-messages/{message}', [MobileContentController::class, 'contactMessageUpdate'])->name('contact-messages.update');
-            Route::delete('/contact-messages/{message}', [MobileContentController::class, 'contactMessageDestroy'])->name('contact-messages.destroy');
+            Route::get('/notifications', [MobileContentController::class, 'notificationsIndex'])->name('notifications.index');
+            Route::post('/notifications', [MobileContentController::class, 'notificationStore'])->name('notifications.store');
+            Route::delete('/notifications/{notification}', [MobileContentController::class, 'notificationDestroy'])->name('notifications.destroy');
 
-            // Volunteer Requests (Mobile Unit)
             Route::get('/volunteer-requests', [MobileContentController::class, 'volunteerRequestsIndex'])->name('volunteer-requests.index');
-            Route::patch('/volunteer-requests/{volunteerRequest}', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update');
+            Route::post('/volunteer-requests/{volunteerRequest}/status', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update-status');
             Route::delete('/volunteer-requests/{volunteerRequest}', [MobileContentController::class, 'destroyVolunteerRequest'])->name('volunteer-requests.destroy');
-            Route::get('/volunteer-requests/{volunteerRequest}/cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.cv');
+            Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.download-cv');
 
-            // Case Applications
             Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
-            Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
-            Route::patch('/case-applications/{application}', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
+            Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update-status');
             Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
+            Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
 
-            // Mobile Donations
             Route::get('/donations', [MobileContentController::class, 'donationsIndex'])->name('donations.index');
-            Route::patch('/donations/{donation}', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
+            Route::post('/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update-status');
             Route::delete('/donations/{donation}', [MobileContentController::class, 'destroyDonation'])->name('donations.destroy');
 
-            // Contact Info Management (Separate from contact messages)
-            Route::get('/contact-info', [MobileContentController::class, 'contactInfoIndex'])->name('contact_info.index');
-            Route::post('/contact-info', [MobileContentController::class, 'contactInfoStore'])->name('contact_info.store');
-            Route::match(['put', 'post'], '/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoUpdate'])->name('contact_info.update');
-            Route::delete('/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoDestroy'])->name('contact_info.destroy');
-
-            // Guest House Bookings (Mobile Unit - Unified)
-            Route::get('/bookings', [MobileContentController::class, 'bookingsIndex'])->name('bookings.index');
-            Route::patch('/bookings/{booking}', [MobileContentController::class, 'updateBookingStatus'])->name('bookings.update');
-            Route::delete('/bookings/{booking}', [MobileContentController::class, 'destroyBooking'])->name('bookings.destroy');
-            
-            // Web Management inside Mobile Unit
-            Route::patch('/web-bookings/{booking}', [MobileContentController::class, 'updateWebBookingStatus'])->name('web_bookings.update');
-            Route::delete('/web-bookings/{booking}', [MobileContentController::class, 'destroyWebBooking'])->name('web_bookings.destroy');
-
             Route::get('/donors-auth', [MobileContentController::class, 'mobileDonorsIndex'])->name('donors_auth.index');
-            Route::put('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
+            Route::post('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
             Route::delete('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorDestroy'])->name('donors_auth.destroy');
 
-            // Ensan Pillars (Integrated Services)
-            Route::post('/pillars', [MobileContentController::class, 'pillarStore'])->name('pillars.store');
-            Route::put('/pillars/{pillar}', [MobileContentController::class, 'pillarUpdate'])->name('pillars.update');
-            Route::delete('/pillars/{pillar}', [MobileContentController::class, 'pillarDestroy'])->name('pillars.destroy');
-        }
-        );
+            Route::get('/contact-info', [MobileContentController::class, 'contactInfoIndex'])->name('contact_info.index');
+            Route::post('/contact-info', [MobileContentController::class, 'contactInfoStore'])->name('contact_info.store');
+            Route::post('/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoUpdate'])->name('contact_info.update');
+            Route::delete('/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoDestroy'])->name('contact_info.destroy');
 
-        Route::post('admin/change-requests/{changeRequest}/approve', [\App\Http\Controllers\ChangeRequestWebController::class , 'approve'])->name('change-requests.approve');
-        Route::post('admin/change-requests/{changeRequest}/reject', [\App\Http\Controllers\ChangeRequestWebController::class , 'reject'])->name('change-requests.reject');
-        Route::delete('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class , 'destroy'])->name('change-requests.destroy');
-        Route::post('admin/change-requests/bulk-destroy', [\App\Http\Controllers\ChangeRequestWebController::class , 'bulkDestroy'])->name('change-requests.bulk-destroy');
-        Route::post('admin/change-requests/bulk-revert', [\App\Http\Controllers\ChangeRequestWebController::class , 'bulkRevert'])->name('change-requests.bulk-revert');
-        Route::post('admin/change-requests/{changeRequest}/revert', [\App\Http\Controllers\ChangeRequestWebController::class , 'revert'])->name('change-requests.revert');
-        Route::post('admin/change-requests/{changeRequest}/cancel', [\App\Http\Controllers\ChangeRequestWebController::class , 'cancel'])->name('change-requests.cancel');
-        Route::put('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class , 'update'])->name('change-requests.update');
+            Route::get('/bookings', [MobileContentController::class, 'bookingsIndex'])->name('bookings.index');
+            Route::post('/bookings/{booking}/status', [MobileContentController::class, 'updateBookingStatus'])->name('bookings.update-status');
+            Route::delete('/bookings/{booking}', [MobileContentController::class, 'destroyBooking'])->name('bookings.destroy');
 
-        // Ramadan Campaign
-        Route::middleware('permission:manage_ramadan')->group(function () {
-            Route::resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->except(['destroy']);
-            Route::delete('ramadan-bags/{ramadan_bag}', [\App\Http\Controllers\RamadanBagWebController::class, 'destroy'])->name('ramadan-bags.destroy');
-            Route::resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->except(['destroy']);
-            Route::delete('ramadan-iftars/{ramadan_iftar}', [\App\Http\Controllers\RamadanIftarWebController::class, 'destroy'])->name('ramadan-iftars.destroy');
-        });
-
-        // Collaborations & Memberships (Specialized Services)
-        Route::middleware('permission:manage_specialized_services')->group(function () {
-            Route::resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class);
-            Route::resource('memberships', \App\Http\Controllers\MembershipWebController::class);
-            Route::resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class);
-            Route::resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class);
-            Route::resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class);
-            Route::resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class);
-            Route::resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class);
+            Route::resource('/pillars', MobileContentController::class, [
+                'names' => 'pillars',
+                'only' => ['store', 'update', 'destroy']
+            ]);
         });
     });
+
+    Route::middleware('permission:manage_change_requests')->group(function () {
+        Route::get('admin/change-requests', [\App\Http\Controllers\ChangeRequestWebController::class, 'index'])->name('change-requests.index');
+        Route::post('admin/change-requests/{changeRequest}/approve', [\App\Http\Controllers\ChangeRequestWebController::class, 'approve'])->name('change-requests.approve');
+        Route::post('admin/change-requests/{changeRequest}/reject', [\App\Http\Controllers\ChangeRequestWebController::class, 'reject'])->name('change-requests.reject');
+        Route::delete('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'destroy'])->name('change-requests.destroy');
+        Route::post('admin/change-requests/bulk-destroy', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkDestroy'])->name('change-requests.bulk-destroy');
+        Route::post('admin/change-requests/bulk-revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkRevert'])->name('change-requests.bulk-revert');
+        Route::post('admin/change-requests/{changeRequest}/revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'revert'])->name('change-requests.revert');
+        Route::post('admin/change-requests/{changeRequest}/cancel', [\App\Http\Controllers\ChangeRequestWebController::class, 'cancel'])->name('change-requests.cancel');
+        Route::put('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'update'])->name('change-requests.update');
+    });
+
+    // --- Specialized Services ---
+    Route::middleware('permission:manage_specialized_services')->group(function () {
+        Route::resource('workspaces', \App\Http\Controllers\WorkspaceWebController::class);
+        Route::resource('guest-houses', GuestHouseWebController::class);
+        Route::resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class);
+        Route::resource('memberships', \App\Http\Controllers\MembershipWebController::class);
+        Route::resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class);
+        Route::resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class);
+        Route::resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class);
+        Route::resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class);
+        Route::resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class);
+    });
+
+    // Ramadan Campaign
+    Route::middleware('permission:manage_ramadan')->group(function () {
+        Route::resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->except(['destroy']);
+        Route::delete('ramadan-bags/{ramadan_bag}', [\App\Http\Controllers\RamadanBagWebController::class, 'destroy'])->name('ramadan-bags.destroy');
+        Route::resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->except(['destroy']);
+        Route::delete('ramadan-iftars/{ramadan_iftar}', [\App\Http\Controllers\RamadanIftarWebController::class, 'destroy'])->name('ramadan-iftars.destroy');
+    });
+
+    // Reception & Visits (Shared/General)
+    Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
+    Route::resource('reception', \App\Http\Controllers\ReceptionWebController::class);
+    Route::resource('tasks', TaskWebController::class);
+
+});
 
 // Storage Link Fallback (Clear fix for 404 images on Windows)
 Route::get('/storage/{path}', function ($path) {

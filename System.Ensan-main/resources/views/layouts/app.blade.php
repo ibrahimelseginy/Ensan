@@ -210,9 +210,14 @@
           background-color: var(--bg) !important;
           border-bottom: 1px solid var(--border) !important;
           box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-          height: 100px; /* Increased from 75px */
           transition: var(--sidebar-transition);
           padding: 0 1.5rem !important;
+      }
+      @media (min-width: 992px) {
+          .navbar { height: 100px; }
+      }
+      @media (max-width: 991.98px) {
+          .navbar { height: 60px; padding: 0 1rem !important; }
       }
 
       .search-wrapper-elite {
@@ -282,12 +287,17 @@
       }
 
       .navbar-logo-elite img {
-          height: 110px; /* Significantly larger */
           width: auto;
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           object-fit: contain;
           margin-top: -5px; /* Slight adjustment to center visually */
           filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
+      }
+      @media (min-width: 992px) {
+          .navbar-logo-elite img { height: 110px; }
+      }
+      @media (max-width: 991.98px) {
+          .navbar-logo-elite img { height: 50px; }
       }
       .navbar-logo-elite:hover img { 
           transform: scale(1.1) translateY(-2px); 
@@ -315,13 +325,30 @@
           background-color: var(--sidebar-bg) !important;
           border-left: 1px solid var(--sidebar-border) !important;
           box-shadow: 10px 0 30px rgba(0,0,0,0.02);
-          width: var(--sidebar-width);
           transition: var(--sidebar-transition);
           z-index: 1030;
           overflow-x: hidden;
           overflow-y: auto;
           scrollbar-width: none; /* Firefox: hide scrollbar completely */
           -ms-overflow-style: none; /* IE/Edge: hide scrollbar */
+      }
+      @media (min-width: 992px) {
+          .sidebar-fixed { width: var(--sidebar-width); }
+      }
+      @media (max-width: 991.98px) {
+          .sidebar-fixed { 
+            position: fixed;
+            top: 60px;
+            height: calc(100vh - 60px);
+            width: 85% !important;
+            max-width: 320px;
+            transform: translateX(100%);
+            right: 0;
+            padding-bottom: 2rem;
+          }
+          .sidebar-fixed.show {
+            transform: translateX(0);
+          }
       }
 
       .sidebar-fixed::-webkit-scrollbar { display: none; } /* Chrome/Safari: hide scrollbar completely */
@@ -1081,9 +1108,11 @@
               class="list-group-item list-group-item-action {{ request()->routeIs('items.*') ? 'active' : '' }}"><i
                 class="bi bi-box"></i><span>الأصناف</span></a>
           @endif
-          <a href="{{ route('suppliers.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i
-                class="bi bi-shop"></i><span>الموردين</span></a>
+          @if($user->hasPermission('warehouses.view'))
+            <a href="{{ route('suppliers.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i
+                  class="bi bi-shop"></i><span>الموردين</span></a>
+          @endif
           @if($user->hasPermission('inventory_transactions.view'))
             <a href="{{ route('inventory-transactions.index') }}"
               class="list-group-item list-group-item-action {{ request()->routeIs('inventory-transactions.*') ? 'active' : '' }}"><i
@@ -1551,7 +1580,9 @@
                    if (result.isConfirmed) {
                        form.removeAttribute('onsubmit'); // Remove original confirm
                        if(loader) loader.classList.add('show');
-                       form.submit();
+                       
+                       // Safely submit the form bypassing any conflicting inputs named "submit"
+                       HTMLFormElement.prototype.submit.call(form);
                    }
                });
            }
