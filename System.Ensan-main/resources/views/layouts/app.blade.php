@@ -47,68 +47,46 @@
           --ws-text-secondary: var(--text-muted);
           --ws-border: var(--border);      /* Premium Sidebar Overhaul */
       }
-      .sidebar {
-          width: var(--sidebar-width);
-          background: var(--bg-card); /* Fallback */
+      .sidebar-fixed {
           background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-soft) 100%);
-          border-left: 1px solid var(--border);
-          height: calc(100vh - var(--nav-height));
-          position: fixed;
-          top: var(--nav-height);
-          right: 0;
-          overflow-y: auto;
-          transition: var(--transition-smooth);
-          z-index: 1020;
-          padding: 1.5rem 1rem;
       }
       
-      .theme-dark .sidebar {
+      .theme-dark .sidebar-fixed {
           background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
-          border-left-color: rgba(255,255,255,0.05);
       }
 
-      .list-group-item {
+      .sidebar-fixed .list-group-item {
           border: none !important;
           border-radius: var(--radius-md) !important;
           margin-bottom: 0.25rem;
-          padding: 0.8rem 1.2rem;
           font-weight: 500;
-          font-size: 0.9rem;
-          color: var(--gray-600);
+          font-size: 0.95rem;
           background: transparent !important;
-          transition: var(--transition-smooth);
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          position: relative;
-          overflow: hidden;
+          transition: transform 0.3s ease, background 0.3s ease;
       }
 
-      .list-group-item i {
-          font-size: 1.1rem;
-          transition: var(--transition-smooth);
-          color: var(--gray-400);
+      .sidebar-fixed .list-group-item i {
+          transition: transform 0.3s ease;
       }
 
-      .list-group-item:hover {
+      .sidebar-fixed .list-group-item:hover {
           color: var(--primary) !important;
           background: var(--primary-subtle) !important;
           transform: translateX(-5px);
       }
 
-      .list-group-item:hover i {
+      .sidebar-fixed .list-group-item:hover i {
           color: var(--primary) !important;
-          transform: scale(1.1);
       }
 
-      .list-group-item.active {
+      .sidebar-fixed .list-group-item.active {
           background: var(--primary) !important;
           color: white !important;
-          box-shadow: var(--shadow-glow) !important;
+          box-shadow: 0 0 15px rgba(34, 197, 94, 0.4) !important;
           transform: translateX(-5px);
       }
 
-      .list-group-item.active i {
+      .sidebar-fixed .list-group-item.active i {
           color: white !important;
       }
       
