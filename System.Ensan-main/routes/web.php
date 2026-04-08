@@ -55,6 +55,10 @@ use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\WebsiteWebController;
 use App\Http\Controllers\MobileContentController;
 use App\Http\Controllers\LogisticsDashboardController;
+use App\Http\Controllers\SupplierWebController;
+use App\Http\Controllers\DonationCategoryWebController;
+use App\Http\Controllers\DonationItemWebController;
+use App\Http\Controllers\AdminWebsiteDonationWebController;
 
 /* |-------------------------------------------------------------------------- | Web Routes |-------------------------------------------------------------------------- | | Here is where you can register web routes for your application. These | routes are loaded by the RouteServiceProvider and all of them will | be assigned to the "web" middleware group. Make something great! | */
 
@@ -245,10 +249,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:website.headquarters.view')->group(function () {
             Route::get('admin/website/headquarters', [WebsiteWebController::class, 'headquarters'])->name('website.headquarters.index');
             Route::post('admin/website/headquarters', [WebsiteWebController::class, 'updateHeadquarters'])->name('website.headquarters.update');
-            Route::resource('admin/website/branches', WebsiteWebController::class, [
-                'names' => 'website.branches',
-                'only' => ['store', 'update', 'destroy']
-            ]);
+            Route::post('admin/website/headquarters/branches', [WebsiteWebController::class, 'branchStore'])->name('website.headquarters.branches.store');
+            Route::put('admin/website/headquarters/branches/{branch}', [WebsiteWebController::class, 'branchUpdate'])->name('website.headquarters.branches.update');
+            Route::delete('admin/website/headquarters/branches/{branch}', [WebsiteWebController::class, 'branchDestroy'])->name('website.headquarters.branches.destroy');
         });
         
         Route::middleware('permission:website.partners.view')->group(function () {
@@ -256,6 +259,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('admin/website/partners', [WebsiteWebController::class, 'partnerStore'])->name('website.partners.store');
             Route::put('admin/website/partners/{partner}', [WebsiteWebController::class, 'partnerUpdate'])->name('website.partners.update');
             Route::delete('admin/website/partners/{partner}', [WebsiteWebController::class, 'partnerDestroy'])->name('website.partners.destroy');
+            
+            // Volunteer Wall (Honor Wall Leaders)
+            Route::get('admin/website/volunteer-wall', [WebsiteWebController::class, 'volunteerWall'])->name('website.volunteer-wall.index');
+            Route::post('admin/website/volunteer-wall', [WebsiteWebController::class, 'volunteerWallStore'])->name('website.volunteer-wall.store');
+            Route::put('admin/website/volunteer-wall/{leader}', [WebsiteWebController::class, 'volunteerWallUpdate'])->name('website.volunteer-wall.update');
+            Route::delete('admin/website/volunteer-wall/{leader}', [WebsiteWebController::class, 'volunteerWallDestroy'])->name('website.volunteer-wall.destroy');
         });
 
         Route::middleware('permission:website.board.view')->group(function () {
@@ -272,15 +281,23 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('admin/website/pages/{page}', [WebsiteWebController::class, 'pageDestroy'])->name('website.pages.destroy');
             
             Route::get('admin/website/content', [WebsiteWebController::class, 'content'])->name('website.content');
+            Route::post('admin/website/projects/stats', [WebsiteWebController::class, 'updateProjectStats'])->name('website.projects.stats.update');
             Route::post('admin/website/projects', [WebsiteWebController::class, 'storeProject'])->name('website.projects.store');
             Route::post('admin/website/projects/{project}', [WebsiteWebController::class, 'updateProjectContent'])->name('website.projects.update');
             Route::delete('admin/website/projects/{project}', [WebsiteWebController::class, 'destroyProject'])->name('website.projects.destroy');
+
+            // Dynamic Cards
+            Route::get('admin/website/cards', [WebsiteWebController::class, 'cards'])->name('website.cards.index');
+            Route::post('admin/website/cards', [WebsiteWebController::class, 'cardStore'])->name('website.cards.store');
+            Route::put('admin/website/cards/{card}', [WebsiteWebController::class, 'cardUpdate'])->name('website.cards.update');
+            Route::delete('admin/website/cards/{card}', [WebsiteWebController::class, 'cardDestroy'])->name('website.cards.destroy');
         });
 
         Route::middleware('permission:website.campaigns_content.view_edit')->group(function () {
             Route::get('admin/website/campaigns-content', [WebsiteWebController::class, 'campaignsContent'])->name('website.campaigns.content');
             Route::post('admin/website/campaigns', [WebsiteWebController::class, 'storeCampaign'])->name('website.campaigns.store');
             Route::post('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'updateCampaignContent'])->name('website.campaigns.update');
+            Route::post('admin/website/campaigns/stats', [WebsiteWebController::class, 'updateCampaignStats'])->name('website.campaigns.stats.update');
             Route::delete('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'destroyCampaign'])->name('website.campaigns.destroy');
         });
 
@@ -293,7 +310,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:website.contact_messages.view')->group(function () {
             Route::get('admin/website/contact-messages', [WebsiteWebController::class, 'contactMessages'])->name('website.contact-messages.index');
-            Route::post('admin/website/contact-messages/{message}/read', [WebsiteWebController::class, 'contactMessageMarkRead'])->name('website.contact-messages.mark-read');
+            Route::patch('admin/website/contact-messages/{message}/read', [WebsiteWebController::class, 'contactMessageMarkRead'])->name('website.contact-messages.read');
             Route::delete('admin/website/contact-messages/{message}', [WebsiteWebController::class, 'contactMessageDestroy'])->name('website.contact-messages.destroy');
         });
 
@@ -304,17 +321,17 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:website.volunteer_requests.view')->group(function () {
             Route::get('admin/website/volunteer-requests', [WebsiteWebController::class, 'volunteerRequests'])->name('website.volunteer-requests.index');
-            Route::post('admin/website/volunteer-requests/content', [WebsiteWebController::class, 'updateVolunteerContent'])->name('website.volunteer-requests.update-content');
+            Route::post('admin/website/volunteer-requests/content', [WebsiteWebController::class, 'updateVolunteerContent'])->name('website.volunteer-content.update');
             Route::post('admin/website/volunteer-requests/{volunteerRequest}/status', [WebsiteWebController::class, 'updateVolunteerRequestStatus'])->name('website.volunteer-requests.update-status');
             Route::delete('admin/website/volunteer-requests/{volunteerRequest}', [WebsiteWebController::class, 'destroyVolunteerRequest'])->name('website.volunteer-requests.destroy');
-            Route::get('admin/website/volunteer-requests/{volunteerRequest}/download-cv', [WebsiteWebController::class, 'downloadCV'])->name('website.volunteer-requests.download-cv');
+            Route::get('admin/website/volunteer-requests/{volunteerRequest}/download-cv', [WebsiteWebController::class, 'downloadCV'])->name('website.volunteer-requests.cv');
         });
 
         Route::middleware('permission:website.guest_house_content.view_edit')->group(function () {
             Route::get('admin/website/guest-house', [WebsiteWebController::class, 'guestHouseContent'])->name('website.guest-house.content');
             Route::post('admin/website/guest-house/update', [WebsiteWebController::class, 'guestHouseContentUpdate'])->name('website.guest-house.update');
             Route::post('admin/website/guest-house/stats', [WebsiteWebController::class, 'updateGuestHouseStats'])->name('website.guest-house.update-stats');
-            Route::post('admin/website/guest-house/booking-status/{booking}', [WebsiteWebController::class, 'bookingUpdateStatus'])->name('website.guest-house.update-booking-status');
+            Route::post('admin/website/guest-house/booking-status/{booking}', [WebsiteWebController::class, 'bookingUpdateStatus'])->name('website.bookings.update');
         });
 
         Route::middleware('permission:website.donation_page.view_edit')->group(function () {
@@ -340,6 +357,13 @@ Route::middleware(['auth'])->group(function () {
             Route::post('admin/website/accounts', [WebsiteWebController::class, 'accountStore'])->name('website.accounts.store');
             Route::put('admin/website/accounts/{user}', [WebsiteWebController::class, 'accountUpdate'])->name('website.accounts.update');
             Route::delete('admin/website/accounts/{user}', [WebsiteWebController::class, 'accountDestroy'])->name('website.accounts.destroy');
+            
+            // Testimonials & Opinions
+            Route::get('admin/website/testimonials', [WebsiteWebController::class, 'testimonials'])->name('website.testimonials.index');
+            Route::post('admin/website/testimonials', [WebsiteWebController::class, 'testimonialStore'])->name('website.testimonials.store');
+            Route::put('admin/website/testimonials/{testimonial}', [WebsiteWebController::class, 'testimonialUpdate'])->name('website.testimonials.update');
+            Route::delete('admin/website/testimonials/{testimonial}', [WebsiteWebController::class, 'testimonialDestroy'])->name('website.testimonials.destroy');
+            Route::get('admin/website/share-opinion', [WebsiteWebController::class, 'shareOpinion'])->name('website.share-opinion');
         });
     });
 

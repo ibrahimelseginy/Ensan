@@ -1331,6 +1331,30 @@
                 <i class="bi bi-wallet2 text-success"></i><span>حسابات تبرعات الويبسايت</span>
               </a>
             @endif
+
+            <hr class="dropdown-divider opacity-10 mx-3 my-2">
+
+            @if($user->hasPermission('website.content.view_edit'))
+              <a href="{{ route('website.pages.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.pages.*') ? 'active' : '' }}">
+                <i class="bi bi-file-earmark-text text-primary"></i><span>الصفحات الثابتة</span>
+              </a>
+              <a href="{{ route('website.cards.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.cards.*') ? 'active' : '' }}">
+                <i class="bi bi-card-list text-info"></i><span>البطاقات التعريفية</span>
+              </a>
+            @endif
+
+            @if($user->hasPermission('website.accounts.view'))
+              <a href="{{ route('website.testimonials.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.testimonials.*') ? 'active' : '' }}">
+                <i class="bi bi-chat-heart text-danger"></i><span>آراء المستفيدين</span>
+              </a>
+              <a href="{{ route('website.share-opinion') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.share-opinion') ? 'active' : '' }}">
+                <i class="bi bi-chat-quote"></i><span>آراء المجتمع</span>
+              </a>
+            @endif
           </div>
         </div>
       @endif
@@ -1432,10 +1456,8 @@
       @endif
 
 
-      @if($user && $user->hasPermission('audits.view') && false) {{-- Moved to settings group --}}
-        <a href="{{ route('audits.index') }}"
-          class="list-group-item list-group-item-action {{ request()->routeIs('audits.*') ? 'active' : '' }}"><i
-            class="bi bi-activity"></i><span>السجلات Logs</span></a>
+      @if($user && ($user->hasPermission('audits.view')))
+        {{-- Already moved to Settings group --}}
       @endif
     </div>
   </div>
