@@ -242,8 +242,9 @@ Route::middleware(['auth'])->group(function () {
     // --- Website Management ---
     Route::middleware('permission:website.view')->group(function () {
         Route::middleware('permission:website.settings.view_edit')->group(function () {
-            Route::get('admin/website', [WebsiteWebController::class, 'showSettings'])->name('website.settings.index');
+            Route::get('admin/website/settings', [WebsiteWebController::class, 'showSettings'])->name('website.settings.index');
             Route::post('admin/website/settings', [WebsiteWebController::class, 'updateSettings'])->name('website.settings.update');
+            Route::post('admin/website/contact-settings', [WebsiteWebController::class, 'updateContactSettings'])->name('website.contact-settings.update');
         });
         
         Route::middleware('permission:website.headquarters.view')->group(function () {
@@ -397,21 +398,21 @@ Route::middleware(['auth'])->group(function () {
 
             Route::middleware('permission:mobile.volunteer_requests.view')->group(function () {
                 Route::get('/volunteer-requests', [MobileContentController::class, 'volunteerRequestsIndex'])->name('volunteer-requests.index');
-                Route::post('/volunteer-requests/{volunteerRequest}/status', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update-status');
+                Route::post('/volunteer-requests/{volunteerRequest}/status', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update');
                 Route::delete('/volunteer-requests/{volunteerRequest}', [MobileContentController::class, 'destroyVolunteerRequest'])->name('volunteer-requests.destroy');
-                Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.download-cv');
+                Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.cv');
             });
 
             Route::middleware('permission:mobile.case_applications.view')->group(function () {
                 Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
-                Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update-status');
+                Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
                 Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
                 Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
             });
 
             Route::middleware('permission:mobile.donations.view')->group(function () {
                 Route::get('/donations', [MobileContentController::class, 'donationsIndex'])->name('donations.index');
-                Route::post('/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update-status');
+                Route::post('/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
                 Route::delete('/donations/{donation}', [MobileContentController::class, 'destroyDonation'])->name('donations.destroy');
             });
 
@@ -423,8 +424,12 @@ Route::middleware(['auth'])->group(function () {
 
             Route::middleware('permission:mobile.bookings.view')->group(function () {
                 Route::get('/bookings', [MobileContentController::class, 'bookingsIndex'])->name('bookings.index');
-                Route::post('/bookings/{booking}/status', [MobileContentController::class, 'updateBookingStatus'])->name('bookings.update-status');
+                Route::post('/bookings/{booking}/status', [MobileContentController::class, 'updateBookingStatus'])->name('bookings.update');
                 Route::delete('/bookings/{booking}', [MobileContentController::class, 'destroyBooking'])->name('bookings.destroy');
+                
+                // Alias for web_bookings to support bookings.blade.php
+                Route::post('/web-bookings/{booking}/status', [MobileContentController::class, 'updateBookingStatus'])->name('web_bookings.update');
+                Route::delete('/web-bookings/{booking}', [MobileContentController::class, 'destroyBooking'])->name('web_bookings.destroy');
             });
 
             Route::resource('/pillars', MobileContentController::class, [

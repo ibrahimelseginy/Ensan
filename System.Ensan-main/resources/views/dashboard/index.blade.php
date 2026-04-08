@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('styles')
 <style>
@@ -30,33 +30,104 @@
         padding: 0 2px;
     }
 
-    .bar {
-        width: 10px !important;
-        min-width: 8px;
-        border-radius: 3px 3px 0 0;
-        transition: all 0.3s ease;
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
         position: relative;
-        cursor: pointer;
-    }
-    
-    @media (max-width: 768px) {
-        .bar { width: 6px !important; min-width: 5px; }
-        .premium-bar-chart, .bar-grid { height: 160px; gap: 2px; }
+        overflow: hidden;
+        transition: var(--transition-smooth);
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border);
+        height: 100%;
+        background: var(--bg-card);
     }
 
-    .bar:hover {
-        transform: scaleY(1.05);
-        filter: brightness(1.1);
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-premium) !important;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        transition: var(--transition-smooth);
+        position: relative;
         z-index: 2;
     }
 
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--dark);
+        position: relative;
+        z-index: 2;
+    }
+
+    .stat-bg-icon {
+        position: absolute;
+        bottom: -10px;
+        left: -10px;
+        font-size: 5rem;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+        transition: var(--transition-smooth);
+    }
+
+    .stat-card:hover .stat-bg-icon {
+        transform: rotate(0deg) scale(1.1);
+        opacity: 0.1;
+    }
+
+    /* Variant Colors with Mesh Gradients */
+    .stat-info .stat-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .stat-success .stat-icon { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .stat-warning .stat-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .stat-danger .stat-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .stat-purple .stat-icon { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+
+    /* Bar Chart High-End Styling */
+    .bar {
+        width: 12px !important;
+        border-radius: 6px 6px 0 0;
+        background: var(--primary);
+        transition: var(--transition-smooth);
+        position: relative;
+    }
+
+    .bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30%;
+        background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+        border-radius: 6px 6px 0 0;
+    }
+
     .bar.cash { 
-        background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important; 
-        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%) !important;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
     }
     .bar.kind { 
-        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important; 
-        box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
     }
 
     .bar-labels {
