@@ -1013,7 +1013,7 @@
                 <i class="bi bi-shield-lock"></i> الأدوار والصلاحيات
               </a>
             @endif
-            @if($user && ($user->hasRole('admin') || $user->hasRole('manager')))
+            @if($user->hasPermission('manage_change_requests'))
               <a href="{{ route('change-requests.index') }}"
                 class="list-group-item list-group-item-action {{ request()->routeIs('change-requests.*') ? 'active' : '' }}">
                 <i class="bi bi-patch-check"></i> طلبات المراجعة (الإلغاء والتعديل)
@@ -1108,7 +1108,7 @@
               class="list-group-item list-group-item-action {{ request()->routeIs('items.*') ? 'active' : '' }}"><i
                 class="bi bi-box"></i><span>الأصناف</span></a>
           @endif
-          @if($user->hasPermission('warehouses.view'))
+          @if($user->hasPermission('suppliers.view'))
             <a href="{{ route('suppliers.index') }}"
                 class="list-group-item list-group-item-action {{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><i
                   class="bi bi-shop"></i><span>الموردين</span></a>
@@ -1127,7 +1127,7 @@
             class="bi bi-kanban"></i><span>إدارة المشاريع</span></a>
       @endif
 
-      @if($user && !$user->hasRole('marketer') && $user->hasPermission('campaigns.view'))
+      @if($user && ($user->hasPermission('campaigns.view') || $user->hasPermission('ramadan_bags.view') || $user->hasPermission('ramadan_iftars.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#campaignsCollapse" role="button"
           aria-expanded="{{ request()->routeIs('campaigns.*') || request()->routeIs('ramadan-bags.*') || request()->routeIs('ramadan-iftars.*') ? 'true' : 'false' }}"
@@ -1137,20 +1137,26 @@
         </a>
         <div class="collapse {{ request()->routeIs('campaigns.*') || request()->routeIs('ramadan-bags.*') || request()->routeIs('ramadan-iftars.*') ? 'show' : '' }} sub-list" id="campaignsCollapse">
           <div class="list-group list-group-flush ps-3">
-            <a href="{{ route('campaigns.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
-              <i class="bi bi-megaphone"></i><span>إدارة الحملات</span></a>
-            <a href="{{ route('ramadan-bags.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-bags.*') ? 'active' : '' }}">
-              <i class="bi bi-bag-heart"></i><span>شنط رمضان</span></a>
-            <a href="{{ route('ramadan-iftars.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-iftars.*') ? 'active' : '' }}">
-              <i class="bi bi-cup-hot"></i><span>إفطارات رمضان</span></a>
+            @if($user->hasPermission('campaigns.view'))
+              <a href="{{ route('campaigns.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
+                <i class="bi bi-megaphone"></i><span>إدارة الحملات</span></a>
+            @endif
+            @if($user->hasPermission('ramadan_bags.view'))
+              <a href="{{ route('ramadan-bags.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-bags.*') ? 'active' : '' }}">
+                <i class="bi bi-bag-heart"></i><span>شنط رمضان</span></a>
+            @endif
+            @if($user->hasPermission('ramadan_iftars.view'))
+              <a href="{{ route('ramadan-iftars.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('ramadan-iftars.*') ? 'active' : '' }}">
+                <i class="bi bi-cup-hot"></i><span>إفطارات رمضان</span></a>
+            @endif
           </div>
         </div>
       @endif
 
-      @if($user && ($user->hasRole('admin') || $user->hasRole('manager')))
+      @if($user && ($user->hasPermission('manage_specialized_services') || $user->hasPermission('school_collaborations.view') || $user->hasPermission('memberships.view') || $user->hasPermission('oncology_medicine_reps.view') || $user->hasPermission('kafr_el_sheikh_brokers.view') || $user->hasPermission('kafr_el_sheikh_deliveries.view') || $user->hasPermission('kafr_el_sheikh_services.view') || $user->hasPermission('tanta_workers.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#collaborationsCollapse" role="button"
           aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
@@ -1160,13 +1166,27 @@
         </a>
         <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
           <div class="list-group list-group-flush ps-3">
-            <a href="{{ route('school-collaborations.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('school-collaborations.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>تعاونات المدارس</span></a>
-            <a href="{{ route('memberships.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('memberships.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i><span>العضويات</span></a>
-            <a href="{{ route('oncology-medicine-reps.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('oncology-medicine-reps.*') ? 'active' : '' }}"><i class="bi bi-prescription2"></i><span>مناديب أدوية الأورام</span></a>
-            <a href="{{ route('kafr-el-sheikh-brokers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-brokers.*') ? 'active' : '' }}"><i class="bi bi-pin-map"></i><span>سماسرة كفر الشيخ</span></a>
-            <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}"><i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span></a>
-            <a href="{{ route('kafr-el-sheikh-services.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}"><i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span></a>
-            <a href="{{ route('tanta-workers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('tanta-workers.*') ? 'active' : '' }}"><i class="bi bi-people"></i><span>عمال باليومية (طنطا)</span></a>
+            @if($user->hasPermission('school_collaborations.view'))
+              <a href="{{ route('school-collaborations.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('school-collaborations.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>تعاونات المدارس</span></a>
+            @endif
+            @if($user->hasPermission('memberships.view'))
+              <a href="{{ route('memberships.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('memberships.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i><span>العضويات</span></a>
+            @endif
+            @if($user->hasPermission('oncology_medicine_reps.view'))
+              <a href="{{ route('oncology-medicine-reps.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('oncology-medicine-reps.*') ? 'active' : '' }}"><i class="bi bi-prescription2"></i><span>مناديب أدوية الأورام</span></a>
+            @endif
+            @if($user->hasPermission('kafr_el_sheikh_brokers.view'))
+              <a href="{{ route('kafr-el-sheikh-brokers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-brokers.*') ? 'active' : '' }}"><i class="bi bi-pin-map"></i><span>سماسرة كفر الشيخ</span></a>
+            @endif
+            @if($user->hasPermission('kafr_el_sheikh_deliveries.view'))
+              <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}"><i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span></a>
+            @endif
+            @if($user->hasPermission('kafr_el_sheikh_services.view'))
+              <a href="{{ route('kafr-el-sheikh-services.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}"><i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span></a>
+            @endif
+            @if($user->hasPermission('tanta_workers.view'))
+              <a href="{{ route('tanta-workers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('tanta-workers.*') ? 'active' : '' }}"><i class="bi bi-people"></i><span>عمال باليومية (طنطا)</span></a>
+            @endif
           </div>
         </div>
       @endif
@@ -1196,7 +1216,8 @@
       @endif
 
       {{-- Website Management Unit --}}
-      @if($user && ($user->hasRole('admin') || $user->hasPermission('website.view') || $user->hasRole('marketer') || $user->hasRole('website_manager')))
+      {{-- Website Management Unit --}}
+      @if($user && ($user->hasPermission('website.view') || $user->hasPermission('website.settings.view_edit') || $user->hasPermission('website.headquarters.view') || $user->hasPermission('website.partners.view') || $user->hasPermission('website.board.view') || $user->hasPermission('website.content.view_edit') || $user->hasPermission('website.campaigns_content.view_edit') || $user->hasPermission('website.guest_house_content.view_edit') || $user->hasPermission('website.news.view') || $user->hasPermission('website.contact_messages.view') || $user->hasPermission('website.subscriptions.view') || $user->hasPermission('website.volunteer_requests.view') || $user->hasPermission('website.donation_page.view_edit') || $user->hasPermission('website.donation_settings.view_edit') || $user->hasPermission('website.accounts.view') || $user->hasPermission('website.donation_accounts.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#websiteCollapse" role="button"
           aria-expanded="{{ request()->routeIs('website.*') ? 'true' : 'false' }}"
@@ -1206,86 +1227,116 @@
         </a>
         <div class="collapse {{ request()->routeIs('website.*') ? 'show' : '' }} sub-list" id="websiteCollapse">
           <div class="list-group list-group-flush ps-3">
-            <a href="{{ route('website.settings.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.settings.*') ? 'active' : '' }}">
-              <i class="bi bi-gear-wide-connected"></i><span>محتوى الصفحة الرئيسية</span>
-            </a>
+            @if($user->hasPermission('website.settings.view_edit'))
+              <a href="{{ route('website.settings.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.settings.*') ? 'active' : '' }}">
+                <i class="bi bi-gear-wide-connected"></i><span>محتوى الصفحة الرئيسية</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.headquarters.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.headquarters.*') ? 'active' : '' }}">
-              <i class="bi bi-geo-alt fs-5"></i><span>المقر والفروع</span>
-            </a>
+            @if($user->hasPermission('website.headquarters.view'))
+              <a href="{{ route('website.headquarters.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.headquarters.*') ? 'active' : '' }}">
+                <i class="bi bi-geo-alt fs-5"></i><span>المقر والفروع</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.partners.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.partners.*') ? 'active' : '' }}">
-              <i class="bi bi-award fs-5"></i><span>جدار الشرف</span>
-            </a>
+            @if($user->hasPermission('website.partners.view'))
+              <a href="{{ route('website.partners.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.partners.*') ? 'active' : '' }}">
+                <i class="bi bi-award fs-5"></i><span>جدار الشرف</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.board.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.board.*') ? 'active' : '' }}">
-              <i class="bi bi-people"></i><span>مجلس الأمناء</span>
-            </a>
+            @if($user->hasPermission('website.board.view'))
+              <a href="{{ route('website.board.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.board.*') ? 'active' : '' }}">
+                <i class="bi bi-people"></i><span>مجلس الأمناء</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.content') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.content') ? 'active' : '' }}">
-              <i class="bi bi-window-sidebar"></i><span>محتوى المشاريع</span>
-            </a>
+            @if($user->hasPermission('website.content.view_edit'))
+              <a href="{{ route('website.content') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.content') ? 'active' : '' }}">
+                <i class="bi bi-window-sidebar"></i><span>محتوى المشاريع</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.campaigns.content') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.campaigns.content') ? 'active' : '' }}">
-              <i class="bi bi-megaphone fs-5 text-warning"></i><span>محتوى الحملات</span>
-            </a>
+            @if($user->hasPermission('website.campaigns_content.view_edit'))
+              <a href="{{ route('website.campaigns.content') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.campaigns.content') ? 'active' : '' }}">
+                <i class="bi bi-megaphone fs-5 text-warning"></i><span>محتوى الحملات</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.guest-house.content') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.guest-house.*') ? 'active' : '' }}">
-              <i class="bi bi-building fs-5 text-primary"></i><span>دار الضيافة</span>
-            </a>
+            @if($user->hasPermission('website.guest_house_content.view_edit'))
+              <a href="{{ route('website.guest-house.content') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.guest-house.*') ? 'active' : '' }}">
+                <i class="bi bi-building fs-5 text-primary"></i><span>دار الضيافة</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.news.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.news.*') ? 'active' : '' }}">
-              <i class="bi bi-newspaper"></i><span>الأخبار والفعاليات</span>
-            </a>
+            @if($user->hasPermission('website.news.view'))
+              <a href="{{ route('website.news.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.news.*') ? 'active' : '' }}">
+                <i class="bi bi-newspaper"></i><span>الأخبار والفعاليات</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.contact-messages.index') }}"
-              class="list-group-item list-group-item-action {{ (request()->routeIs('website.contact-messages.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
-              <i class="bi bi-envelope"></i><span>تواصل معنا</span>
-            </a>
+            @if($user->hasPermission('website.contact_messages.view'))
+              <a href="{{ route('website.contact-messages.index') }}"
+                class="list-group-item list-group-item-action {{ (request()->routeIs('website.contact-messages.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
+                <i class="bi bi-envelope"></i><span>تواصل معنا</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.subscriptions.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.subscriptions.*') ? 'active' : '' }}">
-              <i class="bi bi-envelope-paper"></i><span>النشرة الإخبارية</span>
-            </a>
+            @if($user->hasPermission('website.subscriptions.view'))
+              <a href="{{ route('website.subscriptions.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.subscriptions.*') ? 'active' : '' }}">
+                <i class="bi bi-envelope-paper"></i><span>النشرة الإخبارية</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.volunteer-requests.index') }}"
-              class="list-group-item list-group-item-action {{ (request()->routeIs('website.volunteer-requests.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
-              <i class="bi bi-person-plus text-primary"></i><span>طلبات التطوع (الموقع)</span>
-            </a>
+            @if($user->hasPermission('website.volunteer_requests.view'))
+              <a href="{{ route('website.volunteer-requests.index') }}"
+                class="list-group-item list-group-item-action {{ (request()->routeIs('website.volunteer-requests.*') && !request()->routeIs('mobile.*')) ? 'active' : '' }}">
+                <i class="bi bi-person-plus text-primary"></i><span>طلبات التطوع (الموقع)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.donation-page.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-page.*') ? 'active' : '' }}">
-              <i class="bi bi-heart-fill text-danger"></i><span>إعدادات صفحة التبرع</span>
-            </a>
+            @if($user->hasPermission('website.donation_page.view_edit'))
+              <a href="{{ route('website.donation-page.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-page.*') ? 'active' : '' }}">
+                <i class="bi bi-heart-fill text-danger"></i><span>إعدادات صفحة التبرع</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.donation-settings.unified') }}"
-              class="list-group-item list-group-item-action {{ (request()->routeIs('website.donation-settings.unified') || request()->routeIs('website.donation-settings.categories.*') || request()->routeIs('website.donation-settings.items.*')) ? 'active' : '' }}">
-              <i class="bi bi-ui-checks-grid text-purple"></i><span>مجالات الدعم (الفئات)</span>
-            </a>
+            @if($user->hasPermission('website.donation_settings.view_edit'))
+              <a href="{{ route('website.donation-settings.unified') }}"
+                class="list-group-item list-group-item-action {{ (request()->routeIs('website.donation-settings.unified') || request()->routeIs('website.donation-settings.categories.*') || request()->routeIs('website.donation-settings.items.*')) ? 'active' : '' }}">
+                <i class="bi bi-ui-checks-grid text-purple"></i><span>مجالات الدعم (الفئات)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.accounts.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.accounts.*') ? 'active' : '' }}">
-              <i class="bi bi-person-badge text-info"></i><span>حسابات المتبرعين (دخول)</span>
-            </a>
+            @if($user->hasPermission('website.accounts.view'))
+              <a href="{{ route('website.accounts.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.accounts.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge text-info"></i><span>حسابات المتبرعين (دخول)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('website.donation-accounts.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-accounts.*') ? 'active' : '' }}">
-              <i class="bi bi-wallet2 text-success"></i><span>حسابات تبرعات الويبسايت</span>
-            </a>
+            @if($user->hasPermission('website.donation_accounts.view'))
+              <a href="{{ route('website.donation-accounts.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('website.donation-accounts.*') ? 'active' : '' }}">
+                <i class="bi bi-wallet2 text-success"></i><span>حسابات تبرعات الويبسايت</span>
+              </a>
+            @endif
           </div>
         </div>
       @endif
 
       {{-- Mobile App Management Unit --}}
-      @if($user && ($user->hasRole('admin') || $user->hasPermission('mobile.view') || $user->hasRole('marketer') || $user->hasRole('mobile_manager')))
+      @if($user && ($user->hasPermission('mobile.view') || $user->hasPermission('mobile.home_content.view_edit') || $user->hasPermission('mobile.news.view') || $user->hasPermission('mobile.volunteer_requests.view') || $user->hasPermission('mobile.case_applications.view') || $user->hasPermission('mobile.donations.view') || $user->hasPermission('mobile.donors.view') || $user->hasPermission('mobile.notifications.view') || $user->hasPermission('mobile.bookings.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#mobileCollapse" role="button"
           aria-expanded="{{ (request()->routeIs('mobile.*') || request()->routeIs('website.volunteer-requests.*') || request()->routeIs('website.news.*') || request()->routeIs('website.bookings.*')) ? 'true' : 'false' }}"
@@ -1295,63 +1346,79 @@
         </a>
         <div class="collapse {{ (request()->routeIs('mobile.*') || request()->routeIs('website.volunteer-requests.*') || request()->routeIs('website.news.*') || request()->routeIs('website.bookings.*')) ? 'show' : '' }} sub-list" id="mobileCollapse">
           <div class="list-group list-group-flush ps-3">
-            <a href="{{ route('mobile.home_content.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.home_content.*') ? 'active' : '' }}">
-              <i class="bi bi-house-gear"></i><span>محتوى الصفحة الرئيسية</span>
-            </a>
+            @if($user->hasPermission('mobile.home_content.view_edit'))
+              <a href="{{ route('mobile.home_content.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.home_content.*') ? 'active' : '' }}">
+                <i class="bi bi-house-gear"></i><span>محتوى الصفحة الرئيسية</span>
+              </a>
+            @endif
 
+            @if($user->hasPermission('mobile.news.view'))
+              <a href="{{ route('mobile.news.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.news.*') ? 'active' : '' }}">
+                <i class="bi bi-newspaper text-info"></i><span>أخبار التطبيق (منفصل)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('mobile.news.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.news.*') ? 'active' : '' }}">
-              <i class="bi bi-newspaper text-info"></i><span>أخبار التطبيق (منفصل)</span>
-            </a>
+            @if($user->hasPermission('mobile.volunteer_requests.view'))
+              <a href="{{ route('mobile.volunteer-requests.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.volunteer-requests.*') ? 'active' : '' }}">
+                <i class="bi bi-person-heart text-danger"></i><span>طلبات التطوع (الموبايل)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('mobile.volunteer-requests.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.volunteer-requests.*') ? 'active' : '' }}">
-              <i class="bi bi-person-heart text-danger"></i><span>طلبات التطوع (الموبايل)</span>
-            </a>
+            @if($user->hasPermission('mobile.case_applications.view') || $user->hasPermission('mobile.bookings.view'))
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                data-bs-toggle="collapse" href="#mobileCasesCollapse" role="button"
+                aria-expanded="{{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'true' : 'false' }}"
+                aria-controls="mobileCasesCollapse">
+                <span><i class="bi bi-heart-pulse text-danger"></i> طلبات الحالات المستحقة (الموبايل)</span>
+                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+              </a>
+              <div class="collapse {{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'show' : '' }}" id="mobileCasesCollapse">
+                <div class="list-group list-group-flush ps-3 border-start ms-3">
+                  @if($user->hasPermission('mobile.case_applications.view'))
+                    <a href="{{ route('mobile.case-applications.index', ['type' => 'zad']) }}"
+                      class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'zad') ? 'active' : '' }}">
+                      <i class="bi bi-star-fill text-danger"></i><span>طلبات مشروع زاد للموبايل</span>
+                    </a>
 
+                    <a href="{{ route('mobile.case-applications.index', ['type' => 'hope']) }}"
+                      class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'hope') ? 'active' : '' }}">
+                      <i class="bi bi-brightness-high-fill text-danger"></i><span>طلبات مشروع بعثاء الأمل للموبايل</span>
+                    </a>
+                  @endif
 
-            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-              data-bs-toggle="collapse" href="#mobileCasesCollapse" role="button"
-              aria-expanded="{{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'true' : 'false' }}"
-              aria-controls="mobileCasesCollapse">
-              <span><i class="bi bi-heart-pulse text-danger"></i> طلبات الحالات المستحقة (الموبايل)</span>
-              <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
-            </a>
-            <div class="collapse {{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'show' : '' }}" id="mobileCasesCollapse">
-              <div class="list-group list-group-flush ps-3 border-start ms-3">
-                <a href="{{ route('mobile.case-applications.index', ['type' => 'zad']) }}"
-                  class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'zad') ? 'active' : '' }}">
-                  <i class="bi bi-star-fill text-danger"></i><span>طلبات مشروع زاد للموبايل</span>
-                </a>
-
-                <a href="{{ route('mobile.case-applications.index', ['type' => 'hope']) }}"
-                  class="list-group-item list-group-item-action border-0 {{ (request()->routeIs('mobile.case-applications.*') && request('type') == 'hope') ? 'active' : '' }}">
-                  <i class="bi bi-brightness-high-fill text-danger"></i><span>طلبات مشروع بعثاء الأمل للموبايل</span>
-                </a>
-
-                <a href="{{ route('mobile.bookings.index') }}"
-                  class="list-group-item list-group-item-action border-0 {{ request()->routeIs('mobile.bookings.*') ? 'active' : '' }}">
-                  <i class="bi bi-buildings text-danger"></i><span>طلبات الحجز من الموبايل</span>
-                </a>
+                  @if($user->hasPermission('mobile.bookings.view'))
+                    <a href="{{ route('mobile.bookings.index') }}"
+                      class="list-group-item list-group-item-action border-0 {{ request()->routeIs('mobile.bookings.*') ? 'active' : '' }}">
+                      <i class="bi bi-buildings text-danger"></i><span>طلبات الحجز من الموبايل</span>
+                    </a>
+                  @endif
+                </div>
               </div>
-            </div>
+            @endif
 
-            <a href="{{ route('mobile.donations.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donations.*') ? 'active' : '' }}">
-              <i class="bi bi-cash-coin text-success"></i><span>سجلات التبرعات (الموبايل)</span>
-            </a>
+            @if($user->hasPermission('mobile.donations.view'))
+              <a href="{{ route('mobile.donations.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donations.*') ? 'active' : '' }}">
+                <i class="bi bi-cash-coin text-success"></i><span>سجلات التبرعات (الموبايل)</span>
+              </a>
+            @endif
 
-            <a href="{{ route('mobile.donors_auth.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donors_auth.*') ? 'active' : '' }}">
-              <i class="bi bi-person-badge-fill text-warning"></i><span>تسجيل الدخول للموبايل</span>
-            </a>
+            @if($user->hasPermission('mobile.donors.view'))
+              <a href="{{ route('mobile.donors_auth.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.donors_auth.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge-fill text-warning"></i><span>تسجيل الدخول للموبايل</span>
+              </a>
+            @endif
 
-            <a href="{{ route('mobile.notifications.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('mobile.notifications.*') ? 'active' : '' }}">
-              <i class="bi bi-bell"></i><span>الإشعارات (Push Notifications)</span>
-            </a>
+            @if($user->hasPermission('mobile.notifications.view'))
+              <a href="{{ route('mobile.notifications.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('mobile.notifications.*') ? 'active' : '' }}">
+                <i class="bi bi-bell"></i><span>الإشعارات (Push Notifications)</span>
+              </a>
+            @endif
           </div>
         </div>
       @endif

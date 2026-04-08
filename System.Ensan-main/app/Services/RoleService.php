@@ -50,25 +50,27 @@ final readonly class RoleService
 
     public function createRole(array $data): Role
     {
-        $permissions = $data['permissions'] ?? [];
+        $permissions = $data['permissions'] ?? null;
         unset($data['permissions']);
-
+    
         $role = $this->roleRepository->create($data);
-        if (!empty($permissions)) {
+        if (is_array($permissions)) {
             $role->permissions()->sync($permissions);
         }
-
+    
         return $role;
     }
 
     public function updateRole(Role $role, array $data): mixed
     {
-        $executor = function () use ($role, $data) {
-            $permissions = $data['permissions'] ?? [];
-            unset($data['permissions']);
+        $originalData = $data;
+        $executor = function () use ($role, $originalData) {
+            $permissions = $originalData['permissions'] ?? null;
+            $updateData = $originalData;
+            unset($updateData['permissions']);
 
-            $this->roleRepository->update($role, $data);
-            if (!empty($permissions)) {
+            $this->roleRepository->update($role, $updateData);
+            if (is_array($permissions)) {
                 $role->permissions()->sync($permissions);
             }
             return $role;
@@ -80,7 +82,7 @@ final readonly class RoleService
             'update',
             $data,
             $executor,
-            true
+            false
         );
     }
 
@@ -100,7 +102,7 @@ final readonly class RoleService
                 'key'  => $role->key
             ],
             $executor,
-            true
+            false
         );
     }
 
@@ -144,6 +146,17 @@ final readonly class RoleService
             'audits'                 => 'سجلات النظام (Logs)',
             'website'                => 'إدارة الموقع الإلكتروني',
             'mobile'                 => 'إدارة تطبيق الموبايل',
+            'school_collaborations'  => 'تعاونات المدارس',
+            'memberships'            => 'العضويات',
+            'oncology_medicine_reps' => 'مناديب أدوية الأورام',
+            'kafr_el_sheikh_brokers' => 'سماسرة كفر الشيخ',
+            'kafr_el_sheikh_deliveries' => 'توصيلات كفر الشيخ',
+            'kafr_el_sheikh_services' => 'خدمات كفر الشيخ',
+            'tanta_workers'          => 'عمال باليومية (طنطا)',
+            'ramadan_bags'           => 'شنط رمضان',
+            'ramadan_iftars'         => 'إفطارات رمضان',
+            'change_requests'        => 'طلبات المراجعة',
+            'revenues'               => 'الإيرادات والتحليل',
         ];
     }
 }

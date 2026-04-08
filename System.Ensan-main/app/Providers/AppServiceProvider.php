@@ -26,7 +26,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Global Permission Gate
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            // Check if user has the specific permission key
+            // First, allow admins to bypass everything
+            if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+                return true;
+            }
+
+            // Otherwise, check if user has the specific permission key
             if (method_exists($user, 'hasPermission') && $user->hasPermission($ability)) {
                 return true;
             }
