@@ -111,21 +111,17 @@ class User extends Authenticatable
     }
 
 
-    public function hasPermission($key)
+    public function hasPermission($key): bool
     {
-        // Check if we already loaded roles with permissions to avoid N+1
-        // If not, this might trigger lazy loading
-        if ($this->roles->contains('key', 'admin') || $this->roles->contains('key', 'manager')) {
-            return true;
+        // Load roles and permissions once and cache them on the model instance
+        // to avoid repeated DB hits within the same request.
+        if (!isset($this->cachedPermissions)) {
+            $this->cachedPermissions = $this->roles->flatMap(function ($role) {
+                return $role->permissions->pluck('key');
+            })->unique();
         }
 
-        foreach ($this->roles as $role) {
-            if ($role->permissions->contains('key', $key)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->cachedPermissions->contains($key);
     }
     public function adjustLeaveBalance($days)
     {

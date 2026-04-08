@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'permission' => \App\Http\Middleware\SecurePermissionMiddleware::class,
+        ]);
         $middleware->web(append: [
             \App\Http\Middleware\AuditLogger::class,
         ]);

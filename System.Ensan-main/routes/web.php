@@ -76,78 +76,109 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 
 
 
-Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\RoleAccess::class])->group(function () {
-    Route::get('dashboard', [DashboardWebController::class , 'index'])->name('dashboard.index');
-    Route::get('notifications', [NotificationWebController::class , 'index'])->name('notifications.index');
-    Route::get('audits', [AuditWebController::class , 'index'])->name('audits.index');
-    Route::resource('donors', DonorWebController::class);
-    Route::get('donations/export', [DonationWebController::class , 'export'])->name('donations.export');
-    Route::resource('donations', DonationWebController::class);
-    Route::resource('warehouses', WarehouseWebController::class);
-    Route::resource('items', ItemWebController::class);
-    Route::get('inventory-transactions/transfer', [InventoryTransactionWebController::class , 'createTransfer'])->name('inventory-transactions.create-transfer');
-    Route::post('inventory-transactions/transfer', [InventoryTransactionWebController::class , 'storeTransfer'])->name('inventory-transactions.store-transfer');
-    Route::get('inventory-transactions/reconcile', [InventoryTransactionWebController::class , 'createReconcile'])->name('inventory-transactions.create-reconcile');
-    Route::post('inventory-transactions/reconcile', [InventoryTransactionWebController::class , 'storeReconcile'])->name('inventory-transactions.store-reconcile');
-    Route::resource('inventory-transactions', InventoryTransactionWebController::class);
-    Route::get('beneficiaries/export', [BeneficiaryWebController::class , 'export'])->name('beneficiaries.export');
-    Route::post('beneficiaries/bulk', [BeneficiaryWebController::class , 'bulkUpdate'])->name('beneficiaries.bulk');
-    Route::resource('beneficiaries', BeneficiaryWebController::class);
-    Route::get('accounts/dashboard/overview', [AccountWebController::class , 'dashboard'])->name('accounts.dashboard');
-    Route::resource('accounts', AccountWebController::class);
+    // --- Core Dashboard ---
+    Route::middleware('permission:dashboard.view')->group(function () {
+        Route::get('dashboard', [DashboardWebController::class, 'index'])->name('dashboard.index');
+        Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
+    });
 
-    // Treasuries
-    Route::get('treasuries/sync-accounts', [TreasuryController::class , 'syncAccounts'])->name('treasuries.syncAccounts');
-    Route::get('treasuries/dashboard', [TreasuryController::class , 'dashboard'])->name('treasuries.dashboard');
-    Route::get('treasuries/export', [TreasuryController::class , 'export'])->name('treasuries.export');
-    Route::post('treasuries/{treasury}/transactions', [TreasuryController::class , 'addTransaction'])->name('treasuries.addTransaction');
-    Route::resource('treasuries', TreasuryController::class);
+    Route::middleware('permission:audits.view')->group(function () {
+        Route::get('audits', [AuditWebController::class, 'index'])->name('audits.index');
+    });
 
-    Route::resource('journal-entries', JournalEntryWebController::class);
+    // --- Donors & Donations ---
+    Route::middleware('permission:donors.view')->group(function () {
+        Route::resource('donors', DonorWebController::class);
+    });
 
-    Route::get('expenses/export', [ExpenseWebController::class , 'export'])->name('expenses.export');
-    Route::resource('expenses', ExpenseWebController::class);
+    Route::middleware('permission:donations.view')->group(function () {
+        Route::get('donations/export', [DonationWebController::class, 'export'])->name('donations.export');
+        Route::resource('donations', DonationWebController::class);
+    });
 
-    // Revenue & Income Analytics
-    Route::get('revenues', [\App\Http\Controllers\RevenueWebController::class , 'index'])->name('revenues.index');
+    // --- Inventory & Warehouses ---
+    Route::middleware('permission:warehouses.view')->group(function () {
+        Route::resource('warehouses', WarehouseWebController::class);
+        Route::resource('items', ItemWebController::class);
+        Route::get('inventory-transactions/transfer', [InventoryTransactionWebController::class, 'createTransfer'])->name('inventory-transactions.create-transfer');
+        Route::post('inventory-transactions/transfer', [InventoryTransactionWebController::class, 'storeTransfer'])->name('inventory-transactions.store-transfer');
+        Route::get('inventory-transactions/reconcile', [InventoryTransactionWebController::class, 'createReconcile'])->name('inventory-transactions.create-reconcile');
+        Route::post('inventory-transactions/reconcile', [InventoryTransactionWebController::class, 'storeReconcile'])->name('inventory-transactions.store-reconcile');
+        Route::resource('inventory-transactions', InventoryTransactionWebController::class);
+    });
 
-    // New HR Dashboard
-    Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class , 'index'])->name('hr.dashboard');
+    // --- Beneficiaries ---
+    Route::middleware('permission:beneficiaries.view')->group(function () {
+        Route::get('beneficiaries/export', [BeneficiaryWebController::class, 'export'])->name('beneficiaries.export');
+        Route::post('beneficiaries/bulk', [BeneficiaryWebController::class, 'bulkUpdate'])->name('beneficiaries.bulk');
+        Route::resource('beneficiaries', BeneficiaryWebController::class);
+    });
 
-    Route::get('finance/closures', [FinancialClosureWebController::class , 'index'])->name('closures.index');
-    Route::get('finance/closures/create', [FinancialClosureWebController::class , 'create'])->name('closures.create');
-    Route::post('finance/closures', [FinancialClosureWebController::class , 'store'])->name('closures.store');
-    Route::get('finance/closures/{closure}', [FinancialClosureWebController::class , 'show'])->name('closures.show');
-    Route::get('finance/closures/{closure}/edit', [FinancialClosureWebController::class , 'edit'])->name('closures.edit');
-    Route::put('finance/closures/{closure}', [FinancialClosureWebController::class , 'update'])->name('closures.update');
-    Route::delete('finance/closures/{closure}', [FinancialClosureWebController::class , 'destroy'])->name('closures.destroy');
-    Route::post('finance/closures/{closure}/approve', [FinancialClosureWebController::class , 'approve'])->name('closures.approve');
-    Route::post('attachments', [AttachmentWebController::class , 'store'])->name('attachments.store');
-    Route::delete('attachments/{attachment}', [AttachmentWebController::class , 'destroy'])->name('attachments.destroy');
-    Route::get('delegates/export', [DelegateWebController::class , 'export'])->name('delegates.export');
-    Route::post('delegates/bulk', [DelegateWebController::class , 'bulkUpdate'])->name('delegates.bulk');
-    Route::post('delegates/{delegate}/trips', [DelegateWebController::class , 'storeTrip'])->name('delegates.storeTrip');
-    Route::delete('delegates/{delegate}/trips/{trip}', [DelegateWebController::class , 'destroyTrip'])->name('delegates.destroyTrip');
-    Route::patch('delegates/{delegate}/trips/{trip}', [DelegateWebController::class , 'updateTripStatus'])->name('delegates.updateTripStatus');
+    // --- Finance & Accounting ---
+    Route::middleware('permission:manage_finance')->group(function () {
+        Route::get('accounts/dashboard/overview', [AccountWebController::class, 'dashboard'])->name('accounts.dashboard');
+        Route::resource('accounts', AccountWebController::class);
+        Route::get('treasuries/sync-accounts', [TreasuryController::class, 'syncAccounts'])->name('treasuries.syncAccounts');
+        Route::get('treasuries/dashboard', [TreasuryController::class, 'dashboard'])->name('treasuries.dashboard');
+        Route::get('treasuries/export', [TreasuryController::class, 'export'])->name('treasuries.export');
+        Route::post('treasuries/{treasury}/transactions', [TreasuryController::class, 'addTransaction'])->name('treasuries.addTransaction');
+        Route::resource('treasuries', TreasuryController::class);
+        Route::resource('journal-entries', JournalEntryWebController::class);
+        Route::get('expenses/export', [ExpenseWebController::class, 'export'])->name('expenses.export');
+        Route::resource('expenses', ExpenseWebController::class);
+        Route::get('revenues', [\App\Http\Controllers\RevenueWebController::class, 'index'])->name('revenues.index');
+        Route::get('finance/closures', [FinancialClosureWebController::class, 'index'])->name('closures.index');
+        Route::get('finance/closures/create', [FinancialClosureWebController::class, 'create'])->name('closures.create');
+        Route::post('finance/closures', [FinancialClosureWebController::class, 'store'])->name('closures.store');
+        Route::get('finance/closures/{closure}', [FinancialClosureWebController::class, 'show'])->name('closures.show');
+        Route::get('finance/closures/{closure}/edit', [FinancialClosureWebController::class, 'edit'])->name('closures.edit');
+        Route::put('finance/closures/{closure}', [FinancialClosureWebController::class, 'update'])->name('closures.update');
+        Route::delete('finance/closures/{closure}', [FinancialClosureWebController::class, 'destroy'])->name('closures.destroy');
+        Route::post('finance/closures/{closure}/approve', [FinancialClosureWebController::class, 'approve'])->name('closures.approve');
+    });
 
-    // Logistics Dashboard & Advanced Features
-    Route::get('logistics/dashboard', [LogisticsDashboardController::class , 'index'])->name('logistics.dashboard');
-    Route::get('logistics/delegate/{delegate}/performance', [LogisticsDashboardController::class , 'delegatePerformance'])->name('logistics.delegatePerformance');
+    // --- HR & Volunteers ---
+    Route::middleware('permission:manage_volunteers_hr')->group(function () {
+        Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
+        Route::post('attachments', [AttachmentWebController::class, 'store'])->name('attachments.store');
+        Route::delete('attachments/{attachment}', [AttachmentWebController::class, 'destroy'])->name('attachments.destroy');
+        // ... (other HR routes will be wrapped similarly below or in subsequent chunks)
+    });
 
-    Route::resource('delegates', DelegateWebController::class);
-    Route::post('travel-routes/{travel_route}/cities', [TravelRouteWebController::class , 'addCity'])->name('travel-routes.addCity');
-    Route::post('travel-routes/{travel_route}/trips', [TravelRouteWebController::class , 'addTrip'])->name('travel-routes.addTrip');
-    Route::get('travel-routes/export', [TravelRouteWebController::class , 'export'])->name('travel-routes.export');
-    Route::post('travel-routes/{travel_route}/duplicate', [TravelRouteWebController::class , 'duplicate'])->name('travel-routes.duplicate');
-    Route::resource('travel-routes', TravelRouteWebController::class);
-    Route::get('trips', [TripWebController::class , 'index'])->name('trips.index');
-    Route::post('trips', [TripWebController::class , 'store'])->name('trips.store');
-    Route::get('reports', [ReportsWebController::class , 'index'])->name('reports.index');
-    Route::resource('users', UserWebController::class);
-    Route::resource('roles', RoleWebController::class);
-    Route::post('users/{user}/roles/{role}', [UserWebController::class , 'attachRole'])->name('users.attachRole');
-    Route::delete('users/{user}/roles/{role}', [UserWebController::class , 'detachRole'])->name('users.detachRole');
-    Route::resource('complaints', ComplaintWebController::class);
+    // --- Logistics ---
+    Route::middleware('permission:manage_logistics')->group(function () {
+        Route::get('delegates/export', [DelegateWebController::class, 'export'])->name('delegates.export');
+        Route::post('delegates/bulk', [DelegateWebController::class, 'bulkUpdate'])->name('delegates.bulk');
+        Route::post('delegates/{delegate}/trips', [DelegateWebController::class, 'storeTrip'])->name('delegates.storeTrip');
+        Route::delete('delegates/{delegate}/trips/{trip}', [DelegateWebController::class, 'destroyTrip'])->name('delegates.destroyTrip');
+        Route::patch('delegates/{delegate}/trips/{trip}', [DelegateWebController::class, 'updateTripStatus'])->name('delegates.updateTripStatus');
+        Route::get('logistics/dashboard', [LogisticsDashboardController::class, 'index'])->name('logistics.dashboard');
+        Route::get('logistics/delegate/{delegate}/performance', [LogisticsDashboardController::class, 'delegatePerformance'])->name('logistics.delegatePerformance');
+        Route::resource('delegates', DelegateWebController::class);
+        Route::post('travel-routes/{travel_route}/cities', [TravelRouteWebController::class, 'addCity'])->name('travel-routes.addCity');
+        Route::post('travel-routes/{travel_route}/trips', [TravelRouteWebController::class, 'addTrip'])->name('travel-routes.addTrip');
+        Route::get('travel-routes/export', [TravelRouteWebController::class, 'export'])->name('travel-routes.export');
+        Route::post('travel-routes/{travel_route}/duplicate', [TravelRouteWebController::class, 'duplicate'])->name('travel-routes.duplicate');
+        Route::resource('travel-routes', TravelRouteWebController::class);
+        Route::get('trips', [TripWebController::class, 'index'])->name('trips.index');
+        Route::post('trips', [TripWebController::class, 'store'])->name('trips.store');
+    });
+    Route::get('reports', [ReportsWebController::class, 'index'])->name('reports.index');
+
+    // --- Admin & RBAC ---
+    Route::middleware('permission:users.view')->group(function () {
+        Route::resource('users', UserWebController::class);
+        Route::post('users/{user}/roles/{role}', [UserWebController::class, 'attachRole'])->name('users.attachRole');
+        Route::delete('users/{user}/roles/{role}', [UserWebController::class, 'detachRole'])->name('users.detachRole');
+    });
+
+    Route::middleware('permission:roles.view')->group(function () {
+        Route::resource('roles', RoleWebController::class);
+    });
+
+    Route::middleware('permission:complaints.view')->group(function () {
+        Route::resource('complaints', ComplaintWebController::class);
+    });
     Route::resource('volunteer-hours', VolunteerHourWebController::class);
     Route::get('payrolls/dashboard/overview', [PayrollWebController::class , 'dashboard'])->name('payrolls.dashboard');
     Route::post('payrolls/{payroll}/create-journal-entry', [PayrollWebController::class , 'createJournalEntry'])->name('payrolls.createJournalEntry');
@@ -447,22 +478,23 @@ Route::middleware([\App\Http\Middleware\WebAuth::class , \App\Http\Middleware\Ro
         Route::put('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class , 'update'])->name('change-requests.update');
 
         // Ramadan Campaign
-        Route::resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->except(['destroy']);
-        Route::delete('ramadan-bags/{ramadan_bag}', [\App\Http\Controllers\RamadanBagWebController::class , 'destroy'])->name('ramadan-bags.destroy');
-        Route::resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->except(['destroy']);
-        Route::delete('ramadan-iftars/{ramadan_iftar}', [\App\Http\Controllers\RamadanIftarWebController::class , 'destroy'])->name('ramadan-iftars.destroy');
+        Route::middleware('permission:manage_ramadan')->group(function () {
+            Route::resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->except(['destroy']);
+            Route::delete('ramadan-bags/{ramadan_bag}', [\App\Http\Controllers\RamadanBagWebController::class, 'destroy'])->name('ramadan-bags.destroy');
+            Route::resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->except(['destroy']);
+            Route::delete('ramadan-iftars/{ramadan_iftar}', [\App\Http\Controllers\RamadanIftarWebController::class, 'destroy'])->name('ramadan-iftars.destroy');
+        });
 
-        // Collaborations & Memberships
-        Route::resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class);
-        Route::resource('memberships', \App\Http\Controllers\MembershipWebController::class);
-        Route::resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class);
-        Route::resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class);
-        Route::resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class);
-        Route::resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class);
-        Route::resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class);
-
-        // سجلات النظام (Audits)
-        Route::get('audits', [\App\Http\Controllers\AuditWebController::class , 'index'])->name('audits.index');
+        // Collaborations & Memberships (Specialized Services)
+        Route::middleware('permission:manage_specialized_services')->group(function () {
+            Route::resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class);
+            Route::resource('memberships', \App\Http\Controllers\MembershipWebController::class);
+            Route::resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class);
+            Route::resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class);
+            Route::resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class);
+            Route::resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class);
+            Route::resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class);
+        });
     });
 
 // Storage Link Fallback (Clear fix for 404 images on Windows)

@@ -210,7 +210,7 @@
           background-color: var(--bg) !important;
           border-bottom: 1px solid var(--border) !important;
           box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
-          height: 75px;
+          height: 100px; /* Increased from 75px */
           transition: var(--sidebar-transition);
           padding: 0 1.5rem !important;
       }
@@ -282,11 +282,16 @@
       }
 
       .navbar-logo-elite img {
-          height: 42px;
+          height: 110px; /* Significantly larger */
           width: auto;
-          transition: transform 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          object-fit: contain;
+          margin-top: -5px; /* Slight adjustment to center visually */
+          filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
       }
-      .navbar-logo-elite:hover img { transform: scale(1.05); }
+      .navbar-logo-elite:hover img { 
+          transform: scale(1.1) translateY(-2px); 
+      }
       
       /* --- ELITE SIDEBAR DESIGN SYSTEM --- */
       :root {
@@ -314,12 +319,12 @@
           transition: var(--sidebar-transition);
           z-index: 1030;
           overflow-x: hidden;
-          scrollbar-width: thin;
-          scrollbar-color: var(--border) transparent;
+          overflow-y: auto;
+          scrollbar-width: none; /* Firefox: hide scrollbar completely */
+          -ms-overflow-style: none; /* IE/Edge: hide scrollbar */
       }
 
-      .sidebar-fixed::-webkit-scrollbar { width: 4px; }
-      .sidebar-fixed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+      .sidebar-fixed::-webkit-scrollbar { display: none; } /* Chrome/Safari: hide scrollbar completely */
 
       .sidebar-section-header {
           padding: 1.5rem 1.5rem 0.6rem 1.5rem;

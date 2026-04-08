@@ -24,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Schema::defaultStringLength(191);
         Paginator::useBootstrapFive();
 
+        // Register Global Permission Gate
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            // Check if user has the specific permission key
+            if (method_exists($user, 'hasPermission') && $user->hasPermission($ability)) {
+                return true;
+            }
+            return null; // Fall through to other checks
+        });
+
         if (\DB::connection()->getDriverName() === 'sqlite') {
             $pdo = \DB::connection()->getPdo();
             $pdo->sqliteCreateFunction('REGEXP', function ($pattern, $value) {
