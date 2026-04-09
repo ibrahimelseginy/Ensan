@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('styles')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;700;800&display=swap" rel="stylesheet">
@@ -241,41 +241,38 @@
 @endsection
 
 @section('content')
-<div class="campaigns-page">
-    {{-- Hero Section --}}
-    <div class="premium-hero">
-        <div class="hero-glow"></div>
-        <div class="container text-end py-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <div class="badge bg-indigo-500 bg-opacity-10 text-indigo-400 px-3 py-2 rounded-pill x-small fw-800 mb-3 border border-indigo-500 border-opacity-20 animate__animated animate__fadeIn">
-                        <i class="bi bi-megaphone-fill me-1"></i> إدارة الحملات التسويقية
-                    </div>
-                    <h1 class="display-5 fw-800 mb-2 animate__animated animate__fadeInUp">إدارة الحملات</h1>
-                    <p class="text-slate-400 lead animate__animated animate__fadeInUp animate__delay-1s">تخطيط وإطلاق الحملات الموسمية والتسويقية باحترافية</p>
-                </div>
-                <div class="col-md-4 text-start">
-                    <a href="{{ route('campaigns.create') }}" class="btn btn-indigo-600 btn-lg rounded-4 px-4 py-3 shadow-lg hover-scale fw-bold animate__animated animate__zoomIn" style="background: #6366f1; color: white; border: none;">
-                        <i class="bi bi-plus-lg me-2"></i> إضافة حملة جديدة
-                    </a>
-                </div>
+<div class="campaign-system-container animate-fade-in">
+    {{-- Premium Dashboard Hero --}}
+    <div class="dashboard-hero animate-slide-up bg-primary shadow-sm mb-4" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 3rem 2rem; border-radius: 0 0 40px 40px;">
+        <div class="hero-content">
+            <div class="hero-greeting text-white mb-2 opacity-75 fw-bold">الحملات والمبادرات 📣</div>
+            <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">إدارة الحملات</h1>
+            <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">تخطيط وإطلاق الحملات الموسمية والتسويقية باحترافية لزيادة التأثير والوصول.</p>
+            <div class="hero-actions d-flex gap-2">
+                <a href="{{ route('campaigns.create') }}" class="btn btn-sm rounded-pill px-4 bg-white text-primary fw-bold shadow hover-lift border-0">
+                    <i class="bi bi-plus-lg me-1"></i> إضافة حملة جديدة
+                </a>
+                <button type="button" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
+                    <i class="bi bi-funnel me-1"></i> تصفية متقدمة
+                </button>
             </div>
         </div>
+        <i class="bi bi-megaphone hero-icon text-white opacity-25 d-none d-md-block" style="font-size: 8rem; position: absolute; left: 5%; top: 50%; transform: translateY(-50%) rotate(-15deg);"></i>
     </div>
 
-    <div class="container pb-5" style="position: relative; z-index: 2; margin-top: 120px;">
-        {{-- Advanced Filter Collapse (Separate Form) --}}
+    <div class="container-fluid px-4 pb-5">
+        {{-- Advanced Filter Collapse --}}
         <div class="collapse mb-4" id="advancedFilter">
-            <div class="glass-card-premium p-4">
+            <div class="glass-card p-4">
                 <form method="GET" action="{{ route('campaigns.index') }}">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
-                            <label class="x-small fw-bold text-slate-500 mb-2">اسم الحملة</label>
-                            <input name="q" value="{{ $q ?? '' }}" class="form-control bg-slate-900 border-0 text-white rounded-3" placeholder="بحث...">
+                            <label class="x-small fw-bold text-muted mb-2">اسم الحملة</label>
+                            <input name="q" value="{{ $q ?? '' }}" class="form-control rounded-3" placeholder="بحث باسم الحملة...">
                         </div>
                         <div class="col-md-3">
-                            <label class="x-small fw-bold text-slate-500 mb-2">الحالة</label>
-                            <select name="status" class="form-select bg-slate-900 border-0 text-white rounded-3 shadow-none">
+                            <label class="x-small fw-bold text-muted mb-2">الحالة</label>
+                            <select name="status" class="form-select rounded-3">
                                 <option value="">الكل</option>
                                 <option value="active" @selected(($status ?? '') === 'active')>نشط</option>
                                 <option value="archived" @selected(($status ?? '') === 'archived')>مؤرشف</option>
@@ -286,107 +283,99 @@
                             <input name="season_year" value="{{ $year ?? '' }}" class="form-control rounded-3" type="number" placeholder="2025">
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-indigo-600 w-100 fw-bold rounded-3 shadow-sm border-0 py-2" style="background: #6366f1; color: white;">تطبيق</button>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">تطبيق الفلتر</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
 
-        {{-- Bulk Action Form --}}
+        {{-- Bulk Action & Quick Search --}}
         <form action="{{ route('campaigns.bulk-destroy') }}" method="POST" id="bulkDeleteForm">
             @csrf
-            {{-- Filter & Selection Bar --}}
-            <div class="glass-card-premium p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="form-check p-0 m-0 d-flex align-items-center bg-body-tertiary px-3 py-2 rounded-3 border shadow-sm">
-                        <input class="form-check-input ms-2 mt-0 checkbox-lux" type="checkbox" id="selectAll">
-                        <label class="form-check-label fw-bold small cursor-pointer" for="selectAll" style="margin-right: 5px; white-space: nowrap;">تحديد الكل</label>
+                    <div class="form-check p-0 m-0 d-flex align-items-center bg-white bg-opacity-10 px-3 py-2 rounded-3 border shadow-sm">
+                        <input class="form-check-input ms-2 mt-0" type="checkbox" id="selectAll" style="width: 18px; height: 18px;">
+                        <label class="form-check-label fw-bold small mb-0" for="selectAll" style="cursor: pointer;">تحديد الكل</label>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-danger d-none px-4 rounded-3 border-0 transition-all shadow-sm" id="btnBulkDelete" onclick="return confirm('هل أنت متأكد من حذف الحملات المحددة؟')">
+                    <button type="submit" class="btn btn-sm btn-danger d-none px-4 rounded-pill border-0 shadow-sm" id="btnBulkDelete" onclick="return confirm('هل أنت متأكد من حذف الحملات المحددة؟')">
                         <i class="bi bi-trash me-1"></i> حذف المحدد
                     </button>
-                    
-                    {{-- Quick Search (Minimal - JS filtered) --}}
-                    <div class="input-group input-group-sm d-none d-md-flex" style="width: 250px;">
-                        <input type="text" class="form-control bg-body-secondary border-0 px-3 rounded-start-3" placeholder="بحث سريع..." onkeyup="filterCampaigns(this)">
-                        <span class="input-group-text bg-body-secondary border-0 text-muted rounded-end-3"><i class="bi bi-search"></i></span>
-                    </div>
                 </div>
                 
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
-                        <i class="bi bi-funnel"></i> تصفية متقدمة
-                    </button>
+                <div class="input-group shadow-sm" style="width: 300px;">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 rounded-end-pill" placeholder="بحث سريع في النتائج..." onkeyup="filterCampaigns(this)">
                 </div>
             </div>
 
             {{-- Campaign Grid --}}
             <div class="row g-4" id="campaignGrid">
                 @foreach($campaigns as $c)
-                <div class="col-md-4 col-lg-4 campaign-item">
-                    <div class="campaign-card-lux">
-                        {{-- Banner Area --}}
-                        <div class="card-banner-premium" style="background: linear-gradient(135deg, {{ $c->status === 'active' ? '#065f46, #059669' : '#334155, #475569' }});">
-                            <div class="status-pill-lux {{ $c->status === 'active' ? 'status-active' : 'status-archived' }}">
-                                <i class="bi {{ $c->status === 'active' ? 'bi-record-circle-fill' : 'bi-archive-fill' }} me-1"></i>
-                                {{ $c->status === 'active' ? 'نشطة حالياً' : 'مؤرشفة' }}
+                <div class="col-md-6 col-xl-4 campaign-item">
+                    <div class="glass-card h-100 hover-lift overflow-hidden border-0 shadow-sm p-0">
+                        {{-- Card Header/Banner --}}
+                        <div class="p-4" style="background: linear-gradient(135deg, {{ $c->status === 'active' ? 'var(--primary)' : 'var(--gray-600)' }} 0%, {{ $c->status === 'active' ? 'var(--primary-dark)' : 'var(--dark)' }} 100%); position: relative;">
+                            <div class="d-flex justify-content-between align-items-start position-relative" style="z-index: 2;">
+                                <span class="badge rounded-pill px-3 py-2 {{ $c->status === 'active' ? 'bg-white text-primary' : 'bg-white bg-opacity-20 text-white' }} fw-bold x-small">
+                                    <i class="bi {{ $c->status === 'active' ? 'bi-record-circle-fill' : 'bi-archive-fill' }} me-1"></i>
+                                    {{ $c->status === 'active' ? 'نشطة حالياً' : 'مؤرشفة' }}
+                                </span>
+                                <input class="form-check-input record-checkbox shadow-none" type="checkbox" name="ids[]" value="{{ $c->id }}" style="width: 20px; height: 20px; border-color: rgba(255,255,255,0.3);">
                             </div>
-
-                            <div class="checkbox-wrapper-lux">
-                                <input class="form-check-input checkbox-lux record-checkbox" type="checkbox" name="ids[]" value="{{ $c->id }}">
+                            
+                            <div class="mt-4 pt-2 text-white">
+                                <h5 class="fw-bold mb-1">
+                                    <a href="{{ route('campaigns.show', $c) }}" class="text-white text-decoration-none" style="color: #ffffff !important;">{{ $c->name }}</a>
+                                </h5>
+                                <div class="opacity-75 small">موسم {{ $c->season_year }}</div>
                             </div>
-
-                            <div class="card-icon-bubble">
-                                <i class="bi bi-megaphone-fill fs-4 text-white"></i>
-                            </div>
-
-                            {{-- Abstract Patterns --}}
-                            <div style="position: absolute; inset: 0; background: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.05\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E');"></div>
+                            
+                            {{-- Decorative Icon --}}
+                            <i class="bi bi-megaphone-fill position-absolute text-white opacity-10" style="font-size: 5rem; left: -10px; bottom: -20px; transform: rotate(-15deg);"></i>
                         </div>
 
-                        {{-- Content Area --}}
-                        <div class="content-area-lux">
-                            <div class="mb-3">
-                                <h5 class="campaign-title-lux">
-                                    <a href="{{ route('campaigns.show', $c) }}" class="text-white text-decoration-none hover-indigo">{{ $c->name }}</a>
-                                </h5>
-                                <div class="campaign-meta-lux">
-                                    <i class="bi bi-calendar3 text-indigo-400"></i>
-                                    <span>موسم {{ $c->season_year }}</span>
-                                    @if($c->project)
-                                        <span class="mx-1">•</span>
-                                        <i class="bi bi-folder2-open text-indigo-400"></i>
-                                        <span class="text-truncate" style="max-width: 120px;">{{ $c->project->name }}</span>
-                                    @endif
+                        {{-- Card Body --}}
+                        <div class="p-4">
+                            @if($c->project)
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3">
+                                    <i class="bi bi-folder2-open"></i>
+                                </div>
+                                <div class="text-truncate fw-bold text-main" style="max-width: 200px;">{{ $c->project->name }}</div>
+                            </div>
+                            @endif
+
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <div class="p-2 bg-light bg-opacity-50 rounded-3 text-center border">
+                                        <div class="text-muted x-small mb-1">تاريخ البدء</div>
+                                        <div class="fw-bold small">{{ $c->start_date?->format('Y/m/d') ?? '—' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 bg-light bg-opacity-50 rounded-3 text-center border">
+                                        <div class="text-muted x-small mb-1">تاريخ الانتهاء</div>
+                                        <div class="fw-bold small">{{ $c->end_date?->format('Y/m/d') ?? '—' }}</div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-white border-opacity-5">
-                                <div class="d-flex gap-3">
-                                    <div class="x-small">
-                                        <div class="text-slate-500 mb-1">تاريخ البدء</div>
-                                        <div class="text-white fw-bold">{{ $c->start_date?->format('d/m/Y') ?? '—' }}</div>
-                                    </div>
-                                    <div class="x-small">
-                                        <div class="text-slate-500 mb-1">تاريخ الانتهاء</div>
-                                        <div class="text-white fw-bold">{{ $c->end_date?->format('d/m/Y') ?? '—' }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-2" style="position: relative; z-index: 10;">
-                                    <div class="dropdown">
-                                        <button type="button" class="btn-action-lux" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-start bg-slate-900 border-white border-opacity-10 shadow-lg rounded-3">
-                                            <li><a class="dropdown-item small py-2" href="{{ route('campaigns.show', $c) }}"><i class="bi bi-eye me-2 text-indigo-400"></i> عرض التفاصيل</a></li>
-                                            @if(auth()->check())
-                                            <li><button type="button" class="dropdown-item small py-2" data-bs-toggle="modal" data-bs-target="#editCampaignModal{{ $c->id }}"><i class="bi bi-pencil me-2 text-warning"></i> طلب تعديل</button></li>
-                                            <li><button type="button" class="dropdown-item small py-2 text-danger" onclick="openCancelModal('{{ route('campaigns.destroy', $c) }}')"><i class="bi bi-trash me-2"></i> حذف الحملة</button></li>
-                                            @endif
-                                        </ul>
-                                    </div>
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <a href="{{ route('campaigns.show', $c) }}" class="btn btn-sm btn-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 fw-bold">
+                                    التفاصيل <i class="bi bi-arrow-left ms-1"></i>
+                                </a>
+                                
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle shadow-none" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+                                        <li><button type="button" class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#editCampaignModal{{ $c->id }}"><i class="bi bi-pencil me-2 text-warning"></i> تعديل</button></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><button type="button" class="dropdown-item py-2 text-danger" onclick="openCancelModal('{{ route('campaigns.destroy', $c) }}')"><i class="bi bi-trash me-2"></i> حذف نهائي</button></li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -395,9 +384,12 @@
                 @endforeach
             </div>
 
-            <div class="mt-4 px-2">{{ $campaigns->links() }}</div>
+            <div class="mt-5 d-flex justify-content-center">
+                {{ $campaigns->links() }}
+            </div>
         </form>
     </div>
+</div>
 </div>
 
 {{-- Premium Modals --}}

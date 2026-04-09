@@ -4340,3 +4340,80 @@ body.theme-dark .page-link:hover {
 }
 .theme-dark .audit-card:hover { box-shadow: 0 6px 24px rgba(6,182,212,0.08); }
 
+
+/* Ensure Hero Text is Always White */
+.dashboard-hero .text-white,
+.dashboard-hero .text-white-50,
+.dashboard-hero h1,
+.dashboard-hero p,
+.premium-hero-card .text-white,
+.premium-hero-card .text-slate-400 {
+  color: #ffffff !important;
+}
+.dashboard-hero .text-white-50,
+.premium-hero-card .text-slate-400 {
+  opacity: 0.8;
+}
+
+
+/* Timeline and Glow Effects */
+.audit-timeline {
+  position: relative;
+  padding-right: 1.5rem;
+}
+.audit-timeline::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 10px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--primary) 0%, transparent 100%);
+  opacity: 0.15;
+}
+.audit-card {
+  position: relative;
+}
+.audit-card::after {
+  content: '';
+  position: absolute;
+  right: -21px;
+  top: 20px;
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  z-index: 10;
+}
+.method-glow-success {
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+}
+.method-glow-danger {
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+.method-glow-primary {
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.2);
+}
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+}
+
+
+/* Ensure white background buttons stay white in dark mode within hero sections */
+.dashboard-hero .bg-white, 
+.premium-hero-card .bg-white {
+  background-color: #ffffff !important;
+  color: #059669 !important;
+}
+
+.theme-dark .dashboard-hero .bg-white,
+.theme-dark .premium-hero-card .bg-white {
+  background-color: #ffffff !important;
+  color: #059669 !important; /* Force emerald for high contrast in dark mode */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}

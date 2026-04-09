@@ -1,19 +1,23 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
-  {{-- Page Header --}}
-  <div class="page-header mb-3">
-    <h4 class="mb-0">
-      <i class="bi bi-house-heart text-primary"></i>
-      إضافة دار ضيافة جديدة
-    </h4>
-    <a href="{{ route('guest-houses.index') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-right me-1"></i> رجوع
-    </a>
-  </div>
+    {{-- Premium Dashboard Hero --}}
+    <div class="dashboard-hero animate-slide-up bg-primary shadow-sm mb-4" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 2.5rem 2rem; border-radius: 0 0 40px 40px;">
+        <div class="hero-content">
+            <div class="hero-greeting text-white mb-2 opacity-75 fw-bold">إضافة مرفق جديد 🏢</div>
+            <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">إضافة دار ضيافة</h1>
+            <p class="hero-subtitle text-white opacity-75 mb-0" style="color: #ffffff !important;">قم بإدخال تفاصيل المرفق الجديد لتتمكن من إدارته وتخصيصه للمستفيدين.</p>
+        </div>
+        <div class="ms-auto">
+            <a href="{{ route('guest-houses.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;">
+                <i class="bi bi-arrow-right me-1"></i> العودة للقائمة
+            </a>
+        </div>
+    </div>
 
-  <div class="card">
-    <div class="card-body">
-      <form method="POST" action="{{ route('guest-houses.store') }}">
+    <div class="container-fluid px-4 pb-5">
+        <div class="glass-card border-0 shadow-sm p-5 animate-slide-up">
+            <form method="POST" action="{{ route('guest-houses.store') }}">
+                @csrf
         @csrf
         <div class="row g-3">
           <div class="col-md-6">

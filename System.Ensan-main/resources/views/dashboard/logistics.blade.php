@@ -77,15 +77,15 @@
 @section('content')
 
     {{-- Premium Dashboard Hero --}}
-    <div class="dashboard-hero animate-slide-up mb-4" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 2rem; border-radius: var(--radius-lg); position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);">
+    <div class="dashboard-hero animate-slide-up mb-4 bg-primary" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 2rem; border-radius: var(--radius-lg); position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(5, 150, 105, 0.2);">
         <div class="hero-content position-relative z-1 text-white">
-            <h1 class="hero-title fw-bold">لوحة تحكم اللوجيستك 🚚</h1>
+            <h1 class="hero-title fw-bold text-white">لوحة تحكم اللوجيستك 🚚</h1>
             <p class="hero-subtitle text-white-50 fs-6">ملخص حركة المندوبين، خطوط السير والرحلات لليوم {{ date('Y-m-d') }}</p>
             <div class="hero-actions d-flex gap-2 mt-3">
-                <a href="{{ route('delegates.index') }}" class="btn btn-light btn-sm rounded-pill px-4 text-primary fw-bold shadow-sm">
+                <a href="{{ route('delegates.index') }}" class="btn bg-white btn-sm rounded-pill px-4 text-primary fw-bold shadow-sm hover-lift border-0">
                     <i class="bi bi-people-fill me-1"></i> إدارة المندوبين
                 </a>
-                <a href="{{ route('travel-routes.index') }}" class="btn btn-outline-light btn-sm rounded-pill px-4 shadow-sm">
+                <a href="{{ route('travel-routes.index') }}" class="btn btn-outline-light btn-sm rounded-pill px-4 shadow-sm hover-lift">
                     <i class="bi bi-geo-alt me-1"></i> إدارة المسارات
                 </a>
             </div>
@@ -131,21 +131,25 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-6 animate-slide-up animate-delay-2">
-            <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="kpi-card stat-warning text-decoration-none">
+            <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="kpi-card stat-warning text-decoration-none hover-lift">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="small text-muted fw-bold">توصيلات كفر الشيخ</div>
-                    <i class="bi bi-box-seam text-warning opacity-50 fs-4"></i>
+                    <div class="bg-warning bg-opacity-10 text-warning p-2 rounded-circle">
+                        <i class="bi bi-box-seam fs-5"></i>
+                    </div>
                 </div>
-                <div class="h3 fw-bold text-dark mb-0">{{ number_format($deliveriesCount) }}</div>
+                <div class="h3 fw-bold mb-0 text-main">{{ number_format($deliveriesCount) }}</div>
             </a>
         </div>
         <div class="col-md-6 animate-slide-up animate-delay-3">
-            <a href="{{ route('kafr-el-sheikh-services.index') }}" class="kpi-card stat-info text-decoration-none">
+            <a href="{{ route('kafr-el-sheikh-services.index') }}" class="kpi-card stat-info text-decoration-none hover-lift">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="small text-muted fw-bold">خدمات كفر الشيخ</div>
-                    <i class="bi bi-tools text-info opacity-50 fs-4"></i>
+                    <div class="bg-info bg-opacity-10 text-info p-2 rounded-circle">
+                        <i class="bi bi-tools fs-5"></i>
+                    </div>
                 </div>
-                <div class="h3 fw-bold text-dark mb-0">{{ number_format($servicesCount) }}</div>
+                <div class="h3 fw-bold mb-0 text-main">{{ number_format($servicesCount) }}</div>
             </a>
         </div>
     </div>

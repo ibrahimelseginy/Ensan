@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 <div class="expense-system-container animate-fade-in">
     {{-- High-Tech Dashboard Header --}}
@@ -8,8 +8,8 @@
                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
                     <i class="bi bi-cpu me-1"></i> مُحلل الذكاء الاصطناعي نشط
                 </span>
-                <h1 class="display-5 fw-bold text-white mb-2">إدارة المصروفات الذكية</h1>
-                <p class="text-slate-400 lead">تحليل ذكي للبيانات المالية وتتبع النفقات التشغيلية والخيرية بدقة فائقة.</p>
+                <h1 class="display-5 fw-bold text-white mb-2" style="color: #ffffff !important;">إدارة المصروفات الذكية</h1>
+                <p class="text-white opacity-75 lead" style="color: rgba(255,255,255,0.8) !important;">تحليل ذكي للبيانات المالية وتتبع النفقات التشغيلية والخيرية بدقة فائقة.</p>
                 <div class="d-flex gap-3 mt-4">
                     <a href="{{ route('expenses.create') }}" class="btn btn-primary btn-lg px-4 rounded-pill shadow-premium">
                         <i class="bi bi-plus-circle me-2"></i> إضافة مصروف جديد
@@ -18,8 +18,8 @@
             </div>
             <div class="col-md-5 d-none d-md-block text-center text-md-end">
                 <div class="main-stat-circle">
-                    <div class="stat-value text-white h1 fw-bold mb-0">{{ number_format($totalCurrentMonth, 0) }}</div>
-                    <div class="stat-label text-slate-400">إجمالي الشهر الحالي</div>
+                    <div class="stat-value text-white h1 fw-bold mb-0" style="color: #ffffff !important;">{{ number_format($totalCurrentMonth, 0) }}</div>
+                    <div class="stat-label text-white opacity-75" style="color: rgba(255,255,255,0.7) !important;">إجمالي الشهر الحالي</div>
                 </div>
             </div>
         </div>
@@ -269,118 +269,7 @@
     @keyframes fadeInRow {
         to { opacity: 1; transform: translateY(0); }
     }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -8,11 +8,11 @@
         <p class="hero-subtitle">سجل الإغلاقات اليومية للفروع والمندوبين لضمان دقة الحسابات</p>
         <div class="hero-actions d-flex gap-2 align-items-center">
             @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager')))
-                <a href="{{ route('change-requests.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light border-white border-opacity-25" title="طلبات المراجعة">
+                <a href="{{ route('change-requests.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;" title="طلبات المراجعة">
                     <i class="bi bi-shield-check me-1"></i> طلبات المراجعة
                 </a>
             @endif
-            <a href="{{ route('closures.create') }}" class="btn btn-sm rounded-pill px-4 bg-white text-indigo shadow-lg fw-bold border-0 hover-lift">
+            <a href="{{ route('closures.create') }}" class="btn btn-sm rounded-pill px-4 bg-white text-primary shadow hover-lift fw-bold border-0">
                 <i class="bi bi-plus-lg me-1"></i> إغلاق جديد
             </a>
         </div>
