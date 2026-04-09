@@ -113,6 +113,11 @@ class User extends Authenticatable
 
     public function hasPermission($key): bool
     {
+        // Bypass for admin and manager
+        if ($this->hasRole('admin') || $this->hasRole('manager')) {
+            return true;
+        }
+
         // Load roles and permissions once and cache them on the model instance
         // to avoid repeated DB hits within the same request.
         if (!isset($this->cachedPermissions)) {

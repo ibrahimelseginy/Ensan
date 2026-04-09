@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
@@ -109,7 +109,8 @@
     }
 
     body.dark-theme .logo-img {
-      background: #e9ecef;
+      background: #ffffff;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
     }
         /* --- LIGHT MODE ADAPTATION --- */
       body:not(.theme-dark) {

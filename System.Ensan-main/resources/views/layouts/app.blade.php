@@ -374,6 +374,11 @@
           margin-top: -5px; /* Slight adjustment to center visually */
           filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
       }
+
+      body.theme-dark .navbar-logo-elite img,
+      [data-bs-theme="dark"] .navbar-logo-elite img {
+          filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6)) brightness(1.2) contrast(1.1);
+      }
       @media (min-width: 992px) {
           .navbar-logo-elite img { height: 110px; }
       }
@@ -939,32 +944,50 @@
         @endif
       @endif
 
-      @if($user && ($user->hasPermission('delegates.view') || $user->hasPermission('travel_routes.view') || $user->hasPermission('trips.view')))
+      @if($user && ($user->hasPermission('manage_logistics') || $user->hasPermission('delegates.view') || $user->hasPermission('travel_routes.view') || $user->hasPermission('trips.view') || $user->hasPermission('kafr_el_sheikh_deliveries.view') || $user->hasPermission('kafr_el_sheikh_services.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#delegatesCollapse" role="button"
-          aria-expanded="{{ (request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*')) ? 'true' : 'false' }}"
+          aria-expanded="{{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*')) ? 'true' : 'false' }}"
           aria-controls="delegatesCollapse">
           <span><i class="bi bi-signpost-2"></i> اللوجيستك</span>
           <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
         </a>
-        <div
-          class="collapse {{ (request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*')) ? 'show' : '' }} sub-list"
-          id="delegatesCollapse">
-          @if($user->hasPermission('delegates.view'))
-            <a href="{{ route('delegates.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('delegates.*') ? 'active' : '' }}"><i
-                class="bi bi-person-badge"></i><span>المندوبون</span></a>
-          @endif
-          @if($user->hasPermission('travel_routes.view'))
-            <a href="{{ route('travel-routes.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('travel-routes.*') ? 'active' : '' }}"><i
-                class="bi bi-geo"></i><span>خطوط السير</span></a>
-          @endif
-          @if($user->hasPermission('trips.view'))
-            <a href="{{ route('trips.index') }}"
-              class="list-group-item list-group-item-action {{ request()->routeIs('trips.*') ? 'active' : '' }}"><i
-                class="bi bi-pin-map"></i><span>الرحلات</span></a>
-          @endif
+        <div class="collapse {{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*')) ? 'show' : '' }} sub-list" id="delegatesCollapse">
+          <div class="list-group list-group-flush ps-3">
+            @if($user->hasPermission('manage_logistics'))
+              <a href="{{ route('logistics.dashboard') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('logistics.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-grid-1x2"></i><span>لوحة تحكم اللوجيستك</span>
+              </a>
+            @endif
+            @if($user->hasPermission('delegates.view'))
+              <a href="{{ route('delegates.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('delegates.*') ? 'active' : '' }}"><i
+                  class="bi bi-person-badge"></i><span>المندوبون</span></a>
+            @endif
+            @if($user->hasPermission('travel_routes.view'))
+              <a href="{{ route('travel-routes.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('travel-routes.*') ? 'active' : '' }}"><i
+                  class="bi bi-geo"></i><span>خطوط السير</span></a>
+            @endif
+            @if($user->hasPermission('trips.view'))
+              <a href="{{ route('trips.index') }}"
+                class="list-group-item list-group-item-action {{ request()->routeIs('trips.*') ? 'active' : '' }}"><i
+                  class="bi bi-pin-map"></i><span>الرحلات</span></a>
+            @endif
+            @if($user->hasPermission('kafr_el_sheikh_deliveries.view'))
+              <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" 
+                 class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}">
+                 <i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span>
+              </a>
+            @endif
+            @if($user->hasPermission('kafr_el_sheikh_services.view'))
+              <a href="{{ route('kafr-el-sheikh-services.index') }}" 
+                 class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}">
+                 <i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span>
+              </a>
+            @endif
+          </div>
         </div>
       @endif
 
@@ -1237,15 +1260,15 @@
         </div>
       @endif
 
-      @if($user && ($user->hasPermission('manage_specialized_services') || $user->hasPermission('school_collaborations.view') || $user->hasPermission('memberships.view') || $user->hasPermission('oncology_medicine_reps.view') || $user->hasPermission('kafr_el_sheikh_brokers.view') || $user->hasPermission('kafr_el_sheikh_deliveries.view') || $user->hasPermission('kafr_el_sheikh_services.view') || $user->hasPermission('tanta_workers.view')))
+      @if($user && ($user->hasPermission('manage_specialized_services') || $user->hasPermission('school_collaborations.view') || $user->hasPermission('memberships.view') || $user->hasPermission('oncology_medicine_reps.view') || $user->hasPermission('kafr_el_sheikh_brokers.view') || $user->hasPermission('tanta_workers.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#collaborationsCollapse" role="button"
-          aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
+          aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
           aria-controls="collaborationsCollapse">
           <span><i class="bi bi-diagram-3"></i> التعاونات والشراكات والعضوية</span>
           <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
         </a>
-        <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
+        <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
           <div class="list-group list-group-flush ps-3">
             @if($user->hasPermission('school_collaborations.view'))
               <a href="{{ route('school-collaborations.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('school-collaborations.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>تعاونات المدارس</span></a>
@@ -1258,12 +1281,6 @@
             @endif
             @if($user->hasPermission('kafr_el_sheikh_brokers.view'))
               <a href="{{ route('kafr-el-sheikh-brokers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-brokers.*') ? 'active' : '' }}"><i class="bi bi-pin-map"></i><span>سماسرة كفر الشيخ</span></a>
-            @endif
-            @if($user->hasPermission('kafr_el_sheikh_deliveries.view'))
-              <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}"><i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span></a>
-            @endif
-            @if($user->hasPermission('kafr_el_sheikh_services.view'))
-              <a href="{{ route('kafr-el-sheikh-services.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}"><i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span></a>
             @endif
             @if($user->hasPermission('tanta_workers.view'))
               <a href="{{ route('tanta-workers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('tanta-workers.*') ? 'active' : '' }}"><i class="bi bi-people"></i><span>عمال باليومية (طنطا)</span></a>

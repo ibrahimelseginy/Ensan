@@ -122,6 +122,12 @@ body.theme-dark {
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
 }
 
+/* Global Logo Clarity in Dark Mode */
+body.theme-dark img[src*="logo.png"],
+body.theme-dark img[alt*="logo"] {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)) brightness(1.2) contrast(1.1) !important;
+}
+
 /* Global Reset & Typography */
 body {
   font-family:
@@ -4170,4 +4176,89 @@ body.theme-dark .ws-input:focus {
 /* Base override for hardcoded bodies if any are missed */
 body.ws-theme {
   background-color: var(--ws-bg-page) !important;
+}
+
+/* ======================================================
+ * Premium Pagination System
+ * ====================================================== */
+.pagination {
+    gap: 0.5rem;
+    margin: 2rem 0 1rem 0; /* Increased top margin to separate from content */
+}
+
+/* Separation for the "Showing X of Y" text */
+nav div.flex-1.sm\:hidden, 
+nav div.hidden.sm\:flex-1.sm\:flex.sm\:items-center.sm\:justify-between p,
+.pagination-info,
+p.small.text-muted {
+    margin-bottom: 1.5rem !important; /* Push the text away from the buttons */
+    display: block;
+}
+
+.page-item {
+    border: none;
+}
+
+.page-link {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    border: 1px solid var(--gray-200) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--gray-600) !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0 !important;
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 50% !important;
+}
+
+.page-link:hover {
+    background-color: var(--primary-subtle) !important;
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.15);
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+
+.page-item.disabled .page-link {
+    background-color: var(--bg-soft) !important;
+    border-color: var(--gray-100) !important;
+    color: var(--gray-400) !important;
+    opacity: 0.6;
+}
+
+/* Pagination Info Text (Showing X to Y) */
+.pagination-info {
+    font-size: 0.85rem;
+    color: var(--gray-400);
+    font-weight: 500;
+}
+
+/* Dark Mode Overrides */
+body.theme-dark .page-link {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: var(--gray-400) !important;
+}
+
+body.theme-dark .page-item.active .page-link {
+    color: #ffffff !important;
+}
+
+body.theme-dark .page-link:hover {
+    background-color: rgba(34, 197, 94, 0.15) !important;
 }
