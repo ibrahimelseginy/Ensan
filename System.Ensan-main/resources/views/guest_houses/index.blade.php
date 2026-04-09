@@ -9,10 +9,10 @@
             <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">إدارة دار الضيافة</h1>
             <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">إدارة مرافق الإقامة والضيافة التابعة للمؤسسة لضمان أفضل خدمة للمستفيدين.</p>
             <div class="hero-actions d-flex gap-2">
-                <a href="{{ route('guest-houses.create') }}" class="btn btn-sm rounded-pill px-4 bg-white text-primary fw-bold shadow hover-lift border-0">
+                <a href="{{ route('guest-houses.create') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
                     <i class="bi bi-plus-lg me-1"></i> إضافة دار جديدة
                 </a>
-                <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;">
+                <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
                     <i class="bi bi-arrow-right me-1"></i> العودة للرئيسية
                 </a>
             </div>

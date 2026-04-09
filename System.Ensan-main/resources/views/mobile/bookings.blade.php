@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="bookings-page">
@@ -63,7 +63,11 @@
         <div class="glass-card overflow-hidden">
             <div class="p-4 border-bottom border-white border-opacity-5 d-flex justify-content-between align-items-center bg-white bg-opacity-5">
                 <h5 class="mb-0 fw-bold text-white"><i class="bi bi-list-stars me-2 text-primary"></i> قائمة الطلبات الحالية</h5>
-                <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-20 rounded-pill px-3">مزامنة تلقائية</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-pill px-3 py-2 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 fw-900 x-small" style="letter-spacing: 0.5px;">
+                        <i class="bi bi-arrow-repeat me-1 animate-spin"></i> مزامنة تلقائية
+                    </span>
+                </div>
             </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0 text-white">
@@ -80,21 +84,29 @@
                                 <tr class="border-white border-opacity-5">
                                     <td class="py-4 ps-4">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="avatar-text bg-primary bg-opacity-20 text-primary rounded-circle">
+                                            <div class="avatar-text bg-primary text-white rounded-circle shadow-sm" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); width: 45px; height: 45px;">
                                                 {{ mb_substr($booking->name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <div class="fw-bold fs-5">{{ $booking->name }}</div>
-                                                <div class="text-muted small"><i class="bi bi-telephone me-1"></i> {{ $booking->phone }}</div>
+                                                <div class="fw-bold fs-6 text-main">{{ $booking->name }}</div>
+                                                <div class="text-muted x-small"><i class="bi bi-telephone me-1"></i> {{ $booking->phone }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div>{{ $booking->arrival_date }}</div>
-                                        <div class="badge bg-info bg-opacity-10 text-info mt-1 small">{{ $booking->expected_duration_arabic }}</div>
+                                        <div class="text-main fw-bold small">{{ $booking->arrival_date }}</div>
+                                        <div class="badge bg-info bg-opacity-10 text-info mt-1 x-small fw-bold">{{ $booking->expected_duration_arabic }}</div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge rounded-pill px-3 py-2 {{ $booking->status == 'pending' ? 'bg-warning text-dark' : ($booking->status == 'confirmed' ? 'bg-success' : 'bg-danger') }}">
+                                        @php
+                                            $statusClasses = [
+                                                'pending' => 'bg-warning bg-opacity-10 text-warning',
+                                                'confirmed' => 'bg-success bg-opacity-10 text-success',
+                                                'cancelled' => 'bg-danger bg-opacity-10 text-danger'
+                                            ];
+                                            $statusClass = $statusClasses[$booking->status] ?? 'bg-secondary bg-opacity-10 text-secondary';
+                                        @endphp
+                                        <span class="badge rounded-pill px-3 py-2 {{ $statusClass }} fw-bold x-small">
                                             {{ $booking->status == 'pending' ? 'قيد الانتظار' : ($booking->status == 'confirmed' ? 'مقبول' : 'مرفوض') }}
                                         </span>
                                     </td>

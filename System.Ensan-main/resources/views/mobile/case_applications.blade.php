@@ -83,28 +83,26 @@
         @forelse($applications as $app)
         <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
             <div class="premium-case-card bg-stats-card-main border-light-subtle position-relative">
-                <!-- Checkbox overlay -->
-                <div class="card-selection-overlay">
-                    <input type="checkbox" class="case-checkbox form-check-input-elite" value="{{ $app->id }}" onclick="updateBulkBar()">
-                </div>
-
                 <div class="card-inner-top">
                     <div class="card-meta mb-4">
                         <span class="badge-premium @if($app->status == 'pending') status-pending @elseif($app->status == 'reviewed') status-review @elseif($app->status == 'accepted') status-success @else status-danger @endif">
                             {{ $app->status == 'pending' ? 'بانتظار المراجعة' : ($app->status == 'reviewed' ? 'قيد الدراسة' : ($app->status == 'accepted' ? 'مقبول' : 'مرفوض')) }}
                         </span>
-                        <div class="case-type-badge x-small fw-bold">
-                            @if($app->case_type == 'zad')
-                                <i class="bi bi-star-fill me-1 text-warning"></i> زاد الأيتام
-                            @elseif($app->case_type == 'hope')
-                                <i class="bi bi-brightness-high-fill me-1 text-primary"></i> بعثاء الأمل
-                            @else
-                                <i class="bi bi-folder-fill me-1 text-muted-theme"></i> {{ $app->case_type }}
-                            @endif
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="case-type-badge x-small fw-bold">
+                                @if($app->case_type == 'zad')
+                                    <i class="bi bi-star-fill me-1 text-warning"></i> زاد الأيتام
+                                @elseif($app->case_type == 'hope')
+                                    <i class="bi bi-brightness-high-fill me-1 text-primary"></i> بعثاء الأمل
+                                @else
+                                    <i class="bi bi-folder-fill me-1 text-muted-theme"></i> {{ $app->case_type }}
+                                @endif
+                            </div>
+                            <input type="checkbox" class="case-checkbox form-check-input-elite m-0" value="{{ $app->id }}" onclick="updateBulkBar()">
                         </div>
                     </div>
                     
-                    <div class="card-user-info mb-3 ps-4">
+                    <div class="card-user-info mb-3 px-4">
                         <h4 class="user-name text-truncate text-stats-main fw-bold" title="{{ $app->applicant_name }}">{{ $app->applicant_name }}</h4>
                         <p class="user-phone font-outfit text-primary fw-bold mb-2">{{ $app->applicant_phone }}</p>
                         <div class="location-tag x-small text-muted-theme fw-bold">
@@ -414,13 +412,7 @@
     .report-btn:hover { background: #b91c1c; transform: scale(1.03); color: #ffffff; }
     .disabled-btn { background: var(--gray-100); color: var(--gray-400); }
 
-    /* Selection Overlay Styling */
-    .card-selection-overlay {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 10;
-    }
+    /* Checkbox Alignment (Inline in Metadata) */
     .form-check-input-elite {
         width: 24px;
         height: 24px;

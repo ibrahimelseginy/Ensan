@@ -8,11 +8,11 @@
         <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">مركز مراقبة النشاطات</h1>
         <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">تتبع كامل لجميع العمليات التي تتم عبر النظام لضمان الامتثال والأمان</p>
         <div class="hero-actions d-flex gap-2">
-            <a class="btn btn-sm rounded-pill px-4 bg-white text-primary fw-bold shadow hover-lift border-0"
+            <a class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold shadow-sm hover-lift" style="border-width: 2px;"
                 href="{{ route('audits.index', array_merge(request()->query(), ['export' => 'csv'])) }}">
                 <i class="bi bi-cloud-download me-1"></i> تحميل السجلات (CSV)
             </a>
-            <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;">
+            <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold shadow-sm hover-lift" style="border-width: 2px;">
                 <i class="bi bi-arrow-right me-1"></i> الرجوع للرئيسية
             </a>
         </div>

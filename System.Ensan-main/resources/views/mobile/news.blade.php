@@ -16,12 +16,12 @@
             <div class="row align-items-center">
                 <div class="col-lg-8 text-end animate-revealer">
                     <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <span class="badge-elite-status">
+                        <span class="badge-elite-status" style="color: #ffffff !important; border-color: rgba(255,255,255,0.2) !important;">
                             <span class="status-dot"></span> إدارة المحتوى المنفصل
                         </span>
                     </div>
-                    <h1 class="display-3 fw-900 text-white mb-3">أخبار التطبيق <span class="text-gradient-cyan">(News)</span></h1>
-                    <p class="lead text-azure-mist font-outfit mb-0 max-w-600 ms-auto text-end opacity-90">
+                    <h1 class="display-3 fw-900 text-white mb-3" style="color: #ffffff !important;">أخبار التطبيق <span class="text-gradient-cyan">(News)</span></h1>
+                    <p class="lead text-azure-mist font-outfit mb-0 max-w-600 ms-auto text-end opacity-90" style="color: rgba(255,255,255,0.85) !important;">
                         تحكم كامل في القصص والفعاليات التي تصل حصرياً لمستخدمي تطبيق الهواتف الذكية بنظام Ensan.
                     </p>
                 </div>
