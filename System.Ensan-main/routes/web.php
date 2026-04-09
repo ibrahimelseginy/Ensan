@@ -418,7 +418,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::middleware('permission:mobile.donors.view')->group(function () {
                 Route::get('/donors-auth', [MobileContentController::class, 'mobileDonorsIndex'])->name('donors_auth.index');
-                Route::post('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
+                Route::put('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorUpdate'])->name('donors_auth.update');
                 Route::delete('/donors-auth/{user}', [MobileContentController::class, 'mobileDonorDestroy'])->name('donors_auth.destroy');
             });
 
@@ -432,10 +432,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/web-bookings/{booking}', [MobileContentController::class, 'destroyBooking'])->name('web_bookings.destroy');
             });
 
-            Route::resource('/pillars', MobileContentController::class, [
-                'names' => 'pillars',
-                'only' => ['store', 'update', 'destroy']
-            ]);
+            Route::post('/pillars', [MobileContentController::class, 'pillarStore'])->name('pillars.store');
+            Route::put('/pillars/{pillar}', [MobileContentController::class, 'pillarUpdate'])->name('pillars.update');
+            Route::delete('/pillars/{pillar}', [MobileContentController::class, 'pillarDestroy'])->name('pillars.destroy');
             
             Route::get('/contact-info', [MobileContentController::class, 'contactInfoIndex'])->name('contact_info.index');
             Route::post('/contact-info', [MobileContentController::class, 'contactInfoStore'])->name('contact_info.store');

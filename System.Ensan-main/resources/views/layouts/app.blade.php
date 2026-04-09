@@ -534,11 +534,6 @@
 </style>
 </style>
     <style>
-        /* Global protection against blurry screens by disabling backdrop filters */
-        * {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
 
         /* ======================================================
          * Modal: Global Solid Background (Light Mode)
@@ -673,126 +668,102 @@
       body:not(.theme-dark) .btn-close-white {
           filter: invert(1) grayscale(100%) brightness(200%);
       }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-
-      /* Premium Global Toasts */
+      /* Premium Global Toasts - Emerald Redesign */
       .toast-container-elite {
           position: fixed;
-          top: 30px;
+          top: 40px;
           left: 50%;
           transform: translateX(-50%);
           z-index: 10000;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 15px;
           pointer-events: none;
       }
       .toast-elite {
-          min-width: 350px;
-          max-width: 500px;
-          padding: 16px 20px;
-          border-radius: 16px;
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(15px);
-          -webkit-backdrop-filter: blur(15px);
-          box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+          min-width: 380px;
+          max-width: 550px;
+          padding: 20px 24px;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 1px rgba(255, 255, 255, 0.5) inset;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border: 1px solid rgba(255,255,255,0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
           pointer-events: auto;
-          transition: 0.3s;
+          transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
           direction: rtl;
+          position: relative;
+          overflow: hidden;
       }
       body.theme-dark .toast-elite {
-          background: rgba(30, 41, 59, 0.9);
-          border-color: rgba(255,255,255,0.05);
-          box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+          background: rgba(15, 23, 42, 0.85);
+          border-color: rgba(255, 255, 255, 0.05);
+          box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.1) inset;
       }
-      .toast-elite.success { border-right: 6px solid #10b981; }
-      .toast-elite.error { border-right: 6px solid #ef4444; }
       
-      .toast-content { display: flex; align-items: center; gap: 15px; }
-      .toast-icon { font-size: 1.5rem; }
-      .success .toast-icon { color: #10b981; }
-      .error .toast-icon { color: #ef4444; }
+      /* Success Styling - Emerald Gradient */
+      .toast-elite.success { 
+          border-right: 8px solid transparent;
+          background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), linear-gradient(to bottom, #10b981, #059669);
+          background-origin: border-box;
+          background-clip: padding-box, border-box;
+      }
+      body.theme-dark .toast-elite.success {
+          background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), linear-gradient(to bottom, #10b981, #059669);
+      }
+
+      /* Error Styling - Crimson Ruby */
+      .toast-elite.error { 
+          border-right: 8px solid transparent;
+          background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), linear-gradient(to bottom, #ef4444, #dc2626);
+          background-origin: border-box;
+          background-clip: padding-box, border-box;
+      }
+      body.theme-dark .toast-elite.error {
+          background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), linear-gradient(to bottom, #ef4444, #dc2626);
+      }
+      
+      .toast-content { display: flex; align-items: center; gap: 18px; }
+      .toast-icon { font-size: 1.8rem; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3)); }
+      .success .toast-icon { 
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+      }
+      .error .toast-icon { 
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.3));
+      }
       
       .toast-text { display: flex; flex-direction: column; text-align: right; }
-      .toast-title { font-weight: 800; font-size: 0.95rem; color: var(--ws-text-primary); }
-      .toast-msg { font-size: 0.85rem; color: var(--ws-text-secondary); margin-top: 2px; }
+      .toast-title { font-weight: 800; font-size: 1rem; color: var(--ws-text-primary); letter-spacing: -0.2px; }
+      .toast-msg { font-size: 0.88rem; color: var(--ws-text-secondary); margin-top: 3px; font-weight: 500; line-height: 1.4; }
       
       .btn-close-toast {
           background: none;
           border: none;
-          font-size: 1.5rem;
+          font-size: 1.6rem;
           color: var(--ws-text-secondary);
-          opacity: 0.5;
+          opacity: 0.4;
           transition: 0.2s;
-          padding: 0 10px 0 0;
+          padding: 0 12px;
+          line-height: 1;
       }
-      .btn-close-toast:hover { opacity: 1; transform: scale(1.1); }
+      .btn-close-toast:hover { opacity: 1; transform: scale(1.15) rotate(90deg); color: var(--ws-text-primary); }
 
-      @keyframes toastInSimple {
-          from { opacity: 0; transform: translateY(-40px) scale(0.9); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+      @keyframes toastInSpring {
+          0% { opacity: 0; transform: translateY(-50px) scale(0.9) rotate3d(1, 0, 0, -20deg); }
+          60% { opacity: 1; transform: translateY(10px) scale(1.02); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
       }
-      .animate-toast-in { animation: toastInSimple 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
-      .toast-fade-out { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+      .animate-toast-in { animation: toastInSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+      .toast-fade-out { opacity: 0; transform: translateY(-30px) scale(0.95); filter: blur(5px); }s: none; }
 </style>
   @yield('styles')
 </head>
@@ -807,9 +778,8 @@
       @if(session('success'))
           <div class="toast-elite success animate-toast-in">
               <div class="toast-content">
-                  <i class="bi bi-check-circle-fill toast-icon"></i>
+                  <i class="bi bi-check-circle-sum text-success-elite toast-icon"></i>
                   <div class="toast-text">
-                      <span class="toast-title">تم بنجاح</span>
                       <span class="toast-msg">{{ session('success') }}</span>
                   </div>
               </div>
@@ -822,7 +792,6 @@
               <div class="toast-content">
                   <i class="bi bi-exclamation-triangle-fill toast-icon"></i>
                   <div class="toast-text">
-                      <span class="toast-title">خطأ في النظام</span>
                       <span class="toast-msg">{{ session('error') ?? $errors->first() }}</span>
                   </div>
               </div>
@@ -1572,7 +1541,7 @@
   </div>
   <div class="container content-wrapper fade-in">
     @if(!isset($hideGlobalAlerts) || !$hideGlobalAlerts)
-      @include('partials.alerts')
+      
     @endif
     @yield('content')
 
