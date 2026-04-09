@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 <div class="container-fluid p-0">
     {{-- Premium Dashboard Hero --}}
@@ -19,7 +19,7 @@
                 <a href="{{ route('tasks.index') }}" class="card-body p-4 text-decoration-none text-dark d-block">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <h6 class="fw-bold mb-0 fs-5">إحصائيات المهام</h6>
-                        <div class="icon-circle bg-dark text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                        <div class="icon-circle bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                             style="width: 48px; height: 48px;">
                             <i class="bi bi-list-check fs-4"></i>
                         </div>
@@ -27,21 +27,21 @@
                     <div class="row g-2">
                         {{-- In RTL: Col 1 is Right (All), Col 2 Middle (Completed), Col 3 Left (Pending) --}}
                         <div class="col-4">
-                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center bg-dark text-white shadow-sm">
-                                <div class="small fw-bold mb-1 opacity-75">الكل</div>
-                                <div class="h4 fw-bolder mb-0">{{ $tasksTotal }}</div>
+                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center shadow-sm" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
+                                <div class="small fw-bold mb-1 opacity-75" style="color: #3b82f6;">الكل</div>
+                                <div class="h4 fw-bolder mb-0" style="color: #3b82f6;">{{ $tasksTotal }}</div>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center bg-success text-white shadow-sm" style="background-color: #10b981 !important;">
-                                <div class="small fw-bold mb-1 opacity-90">مكتملة</div>
-                                <div class="h4 fw-bolder mb-0">{{ $tasksCompleted }}</div>
+                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center shadow-sm" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                                <div class="small fw-bold mb-1 opacity-90" style="color: #10b981;">مكتملة</div>
+                                <div class="h4 fw-bolder mb-0" style="color: #10b981;">{{ $tasksCompleted }}</div>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center bg-warning text-white shadow-sm" style="background-color: #f59e0b !important;">
-                                <div class="small fw-bold mb-1 opacity-90">معلقة</div>
-                                <div class="h4 fw-bolder mb-0">{{ $tasksPending }}</div>
+                            <div class="p-3 rounded-4 text-center h-100 d-flex flex-column justify-content-center shadow-sm" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2);">
+                                <div class="small fw-bold mb-1 opacity-90" style="color: #f59e0b;">معلقة</div>
+                                <div class="h4 fw-bolder mb-0" style="color: #f59e0b;">{{ $tasksPending }}</div>
                             </div>
                         </div>
                     </div>

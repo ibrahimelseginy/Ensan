@@ -17,9 +17,9 @@
   <style>
       :root {
           /* Brand Identity - SaaS Clean Style */
-          --primary: #22C55E;
-          --primary-dark: #16A34A;
-          --primary-light: #f0fdf4;
+          --primary: #059669;
+          --primary-dark: #047857;
+          --primary-light: #ecfdf5;
           --secondary: #111111;
           --text-main: #111111;
           --text-muted: #6B7280;
@@ -35,8 +35,8 @@
           --radius-sm: 8px;
           
           /* Bootstrap 5 Native Overrides - Essential for opacity utilities */
-          --bs-primary: #22C55E;
-          --bs-primary-rgb: 34, 197, 94;
+          --bs-primary: #059669;
+          --bs-primary-rgb: 5, 150, 105;
           
           /* Legacy Compatibility */
           --ws-primary: var(--primary);
@@ -944,15 +944,15 @@
         @endif
       @endif
 
-      @if($user && ($user->hasPermission('manage_logistics') || $user->hasPermission('delegates.view') || $user->hasPermission('travel_routes.view') || $user->hasPermission('trips.view') || $user->hasPermission('kafr_el_sheikh_deliveries.view') || $user->hasPermission('kafr_el_sheikh_services.view')))
+      @if($user && ($user->hasPermission('manage_logistics') || $user->hasPermission('delegates.view') || $user->hasPermission('travel_routes.view') || $user->hasPermission('trips.view') || $user->hasPermission('kafr_el_sheikh_deliveries.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#delegatesCollapse" role="button"
-          aria-expanded="{{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*')) ? 'true' : 'false' }}"
+          aria-expanded="{{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*')) ? 'true' : 'false' }}"
           aria-controls="delegatesCollapse">
           <span><i class="bi bi-signpost-2"></i> اللوجيستك</span>
           <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
         </a>
-        <div class="collapse {{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*') || request()->routeIs('kafr-el-sheikh-services.*')) ? 'show' : '' }} sub-list" id="delegatesCollapse">
+        <div class="collapse {{ (request()->routeIs('logistics.*') || request()->routeIs('delegates.*') || request()->routeIs('travel-routes.*') || request()->routeIs('trips.*') || request()->routeIs('kafr-el-sheikh-deliveries.*')) ? 'show' : '' }} sub-list" id="delegatesCollapse">
           <div class="list-group list-group-flush ps-3">
             @if($user->hasPermission('manage_logistics'))
               <a href="{{ route('logistics.dashboard') }}"
@@ -979,12 +979,6 @@
               <a href="{{ route('kafr-el-sheikh-deliveries.index') }}" 
                  class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-deliveries.*') ? 'active' : '' }}">
                  <i class="bi bi-truck"></i><span>توصيلات كفر الشيخ</span>
-              </a>
-            @endif
-            @if($user->hasPermission('kafr_el_sheikh_services.view'))
-              <a href="{{ route('kafr-el-sheikh-services.index') }}" 
-                 class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}">
-                 <i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span>
               </a>
             @endif
           </div>
@@ -1260,21 +1254,38 @@
         </div>
       @endif
 
-      @if($user && ($user->hasPermission('manage_specialized_services') || $user->hasPermission('school_collaborations.view') || $user->hasPermission('memberships.view') || $user->hasPermission('oncology_medicine_reps.view') || $user->hasPermission('kafr_el_sheikh_brokers.view') || $user->hasPermission('tanta_workers.view')))
+      @if($user && ($user->hasPermission('manage_specialized_services') || $user->hasPermission('school_collaborations.view') || $user->hasPermission('memberships.view')))
         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           data-bs-toggle="collapse" href="#collaborationsCollapse" role="button"
-          aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
+          aria-expanded="{{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') ? 'true' : 'false' }}"
           aria-controls="collaborationsCollapse">
           <span><i class="bi bi-diagram-3"></i> التعاونات والشراكات والعضوية</span>
           <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
         </a>
-        <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
+        <div class="collapse {{ request()->routeIs('school-collaborations.*') || request()->routeIs('memberships.*') ? 'show' : '' }} sub-list" id="collaborationsCollapse">
           <div class="list-group list-group-flush ps-3">
             @if($user->hasPermission('school_collaborations.view'))
               <a href="{{ route('school-collaborations.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('school-collaborations.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>تعاونات المدارس</span></a>
             @endif
             @if($user->hasPermission('memberships.view'))
               <a href="{{ route('memberships.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('memberships.*') ? 'active' : '' }}"><i class="bi bi-person-badge"></i><span>العضويات</span></a>
+            @endif
+          </div>
+        </div>
+      @endif
+
+      @if($user && ($user->hasPermission('kafr_el_sheikh_services.view') || $user->hasPermission('oncology_medicine_reps.view') || $user->hasPermission('kafr_el_sheikh_brokers.view') || $user->hasPermission('tanta_workers.view')))
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          data-bs-toggle="collapse" href="#generalServicesCollapse" role="button"
+          aria-expanded="{{ request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'true' : 'false' }}"
+          aria-controls="generalServicesCollapse">
+          <span><i class="bi bi-briefcase"></i> الخدمات العامة</span>
+          <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
+        </a>
+        <div class="collapse {{ request()->routeIs('kafr-el-sheikh-services.*') || request()->routeIs('oncology-medicine-reps.*') || request()->routeIs('kafr-el-sheikh-brokers.*') || request()->routeIs('tanta-workers.*') ? 'show' : '' }} sub-list" id="generalServicesCollapse">
+          <div class="list-group list-group-flush ps-3">
+            @if($user->hasPermission('kafr_el_sheikh_services.view'))
+              <a href="{{ route('kafr-el-sheikh-services.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('kafr-el-sheikh-services.*') ? 'active' : '' }}"><i class="bi bi-tools"></i><span>خدمات كفر الشيخ</span></a>
             @endif
             @if($user->hasPermission('oncology_medicine_reps.view'))
               <a href="{{ route('oncology-medicine-reps.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('oncology-medicine-reps.*') ? 'active' : '' }}"><i class="bi bi-prescription2"></i><span>مناديب أدوية الأورام</span></a>

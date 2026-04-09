@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 
 {{-- Premium Security Dashboard Hero --}}
@@ -124,24 +124,24 @@
                 <h6 class="fw-bold mb-3 section-title-sm">ملخص العمليات</h6>
                 <div class="list-group list-group-flush bg-transparent audit-stats">
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => ''])) }}" 
-                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span style="color: #94a3b8;"><i class="bi bi-layers me-2" style="color: #22d3ee;"></i>الإجمالي</span>
-                        <span class="fw-bold" style="color: #e2e8f0; font-size: 1.1rem;">{{ number_format($stats['total']) }}</span>
+                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center audit-stats-item">
+                        <span class="text-muted"><i class="bi bi-layers me-2 text-info"></i>الإجمالي</span>
+                        <span class="fw-bold audit-stat-value">{{ number_format($stats['total']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'POST'])) }}"
-                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="small" style="color: #4ade80;"><i class="bi bi-plus-circle me-2"></i>إضافة (POST)</span>
-                        <span class="badge rounded-pill" style="background: rgba(74,222,128,0.12); color: #4ade80;">{{ number_format($stats['POST']) }}</span>
+                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center audit-stats-item">
+                        <span class="small text-muted"><i class="bi bi-plus-circle me-2 text-success"></i>إضافة (POST)</span>
+                        <span class="badge rounded-pill bg-success-subtle text-success">{{ number_format($stats['POST']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'PUT'])) }}"
-                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="small" style="color: #60a5fa;"><i class="bi bi-pencil me-2"></i>تعديل (PUT)</span>
-                        <span class="badge rounded-pill" style="background: rgba(96,165,250,0.12); color: #60a5fa;">{{ number_format($stats['PUT'] + $stats['PATCH']) }}</span>
+                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center audit-stats-item">
+                        <span class="small text-muted"><i class="bi bi-pencil me-2 text-primary"></i>تعديل (PUT)</span>
+                        <span class="badge rounded-pill bg-primary-subtle text-primary">{{ number_format($stats['PUT'] + $stats['PATCH']) }}</span>
                     </a>
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'DELETE'])) }}"
-                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center">
-                        <span class="small" style="color: #f87171;"><i class="bi bi-trash me-2"></i>حذف (DELETE)</span>
-                        <span class="badge rounded-pill" style="background: rgba(248,113,113,0.12); color: #f87171;">{{ number_format($stats['DELETE']) }}</span>
+                       class="list-group-item list-group-item-action bg-transparent border-0 px-0 d-flex justify-content-between align-items-center audit-stats-item">
+                        <span class="small text-muted"><i class="bi bi-trash me-2 text-danger"></i>حذف (DELETE)</span>
+                        <span class="badge rounded-pill bg-danger-subtle text-danger">{{ number_format($stats['DELETE']) }}</span>
                     </a>
                 </div>
             </div>

@@ -2,19 +2,15 @@
 
 :root {
   /* Brand Colors - Modern Corporate (Emerald & Slate) */
-  --primary: #22c55e;
-  /* Emerald 500 - Uniform Brand Green */
-  --primary-hover: #16a34a;
-  /* Emerald 600 */
-  --primary-active: #15803d;
-  /* Emerald 700 */
-  --primary-subtle: #f0fdf4;
-  /* Emerald 50 */
+  --primary: #059669;        /* Emerald 600 - Uniform Brand Green */
+  --primary-hover: #047857;  /* Emerald 700 */
+  --primary-active: #065f46; /* Emerald 800 */
+  --primary-subtle: #ecfdf5; /* Emerald 50 */
   --accent: #f59e0b;
   /* Amber 500 */
   --danger: #ef4444;
   /* Red 500 */
-  --success: #22c55e;
+  --success: #059669;
   /* Match Primary */
   --warning: #f59e0b;
   /* Amber 500 */
@@ -56,8 +52,8 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg:
     0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-premium: 0 20px 40px -12px rgba(34, 197, 94, 0.15), 0 15px 25px -10px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(34, 197, 94, 0.3);
+  --shadow-premium: 0 20px 40px -12px rgba(5, 150, 105, 0.15), 0 15px 25px -10px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.3);
 
   --nav-height: 100px;
   /* Increased from 70px to accommodate larger logo */
@@ -72,9 +68,9 @@
 }
 
 @keyframes pulseGlow {
-    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
 }
 
 .animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
@@ -87,11 +83,11 @@
 /* Dark Mode - Deep Navy & Slate */
 body.theme-dark {
   /* Primary - Brighter for Dark Mode */
-  --primary: #34d399;
-  /* Emerald 400 */
-  --primary-hover: #10b981;
+  --primary: #10b981;
   /* Emerald 500 */
-  --primary-subtle: rgba(16, 185, 129, 0.1);
+  --primary-hover: #059669;
+  /* Emerald 600 */
+  --primary-subtle: rgba(5, 150, 105, 0.1);
   --accent: #fbbf24;
   /* Amber 400 */
 
@@ -225,11 +221,11 @@ input[type="number"] {
   }
 
   .btn-primary {
-      box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.39);
+      box-shadow: 0 4px 14px 0 rgba(5, 150, 105, 0.39);
   }
 
   .btn-primary:hover {
-      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.23);
+      box-shadow: 0 6px 20px rgba(5, 150, 105, 0.23);
   }
 
   /* Form Glassmorphism */
@@ -244,7 +240,7 @@ input[type="number"] {
   .form-control:focus, .form-select:focus {
       background: var(--bg-card) !important;
       border-color: var(--primary) !important;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1) !important;
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1) !important;
   }
 
 /* Navbar Premium */
@@ -569,13 +565,13 @@ body.sidebar-collapsed .content-wrapper {
   background: var(--primary);
   border: 1px solid transparent;
   color: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.3);
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.4);
 }
 
 .btn-primary:active {
@@ -661,7 +657,7 @@ body.sidebar-collapsed .content-wrapper {
 .card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-xl);
-  border-color: rgba(16, 185, 129, 0.2);
+  border-color: rgba(5, 150, 105, 0.2);
   /* Hint of green on hover */
 }
 
@@ -4262,3 +4258,85 @@ body.theme-dark .page-item.active .page-link {
 body.theme-dark .page-link:hover {
     background-color: rgba(34, 197, 94, 0.15) !important;
 }
+/* --- Fix Pagination Overlap with Dropdown --- */
+.dropdown-menu {
+  z-index: 9999 !important;
+}
+.pagination {
+  z-index: 0 !important;
+}
+.page-item .page-link {
+  z-index: 0 !important;
+}
+.page-item.active .page-link {
+  z-index: 1 !important;
+}
+
+/* --- Sidebar Parent Active State --- */
+.sidebar-fixed .list-group-item[aria-expanded="true"] {
+  background-color: var(--primary-subtle) !important;
+  color: var(--primary) !important;
+  border-right: 4px solid var(--primary) !important;
+  font-weight: 700 !important;
+}
+.theme-dark .sidebar-fixed .list-group-item[aria-expanded="true"] {
+  background-color: rgba(5, 150, 105, 0.15) !important;
+}
+.sidebar-fixed .list-group-item[aria-expanded="true"] i {
+  color: var(--primary) !important;
+}
+
+/* Overriding the expanded state to avoid looking like a stuck hover */
+.sidebar-fixed .list-group-item[aria-expanded="true"] {
+  background-color: transparent !important;
+  border-right: none !important;
+}
+
+.sidebar-fixed .list-group-item[aria-expanded="true"] span {
+  font-weight: 700;
+  color: var(--primary);
+}
+.sidebar-fixed .list-group-item[aria-expanded="true"] .sidebar-toggle-icon {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+
+/* Strong Active Class Ensure */
+.sidebar-fixed .list-group-item.active, .sidebar-fixed .sub-list .list-group-item.active {
+  background-color: var(--primary) !important;
+  color: white !important;
+  box-shadow: 0 0 15px rgba(5, 150, 105, 0.4) !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: bold !important;
+}
+.sidebar-fixed .list-group-item.active i, .sidebar-fixed .list-group-item.active span {
+  color: white !important;
+}
+
+
+/* Audits UI Improvements */
+.audit-stats-item {
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+.theme-dark .audit-stats-item { color: #e2e8f0; }
+.audit-stat-value { font-size: 1.1rem; }
+.audit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--gray-200);
+  border-right: 4px solid transparent;
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+.theme-dark .audit-card {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.07);
+}
+.audit-card:hover {
+  border-right-color: var(--primary);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transform: translateX(-2px);
+}
+.theme-dark .audit-card:hover { box-shadow: 0 6px 24px rgba(6,182,212,0.08); }
+

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #3730a3 100%);">
@@ -12,7 +12,7 @@
                     <i class="bi bi-shield-check me-1"></i> طلبات المراجعة
                 </a>
             @endif
-            <a href="{{ route('closures.create') }}" class="btn btn-sm rounded-pill px-4 btn-light text-primary shadow-sm">
+            <a href="{{ route('closures.create') }}" class="btn btn-sm rounded-pill px-4 bg-white text-indigo shadow-lg fw-bold border-0 hover-lift">
                 <i class="bi bi-plus-lg me-1"></i> إغلاق جديد
             </a>
         </div>
