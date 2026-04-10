@@ -5,9 +5,12 @@
 
 @php
     $totalAmount = $donations->sum('donation_amount');
+    $completedAmount = $donations->where('status', 'completed')->sum('donation_amount');
     $donationsCount = $donations->count();
     $pendingCount = $donations->where('status', 'pending')->count();
     $completedCount = $donations->where('status', 'completed')->count();
+    $collectionRate = $totalAmount > 0 ? round(($completedAmount / $totalAmount) * 100) : 0;
+    
     $targetsBreakdown = $donations->groupBy('donation_for')->map(function($items) {
         return [
             'count' => $items->count(),
@@ -47,12 +50,19 @@
                         <h2 class="text-white fw-800 font-outfit mb-0" style="font-size: 2.8rem">{{ number_format($totalAmount, 0) }} <span class="fs-6 opacity-75">ج.م</span></h2>
                     </div>
                     <div class="mt-auto">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-white x-small fw-bold op-75">اكتمال التحصيل</span>
-                            <span class="text-white x-small fw-bold">100%</span>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="text-white small fw-bold op-75">اكتمال التحصيل</span>
+                            <div class="percentage-pill bg-white bg-opacity-20 px-3 py-1 rounded-pill blur-xs">
+                                <span class="text-white fw-800 font-outfit" style="font-size: 1.1rem">{{ $collectionRate }}%</span>
+                            </div>
                         </div>
-                        <div class="progress bg-white bg-opacity-10" style="height: 6px; border-radius: 10px;">
-                            <div class="progress-bar bg-white shadow-sm" style="width: 100%"></div>
+                        <div class="progress-container-elite shadow-sm">
+                            <div class="progress bg-white bg-opacity-10" style="height: 12px; border-radius: 20px; padding: 2px;">
+                                <div class="progress-bar emerald-glow-bar" role="progressbar" 
+                                     style="width: {{ $collectionRate }}%; border-radius: 20px;" 
+                                     aria-valuenow="{{ $collectionRate }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -148,9 +158,15 @@
                 <i class="bi bi-search text-primary fs-5"></i>
                 <input type="text" id="donationSearch" class="form-control border-0 bg-transparent py-3 shadow-none text-stats-main" placeholder="البحث عن متبرع بالاسم أو رقم الهاتف...">
                 <div class="d-none d-md-flex align-items-center gap-2">
-                    <span class="badge-filter active">الكل</span>
-                    <span class="badge-filter">بانتظار التأكيد</span>
-                    <span class="badge-filter">تم التبرع</span>
+                    <span class="badge-filter active" data-filter="all">
+                        الكل <span class="badge bg-white bg-opacity-10 ms-2 font-outfit">{{ $donationsCount }}</span>
+                    </span>
+                    <span class="badge-filter" data-filter="pending">
+                        بانتظار التأكيد <span class="badge bg-white bg-opacity-10 ms-2 font-outfit">{{ $pendingCount }}</span>
+                    </span>
+                    <span class="badge-filter" data-filter="completed">
+                        تم التبرع <span class="badge bg-white bg-opacity-10 ms-2 font-outfit">{{ $completedCount }}</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -159,7 +175,11 @@
     <!-- Donation Cards Grid -->
     <div class="row g-4" id="donationsGrid">
         @forelse($donations as $donation)
-        <div class="col-xl-4 col-lg-6 col-md-6 donation-item animate-up" data-name="{{ $donation->donor_name }}" data-phone="{{ $donation->donor_phone }}" style="animation-delay: {{ $loop->index * 0.05 }}s">
+        <div class="col-xl-4 col-lg-6 col-md-6 donation-item animate-up" 
+             data-name="{{ $donation->donor_name }}" 
+             data-phone="{{ $donation->donor_phone }}" 
+             data-status="{{ $donation->status }}"
+             style="animation-delay: {{ $loop->index * 0.05 }}s">
             <div class="elite-donation-card">
                 <div class="card-glow-overlay"></div>
                 
@@ -287,6 +307,55 @@
                             </div>
                         </div>
 
+                        <!-- Timeline Process Section -->
+                        <div class="section-elite mb-5">
+                            <h6 class="text-primary fw-800 small text-uppercase letter-spacing-1 mb-4">مسار العملية (Timeline)</h6>
+                            <div class="timeline-elite">
+                                <div class="timeline-item-elite active">
+                                    <div class="timeline-point-elite"></div>
+                                    <div class="timeline-content-elite">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold text-stats-main small">إنشاء الطلب من الموبايل</span>
+                                            <span class="x-small text-muted">{{ $donation->created_at->format('h:i A') }}</span>
+                                        </div>
+                                        <p class="x-small text-muted mb-0">تم استلام بيانات التبرع بنجاح.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item-elite {{ $donation->status != 'pending' ? 'active' : '' }}">
+                                    <div class="timeline-point-elite {{ $donation->status == 'pending' ? 'pulse-pending' : '' }}"></div>
+                                    <div class="timeline-content-elite">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold text-stats-main small">مراجعة الإدارة</span>
+                                            <span class="x-small text-muted">@if($donation->status != 'pending') {{ $donation->updated_at->format('h:i A') }} @else قيد الانتظار @endif</span>
+                                        </div>
+                                        <p class="x-small text-muted mb-0">
+                                            @if($donation->status == 'pending')
+                                                جاري مراجعة الوصل والبيانات من قبل المسؤول.
+                                            @elseif($donation->status == 'completed')
+                                                تمت مراجعة الوصل وتأكيده بنجاح.
+                                            @else
+                                                تم رفض الطلب أو إلغاؤه لمشكلة في البيانات.
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+
+                                @if($donation->status == 'completed')
+                                <div class="timeline-item-elite active success">
+                                    <div class="timeline-point-elite bg-success"></div>
+                                    <div class="timeline-content-elite">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold text-success small">اكتمال التحصيل</span>
+                                            <span class="x-small text-success">{{ $donation->updated_at->format('Y/m/d') }}</span>
+                                        </div>
+                                        <p class="x-small text-success mb-0 opacity-75">تمت إضافة المبلغ لميزانية المشروع.</p>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="section-elite">
                             <h6 class="text-primary fw-800 small text-uppercase letter-spacing-1 mb-4">تفاصيل الدفع</h6>
                             <div class="row g-4">
@@ -397,6 +466,26 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
+    /* Progress Bar Improvements */
+    .emerald-glow-bar {
+        background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        position: relative;
+        overflow: hidden;
+    }
+    .emerald-glow-bar::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: progress-shine 2s infinite;
+    }
+    @keyframes progress-shine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    .blur-xs { backdrop-filter: blur(5px); }
+
     .search-container-premium {
         background: var(--ws-bg-card);
         border: 1px solid var(--ws-border);
@@ -590,6 +679,52 @@
         50% { transform: translateY(-10px); }
     }
 
+    /* Timeline Styling */
+    .timeline-elite {
+        position: relative;
+        padding-right: 32px;
+        margin-right: 15px;
+        border-right: 2px solid var(--ws-border);
+    }
+    .timeline-item-elite {
+        position: relative;
+        padding-bottom: 25px;
+    }
+    .timeline-item-elite:last-child { padding-bottom: 0; }
+    
+    .timeline-point-elite {
+        position: absolute;
+        right: -41px;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ws-border);
+        border: 3px solid var(--ws-bg-page);
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+    .timeline-item-elite.active .timeline-point-elite {
+        background: var(--primary);
+        box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+    }
+    .timeline-content-elite {
+        background: var(--ws-bg-card);
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--ws-border);
+    }
+    
+    .pulse-pending {
+        animation: pulse-line 2s infinite;
+        background: var(--warning) !important;
+    }
+    @keyframes pulse-line {
+        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
     /* Search Result Handling */
     .donation-item.hidden-search {
         display: none !important;
@@ -606,16 +741,26 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('donationSearch');
     const donationItems = document.querySelectorAll('.donation-item');
+    const filterBadges = document.querySelectorAll('.badge-filter');
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase().trim();
+    // Filter Badges Logic
+    filterBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            filterBadges.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filterValue = this.getAttribute('data-filter');
+            const query = searchInput.value.toLowerCase().trim();
             
             donationItems.forEach(item => {
                 const name = item.getAttribute('data-name').toLowerCase();
                 const phone = item.getAttribute('data-phone').toLowerCase();
+                const status = item.getAttribute('data-status');
                 
-                if (name.includes(query) || phone.includes(query)) {
+                const matchesSearch = name.includes(query) || phone.includes(query);
+                const matchesFilter = filterValue === 'all' || status === filterValue;
+                
+                if (matchesSearch && matchesFilter) {
                     item.style.display = 'block';
                     item.classList.add('animate-up');
                 } else {
@@ -623,19 +768,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-    }
-
-    // Filter Badges Logic
-    const filterBadges = document.querySelectorAll('.badge-filter');
-    filterBadges.forEach(badge => {
-        badge.addEventListener('click', function() {
-            filterBadges.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filterText = this.innerText;
-            // Add filtering logic here if needed (requires status data on items)
-        });
     });
+
+    // Integrated search with filter support
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const activeBadge = document.querySelector('.badge-filter.active');
+            const activeFilter = activeBadge ? activeBadge.getAttribute('data-filter') : 'all';
+            const query = this.value.toLowerCase().trim();
+            
+            donationItems.forEach(item => {
+                const name = item.getAttribute('data-name').toLowerCase();
+                const phone = item.getAttribute('data-phone').toLowerCase();
+                const status = item.getAttribute('data-status');
+                
+                const matchesSearch = name.includes(query) || phone.includes(query);
+                const matchesFilter = activeFilter === 'all' || status === activeFilter;
+                
+                if (matchesSearch && matchesFilter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
 });
 </script>
 @endsection
