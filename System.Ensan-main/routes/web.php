@@ -412,7 +412,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::middleware('permission:mobile.donations.view')->group(function () {
                 Route::get('/donations', [MobileContentController::class, 'donationsIndex'])->name('donations.index');
-                Route::post('/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
+                Route::match(['post', 'patch'], '/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
                 Route::delete('/donations/{donation}', [MobileContentController::class, 'destroyDonation'])->name('donations.destroy');
             });
 

@@ -327,7 +327,7 @@
 
                             <div class="admin-action-card p-4 rounded-4 bg-white shadow-sm border border-light-subtle">
                                 <form action="{{ route('mobile.donations.update', $donation->id) }}" method="POST">
-                                    @csrf @method('PATCH')
+                                    @csrf
                                     <label class="x-small text-muted-theme fw-bold mb-3 d-block text-center uppercase">اتخاذ إجراء بشأن العملية</label>
                                     <div class="status-buttons-elite d-flex flex-column gap-2">
                                         <button type="submit" name="status" value="completed" class="btn btn-success rounded-3 fw-bold py-2 {{ $donation->status == 'completed' ? 'opacity-50' : '' }}">
