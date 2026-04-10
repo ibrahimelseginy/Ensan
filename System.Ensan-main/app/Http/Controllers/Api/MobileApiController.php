@@ -740,8 +740,8 @@ final class MobileApiController extends Controller
             // Revoke all tokens
             $user->tokens()->delete();
 
-            // Soft delete the user
-            $user->delete();
+            // Hard delete the user to allow re-registration and complete removal from login system
+            $user->forceDelete();
 
             return response()->json([
                 'status'  => 'success',
