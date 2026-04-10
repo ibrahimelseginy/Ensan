@@ -101,7 +101,7 @@
         <div class="modal fade" id="editNewsModal{{ $item->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <form action="{{ route('mobile.news.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg modal-glass-theme rounded-5 overflow-hidden">
-                    @csrf @method('PUT')
+                    @csrf
                     <div class="modal-header border-0 bg-stats-header px-4 py-3 border-bottom border-light-subtle">
                         <h5 class="modal-title fw-bold text-stats-main"><i class="bi bi-pencil-square me-2 text-primary"></i> تحرير خبر الموبايل</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
