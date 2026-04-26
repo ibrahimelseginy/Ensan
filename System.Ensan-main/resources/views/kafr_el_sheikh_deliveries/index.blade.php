@@ -333,7 +333,6 @@
                 <div class="mt-4 opacity-10">
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <img src="{{ asset('heart-icon.png') }}" alt="logo" height="40">
-                        <img src="{{ asset('text-logo.png') }}" alt="text" height="20">
                     </div>
                 </div>
             </div>

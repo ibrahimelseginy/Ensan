@@ -813,11 +813,8 @@
             <i class="bi bi-list fs-2"></i>
           </button>
           <a class="navbar-brand navbar-logo-elite me-0" href="/">
-            @if(file_exists(public_path('heart-icon.png')) && file_exists(public_path('text-logo.png')))
-              <div class="d-flex align-items-center gap-2">
-                <img src="{{ asset('heart-icon.png') }}" alt="شعار إنسان" loading="lazy" style="height: 50px !important; width: auto !important;">
-                <img src="{{ asset('text-logo.png') }}" alt="مؤسسة إنسان الخيرية" loading="lazy" class="d-none d-md-block" style="height: 32px !important; width: auto !important; margin-top: 0 !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)) !important;">
-              </div>
+            @if(file_exists(public_path('heart-icon.png')))
+              <img src="{{ asset('heart-icon.png') }}" alt="شعار إنسان" loading="lazy" style="height: 50px !important; width: auto !important;">
             @else
               <span class="fw-800 text-primary">مؤسسة إنسان الخيرية</span>
             @endif
@@ -1551,10 +1548,9 @@
     <footer class="mt-5 pt-4 pb-4 text-center text-muted small">
       <div class="container">
         <div class="d-flex justify-content-center align-items-center mb-2">
-          @if(file_exists(public_path('heart-icon.png')) && file_exists(public_path('text-logo.png')))
+          @if(file_exists(public_path('heart-icon.png')))
             <div class="d-flex align-items-center justify-content-center gap-2">
               <img src="{{ asset('heart-icon.png') }}" alt="logo" height="45" style="opacity: 1; width: auto !important;">
-              <img src="{{ asset('text-logo.png') }}" alt="مؤسسة إنسان الخيرية" height="28" style="opacity: 1; width: auto !important;">
             </div>
           @endif
         </div>

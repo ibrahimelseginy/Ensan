@@ -238,10 +238,9 @@
               style="width: 32px; height: 32px; border: none;" aria-label="Toggle Theme">
               <i class="bi bi-moon"></i>
             </button>
-            @if(file_exists(public_path('heart-icon.png')) && file_exists(public_path('text-logo.png')))
-              <div class="d-flex align-items-center justify-content-center gap-2 mb-3 mt-2">
+            @if(file_exists(public_path('heart-icon.png')))
+              <div class="d-flex align-items-center justify-content-center mb-3 mt-2">
                 <img src="{{ asset('heart-icon.png') }}" alt="logo" class="logo-img mb-0 shadow-sm" style="width: 55px; height: 55px; padding: 5px;">
-                <img src="{{ asset('text-logo.png') }}" alt="مؤسسة إنسان الخيرية" style="height: 35px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
               </div>
             @endif
             <p class="mb-0 opacity-75 small mt-1">نبني جيل .. يبني حياة</p>
