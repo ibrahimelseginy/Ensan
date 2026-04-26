@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>تسجيل دخول | مؤسسة إنسان</title>
-  <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+  <title>تسجيل دخول | مؤسسة انسان الخيرية</title>
+  <link rel="icon" href="{{ asset('heart-icon.png') }}" type="image/png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,10 +238,12 @@
               style="width: 32px; height: 32px; border: none;" aria-label="Toggle Theme">
               <i class="bi bi-moon"></i>
             </button>
-            @if(file_exists(public_path('logo.png')))
-              <img src="{{ asset('logo.png') }}" alt="logo" class="logo-img">
+            @if(file_exists(public_path('heart-icon.png')) && file_exists(public_path('text-logo.png')))
+              <div class="d-flex align-items-center justify-content-center gap-2 mb-3 mt-2">
+                <img src="{{ asset('heart-icon.png') }}" alt="logo" class="logo-img mb-0 shadow-sm" style="width: 55px; height: 55px; padding: 5px;">
+                <img src="{{ asset('text-logo.png') }}" alt="مؤسسة إنسان الخيرية" style="height: 35px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+              </div>
             @endif
-            <h4 class="mb-0 fw-bold">مؤسسة إنسان</h4>
             <p class="mb-0 opacity-75 small mt-1">نبني جيل .. يبني حياة</p>
           </div>
           <div class="card-body p-4 p-md-5">
