@@ -7,7 +7,7 @@
 /storage/logs/
 /bootstrap/cache/
 /.trae/
-/.DS_Store
+.DS_Store
 Thumbs.db
 /.phpunit.result.cache
 composer.phar
