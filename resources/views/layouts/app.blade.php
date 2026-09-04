@@ -1661,7 +1661,6 @@
                   class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger d-none">0</span>
               </button>
             @endif
-            @endif
 
             <button id="themeToggle" class="btn btn-glass-pill" type="button" aria-label="تبديل الثيم">
               <i class="bi bi-moon fs-5"></i>
