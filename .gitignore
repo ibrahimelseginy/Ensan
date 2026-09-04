@@ -18,6 +18,7 @@ composer-setup.php
 /maintenance/backups/
 /.tools/
 /.gemini/
+/.claude/
 /.idea/
 /.vscode/
 /public/storage/
