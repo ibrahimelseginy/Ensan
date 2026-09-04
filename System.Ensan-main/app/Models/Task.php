@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class Task extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['title','volunteer_activity_name','description','assigned_to','assigned_by','due_date','status','project_id','campaign_id','guest_house_id','rating','evaluation_notes'];
 
     protected $casts = ['due_date' => 'date'];

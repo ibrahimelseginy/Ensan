@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class ChangeRequest extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'user_id',
         'model_type',

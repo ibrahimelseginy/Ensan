@@ -1,4 +1,137 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
+@section('styles')
+<style>
+  .beneficiaries-table {
+    position: relative;
+  }
+
+  .beneficiary-action-cell {
+    position: relative;
+    width: 80px;
+    min-width: 80px;
+  }
+
+  .beneficiary-actions {
+    position: relative;
+    display: inline-flex;
+    justify-content: flex-end;
+  }
+
+  .beneficiary-action-toggle {
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-grid !important;
+    place-items: center;
+    border: 1px solid rgba(100, 116, 139, .25) !important;
+    background: rgba(148, 163, 184, .12) !important;
+    color: var(--dark) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .beneficiary-action-toggle::after {
+    display: none !important;
+  }
+
+  .beneficiary-action-toggle:hover,
+  .beneficiary-action-toggle:focus,
+  .beneficiary-action-toggle[aria-expanded="true"] {
+    transform: none !important;
+    color: var(--primary) !important;
+    border-color: rgba(16, 185, 129, .55) !important;
+    background: rgba(16, 185, 129, .14) !important;
+  }
+
+  .beneficiary-action-menu {
+    min-width: min(275px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px);
+    padding: 8px !important;
+    border-radius: 14px !important;
+    direction: rtl;
+    text-align: right;
+    z-index: 1070 !important;
+  }
+
+  .beneficiary-action-menu li,
+  .beneficiary-action-menu form {
+    width: 100%;
+    margin: 0;
+  }
+
+  .beneficiary-action-menu .dropdown-item {
+    width: 100%;
+    min-height: 42px;
+    display: grid !important;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px !important;
+    padding: 9px 12px !important;
+    border-radius: 9px !important;
+    line-height: 1.35;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .beneficiary-action-menu .action-icon {
+    width: 22px;
+    display: inline-grid;
+    place-items: center;
+    margin: 0 !important;
+    font-size: 1rem;
+  }
+
+  .beneficiary-action-menu .action-label {
+    min-width: 0;
+  }
+
+  .beneficiary-action-menu .dropdown-divider {
+    margin: 5px 4px !important;
+  }
+
+  .beneficiary-action-menu .dropdown-item.text-info {
+    color: #0891b2 !important;
+  }
+
+  .beneficiary-action-menu .dropdown-item.text-warning {
+    color: #d97706 !important;
+  }
+
+  .beneficiary-action-menu .dropdown-item.text-danger {
+    color: #dc2626 !important;
+  }
+
+  .beneficiaries-table tbody tr.actions-row-active {
+    position: relative;
+    z-index: 1065 !important;
+    transform: none !important;
+  }
+
+  .beneficiaries-table.actions-menu-open tbody tr:not(.actions-row-active) .beneficiary-action-toggle {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .theme-dark .beneficiary-action-toggle {
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, .18) !important;
+    background: rgba(255, 255, 255, .08) !important;
+  }
+
+  .theme-dark .beneficiary-action-menu {
+    border-color: rgba(148, 163, 184, .22) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .55) !important;
+  }
+
+  .theme-dark .beneficiary-action-menu .dropdown-item.text-info {
+    color: #38bdf8 !important;
+  }
+
+  .theme-dark .beneficiary-action-menu .dropdown-item.text-danger {
+    color: #fb7185 !important;
+  }
+</style>
+@endsection
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%);">
@@ -93,12 +226,17 @@
                     <option value="new" @selected(($status ?? '') === 'new')>جديد</option>
                     <option value="under_review" @selected(($status ?? '') === 'under_review')>تحت المراجعة</option>
                     <option value="accepted" @selected(($status ?? '') === 'accepted')>مقبول</option>
+                    <option value="rejected" @selected(($status ?? '') === 'rejected')>مرفوض</option>
+                    <option value="archived_improved" @selected(($status ?? '') === 'archived_improved')>أرشيف — تحسن / شفاء</option>
+                    <option value="archived_deceased" @selected(($status ?? '') === 'archived_deceased')>أرشيف — توفي</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-bold small text-uppercase text-muted">نوع المساعدة</label>
                 <select name="assistance_type" class="form-select">
                     <option value="">الكل</option>
+                    <option value="monthly" @selected(($atype ?? '') === 'monthly')>كفالة شهرية</option>
+                    <option value="one_time" @selected(($atype ?? '') === 'one_time')>مساعدة مؤقتة</option>
                     <option value="financial" @selected(($atype ?? '') === 'financial')>مالية</option>
                     <option value="in_kind" @selected(($atype ?? '') === 'in_kind')>عينية</option>
                     <option value="service" @selected(($atype ?? '') === 'service')>خدمية</option>
@@ -163,44 +301,34 @@
             <div class="col-md-4 d-flex align-items-end gap-2">
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
-                <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.export', request()->query()) }}" title="تصدير Excel"><i class="bi bi-download"></i></a>
+                <a class="btn btn-outline-success" data-no-loader href="{{ route('beneficiaries.export', request()->query()) }}" title="تصدير Excel"><i class="bi bi-file-earmark-excel me-1"></i> إكسل</a>
+                <a class="btn btn-outline-danger" data-no-loader href="{{ route('beneficiaries.export-pdf', request()->query()) }}" title="تحميل PDF"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+                <button class="btn btn-outline-primary" type="button" onclick="window.print()" title="طباعة الكشف"><i class="bi bi-printer me-1"></i> طباعة</button>
             </div>
         </div>
     </form>
 </div>
-  <div class="table-responsive">
+  <div class="table-responsive bg-white rounded shadow-sm p-3">
     @php
       $curSort = $sort ?? request('sort');
       $curDir = $dir ?? request('dir');
       $toggle = ($curDir === 'asc' ? 'desc' : 'asc');
     @endphp
     <div id="tableContainer">
-      <table class="table table-striped">
-        <thead>
+      <table class="table table-hover align-middle beneficiaries-table">
+        <thead class="table-light">
           <tr>
-            <th><input type="checkbox"
-                onclick="document.querySelectorAll('.row-check').forEach(cb=>cb.checked=this.checked)"></th>
-            <th><a
-                href="{{ route('beneficiaries.index', array_merge(request()->query(), ['sort' => 'id', 'dir' => $toggle])) }}">#</a>
-            </th>
+            <th width="40"><input type="checkbox" onclick="document.querySelectorAll('.row-check').forEach(cb=>cb.checked=this.checked)"></th>
+            <th width="60">#</th>
             <th>الكود</th>
-            <th><a
-                href="{{ route('beneficiaries.index', array_merge(request()->query(), ['sort' => 'full_name', 'dir' => $toggle])) }}">الاسم</a>
-            </th>
-            <th>الرقم القومي</th>
+            <th>اسم ولي الأمر / المستفيد</th>
+            <th>الرقم القومي / الفيزا</th>
             <th>الهاتف</th>
-            <th><a
-                href="{{ route('beneficiaries.index', array_merge(request()->query(), ['sort' => 'status', 'dir' => $toggle])) }}">الحالة</a>
-            </th>
-            <th><a
-                href="{{ route('beneficiaries.index', array_merge(request()->query(), ['sort' => 'assistance_type', 'dir' => $toggle])) }}">المساعدة</a>
-            </th>
+            <th>الحالة</th>
+            <th>نوع المساعدة</th>
             <th>المشروع</th>
-            <th>الحملة</th>
-            <th><a
-                href="{{ route('beneficiaries.index', array_merge(request()->query(), ['sort' => 'created_at', 'dir' => $toggle])) }}">تاريخ
-                الإنشاء</a></th>
-            <th></th>
+            <th>تاريخ التسجيل</th>
+            <th width="80">الإجراءات</th>
           </tr>
         </thead>
         <tbody>
@@ -208,14 +336,48 @@
             <tr>
               <td><input type="checkbox" class="row-check" name="ids[]" value="{{ $b->id }}"></td>
               <td>{{ $b->id }}</td>
-              <td>{{ $b->full_name }}</td>
-              <td>{{ $b->national_id ?? '—' }}</td>
+              <td><span class="badge bg-light text-dark border">{{ $b->code ?? ('BEN-' . $b->id) }}</span></td>
+              <td>
+                <div class="fw-bold">{{ $b->full_name }}</div>
+                @if($b->guardian_name)
+                    <div class="small text-muted"><i class="bi bi-person-heart me-1"></i>ولي الأمر: {{ $b->guardian_name }}</div>
+                @endif
+                @if($b->patient_name)
+                    <div class="small text-info"><i class="bi bi-hospital me-1"></i>المريض: {{ $b->patient_name }}</div>
+                @endif
+              </td>
+              <td>
+                @if($b->national_id)
+                    <div><i class="bi bi-card-text me-1"></i>{{ $b->national_id }}</div>
+                @endif
+                @if($b->visa_card_number)
+                    <div class="small text-success"><i class="bi bi-credit-card me-1"></i>فيزا: {{ $b->visa_card_number }}</div>
+                @endif
+                @if(!$b->national_id && !$b->visa_card_number)
+                    —
+                @endif
+              </td>
               <td>{{ $b->phone ?? '—' }}</td>
               <td>
                 @php
                   $s = $b->status;
-                  $cls = $s === 'accepted' ? 'success' : ($s === 'under_review' ? 'warning' : 'secondary');
-                  $s_ar = $s === 'new' ? 'جديد' : ($s === 'under_review' ? 'تحت المراجعة' : ($s === 'accepted' ? 'مقبول' : $s));
+                  $cls = match($s) {
+                      'accepted' => 'success',
+                      'under_review' => 'warning',
+                      'rejected' => 'danger',
+                      'archived_improved' => 'secondary',
+                      'archived_deceased' => 'dark',
+                      default => 'info'
+                  };
+                  $s_ar = match($s) {
+                      'pending', 'new' => 'تحت التقديم',
+                      'under_review' => 'تحت المراجعة',
+                      'accepted' => 'مقبول',
+                      'rejected' => 'مرفوض',
+                      'archived_improved' => 'أرشيف (تحسن معيشي/شفاء)',
+                      'archived_deceased' => 'أرشيف (متوفى)',
+                      default => $s
+                  };
                 @endphp
                 <span class="badge bg-{{ $cls }}">{{ $s_ar }}</span>
                 @php $isDup = ((in_array($b->phone, $dupPhones ?? []) && $b->phone) || (in_array($b->national_id, $dupNids ?? []) && $b->national_id)); @endphp
@@ -226,32 +388,47 @@
               <td>
                 @php
                   $t = $b->assistance_type;
-                  $tcls = $t === 'financial' ? 'primary' : ($t === 'in_kind' ? 'info' : 'dark');
-                  $t_ar = $t === 'financial' ? 'مالية' : ($t === 'in_kind' ? 'عينية' : ($t === 'service' ? 'خدمية' : $t));
+                  $tcls = match($t) {
+                      'monthly' => 'primary',
+                      'one_time' => 'success',
+                      'in_kind' => 'info',
+                      'service' => 'warning',
+                      default => 'secondary'
+                  };
+                  $t_ar = match($t) {
+                      'monthly' => 'شهرية',
+                      'one_time' => 'مرة واحدة',
+                      'in_kind' => 'عينية',
+                      'service' => 'خدمية',
+                      'financial' => 'مالية',
+                      default => $t
+                  };
                 @endphp
                 <span class="badge bg-{{ $tcls }}">{{ $t_ar }}</span>
+                @if($b->collection_method)
+                    <div class="small text-muted">{{ $b->collection_method }}</div>
+                @endif
               </td>
               <td>{{ $b->project?->name ?? '—' }}</td>
-              <td>{{ $b->campaign?->name ? ($b->campaign->name . ' (' . $b->campaign->season_year . ')') : '—' }}</td>
               <td>{{ optional($b->created_at)->format('Y-m-d') ?? '—' }}</td>
-              <td class="text-end">
+              <td class="text-end beneficiary-action-cell">
                 @if(isset($b->pendingRequest) && $b->pendingRequest)
                     <span class="badge bg-warning bg-opacity-10 text-warning d-flex align-items-center px-2 py-1 rounded-pill small">
                         <i class="bi bi-hourglass-split me-1"></i> قيد المراجعة
                     </span>
                 @else
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border-0 rounded-circle p-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="dropdown beneficiary-actions">
+                        <button class="btn btn-sm rounded-circle beneficiary-action-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="إجراءات المستفيد" title="إجراءات المستفيد">
                           <i class="bi bi-three-dots-vertical"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="z-index: 9999;">
-                            <li><a class="dropdown-item" href="{{ route('beneficiaries.show', $b) }}"><i class="bi bi-eye me-2 text-primary"></i> عرض</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end beneficiary-action-menu">
+                            <li><a class="dropdown-item" href="{{ route('beneficiaries.show', $b) }}"><i class="bi bi-eye text-primary action-icon"></i><span class="action-label">عرض</span></a></li>
                             
-                            <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil me-2 text-warning"></i> طلب تعديل</a></li>
+                            <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil text-warning action-icon"></i><span class="action-label">طلب تعديل</span></a></li>
 
                             @php
                               $attCount = $b->attachments_count ?? 0;
-                              $next = $b->status === 'new' ? 'under_review' : ($b->status === 'under_review' ? 'accepted' : null);
+                              $next = in_array($b->status, ['pending', 'new'], true) ? 'under_review' : ($b->status === 'under_review' ? 'accepted' : null);
                               $next_ar = $next === 'under_review' ? 'نقل إلى تحت المراجعة' : ($next === 'accepted' ? 'نقل إلى مقبول' : '');
                             @endphp
 
@@ -260,7 +437,7 @@
                                 <form action="{{ route('beneficiaries.update', $b) }}" method="POST">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="{{ $next }}">
-                                    <button class="dropdown-item text-warning"><i class="bi bi-arrow-repeat me-2 text-warning"></i> طلب {{ $next_ar }}</button>
+                                    <button type="submit" class="dropdown-item text-info"><i class="bi bi-arrow-repeat text-info action-icon"></i><span class="action-label">طلب {{ $next_ar }}</span></button>
                                 </form>
                             </li>
                             @endif
@@ -270,18 +447,19 @@
                                 <form action="{{ route('beneficiaries.update', $b) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من طلب نقل هذا المستفيد إلى المرفوضين؟');">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="rejected">
-                                    <button class="dropdown-item text-warning"><i class="bi bi-x-circle me-2"></i> طلب نقل إلى مرفوض</button>
+                                    <input type="hidden" name="rejection_reason" value="تم طلب النقل إلى المرفوض من قائمة المستفيدين">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle action-icon"></i><span class="action-label">طلب نقل إلى مرفوض</span></button>
                                 </form>
                             </li>
                             @endif
 
-                            <li><a class="dropdown-item" href="{{ route('tasks.create', ['assigned_to' => request()->user()?->id, 'subject_beneficiary_id' => $b->id]) }}"><i class="bi bi-check-square me-2"></i> مهمة مرتبطة</a></li>
+                            <li><a class="dropdown-item" href="{{ route('tasks.create', ['assigned_to' => request()->user()?->id, 'subject_beneficiary_id' => $b->id]) }}"><i class="bi bi-check-square text-primary action-icon"></i><span class="action-label">مهمة مرتبطة</span></a></li>
 
                             <li><hr class="dropdown-divider"></li>
 
                             <li>
-                                <button class="dropdown-item text-warning" onclick="openCancelModal('{{ route('beneficiaries.destroy', $b) }}')">
-                                    <i class="bi bi-x-circle me-2"></i> طلب إلغاء
+                                <button type="button" class="dropdown-item text-danger" onclick="openCancelModal('{{ route('beneficiaries.destroy', $b) }}')">
+                                    <i class="bi bi-x-circle action-icon"></i><span class="action-label">طلب إلغاء</span>
                                 </button>
                             </li>
                         </ul>
@@ -317,6 +495,28 @@
   </form>
 
   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.beneficiary-actions').forEach(function (dropdown) {
+        const table = dropdown.closest('.beneficiaries-table');
+        const row = dropdown.closest('tr');
+
+        dropdown.addEventListener('shown.bs.dropdown', function () {
+          table?.querySelectorAll('.actions-row-active').forEach(function (activeRow) {
+            activeRow.classList.remove('actions-row-active');
+          });
+          row?.classList.add('actions-row-active');
+          table?.classList.add('actions-menu-open');
+        });
+
+        dropdown.addEventListener('hidden.bs.dropdown', function () {
+          row?.classList.remove('actions-row-active');
+          if (!table?.querySelector('.beneficiary-action-menu.show')) {
+            table?.classList.remove('actions-menu-open');
+          }
+        });
+      });
+    });
+
     function submitBulkForm() {
       const action = document.getElementById('bulkActionSelect').value;
       if (!action) {

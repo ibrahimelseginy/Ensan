@@ -147,9 +147,9 @@
 </style>
 @endsection
 @section('content')
-<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, var(--ws-border) 0%, var(--ws-bg-card-header) 100%); border-bottom: 1px solid var(--ws-border);">
     <div class="hero-content">
-        <div class="hero-greeting text-white-50">إدارة تطبيق الموبايل API Unit 📱</div>
+        <div class="hero-greeting text-stats-main-50">إدارة تطبيق الموبايل API Unit 📱</div>
         <h1 class="hero-title">محتوى الصفحة الرئيسية</h1>
         <p class="hero-subtitle">تخصيص الأقسام والكروت التي تظهر في شاشة التطبيق الرئيسية</p>
     </div>
@@ -247,7 +247,7 @@
             <div class="glass-card mb-4 overflow-hidden border-0 shadow-sm animate-slide-up">
                 <div class="p-4 border-bottom bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="bi bi-images me-2 text-info"></i> صور المعرض (Gallery)</h5>
-                    <button class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addGalleryModal">إضافة صورة <i class="bi bi-plus"></i></button>
+                    <button class="btn btn-sm btn-info text-stats-main rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addGalleryModal">إضافة صورة <i class="bi bi-plus"></i></button>
                 </div>
                 <div class="p-4">
                     <div class="row g-3">
@@ -302,10 +302,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="fw-bold text-white">{{ $item->title }}</div>
+                                            <div class="fw-bold text-stats-main">{{ $item->title }}</div>
                                             <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ $item->description }}</small>
                                         </td>
-                                        <td class="text-white">{{ number_format($item->share_price) }} ج.م</td>
+                                        <td class="text-stats-main">{{ number_format($item->share_price) }} ج.م</td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2">
                                                 <button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#editItemModal{{ $item->id }}"><i class="bi bi-pencil"></i></button>
@@ -344,7 +344,7 @@
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-secondary rounded-pill">#{{ $item->sort_order }}</span>
-                                    <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                    <h6 class="mb-0 fw-bold text-stats-main">{{ $item->title }}</h6>
                                     @if($item->share_price)
                                         <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
                                     @endif
@@ -383,7 +383,7 @@
                                 @endif
                             </div>
                             <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold text-white">{{ $item->title }}</h6>
+                                <h6 class="mb-0 fw-bold text-stats-main">{{ $item->title }}</h6>
                                 @if($item->share_price)
                                     <span class="badge bg-success ms-2">{{ number_format($item->share_price) }} ج.م</span>
                                 @endif
@@ -459,10 +459,10 @@
                     <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.4\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E');"></div>
                     <div class="z-index-1 d-flex align-items-center justify-content-between w-100">
                         <div>
-                            <h5 class="modal-title fw-bold text-white mb-0">
+                            <h5 class="modal-title fw-bold text-stats-main mb-0">
                                 <i class="bi bi-pencil-square me-2 text-primary"></i> تعديل مبادرة: {{ $pillar->title }}
                             </h5>
-                            <p class="text-white-50 small mb-0 mt-1">تحديث بيانات وأيقونات المبادرة الأساسية</p>
+                            <p class="text-stats-main-50 small mb-0 mt-1">تحديث بيانات وأيقونات المبادرة الأساسية</p>
                         </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
@@ -580,7 +580,7 @@
         <form action="{{ route('mobile.pillars.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg">
             @csrf
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white"><i class="bi bi-plus-square me-2"></i> إضافة مبادرة جديدة</h5>
+                <h5 class="modal-title fw-bold text-stats-main"><i class="bi bi-plus-square me-2"></i> إضافة مبادرة جديدة</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -639,9 +639,9 @@
     <div class="modal fade" id="editItemModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog">
             <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
-                @csrf @method('PUT')
+                @csrf
                 <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-white">تعديل الخدمة</h5>
+                    <h5 class="modal-title fw-bold text-stats-main">تعديل الخدمة</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -675,9 +675,9 @@
     <div class="modal fade" id="editShareModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog">
             <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
-                @csrf @method('PUT')
+                @csrf
                 <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-white">تعديل العنصر</h5>
+                    <h5 class="modal-title fw-bold text-stats-main">تعديل العنصر</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -700,9 +700,9 @@
     <div class="modal fade" id="editCampModal{{ $item->id }}" tabindex="-1" style="z-index: 9999;">
         <div class="modal-dialog">
             <form action="{{ route('mobile.home_content.update', $item) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
-                @csrf @method('PUT')
+                @csrf
                 <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold text-white">تعديل الحملة</h5>
+                    <h5 class="modal-title fw-bold text-stats-main">تعديل الحملة</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -724,10 +724,10 @@
     <div class="modal-dialog">
         <form action="{{ $finalSection ? route('mobile.home_content.update', $finalSection) : route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
             @csrf
-            @if($finalSection) @method('PUT') @endif
+
             <input type="hidden" name="type" value="final">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">القسم الأخير</h5>
+                <h5 class="modal-title fw-bold text-stats-main">القسم الأخير</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -749,7 +749,7 @@
             @csrf
             <input type="hidden" name="type" value="gallery">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إضافة صورة</h5>
+                <h5 class="modal-title fw-bold text-stats-main">إضافة صورة</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -757,7 +757,7 @@
                 <div class="mb-3"><label class="form-label fw-bold">الترتيب</label><input type="number" name="sort_order" class="form-control" value="0"></div>
             </div>
             <div class="modal-footer border-0">
-                <button type="submit" class="btn btn-info text-white fw-bold rounded-pill w-100 py-3">رفع</button>
+                <button type="submit" class="btn btn-info text-stats-main fw-bold rounded-pill w-100 py-3">رفع</button>
             </div>
         </form>
     </div>
@@ -769,7 +769,7 @@
             @csrf
             <input type="hidden" name="type" value="service">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إضافة خدمة جديدة</h5>
+                <h5 class="modal-title fw-bold text-stats-main">إضافة خدمة جديدة</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -791,7 +791,7 @@
             @csrf
             <input type="hidden" name="type" value="share">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إضافة عنصر جديد</h5>
+                <h5 class="modal-title fw-bold text-stats-main">إضافة عنصر جديد</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -813,7 +813,7 @@
             @csrf
             <input type="hidden" name="type" value="campaign">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إضافة حملة موسمية</h5>
+                <h5 class="modal-title fw-bold text-stats-main">إضافة حملة موسمية</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -833,10 +833,10 @@
     <div class="modal-dialog">
         <form action="{{ $aboutUs ? route('mobile.home_content.update', $aboutUs) : route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data" class="modal-content border-0">
             @csrf
-            @if($aboutUs) @method('PUT') @endif
+
             <input type="hidden" name="type" value="about_us">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-white">إدارة قسم "معلومات عنا"</h5>
+                <h5 class="modal-title fw-bold text-stats-main">إدارة قسم "معلومات عنا"</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">

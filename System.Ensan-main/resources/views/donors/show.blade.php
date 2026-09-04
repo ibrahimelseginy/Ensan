@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 
     {{-- Page Header --}}
@@ -53,6 +53,10 @@
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-md-6">
+                            <label class="text-muted small mb-1">كود المتبرع</label>
+                            <div class="fw-bold text-primary font-monospace">{{ $donor->code ?? ('D-' . $donor->id) }}</div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="text-muted small mb-1">الهاتف</label>
                             <div class="fw-medium">{{ $donor->phone ?? '—' }}</div>
                         </div>
@@ -67,18 +71,62 @@
                             </div>
                         </div>
 
+                        @if($donor->monthly_allocation_target)
+                            <div class="col-md-12">
+                                <label class="text-muted small mb-1">وجهة التبرع الشهري (محددة من المتبرع)</label>
+                                <div class="fw-medium text-dark bg-light p-2 rounded"><i class="bi bi-geo-alt text-primary me-1"></i>{{ $donor->monthly_allocation_target }}</div>
+                            </div>
+                        @endif
+
+                        @if($donor->classification === 'recurring' && $donor->recurring_cycle === 'monthly')
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1">موعد التبرع الشهري</label>
+                                <div class="fw-medium"><i class="bi bi-calendar-event text-warning me-1"></i>يوم {{ $donor->monthly_donation_day ?? 1 }} من كل شهر</div>
+                            </div>
+                        @endif
+
+                        @php $sponsored = $donor->sponsoredBeneficiaries; @endphp
+                        <div class="col-md-12">
+                            <label class="text-muted small mb-1">الأطفال / الحالات المكفولة ({{ $sponsored->count() }})</label>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                @forelse($sponsored as $sb)
+                                    <a href="{{ route('beneficiaries.show', $sb) }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                        <i class="bi bi-person-heart me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
+                                    </a>
+                                @empty
+                                    <span class="text-muted small">لا توجد حالات مكفولة مسجلة باسم هذا المتبرع</span>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        @if($donor->sponsoredFamilyMembers->isNotEmpty())
+                            <div class="col-md-12">
+                                <label class="text-muted small mb-1">الأفراد المرتبطون بالكفالة تحديدًا ({{ $donor->sponsoredFamilyMembers->count() }})</label>
+                                <div class="row g-2 mt-1">
+                                    @foreach($donor->sponsoredFamilyMembers as $familyMember)
+                                        <div class="col-md-6">
+                                            <a href="{{ route('beneficiary-family-members.show', $familyMember) }}" class="text-decoration-none d-block border rounded-3 p-2">
+                                                <div class="fw-bold text-success"><i class="bi bi-person-badge me-1"></i>{{ $familyMember->full_name }}</div>
+                                                <div class="small text-muted">{{ $familyMember->relationship_label }} — أسرة {{ $familyMember->beneficiary->full_name }} — {{ $familyMember->code }}</div>
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         @if($donor->allocation_type === 'sponsorship' || ($donor->sponsorship_type && $donor->sponsorship_type !== 'none' && $donor->sponsorship_type !== 'sadaqa_jariya'))
                             @if($donor->sponsorship_monthly_amount > 0)
                                 <div class="col-12">
                                     <hr class="my-0 opacity-25">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="text-muted small mb-1">قيمة الكفالة</label>
-                                    <div class="fw-medium">{{ number_format($donor->sponsorship_monthly_amount, 2) }}</div>
+                                    <label class="text-muted small mb-1">قيمة الكفالة الشهرية</label>
+                                    <div class="fw-medium">{{ number_format($donor->sponsorship_monthly_amount, 2) }} جنيه</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="text-muted small mb-1">المدفوع ({{ now()->format('m/Y') }})</label>
-                                    <div class="fw-medium text-success">{{ number_format($paidThisMonth, 2) }}</div>
+                                    <div class="fw-medium text-success">{{ number_format($paidThisMonth, 2) }} جنيه</div>
                                 </div>
                             @endif
                         @endif

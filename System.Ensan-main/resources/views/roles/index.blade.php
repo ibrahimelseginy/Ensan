@@ -1,5 +1,9 @@
 ﻿@extends('layouts.app')
 @section('content')
+    @php
+        $currentUser = request()->user();
+        $protectedRoleKeys = ['admin', 'manager'];
+    @endphp
 
     {{-- Premium Dashboard Hero --}}
     <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%);">
@@ -14,9 +18,11 @@
                         <button class="btn btn-light rounded-pill-end border-0 text-primary" type="submit"><i class="bi bi-search"></i></button>
                     </div>
                 </form>
-                <a href="{{ route('roles.create') }}" class="btn btn-sm rounded-pill px-4">
-                    <i class="bi bi-plus-lg me-1"></i> إضافة دور جديد
-                </a>
+                @if($currentUser?->hasPermission('roles.create'))
+                    <a href="{{ route('roles.create') }}" class="btn btn-sm rounded-pill px-4">
+                        <i class="bi bi-plus-lg me-1"></i> إضافة دور جديد
+                    </a>
+                @endif
             </div>
         </div>
         <i class="bi bi-shield-lock-fill hero-icon d-none d-md-block"></i>
@@ -31,6 +37,8 @@
                             <th class="border-0 p-3 ps-4">الدور</th>
                             <th class="border-0 p-3">المعرف (Key)</th>
                             <th class="border-0 p-3">الوصف</th>
+                            <th class="border-0 p-3 text-center">المستخدمون</th>
+                            <th class="border-0 p-3 text-center">الصلاحيات</th>
                             <th class="border-0 p-3 text-end pe-4">الإجراءات</th>
                         </tr>
                     </thead>
@@ -52,21 +60,36 @@
                                 <td class="p-3 text-muted">
                                     {{ $r->description ?? '—' }}
                                 </td>
+                                <td class="p-3 text-center">
+                                    <span class="badge bg-info-subtle text-info">{{ $r->users_count }}</span>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <span class="badge bg-success-subtle text-success">{{ $r->permissions_count }}</span>
+                                </td>
                                 <td class="p-3 text-end pe-4">
                                     <div class="btn-group" onclick="event.stopPropagation()">
                                         <a href="{{ route('roles.show', $r) }}" class="btn btn-sm btn-outline-secondary"
                                             title="عرض الصلاحيات">
                                             <i class="bi bi-shield-lock"></i>
                                         </a>
-                                        <a href="{{ route('roles.edit', $r) }}" class="btn btn-sm btn-outline-primary"
-                                            title="تعديل">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="if(confirm('هل أنت متأكد من حذف هذا الدور؟')) document.getElementById('del-{{ $r->id }}').submit()"
-                                            title="حذف">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        @if($currentUser?->hasPermission('roles.edit'))
+                                            <a href="{{ route('roles.edit', $r) }}" class="btn btn-sm btn-outline-primary"
+                                                title="تعديل">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
+                                        @if($currentUser?->hasPermission('roles.delete'))
+                                            @php $canDelete = !in_array($r->key, $protectedRoleKeys, true) && $r->users_count === 0; @endphp
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @disabled(!$canDelete)
+                                                @if($canDelete)
+                                                    onclick="if(confirm('هل أنت متأكد من حذف هذا الدور؟')) document.getElementById('del-{{ $r->id }}').submit()"
+                                                    title="حذف"
+                                                @else
+                                                    title="{{ in_array($r->key, $protectedRoleKeys, true) ? 'دور أساسي لا يمكن حذفه' : 'الدور مرتبط بمستخدمين' }}"
+                                                @endif>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                     <form id="del-{{ $r->id }}" action="{{ route('roles.destroy', $r) }}" method="POST"
                                         class="d-none">
@@ -76,7 +99,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">
+                                <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="bi bi-shield-x display-4 mb-3 d-block opacity-50"></i>
                                     لا توجد أدوار معرفة في النظام
                                 </td>

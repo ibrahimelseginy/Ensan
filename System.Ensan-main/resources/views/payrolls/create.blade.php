@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="page-header">
@@ -21,7 +21,7 @@
                         <select name="user_id" class="form-select" id="userSelect" required>
                             <option value="">اختر موظف...</option>
                             @foreach($users as $u)
-                                <option value="{{ $u->id }}" data-salary="{{ $u->salary }}">{{ $u->name }}</option>
+                                <option value="{{ $u->id }}" data-salary="{{ $u->salary ? (int)$u->salary : '' }}">{{ $u->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -30,7 +30,7 @@
                     <div class="col-md-4">
                         <label class="form-label">المبلغ</label>
                         <div class="input-group">
-                            <input name="amount" id="amountInput" class="form-control" required>
+                            <input name="amount" id="amountInput" type="number" step="1" class="form-control" required>
                             <select name="currency" class="form-select" style="max-width:110px">
                                 <option value="EGP" selected>EGP</option>
                                 <option value="USD">USD</option>

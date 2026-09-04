@@ -215,11 +215,11 @@
                         </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-bold text-muted d-block text-center">شعار الشريك</label>
-                            <div class="p-3 bg-light rounded-4 border upload-zone-mini h-100 d-flex flex-column align-items-center justify-content-center text-center cursor-pointer position-relative">
+                            <div class="p-3 bg-light rounded-4 border upload-zone-mini h-100 d-flex flex-column align-items-center justify-content-center text-center cursor-pointer position-relative" style="min-height: 180px;">
                                 <i class="bi bi-cloud-arrow-up fs-1 text-primary opacity-50 mb-2"></i>
                                 <p class="x-small text-muted mb-0">اسحب الشعار هنا أو انقر للاختيار</p>
-                                <input type="file" name="logo" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer" onchange="previewLogoAdd(this)">
-                                <div id="addLogoPreviewContainer" class="position-absolute inset-0 p-2 bg-light d-none rounded-4"></div>
+                                <input type="file" name="logo" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" onchange="previewLogoAdd(this)">
+                                <div id="addLogoPreviewContainer" class="position-absolute top-0 start-0 w-100 h-100 p-2 bg-light d-none rounded-4"></div>
                             </div>
                         </div>
                     </div>
@@ -286,7 +286,7 @@
                             <div class="position-relative rounded-4 border overflow-hidden bg-light slider-upload-mini ratio ratio-4x3 group-hover-overlay" style="cursor: pointer;">
                                 @php $sliderPath = $settings["honor_wall_slider_$i"] ?? null; @endphp
                                 @if($sliderPath)
-                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="honorSliderPrev{{ $i }}">
+                                    <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="honorSliderPrev{{ $i }}">
                                 @else
                                     <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="honorSliderPlace{{ $i }}">
                                         <i class="bi bi-cloud-arrow-up fs-2 mb-1"></i>
@@ -295,7 +295,7 @@
                                     <img src="" class="w-100 h-100 object-fit-cover d-none shadow-sm transition-all" id="honorSliderPrev{{ $i }}">
                                 @endif
                                 
-                                <input type="file" name="honor_wall_slider_{{ $i }}" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewHonorSlider(this, {{ $i }})">
+                                <input type="file" name="honor_wall_slider_{{ $i }}" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewHonorSlider(this, {{ $i }})">
                                 
                                 @if($sliderPath)
                                 <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-sm d-flex align-items-center justify-content-center z-10" 
@@ -402,15 +402,32 @@
                         </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-bold text-muted d-block text-center">شعار الشريك</label>
-                            <div class="p-3 bg-light rounded-4 border upload-zone-mini h-100 d-flex flex-column align-items-center justify-content-center text-center cursor-pointer position-relative">
-                                @if($partner->logo_path)
-                                    <img src="{{ $partner->image_url }}" class="w-100 h-100 object-fit-contain shadow-sm rounded-3 p-2 bg-white" id="editLogoPreview{{ $partner->id }}">
-                                @else
-                                    <i class="bi bi-cloud-arrow-up fs-1 text-primary opacity-50 mb-2"></i>
-                                    <p class="x-small text-muted mb-0">تغيير الشعار</p>
-                                @endif
-                                <input type="file" name="logo" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer" onchange="previewLogoEdit(this, {{ $partner->id }})">
-                                <div id="editLogoPreviewContainer{{ $partner->id }}" class="position-absolute inset-0 p-2 bg-light d-none rounded-4"></div>
+                            <div class="p-3 bg-light rounded-4 border upload-zone-mini d-flex flex-column align-items-center justify-content-center text-center position-relative" style="min-height: 180px; cursor: pointer;" onclick="document.getElementById('logoInput{{ $partner->id }}').click()">
+                                <div class="w-100 d-flex align-items-center justify-content-center" style="height: 140px;">
+                                    @if($partner->logo_path)
+                                        <img src="{{ $partner->image_url }}" class="object-fit-contain shadow-sm rounded-3 p-2 bg-white" style="max-height: 100%; max-width: 100%;" id="editLogoImg{{ $partner->id }}">
+                                    @else
+                                        <div class="text-center" id="editLogoPlaceholder{{ $partner->id }}">
+                                            <i class="bi bi-cloud-arrow-up fs-1 text-primary opacity-50 mb-2"></i>
+                                            <p class="x-small text-muted mb-0">اضغط لاختيار الشعار</p>
+                                        </div>
+                                        <img src="" class="object-fit-contain shadow-sm rounded-3 p-2 bg-white d-none" style="max-height: 100%; max-width: 100%;" id="editLogoImg{{ $partner->id }}">
+                                    @endif
+                                </div>
+                                <input type="file" name="logo" accept="image/*" id="logoInput{{ $partner->id }}" class="d-none" onchange="
+                                    if(this.files && this.files[0]) {
+                                        var reader = new FileReader();
+                                        var imgEl = document.getElementById('editLogoImg{{ $partner->id }}');
+                                        var placeholder = document.getElementById('editLogoPlaceholder{{ $partner->id }}');
+                                        reader.onload = function(e) {
+                                            imgEl.src = e.target.result;
+                                            imgEl.classList.remove('d-none');
+                                            if(placeholder) placeholder.classList.add('d-none');
+                                        };
+                                        reader.readAsDataURL(this.files[0]);
+                                    }
+                                ">
+                                <small class="text-muted mt-2 x-small"><i class="bi bi-info-circle me-1"></i>اضغط لتغيير الشعار</small>
                             </div>
                         </div>
                     </div>
@@ -451,7 +468,15 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label small fw-bold text-muted">تغيير الصورة</label>
-                        <input type="file" name="image" class="form-control">
+                        <div class="d-flex align-items-center gap-3">
+                            @if($leader->image_path)
+                                <img src="{{ $leader->image_url }}" class="rounded-circle shadow-sm border border-2 border-primary-light" style="width: 60px; height: 60px; object-fit: cover;" id="editLeaderCurrentImg{{ $leader->id }}">
+                            @endif
+                            <div class="flex-grow-1">
+                                <input type="file" name="image" class="form-control" onchange="previewLeaderEdit(this, {{ $leader->id }})">
+                            </div>
+                        </div>
+                        <div id="editLeaderPreviewContainer{{ $leader->id }}" class="mt-3 text-center d-none"></div>
                     </div>
                 </div>
                 <div class="modal-footer border-top bg-light p-3">
@@ -483,7 +508,24 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 const container = document.getElementById('editLogoPreviewContainer' + id);
-                container.innerHTML = `<img src="${e.target.result}" class="w-100 h-100 object-fit-contain rounded-3 p-2 bg-white">`;
+                const currentImg = document.getElementById('editLogoPreview' + id);
+                if(currentImg) currentImg.classList.add('d-none');
+                container.innerHTML = `<img src="${e.target.result}" class="object-fit-contain rounded-3 p-2 bg-white" style="max-height: 100%; max-width: 100%;">`;
+                container.classList.remove('d-none');
+                container.classList.add('d-flex');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewLeaderEdit(input, id) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('editLeaderPreviewContainer' + id);
+                const currentImg = document.getElementById('editLeaderCurrentImg' + id);
+                if(currentImg) currentImg.classList.add('d-none');
+                container.innerHTML = `<img src="${e.target.result}" class="rounded-circle border border-4 border-primary-light shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">`;
                 container.classList.remove('d-none');
             }
             reader.readAsDataURL(input.files[0]);
@@ -590,7 +632,7 @@
 
     .avatar-ring-premium-light {
         position: absolute;
-        inset: -10px;
+        top: -10px; right: -10px; bottom: -10px; left: -10px;
         border: 2px dashed var(--primary-light);
         border-radius: 50%;
         animation: rotate 15s linear infinite;

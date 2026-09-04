@@ -39,7 +39,8 @@ final class VisitWebController extends Controller
         ]);
 
         FieldVisit::create($validated);
+        Beneficiary::where('id', $validated['beneficiary_id'])->update(['status' => 'under_review']);
 
-        return redirect()->route('visits.index')->with('success', 'تم جدولة الزيارة بنجاح');
+        return redirect()->route('visits.index')->with('success', 'تم جدولة الزيارة بنجاح وتحويل حالة المستفيد إلى تحت المراجعة');
     }
 }

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="page-header">
@@ -57,7 +57,7 @@
                             <div class="info-row">
                                 <span class="info-label">المبلغ</span>
                                 <span class="info-value">
-                                    <span class="fs-4 fw-bold text-success">{{ number_format($payroll->amount, 2) }}</span>
+                                    <span class="fs-4 fw-bold text-success">{{ number_format($payroll->amount, 0) }}</span>
                                     <small class="text-muted">{{ $payroll->currency }}</small>
                                 </span>
                             </div>

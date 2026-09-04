@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -191,7 +191,7 @@
 
                                                             @foreach($docs as $doc)
                                                                 @if($doc['path'])
-                                                                    <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="btn btn-sm btn-glass-premium-doc d-flex align-items-center gap-2 px-3 py-2 rounded-3">
+                                                                    <a href="{{ app(\App\Services\ImageUploadService::class)->url($doc['path']) }}" target="_blank" class="btn btn-sm btn-glass-premium-doc d-flex align-items-center gap-2 px-3 py-2 rounded-3">
                                                                         <i class="bi {{ $doc['icon'] }} text-info"></i>
                                                                         <span class="x-small fw-bold text-white">{{ $doc['label'] }}</span>
                                                                     </a>

@@ -171,7 +171,7 @@
                                 <div class="p-4 bg-light rounded-4 border upload-zone-mini h-100 d-flex flex-column align-items-center justify-content-center text-center cursor-pointer position-relative min-h-300">
                                     @php $heroPath = $settings['volunteer_hero_image'] ?? null; @endphp
                                     @if($heroPath)
-                                        <img src="{{ asset('storage/' . $heroPath) }}" class="w-100 h-100 object-fit-cover shadow-sm rounded-4" id="heroPrevImg">
+                                        <img src="{{ app(\App\Services\ImageUploadService::class)->url($heroPath) }}" class="w-100 h-100 object-fit-cover shadow-sm rounded-4" id="heroPrevImg">
                                     @else
                                         <i class="bi bi-cloud-arrow-up fs-1 text-primary opacity-50 mb-2"></i>
                                         <p class="x-small text-muted mb-0">رفع صورة خلفية جديدة</p>
@@ -195,7 +195,7 @@
                                 <div class="position-relative rounded-4 border overflow-hidden bg-light slider-upload-mini ratio ratio-4x3 group-hover-overlay" style="cursor: pointer;">
                                     @php $sliderPath = $settings["volunteer_slider_$i"] ?? null; @endphp
                                     @if($sliderPath)
-                                        <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="volSliderPrev{{ $i }}">
+                                        <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="volSliderPrev{{ $i }}">
                                     @else
                                         <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="volSliderPlace{{ $i }}">
                                             <i class="bi bi-images fs-2 mb-1"></i>

@@ -86,6 +86,8 @@ final class DashboardWebController extends Controller
 
         $evaluations = [];
         $volunteers = User::where('is_volunteer', true)->orderBy('name')->limit(12)->get();
+        $monthStart = now()->startOfMonth()->toDateString();
+        $today = now()->toDateString();
         foreach ($volunteers as $v) {
             $hours = (float) VolunteerHour::where('user_id', $v->id)->whereBetween('date', [$monthStart, $today])->sum('hours');
             $attendanceDays = (int) VolunteerAttendance::where('user_id', $v->id)->whereBetween('date', [$monthStart, $today])->distinct()->count('date');
@@ -190,8 +192,19 @@ final class DashboardWebController extends Controller
 
 
         $user = request()->user();
-        $isAdmin = $user && ($user->roles()->where('key', 'admin')->exists() || $user->hasPermission('roles.delete'));
-        $isFinance = $user && ($user->roles()->where('key', 'finance')->exists() || $user->hasPermission('journal_entries.view') || $user->hasPermission('expenses.view'));
+        // Administrative dashboards expose organization-wide data, so they
+        // must be selected by an administrative role rather than by one shared
+        // CRUD permission.
+        $isAdmin = $user && ($user->hasRole('admin') || $user->hasRole('manager'));
+        // Viewing expenses is shared with operational roles such as project and
+        // guest-house managers. It must not route those users to the full finance
+        // dashboard. Reserve that dashboard for actual finance capabilities.
+        $isFinance = $user && (
+            $user->hasRole('finance')
+            || $user->hasPermission('manage_finance')
+            || $user->hasPermission('accounts.view')
+            || $user->hasPermission('journal_entries.view')
+        );
         $financeStats = [];
         if ($isFinance) {
             $lastPayroll = Payroll::where('user_id', $user->id)->orderByDesc('month')->first();
@@ -220,7 +233,11 @@ final class DashboardWebController extends Controller
                 'permissions_count' => $permissionsCount
             ];
         }
-        $isHr = $user && ($user->roles()->where('key', 'hr')->exists() || $user->hasPermission('users.create') || $user->hasPermission('payroll.create'));
+        $isHr = $user && (
+            $user->hasRole('hr')
+            || $user->hasPermission('manage_employees')
+            || $user->hasPermission('manage_volunteers_hr')
+        );
         $hrStats = [];
         $hrDashboardData = [];
         $pendingLeaves = 0;
@@ -663,7 +680,10 @@ final class DashboardWebController extends Controller
         $isWarehouseManager = false;
         $warehouseManagerDashboardData = [];
 
-        if ($user && ($user->roles()->where('key', 'warehouse')->exists() || $user->hasPermission('inventory.manage'))) {
+        if ($user && (
+            $user->hasRole('store_keeper')
+            || $user->hasRole('warehouse')
+        )) {
             $isWarehouseManager = true;
             $now = \Carbon\Carbon::now();
             $currentMonth = $now->format('m');
@@ -784,7 +804,7 @@ final class DashboardWebController extends Controller
         $isLogisticsManager = false;
         $logisticsManagerDashboardData = [];
 
-        if ($user && ($user->roles()->where('key', 'logistics')->exists() || $user->hasPermission('logistics.manage'))) {
+        if ($user && ($user->roles()->where('key', 'logistics')->exists() || $user->hasPermission('manage_logistics'))) {
             $isLogisticsManager = true;
             $now = \Carbon\Carbon::now();
             $currentMonth = $now->format('m');
@@ -885,7 +905,7 @@ final class DashboardWebController extends Controller
         }
 
         $projectManagerDashboardData = [];
-        $isManager = $user && ($user->roles()->where('key', 'manager')->exists() || $user->hasPermission('projects.edit') || $user->hasPermission('guest_houses.set_manager') || $isProjectManager || $isDeputyManager);
+        $isManager = $user && ($user->hasRole('manager') || $isProjectManager || $isDeputyManager);
         $managerStats = [];
 
         if ($isProjectManager || $isDeputyManager) {
@@ -1487,6 +1507,94 @@ final class DashboardWebController extends Controller
                 ->first();
         }
 
+        // A useful, permission-scoped dashboard for users who do not belong to
+        // one of the specialized dashboard types above.
+        $genericDashboardData = [];
+        if ($user) {
+            $ownTasksQuery = Task::where('assigned_to', $user->id);
+            $ownTasksTotal = (clone $ownTasksQuery)->count();
+            $ownTasksCompleted = (clone $ownTasksQuery)->where('status', 'done')->count();
+            $ownTasksPending = (clone $ownTasksQuery)->where('status', '!=', 'done')->count();
+            $taskCompletionRate = $ownTasksTotal > 0
+                ? (int) round(($ownTasksCompleted / $ownTasksTotal) * 100)
+                : 0;
+
+            $attendanceThisMonth = EmployeeAttendance::where('user_id', $user->id)
+                ->whereYear('date', now()->year)
+                ->whereMonth('date', now()->month)
+                ->distinct()
+                ->count('date');
+
+            $pendingLeaveRequests = \App\Models\Leave::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->count();
+
+            $summaryCards = [];
+            $addSummaryCard = static function (
+                array &$cards,
+                string $label,
+                int|float $value,
+                string $icon,
+                string $color,
+                string $route
+            ): void {
+                $cards[] = compact('label', 'value', 'icon', 'color', 'route');
+            };
+
+            if ($user->hasPermission('donors.view')) {
+                $addSummaryCard($summaryCards, 'المتبرعون', $donorsCount, 'people-fill', '#0ea5e9', 'donors.index');
+            }
+            if ($user->hasPermission('donations.view')) {
+                $donationsThisMonthCount = Donation::whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month)
+                    ->where('status', '!=', 'cancelled')
+                    ->count();
+                $addSummaryCard($summaryCards, 'تبرعات هذا الشهر', $donationsThisMonthCount, 'gift-fill', '#10b981', 'donations.index');
+            }
+            if ($user->hasPermission('beneficiaries.view')) {
+                $addSummaryCard($summaryCards, 'المستفيدون', $beneficiariesCount, 'heart-fill', '#ec4899', 'beneficiaries.index');
+            }
+            if ($user->hasPermission('warehouses.view')) {
+                $addSummaryCard($summaryCards, 'المخازن', $warehousesCount, 'boxes', '#f59e0b', 'warehouses.index');
+            }
+            if ($user->hasPermission('projects.view')) {
+                $projectsCount = \App\Models\Project::where('status', 'active')->count();
+                $addSummaryCard($summaryCards, 'المشاريع النشطة', $projectsCount, 'folder-fill', '#6366f1', 'projects.index');
+            }
+            if ($user->hasPermission('campaigns.view')) {
+                $campaignsCount = \App\Models\Campaign::where('status', 'active')->count();
+                $addSummaryCard($summaryCards, 'الحملات النشطة', $campaignsCount, 'megaphone-fill', '#8b5cf6', 'campaigns.index');
+            }
+            if ($user->hasPermission('complaints.view')) {
+                $addSummaryCard($summaryCards, 'الشكاوى المفتوحة', $openComplaints, 'chat-left-text-fill', '#ef4444', 'complaints.index');
+            }
+            if ($user->hasPermission('delegates.view')) {
+                $delegatesCount = \App\Models\Delegate::where('active', true)->count();
+                $addSummaryCard($summaryCards, 'المندوبون النشطون', $delegatesCount, 'person-badge-fill', '#14b8a6', 'delegates.index');
+            }
+
+            $assignmentNotice = null;
+            if ($user->hasPermission('manage_campaign') && !$managedCampaign && !$user->campaign_id) {
+                $assignmentNotice = 'لم يتم ربط حسابك بحملة محددة بعد. عيّن المستخدم مديرًا لحملة لإظهار لوحة الحملة المتخصصة.';
+            } elseif ($user->hasPermission('manage_project') && !$managedProject && !$user->project_id) {
+                $assignmentNotice = 'لم يتم ربط حسابك بمشروع محدد بعد.';
+            }
+
+            $genericDashboardData = [
+                'attendanceThisMonth' => $attendanceThisMonth,
+                'leaveBalance' => (int) ($user->leave_balance ?? $user->annual_leave_quota ?? 21),
+                'pendingLeaveRequests' => $pendingLeaveRequests,
+                'ownTasksTotal' => $ownTasksTotal,
+                'ownTasksCompleted' => $ownTasksCompleted,
+                'ownTasksPending' => $ownTasksPending,
+                'taskCompletionRate' => $taskCompletionRate,
+                'recentTasks' => (clone $ownTasksQuery)->orderByDesc('id')->limit(6)->get(),
+                'summaryCards' => $summaryCards,
+                'assignmentNotice' => $assignmentNotice,
+                'todayRecord' => $todayRecord,
+            ];
+        }
+
         return view('dashboard.index', compact(
             'donorsCount',
             'beneficiariesCount',
@@ -1564,6 +1672,7 @@ final class DashboardWebController extends Controller
             'isReceptionist',
             'receptionStats',
             'receptionDashboardData',
+            'genericDashboardData',
             'user',
             'todayRecord'
         ));

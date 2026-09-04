@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="page-header">
@@ -50,7 +50,7 @@
                     <div class="col-md-6"><label class="form-label">المسمى الوظيفي</label><input name="job_title"
                             class="form-control"></div>
                     <div class="col-md-6"><label class="form-label">الراتب</label><input name="salary" type="number"
-                            step="0.01" class="form-control"></div>
+                            step="1" class="form-control"></div>
                     <div class="col-md-6"><label class="form-label">تاريخ الانضمام</label><input name="join_date"
                             type="date" class="form-control"></div>
 
@@ -98,6 +98,8 @@
                         </div>
                     </div>
                     <div class="col-12">
+                        <input type="hidden" name="is_employee" value="1">
+                        <input type="hidden" name="active" value="0">
                         <div class="form-check"><input class="form-check-input" type="checkbox" name="active" value="1"
                                 checked><label class="form-check-label">نشط</label></div>
                     </div>
@@ -115,4 +117,3 @@
     </div>
     </div>
 @endsection
-

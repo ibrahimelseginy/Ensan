@@ -12,6 +12,7 @@ use App\Models\Campaign;
 use App\Models\Warehouse;
 use App\Models\GuestHouse;
 use App\Models\Beneficiary;
+use App\Models\BeneficiaryFamilyMember;
 use App\Services\DonorService;
 use App\Http\Requests\StoreDonorRequest;
 use App\Http\Requests\UpdateDonorRequest;
@@ -78,9 +79,15 @@ final class DonorWebController extends Controller
     public function create(): View
     {
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
+        $familyMembers = BeneficiaryFamilyMember::query()
+            ->where('active', true)
+            ->where(fn ($query) => $query->where('relationship', 'child')->orWhere('is_patient', true))
+            ->with('beneficiary')
+            ->orderBy('full_name')
+            ->get();
         $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))
             ->orderBy('name')->get();
-        return view('donors.create', compact('beneficiaries', 'projects'));
+        return view('donors.create', compact('beneficiaries', 'familyMembers', 'projects'));
     }
 
     public function store(StoreDonorRequest $request): RedirectResponse
@@ -149,6 +156,7 @@ final class DonorWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
+        $donor->load(['sponsoredBeneficiaries', 'sponsoredFamilyMembers.beneficiary']);
         $stats         = $this->donorService->getDonorStats($donor->id);
         $paidThisMonth = $this->donorService->getPaidThisMonth($donor);
         $history       = Donation::with(['project', 'campaign', 'warehouse'])
@@ -165,12 +173,19 @@ final class DonorWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
+        $donor->load(['sponsoredBeneficiaries', 'sponsoredFamilyMembers']);
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
+        $familyMembers = BeneficiaryFamilyMember::query()
+            ->where('active', true)
+            ->where(fn ($query) => $query->where('relationship', 'child')->orWhere('is_patient', true))
+            ->with('beneficiary')
+            ->orderBy('full_name')
+            ->get();
         $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))->orderBy('name')->get();
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
         $guestHouses   = GuestHouse::orderBy('name')->get();
         
-        return view('donors.edit', compact('donor', 'beneficiaries', 'projects', 'campaigns', 'guestHouses'));
+        return view('donors.edit', compact('donor', 'beneficiaries', 'familyMembers', 'projects', 'campaigns', 'guestHouses'));
     }
 
     public function update(UpdateDonorRequest $request, Donor $donor): RedirectResponse

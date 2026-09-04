@@ -28,14 +28,18 @@ final readonly class BeneficiaryRepository
         $dir            = $filters['dir'] ?? 'desc';
 
         return Beneficiary::query()
-            ->with(['project', 'campaign'])
+            ->with(['project', 'campaign', 'familyMembers' => fn ($query) => $query->where('active', true)])
             ->withCount('attachments')
             ->when($q, function ($qr) use ($q) {
                 $qr->where(function ($w) use ($q) {
                     $w->where('full_name', 'like', '%' . $q . '%')
                       ->orWhere('code', 'like', '%' . $q . '%')
                       ->orWhere('phone', 'like', '%' . $q . '%')
-                      ->orWhere('national_id', 'like', '%' . $q . '%');
+                      ->orWhere('national_id', 'like', '%' . $q . '%')
+                      ->orWhere('visa_card_number', 'like', '%' . $q . '%')
+                      ->orWhereHas('familyMembers', fn ($members) => $members
+                          ->where('full_name', 'like', '%' . $q . '%')
+                          ->orWhere('code', 'like', '%' . $q . '%'));
                 });
             })
             ->when($status, fn($qr) => $qr->where('status', $status))
@@ -55,7 +59,7 @@ final readonly class BeneficiaryRepository
 
     public function findById(int $id): ?Beneficiary
     {
-        return Beneficiary::with(['project', 'campaign', 'attachments'])->find($id);
+        return Beneficiary::with(['project', 'campaign', 'attachments', 'familyMembers.sponsors'])->find($id);
     }
 
     public function create(array $data): Beneficiary
@@ -89,7 +93,7 @@ final readonly class BeneficiaryRepository
     {
         return [
             'total'        => Beneficiary::count(),
-            'new'          => Beneficiary::where('status', 'new')->count(),
+            'new'          => Beneficiary::whereIn('status', ['pending', 'new'])->count(),
             'under_review' => Beneficiary::where('status', 'under_review')->count(),
             'accepted'     => Beneficiary::where('status', 'accepted')->count(),
             'rejected'     => Beneficiary::where('status', 'rejected')->count(),

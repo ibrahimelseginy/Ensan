@@ -8,6 +8,9 @@
         تفاصيل التبرع
       </h4>
       <div class="btn-group">
+        <button type="button" onclick="window.print()" class="btn btn-outline-success">
+          <i class="bi bi-printer me-1"></i> طباعة الإيصال
+        </button>
         <a class="btn btn-outline-primary" href="{{ route('donations.edit', $donation) }}">
           <i class="bi bi-pencil me-1"></i> تعديل
         </a>
@@ -77,6 +80,12 @@
                   <span class="info-value font-monospace user-select-all">{{ $donation->receipt_number ?: '—' }}</span>
                 </div>
               </div>
+              <div class="col-md-6">
+                <div class="info-row">
+                  <span class="info-label fw-bold text-success">وذلك قيمة</span>
+                  <span class="info-value fw-bold">{{ $donation->purpose_label }}</span>
+                </div>
+              </div>
 
               {{-- Row 3: Payment Method / Warehouse --}}
               @if($donation->type === 'cash')
@@ -112,41 +121,25 @@
                 </div>
               </div>
 
-              {{-- Row 4: Allocation (Project/Campaign) --}}
-              <div class="col-md-6">
-                <div class="info-row">
-                  <span class="info-label">المشروع</span>
-                  <span class="info-value">
-                    @if($donation->project)
-                      <a href="{{ route('projects.show', $donation->project) }}" class="text-decoration-none fw-bold">
-                        <i class="bi bi-box-seam text-primary me-1"></i> {{ $donation->project->name }}
-                      </a>
-                    @else
-                      <span class="text-muted">—</span>
-                    @endif
-                  </span>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="info-row">
-                  <span class="info-label">الحملة</span>
-                  <span class="info-value">
-                    @if($donation->campaign)
-                      <a href="{{ route('campaigns.show', $donation->campaign) }}" class="text-decoration-none fw-bold">
-                        <i class="bi bi-flag text-danger me-1"></i> {{ $donation->campaign->name }}
-                      </a>
-                    @else
-                      <span class="text-muted">—</span>
-                    @endif
-                  </span>
-                </div>
-              </div>
             </div>
 
-            @if($donation->allocation_note)
+            @if($donation->familyMembers->isNotEmpty())
+              <div class="mt-4 p-3 border rounded-3">
+                <div class="text-muted small mb-2">الأطفال / المرضى المخصص لهم الإيصال</div>
+                <div class="d-flex flex-wrap gap-2">
+                  @foreach($donation->familyMembers as $member)
+                    <a href="{{ route('beneficiary-family-members.show', $member) }}" class="badge bg-success-subtle text-success text-decoration-none p-2">
+                      <i class="bi bi-person-badge me-1"></i>{{ $member->full_name }} — {{ $member->code }}
+                    </a>
+                  @endforeach
+                </div>
+              </div>
+            @endif
+
+            @if($donation->display_allocation_note)
               <div class="mt-4 p-3 bg-light rounded">
                 <div class="text-muted small mb-2">ملاحظات</div>
-                <div>{{ $donation->allocation_note }}</div>
+                <div>{{ $donation->display_allocation_note }}</div>
               </div>
             @endif
 
@@ -278,5 +271,15 @@
           new bootstrap.Modal(document.getElementById('cancelModal')).show();
       }
   </script>
+
+  <style>
+    @media print {
+      .navbar, .sidebar-fixed, .btn-group, .col-lg-4, #cancelModal { display:none !important; }
+      body { padding-top:0 !important; }
+      .container-fluid, .col-lg-8 { width:100% !important; max-width:100% !important; }
+      .card { border:1px solid #bbb !important; box-shadow:none !important; }
+      .page-header::before { content:'إيصال استلام تبرع — مؤسسة إنسان'; display:block; width:100%; text-align:center; font-size:1.5rem; font-weight:800; margin-bottom:1rem; }
+    }
+  </style>
 @endsection
 

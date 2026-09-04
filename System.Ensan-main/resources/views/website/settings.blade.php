@@ -170,7 +170,7 @@
                                         if($path) $path = str_replace('\\', '/', $path);
                                     @endphp
                                     <input type="hidden" name="delete_gallery_image_{{ $i }}" id="delete_gallery_image_{{ $i }}" value="0">
-                                    <img src="{{ $path ? asset('storage/' . $path) . '?v=' . time() : '' }}" class="w-100 h-100 object-fit-cover {{ !$path ? 'd-none' : '' }}" id="galImg{{ $i }}">
+                                    <img src="{{ $path ? app(\App\Services\ImageUploadService::class)->url($path) . '?v=' . time() : '' }}" class="w-100 h-100 object-fit-cover {{ !$path ? 'd-none' : '' }}" id="galImg{{ $i }}">
                                     
                                     <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted {{ $path ? 'd-none' : '' }}" id="galPlaceholder{{ $i }}">
                                         <i class="bi bi-image x-small"></i>
@@ -233,7 +233,7 @@
                                 @php $ghImg = $settings['gh_home_image'] ?? null; @endphp
                                 @if($ghImg)
                                     <div class="mb-2 position-relative d-inline-block">
-                                        <img src="{{ asset('storage/' . $ghImg) }}?v={{ time() }}" class="rounded-3 shadow-sm" style="max-height: 150px; max-width: 100%;">
+                                        <img src="{{ app(\App\Services\ImageUploadService::class)->url($ghImg) }}?v={{ time() }}" class="rounded-3 shadow-sm" style="max-height: 150px; max-width: 100%;">
                                         <input type="hidden" name="delete_gh_home_image" id="delete_gh_home_image" value="0">
                                         <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle" style="width: 28px; height: 28px;"
                                                 onclick="if(confirm('هل أنت متأكد من حذف الصورة؟')){ document.getElementById('delete_gh_home_image').value='1'; this.closest('form').submit(); }">
@@ -306,7 +306,7 @@
                                         if($path) $path = str_replace('\\', '/', $path);
                                     @endphp
                                     <input type="hidden" name="delete_field_image_{{ $i }}" id="delete_field_image_{{ $i }}" value="0">
-                                    <img src="{{ $path ? asset('storage/' . $path) . '?v=' . time() : '' }}" class="w-100 h-100 object-fit-cover {{ !$path ? 'd-none' : '' }}" id="fieldImg{{ $i }}">
+                                    <img src="{{ $path ? app(\App\Services\ImageUploadService::class)->url($path) . '?v=' . time() : '' }}" class="w-100 h-100 object-fit-cover {{ !$path ? 'd-none' : '' }}" id="fieldImg{{ $i }}">
                                     <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted {{ $path ? 'd-none' : '' }}" id="fieldPlaceholder{{ $i }}">
                                         <i class="bi bi-geo-alt x-small"></i>
                                     </div>

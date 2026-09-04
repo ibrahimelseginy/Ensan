@@ -46,35 +46,37 @@
                                 <i class="bi bi-camera fs-1 text-muted opacity-25"></i>
                             </div>
                         @endif
-                        
-                        <div class="news-card-actions-overlay position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 transition-all opacity-0">
-                            <button class="btn btn-white btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" data-bs-toggle="modal" data-bs-target="#editNews{{ $item->id }}" title="تعديل">
-                                <i class="bi bi-pencil-square text-primary"></i>
+
+                        {{-- Action buttons - forced to physical LEFT side --}}
+                        <div class="position-absolute top-0 p-3 d-flex flex-column gap-2" style="left: 0 !important; right: auto !important; inset-inline-start: 0 !important; inset-inline-end: auto !important; z-index: 20; direction: ltr;">
+                            <button class="btn btn-primary btn-sm rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" data-bs-toggle="modal" data-bs-target="#editNews{{ $item->id }}" title="تعديل">
+                                <i class="bi bi-pencil-square text-white"></i>
                             </button>
-                            <form action="{{ route('website.news.destroy', $item) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
+                            <form action="{{ route('website.news.destroy', $item) }}" method="POST" class="m-0" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-white btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="حذف">
-                                    <i class="bi bi-trash text-danger"></i>
+                                <button type="submit" class="btn btn-danger btn-sm rounded-circle shadow d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;" title="حذف">
+                                    <i class="bi bi-trash text-white"></i>
                                 </button>
                             </form>
                         </div>
-                        
+
                         @if($item->category)
-                        <div class="position-absolute top-0 start-0 p-3">
+                        {{-- Category badge - forced to physical RIGHT side --}}
+                        <div class="position-absolute top-0 p-3" style="right: 0 !important; left: auto !important; inset-inline-end: 0 !important; inset-inline-start: auto !important; z-index: 15;">
                             <span class="badge bg-primary rounded-pill px-3 py-1 x-small fw-bold shadow-sm">{{ $item->category }}</span>
                         </div>
                         @endif
                     </div>
-                    
+
                     <div class="card-body p-4 d-flex flex-column h-100">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="text-muted x-small"><i class="bi bi-calendar3 me-1"></i> {{ $item->published_at ? $item->published_at->format('d M Y') : 'مسودة' }}</span>
                             <span class="text-muted x-small fw-bold px-2 py-0 bg-light rounded-pill border">#{{ $item->id }}</span>
                         </div>
-                        
+
                         <h6 class="fw-bold text-dark mb-2 lh-base text-truncate-2 h-news-title" title="{{ $item->title }}">{{ $item->title }}</h6>
                         <p class="text-muted x-small mb-4 text-truncate-3 opacity-75">{{ Str::limit($item->content, 120) }}</p>
-                        
+
                         @if($item->statistic_number)
                         <div class="stat-highlight-pill d-flex align-items-center gap-2 bg-light border rounded-pill px-3 py-2 mb-4">
                             <i class="bi bi-graph-up-arrow text-primary"></i>
@@ -121,28 +123,36 @@
                                         </select>
                                     </div>
                                     <div class="col-12 mb-3">
-                                        <label class="form-label small fw-bold text-muted">شريط صورة الخبر</label>
+                                        <label class="form-label small fw-bold text-muted">إدارة صور الخبر</label>
                                         <div class="p-3 bg-light rounded-4 border">
+                                            {{-- Current Images --}}
+                                            <div class="row g-3 mb-3">
+                                                @php $newsImages = $item->images ?? ($item->image_path ? [$item->image_path] : []); @endphp
+                                                @foreach($newsImages as $index => $path)
+                                                <div class="col-md-3 col-6 text-center" id="img_container_{{ $item->id }}_{{ $index }}">
+                                                    <div class="position-relative overflow-hidden rounded shadow-sm border border-light" style="height: 100px;">
+                                                        <img src="{{ app(\App\Services\ImageUploadService::class)->url($path) }}" class="w-100 h-100 object-fit-cover" onerror="this.style.display='none'">
+
+                                                        {{-- Hidden Checkbox for deletion --}}
+                                                        <input type="checkbox" name="remove_images[]" value="{{ $path }}" id="remove_img_{{ $item->id }}_{{ $index }}" class="d-none">
+
+                                                        {{-- Delete Button --}}
+                                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 m-1 rounded-circle shadow d-flex align-items-center justify-content-center" style="right: 0; left: auto; width: 30px; height: 30px; z-index: 10;" title="حذف الصورة" onclick="document.getElementById('remove_img_{{ $item->id }}_{{ $index }}').checked = true; document.getElementById('img_container_{{ $item->id }}_{{ $index }}').style.display = 'none';">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
+
+                                            <hr class="opacity-50">
+
                                             <div class="row align-items-center g-3">
-                                                <div class="col-auto">
-                                                    @if($item->image_path)
-                                                        <img src="{{ $item->image_url }}" class="rounded shadow-sm border border-white" style="width: 100px; height: 60px; object-fit: cover;">
-                                                    @else
-                                                        <div class="rounded border p-3 text-muted text-center" style="width: 100px;"><i class="bi bi-image"></i></div>
-                                                    @endif
-                                                </div>
                                                 <div class="col">
-                                                    <input type="file" name="image" class="form-control form-control-sm">
-                                                    <p class="x-small text-muted mt-1 mb-0">اتركه فارغاً للاحتفظ بالصورة الحالية. الحجم المثالي (800x450)</p>
+                                                    <label class="form-label x-small fw-bold text-muted mb-1">إضافة صور جديدة</label>
+                                                    <input type="file" name="images[]" class="form-control form-control-sm" multiple>
+                                                    <p class="x-small text-muted mt-1 mb-0">الحجم المثالي (800x450)</p>
                                                 </div>
-                                                @if($item->image_path)
-                                                <div class="col-auto">
-                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-3" onclick="document.getElementById('delete_image_{{ $item->id }}').value='1'; this.closest('.p-3').querySelector('img').classList.add('opacity-25'); this.remove();">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                    <input type="hidden" name="delete_image" id="delete_image_{{ $item->id }}" value="0">
-                                                </div>
-                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -170,7 +180,7 @@
                                         <input type="text" name="statistic_description" class="form-control" value="{{ $item->statistic_description }}" placeholder="مثلاً: نسبة الإنجاز">
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-muted">نص الخبر الكامل</label>
                                     <textarea name="content" class="form-control" rows="8" required>{{ $item->content }}</textarea>
@@ -192,9 +202,33 @@
                                 <h5 class="modal-title fw-bold text-dark">{{ $item->title }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="modal-body p-0">
-                                @if($item->image_path)
-                                    <img src="{{ $item->image_url }}" class="w-100 object-fit-cover shadow-inner" style="max-height: 400px;">
+                             <div class="modal-body p-0">
+                                @php $displayImages = $item->images ?? ($item->image_path ? [$item->image_path] : []); @endphp
+                                @if(count($displayImages) > 0)
+                                    <div id="newsCarousel{{ $item->id }}" class="carousel slide" data-bs-ride="carousel">
+                                        <div class="carousel-inner">
+                                            @foreach($displayImages as $index => $path)
+                                            <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                                <img src="{{ app(\App\Services\ImageUploadService::class)->url($path) }}" class="d-block w-100 object-fit-cover shadow-inner" style="max-height: 450px; min-height: 300px;">
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @if(count($displayImages) > 1)
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#newsCarousel{{ $item->id }}" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#newsCarousel{{ $item->id }}" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                        </button>
+                                        <div class="carousel-indicators position-relative mt-2">
+                                            @foreach($displayImages as $index => $path)
+                                            <button type="button" data-bs-target="#newsCarousel{{ $item->id }}" data-bs-slide-to="{{ $index }}" class="{{ $index == 0 ? 'active' : '' }}" aria-current="true" style="width: 50px; height: 30px; margin: 0 5px;"></button>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                    </div>
                                 @endif
                                 <div class="p-4 p-md-5">
                                     <div class="d-flex flex-wrap gap-4 text-muted small mb-4 pb-3 border-bottom">
@@ -203,7 +237,7 @@
                                         <span class="d-flex align-items-center gap-1"><i class="bi bi-eye text-primary"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
                                     </div>
                                     <div class="text-dark lh-lg" style="white-space: pre-wrap; font-size: 1.05rem; opacity: 0.9;">{{ $item->content }}</div>
-                                    
+
                                     @if($item->contact_name)
                                     <div class="mt-5 p-4 bg-light rounded-4 border-start border-primary border-4 shadow-sm">
                                         <h6 class="fw-bold mb-2">للاستفسار / التواصل:</h6>
@@ -254,9 +288,9 @@
                             </select>
                         </div>
                         <div class="col-12 mb-2">
-                            <label class="form-label small fw-bold text-muted">صورة الخبر</label>
-                            <input type="file" name="image" class="form-control">
-                            <p class="x-small text-muted mt-1">يفضل أن تكون الصورة بعرض كبير (16:9)</p>
+                            <label class="form-label small fw-bold text-muted">صور الخبر (يمكنك اختيار أكثر من صورة)</label>
+                            <input type="file" name="images[]" class="form-control" multiple>
+                            <p class="x-small text-muted mt-1">يفضل أن تكون الصور بعرض كبير (16:9). يمكنك اختيار صور متعددة بالضغط على Ctrl.</p>
                         </div>
                     </div>
                     <div class="row g-3">
@@ -315,7 +349,7 @@
                             <div class="position-relative rounded-4 border overflow-hidden bg-light slider-upload-mini ratio ratio-4x3 group-hover-overlay" style="cursor: pointer;">
                                 @php $sliderPath = $settings["news_slider_$i"] ?? null; @endphp
                                 @if($sliderPath)
-                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="newsSliderPrev{{ $i }}">
+                                    <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="newsSliderPrev{{ $i }}">
                                 @else
                                     <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="newsSliderPlace{{ $i }}">
                                         <i class="bi bi-cloud-arrow-up fs-2 mb-1"></i>
@@ -323,11 +357,11 @@
                                     </div>
                                     <img src="" class="w-100 h-100 object-fit-cover d-none shadow-sm transition-all" id="newsSliderPrev{{ $i }}">
                                 @endif
-                                
-                                <input type="file" name="news_slider_{{ $i }}" class="position-absolute inset-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewNewsSlider(this, {{ $i }})">
-                                
+
+                                <input type="file" name="news_slider_{{ $i }}" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer z-5" onchange="previewNewsSlider(this, {{ $i }})">
+
                                 @if($sliderPath)
-                                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-sm d-flex align-items-center justify-content-center z-10" 
+                                <button type="button" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 shadow-sm d-flex align-items-center justify-content-center z-10"
                                         style="width: 26px; height: 26px;"
                                         onclick="event.stopPropagation(); document.getElementById('delete_news_slider_{{ $i }}').value='1'; this.closest('.slider-upload-mini').querySelector('.d-none').classList.remove('d-none'); document.getElementById('newsSliderPrev{{ $i }}').classList.add('d-none'); this.remove();">
                                     <i class="bi bi-trash fs-xs"></i>
@@ -380,27 +414,27 @@
     .transition-all { transition: all 0.3s ease; }
 
     /* Premium Hero */
-    .premium-hero-sleek { 
-        position: relative; 
-        padding: 80px 0 100px; 
-        background: white !important; 
-        border-bottom: 1px solid var(--border); 
-        overflow: hidden; 
-        z-index: 10; 
+    .premium-hero-sleek {
+        position: relative;
+        padding: 80px 0 100px;
+        background: white !important;
+        border-bottom: 1px solid var(--border);
+        overflow: hidden;
+        z-index: 10;
     }
     .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.05; pointer-events: none; }
     .glow-orb-1 { width: 400px; height: 400px; top: -100px; right: -50px; }
     .glow-orb-2 { width: 300px; height: 300px; bottom: -150px; left: -50px; }
     .hero-content-wrapper { position: relative; z-index: 5; }
-    
-    .badge-glass-premium { 
-        background: var(--primary-light); 
-        border: 1px solid rgba(34, 197, 94, 0.1); 
-        padding: 8px 18px; 
-        border-radius: 100px; 
-        color: var(--primary); 
-        font-weight: 700; 
-        font-size: 0.85rem; 
+
+    .badge-glass-premium {
+        background: var(--primary-light);
+        border: 1px solid rgba(34, 197, 94, 0.1);
+        padding: 8px 18px;
+        border-radius: 100px;
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.85rem;
         display: inline-block;
     }
 
@@ -420,7 +454,7 @@
     .group-hover-zoom:hover img {
         transform: scale(1.1);
     }
-    
+
     .h-news-title {
         min-height: 3rem;
     }
@@ -438,12 +472,12 @@
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important; }
-    
+
     .modal-content .form-control:focus, .modal-content .form-select:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.1);
     }
-    
+
     .btn-white {
         background: white;
         border: none;

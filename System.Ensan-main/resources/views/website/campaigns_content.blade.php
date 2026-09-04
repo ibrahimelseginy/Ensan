@@ -125,7 +125,7 @@
                                     </div>
                                     <div class="bg-white bg-opacity-20 p-3 rounded-4 d-flex align-items-center justify-content-center backdrop-blur-md border border-white border-opacity-20 shadow-lg" style="width: 85px; height: 85px;">
                                         @if(isset($settings['featured_campaign_icon']) && \Illuminate\Support\Str::contains($settings['featured_campaign_icon'], ['/', '.']))
-                                            <img src="{{ asset('storage/' . $settings['featured_campaign_icon']) }}" class="w-100 h-100 object-fit-cover rounded-3" id="prevBannerIconImg">
+                                            <img src="{{ app(\App\Services\ImageUploadService::class)->url($settings['featured_campaign_icon']) }}" class="w-100 h-100 object-fit-cover rounded-3" id="prevBannerIconImg">
                                         @else
                                             <img src="" class="w-100 h-100 object-fit-cover d-none rounded-3" id="prevBannerIconImg">
                                             <i class="bi bi-snow2 fs-1 text-white" id="prevBannerIconI"></i>
@@ -293,7 +293,7 @@
                             <div class="position-relative rounded-4 overflow-hidden border bg-light slider-upload-box" style="height: 100px;">
                                 @php $sliderPath = $settings["campaign_slider_$i"] ?? null; @endphp
                                 @if($sliderPath)
-                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover" id="preview_slider_{{$i}}">
+                                    <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover" id="preview_slider_{{$i}}">
                                 @else
                                     <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="preview_container_{{$i}}">
                                         <i class="bi bi-image-fill fs-4 mb-1"></i>

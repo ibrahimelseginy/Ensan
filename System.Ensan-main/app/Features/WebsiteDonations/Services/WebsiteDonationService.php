@@ -38,6 +38,9 @@ class WebsiteDonationService implements WebsiteDonationProcessorInterface
             $donation->payment_method = $data['payment_method'];
             $donation->status = 'pending';
             $donation->allocation_note = $data['notes'] ?? null;
+            if (isset($data['metadata'])) {
+                $donation->metadata = $data['metadata'];
+            }
             
             // Resolve category from ID
             $categoryRecord = \App\Models\DonationCategory::find($data['category_id']);

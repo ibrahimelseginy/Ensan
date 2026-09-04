@@ -53,9 +53,9 @@
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-initials bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
                                             style="width: 35px; height: 35px; font-weight: bold;">
-                                            {{ strtoupper(substr($leave->user->name ?? 'U', 0, 1)) }}
+                                            {{ strtoupper(substr($leave->user?->name ?? 'U', 0, 1)) }}
                                         </div>
-                                        <span class="fw-medium">{{ $leave->user->name }}</span>
+                                        <span class="fw-medium">{{ $leave->user?->name ?? 'مستخدم محذوف' }}</span>
                                     </div>
                                 </td>
                                 <td class="px-4">

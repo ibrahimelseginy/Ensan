@@ -1,4 +1,4 @@
-﻿{{-- Pillars Modals --}}
+{{-- Pillars Modals --}}
 <div class="modal fade premium-modal-dark" id="addPillarModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <form action="{{ route('mobile.pillars.store') }}" method="POST" enctype="multipart/form-data">
@@ -135,7 +135,7 @@
 <div class="modal fade premium-modal-dark" id="editShareModal{{ $s->id }}" tabindex="-1">
     <div class="modal-dialog">
         <form action="{{ route('mobile.home_content.update', $s) }}" method="POST" enctype="multipart/form-data">
-            @csrf @method('PUT')
+            @csrf
             <div class="modal-content glass-card">
                 <div class="modal-header border-white border-opacity-10">
                     <h5 class="modal-title text-white">تعديل عنصر</h5>
@@ -200,7 +200,7 @@
 <div class="modal fade premium-modal-dark" id="editCampModal{{ $c->id }}" tabindex="-1">
     <div class="modal-dialog">
         <form action="{{ route('mobile.home_content.update', $c) }}" method="POST" enctype="multipart/form-data">
-            @csrf @method('PUT')
+            @csrf
             <div class="modal-content glass-card">
                 <div class="modal-header border-white border-opacity-10">
                     <h5 class="modal-title text-white">تعديل الحملة</h5>
@@ -229,7 +229,7 @@
     <div class="modal-dialog">
         <form action="{{ $finalSection ? route('mobile.home_content.update', $finalSection) : route('mobile.home_content.store') }}" method="POST" enctype="multipart/form-data">
             @csrf 
-            @if($finalSection) @method('PUT') @else <input type="hidden" name="section" value="6"> @endif
+            @if(!$finalSection) <input type="hidden" name="section" value="6"> @endif
             <div class="modal-content glass-card">
                 <div class="modal-header border-white border-opacity-10">
                     <h5 class="modal-title text-white">تعديل القسم الأخير</h5>
@@ -289,7 +289,7 @@
 <div class="modal fade premium-modal-dark" id="editAboutModal" tabindex="-1">
     <div class="modal-dialog">
         <form action="{{ route('mobile.home_content.update', $aboutUs) }}" method="POST">
-            @csrf @method('PUT')
+            @csrf
             <div class="modal-content glass-card">
                 <div class="modal-header border-white border-opacity-10">
                     <h5 class="modal-title text-white">تعديل معلومات عنا</h5>
@@ -354,7 +354,7 @@
 <div class="modal fade premium-modal-dark" id="editItemModal{{ $s->id }}" tabindex="-1">
     <div class="modal-dialog">
         <form action="{{ route('mobile.home_content.update', $s) }}" method="POST" enctype="multipart/form-data">
-            @csrf @method('PUT')
+            @csrf
             <div class="modal-content glass-card">
                 <div class="modal-header border-white border-opacity-10">
                     <h5 class="modal-title text-white">تعديل الخدمة</h5>

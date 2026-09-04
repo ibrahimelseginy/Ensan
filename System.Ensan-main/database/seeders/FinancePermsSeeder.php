@@ -20,12 +20,10 @@ class FinancePermsSeeder extends Seeder
         $permissions = [
             // Payrolls
             'payrolls.view', 'payrolls.create', 'payrolls.edit', 'payrolls.delete',
-            'payroll.view', 'payroll.create', 'payroll.edit', 'payroll.delete',
             
             // Employee Tasks
-            'employee-tasks.view', 'employee-tasks.create', 'employee-tasks.edit', 'employee-tasks.delete',
             'employee_tasks.view', 'employee_tasks.create', 'employee_tasks.edit', 'employee_tasks.delete',
-            'tasks.view', // Just in case
+            'tasks.view',
             
             // Allow finance to view basic lists needed for dropdowns
             'users.view',

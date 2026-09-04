@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
     <div class="container-fluid py-5">
         <div class="row g-4">
             <div class="col-12">
-                <form action="{{ route('website.guest-house.stats.update') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('website.guest-house.update-stats') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="premium-card-dark animate-up">
                         <div class="card-header-lux d-flex justify-content-between align-items-center">
@@ -120,7 +120,7 @@
 
                                          <div class="gallery-preview-wrapper" id="ghSliderPreview{{ $i }}">
                                              @if(isset($settings["gh_slider_$i"]))
-                                                 <img src="{{ asset('storage/' . $settings["gh_slider_$i"]) }}" class="img-fluid rounded-4 h-100 w-100 object-fit-cover">
+                                                 <img src="{{ app(\App\Services\ImageUploadService::class)->url($settings["gh_slider_$i"]) }}" class="img-fluid rounded-4 h-100 w-100 object-fit-cover">
                                              @else
                                                  <div class="gallery-placeholder">
                                                      <i class="bi bi-images fs-3 text-indigo-400"></i>

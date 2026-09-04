@@ -25,7 +25,7 @@ final class UpdateUserRequest extends FormRequest
             'is_employee'           => 'nullable|boolean',
             'is_volunteer'          => 'nullable|boolean',
             'active'                => 'nullable|boolean',
-            'roles'                 => 'nullable|array',
+            'roles'                 => 'sometimes|array|min:1',
             'roles.*'               => 'exists:roles,id',
             'department'            => 'nullable|string|max:255',
             'job_title'             => 'nullable|string|max:255',
@@ -33,10 +33,10 @@ final class UpdateUserRequest extends FormRequest
             'join_date'             => 'nullable|date',
             'contract_start_date'   => 'nullable|date',
             'contract_end_date'     => 'nullable|date|after_or_equal:contract_start_date',
-            'profile_photo'         => 'nullable|image|max:10240',
-            'contract_image'        => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'criminal_record_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'id_card_image'         => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:10240',
+            'profile_photo'         => 'nullable|any_image|max:10240',
+            'contract_image'        => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,bmp,svg,tiff,heic,heif,avif,pdf|max:10240',
+            'criminal_record_image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,bmp,svg,tiff,heic,heif,avif,pdf|max:10240',
+            'id_card_image'         => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,bmp,svg,tiff,heic,heif,avif,pdf|max:10240',
             'annual_leave_quota'    => 'nullable|integer|min:0',
             'leave_balance'         => 'nullable|integer|min:0'
         ];

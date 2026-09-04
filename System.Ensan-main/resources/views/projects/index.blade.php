@@ -94,8 +94,8 @@
                     <i class="bi bi-kanban fs-4"></i>
                     </div>
                     <div>
-                        <a href="{{ route('projects.show', $p) }}" class="fw-bold text-dark fs-5 text-decoration-none stretched-link">{{ $p->name }}</a>
-                        <div class="small text-muted mt-1">{{ Str::limit($p->description, 50) }}</div>
+                        <a href="{{ route('projects.show', $p) }}" class="fw-bold text-dark fs-5 text-decoration-none">{{ $p->name }}</a>
+                        <div class="small text-muted mt-1">{{ Str::limit((string) ($p->description ?? ''), 50) }}</div>
                     </div>
                 </div>
                 @if(isset($p->pendingRequest) && $p->pendingRequest)
@@ -116,6 +116,15 @@
                 @if($p->fixed)
                     <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill"><i class="bi bi-pin-angle me-1"></i> ثابت</span>
                 @endif
+            </div>
+
+            <div class="d-flex gap-2 mb-3 position-relative" style="z-index: 4;">
+                <a href="{{ route('projects.show', $p) }}" class="btn btn-sm btn-outline-primary flex-fill">
+                    <i class="bi bi-eye me-1"></i> عرض
+                </a>
+                <a href="{{ route('projects.edit', $p) }}" class="btn btn-sm btn-outline-secondary flex-fill">
+                    <i class="bi bi-pencil-square me-1"></i> تعديل
+                </a>
             </div>
 
             <div class="d-flex align-items-center justify-content-between pt-3 border-top">

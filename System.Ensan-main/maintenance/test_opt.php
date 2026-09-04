@@ -4,7 +4,6 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use Illuminate\Http\UploadedFile;
-use App\Helpers\ImageOptimizer;
 
 $path = __DIR__ . '/test.jpg';
 if (!file_exists($path)) {
@@ -19,5 +18,5 @@ if (!file_exists($path)) {
 }
 
 $file = new UploadedFile($path, 'test.jpg', 'image/jpeg', null, true);
-$res = ImageOptimizer::optimize($file, 'website/test');
+$res = app(\App\Services\ImageUploadService::class)->upload($file, 'website/test');
 echo "Result: " . ($res ?: 'NULL') . "\n";

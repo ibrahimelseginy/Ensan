@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
   {{-- Page Header --}}
   <div class="page-header">
@@ -162,11 +162,14 @@
             </select>
           </div>
           <div class="col-md-6 alloc alloc-sponsorship" style="display:none">
-            <label class="form-label">نوع الكفالة</label>
+            <label class="form-label">نوع التخصيص</label>
             <select id="sponsorshipKind" name="sponsorship_type" class="form-select">
               @php $note = (string) ($donation->allocation_note ?? ''); @endphp
-              <option value="طفل" @selected(str_contains($note, 'sponsorship=طفل'))>طفل</option>
-              <option value="أسرة" @selected(str_contains($note, 'sponsorship=أسرة'))>أسرة</option>
+              <option value="kafalat_aytam" @selected(str_contains($note, 'sponsorship=kafalat_aytam') || str_contains($note, 'sponsorship=kafalat_yateem') || str_contains($note, 'sponsorship=طفل'))>كفالة أيتام</option>
+              <option value="kafalat_awram" @selected(str_contains($note, 'sponsorship=kafalat_awram'))>كفالة أورام</option>
+              <option value="sadaqat" @selected(str_contains($note, 'sponsorship=sadaqat'))>صدقات</option>
+              <option value="zakat_maal" @selected(str_contains($note, 'sponsorship=zakat_maal'))>زكاة مال</option>
+              <option value="sadaqa_jariya" @selected(str_contains($note, 'sponsorship=sadaqa_jariya'))>صدقات جارية</option>
             </select>
           </div>
           <div class="col-md-6 alloc alloc-sponsorship" id="sponsorshipBeneficiaryBox" style="display:none">

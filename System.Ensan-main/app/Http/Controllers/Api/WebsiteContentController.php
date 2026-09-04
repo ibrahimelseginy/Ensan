@@ -30,7 +30,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'sponsorship_details' => 'nullable|string',
@@ -48,7 +48,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'sponsorship_details' => 'nullable|string',
@@ -83,7 +83,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'goal_amount' => 'nullable|numeric',
@@ -102,7 +102,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'goal_amount' => 'nullable|numeric',
@@ -138,7 +138,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'is_published' => 'boolean',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',
@@ -156,7 +156,7 @@ final class WebsiteContentController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|string',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'is_published' => 'boolean',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',

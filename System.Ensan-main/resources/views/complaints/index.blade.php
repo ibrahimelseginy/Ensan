@@ -7,7 +7,10 @@
                 <i class="bi bi-chat-dots text-primary me-2"></i>الشكاوى
             </h4>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('complaint.track') }}" target="_blank" class="btn btn-outline-success shadow-sm">
+                <i class="bi bi-search me-1"></i> تتبع شكوى
+            </a>
             <a href="{{ route('complaints.create') }}" class="btn btn-primary shadow-sm">
                 <i class="bi bi-plus-lg me-1"></i> إضافة شكوى
             </a>
@@ -21,6 +24,7 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>كود التتبع</th>
                         <th>المصدر</th>
                         <th>العنوان</th>
                         <th>الحالة</th>
@@ -31,6 +35,11 @@
                     @forelse($complaints as $c)
                         <tr>
                             <td class="text-muted">{{ $c->id }}</td>
+                            <td>
+                                <span style="font-family: monospace; font-size: 0.85rem; color: #16a34a; font-weight: bold; letter-spacing: 1px;">
+                                    {{ $c->tracking_code ?? '—' }}
+                                </span>
+                            </td>
                             <td>
                                 <span class="badge bg-secondary-subtle text-secondary">{{ $c->source_type }}
                                     #{{ $c->source_id }}</span>
@@ -96,7 +105,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="empty-state">
                                     <i class="bi bi-chat-left-dots"></i>
                                     <h5>لا توجد شكاوى مسجلة</h5>

@@ -8,6 +8,8 @@ use App\Models\Project;
 use App\Models\ProjectActivity;
 use App\Models\ProjectMonthlyVolunteer;
 use App\Models\Beneficiary;
+use App\Models\Donation;
+use App\Models\Expense;
 use App\Models\Supplier;
 use App\Models\ChangeRequest;
 use App\Repositories\ProjectRepository;
@@ -33,13 +35,18 @@ final readonly class ProjectService
 
     public function getProjectStats(Project $project): array
     {
-        $donationsCount = $project->donations()->count();
-        $cashSum        = (float) $project->donations()->where('type', 'cash')->sum('amount');
-        $inKindSum      = (float) $project->donations()->where('type', 'in_kind')->sum('estimated_value');
+        $activeDonations = Donation::where('project_id', $project->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+        $activeExpenses = Expense::where('project_id', $project->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+
+        $donationsCount = (clone $activeDonations)->count();
+        $cashSum        = (float) (clone $activeDonations)->where('type', 'cash')->sum('amount');
+        $inKindSum      = (float) (clone $activeDonations)->where('type', 'in_kind')->sum('estimated_value');
         $donationsTotal = $cashSum + $inKindSum;
         
-        $expensesCount = (int) \App\Models\Expense::where('project_id', $project->id)->count();
-        $expensesTotal = (float) \App\Models\Expense::where('project_id', $project->id)->sum('amount');
+        $expensesCount = (clone $activeExpenses)->count();
+        $expensesTotal = (float) (clone $activeExpenses)->sum('amount');
         
         $activitiesRevenue = (float) $project->activities()->sum('revenue');
         $exhibitions       = $project->activities()->where('type', 'exhibition')->orderByDesc('activity_date')->get();
@@ -88,8 +95,7 @@ final readonly class ProjectService
             $project->id,
             'update',
             $data,
-            $executor,
-            true
+            $executor
         );
     }
 

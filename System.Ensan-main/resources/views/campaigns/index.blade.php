@@ -6,250 +6,145 @@
     body { font-family: 'Tajawal', sans-serif; }
     .campaigns-page { min-height: 100vh; }
 
-    /* Premium Hero Section */
-    .premium-hero {
-        position: relative;
-        padding: 80px 0 110px;
-        background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-body) 100%);
-        border-radius: 0 0 50px 50px;
-        overflow: hidden;
-        margin-bottom: -40px;
-        z-index: 1;
-        border-bottom: 1px solid var(--gray-200);
-    }
-    .hero-glow {
-        position: absolute;
-        width: 400px; height: 400px;
-        background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-        top: -100px; right: -100px;
-        filter: blur(60px);
-    }
-
-    .glass-card-premium {
-        background: var(--bg-glass);
-        backdrop-filter: blur(16px);
-        border: 1px solid var(--gray-200);
-        border-radius: 20px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: var(--shadow-lg);
-    }
-
     /* Campaign Card */
     .campaign-card-lux {
-        background: var(--bg-card);
-        border-radius: 28px;
+        background: #ffffff;
+        border-radius: 24px;
         overflow: hidden;
-        border: 1px solid var(--gray-200);
-        transition: all 0.4s ease;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         height: 100%;
         display: flex;
         flex-direction: column;
-        position: relative;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+    }
+    .theme-dark .campaign-card-lux {
+        background: #131c2e !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35) !important;
     }
     .campaign-card-lux:hover {
-        transform: translateY(-8px);
-        border-color: rgba(99, 102, 241, 0.3);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        transform: translateY(-6px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18) !important;
+        border-color: #6366f1 !important;
     }
 
-    .card-banner-premium {
-        height: 120px;
+    .card-banner-active {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        padding: 1.5rem;
         position: relative;
         overflow: hidden;
     }
-    .status-pill-lux {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        z-index: 5;
-        padding: 6px 16px;
-        border-radius: 100px;
-        font-size: 0.75rem;
-        font-weight: 700;
+    .card-banner-archived {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .campaign-banner-title {
+        color: #ffffff !important;
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+    .campaign-banner-season {
+        color: rgba(255, 255, 255, 0.85) !important;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .campaign-badge-active {
+        background: rgba(255, 255, 255, 0.22) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
         backdrop-filter: blur(8px);
+        font-weight: 700;
+        font-size: 0.76rem;
     }
-    .status-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-archived { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
-
-    .checkbox-wrapper-lux {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        z-index: 10;
-        background: rgba(15, 23, 42, 0.6);
-        padding: 5px;
-        border-radius: 8px;
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .checkbox-lux {
-        width: 20px; height: 20px;
-        cursor: pointer;
-        accent-color: #6366f1;
-        background-color: transparent !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
+    .campaign-badge-archived {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #e2e8f0 !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(8px);
+        font-weight: 700;
+        font-size: 0.76rem;
     }
 
-    .card-icon-bubble {
-        position: absolute;
-        bottom: -25px;
-        right: 25px;
-        width: 60px; height: 60px;
-        background: #6366f1;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: var(--shadow-sm);
-        border: 4px solid var(--bg-card);
-        z-index: 3;
+    .campaign-date-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.65rem 0.5rem;
+        text-align: center;
+    }
+    .theme-dark .campaign-date-box {
+        background: #1e293b !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    .campaign-date-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 0.2rem;
+    }
+    .theme-dark .campaign-date-label {
+        color: #94a3b8 !important;
+    }
+    .campaign-date-value {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .theme-dark .campaign-date-value {
+        color: #f8fafc !important;
     }
 
-    .content-area-lux { padding: 35px 24px 24px; flex-grow: 1; display: flex; flex-direction: column; }
-    .campaign-title-lux { font-size: 1.1rem; font-weight: 800; color: var(--dark); margin-bottom: 8px; line-height: 1.4; }
-    .campaign-meta-lux { font-size: 0.8rem; color: var(--gray-600); display: flex; align-items: center; gap: 8px; }
-
-    .btn-action-lux {
-        width: 32px; height: 32px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        background: var(--bg-body);
-        border: 1px solid var(--gray-200);
-        color: #94a3b8;
-        transition: all 0.3s ease;
+    .project-pill-tag {
+        background: rgba(99, 102, 241, 0.1);
+        color: #4f46e5;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 12px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.82rem;
+        font-weight: 700;
     }
-    .btn-action-lux:hover { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); color: #818cf8; transform: translateY(-2px); }
+    .theme-dark .project-pill-tag {
+        background: rgba(99, 102, 241, 0.2) !important;
+        color: #a5b4fc !important;
+        border-color: rgba(99, 102, 241, 0.3) !important;
+    }
 
-    .x-small { font-size: 0.7rem; }
-    .fw-800 { font-weight: 800; }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
-      /* --- LIGHT MODE ADAPTATION --- */
-      body:not(.theme-dark) {
-          background-color: var(--ws-bg-page) !important;
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .member-card-premium {
-          background: var(--ws-bg-card);
-          border-color: var(--ws-border-card);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      }
-      body:not(.theme-dark) .text-white,
-      body:not(.theme-dark) .text-white-50 {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
-          color: #fff !important;
-      }
-      body:not(.theme-dark) .role-pill-premium {
-          color: var(--blue-dark);
-          background: rgba(59,130,246,0.15);
-          border-color: rgba(59,130,246,0.2);
-      }
-      body:not(.theme-dark) .text-slate-400 {
-          color: var(--ws-text-secondary);
-      }
-      body:not(.theme-dark) .btn-glass-blue {
-          color: var(--blue-dark);
-          background: rgba(37, 99, 235, 0.1);
-          border-color: rgba(37, 99, 235, 0.2);
-      }
-      body:not(.theme-dark) .btn-glass-danger {
-          color: #dc2626;
-          background: rgba(220, 38, 38, 0.1);
-          border-color: rgba(220, 38, 38, 0.2);
-      }
-      body:not(.theme-dark) .premium-modal-dark {
-          background: var(--ws-bg-card);
-      }
-      body:not(.theme-dark) .premium-modal-dark .modal-header .text-white {
-          color: var(--ws-text-primary) !important;
-      }
-      body:not(.theme-dark) .field-lux {
-          background: var(--ws-bg-input);
-          color: var(--ws-text-primary);
-          border-color: var(--ws-border);
-      }
-      body:not(.theme-dark) .field-lux:focus {
-          background: var(--ws-bg-input);
-      }
-      body:not(.theme-dark) .avatar-placeholder-premium {
-          color: #fff; /* Keep placeholder icon white because of gradient */
-      }
-      body:not(.theme-dark) .btn-close-white {
-          filter: invert(1) grayscale(100%) brightness(200%);
-      }
+    .btn-campaign-details {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 999px;
+        padding: 0.45rem 1.25rem;
+        font-weight: 700;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        transition: all 0.2s ease;
+    }
+    .btn-campaign-details:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
 </style>
 @endsection
 
 @section('content')
 <div class="campaign-system-container animate-fade-in">
     {{-- Premium Dashboard Hero --}}
-    <div class="dashboard-hero animate-slide-up bg-primary shadow-sm mb-4" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 3rem 2rem; border-radius: 0 0 40px 40px;">
+    <div class="dashboard-hero animate-slide-up bg-primary shadow-sm mb-4" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); padding: 2.8rem 2rem; border-radius: 0 0 36px 36px;">
         <div class="hero-content">
-            <div class="hero-greeting text-white mb-2 opacity-75 fw-bold">الحملات والمبادرات 📣</div>
-            <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">إدارة الحملات</h1>
-            <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">تخطيط وإطلاق الحملات الموسمية والتسويقية باحترافية لزيادة التأثير والوصول.</p>
+            <div class="hero-greeting text-white mb-2 opacity-90 fw-bold">الحملات والمبادرات 📣</div>
+            <h1 class="hero-title fw-bold text-white mb-2" style="color: #ffffff !important;">إدارة الحملات</h1>
+            <p class="hero-subtitle text-white opacity-85 mb-4" style="color: #ffffff !important;">تخطيط وإطلاق الحملات الموسمية والتسويقية باحترافية لزيادة التأثير والوصول.</p>
             <div class="hero-actions d-flex gap-2">
-                <a href="{{ route('campaigns.create') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
+                <a href="{{ route('campaigns.create') }}" class="btn btn-sm rounded-pill px-4 btn-light fw-bold hover-lift shadow-sm">
                     <i class="bi bi-plus-lg me-1"></i> إضافة حملة جديدة
                 </a>
                 <button type="button" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
@@ -257,13 +152,13 @@
                 </button>
             </div>
         </div>
-        <i class="bi bi-megaphone hero-icon text-white opacity-25 d-none d-md-block" style="font-size: 8rem; position: absolute; left: 5%; top: 50%; transform: translateY(-50%) rotate(-15deg);"></i>
+        <i class="bi bi-megaphone hero-icon text-white opacity-20 d-none d-md-block" style="font-size: 8rem; position: absolute; left: 5%; top: 50%; transform: translateY(-50%) rotate(-15deg);"></i>
     </div>
 
     <div class="container-fluid px-4 pb-5">
         {{-- Advanced Filter Collapse --}}
         <div class="collapse mb-4" id="advancedFilter">
-            <div class="glass-card p-4">
+            <div class="card border p-4 rounded-4 shadow-sm">
                 <form method="GET" action="{{ route('campaigns.index') }}">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -280,7 +175,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="x-small fw-bold text-muted mb-2">السنة</label>
-                            <input name="season_year" value="{{ $year ?? '' }}" class="form-control rounded-3" type="number" placeholder="2025">
+                            <input name="season_year" value="{{ $season_year ?? '' }}" class="form-control rounded-3" type="number" placeholder="2025">
                         </div>
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">تطبيق الفلتر</button>
@@ -295,7 +190,7 @@
             @csrf
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="form-check p-0 m-0 d-flex align-items-center bg-white bg-opacity-10 px-3 py-2 rounded-3 border shadow-sm">
+                    <div class="form-check p-0 m-0 d-flex align-items-center bg-body-tertiary px-3 py-2 rounded-3 border shadow-sm">
                         <input class="form-check-input ms-2 mt-0" type="checkbox" id="selectAll" style="width: 18px; height: 18px;">
                         <label class="form-check-label fw-bold small mb-0" for="selectAll" style="cursor: pointer;">تحديد الكل</label>
                     </div>
@@ -305,7 +200,7 @@
                 </div>
                 
                 <div class="input-group shadow-sm" style="width: 300px;">
-                    <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
+                    <span class="input-group-text bg-body border-end-0 rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" class="form-control border-start-0 rounded-end-pill" placeholder="بحث سريع في النتائج..." onkeyup="filterCampaigns(this)">
                 </div>
             </div>
@@ -314,22 +209,22 @@
             <div class="row g-4" id="campaignGrid">
                 @foreach($campaigns as $c)
                 <div class="col-md-6 col-xl-4 campaign-item">
-                    <div class="glass-card h-100 hover-lift overflow-hidden border-0 shadow-sm p-0">
+                    <div class="campaign-card-lux">
                         {{-- Card Header/Banner --}}
-                        <div class="p-4" style="background: linear-gradient(135deg, {{ $c->status === 'active' ? 'var(--primary)' : 'var(--gray-600)' }} 0%, {{ $c->status === 'active' ? 'var(--primary-dark)' : 'var(--dark)' }} 100%); position: relative;">
+                        <div class="{{ $c->status === 'active' ? 'card-banner-active' : 'card-banner-archived' }}">
                             <div class="d-flex justify-content-between align-items-start position-relative" style="z-index: 2;">
-                                <span class="badge rounded-pill px-3 py-2 {{ $c->status === 'active' ? 'bg-white text-primary' : 'bg-white bg-opacity-20 text-white' }} fw-bold x-small">
+                                <span class="badge rounded-pill px-3 py-2 {{ $c->status === 'active' ? 'campaign-badge-active' : 'campaign-badge-archived' }}">
                                     <i class="bi {{ $c->status === 'active' ? 'bi-record-circle-fill' : 'bi-archive-fill' }} me-1"></i>
                                     {{ $c->status === 'active' ? 'نشطة حالياً' : 'مؤرشفة' }}
                                 </span>
-                                <input class="form-check-input record-checkbox shadow-none" type="checkbox" name="ids[]" value="{{ $c->id }}" style="width: 20px; height: 20px; border-color: rgba(255,255,255,0.3);">
+                                <input class="form-check-input record-checkbox shadow-none" type="checkbox" name="ids[]" value="{{ $c->id }}" style="width: 20px; height: 20px; border-color: rgba(255,255,255,0.4);">
                             </div>
                             
-                            <div class="mt-4 pt-2 text-white">
-                                <h5 class="fw-bold mb-1">
+                            <div class="mt-3 text-white">
+                                <h5 class="campaign-banner-title">
                                     <a href="{{ route('campaigns.show', $c) }}" class="text-white text-decoration-none" style="color: #ffffff !important;">{{ $c->name }}</a>
                                 </h5>
-                                <div class="opacity-75 small">موسم {{ $c->season_year }}</div>
+                                <div class="campaign-banner-season">موسم {{ $c->season_year }}</div>
                             </div>
                             
                             {{-- Decorative Icon --}}
@@ -337,38 +232,37 @@
                         </div>
 
                         {{-- Card Body --}}
-                        <div class="p-4">
+                        <div class="p-4 d-flex flex-column flex-grow-1 justify-content-between">
                             @if($c->project)
                             <div class="d-flex align-items-center gap-2 mb-3">
-                                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3">
-                                    <i class="bi bi-folder2-open"></i>
+                                <div class="project-pill-tag text-truncate" style="max-width: 100%;">
+                                    <i class="bi bi-folder2-open me-1"></i> {{ $c->project->name }}
                                 </div>
-                                <div class="text-truncate fw-bold text-main" style="max-width: 200px;">{{ $c->project->name }}</div>
                             </div>
                             @endif
 
                             <div class="row g-2 mb-4">
                                 <div class="col-6">
-                                    <div class="p-2 bg-light bg-opacity-50 rounded-3 text-center border">
-                                        <div class="text-muted x-small mb-1">تاريخ البدء</div>
-                                        <div class="fw-bold small">{{ $c->start_date?->format('Y/m/d') ?? '—' }}</div>
+                                    <div class="campaign-date-box">
+                                        <div class="campaign-date-label">تاريخ البدء</div>
+                                        <div class="campaign-date-value">{{ $c->start_date?->format('Y/m/d') ?? '—' }}</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="p-2 bg-light bg-opacity-50 rounded-3 text-center border">
-                                        <div class="text-muted x-small mb-1">تاريخ الانتهاء</div>
-                                        <div class="fw-bold small">{{ $c->end_date?->format('Y/m/d') ?? '—' }}</div>
+                                    <div class="campaign-date-box">
+                                        <div class="campaign-date-label">تاريخ الانتهاء</div>
+                                        <div class="campaign-date-value">{{ $c->end_date?->format('Y/m/d') ?? '—' }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                <a href="{{ route('campaigns.show', $c) }}" class="btn btn-sm btn-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 fw-bold">
+                                <a href="{{ route('campaigns.show', $c) }}" class="btn btn-campaign-details">
                                     التفاصيل <i class="bi bi-arrow-left ms-1"></i>
                                 </a>
                                 
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-light rounded-circle shadow-none" type="button" data-bs-toggle="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle shadow-sm border" type="button" data-bs-toggle="dropdown" style="width: 36px; height: 36px;">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
@@ -498,7 +392,7 @@
         const value = input.value.toLowerCase();
         const items = document.querySelectorAll('.campaign-item');
         items.forEach(item => {
-            const title = item.querySelector('.campaign-title-lux').textContent.toLowerCase();
+            const title = item.querySelector('.campaign-title-lux')?.textContent.toLowerCase() ?? '';
             item.style.display = title.includes(value) ? '' : 'none';
         });
     }

@@ -29,6 +29,10 @@
             <input name="location" class="form-control" value="{{ $guest_house->location }}">
           </div>
           <div class="col-md-6">
+            <label class="form-label">المحافظة</label>
+            <select name="governorate" class="form-select" required><option value="كفر الشيخ" @selected(old('governorate',$guest_house->governorate)==='كفر الشيخ')>كفر الشيخ</option><option value="الغربية" @selected(old('governorate',$guest_house->governorate)==='الغربية')>الغربية</option></select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">الهاتف</label>
             <input name="phone" class="form-control" value="{{ $guest_house->phone }}">
           </div>

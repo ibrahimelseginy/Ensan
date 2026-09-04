@@ -26,7 +26,7 @@
             <div id="bulk-action-bar" class="bulk-action-bar-elite shadow-premium d-none">
                 <div class="d-flex align-items-center gap-4 bg-glass-onyx px-4 py-2 rounded-24 border border-primary animate-reveal-up">
                     <div class="selected-badge bg-primary px-3 py-1 rounded-pill">
-                        <span class="text-white small fw-bold"><span id="selected-count">0</span> محدد</span>
+                        <span class="text-stats-main small fw-bold"><span id="selected-count">0</span> محدد</span>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-danger rounded-pill px-4 fw-800 shadow-sm btn-hover-scale" onclick="submitBulkDelete()">

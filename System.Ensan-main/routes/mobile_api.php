@@ -84,4 +84,15 @@ Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
     
     Route::get('/donation-records', [MobileApiController::class, 'getDonations']);
     Route::get('/donation/{donation}', [MobileApiController::class, 'showDonation']);
+
+    // Employee specific routes
+    Route::prefix('employee')->group(function () {
+        Route::get('dashboard', [MobileApiController::class, 'getEmployeeDashboard']);
+        Route::post('attendance/check-in', [MobileApiController::class, 'employeeCheckIn']);
+        Route::post('attendance/check-out', [MobileApiController::class, 'employeeCheckOut']);
+        Route::get('attendance', [MobileApiController::class, 'getEmployeeAttendance']);
+        Route::get('leaves', [MobileApiController::class, 'getEmployeeLeaves']);
+        Route::post('leaves', [MobileApiController::class, 'requestEmployeeLeave']);
+        Route::get('payrolls', [MobileApiController::class, 'getEmployeePayrolls']);
+    });
 });

@@ -1,22 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\LoginWebController;
-
-// مؤقت: تصفير كلمة المرور للمدير
-Route::get('/reset-admin-pass', function () {
-    $user = User::where('email', 'IbrahimElfil@gmail.com')->first();
-    if ($user) {
-        $user->password = Hash::make('IbrahimElfil');
-        $user->save();
-        return 'Password reset to IbrahimElfil successfully for ' . $user->email;
-    }
-    return 'User not found';
-});
 
 use App\Http\Controllers\HrEvaluationWebController;
 use App\Http\Controllers\GuestHouseWebController;
@@ -27,6 +14,7 @@ use App\Http\Controllers\WarehouseWebController;
 use App\Http\Controllers\ItemWebController;
 use App\Http\Controllers\InventoryTransactionWebController;
 use App\Http\Controllers\BeneficiaryWebController;
+use App\Http\Controllers\BeneficiaryFamilyMemberWebController;
 use App\Http\Controllers\AccountWebController;
 use App\Http\Controllers\JournalEntryWebController;
 use App\Http\Controllers\ReportsWebController;
@@ -56,9 +44,12 @@ use App\Http\Controllers\WebsiteWebController;
 use App\Http\Controllers\MobileContentController;
 use App\Http\Controllers\LogisticsDashboardController;
 use App\Http\Controllers\SupplierWebController;
+use App\Http\Controllers\PurchaseWebController;
+use App\Http\Controllers\SalesTargetWebController;
 use App\Http\Controllers\DonationCategoryWebController;
 use App\Http\Controllers\DonationItemWebController;
 use App\Http\Controllers\AdminWebsiteDonationWebController;
+use App\Http\Controllers\ImageUploadController;
 
 /* |-------------------------------------------------------------------------- | Web Routes |-------------------------------------------------------------------------- | | Here is where you can register web routes for your application. These | routes are loaded by the RouteServiceProvider and all of them will | be assigned to the "web" middleware group. Make something great! | */
 
@@ -70,15 +61,29 @@ Route::get('login', [LoginWebController::class , 'show'])->name('login');
 Route::post('login', [LoginWebController::class , 'login'])->name('login.post');
 Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 
+// تتبع الشكاوي - صفحة عامة بدون تسجيل دخول
+Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->name('complaint.track');
+Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->name('complaint.track.search');
+
 
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {
 
-    // --- Core Dashboard ---
-    Route::middleware('permission:dashboard.view')->group(function () {
-        Route::get('dashboard', [DashboardWebController::class, 'index'])->name('dashboard.index');
-        Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
+    // --- Image Upload (AJAX / Fetch from Web Dashboard) ---
+    Route::prefix('upload')->group(function () {
+        Route::post('image',   [ImageUploadController::class, 'upload'])->name('upload.image');
+        Route::post('images',  [ImageUploadController::class, 'uploadMultiple'])->name('upload.images');
+        Route::delete('image', [ImageUploadController::class, 'destroy'])->name('upload.image.destroy');
     });
+
+    // --- Core Dashboard ---
+    Route::middleware('permission:dashboard.view')
+        ->get('dashboard', [DashboardWebController::class, 'index'])
+        ->name('dashboard.index');
+
+    Route::middleware('permission:notifications.view')
+        ->get('notifications', [NotificationWebController::class, 'index'])
+        ->name('notifications.index');
 
     Route::middleware('permission:audits.view')->group(function () {
         Route::get('audits', [AuditWebController::class, 'index'])->name('audits.index');
@@ -108,12 +113,18 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('permission:suppliers.view')->group(function () {
+        Route::post('suppliers/{supplier}/purchases', [PurchaseWebController::class, 'store'])->name('suppliers.purchases.store');
+        Route::delete('suppliers/{supplier}/purchases/{purchase}', [PurchaseWebController::class, 'destroy'])->name('suppliers.purchases.destroy');
         Route::resource('suppliers', SupplierWebController::class);
     });
 
     // --- Beneficiaries ---
     Route::middleware('permission:beneficiaries.view')->group(function () {
         Route::get('beneficiaries/export', [BeneficiaryWebController::class, 'export'])->name('beneficiaries.export');
+        Route::get('beneficiaries/export/pdf', [BeneficiaryWebController::class, 'exportPdf'])->name('beneficiaries.export-pdf');
+        Route::get('beneficiaries/{beneficiary}/pdf', [BeneficiaryWebController::class, 'pdf'])->name('beneficiaries.pdf');
+        Route::get('beneficiary-family-members/{familyMember}', [BeneficiaryFamilyMemberWebController::class, 'show'])
+            ->name('beneficiary-family-members.show');
         Route::post('beneficiaries/bulk', [BeneficiaryWebController::class, 'bulkUpdate'])->name('beneficiaries.bulk');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
     });
@@ -158,8 +169,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('attachments', [AttachmentWebController::class, 'store'])->name('attachments.store');
         Route::delete('attachments/{attachment}', [AttachmentWebController::class, 'destroy'])->name('attachments.destroy');
         
-        Route::resource('volunteers', VolunteerWebController::class);
         Route::get('volunteers/reports', [VolunteerWebController::class, 'reports'])->name('volunteers.reports');
+        Route::resource('volunteers', VolunteerWebController::class);
         Route::resource('volunteer-hours', VolunteerHourWebController::class);
         Route::resource('volunteer-attendance', VolunteerAttendanceWebController::class);
         Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
@@ -178,6 +189,8 @@ Route::middleware(['auth'])->group(function () {
     // --- Payrolls (Specific Permission) ---
     Route::middleware('permission:payrolls.view')->group(function () {
         Route::get('payrolls/dashboard/overview', [PayrollWebController::class, 'dashboard'])->name('payrolls.dashboard');
+        Route::get('sales/target', [SalesTargetWebController::class, 'index'])->name('sales.target');
+        Route::post('sales/target/employee', [SalesTargetWebController::class, 'updateEmployee'])->name('sales.target.update-employee');
         Route::post('payrolls/{payroll}/create-journal-entry', [PayrollWebController::class, 'createJournalEntry'])->name('payrolls.createJournalEntry');
         Route::resource('payrolls', PayrollWebController::class);
     });
@@ -190,10 +203,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('delegates/{delegate}/trips/{trip}', [DelegateWebController::class, 'destroyTrip'])->name('delegates.destroyTrip');
         Route::patch('delegates/{delegate}/trips/{trip}', [DelegateWebController::class, 'updateTripStatus'])->name('delegates.updateTripStatus');
         Route::get('logistics/dashboard', [LogisticsDashboardController::class, 'index'])->name('logistics.dashboard');
-        Route::get('logistics/delegate/{delegate}/performance', [LogisticsDashboardController::class, 'delegatePerformance'])->name('logistics.delegatePerformance');
         Route::resource('delegates', DelegateWebController::class);
         Route::post('travel-routes/{travel_route}/cities', [TravelRouteWebController::class, 'addCity'])->name('travel-routes.addCity');
-        Route::post('travel-routes/{travel_route}/trips', [TravelRouteWebController::class, 'addTrip'])->name('travel-routes.addTrip');
         Route::get('travel-routes/export', [TravelRouteWebController::class, 'export'])->name('travel-routes.export');
         Route::post('travel-routes/{travel_route}/duplicate', [TravelRouteWebController::class, 'duplicate'])->name('travel-routes.duplicate');
         Route::resource('travel-routes', TravelRouteWebController::class);
@@ -201,17 +212,49 @@ Route::middleware(['auth'])->group(function () {
         Route::post('trips', [TripWebController::class, 'store'])->name('trips.store');
     });
 
-    Route::get('reports', [ReportsWebController::class, 'index'])->name('reports.index');
+    Route::middleware('permission:reports.view')
+        ->get('reports', [ReportsWebController::class, 'index'])
+        ->name('reports.index');
 
     // --- Admin & RBAC ---
     Route::middleware('permission:users.view')->group(function () {
-        Route::resource('users', UserWebController::class);
+        Route::get('users', [UserWebController::class, 'index'])->name('users.index');
+    });
+    Route::middleware('permission:users.create')->group(function () {
+        Route::get('users/create', [UserWebController::class, 'create'])->name('users.create');
+        Route::post('users', [UserWebController::class, 'store'])->name('users.store');
+    });
+    Route::middleware('own_user_or_permission:users.view')->group(function () {
+        Route::get('users/{user}', [UserWebController::class, 'show'])->name('users.show');
+    });
+    Route::middleware('own_user_or_permission:users.edit')->group(function () {
+        Route::get('users/{user}/edit', [UserWebController::class, 'edit'])->name('users.edit');
+        Route::match(['PUT', 'PATCH'], 'users/{user}', [UserWebController::class, 'update'])->name('users.update');
+    });
+    Route::middleware('permission:users.delete')->group(function () {
+        Route::delete('users/{user}', [UserWebController::class, 'destroy'])->name('users.destroy');
+    });
+    Route::middleware('permission:users.edit')->group(function () {
         Route::post('users/{user}/roles/{role}', [UserWebController::class, 'attachRole'])->name('users.attachRole');
         Route::delete('users/{user}/roles/{role}', [UserWebController::class, 'detachRole'])->name('users.detachRole');
     });
 
     Route::middleware('permission:roles.view')->group(function () {
-        Route::resource('roles', RoleWebController::class);
+        Route::get('roles', [RoleWebController::class, 'index'])->name('roles.index');
+    });
+    Route::middleware('permission:roles.create')->group(function () {
+        Route::get('roles/create', [RoleWebController::class, 'create'])->name('roles.create');
+        Route::post('roles', [RoleWebController::class, 'store'])->name('roles.store');
+    });
+    Route::middleware('permission:roles.view')->group(function () {
+        Route::get('roles/{role}', [RoleWebController::class, 'show'])->name('roles.show');
+    });
+    Route::middleware('permission:roles.edit')->group(function () {
+        Route::get('roles/{role}/edit', [RoleWebController::class, 'edit'])->name('roles.edit');
+        Route::match(['PUT', 'PATCH'], 'roles/{role}', [RoleWebController::class, 'update'])->name('roles.update');
+    });
+    Route::middleware('permission:roles.delete')->group(function () {
+        Route::delete('roles/{role}', [RoleWebController::class, 'destroy'])->name('roles.destroy');
     });
 
     Route::middleware('permission:complaints.view')->group(function () {
@@ -226,6 +269,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('projects/{project}/deputy', [ProjectWebController::class, 'setDeputy'])->name('projects.setDeputy');
         Route::post('projects/{project}/volunteers', [ProjectWebController::class, 'attachVolunteer'])->name('projects.attachVolunteer');
         Route::delete('projects/{project}/volunteers/{user}', [ProjectWebController::class, 'detachVolunteer'])->name('projects.detachVolunteer');
+
+        Route::post('projects/{project}/monthly-volunteers', [ProjectWebController::class, 'storeMonthlyVolunteer'])->name('projects.storeMonthlyVolunteer');
+        Route::delete('projects/{project}/monthly-volunteers/{monthlyVolunteer}', [ProjectWebController::class, 'destroyMonthlyVolunteer'])->name('projects.destroyMonthlyVolunteer');
+        Route::post('projects/{project}/activities', [ProjectWebController::class, 'storeActivity'])->name('projects.storeActivity');
+        Route::delete('projects/{project}/activities/{activity}', [ProjectWebController::class, 'destroyActivity'])->name('projects.destroyActivity');
+
+        // Generic beneficiary file management
+        Route::post('projects/{project}/beneficiaries', [ProjectWebController::class, 'storeBeneficiaryFile'])->name('projects.storeBeneficiaryFile');
+        Route::put('projects/{project}/beneficiaries/{beneficiary}', [ProjectWebController::class, 'updateBeneficiaryFile'])->name('projects.updateBeneficiaryFile');
+        Route::delete('projects/{project}/beneficiaries/{beneficiary}', [ProjectWebController::class, 'destroyBeneficiaryFile'])->name('projects.destroyBeneficiaryFile');
+        Route::post('projects/{project}/donations', [ProjectWebController::class, 'storeDonation'])
+            ->middleware('permission:donations.view')
+            ->name('projects.storeDonation');
+        Route::post('projects/{project}/expenses', [ProjectWebController::class, 'storeExpense'])
+            ->middleware(['permission:manage_finance', 'permission:expenses.view'])
+            ->name('projects.storeExpense');
         
         // Zad Management
         Route::post('projects/{project}/zad-families', [ProjectWebController::class, 'storeZadFamily'])->name('projects.storeZadFamily');
@@ -237,6 +296,21 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('campaigns', CampaignWebController::class);
         Route::post('campaigns/bulk-destroy', [CampaignWebController::class, 'bulkDestroy'])->name('campaigns.bulk-destroy');
         Route::post('campaigns/{campaign}/manager', [CampaignWebController::class, 'setManager'])->name('campaigns.setManager');
+        Route::post('campaigns/{campaign}/volunteers', [CampaignWebController::class, 'attachVolunteer'])->name('campaigns.attachVolunteer');
+        Route::delete('campaigns/{campaign}/volunteers/{user}', [CampaignWebController::class, 'detachVolunteer'])->name('campaigns.detachVolunteer');
+        Route::post('campaigns/{campaign}/monthly-volunteers', [CampaignWebController::class, 'storeMonthlyVolunteer'])->name('campaigns.storeMonthlyVolunteer');
+        Route::delete('campaigns/{campaign}/monthly-volunteers/{monthlyVolunteer}', [CampaignWebController::class, 'destroyMonthlyVolunteer'])->name('campaigns.destroyMonthlyVolunteer');
+        Route::post('campaigns/{campaign}/daily-menus', [CampaignWebController::class, 'storeDailyMenu'])->name('campaigns.storeDailyMenu');
+        Route::delete('campaigns/{campaign}/daily-menus/{dailyMenu}', [CampaignWebController::class, 'destroyDailyMenu'])->name('campaigns.destroyDailyMenu');
+        Route::post('campaigns/{campaign}/beneficiaries', [CampaignWebController::class, 'storeBeneficiaryFile'])->name('campaigns.storeBeneficiaryFile');
+        Route::put('campaigns/{campaign}/beneficiaries/{beneficiary}', [CampaignWebController::class, 'updateBeneficiaryFile'])->name('campaigns.updateBeneficiaryFile');
+        Route::delete('campaigns/{campaign}/beneficiaries/{beneficiary}', [CampaignWebController::class, 'destroyBeneficiaryFile'])->name('campaigns.destroyBeneficiaryFile');
+        Route::post('campaigns/{campaign}/donations', [CampaignWebController::class, 'storeDonation'])
+            ->middleware('permission:donations.view')
+            ->name('campaigns.storeDonation');
+        Route::post('campaigns/{campaign}/expenses', [CampaignWebController::class, 'storeExpense'])
+            ->middleware(['permission:manage_finance', 'permission:expenses.view'])
+            ->name('campaigns.storeExpense');
     });
 
     // --- Website Management ---
@@ -296,9 +370,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:website.campaigns_content.view_edit')->group(function () {
             Route::get('admin/website/campaigns-content', [WebsiteWebController::class, 'campaignsContent'])->name('website.campaigns.content');
-            Route::post('admin/website/campaigns', [WebsiteWebController::class, 'storeCampaign'])->name('website.campaigns.store');
-            Route::post('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'updateCampaignContent'])->name('website.campaigns.update');
             Route::post('admin/website/campaigns/stats', [WebsiteWebController::class, 'updateCampaignStats'])->name('website.campaigns.stats.update');
+            Route::post('admin/website/campaigns', [WebsiteWebController::class, 'storeCampaign'])->name('website.campaigns.store');
+            Route::match(['POST', 'PUT'], 'admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'updateCampaignContent'])->name('website.campaigns.update');
             Route::delete('admin/website/campaigns/{campaign}', [WebsiteWebController::class, 'destroyCampaign'])->name('website.campaigns.destroy');
         });
 
@@ -330,6 +404,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:website.guest_house_content.view_edit')->group(function () {
             Route::get('admin/website/guest-house', [WebsiteWebController::class, 'guestHouseContent'])->name('website.guest-house.content');
+            Route::get('admin/website/guest-house/slider', [WebsiteWebController::class, 'guestHouseSlider'])->name('website.guest-house.slider');
             Route::post('admin/website/guest-house/update', [WebsiteWebController::class, 'guestHouseContentUpdate'])->name('website.guest-house.update');
             Route::post('admin/website/guest-house/stats', [WebsiteWebController::class, 'updateGuestHouseStats'])->name('website.guest-house.update-stats');
             Route::post('admin/website/guest-house/booking-status/{booking}', [WebsiteWebController::class, 'bookingUpdateStatus'])->name('website.bookings.update');
@@ -342,8 +417,16 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware('permission:website.donation_settings.view_edit')->group(function () {
             Route::get('admin/website/donation-settings/unified', [DonationCategoryWebController::class, 'unified'])->name('website.donation-settings.unified');
-            Route::resource('admin/website/donation-settings/categories', DonationCategoryWebController::class, ['as' => 'website.donation-settings']);
-            Route::resource('admin/website/donation-settings/items', DonationItemWebController::class, ['as' => 'website.donation-settings']);
+            Route::post('admin/website/donation-settings/categories/{donationCategory}/toggle', [DonationCategoryWebController::class, 'toggleStatus'])
+                ->name('website.donation-settings.categories.toggle');
+            Route::resource('admin/website/donation-settings/categories', DonationCategoryWebController::class, ['as' => 'website.donation-settings'])
+                ->parameters(['categories' => 'donationCategory'])
+                ->only(['index', 'store', 'update', 'destroy']);
+            Route::post('admin/website/donation-settings/items/{donationItem}/toggle', [DonationItemWebController::class, 'toggleStatus'])
+                ->name('website.donation-settings.items.toggle');
+            Route::resource('admin/website/donation-settings/items', DonationItemWebController::class, ['as' => 'website.donation-settings'])
+                ->parameters(['items' => 'donationItem'])
+                ->only(['index', 'store', 'update', 'destroy']);
         });
 
         Route::middleware('permission:website.donation_accounts.view')->group(function () {
@@ -372,11 +455,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:mobile.view')->group(function () {
         Route::group(['prefix' => 'admin/mobile', 'as' => 'mobile.'], function () {
             Route::get('/', [MobileContentController::class, 'index'])->name('dashboard');
+            Route::put('/projects/{project}/mobile-content', [MobileContentController::class, 'updateProjectMobileContent'])->name('projects.update.mobile');
+            Route::put('/campaigns/{campaign}/mobile-content', [MobileContentController::class, 'updateCampaignMobileContent'])->name('campaigns.update.mobile');
             
             Route::middleware('permission:mobile.home_content.view_edit')->group(function () {
                 Route::get('/home-content', [MobileContentController::class, 'homeContentIndex'])->name('home_content.index');
                 Route::post('/home-content', [MobileContentController::class, 'homeContentStore'])->name('home_content.store');
-                Route::post('/home-content/{item}', [MobileContentController::class, 'homeContentUpdate'])->name('home_content.update');
+                Route::match(['POST', 'PUT'], '/home-content/{item}', [MobileContentController::class, 'homeContentUpdate'])->name('home_content.update');
                 Route::delete('/home-content/{item}', [MobileContentController::class, 'homeContentDestroy'])->name('home_content.destroy');
                 Route::get('/banners', [MobileContentController::class, 'bannersIndex'])->name('banners.index');
                 Route::post('/banners', [MobileContentController::class, 'bannerStore'])->name('banners.store');
@@ -393,6 +478,7 @@ Route::middleware(['auth'])->group(function () {
             Route::middleware('permission:mobile.notifications.view')->group(function () {
                 Route::get('/notifications', [MobileContentController::class, 'notificationsIndex'])->name('notifications.index');
                 Route::post('/notifications', [MobileContentController::class, 'notificationStore'])->name('notifications.store');
+                Route::match(['POST', 'PUT'], '/notifications/{notification}', [MobileContentController::class, 'notificationUpdate'])->name('notifications.update');
                 Route::delete('/notifications/{notification}', [MobileContentController::class, 'notificationDestroy'])->name('notifications.destroy');
             });
 
@@ -414,6 +500,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/donations', [MobileContentController::class, 'donationsIndex'])->name('donations.index');
                 Route::match(['post', 'patch'], '/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
                 Route::delete('/donations/{donation}', [MobileContentController::class, 'destroyDonation'])->name('donations.destroy');
+                Route::get('/in-kind-donations', [MobileContentController::class, 'inKindDonationsIndex'])->name('inkind.index');
+                Route::patch('/in-kind-donations/{donation}/status', [MobileContentController::class, 'inKindDonationUpdateStatus'])->name('inkind.update');
             });
 
             Route::middleware('permission:mobile.donors.view')->group(function () {
@@ -458,27 +546,87 @@ Route::middleware(['auth'])->group(function () {
     // --- Specialized Services ---
     Route::middleware('permission:manage_specialized_services')->group(function () {
         Route::middleware('permission:workspaces.view')->resource('workspaces', \App\Http\Controllers\WorkspaceWebController::class);
-        Route::middleware('permission:guest_houses.view')->resource('guest-houses', GuestHouseWebController::class);
-        Route::middleware('permission:school_collaborations.view')->resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class);
-        Route::middleware('permission:memberships.view')->resource('memberships', \App\Http\Controllers\MembershipWebController::class);
-        Route::middleware('permission:oncology_medicine_reps.view')->resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class);
-        Route::middleware('permission:kafr_el_sheikh_brokers.view')->resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class);
-        Route::middleware('permission:kafr_el_sheikh_deliveries.view')->resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class);
-        Route::middleware('permission:kafr_el_sheikh_services.view')->resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class);
-        Route::middleware('permission:tanta_workers.view')->resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class);
+        Route::middleware('permission:workspaces.view')->group(function () {
+            Route::post('workspaces/{workspace}/rentals', [\App\Http\Controllers\WorkspaceWebController::class, 'storeRental'])->name('workspaces.storeRental');
+            Route::patch('workspaces/{workspace}/rentals/{rental}/status', [\App\Http\Controllers\WorkspaceWebController::class, 'updateRentalStatus'])->name('workspaces.updateRentalStatus');
+            Route::delete('workspaces/{workspace}/rentals/{rental}', [\App\Http\Controllers\WorkspaceWebController::class, 'destroyRental'])->name('workspaces.destroyRental');
+        });
+        Route::middleware('permission:school_collaborations.view')->resource('school-collaborations', \App\Http\Controllers\SchoolCollaborationWebController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:memberships.view')->resource('memberships', \App\Http\Controllers\MembershipWebController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:oncology_medicine_reps.view')->resource('oncology-medicine-reps', \App\Http\Controllers\OncologyMedicineRepWebController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:kafr_el_sheikh_brokers.view')->resource('kafr-el-sheikh-brokers', \App\Http\Controllers\KafrElSheikhBrokerWebController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:kafr_el_sheikh_deliveries.view')->resource('kafr-el-sheikh-deliveries', \App\Http\Controllers\KafrElSheikhDeliveryWebController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:kafr_el_sheikh_services.view')
+            ->resource('kafr-el-sheikh-services', \App\Http\Controllers\KafrElSheikhServiceWebController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::middleware('permission:tanta_workers.view')->resource('tanta-workers', \App\Http\Controllers\TantaWorkerWebController::class)->only(['index', 'store', 'update', 'destroy']);
+    });
+
+    // Guest houses use their own granular permissions and must not depend on
+    // the unrelated specialized-services umbrella permission.
+    Route::middleware('permission:guest_houses.create')->group(function () {
+        Route::resource('guest-houses', GuestHouseWebController::class)->only(['create', 'store']);
+    });
+    Route::middleware('permission:guest_houses.view')->group(function () {
+        Route::resource('guest-houses', GuestHouseWebController::class)->only(['index', 'show']);
+    });
+    Route::middleware('permission:guest_houses.edit')->group(function () {
+        Route::resource('guest-houses', GuestHouseWebController::class)->only(['edit', 'update']);
+    });
+    Route::middleware('permission:guest_houses.delete')->group(function () {
+        Route::resource('guest-houses', GuestHouseWebController::class)->only(['destroy']);
+    });
+    Route::middleware('permission:guest_houses.set_manager')
+        ->post('guest-houses/{guest_house}/manager', [GuestHouseWebController::class, 'setManager'])
+        ->name('guest-houses.setManager');
+    Route::middleware('permission:guest_houses.manage_volunteers')->group(function () {
+        Route::post('guest-houses/{guest_house}/volunteers', [GuestHouseWebController::class, 'attachVolunteer'])
+            ->name('guest-houses.attachVolunteer');
+        Route::delete('guest-houses/{guest_house}/volunteers/{user}', [GuestHouseWebController::class, 'detachVolunteer'])
+            ->name('guest-houses.detachVolunteer');
+    });
+    Route::middleware('permission:guest_houses.manage_monthly_volunteers')->group(function () {
+        Route::post('guest-houses/{guest_house}/monthly-volunteers', [GuestHouseWebController::class, 'storeMonthlyVolunteer'])
+            ->name('guest-houses.storeMonthlyVolunteer');
+        Route::delete('guest-houses/{guest_house}/monthly-volunteers/{monthlyVolunteer}', [GuestHouseWebController::class, 'destroyMonthlyVolunteer'])
+            ->name('guest-houses.destroyMonthlyVolunteer');
+    });
+    Route::post('guest-houses/{guest_house}/beneficiaries', [GuestHouseWebController::class, 'storeBeneficiary'])
+        ->middleware(['permission:guest_houses.view', 'permission:beneficiaries.view'])
+        ->name('guest-houses.storeBeneficiary');
+    Route::post('guest-houses/{guest_house}/donations', [GuestHouseWebController::class, 'storeDonation'])
+        ->middleware(['permission:guest_houses.view', 'permission:donations.view'])
+        ->name('guest-houses.storeDonation');
+    Route::post('guest-houses/{guest_house}/expenses', [GuestHouseWebController::class, 'storeExpense'])
+        ->middleware(['permission:guest_houses.view', 'permission:manage_finance', 'permission:expenses.view'])
+        ->name('guest-houses.storeExpense');
+    Route::middleware('permission:guest_houses.view')->group(function () {
+        Route::post('guest-houses/{guest_house}/wings', [GuestHouseWebController::class, 'storeWing'])->name('guest-houses.wings.store');
+        Route::patch('guest-houses/{guest_house}/beds/{bed}/status', [GuestHouseWebController::class, 'updateBedStatus'])->name('guest-houses.beds.status');
+        Route::post('guest-houses/{guest_house}/custodies', [GuestHouseWebController::class, 'storeCustody'])->name('guest-houses.custodies.store');
+        Route::post('guest-houses/{guest_house}/inventory/issues', [GuestHouseWebController::class, 'issueInventory'])->name('guest-houses.inventory.issue');
+        Route::post('guest-houses/{guest_house}/meals', [GuestHouseWebController::class, 'storeMeal'])->name('guest-houses.meals.store');
+        Route::post('guest-houses/{guest_house}/stays/{stay}/depart', [GuestHouseWebController::class, 'departStay'])->name('guest-houses.stays.depart');
+        Route::post('guest-houses/{guest_house}/stays/{stay}/return', [GuestHouseWebController::class, 'returnStay'])->name('guest-houses.stays.return');
+        Route::post('guest-houses/{guest_house}/bookings/{booking}/decision', [GuestHouseWebController::class, 'decideBooking'])->name('guest-houses.bookings.decision');
+        Route::post('guest-houses/{guest_house}/mobile-cases/{application}/decision', [GuestHouseWebController::class, 'decideMobileCase'])->name('guest-houses.mobile-cases.decision');
     });
 
     // Ramadan Campaign
     Route::middleware('permission:manage_ramadan')->group(function () {
-        Route::middleware('permission:ramadan_bags.view')->resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->except(['destroy']);
+        Route::middleware('permission:ramadan_bags.view')->resource('ramadan-bags', \App\Http\Controllers\RamadanBagWebController::class)->only(['index', 'create', 'store', 'edit', 'update']);
         Route::middleware('permission:ramadan_bags.view')->delete('ramadan-bags/{ramadan_bag}', [\App\Http\Controllers\RamadanBagWebController::class, 'destroy'])->name('ramadan-bags.destroy');
-        Route::middleware('permission:ramadan_iftars.view')->resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->except(['destroy']);
+        Route::middleware('permission:ramadan_iftars.view')->resource('ramadan-iftars', \App\Http\Controllers\RamadanIftarWebController::class)->only(['index', 'create', 'store', 'edit', 'update']);
         Route::middleware('permission:ramadan_iftars.view')->delete('ramadan-iftars/{ramadan_iftar}', [\App\Http\Controllers\RamadanIftarWebController::class, 'destroy'])->name('ramadan-iftars.destroy');
     });
 
     // Reception & Visits (Shared/General)
-    Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
-    Route::resource('reception', \App\Http\Controllers\ReceptionWebController::class);
+    Route::middleware('permission:visits.view')
+        ->resource('visits', \App\Http\Controllers\VisitWebController::class)
+        ->only(['index', 'store']);
+    Route::middleware('permission:reception.view')
+        ->resource('reception', \App\Http\Controllers\ReceptionWebController::class)
+        ->only(['index', 'store']);
     Route::resource('tasks', TaskWebController::class);
 
 });

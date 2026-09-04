@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Campaign extends Model
 {
-    use \App\Traits\UploadsImages;
+    use \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
     public function getImageColumns(): array
     {
@@ -79,6 +79,20 @@ final class Campaign extends Model
         'start_date' => 'date',
         'end_date' => 'date'
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (Campaign $campaign) {
+            \App\Models\Permission::updateOrCreate(
+                ['key' => "campaigns.manage.{$campaign->id}"],
+                ['name' => "إدارة حملة: {$campaign->name}"]
+            );
+        });
+
+        static::deleted(function (Campaign $campaign) {
+            \App\Models\Permission::where('key', "campaigns.manage.{$campaign->id}")->delete();
+        });
+    }
 
     public function donations()
     {

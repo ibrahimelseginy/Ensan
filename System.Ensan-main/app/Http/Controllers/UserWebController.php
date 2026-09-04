@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Arr;
 
 final class UserWebController extends Controller
 {
@@ -71,23 +73,52 @@ final class UserWebController extends Controller
             ->where('status', 'pending')
             ->first();
 
-        return view('users.show', compact('user', 'pendingRequest'));
+        $isOwnProfile   = (int) request()->user()->id === (int) $user->id;
+        $canManageUsers = Gate::allows('users.edit');
+        $canViewUsers   = Gate::allows('users.view');
+        $canDeleteUsers = Gate::allows('users.delete');
+
+        return view('users.show', compact(
+            'user',
+            'pendingRequest',
+            'isOwnProfile',
+            'canManageUsers',
+            'canViewUsers',
+            'canDeleteUsers'
+        ));
     }
 
     public function edit(User $user): View|RedirectResponse
     {
         if ($this->hasPendingRequest($user)) {
-            return redirect()->route('change-requests.index')->with('info', 'هذا المستخدم لديه طلب مراجعة حالياً');
+            return redirect()->route('users.show', $user)->with('info', 'يوجد طلب تعديل قيد مراجعة الأدمن حاليًا.');
         }
 
-        $roles = Role::orderBy('name')->get();
-        return view('users.edit', compact('user', 'roles'));
+        $isOwnProfile   = (int) request()->user()->id === (int) $user->id;
+        $canManageUsers = Gate::allows('users.edit');
+        $roles = $canManageUsers ? Role::orderBy('name')->get() : collect();
+
+        return view('users.edit', compact('user', 'roles', 'isOwnProfile', 'canManageUsers'));
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         if ($this->hasPendingRequest($user)) {
-            return redirect()->route('change-requests.index')->with('info', 'هذا المستخدم لديه طلب مراجعة حالياً');
+            return redirect()->route('users.show', $user)->with('info', 'يوجد طلب تعديل قيد مراجعة الأدمن حاليًا.');
+        }
+
+        $data = $request->validated();
+        $isOwnEmployeeRequest = (int) $request->user()->id === (int) $user->id
+            && !Gate::allows('users.edit');
+
+        if ($isOwnEmployeeRequest) {
+            $data = Arr::only($data, [
+                'name',
+                'email',
+                'phone',
+                'department',
+                'job_title',
+            ]);
         }
 
         $files = [
@@ -97,7 +128,16 @@ final class UserWebController extends Controller
             'id_card_image'         => $request->file('id_card_image'),
         ];
 
-        $this->userService->updateUser($user, $request->validated(), array_filter($files));
+        if ($isOwnEmployeeRequest) {
+            $files = Arr::only($files, ['profile_photo']);
+        }
+
+        $result = $this->userService->updateUser($user, $data, array_filter($files));
+
+        if ($result instanceof ChangeRequest) {
+            return redirect()->route('users.show', $user)
+                ->with('success', 'تم إرسال طلب تعديل بياناتك إلى الأدمن للمراجعة.');
+        }
 
         return redirect()->route('users.show', $user)->with('success', 'تم تحديث بيانات المستخدم بنجاح');
     }

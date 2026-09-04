@@ -34,8 +34,16 @@ use App\Http\Controllers\Api\AdminDonationController as ApiAdminDonationControll
 // Mobile API routes are in routes/mobile_api.php (loaded via bootstrap/app.php)
 
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\ImageUploadController;
 
 Route::get('/media', [MediaController::class, 'serve'])->name('media.serve');
+
+// === Image Upload Routes (Authenticated) ===
+Route::middleware([\App\Http\Middleware\TokenAuth::class])->prefix('v1/upload')->group(function () {
+    Route::post('image',   [ImageUploadController::class, 'upload'])->name('api.upload.image');
+    Route::post('images',  [ImageUploadController::class, 'uploadMultiple'])->name('api.upload.images');
+    Route::delete('image', [ImageUploadController::class, 'destroy'])->name('api.upload.image.destroy');
+});
 Route::prefix('v1')->group(function () {
     Route::get('/', function () {
             return response()->json(['status' => 'ok']);
@@ -89,14 +97,23 @@ Route::prefix('v1')->group(function () {
         Route::post('website/subscribe', [WebsiteApiController::class, 'submitSubscription']);
         Route::post('website/testimonials', [WebsiteApiController::class, 'submitTestimonial']);
         Route::post('website/opinions', [WebsiteApiController::class, 'shareOpinion']);
+
+        // Complaints — Public (no auth)
+        Route::post('website/complaints', [WebsiteApiController::class, 'submitWebsiteComplaint']);
+        Route::get('website/complaints/track/{code}', [WebsiteApiController::class, 'trackWebsiteComplaint']);
         Route::post('website/register', [WebsiteApiController::class, 'publicRegister']);
         Route::post('website/login', [WebsiteApiController::class, 'publicLogin']);
         Route::post('website/verify-otp', [WebsiteApiController::class, 'publicVerifyOtp']);
         Route::post('website/resend-otp', [WebsiteApiController::class, 'publicResendOtp']);
+        Route::post('website/check-phone', [WebsiteApiController::class, 'publicCheckPhone']);
 
 
         // Admin Website Management
         Route::prefix('admin/website')->group(function () {
+            // Complaints Admin
+            Route::get('complaints', [WebsiteApiController::class, 'adminListComplaints']);
+            Route::patch('complaints/{complaint}', [WebsiteApiController::class, 'adminUpdateComplaint']);
+
             Route::get('donation-accounts', [AdminWebsiteDonationController::class, 'index']);
             Route::get('donation-accounts/{donor}', [AdminWebsiteDonationController::class, 'donorHistory']);
             Route::put('donation-accounts/{donor}', [AdminWebsiteDonationController::class, 'updateDonor']);

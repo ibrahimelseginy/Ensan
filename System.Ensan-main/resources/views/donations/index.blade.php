@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);">
@@ -7,8 +7,11 @@
         <h1 class="hero-title">سجل التبرعات</h1>
         <p class="hero-subtitle">إدارة ومتابعة التبرعات النقدية والعينية الواردة</p>
         <div class="hero-actions d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-light text-success fw-bold rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickReceiptModal">
+                <i class="bi bi-receipt me-1"></i> إيصال استلام نقدية سريع
+            </button>
             <a href="{{ route('donations.create') }}" class="btn btn-sm rounded-pill px-4">
-                <i class="bi bi-plus-lg me-1"></i> إضافة تبرع جديد
+                <i class="bi bi-plus-lg me-1"></i> إضافة تبرع كامل
             </a>
         </div>
     </div>
@@ -60,10 +63,10 @@
                             <i class="bi bi-download"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                            <li><a class="dropdown-item" href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'cash'])) }}">
+                            <li><a class="dropdown-item" data-no-loader download href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'cash'])) }}">
                                 <i class="bi bi-cash me-2 text-success"></i> تبرعات نقدية
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'in_kind'])) }}">
+                            <li><a class="dropdown-item" data-no-loader download href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'in_kind'])) }}">
                                 <i class="bi bi-box me-2 text-info"></i> تبرعات عينية
                             </a></li>
                         </ul>
@@ -354,5 +357,180 @@
         });
         form.submit();
     }
+</script>
+
+{{-- Quick Receipt Modal (إيصال استلام نقدية سريع) --}}
+<div class="modal fade" id="quickReceiptModal" tabindex="-1" aria-labelledby="quickReceiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{{ route('donations.store') }}" class="modal-content border-0 shadow-lg">
+            @csrf
+            <input type="hidden" name="type" value="cash">
+            <input type="hidden" name="currency" value="EGP">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="quickReceiptModalLabel">
+                    <i class="bi bi-receipt me-2"></i> إيصال استلام نقدية سريع
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" style="background:#fafafa">
+                <div class="card p-3 border-success mb-3 bg-white">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark">رقم الإيصال <span class="text-danger">*</span></label>
+                            <input name="receipt_number" class="form-control fw-bold text-success border-success" placeholder="مثال: 06501" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">المبلغ (جنيه)</label>
+                            <input name="amount" type="number" step="0.01" class="form-control fw-bold text-dark" placeholder="مثال: 250.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">تحريراً في (التاريخ)</label>
+                            <input name="received_at" type="date" value="{{ date('Y-m-d') }}" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">وصل من (اسم المتبرع) <span class="text-danger">*</span></label>
+                        <select name="donor_id" id="quickDonorSelect" class="form-select" required>
+                            <option value="">— اختر المتبرع —</option>
+                            @foreach($receiptDonors as $donorItem)
+                                <option value="{{ $donorItem->id }}">{{ $donorItem->name }} {{ $donorItem->phone ? '('.$donorItem->phone.')' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">المشروع</label>
+                        <select name="project_id" class="form-select">
+                            <option value="">— اختر مشروع (اختياري) —</option>
+                            @foreach($receiptProjects as $projectItem)
+                                <option value="{{ $projectItem->id }}">{{ $projectItem->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">وذلك قيمة (نوع التخصيص)</label>
+                        <select name="purpose" id="quickPurposeSelect" class="form-select" required>
+                            <option value="">— اختر —</option>
+                            <option value="kafalat_aytam">كفالات أيتام</option>
+                            <option value="kafalat_awram">كفالات أورام</option>
+                            <option value="sadaqat">صدقات</option>
+                            <option value="zakat_maal">زكاة مال</option>
+                            <option value="sadaqa_jariya">صدقات جارية</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">طريقة وسيلة التحصيل</label>
+                        <select name="cash_channel" class="form-select" required>
+                            <option value="cash">نقدي</option>
+                            <option value="instapay">انستا باي (Instapay)</option>
+                            <option value="vodafone_cash">فودافون كاش</option>
+                            <option value="delegate">مندوب تحصيل</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-12" id="quickMembersWrapper" style="display:none">
+                        <label class="form-label fw-bold" id="quickMembersLabel">اختر الملفات المكفولة</label>
+                        <select name="family_member_ids[]" id="quickMembersSelect" class="form-select" multiple></select>
+                        <div id="quickMembersWarning" class="form-text text-muted"></div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">الخزينة <span class="text-danger">*</span></label>
+                        <select name="treasury_id" class="form-select" required>
+                            <option value="">— اختر الخزينة —</option>
+                            @foreach($receiptTreasuries as $treasuryItem)
+                                <option value="{{ $treasuryItem->id }}">{{ $treasuryItem->name }} — {{ number_format((float)$treasuryItem->current_balance, 2) }} {{ $treasuryItem->currency }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">ملاحظات التخصيص أو كود الحالة</label>
+                        <input name="allocation_note" class="form-control" placeholder="مثال: كود حالة 105 أو تخصيص خاص...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-success px-4 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i> تسجيل وإصدار الإيصال
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@php
+    $quickDonorMembersData = $receiptDonors->mapWithKeys(function ($donor) {
+        return [(string)$donor->id => $donor->sponsoredFamilyMembers->map(function ($member) {
+            return [
+                'id' => $member->id,
+                'name' => $member->full_name,
+                'code' => $member->code,
+                'relationship' => $member->relationship,
+                'is_patient' => (bool)$member->is_patient,
+                'family' => $member->beneficiary?->full_name,
+            ];
+        })->values()];
+    });
+    $quickAllMembersData = $allFamilyMembers->map(function ($member) {
+        return [
+            'id' => $member->id,
+            'name' => $member->full_name,
+            'code' => $member->code,
+            'relationship' => $member->relationship,
+            'is_patient' => (bool)$member->is_patient,
+            'family' => $member->beneficiary?->full_name,
+        ];
+    });
+@endphp
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const donorMembers = @json($quickDonorMembersData);
+    const allMembersList = @json($quickAllMembersData);
+    const donorSelect = document.getElementById('quickDonorSelect');
+    const purposeSelect = document.getElementById('quickPurposeSelect');
+    const membersWrapper = document.getElementById('quickMembersWrapper');
+    const membersSelect = document.getElementById('quickMembersSelect');
+    const membersLabel = document.getElementById('quickMembersLabel');
+    const warning = document.getElementById('quickMembersWarning');
+
+    function refreshQuickMembers() {
+        const purpose = purposeSelect?.value || '';
+        const donorId = String(donorSelect?.value || '');
+        const isKafala = ['kafalat_aytam', 'kafalat_awram'].includes(purpose);
+
+        const donorSpecific = (donorMembers[donorId] || []).filter(member => purpose === 'kafalat_awram'
+            ? member.is_patient
+            : (!member.is_patient && member.relationship === 'child'));
+
+        const members = donorSpecific.length > 0 ? donorSpecific : allMembersList.filter(member => purpose === 'kafalat_awram'
+            ? member.is_patient
+            : (!member.is_patient && member.relationship === 'child'));
+
+        membersWrapper.style.display = isKafala ? '' : 'none';
+        membersSelect.disabled = !isKafala;
+        membersSelect.required = isKafala;
+        membersSelect.innerHTML = '';
+        if (!isKafala) return;
+
+        members.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.id;
+            option.textContent = `${member.name} — ${member.family || 'الأسرة'}${member.code ? ' — ' + member.code : ''}`;
+            membersSelect.appendChild(option);
+        });
+        membersLabel.textContent = purpose === 'kafalat_awram' ? 'اختر مرضى الأورام المكفولين' : 'اختر الأطفال المكفولين';
+        warning.textContent = members.length ? 'يمكن اختيار اسم واحد أو أكثر من الحالات المتاحة.' : 'لا توجد حالات مسجلة حالياً لهذا البند.';
+    }
+
+    donorSelect?.addEventListener('change', refreshQuickMembers);
+    purposeSelect?.addEventListener('change', refreshQuickMembers);
+});
 </script>
 

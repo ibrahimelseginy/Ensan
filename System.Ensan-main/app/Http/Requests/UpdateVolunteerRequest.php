@@ -32,7 +32,7 @@ final class UpdateVolunteerRequest extends FormRequest
             'campaign_id'     => 'nullable|exists:campaigns,id',
             'guest_house_id'  => 'nullable|exists:guest_houses,id',
             'join_date'       => 'nullable|date',
-            'profile_photo'   => 'nullable|image|max:10240'
+            'profile_photo'   => 'nullable|any_image|max:10240'
         ];
     }
 }

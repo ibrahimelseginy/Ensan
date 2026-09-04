@@ -196,6 +196,7 @@ class RolePermissionSeeder extends Seeder
 
                     // الإجازات - تحكم كامل
                     'leaves.view', 'leaves.create', 'leaves.edit', 'leaves.delete',
+                    'leaves.manage',
 
                     // المهام العامة - تحكم كامل
                     'tasks.view', 'tasks.create', 'tasks.edit', 'tasks.delete',
@@ -227,7 +228,57 @@ class RolePermissionSeeder extends Seeder
             ],
 
             // ─────────────────────────────────────────
-            // 7. مدراء دار الضيافة (Guest House Manager)
+            // 7. أمين المخزن (Store Keeper)
+            //    إدارة المخازن والأصناف وحركات المخزون
+            // ─────────────────────────────────────────
+            'store_keeper' => [
+                'name' => 'أمين المخزن',
+                'permissions' => [
+                    'dashboard.view',
+                    'notifications.view',
+
+                    'warehouses.view', 'warehouses.create', 'warehouses.edit', 'warehouses.delete',
+                    'items.view', 'items.create', 'items.edit', 'items.delete',
+                    'inventory_transactions.view', 'inventory_transactions.create',
+                    'inventory_transactions.edit', 'inventory_transactions.delete',
+                    'suppliers.view',
+                ],
+            ],
+
+            // ─────────────────────────────────────────
+            // الباحث الميداني
+            // ─────────────────────────────────────────
+            'field_researcher' => [
+                'name' => 'باحث ميداني',
+                'permissions' => [
+                    'dashboard.view',
+                    'notifications.view',
+                    'view_own_tasks',
+                    'employee_tasks.view_own',
+                    'beneficiaries.view', 'beneficiaries.create', 'beneficiaries.edit',
+                    'visits.view', 'visits.create', 'visits.edit',
+                    'complaints.view', 'complaints.create',
+                ],
+            ],
+
+            // ─────────────────────────────────────────
+            // المتطوع
+            // ─────────────────────────────────────────
+            'volunteer' => [
+                'name' => 'متطوع',
+                'permissions' => [
+                    'dashboard.view',
+                    'notifications.view',
+                    'view_own_tasks',
+                    'volunteer_attendance.view_own',
+                    'volunteer_tasks.view',
+                    'volunteer_hours.view',
+                    'complaints.create',
+                ],
+            ],
+
+            // ─────────────────────────────────────────
+            // 8. مدراء دار الضيافة (Guest House Manager)
             //    إدارة دار الضيافة ومساحات العمل
             // ─────────────────────────────────────────
             'guest_house_manager' => [
@@ -259,7 +310,7 @@ class RolePermissionSeeder extends Seeder
             ],
 
             // ─────────────────────────────────────────
-            // 8. المسؤول التسويقي (Marketer)
+            // 9. المسؤول التسويقي (Marketer)
             //    إدارة الموقع والتطبيق
             // ─────────────────────────────────────────
             'marketer' => [
@@ -283,7 +334,7 @@ class RolePermissionSeeder extends Seeder
             ],
 
             // ─────────────────────────────────────────
-            // 9. اللوجستيك (Logistics)
+            // 10. اللوجستيك (Logistics)
             //    إدارة المناديب وخطوط السير والرحلات
             // ─────────────────────────────────────────
             'logistics' => [
@@ -351,17 +402,7 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // حذف الأدوار المكررة أو الغير مستخدمة
-        // ═══════════════════════════════════════════════════════════════
-        $validRoleKeys = array_keys($rolesPermissions);
-        $orphanRoles = Role::whereNotIn('key', $validRoleKeys)
-            ->whereDoesntHave('users')
-            ->get();
-
-        foreach ($orphanRoles as $orphan) {
-            $orphan->permissions()->detach();
-            $orphan->delete();
-        }
+        // الأدوار الديناميكية الخاصة بالمشاريع والحملات تُترك كما هي؛
+        // حذفها تلقائياً قد يزيل أدواراً جاهزة للتعيين لاحقاً.
     }
 }

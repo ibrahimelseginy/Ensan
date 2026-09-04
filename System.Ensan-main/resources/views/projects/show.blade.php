@@ -1,4 +1,17 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
+@section('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    <style>
+        #beneficiaryForm .select2-container { width: 100% !important; direction: rtl; }
+        #beneficiaryForm .select2-container--bootstrap-5 .select2-selection--multiple { min-height: 42px; }
+        #beneficiaryForm .select2-container--bootstrap-5 .select2-selection__choice {
+            background: var(--primary) !important;
+            color: #fff !important;
+            border: 0 !important;
+        }
+    </style>
+@endsection
 @section('content')
     <style>
         .gh-metric-card {
@@ -176,7 +189,17 @@
                 </div>
             </div>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
+            @if(request()->user()?->hasPermission('donations.view'))
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#projectDonationModal">
+                    <i class="bi bi-cash-coin"></i> إضافة تبرع
+                </button>
+            @endif
+            @if(request()->user()?->hasPermission('manage_finance') && request()->user()?->hasPermission('expenses.view'))
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#projectExpenseModal">
+                    <i class="bi bi-receipt"></i> إضافة مصروف
+                </button>
+            @endif
             <a class="btn btn-outline-primary" href="{{ route('projects.edit', $project) }}"><i class="bi bi-pencil"></i>
                 تعديل</a>
             <a href="{{ route('projects.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-right"></i>
@@ -194,7 +217,7 @@
                     <i class="bi bi-cash-coin"></i>
                 </div>
                 <div class="text-muted small">اجمالي التبرعات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($donationsTotal - $activitiesRevenue, 2) }}</h3>
+                <h3 class="fw-bold mb-0">{{ number_format($donationsTotal, 2) }}</h3>
                 <div class="small text-success mt-1">
                     <i class="bi bi-arrow-up"></i> {{ $donationsCount }} عملية
                 </div>
@@ -493,41 +516,167 @@
                             <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">إضافة مستفيد</button>
                         </div>
                         
-                        <div class="collapse mb-4" id="beneficiaryForm">
-                            <form method="POST" action="{{ route('projects.storeBeneficiaryFile', $project) }}" class="bg-body-tertiary p-3 rounded shadow-sm">
+                        <div @class(['collapse mb-4', 'show' => old('form_context') === 'project_beneficiary']) id="beneficiaryForm">
+                            <form method="POST" action="{{ route('projects.storeBeneficiaryFile', $project) }}" class="bg-body-tertiary p-4 rounded shadow-sm">
                                 @csrf
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="form-label small">اسم المستفيد</label>
-                                        <input type="text" name="full_name" class="form-control form-control-sm" required>
+                                <input type="hidden" name="form_context" value="project_beneficiary">
+
+                                <div class="form-section mb-4">
+                                    <div class="form-section-title">
+                                        <i class="bi bi-person-lines-fill"></i>
+                                        <span>البيانات الشخصية</span>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small">رقم التلفون</label>
-                                        <input type="text" name="phone" class="form-control form-control-sm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">كود المستفيد</label>
+                                            <input name="code" class="form-control @error('code') is-invalid @enderror"
+                                                value="{{ old('code') }}"
+                                                placeholder="مثال: A-101 (يترك فارغاً للتوليد التلقائي)">
+                                            <div class="form-help-text">يترك فارغاً وسيتم إنشاؤه تلقائياً</div>
+                                            @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label form-label-required">الاسم الكامل</label>
+                                            <input name="full_name" class="form-control @error('full_name') is-invalid @enderror"
+                                                value="{{ old('full_name') }}" required placeholder="أدخل الاسم بالعربية">
+                                            @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">الرقم القومي</label>
+                                            <input name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                                value="{{ old('national_id') }}"
+                                                pattern="^[23]\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{7}$"
+                                                title="الرقم القومي 14 رقم بصيغة صحيحة" placeholder="14 رقم">
+                                            <div class="form-help-text">الرقم القومي المصري المكون من 14 رقم</div>
+                                            @error('national_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">رقم الهاتف</label>
+                                            <input name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                                value="{{ old('phone') }}" pattern="^(01[0125]\d{8}|\+?201[0125]\d{8})$"
+                                                title="ابدأ بـ 010 أو 011 أو 012 أو 015" placeholder="01xxxxxxxxx">
+                                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">العنوان</label>
+                                            <input name="address" class="form-control @error('address') is-invalid @enderror"
+                                                value="{{ old('address') }}" placeholder="العنوان بالتفصيل">
+                                            @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small">المساعدة</label>
-                                        <input type="text" name="assistance_type" class="form-control form-control-sm">
+                                </div>
+
+                                @php
+                                    $selectedAllocatedBeneficiaries = array_map('intval', old('allocated_beneficiary_ids', []));
+                                    $selectedSponsors = array_map('intval', old('sponsor_ids', []));
+                                @endphp
+                                <div class="form-section mb-4">
+                                    <div class="form-section-title">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                        <span>نوع المساعدة والتخصيص</span>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small">ملاحظات</label>
-                                        <input type="text" name="notes" class="form-control form-control-sm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label form-label-required">نوع المساعدة</label>
+                                            <select name="assistance_type" class="form-select @error('assistance_type') is-invalid @enderror" required>
+                                                <option value="financial" @selected(old('assistance_type', 'financial') === 'financial')>مالية</option>
+                                                <option value="in_kind" @selected(old('assistance_type') === 'in_kind')>عينية</option>
+                                                <option value="service" @selected(old('assistance_type') === 'service')>خدمية</option>
+                                            </select>
+                                            @error('assistance_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">نوع التخصيص</label>
+                                            <select id="project-allocation-type" name="allocation_type" class="form-select @error('allocation_type') is-invalid @enderror">
+                                                <option value="">— اختر النوع —</option>
+                                                <option value="شخص واحد" @selected(old('allocation_type') === 'شخص واحد')>شخص واحد</option>
+                                                <option value="أكثر من مستفيد" @selected(old('allocation_type') === 'أكثر من مستفيد')>أكثر من مستفيد</option>
+                                            </select>
+                                            @error('allocation_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">التخصيص لكل طفل</label>
+                                            <select id="project-child-sponsorship-type" name="child_sponsorship_type" class="form-select @error('child_sponsorship_type') is-invalid @enderror">
+                                                <option value="">— اختر النوع —</option>
+                                                <option value="كافل واحد" @selected(old('child_sponsorship_type') === 'كافل واحد')>كافل واحد</option>
+                                                <option value="أكثر من كافل" @selected(old('child_sponsorship_type') === 'أكثر من كافل')>أكثر من كافل</option>
+                                            </select>
+                                            @error('child_sponsorship_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div id="project-allocated-beneficiaries-field"
+                                            class="col-md-6 {{ old('allocation_type') ? '' : 'd-none' }}">
+                                            <label id="project-allocated-beneficiaries-label" class="form-label">اختر المستفيد / المستفيدين</label>
+                                            <select id="project-allocated-beneficiaries" name="allocated_beneficiary_ids[]"
+                                                class="form-select @error('allocated_beneficiary_ids') is-invalid @enderror" multiple>
+                                                <option value="" data-placeholder>— اختر المستفيد / المستفيدين —</option>
+                                                @foreach($beneficiaryOptions as $option)
+                                                    <option value="{{ $option->id }}" @selected(in_array((int) $option->id, $selectedAllocatedBeneficiaries, true))>
+                                                        {{ $option->full_name }}{{ $option->code ? ' — ' . $option->code : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div id="project-allocated-beneficiaries-help" class="form-help-text"></div>
+                                            @error('allocated_beneficiary_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div id="project-sponsors-field" class="col-md-6 {{ old('child_sponsorship_type') ? '' : 'd-none' }}">
+                                            <label id="project-sponsors-label" class="form-label">اختر الكافل / الكفلاء</label>
+                                            <select id="project-sponsors-list" name="sponsor_ids[]"
+                                                class="form-select @error('sponsor_ids') is-invalid @enderror" multiple>
+                                                <option value="" data-placeholder>— اختر الكافل / الكفلاء —</option>
+                                                @foreach($sponsors as $sponsor)
+                                                    <option value="{{ $sponsor->id }}" @selected(in_array((int) $sponsor->id, $selectedSponsors, true))>
+                                                        {{ $sponsor->name }}{{ $sponsor->phone ? ' — ' . $sponsor->phone : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div id="project-sponsors-help" class="form-help-text"></div>
+                                            @error('sponsor_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
                                     </div>
-                                    <div class="col-12 text-end">
-                                        <button class="btn btn-primary btn-sm px-4">حفظ المستفيد</button>
+                                </div>
+
+                                <div class="form-section">
+                                    <div class="form-section-title">
+                                        <i class="bi bi-pencil-square"></i>
+                                        <span>ملاحظات</span>
                                     </div>
+                                    <label class="form-label">ملاحظات داخلية</label>
+                                    <textarea name="notes" class="form-control @error('notes') is-invalid @enderror" rows="3"
+                                        placeholder="أضف أي ملاحظات إضافية...">{{ old('notes') }}</textarea>
+                                    @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">
+                                        <i class="bi bi-x-lg me-1"></i> إلغاء
+                                    </button>
+                                    <button class="btn btn-primary px-4">
+                                        <i class="bi bi-check-lg me-1"></i> حفظ المستفيد
+                                    </button>
                                 </div>
                             </form>
                         </div>
 
                         <div class="table-responsive">
-                            @php $genericBeneficiaries = $project->beneficiaries()->whereNull('mother_name')->orderByDesc('id')->limit(50)->get(); @endphp
+                            @php
+                                $genericBeneficiaries = $project->beneficiaries()
+                                    ->whereNull('mother_name')
+                                    ->with(['allocatedBeneficiaries:id,full_name', 'sponsors:id,name'])
+                                    ->orderByDesc('id')
+                                    ->limit(50)
+                                    ->get();
+                            @endphp
                             <table class="table table-sm table-hover align-middle small">
                                 <thead class="bg-body-tertiary">
                                     <tr>
+                                        <th>الكود</th>
                                         <th>الاسم</th>
+                                        <th>الرقم القومي</th>
                                         <th>الهاتف</th>
+                                        <th>العنوان</th>
                                         <th>المساعدة</th>
+                                        <th>التخصيص</th>
+                                        <th>كفالة الطفل</th>
                                         <th>ملاحظات</th>
                                         <th style="width: 80px">إجراء</th>
                                     </tr>
@@ -535,15 +684,41 @@
                                 <tbody>
                                     @forelse($genericBeneficiaries as $ben)
                                     <tr>
+                                        <td class="text-nowrap">{{ $ben->code ?? '—' }}</td>
                                         <td>{{ $ben->full_name }}</td>
+                                        <td class="text-nowrap">{{ $ben->national_id ?? '—' }}</td>
                                         <td>{{ $ben->phone ?? '—' }}</td>
-                                        <td>{{ $ben->assistance_type ?? '—' }}</td>
+                                        <td>{{ $ben->address ?? '—' }}</td>
+                                        <td>
+                                            {{ match($ben->assistance_type) {
+                                                'financial' => 'مالية',
+                                                'in_kind' => 'عينية',
+                                                'service' => 'خدمية',
+                                                default => $ben->assistance_type ?? '—'
+                                            } }}
+                                        </td>
+                                        <td>
+                                            <div>{{ $ben->allocation_type ?? '—' }}</div>
+                                            @if($ben->allocatedBeneficiaries->isNotEmpty())
+                                                <div class="text-muted mt-1" style="font-size: .72rem">
+                                                    {{ $ben->allocatedBeneficiaries->pluck('full_name')->join('، ') }}
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>{{ $ben->child_sponsorship_type ?? '—' }}</div>
+                                            @if($ben->sponsors->isNotEmpty())
+                                                <div class="text-muted mt-1" style="font-size: .72rem">
+                                                    {{ $ben->sponsors->pluck('name')->join('، ') }}
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td>{{ $ben->notes ?? '—' }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal" data-bs-target="#editBen{{ $ben->id }}">
+                                                <a class="btn btn-link text-primary p-0" href="{{ route('beneficiaries.edit', $ben) }}" title="تعديل كل بيانات المستفيد">
                                                     <i class="bi bi-pencil"></i>
-                                                </button>
+                                                </a>
 
                                                 <form action="{{ route('projects.destroyBeneficiaryFile', [$project, $ben]) }}" method="POST" onsubmit="return confirm('حذف المستفيد؟')" class="d-inline">
                                                     @csrf @method('DELETE')
@@ -553,7 +728,7 @@
                                         </td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="5" class="text-center py-3 text-muted">لا يوجد مستفيدين مسجلين لهذا المشروع</td></tr>
+                                    <tr><td colspan="10" class="text-center py-3 text-muted">لا يوجد مستفيدين مسجلين لهذا المشروع</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -581,7 +756,11 @@
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label small">المساعدة</label>
-                                                <input type="text" name="assistance_type" class="form-control form-control-sm" value="{{ $ben->assistance_type }}">
+                                                <select name="assistance_type" class="form-select form-select-sm" required>
+                                                    <option value="in_kind" @selected($ben->assistance_type === 'in_kind')>عينية</option>
+                                                    <option value="financial" @selected($ben->assistance_type === 'financial')>مالية</option>
+                                                    <option value="service" @selected($ben->assistance_type === 'service')>خدمة</option>
+                                                </select>
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label small">ملاحظات</label>
@@ -961,5 +1140,195 @@
 
         </div>
     </div>
+
+    @include('projects.partials.finance-modals')
+@endsection
+
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const $ = window.jQuery;
+            const hasSelect2 = Boolean($ && $.fn && $.fn.select2);
+
+            if (hasSelect2) {
+                $('#project-allocation-type, #project-child-sponsorship-type').select2({
+                    theme: 'bootstrap-5',
+                    dir: 'rtl',
+                    width: '100%',
+                    allowClear: true,
+                    minimumResultsForSearch: 0,
+                    placeholder: 'ابحث واختر النوع...'
+                });
+            }
+
+            function configurePeopleList(config) {
+                const typeSelect = document.getElementById(config.typeSelectId);
+                const field = document.getElementById(config.fieldId);
+                const list = document.getElementById(config.listId);
+                const label = document.getElementById(config.labelId);
+                const help = document.getElementById(config.helpId);
+
+                if (!typeSelect || !field || !list) return;
+
+                function updateList() {
+                    const isActive = typeSelect.value === config.singleType || typeSelect.value === config.multipleType;
+                    const isMultiple = typeSelect.value === config.multipleType;
+
+                    if (hasSelect2 && $(list).hasClass('select2-hidden-accessible')) {
+                        $(list).select2('destroy');
+                    }
+
+                    field.classList.toggle('d-none', !isActive);
+                    list.disabled = !isActive;
+                    list.required = isActive;
+                    list.multiple = isMultiple;
+                    list.size = isMultiple ? Math.min(6, Math.max(2, list.options.length)) : 1;
+
+                    const placeholder = list.querySelector('[data-placeholder]');
+                    if (placeholder) {
+                        placeholder.disabled = isMultiple;
+                        if (isMultiple) placeholder.selected = false;
+                    }
+
+                    label.textContent = isMultiple ? config.multipleLabel : config.singleLabel;
+                    help.textContent = isMultiple ? 'يمكنك اختيار أكثر من اسم من القائمة.' : '';
+
+                    if (!isActive) {
+                        Array.from(list.options).forEach(option => option.selected = false);
+                    } else if (!isMultiple && list.selectedOptions.length > 1) {
+                        Array.from(list.selectedOptions).slice(1).forEach(option => option.selected = false);
+                    }
+
+                    if (isActive && hasSelect2) {
+                        $(list).select2({
+                            theme: 'bootstrap-5',
+                            dir: 'rtl',
+                            width: '100%',
+                            allowClear: !isMultiple,
+                            closeOnSelect: !isMultiple,
+                            minimumResultsForSearch: 0,
+                            placeholder: isMultiple ? config.multipleLabel : config.singleLabel
+                        });
+                    }
+                }
+
+                typeSelect.addEventListener('change', updateList);
+                if (hasSelect2) {
+                    $(typeSelect).on('change select2:select select2:clear', updateList);
+                }
+                updateList();
+            }
+
+            configurePeopleList({
+                typeSelectId: 'project-allocation-type',
+                fieldId: 'project-allocated-beneficiaries-field',
+                listId: 'project-allocated-beneficiaries',
+                labelId: 'project-allocated-beneficiaries-label',
+                helpId: 'project-allocated-beneficiaries-help',
+                singleType: 'شخص واحد',
+                multipleType: 'أكثر من مستفيد',
+                singleLabel: 'اختر المستفيد',
+                multipleLabel: 'اختر المستفيدين'
+            });
+
+            configurePeopleList({
+                typeSelectId: 'project-child-sponsorship-type',
+                fieldId: 'project-sponsors-field',
+                listId: 'project-sponsors-list',
+                labelId: 'project-sponsors-label',
+                helpId: 'project-sponsors-help',
+                singleType: 'كافل واحد',
+                multipleType: 'أكثر من كافل',
+                singleLabel: 'اختر الكافل',
+                multipleLabel: 'اختر الكفلاء'
+            });
+
+            const donorMode = document.getElementById('project-donor-mode');
+            const existingDonorField = document.getElementById('project-existing-donor-field');
+            const donorId = document.getElementById('project-donor-id');
+            const newDonorFields = document.getElementById('project-new-donor-fields');
+            const newDonorName = document.getElementById('project-new-donor-name');
+            const newDonorPhone = document.getElementById('project-new-donor-phone');
+
+            function updateDonorMode() {
+                if (!donorMode) return;
+
+                const isNew = donorMode.value === 'new';
+                existingDonorField?.classList.toggle('d-none', isNew);
+                newDonorFields?.classList.toggle('d-none', !isNew);
+
+                if (donorId) {
+                    donorId.disabled = isNew;
+                    donorId.required = !isNew;
+                    if (isNew) donorId.value = '';
+                }
+
+                newDonorFields?.querySelectorAll('input, select').forEach(function (field) {
+                    field.disabled = !isNew;
+                });
+                if (newDonorName) newDonorName.required = isNew;
+                if (newDonorPhone) newDonorPhone.required = isNew;
+            }
+
+            donorMode?.addEventListener('change', updateDonorMode);
+            updateDonorMode();
+
+            const donationType = document.getElementById('project-donation-type');
+            const cashFields = document.querySelectorAll('.project-donation-cash-field');
+            const inKindFields = document.querySelectorAll('.project-donation-in-kind-field');
+            const cashRequiredIds = [
+                'project-donation-amount',
+                'project-donation-cash-channel',
+                'project-donation-receipt',
+                'project-donation-treasury'
+            ];
+            const inKindRequiredIds = [
+                'project-donation-estimated-value',
+                'project-donation-warehouse'
+            ];
+
+            function setFinanceFieldsState(fields, active) {
+                fields.forEach(function (container) {
+                    container.classList.toggle('d-none', !active);
+                    container.querySelectorAll('input, select, textarea').forEach(function (field) {
+                        field.disabled = !active;
+                    });
+                });
+            }
+
+            function updateDonationType() {
+                if (!donationType) return;
+
+                const isCash = donationType.value === 'cash';
+                setFinanceFieldsState(cashFields, isCash);
+                setFinanceFieldsState(inKindFields, !isCash);
+                cashRequiredIds.forEach(function (id) {
+                    const field = document.getElementById(id);
+                    if (field) field.required = isCash;
+                });
+                inKindRequiredIds.forEach(function (id) {
+                    const field = document.getElementById(id);
+                    if (field) field.required = !isCash;
+                });
+            }
+
+            donationType?.addEventListener('change', updateDonationType);
+            updateDonationType();
+
+            const previousFormContext = @json(old('form_context'));
+            const modalId = previousFormContext === 'project_donation'
+                ? 'projectDonationModal'
+                : (previousFormContext === 'project_expense' ? 'projectExpenseModal' : null);
+
+            if (modalId && window.bootstrap) {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                }
+            }
+        });
+    </script>
 @endsection
 

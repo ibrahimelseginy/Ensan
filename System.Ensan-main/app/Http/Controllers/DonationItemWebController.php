@@ -24,8 +24,8 @@ final class DonationItemWebController extends Controller
             'category_id' => 'required|exists:donation_categories,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'icon'        => 'nullable|image|max:2048',
-            'image'       => 'nullable|image|max:4096',
+            'icon'        => 'nullable|any_image|max:2048',
+            'image'       => 'nullable|any_image|max:4096',
             'sort_order'  => 'nullable|integer',
             'bg_style'    => 'nullable|string|in:light,dark',
         ]);
@@ -53,8 +53,8 @@ final class DonationItemWebController extends Controller
             'category_id' => 'required|exists:donation_categories,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'icon'        => 'nullable|image|max:2048',
-            'image'       => 'nullable|image|max:4096',
+            'icon'        => 'nullable|any_image|max:2048',
+            'image'       => 'nullable|any_image|max:4096',
             'sort_order'  => 'nullable|integer',
             'bg_style'    => 'nullable|string|in:light,dark',
         ]);

@@ -214,7 +214,7 @@
                                     <div class="position-relative rounded-4 border overflow-hidden bg-light slider-upload-mini ratio ratio-21x9 group-hover-overlay" style="cursor: pointer;">
                                         @php $sliderPath = $settings["contact_slider_$i"] ?? null; @endphp
                                         @if($sliderPath)
-                                            <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="contactSliderPrev{{ $i }}">
+                                            <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm transition-all" id="contactSliderPrev{{ $i }}">
                                         @else
                                             <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="contactSliderPlace{{ $i }}">
                                                 <i class="bi bi-cloud-arrow-up fs-3 mb-1"></i>

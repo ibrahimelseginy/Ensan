@@ -19,13 +19,12 @@ final class ExpenseController extends Controller
 
     public function index(): LengthAwarePaginator
     {
-        return $this->expenseService->getAllExpenses(20);
+        return $this->expenseService->getFilteredExpenses([], 20);
     }
 
-    public function store(StoreExpenseRequest $request): Expense
+    public function store(StoreExpenseRequest $request): mixed
     {
-        $userId = $request->user()?->id;
-        return $this->expenseService->createExpense($request->validated(), $userId);
+        return $this->expenseService->createExpense($request->validated());
     }
 
     public function show(Expense $expense): Expense
@@ -40,7 +39,7 @@ final class ExpenseController extends Controller
 
     public function destroy(Expense $expense): Response
     {
-        $this->expenseService->deleteExpense($expense);
+        $this->expenseService->cancelExpense($expense, 'Canceled through API');
         return response()->noContent();
     }
 }

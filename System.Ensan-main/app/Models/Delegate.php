@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Delegate extends Model
 {
-    use \App\Traits\UploadsImages;
+    use \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
     public function getImageColumn(): string
     {

@@ -5,9 +5,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Donation extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'source',
         'user_id',
@@ -24,6 +27,7 @@ final class Donation extends Model
         'cash_channel',
         'currency',
         'receipt_number',
+        'purpose',
         'estimated_value',
         'project_id',
         'campaign_id',
@@ -71,6 +75,16 @@ final class Donation extends Model
     public function donor(): BelongsTo 
     { 
         return $this->belongsTo(Donor::class); 
+    }
+
+    public function familyMembers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            BeneficiaryFamilyMember::class,
+            'donation_family_members',
+            'donation_id',
+            'family_member_id'
+        )->withTimestamps();
     }
 
     public function project(): BelongsTo 
@@ -201,5 +215,25 @@ final class Donation extends Model
         ];
 
         return $labels[$this->category] ?? ($this->category ?: 'عام');
+    }
+
+    public function getPurposeLabelAttribute(): string
+    {
+        return match ($this->purpose) {
+            'kafalat_aytam' => 'كفالات أيتام',
+            'kafalat_awram' => 'كفالات أورام',
+            'sadaqat' => 'صدقات',
+            'zakat_maal' => 'زكاة مال',
+            'sadaqa_jariya' => 'صدقات جارية',
+            default => 'غير محدد',
+        };
+    }
+
+    public function getDisplayAllocationNoteAttribute(): ?string
+    {
+        $note = preg_replace('/^sponsorship=[^\r\n]*(?:\r?\n)?/u', '', (string) $this->allocation_note);
+        $note = trim((string) $note);
+
+        return $note !== '' ? $note : null;
     }
 }

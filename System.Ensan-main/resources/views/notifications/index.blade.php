@@ -25,6 +25,7 @@
                             <option value="attendance" @selected($category === 'attendance')>الحضور</option>
                             <option value="finance" @selected($category === 'finance')>المالية</option>
                             <option value="beneficiaries" @selected($category === 'beneficiaries')>المستفيدون</option>
+                            <option value="monthly_donations" @selected($category === 'monthly_donations')>التبرعات الشهرية</option>
                         </select>
                     </div>
                 </div>

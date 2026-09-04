@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use SoftDeletes, \App\Traits\UploadsImages;
+    use SoftDeletes, \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
-    protected $fillable = ['name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
+    protected $fillable = ['name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
 
     public function tokens(): HasMany
     {
@@ -55,6 +55,9 @@ class User extends Authenticatable
     protected $casts = [
         'is_employee' => 'boolean',
         'is_volunteer' => 'boolean',
+        'is_sales' => 'boolean',
+        'monthly_target' => 'decimal:2',
+        'commission_rate' => 'decimal:2',
         'active' => 'boolean',
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
@@ -103,8 +106,18 @@ class User extends Authenticatable
         return $this->hasMany(VolunteerHour::class);
     }
 
-    public function hasRole($key)
+    public function payrolls(): HasMany
     {
+        return $this->hasMany(Payroll::class);
+    }
+
+    public function hasRole($key): bool
+    {
+        // تحميل الأدوار إذا لم تكن محملة بعد
+        if (!$this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
         return $this->roles->contains(function ($role) use ($key) {
             return strtolower($role->key) === strtolower($key);
         });
@@ -121,6 +134,9 @@ class User extends Authenticatable
         // Load roles and permissions once and cache them on the model instance
         // to avoid repeated DB hits within the same request.
         if (!isset($this->cachedPermissions)) {
+            if (!$this->relationLoaded('roles')) {
+                $this->load('roles.permissions');
+            }
             $this->cachedPermissions = $this->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('key');
             })->unique();

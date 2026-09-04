@@ -48,6 +48,9 @@
                         <h5 class="mb-0 fw-bold text-white">تبرعات عينية</h5>
                         <p class="text-muted small mb-0">إدارة تبرعات (ملابس، أثاث، إلخ)</p>
                     </div>
+                </div>
+            </a>
+        </div>
         <div class="col-md-3">
             <a href="{{ route('mobile.contact_info.index') }}" class="text-decoration-none">
                 <div class="glass-card p-4 d-flex align-items-center gap-3 animate-slide-up hover-tilt" style="animation-delay: 0.3s">

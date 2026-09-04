@@ -6,12 +6,14 @@ namespace App\Services;
 
 use App\Models\Donor;
 use App\Models\Donation;
-use App\Models\Project;
+use App\Models\ChangeRequest;
+use App\Models\BeneficiaryFamilyMember;
 use App\Repositories\DonorRepository;
 use App\Services\ChangeRequestService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 
 final readonly class DonorService
 {
@@ -30,6 +32,7 @@ final readonly class DonorService
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($w) use ($q) {
                     $w->where('name', 'like', "%$q%")
+                      ->orWhere('code', 'like', "%$q%")
                       ->orWhere('phone', 'like', "%$q%");
                 });
             })
@@ -72,15 +75,51 @@ final readonly class DonorService
             return $this->updateDonor($existing, $updateData, $forceRequest);
         }
 
-        $this->applySponsorshipDefaults($data);
+        if (empty($data['code'])) {
+            $data['code'] = $this->nextDonorCode();
+        }
 
-        $executor = fn() => $this->donorRepository->create($data);
+        $submittedBeneficiaryIds = $data['sponsored_beneficiary_ids']
+            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []);
+        $sponsoredFamilyMemberIds = $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? []);
+        $sponsoredBeneficiaryIds = $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds);
+        $syncSponsoredBeneficiaries = (bool) ($data['sync_sponsored_beneficiaries'] ?? false);
+        $syncSponsoredFamilyMembers = (bool) ($data['sync_sponsored_family_members'] ?? false);
+        $modelData = Arr::except($data, [
+            'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
+            'sponsored_family_member_ids', 'sync_sponsored_family_members',
+        ]);
+
+        $this->applySponsorshipDefaults($modelData);
+        $modelData['sponsored_beneficiary_id'] = $sponsoredBeneficiaryIds[0] ?? null;
+        if (($modelData['classification'] ?? null) === 'recurring'
+            && ($modelData['recurring_cycle'] ?? null) === 'monthly') {
+            $modelData['allocation_type'] = $sponsoredBeneficiaryIds !== [] ? 'sponsorship' : null;
+        }
+
+        $payload = array_merge($modelData, [
+            'sponsored_beneficiary_ids' => $sponsoredBeneficiaryIds,
+            'sync_sponsored_beneficiaries' => $syncSponsoredBeneficiaries,
+            'sponsored_family_member_ids' => $sponsoredFamilyMemberIds,
+            'sync_sponsored_family_members' => $syncSponsoredFamilyMembers,
+        ]);
+
+        $executor = function () use ($modelData, $sponsoredBeneficiaryIds, $syncSponsoredBeneficiaries, $sponsoredFamilyMemberIds, $syncSponsoredFamilyMembers) {
+            $donor = $this->donorRepository->create($modelData);
+            if ($syncSponsoredBeneficiaries) {
+                $donor->sponsoredBeneficiaries()->sync($sponsoredBeneficiaryIds);
+            }
+            if ($syncSponsoredFamilyMembers) {
+                $donor->sponsoredFamilyMembers()->sync($sponsoredFamilyMemberIds);
+            }
+            return $donor;
+        };
 
         return ChangeRequestService::handleRequest(
             Donor::class,
             null,
             'create',
-            $data,
+            $payload,
             $executor,
             $forceRequest
         );
@@ -88,10 +127,57 @@ final readonly class DonorService
 
     public function updateDonor(Donor $donor, array $data, bool $forceRequest = true): mixed
     {
-        $this->applySponsorshipDefaults($data, $donor);
+        $syncSponsoredBeneficiaries = (bool) ($data['sync_sponsored_beneficiaries'] ?? false);
+        $syncSponsoredFamilyMembers = (bool) ($data['sync_sponsored_family_members'] ?? false);
+        $sponsoredFamilyMemberIds = $syncSponsoredFamilyMembers
+            ? $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? [])
+            : null;
+        $submittedBeneficiaryIds = $data['sponsored_beneficiary_ids']
+            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []);
+        $sponsoredBeneficiaryIds = $syncSponsoredBeneficiaries
+            ? $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds ?? [])
+            : null;
+        $modelData = Arr::except($data, [
+            'code', 'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
+            'sponsored_family_member_ids', 'sync_sponsored_family_members',
+        ]);
 
-        $executor = function () use ($donor, $data) {
-            $this->donorRepository->update($donor, $data);
+        if (empty($donor->code)) {
+            $modelData['code'] = Donor::nextAvailableCode();
+        }
+
+        $this->applySponsorshipDefaults($modelData, $donor);
+        if ($syncSponsoredBeneficiaries) {
+            $modelData['sponsored_beneficiary_id'] = $sponsoredBeneficiaryIds[0] ?? null;
+        }
+        if (($modelData['classification'] ?? $donor->classification) === 'recurring'
+            && ($modelData['recurring_cycle'] ?? $donor->recurring_cycle) === 'monthly') {
+            $currentBeneficiaryIds = $donor->sponsoredBeneficiaries()
+                ->pluck('beneficiaries.id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $modelData['allocation_type'] = ($sponsoredBeneficiaryIds ?? $currentBeneficiaryIds) !== []
+                ? 'sponsorship'
+                : null;
+        } elseif (($modelData['allocation_type'] ?? $donor->allocation_type) === 'sponsorship') {
+            $modelData['allocation_type'] = null;
+        }
+
+        $payload = array_merge($modelData, [
+            'sponsored_beneficiary_ids' => $sponsoredBeneficiaryIds ?? [],
+            'sync_sponsored_beneficiaries' => $syncSponsoredBeneficiaries,
+            'sponsored_family_member_ids' => $sponsoredFamilyMemberIds ?? [],
+            'sync_sponsored_family_members' => $syncSponsoredFamilyMembers,
+        ]);
+
+        $executor = function () use ($donor, $modelData, $sponsoredBeneficiaryIds, $sponsoredFamilyMemberIds) {
+            $this->donorRepository->update($donor, $modelData);
+            if (!is_null($sponsoredBeneficiaryIds)) {
+                $donor->sponsoredBeneficiaries()->sync($sponsoredBeneficiaryIds);
+            }
+            if (!is_null($sponsoredFamilyMemberIds)) {
+                $donor->sponsoredFamilyMembers()->sync($sponsoredFamilyMemberIds);
+            }
             return $donor;
         };
 
@@ -99,7 +185,7 @@ final readonly class DonorService
             Donor::class,
             $donor->id,
             'update',
-            $data,
+            $payload,
             $executor,
             $forceRequest
         );
@@ -154,13 +240,56 @@ final readonly class DonorService
 
     private function applySponsorshipDefaults(array &$data, ?Donor $donor = null): void
     {
-        $sponsorshipType = $data['sponsorship_type'] ?? ($donor?->sponsorship_type ?? 'none');
-        
-        if ($sponsorshipType !== 'none' && empty($data['sponsorship_project_id']) && (!$donor || empty($donor->sponsorship_project_id))) {
-            $defaultProjId = Project::where('name', 'like', '%بعثاء%')->value('id');
-            if ($defaultProjId) {
-                $data['sponsorship_project_id'] = $defaultProjId;
-            }
+        $classification = $data['classification'] ?? $donor?->classification;
+        $cycle = $data['recurring_cycle'] ?? $donor?->recurring_cycle;
+
+        if ($classification === 'recurring' && $cycle === 'monthly') {
+            $data['sponsorship_type'] = 'monthly_sponsor';
+        } elseif (($data['sponsorship_type'] ?? null) !== 'sadaqa_jariya') {
+            $data['sponsorship_type'] = 'none';
         }
+
+        if (array_key_exists('monthly_allocation_target', $data)
+            && trim((string) $data['monthly_allocation_target']) === '') {
+            $data['monthly_allocation_target'] = null;
+        }
+    }
+
+    public function syncSponsoredBeneficiaries(Donor $donor, array $data): void
+    {
+        $familyMemberIds = $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? []);
+
+        if ($data['sync_sponsored_family_members'] ?? false) {
+            $donor->sponsoredFamilyMembers()->sync($familyMemberIds);
+        }
+
+        if ($data['sync_sponsored_beneficiaries'] ?? false) {
+            $donor->sponsoredBeneficiaries()->sync($this->beneficiaryIdsForAssignments(
+                $data['sponsored_beneficiary_ids'] ?? [],
+                $familyMemberIds
+            ));
+        }
+    }
+
+    private function normaliseBeneficiaryIds(array $ids): array
+    {
+        return array_values(array_unique(array_map('intval', array_filter($ids))));
+    }
+
+    private function beneficiaryIdsForAssignments(array $beneficiaryIds, array $familyMemberIds): array
+    {
+        $derivedIds = $familyMemberIds === []
+            ? []
+            : BeneficiaryFamilyMember::query()
+                ->whereIn('id', $familyMemberIds)
+                ->pluck('beneficiary_id')
+                ->all();
+
+        return $this->normaliseBeneficiaryIds(array_merge($beneficiaryIds, $derivedIds));
+    }
+
+    private function nextDonorCode(): string
+    {
+        return Donor::nextAvailableCode();
     }
 }

@@ -28,7 +28,9 @@ final readonly class DonationRepository
             ->when($channel, fn($qr) => $qr->where('cash_channel', $channel))
             ->when($q !== '', function ($qr) use ($q) {
                 $qr->where(function ($w) use ($q) {
-                    $w->whereHas('donor', fn($d) => $d->where('name', 'like', '%' . $q . '%'))
+                    $w->whereHas('donor', fn($d) => $d
+                        ->where('name', 'like', '%' . $q . '%')
+                        ->orWhere('code', 'like', '%' . $q . '%'))
                       ->orWhere('receipt_number', 'like', '%' . $q . '%')
                       ->orWhereHas('project', fn($p) => $p->where('name', 'like', '%' . $q . '%'))
                       ->orWhereHas('campaign', fn($c) => $c->where('name', 'like', '%' . $q . '%'))

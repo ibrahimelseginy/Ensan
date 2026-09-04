@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class ProjectMonthlyVolunteer extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HashedRouteKey;
 
     protected $fillable = ['project_id', 'user_id', 'month', 'year', 'notes'];
 

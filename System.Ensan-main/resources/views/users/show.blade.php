@@ -1,6 +1,10 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
+    @php
+        $currentUser = request()->user();
+        $backRoute = $canViewUsers ? route('users.index') : route('dashboard.index');
+    @endphp
     <div class="container-fluid p-0">
         {{-- Page Header --}}
         <div class="page-header mb-4">
@@ -9,12 +13,12 @@
                 ملف المستخدم
             </h4>
             <div class="btn-group">
-                @if(!$pendingRequest)
+                @if(!$pendingRequest && ($isOwnProfile || $canManageUsers))
                     <a href="{{ route('users.edit', $user) }}" class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-1"></i> تعديل
                     </a>
                 @endif
-                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ $backRoute }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-right me-1"></i> رجوع
                 </a>
             </div>
@@ -39,19 +43,21 @@
                                 @endif
                             </div>
 
-                            <label for="profile_photo_upload"
-                                class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle shadow-lg border border-white profile-camera-btn"
-                                style="cursor: pointer; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; transform: translate(-10%, -10%); transition: all 0.3s ease;"
-                                title="تغيير الصورة">
-                                <i class="bi bi-camera-fill fs-5"></i>
-                            </label>
-                            <form id="avatar-form" action="{{ route('users.update', $user) }}" method="POST"
-                                enctype="multipart/form-data" class="d-none">
-                                @csrf
-                                @method('PUT')
-                                <input type="file" id="profile_photo_upload" name="profile_photo" accept="image/*"
-                                    onchange="if(confirm('هل تريد تغيير الصورة الشخصية؟')) document.getElementById('avatar-form').submit()">
-                            </form>
+                            @if(!$pendingRequest && ($isOwnProfile || $canManageUsers))
+                                <label for="profile_photo_upload"
+                                    class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle shadow-lg border border-white profile-camera-btn"
+                                    style="cursor: pointer; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; transform: translate(-10%, -10%); transition: all 0.3s ease;"
+                                    title="تغيير الصورة">
+                                    <i class="bi bi-camera-fill fs-5"></i>
+                                </label>
+                                <form id="avatar-form" action="{{ route('users.update', $user) }}" method="POST"
+                                    enctype="multipart/form-data" class="d-none">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="file" id="profile_photo_upload" name="profile_photo" accept="image/*"
+                                        onchange="if(confirm('سيتم إرسال الصورة الجديدة إلى الأدمن للموافقة. هل تريد المتابعة؟')) document.getElementById('avatar-form').submit()">
+                                </form>
+                            @endif
                         </div>
                         <h3 class="fw-bold mb-1">{{ $user->name }}</h3>
                         <p class="text-muted mb-3">{{ $user->email }}</p>
@@ -67,7 +73,6 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            @php $currentUser = request()->user(); @endphp
                             @if($pendingRequest)
                                 <div class="alert alert-warning mb-0 p-3 border-0 bg-warning bg-opacity-10 text-warning rounded-4 shadow-sm text-start">
                                     <div class="d-flex align-items-center gap-2">
@@ -76,23 +81,26 @@
                                     </div>
                                     <p class="x-small mb-0 mt-1 opacity-75">يوجد طلب تعديل أو حذف لهذا المستخدم قيد المراجعة حالياً.</p>
                                 </div>
-                            @elseif($currentUser)
+                            @elseif($currentUser && ($isOwnProfile || $canManageUsers))
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-primary">
                                     <i class="bi bi-pencil-square me-2"></i>
-                                    {{ ($currentUser->hasRole('admin') || $currentUser->hasRole('manager') || $currentUser->hasRole('finance')) ? 'تعديل البيانات' : 'طلب تعديل البيانات' }}
+                                    {{ $canManageUsers ? 'تعديل البيانات' : 'طلب تعديل البيانات' }}
                                 </a>
                                 
-                                <form action="{{ route('users.destroy', $user) }}" method="POST"
-                                      onsubmit="return confirm('{{ ($currentUser->hasRole('admin') || $currentUser->hasRole('manager') || $currentUser->hasRole('finance')) ? 'هل أنت متأكد من حذف هذا المستخدم؟' : 'هل أنت متأكد من طلب إلغاء هذا المستخدم؟' }}');">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-outline-danger w-100">
-                                        <i class="bi bi-x-circle me-2"></i>
-                                        {{ ($currentUser->hasRole('admin') || $currentUser->hasRole('manager') || $currentUser->hasRole('finance')) ? 'حذف المستخدم' : 'طلب إلغاء' }}
-                                    </button>
-                                </form>
+                                @if($canDeleteUsers)
+                                    <form action="{{ route('users.destroy', $user) }}" method="POST"
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟');">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-outline-danger w-100">
+                                            <i class="bi bi-x-circle me-2"></i> حذف المستخدم
+                                        </button>
+                                    </form>
+                                @endif
                             @endif
 
-                            <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">رجوع للقائمة</a>
+                            <a href="{{ $backRoute }}" class="btn btn-outline-secondary">
+                                {{ $canViewUsers ? 'رجوع للقائمة' : 'رجوع للرئيسية' }}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -118,7 +126,7 @@
                             <div class="col-md-6">
                                 <label class="text-muted small mb-1">الراتب</label>
                                 <div class="fw-medium fs-5">
-                                    {{ $user->salary ? number_format($user->salary, 2) . ' ج.م' : '—' }}</div>
+                                    {{ $user->salary ? number_format($user->salary, 0) . ' ج.م' : '—' }}</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small mb-1">تاريخ الانضمام</label>

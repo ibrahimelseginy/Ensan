@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="page-header">
@@ -24,7 +24,7 @@
                     <div class="col-md-4">
                         <label class="form-label">المبلغ</label>
                         <div class="input-group">
-                            <input name="amount" class="form-control" value="{{ $payroll->amount }}">
+                            <input name="amount" type="number" step="1" class="form-control" value="{{ $payroll->amount ? (int)$payroll->amount : '' }}">
                             <select name="currency" class="form-select" style="max-width:110px">
                                 <option value="EGP" @selected($payroll->currency == 'EGP')>EGP</option>
                                 <option value="USD" @selected($payroll->currency == 'USD')>USD</option>

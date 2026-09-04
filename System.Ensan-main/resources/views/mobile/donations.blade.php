@@ -41,19 +41,19 @@
                 <div class="p-4 position-relative z-1 d-flex flex-column h-100">
                     <div class="d-flex justify-content-between align-items-start mb-4">
                         <div class="icon-box-premium">
-                            <i class="bi bi-wallet2 fs-4 text-white"></i>
+                            <i class="bi bi-wallet2 fs-4 text-stats-main"></i>
                         </div>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-1 x-small">إجمالي المبالغ</span>
+                        <span class="badge bg-white bg-opacity-20 text-stats-main rounded-pill px-3 py-1 x-small">إجمالي المبالغ</span>
                     </div>
                     <div class="mb-4">
-                        <h6 class="text-white text-opacity-75 mb-1 small fw-bold">إجمالي المبلغ المحصل</h6>
-                        <h2 class="text-white fw-800 font-outfit mb-0" style="font-size: 2.8rem">{{ number_format($totalAmount, 0) }} <span class="fs-6 opacity-75">ج.م</span></h2>
+                        <h6 class="text-stats-main text-opacity-75 mb-1 small fw-bold">إجمالي المبلغ المحصل</h6>
+                        <h2 class="text-stats-main fw-800 font-outfit mb-0" style="font-size: 2.8rem">{{ number_format($totalAmount, 0) }} <span class="fs-6 opacity-75">ج.م</span></h2>
                     </div>
                     <div class="mt-auto">
                         <div class="d-flex align-items-center justify-content-between mb-3">
-                            <span class="text-white small fw-bold op-75">اكتمال التحصيل</span>
+                            <span class="text-stats-main small fw-bold op-75">اكتمال التحصيل</span>
                             <div class="percentage-pill bg-white bg-opacity-20 px-3 py-1 rounded-pill blur-xs">
-                                <span class="text-white fw-800 font-outfit" style="font-size: 1.1rem">{{ $collectionRate }}%</span>
+                                <span class="text-stats-main fw-800 font-outfit" style="font-size: 1.1rem">{{ $collectionRate }}%</span>
                             </div>
                         </div>
                         <div class="progress-container-elite shadow-sm">
@@ -263,7 +263,7 @@
         <div class="modal-content border-0 shadow-lg modal-glass-theme" style="border-radius: 32px; overflow: hidden;">
             <div class="modal-header border-0 bg-stats-header px-4 py-4 border-bottom border-light-subtle d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box-premium bg-primary text-white shadow-sm">
+                    <div class="icon-box-premium bg-primary text-stats-main shadow-sm">
                         <i class="bi bi-shield-check fs-4"></i>
                     </div>
                     <div>
@@ -383,7 +383,7 @@
                             @if($donation->receipt_path)
                                 <div class="receipt-viewer-elite flex-grow-1 rounded-4 overflow-hidden position-relative bg-white shadow-sm mb-4">
                                     <img src="{{ $donation->image_url }}" class="img-fluid w-100 h-100" style="object-fit: cover; cursor: pointer" data-bs-toggle="tooltip" title="اضغط للتكبير" onclick="window.open(this.src)">
-                                    <div class="receipt-zoom-hint position-absolute bottom-0 start-0 w-100 p-2 text-center text-white bg-dark bg-opacity-50 small">
+                                    <div class="receipt-zoom-hint position-absolute bottom-0 start-0 w-100 p-2 text-center text-stats-main bg-dark bg-opacity-50 small">
                                         <i class="bi bi-zoom-in me-1"></i> عرض الحجم الكامل
                                     </div>
                                 </div>

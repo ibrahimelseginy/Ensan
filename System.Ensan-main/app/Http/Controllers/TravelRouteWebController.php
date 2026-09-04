@@ -101,4 +101,24 @@ final class TravelRouteWebController extends Controller
         $this->travelRouteService->duplicateRoute($travel_route, $suffix);
         return redirect()->route('travel-routes.index');
     }
+
+    public function addCity(Request $request, TravelRoute $travel_route): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'fare' => ['required', 'numeric', 'min:0'],
+            'fare_currency' => ['required', 'in:EGP,USD,SAR,EUR,AED'],
+        ]);
+
+        $cities = is_array($travel_route->cities) ? $travel_route->cities : [];
+        $cities[] = [
+            'name' => $data['name'],
+            'fare' => (float) $data['fare'],
+            'currency' => $data['fare_currency'],
+        ];
+
+        $travel_route->update(['cities' => $cities]);
+
+        return back()->with('success', 'تمت إضافة المدينة والتسعيرة بنجاح');
+    }
 }

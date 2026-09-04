@@ -11,17 +11,17 @@
             <div class="glow-orb-cyan"></div>
             <div class="noise-texture"></div>
         </div>
-        
+
         <div class="container-fluid px-4 position-relative z-index-10 py-5">
             <div class="row align-items-center">
                 <div class="col-lg-8 text-end animate-revealer">
                     <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
-                        <span class="badge-elite-status" style="color: #ffffff !important; border-color: rgba(255,255,255,0.2) !important;">
+                        <span class="badge-elite-status" style="color: var(--text-stats-main) !important; border-color: var(--ws-border) !important;">
                             <span class="status-dot"></span> إدارة المحتوى المنفصل
                         </span>
                     </div>
-                    <h1 class="display-3 fw-900 text-white mb-3" style="color: #ffffff !important;">أخبار التطبيق <span class="text-gradient-cyan">(News)</span></h1>
-                    <p class="lead text-azure-mist font-outfit mb-0 max-w-600 ms-auto text-end opacity-90" style="color: rgba(255,255,255,0.85) !important;">
+                    <h1 class="display-3 fw-900 text-stats-main mb-3" >أخبار التطبيق <span class="text-gradient-cyan">(News)</span></h1>
+                    <p class="lead text-muted-theme font-outfit mb-0 max-w-600 ms-auto text-end opacity-90" >
                         تحكم كامل في القصص والفعاليات التي تصل حصرياً لمستخدمي تطبيق الهواتف الذكية بنظام Ensan.
                     </p>
                 </div>
@@ -48,7 +48,7 @@
                             <i class="bi bi-newspaper display-4 text-muted-theme"></i>
                         </div>
                     @endif
-                    
+
                     <div class="card-overlay-actions">
                         <div class="d-flex gap-2 p-3">
                             <button class="btn-icon-elite bg-primary bg-opacity-25" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ $item->id }}">
@@ -120,7 +120,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            
+
                             <div class="col-12">
                                 <label class="text-muted-theme small fw-bold mb-2 d-block">نص المحتوى (البرودكاست)</label>
                                 <textarea name="content" class="form-control premium-field" rows="6" required>{{ $item->content }}</textarea>
@@ -159,12 +159,30 @@
                                             <img src="{{ $item->image_url }}" class="w-100 h-auto">
                                         </div>
                                     @endif
+
+                                    <div class="mt-3">
+                                        <label class="x-small text-muted-theme mb-2">صور إضافية (معرض الخبر - اختياري)</label>
+                                        <input type="file" name="additional_images[]" class="form-control premium-field f-lg" multiple accept="image/*" style="font-size: 0.9rem;">
+                                        @if($item->additional_images)
+                                            <div class="d-flex gap-2 mt-2 overflow-auto pb-2">
+                                                @foreach($item->additional_images_urls as $imgUrl)
+                                                    <img src="{{ $imgUrl }}" class="rounded border" style="height: 60px; width: 60px; object-fit: cover;">
+                                                @endforeach
+                                            </div>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="delete_additional_images" value="1" id="delAddImg{{ $item->id }}">
+                                                <label class="form-check-label x-small text-danger" for="delAddImg{{ $item->id }}">
+                                                    حذف جميع الصور الإضافية الحالية
+                                                </label>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-12">
                                 <div class="bg-primary bg-opacity-10 border border-primary border-opacity-10 rounded-4 p-3 d-flex align-items-center gap-3">
-                                    <div class="icon-orb bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <div class="icon-orb bg-primary text-stats-main rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                         <i class="bi bi-star"></i>
                                     </div>
                                     <div class="flex-grow-1">
@@ -193,12 +211,19 @@
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content dark-glass-card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background-color: var(--ws-bg-card-header) !important;">
                     <div class="modal-header border-0" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                        <h5 class="modal-title fw-bold text-white">{{ $item->title }}</h5>
+                        <h5 class="modal-title fw-bold text-stats-main">{{ $item->title }}</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-0">
                         @if($item->image_path)
                             <img src="{{ $item->image_url }}" class="w-100 object-fit-cover" style="height: 300px;">
+                        @endif
+                        @if($item->additional_images)
+                            <div class="d-flex gap-3 px-4 pt-4 overflow-auto">
+                                @foreach($item->additional_images_urls as $imgUrl)
+                                    <img src="{{ $imgUrl }}" class="rounded shadow-sm" style="height: 120px; min-width: 150px; object-fit: cover;">
+                                @endforeach
+                            </div>
                         @endif
                         <div class="p-4">
                             <div class="d-flex gap-3 ws-label small mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
@@ -206,7 +231,7 @@
                                 <span><i class="bi bi-folder text-purple me-1"></i> {{ $item->category ?? 'عام' }}</span>
                                 <span><i class="bi bi-eye text-purple me-1"></i> {{ $item->views_count ?? 0 }} مشاهدة</span>
                             </div>
-                            <div class="text-white lh-lg" style="white-space: pre-wrap;">{{ $item->content }}</div>
+                            <div class="text-stats-main lh-lg" style="white-space: pre-wrap;">{{ $item->content }}</div>
                         </div>
                     </div>
                     <div class="modal-footer border-0" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
@@ -222,8 +247,8 @@
         @empty
         <div class="col-12">
             <div class="text-center py-5">
-                <i class="bi bi-newspaper display-1 text-white-50"></i>
-                <p class="text-white-50 mt-3">لا توجد أخبار بعد. أضف أول خبر الآن!</p>
+                <i class="bi bi-newspaper display-1 text-stats-main-50"></i>
+                <p class="text-stats-main-50 mt-3">لا توجد أخبار بعد. أضف أول خبر الآن!</p>
             </div>
         </div>
         @endforelse
@@ -253,7 +278,7 @@
                             @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="col-12">
                         <label class="text-muted-theme small fw-bold mb-2 d-block">نص المحتوى (البرودكاست)</label>
                         <textarea name="content" class="form-control premium-field" rows="6" placeholder="ما هي القصة التي تريد مشاركتها؟" required></textarea>
@@ -285,14 +310,19 @@
                             <div class="upload-zone-elite position-relative text-center py-5 border border-dashed border-light-subtle rounded-4 mb-3 d-flex flex-column align-items-center justify-content-center">
                                 <input type="file" name="image" class="absolute-opacity-zero w-100 h-100 cursor-pointer">
                                 <i class="bi bi-cloud-arrow-up display-4 text-primary opacity-50 mb-2"></i>
-                                <p class="small text-muted-theme px-3">اسحب صورة الخبر هنا أو انقر لاختيار ملف</p>
+                                <p class="small text-muted-theme px-3">اسحب صورة الخبر الرئيسية هنا أو انقر لاختيار ملف</p>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="x-small text-muted-theme mb-2">صور إضافية (معرض الخبر - يمكنك اختيار أكثر من صورة)</label>
+                                <input type="file" name="additional_images[]" class="form-control premium-field f-lg" multiple accept="image/*" style="font-size: 0.9rem;">
                             </div>
                         </div>
                     </div>
 
                     <div class="col-12">
                         <div class="bg-primary bg-opacity-10 border border-primary border-opacity-10 rounded-4 p-3 d-flex align-items-center gap-3">
-                            <div class="icon-orb bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <div class="icon-orb bg-primary text-stats-main rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                 <i class="bi bi-star"></i>
                             </div>
                             <div class="flex-grow-1">
@@ -326,16 +356,16 @@
 
     /* Elite Hero Styles */
     .elite-hero-broadcast { min-height: 380px; display: flex; align-items: center; border-radius: 0 0 80px 80px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-    .bg-premium-gradient { background: linear-gradient(135deg, #101828 0%, #1e293b 50%, #0f172a 100%); }
+    .bg-premium-gradient { background: linear-gradient(135deg, var(--ws-border) 0%, var(--ws-bg-card-header) 100%); border-bottom: 1px solid var(--ws-border); }
     .hero-bg-visuals div { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.35; pointer-events: none; }
     .glow-orb-purple { width: 450px; height: 450px; top: -150px; left: -100px; background: #6366f1; }
     .glow-orb-cyan { width: 350px; height: 350px; bottom: -120px; right: -50px; background: #06b6d4; }
     .noise-texture { position: absolute; inset: 0; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
-    
+
     .badge-elite-status { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 100px; color: #cbd5e1; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
     .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-    .text-gradient-cyan { background: linear-gradient(90deg, #06b6d4, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .text-gradient-cyan { color: var(--primary); font-weight: bold; }
     .text-azure-mist { color: rgba(219, 234, 254, 0.85); text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .btn-elite-action { background: #6366f1; color: #fff; border: none; box-shadow: 0 15px 35px rgba(99,102,241,0.35); transition: 0.4s; }
     .btn-elite-action:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(99,102,241,0.5); color: #fff; }
@@ -348,7 +378,7 @@
     .btn-icon-elite { width: 42px; height: 42px; border-radius: 14px; color: #fff; border: none; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); transition: 0.2s; }
     .btn-icon-elite:hover { transform: scale(1.1); filter: brightness(1.2); }
     .elite-category-tag { position: absolute; top: 15px; left: 15px; background: rgba(15,23,42,0.7); backdrop-filter: blur(10px); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 5px 15px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.1); }
-    
+
     .badge-mini-stat { padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; display: flex; align-items: center; gap: 5px; }
     .bg-tag-primary { background: rgba(99,102,241,0.1); color: #6366f1; }
     .bg-tag-success { background: rgba(16,185,129,0.1); color: #10b981; }

@@ -1,0 +1,13 @@
+/* ============================================================
+ * Ensan System — Main CSS Entry Point (Vite)
+ * يتم استدعاء هذا الملف عبر @vite في الـ layout الرئيسي
+ * ============================================================ */
+
+/* Bootstrap RTL */
+@import '/public/css/bootstrap.rtl.min.css';
+
+/* Bootstrap Icons */
+@import '/public/css/bootstrap-icons.css';
+
+/* Custom System Styles */
+@import '/public/css/style.css';

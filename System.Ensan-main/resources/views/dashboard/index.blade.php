@@ -306,7 +306,7 @@
 @endsection
 
 @section('content')
-
+<div class="container-fluid py-4 px-3 px-md-4">
   @if($isAdmin ?? false)
     {{-- Premium Dashboard Hero --}}
     @php
@@ -325,9 +325,6 @@
                 <a href="{{ route('reports.index') }}" class="btn btn-sm rounded-pill px-4">
                     <i class="bi bi-file-earmark-bar-graph me-1"></i> التقارير
                 </a>
-                <button class="btn btn-sm rounded-pill px-4" onclick="window.print()">
-                    <i class="bi bi-printer me-1"></i> طباعة
-                </button>
             </div>
         </div>
         <i class="bi bi-speedometer2 hero-icon d-none d-md-block"></i>
@@ -692,9 +689,11 @@
             <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm rounded-pill px-3">
                 <i class="bi bi-person-circle me-1"></i> ملفي الشخصي
             </a>
-            <a href="{{ route('expenses.index') }}" class="btn btn-sm rounded-pill px-3">
-                <i class="bi bi-cash-stack me-1"></i> المصروفات
-            </a>
+            @if($user->hasPermission('expenses.view'))
+              <a href="{{ route('expenses.index') }}" class="btn btn-sm rounded-pill px-3">
+                  <i class="bi bi-cash-stack me-1"></i> المصروفات
+              </a>
+            @endif
         </div>
       </div>
       <div class="d-none d-md-block position-relative z-1">
@@ -712,7 +711,9 @@
               </div>
               <div class="h3 fw-bold text-dark mb-0">{{ number_format($financeStats['salary']) }}</div>
               <div class="small text-muted mt-1">آخر راتب مسجل</div>
-              <a href="{{ route('payrolls.index') }}" class="stretched-link"></a>
+              @if($user->hasPermission('payrolls.view'))
+                <a href="{{ route('payrolls.index') }}" class="stretched-link"></a>
+              @endif
           </div>
       </div>
       <div class="col-6 col-md-3">
@@ -735,7 +736,6 @@
               <div class="progress mt-2" style="height: 4px;">
                   <div class="progress-bar bg-warning" style="width: {{ max(0, min(100, (($financeStats['vacations_balance'] ?? 21) / 21) * 100)) }}%"></div>
               </div>
-              <a href="{{ route('leaves.index') }}" class="stretched-link"></a>
           </div>
       </div>
       <div class="col-6 col-md-3">
@@ -745,29 +745,41 @@
                   <i class="bi bi-list-task text-danger opacity-50 fs-5"></i>
               </div>
               <div class="h3 fw-bold text-dark mb-0">{{ $financeStats['tasks_pending'] }}</div>
-              <a href="{{ route('employee-tasks.index') }}" class="stretched-link"></a>
+              @if($user->hasPermission('view_own_tasks') || $user->hasPermission('tasks.view'))
+                <a href="{{ route('tasks.index') }}" class="stretched-link"></a>
+              @endif
           </div>
       </div>
     </div>
 
     {{-- Row 1: Counts --}}
     <div class="row g-3 mb-3">
+      @if($user->hasPermission('warehouses.view'))
       <div class="col-md-6"><div class="kpi-card kpi-info p-4 text-center h-100 d-block">
           <div class="small text-muted mb-2">المخازن</div>
           <div class="display-6 fw-bold text-dark">{{ $warehousesCount }}</div>
       </div></div>
+      @endif
+      @if($user->hasPermission('beneficiaries.view'))
       <div class="col-md-6"><div class="kpi-card kpi-success p-4 text-center h-100 d-block">
           <div class="small text-muted mb-2">المستفيدون</div>
           <div class="display-6 fw-bold text-dark">{{ $beneficiariesCount }}</div>
       </div></div>
+      @endif
     </div>
 
     {{-- Row 2: Financials Month --}}
     <div class="row g-3 mb-3">
-      <div class="col-6 col-md-6"><a href="{{ route('expenses.index') }}" class="kpi-card kpi-danger p-4 text-center text-decoration-none h-100 d-block hover-lift">
+      <div class="col-6 col-md-6">
+        @if($user->hasPermission('expenses.view'))
+          <a href="{{ route('expenses.index') }}" class="kpi-card kpi-danger p-4 text-center text-decoration-none h-100 d-block hover-lift">
+        @else
+          <div class="kpi-card kpi-danger p-4 text-center h-100 d-block">
+        @endif
           <div class="small text-muted mb-2">مصروفات (هذا الشهر)</div>
           <div class="h3 mb-0 fw-bold text-danger">{{ number_format($expensesMonth, 2) }}</div>
-      </a></div>
+        @if($user->hasPermission('expenses.view'))</a>@else</div>@endif
+      </div>
       <div class="col-6 col-md-6"><div class="kpi-card kpi-warning p-4 text-center h-100 d-block">
           <div class="small text-muted mb-2">صافي التدفق (هذا الشهر)</div>
           <div class="h3 mb-0 fw-bold text-dark" style="direction: ltr;">{{ number_format($netFlowMonth, 2) }}</div>
@@ -2365,7 +2377,7 @@
             </a>
         </div>
         <div class="col-xl-3 col-md-6 animate-slide-up animate-delay-2">
-             <a href="{{ route('delegate-trips.index') }}" class="glass-card h-100 hover-lift text-decoration-none d-block">
+             <a href="{{ route('trips.index') }}" class="glass-card h-100 hover-lift text-decoration-none d-block">
                   <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                          <div class="icon-circle rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; background: rgba(16, 185, 129, 0.1);">
@@ -2514,7 +2526,7 @@
             </a>
          </div>
          <div class="col-md-2 col-4">
-            <a href="{{ route('delegate-trips.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
+            <a href="{{ route('trips.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
                  <i class="bi bi-truck fs-3 mb-2" style="color: #10b981;"></i>
                  <div class="fw-bold small">الرحلات</div>
             </a>
@@ -2532,7 +2544,7 @@
             </a>
          </div>
          <div class="col-md-2 col-4">
-            <a href="{{ route('delegate-trips.create') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
+            <a href="{{ route('trips.index') }}#create-trip" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
                  <i class="bi bi-plus-square fs-3 mb-2" style="color: #f59e0b;"></i>
                  <div class="fw-bold small">رحلة جديدة</div>
             </a>
@@ -3220,7 +3232,7 @@
             <div class="glass-card h-100 p-0 overflow-hidden">
                 <div class="p-4 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2" style="color: #22d3ee;"></i>آخر المهام</h5>
-                    <a href="{{ route('employee-tasks.index') }}" class="small" style="color: #22d3ee;">عرض الكل</a>
+                    <a href="{{ route('tasks.index') }}" class="small" style="color: #22d3ee;">عرض الكل</a>
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse($fieldResDashboardData['latestTasks'] ?? [] as $task)
@@ -3261,7 +3273,7 @@
             </a>
          </div>
          <div class="col-md-3 col-6">
-            <a href="{{ route('employee-tasks.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
+            <a href="{{ route('tasks.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
                  <i class="bi bi-list-task fs-3 mb-2" style="color: #f59e0b;"></i>
                  <div class="fw-bold">مهامي</div>
             </a>
@@ -3528,7 +3540,7 @@
             <div class="glass-card h-100 p-0 overflow-hidden">
                 <div class="p-4 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2" style="color: #f472b6;"></i>آخر المهام</h5>
-                    <a href="{{ route('employee-tasks.index') }}" class="small" style="color: #f472b6;">عرض الكل</a>
+                    <a href="{{ route('tasks.index') }}" class="small" style="color: #f472b6;">عرض الكل</a>
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse($receptionDashboardData['latestTasks'] ?? [] as $task)
@@ -4398,43 +4410,146 @@
       </div>
     </div>
   @else
-    {{-- Generic Employee / No Specific Dashboard Role --}}
-    <div class="d-flex justify-content-between align-items-center mb-4 dashboard-header">
-       <h2 class="h4 fw-bold text-primary-custom">لوحة التحكم</h2>
-       <div class="d-flex gap-3 align-items-center">
-           <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-mobile-icon">
-               <i class="bi bi-person-circle me-1"></i> <span>ملفي الشخصي</span>
-           </a>
-           <div class="text-muted small d-none d-md-block">{{ date('Y-m-d') }}</div>
-       </div>
-    </div>
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="alert alert-light shadow-sm border-0 text-center p-5">
-                <div class="mb-4">
-                    @if($user->profile_photo_path)
-                      <img src="{{ $user->image_url }}" alt="{{ $user->name }}" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
-                    @else
-                      <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
-                           {{ strtoupper(substr($user->name, 0, 1)) }}
-                      </div>
-                    @endif
-                </div>
-                <h4 class="alert-heading fw-bold mb-3">مرحباً بك، {{ $user->name }}</h4>
-                <p class="text-muted lead mb-4">
-                    أهلاً بك في نظام إدارة مؤسسة إنسان.<br>
-                    يمكنك الوصول إلى الأدوات والوظائف المتاحة لك من خلال القائمة الجانبية.
-                </p>
-                @if($user->roles->count() > 0)
-                  <div class="d-inline-block px-4 py-2 bg-body-tertiary rounded-pill border">
-                      <small class="text-muted fw-bold">الأدوار المسندة: </small>
-                      <span class="text-primary fw-bold">{{ $user->roles->pluck('name')->implode('، ') }}</span>
-                  </div>
-                @endif
-            </div>
+    {{-- Permission-scoped personal dashboard --}}
+    @php $gd = $genericDashboardData ?? []; @endphp
+
+    <div class="dashboard-hero animate-slide-up mb-4" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);">
+      <div class="hero-content d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div>
+          <div class="hero-greeting">{{ now()->hour < 12 ? 'صباح الخير' : 'مساء الخير' }} 👋</div>
+          <h1 class="hero-title">مرحباً {{ $user->name }}</h1>
+          <p class="hero-subtitle mb-2">هذه لوحتك الشخصية ليوم {{ now()->format('Y-m-d') }}</p>
+          <div class="d-flex flex-wrap gap-2">
+            @foreach($user->roles as $role)
+              <span class="badge rounded-pill bg-white bg-opacity-25 px-3 py-2">{{ $role->name }}</span>
+            @endforeach
+          </div>
         </div>
+        @if($user->hasPermission('view_own_tasks') || $user->hasPermission('tasks.view'))
+          <a href="{{ route('tasks.index') }}" class="btn btn-light rounded-pill px-4">
+            <i class="bi bi-check2-square me-1"></i> مهامي
+          </a>
+        @endif
+      </div>
+    </div>
+
+    @if(!empty($gd['assignmentNotice']))
+      <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div>{{ $gd['assignmentNotice'] }}</div>
+      </div>
+    @endif
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="stat-card stat-info h-100">
+          <div class="stat-icon"><i class="bi bi-list-check"></i></div>
+          <div class="stat-label">مهام معلقة</div>
+          <div class="stat-value">{{ $gd['ownTasksPending'] ?? 0 }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card stat-success h-100">
+          <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="stat-label">نسبة إنجاز المهام</div>
+          <div class="stat-value">{{ $gd['taskCompletionRate'] ?? 0 }}%</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card stat-purple h-100">
+          <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="stat-label">حضوري هذا الشهر</div>
+          <div class="stat-value">{{ $gd['attendanceThisMonth'] ?? 0 }} <small class="fs-6">يوم</small></div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card stat-warning h-100">
+          <div class="stat-icon"><i class="bi bi-calendar2-heart-fill"></i></div>
+          <div class="stat-label">رصيد الإجازات</div>
+          <div class="stat-value">{{ $gd['leaveBalance'] ?? 0 }} <small class="fs-6">يوم</small></div>
+        </div>
+      </div>
+    </div>
+
+    @if(!empty($gd['summaryCards']))
+      <h5 class="fw-bold mb-3"><i class="bi bi-grid-fill text-primary me-2"></i>ملخص الأقسام المتاحة لك</h5>
+      <div class="row g-3 mb-4">
+        @foreach($gd['summaryCards'] as $card)
+          <div class="col-6 col-lg-3">
+            <a href="{{ route($card['route']) }}" class="glass-card p-3 text-decoration-none d-flex align-items-center gap-3 h-100 hover-lift">
+              <span class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:48px;height:48px;background:{{ $card['color'] }}1a;color:{{ $card['color'] }};">
+                <i class="bi bi-{{ $card['icon'] }} fs-5"></i>
+              </span>
+              <span>
+                <span class="d-block h4 fw-bold mb-0 text-dark">{{ number_format($card['value']) }}</span>
+                <span class="small text-muted">{{ $card['label'] }}</span>
+              </span>
+            </a>
+          </div>
+        @endforeach
+      </div>
+    @endif
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i>آخر مهامي</h5>
+            @if($user->hasPermission('view_own_tasks') || $user->hasPermission('tasks.view'))
+              <a href="{{ route('tasks.index') }}" class="small text-decoration-none">عرض الكل</a>
+            @endif
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead><tr><th>المهمة</th><th>تاريخ الاستحقاق</th><th>الحالة</th></tr></thead>
+              <tbody>
+                @forelse($gd['recentTasks'] ?? [] as $task)
+                  @php
+                    $taskStatus = match($task->status) {
+                      'done' => ['مكتملة', 'success'],
+                      'in_progress' => ['قيد التنفيذ', 'primary'],
+                      default => ['معلقة', 'warning'],
+                    };
+                  @endphp
+                  <tr>
+                    <td class="fw-semibold">{{ $task->title }}</td>
+                    <td>{{ $task->due_date?->format('Y-m-d') ?? '—' }}</td>
+                    <td><span class="badge bg-{{ $taskStatus[1] }}-subtle text-{{ $taskStatus[1] }}">{{ $taskStatus[0] }}</span></td>
+                  </tr>
+                @empty
+                  <tr><td colspan="3" class="text-center text-muted py-4">لا توجد مهام مسندة إليك حاليًا</td></tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+          <h5 class="fw-bold mb-3"><i class="bi bi-person-check-fill text-success me-2"></i>حالة اليوم</h5>
+          <div class="d-flex justify-content-between py-3 border-bottom">
+            <span class="text-muted">الحضور</span>
+            <span class="fw-bold {{ !empty($gd['todayRecord']) ? 'text-success' : 'text-muted' }}">
+              {{ !empty($gd['todayRecord']) ? 'مسجل' : 'غير مسجل' }}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between py-3 border-bottom">
+            <span class="text-muted">إجمالي مهامي</span>
+            <span class="fw-bold">{{ $gd['ownTasksTotal'] ?? 0 }}</span>
+          </div>
+          <div class="d-flex justify-content-between py-3 border-bottom">
+            <span class="text-muted">مهام مكتملة</span>
+            <span class="fw-bold text-success">{{ $gd['ownTasksCompleted'] ?? 0 }}</span>
+          </div>
+          <div class="d-flex justify-content-between py-3">
+            <span class="text-muted">طلبات إجازة معلقة</span>
+            <span class="fw-bold">{{ $gd['pendingLeaveRequests'] ?? 0 }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   @endif
+</div>
 @endsection
 
 

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class Payroll extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'user_id',
         'month',

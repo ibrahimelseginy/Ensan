@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class Expense extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['type','category','amount','currency','payment_method','description','project_id','campaign_id','guest_house_id','workspace_id','beneficiary_id','created_by','paid_at','status','cancelled_at','cancelled_by','cancellation_reason','attachment_path'];
 
     protected $casts = [

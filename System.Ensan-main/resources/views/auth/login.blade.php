@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>تسجيل دخول | مؤسسة انسان الخيرية</title>
-  <link rel="icon" href="{{ asset('heart-icon.png') }}" type="image/png">
+  <link rel="icon" href="{{ asset('images/heart-icon.png') }}" type="image/png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,9 +238,9 @@
               style="width: 32px; height: 32px; border: none;" aria-label="Toggle Theme">
               <i class="bi bi-moon"></i>
             </button>
-            @if(file_exists(public_path('heart-icon.png')))
+            @if(file_exists(public_path('images/heart-icon.png')))
               <div class="d-flex align-items-center justify-content-center mb-3 mt-2">
-                <img src="{{ asset('heart-icon.png') }}" alt="logo" class="logo-img mb-0 shadow-sm" style="width: 55px; height: 55px; padding: 5px;">
+                <img src="{{ asset('images/heart-icon.png') }}" alt="logo" class="logo-img mb-0 shadow-sm" style="width: 60px; height: 60px; padding: 8px;">
               </div>
             @endif
             <p class="mb-0 opacity-75 small mt-1">نبني جيل .. يبني حياة</p>

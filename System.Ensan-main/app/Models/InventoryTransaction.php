@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class InventoryTransaction extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'item_id',
         'warehouse_id',
@@ -19,6 +21,7 @@ final class InventoryTransaction extends Model
         'beneficiary_id',
         'project_id',
         'campaign_id',
+        'guest_house_id',
         'expense_id',
         'delegate_id',
         'user_id',
@@ -78,6 +81,11 @@ final class InventoryTransaction extends Model
     public function campaign(): BelongsTo 
     { 
         return $this->belongsTo(Campaign::class); 
+    }
+
+    public function guestHouse(): BelongsTo
+    {
+        return $this->belongsTo(GuestHouse::class);
     }
 
     public function expense(): BelongsTo 

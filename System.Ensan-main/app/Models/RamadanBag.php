@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class RamadanBag extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     use HasFactory;
 
     protected $fillable = [

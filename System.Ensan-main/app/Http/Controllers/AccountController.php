@@ -20,12 +20,12 @@ final class AccountController extends Controller
 
     public function index(): LengthAwarePaginator
     {
-        return $this->accountService->getAllAccounts(50);
+        return $this->accountService->getAllAccountsPaginated(50);
     }
 
-    public function store(StoreAccountRequest $request): Account
+    public function store(StoreAccountRequest $request): mixed
     {
-        return $this->accountService.createAccount($request->validated());
+        return $this->accountService->createAccount($request->validated());
     }
 
     public function show(Account $account): Account
@@ -33,14 +33,14 @@ final class AccountController extends Controller
         return $account;
     }
 
-    public function update(UpdateAccountRequest $request, Account $account): Account
+    public function update(UpdateAccountRequest $request, Account $account): mixed
     {
-        return $this->accountService.updateAccount($account, $request->validated());
+        return $this->accountService->updateAccount($account, $request->validated());
     }
 
     public function destroy(Account $account): Response
     {
-        $this->accountService.deleteAccount($account);
+        $this->accountService->deleteAccount($account);
         return response()->noContent();
     }
 }

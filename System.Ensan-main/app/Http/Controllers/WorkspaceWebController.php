@@ -219,6 +219,8 @@ final class WorkspaceWebController extends Controller
 
     public function updateRentalStatus(Request $request, Workspace $workspace, WorkspaceRental $rental)
     {
+        abort_unless($rental->workspace_id === $workspace->id, 404);
+
         $data = $request->validate([
             'status' => 'required|in:pending,confirmed,completed,cancelled',
         ]);
@@ -228,6 +230,8 @@ final class WorkspaceWebController extends Controller
 
     public function destroyRental(Workspace $workspace, WorkspaceRental $rental)
     {
+        abort_unless($rental->workspace_id === $workspace->id, 404);
+
         $rental->delete();
         return redirect()->route('workspaces.show', $workspace);
     }

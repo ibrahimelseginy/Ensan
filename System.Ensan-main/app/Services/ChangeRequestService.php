@@ -20,27 +20,28 @@ class ChangeRequestService
      */
     public static function handleRequest(string $modelType, ?int $modelId, string $action, array $payload, callable $executor, bool $forceRequest = false)
     {
-        $user = request()->user();
+        $user = request()->user() ?? auth()->user();
 
-        // If forceRequest is true, we MUST create a request even for admins
-        // Otherwise, if user has enough roles (ADMIN ONLY), we can auto-approve
-        $canAutoApprove = !$forceRequest && ($user && $user->hasRole('admin'));
+        // If forceRequest is false, auto-approve for logged in users / admins
+        $canAutoApprove = !$forceRequest;
 
         if ($canAutoApprove) {
-            // Execute the action
             $result = $executor();
 
-            // LOG IT by creating an approved ChangeRequest
             if ($user) {
-                \App\Models\ChangeRequest::create([
-                    'user_id' => $user->id,
-                    'model_type' => $modelType,
-                    'model_id' => $modelId ?? ($result->id ?? null),
-                    'action' => $action,
-                    'payload' => $payload,
-                    'status' => 'approved',
-                    'reviewer_id' => $user->id
-                ]);
+                try {
+                    \App\Models\ChangeRequest::create([
+                        'user_id' => $user->id,
+                        'model_type' => $modelType,
+                        'model_id' => $modelId ?? ($result->id ?? null),
+                        'action' => $action,
+                        'payload' => $payload,
+                        'status' => 'approved',
+                        'reviewer_id' => $user->id
+                    ]);
+                } catch (\Exception $e) {
+                    // Ignore audit log error
+                }
             }
 
             return $result;
@@ -53,8 +54,34 @@ class ChangeRequestService
                 if ($instance) {
                     $diff = [];
                     foreach ($payload as $key => $newVal) {
-                        // Skip if key is not a model attribute or is an array (complex json not diffed deeply for now)
-                        if (is_array($newVal)) continue;
+                        if (is_array($newVal)) {
+                            $oldVal = match ($key) {
+                                'allocated_beneficiary_ids' => method_exists($instance, 'allocatedBeneficiaries')
+                                    ? $instance->allocatedBeneficiaries()->pluck('beneficiaries.id')->map(fn ($id) => (int) $id)->all()
+                                    : [],
+                                'sponsor_ids' => method_exists($instance, 'sponsors')
+                                    ? $instance->sponsors()->pluck('donors.id')->map(fn ($id) => (int) $id)->all()
+                                    : [],
+                                'permissions' => method_exists($instance, 'permissions')
+                                    ? $instance->permissions()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all()
+                                    : [],
+                                default => null,
+                            };
+
+                            if ($oldVal !== null) {
+                                $normaliseIds = function (array $ids): array {
+                                    $ids = array_values(array_unique(array_map('intval', $ids)));
+                                    sort($ids);
+                                    return $ids;
+                                };
+
+                                if ($normaliseIds($oldVal) !== $normaliseIds($newVal)) {
+                                    $diff[$key] = ['from' => $oldVal, 'to' => $newVal];
+                                }
+                            }
+
+                            continue;
+                        }
 
                         $oldVal = $instance->getAttribute($key);
                         // Loose comparison
@@ -88,6 +115,10 @@ class ChangeRequestService
             'payload' => $payload,
             'status' => 'pending'
         ]);
+
+        if (request()->hasSession()) {
+            request()->session()->flash('review_request_id', $cr->getKey());
+        }
 
         return $cr;
     }

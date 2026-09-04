@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class Workspace extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HashedRouteKey;
 
     protected $fillable = [
         'name',

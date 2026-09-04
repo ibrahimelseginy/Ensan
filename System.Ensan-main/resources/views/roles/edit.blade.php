@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 <div class="container-fluid">
     {{-- Page Header --}}
@@ -70,10 +70,22 @@
                                         <div class="p-3">
                                             @foreach($perms as $perm)
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input perm-checkbox group-{{ $loop->parent->index }}" type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm_{{ $perm->id }}" 
-                                                        {{ in_array($perm->id, $rolePermissions) ? 'checked' : '' }}>
+                                                    @if($perm->key === 'dashboard.view')
+                                                        <input type="hidden" name="permissions[]" value="{{ $perm->id }}">
+                                                        <input class="form-check-input perm-checkbox group-{{ $loop->parent->index }}"
+                                                            type="checkbox" id="perm_{{ $perm->id }}" checked disabled>
+                                                    @else
+                                                        <input class="form-check-input perm-checkbox group-{{ $loop->parent->index }}"
+                                                            type="checkbox" name="permissions[]" value="{{ $perm->id }}" id="perm_{{ $perm->id }}"
+                                                            @checked(in_array($perm->id, old('permissions', $rolePermissions)))>
+                                                    @endif
                                                     <label class="form-check-label d-block" for="perm_{{ $perm->id }}">
                                                         <span class="fw-medium">{{ $perm->name }}</span>
+                                                        @if($perm->key === 'dashboard.view')
+                                                            <span class="badge bg-primary-subtle text-primary ms-1">أساسية</span>
+                                                        @elseif(str_contains($perm->key, '.manage.'))
+                                                            <span class="badge bg-success-subtle text-success ms-1"><i class="bi bi-pin-angle-fill me-1"></i>مخصصة</span>
+                                                        @endif
                                                         <br>
                                                         <small class="text-muted font-monospace" style="font-size: 0.75rem;">{{ $perm->key }}</small>
                                                     </label>
@@ -95,7 +107,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Select All
         document.getElementById('selectAll').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.perm-checkbox');
+            const checkboxes = document.querySelectorAll('.perm-checkbox:not(:disabled)');
             checkboxes.forEach(cb => cb.checked = this.checked);
             document.querySelectorAll('.group-toggle').forEach(cb => cb.checked = this.checked);
         });
@@ -104,7 +116,7 @@
         document.querySelectorAll('.group-toggle').forEach(toggle => {
             toggle.addEventListener('change', function() {
                 const group = this.dataset.group;
-                document.querySelectorAll('.' + group).forEach(cb => cb.checked = this.checked);
+                document.querySelectorAll('.' + group + ':not(:disabled)').forEach(cb => cb.checked = this.checked);
             });
         });
     });

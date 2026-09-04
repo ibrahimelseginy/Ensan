@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,7 +42,7 @@
                                 <span class="badge bg-secondary-subtle text-secondary">{{ $p->month }}</span>
                             </td>
                             <td>
-                                <span class="fw-bold">{{ number_format($p->amount, 2) }}</span>
+                                <span class="fw-bold">{{ number_format($p->amount, 0) }}</span>
                                 <small class="text-muted ms-1">{{ $p->currency }}</small>
                             </td>
                             <td>

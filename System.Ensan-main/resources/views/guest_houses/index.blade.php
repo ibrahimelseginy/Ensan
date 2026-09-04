@@ -1,5 +1,9 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .guest-house-solid-card { background:#fff !important; backdrop-filter:none !important; }
+    .theme-dark .guest-house-solid-card { background:#111827 !important; }
+</style>
 
 <div class="guest-house-system-container animate-fade-in">
     {{-- Premium Dashboard Hero --}}
@@ -24,7 +28,7 @@
         {{-- Stats Bar --}}
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="glass-card guest-house-solid-card p-3 d-flex align-items-center gap-3">
                     <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle">
                         <i class="bi bi-building fs-4"></i>
                     </div>
@@ -35,7 +39,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="glass-card guest-house-solid-card p-3 d-flex align-items-center gap-3">
                     <div class="bg-success bg-opacity-10 text-success p-3 rounded-circle">
                         <i class="bi bi-check-circle fs-4"></i>
                     </div>
@@ -46,7 +50,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                <div class="glass-card guest-house-solid-card p-3 d-flex align-items-center gap-3">
                     <div class="bg-info bg-opacity-10 text-info p-3 rounded-circle">
                         <i class="bi bi-people fs-4"></i>
                     </div>
@@ -59,23 +63,27 @@
         </div>
 
         {{-- Filter Bar --}}
-        <div class="glass-container p-4 mb-4">
+        <div class="glass-container guest-house-solid-card p-4 mb-4">
             <form method="GET">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold text-muted small">بحث بالاسم أو الموقع</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                             <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="اسم الدار، المدينة، أو العنوان...">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fw-bold text-muted small">حالة الدار</label>
                         <select name="status" class="form-select">
                             <option value="">الكل</option>
                             <option value="active" @selected(($status ?? '') === 'active')>نشط</option>
                             <option value="archived" @selected(($status ?? '') === 'archived')>مؤرشف</option>
                         </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">المحافظة</label>
+                        <select name="governorate" class="form-select"><option value="">كل المحافظات</option><option value="كفر الشيخ" @selected(($governorate ?? '')==='كفر الشيخ')>كفر الشيخ</option><option value="الغربية" @selected(($governorate ?? '')==='الغربية')>الغربية</option></select>
                     </div>
                     <div class="col-md-3">
                         <button class="btn btn-primary w-100 fw-bold rounded-pill">
@@ -90,7 +98,7 @@
         <div class="row g-4">
             @forelse($houses as $h)
             <div class="col-md-6 col-xl-4">
-                <div class="glass-card h-100 hover-lift border-0 shadow-sm p-0 overflow-hidden">
+                <div class="glass-card guest-house-solid-card h-100 hover-lift border-0 shadow-sm p-0 overflow-hidden">
                     <div class="p-4 d-flex align-items-center justify-content-between border-bottom">
                         <div class="d-flex align-items-center gap-3">
                             <div class="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm" style="width: 54px; height: 54px;">
@@ -98,7 +106,7 @@
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-0 text-main">{{ $h->name }}</h6>
-                                <div class="text-muted x-small"><i class="bi bi-geo-alt me-1"></i>{{ $h->location ?? 'غير محدد' }}</div>
+                                <div class="text-muted x-small"><i class="bi bi-geo-alt me-1"></i>{{ $h->governorate ?: 'غير محدد' }}{{ $h->location ? ' · '.$h->location : '' }}</div>
                             </div>
                         </div>
                         <span class="badge rounded-pill px-3 py-2 {{ $h->status === 'active' ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary' }} fw-bold x-small">
@@ -109,12 +117,12 @@
                     <div class="p-4">
                         <div class="row g-3 mb-4">
                             <div class="col-6">
-                                <div class="small text-muted mb-1">السعة الاستيعابية</div>
-                                <div class="fw-bold"><i class="bi bi-people text-primary me-2"></i>{{ $h->capacity ?? '—' }} فرد</div>
+                                <div class="small text-muted mb-1">الأجنحة والأسِرّة</div>
+                                <div class="fw-bold"><i class="bi bi-hospital-bed text-primary me-2"></i>{{ $h->wings_count }} جناح · {{ $h->beds_count }} سرير</div>
                             </div>
                             <div class="col-6">
-                                <div class="small text-muted mb-1">رقم الهاتف</div>
-                                <div class="fw-bold"><i class="bi bi-telephone text-primary me-2"></i>{{ $h->phone ?? '—' }}</div>
+                                <div class="small text-muted mb-1">المقيمون حاليًا</div>
+                                <div class="fw-bold"><i class="bi bi-people text-primary me-2"></i>{{ $h->resident_stays_count }} مقيم</div>
                             </div>
                             @if($h->manager)
                             <div class="col-12">

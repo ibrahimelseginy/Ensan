@@ -61,7 +61,7 @@ final class RoleWebController extends Controller
 
     public function show(Role $role): View
     {
-        $role->load('permissions');
+        $role->load('permissions')->loadCount('users');
         $permissions = $this->roleService->getGroupedRolePermissions($role);
 
         return view('roles.show', compact('role', 'permissions'));

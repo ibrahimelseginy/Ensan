@@ -1,4 +1,4 @@
-﻿<style>
+<style>
     /* Robust Solid Dark Theme for Project Modals */
 .modal-premium-dark .modal-header, 
     .modal-premium-dark .modal-footer,
@@ -277,7 +277,7 @@
                                                     <div class="col-md-6">
                                                         <div class="input-group input-group-sm">
                                                             @if(!empty($feature['icon']))
-                                                                <span class="input-group-text bg-slate-800 border-secondary"><img src="{{ asset('storage/' . $feature['icon']) }}" style="width: 16px;"></span>
+                                                                <span class="input-group-text bg-slate-800 border-secondary"><img src="{{ app(\App\Services\ImageUploadService::class)->url($feature['icon']) }}" style="width: 16px;"></span>
                                                             @endif
                                                             <input type="file" name="features[{{ $fIdx }}][icon_file]" class="form-control ws-input">
                                                             <input type="hidden" name="features[{{ $fIdx }}][icon]" value="{{ $feature['icon'] ?? '' }}">
@@ -309,7 +309,7 @@
                                                     <div class="col-md-5">
                                                         <div class="input-group input-group-sm">
                                                             @if(!empty($stat['icon']))
-                                                                <span class="input-group-text bg-slate-800 border-secondary"><img src="{{ asset('storage/' . $stat['icon']) }}" style="width: 16px;"></span>
+                                                                <span class="input-group-text bg-slate-800 border-secondary"><img src="{{ app(\App\Services\ImageUploadService::class)->url($stat['icon']) }}" style="width: 16px;"></span>
                                                             @endif
                                                             <input type="file" name="stats[{{ $sIdx }}][icon_file]" class="form-control ws-input">
                                                             <input type="hidden" name="stats[{{ $sIdx }}][icon]" value="{{ $stat['icon'] ?? '' }}">

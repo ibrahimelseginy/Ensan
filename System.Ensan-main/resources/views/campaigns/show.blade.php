@@ -1,4 +1,17 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
+@section('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    <style>
+        #beneficiaryForm .select2-container { width: 100% !important; direction: rtl; }
+        #beneficiaryForm .select2-container--bootstrap-5 .select2-selection--multiple { min-height: 42px; }
+        #beneficiaryForm .select2-container--bootstrap-5 .select2-selection__choice {
+            background: var(--primary) !important;
+            color: #fff !important;
+            border: 0 !important;
+        }
+    </style>
+@endsection
 @section('content')
     <style>
         .gh-metric-card {
@@ -184,6 +197,16 @@
             </div>
         </div>
         <div class="btn-group">
+            @if(request()->user()?->hasPermission('donations.view'))
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#campaignDonationModal">
+                    <i class="bi bi-cash-coin me-1"></i> إضافة تبرع
+                </button>
+            @endif
+            @if(request()->user()?->hasPermission('expenses.view'))
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#campaignExpenseModal">
+                    <i class="bi bi-receipt me-1"></i> إضافة مصروف
+                </button>
+            @endif
             @if(\App\Models\ChangeRequest::where('model_type', \App\Models\Campaign::class)->where('model_id', $campaign->id)->where('status', 'pending')->exists())
                 <span class="badge bg-warning bg-opacity-10 text-warning d-flex align-items-center px-3 py-1 rounded-pill small">
                     <i class="bi bi-hourglass-split me-1"></i> قيد المراجعة
@@ -462,28 +485,143 @@
                         <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">إضافة مستفيد</button>
                     </div>
                     
-                    <div class="collapse mb-4" id="beneficiaryForm">
-                        <form method="POST" action="{{ route('campaigns.storeBeneficiaryFile', $campaign) }}" class="bg-body-tertiary p-3 rounded shadow-sm">
+                    <div @class(['collapse mb-4', 'show' => old('form_context') === 'beneficiary']) id="beneficiaryForm">
+                        <form method="POST" action="{{ route('campaigns.storeBeneficiaryFile', $campaign) }}" class="bg-body-tertiary p-4 rounded shadow-sm">
                             @csrf
+                            <input type="hidden" name="form_context" value="beneficiary">
+
+                            <div class="form-section mb-4">
+                                <div class="form-section-title">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                    <span>البيانات الشخصية</span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">كود المستفيد</label>
+                                        <input name="code" class="form-control @error('code') is-invalid @enderror"
+                                            value="{{ old('code') }}"
+                                            placeholder="مثال: A-101 (يترك فارغاً للتوليد التلقائي)">
+                                        <div class="form-help-text">يترك فارغاً وسيتم إنشاؤه تلقائياً</div>
+                                        @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label form-label-required">الاسم الكامل</label>
+                                        <input name="full_name" class="form-control @error('full_name') is-invalid @enderror"
+                                            value="{{ old('full_name') }}" required placeholder="أدخل الاسم بالعربية">
+                                        @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">الرقم القومي</label>
+                                        <input name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                            value="{{ old('national_id') }}"
+                                            pattern="^[23]\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{7}$"
+                                            title="الرقم القومي 14 رقم بصيغة صحيحة" placeholder="14 رقم">
+                                        <div class="form-help-text">الرقم القومي المصري المكون من 14 رقم</div>
+                                        @error('national_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">رقم الهاتف</label>
+                                        <input name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                            value="{{ old('phone') }}" pattern="^(01[0125]\d{8}|\+?201[0125]\d{8})$"
+                                            title="ابدأ بـ 010 أو 011 أو 012 أو 015" placeholder="01xxxxxxxxx">
+                                        @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">العنوان</label>
+                                        <input name="address" class="form-control @error('address') is-invalid @enderror"
+                                            value="{{ old('address') }}" placeholder="العنوان بالتفصيل">
+                                        @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            @php
+                                $selectedAllocatedBeneficiaries = array_map('intval', old('allocated_beneficiary_ids', []));
+                                $selectedSponsors = array_map('intval', old('sponsor_ids', []));
+                            @endphp
+                            <div class="form-section mb-4">
+                                <div class="form-section-title">
+                                    <i class="bi bi-hand-thumbs-up"></i>
+                                    <span>نوع المساعدة والتخصيص</span>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label form-label-required">نوع المساعدة</label>
+                                        <select name="assistance_type" class="form-select @error('assistance_type') is-invalid @enderror" required>
+                                            <option value="financial" @selected(old('assistance_type', 'financial') === 'financial')>مالية</option>
+                                            <option value="in_kind" @selected(old('assistance_type') === 'in_kind')>عينية</option>
+                                            <option value="service" @selected(old('assistance_type') === 'service')>خدمية</option>
+                                        </select>
+                                        @error('assistance_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">نوع التخصيص</label>
+                                        <select id="campaign-allocation-type" name="allocation_type" class="form-select @error('allocation_type') is-invalid @enderror">
+                                            <option value="">— اختر النوع —</option>
+                                            <option value="شخص واحد" @selected(old('allocation_type') === 'شخص واحد')>شخص واحد</option>
+                                            <option value="أكثر من مستفيد" @selected(old('allocation_type') === 'أكثر من مستفيد')>أكثر من مستفيد</option>
+                                        </select>
+                                        @error('allocation_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">التخصيص لكل طفل</label>
+                                        <select id="campaign-child-sponsorship-type" name="child_sponsorship_type" class="form-select @error('child_sponsorship_type') is-invalid @enderror">
+                                            <option value="">— اختر النوع —</option>
+                                            <option value="كافل واحد" @selected(old('child_sponsorship_type') === 'كافل واحد')>كافل واحد</option>
+                                            <option value="أكثر من كافل" @selected(old('child_sponsorship_type') === 'أكثر من كافل')>أكثر من كافل</option>
+                                        </select>
+                                        @error('child_sponsorship_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div id="campaign-allocated-beneficiaries-field"
+                                        class="col-md-6 {{ old('allocation_type') ? '' : 'd-none' }}">
+                                        <label id="campaign-allocated-beneficiaries-label" class="form-label">اختر المستفيد / المستفيدين</label>
+                                        <select id="campaign-allocated-beneficiaries" name="allocated_beneficiary_ids[]"
+                                            class="form-select @error('allocated_beneficiary_ids') is-invalid @enderror" multiple>
+                                            <option value="" data-placeholder>— اختر المستفيد / المستفيدين —</option>
+                                            @foreach($beneficiaryOptions as $option)
+                                                <option value="{{ $option->id }}" @selected(in_array((int) $option->id, $selectedAllocatedBeneficiaries, true))>
+                                                    {{ $option->full_name }}{{ $option->code ? ' — ' . $option->code : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div id="campaign-allocated-beneficiaries-help" class="form-help-text"></div>
+                                        @error('allocated_beneficiary_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div id="campaign-sponsors-field" class="col-md-6 {{ old('child_sponsorship_type') ? '' : 'd-none' }}">
+                                        <label id="campaign-sponsors-label" class="form-label">اختر الكافل / الكفلاء</label>
+                                        <select id="campaign-sponsors-list" name="sponsor_ids[]"
+                                            class="form-select @error('sponsor_ids') is-invalid @enderror" multiple>
+                                            <option value="" data-placeholder>— اختر الكافل / الكفلاء —</option>
+                                            @foreach($sponsors as $sponsor)
+                                                <option value="{{ $sponsor->id }}" @selected(in_array((int) $sponsor->id, $selectedSponsors, true))>
+                                                    {{ $sponsor->name }}{{ $sponsor->phone ? ' — ' . $sponsor->phone : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div id="campaign-sponsors-help" class="form-help-text"></div>
+                                        @error('sponsor_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label small">اسم المستفيد</label>
-                                    <input type="text" name="full_name" class="form-control form-control-sm" required>
+                                <div class="col-12">
+                                    <div class="form-section-title">
+                                        <i class="bi bi-pencil-square"></i>
+                                        <span>ملاحظات</span>
+                                    </div>
+                                    <label class="form-label">ملاحظات داخلية</label>
+                                    <textarea name="notes" class="form-control @error('notes') is-invalid @enderror" rows="3"
+                                        placeholder="أضف أي ملاحظات إضافية...">{{ old('notes') }}</textarea>
+                                    @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">رقم التلفون</label>
-                                    <input type="text" name="phone" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">المساعدة</label>
-                                    <input type="text" name="assistance_type" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">ملاحظات</label>
-                                    <input type="text" name="notes" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button class="btn btn-primary btn-sm px-4">حفظ المستفيد</button>
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">
+                                        <i class="bi bi-x-lg me-1"></i> إلغاء
+                                    </button>
+                                    <button class="btn btn-primary px-4">
+                                        <i class="bi bi-check-lg me-1"></i> حفظ المستفيد
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -550,7 +688,11 @@
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">المساعدة</label>
-                                            <input type="text" name="assistance_type" class="form-control form-control-sm" value="{{ $ben->assistance_type }}">
+                                            <select name="assistance_type" class="form-select form-select-sm" required>
+                                                <option value="financial" @selected($ben->assistance_type === 'financial')>مالية</option>
+                                                <option value="in_kind" @selected($ben->assistance_type === 'in_kind')>عينية</option>
+                                                <option value="service" @selected($ben->assistance_type === 'service')>خدمية</option>
+                                            </select>
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">ملاحظات</label>
@@ -691,6 +833,311 @@
 
         </div>
     </div>
+
+    @if(request()->user()?->hasPermission('donations.view'))
+        <div class="modal fade" id="campaignDonationModal" tabindex="-1" aria-labelledby="campaignDonationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <form class="modal-content" method="POST" action="{{ route('campaigns.storeDonation', $campaign) }}">
+                    @csrf
+                    <input type="hidden" name="form_context" value="campaign_donation">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title" id="campaignDonationModalLabel">
+                                <i class="bi bi-cash-coin text-success me-1"></i> إضافة تبرع للحملة
+                            </h5>
+                            <div class="small text-muted mt-1">{{ $campaign->name }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($campaignDonationTreasuries->isEmpty())
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                لا توجد خزينة مفعّلة لاستلام تبرع نقدي حاليًا. يمكن تسجيل تبرع عيني أو تفعيل خزينة أولاً.
+                            </div>
+                        @endif
+                        <div class="form-section mb-4">
+                            <div class="form-section-title">
+                                <i class="bi bi-person-heart"></i>
+                                <span>بيانات المتبرع</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">طريقة إدخال المتبرع</label>
+                                    <select id="campaign-donor-mode" class="form-select">
+                                        <option value="existing" @selected(!old('new_donor_name'))>اختيار متبرع مسجل</option>
+                                        <option value="new" @selected((bool) old('new_donor_name'))>إضافة متبرع جديد</option>
+                                    </select>
+                                </div>
+                                <div id="campaign-existing-donor-field" class="col-md-6">
+                                    <label class="form-label form-label-required">المتبرع</label>
+                                    <select id="campaign-donor-id" name="donor_id" class="form-select @error('donor_id') is-invalid @enderror">
+                                        <option value="">— اختر المتبرع —</option>
+                                        @foreach($campaignDonors as $donor)
+                                            <option value="{{ $donor->id }}" @selected(old('donor_id') == $donor->id)>
+                                                {{ $donor->name }} — {{ $donor->code }}{{ $donor->phone ? ' — ' . $donor->phone : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('donor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div id="campaign-new-donor-fields" class="col-12 d-none">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label">كود المتبرع <span class="badge bg-primary-subtle text-primary">ثابت</span></label>
+                                            <input name="new_donor_code" dir="ltr" class="form-control font-monospace @error('new_donor_code') is-invalid @enderror"
+                                                value="{{ old('new_donor_code') }}" placeholder="اختياري — يُنشأ تلقائيًا عند تركه فارغًا">
+                                            @error('new_donor_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label form-label-required">اسم المتبرع الجديد</label>
+                                            <input id="campaign-new-donor-name" name="new_donor_name"
+                                                class="form-control @error('new_donor_name') is-invalid @enderror"
+                                                value="{{ old('new_donor_name') }}" placeholder="الاسم ثلاثي">
+                                            @error('new_donor_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label form-label-required">رقم الهاتف</label>
+                                            <input id="campaign-new-donor-phone" name="new_donor_phone"
+                                                class="form-control @error('new_donor_phone') is-invalid @enderror"
+                                                value="{{ old('new_donor_phone') }}" placeholder="01xxxxxxxxx">
+                                            @error('new_donor_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">تصنيف المتبرع</label>
+                                            <select id="campaign-new-donor-classification" name="new_donor_classification" class="form-select">
+                                                <option value="one_time" @selected(old('new_donor_classification', 'one_time') === 'one_time')>مرة واحدة</option>
+                                                <option value="recurring" @selected(old('new_donor_classification') === 'recurring')>متكرر</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">دورة التكرار</label>
+                                            <select id="campaign-new-donor-cycle" name="new_donor_cycle" class="form-select">
+                                                <option value="">— اختر —</option>
+                                                <option value="monthly" @selected(old('new_donor_cycle') === 'monthly')>شهري</option>
+                                                <option value="yearly" @selected(old('new_donor_cycle') === 'yearly')>سنوي</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-wallet2"></i>
+                                <span>بيانات التبرع</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">نوع التبرع</label>
+                                    <select id="campaign-donation-type" name="type" class="form-select @error('type') is-invalid @enderror" required>
+                                        <option value="cash" @selected(old('type', 'cash') === 'cash')>نقدي</option>
+                                        <option value="in_kind" @selected(old('type') === 'in_kind')>عيني</option>
+                                    </select>
+                                    @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">تاريخ الاستلام</label>
+                                    <input type="date" name="received_at" class="form-control @error('received_at') is-invalid @enderror"
+                                        value="{{ old('received_at', now()->toDateString()) }}">
+                                    @error('received_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="col-md-6 campaign-donation-cash-field">
+                                    <label class="form-label form-label-required">المبلغ</label>
+                                    <div class="input-group">
+                                        <input id="campaign-donation-amount" name="amount" type="number" step="0.01" min="0.01"
+                                            class="form-control @error('amount') is-invalid @enderror" value="{{ old('amount') }}" placeholder="0.00">
+                                        <select name="currency" class="form-select" style="max-width: 110px">
+                                            @foreach(['EGP', 'USD', 'EUR', 'SAR'] as $currency)
+                                                <option value="{{ $currency }}" @selected(old('currency', 'EGP') === $currency)>{{ $currency }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6 campaign-donation-cash-field">
+                                    <label class="form-label form-label-required">طريقة الدفع</label>
+                                    <select id="campaign-donation-cash-channel" name="cash_channel" class="form-select @error('cash_channel') is-invalid @enderror">
+                                        <option value="cash" @selected(old('cash_channel', 'cash') === 'cash')>نقدي</option>
+                                        <option value="instapay" @selected(old('cash_channel') === 'instapay')>إنستا باي</option>
+                                        <option value="vodafone_cash" @selected(old('cash_channel') === 'vodafone_cash')>فودافون كاش</option>
+                                        <option value="delegate" @selected(old('cash_channel') === 'delegate')>مندوب</option>
+                                    </select>
+                                    @error('cash_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6 campaign-donation-cash-field">
+                                    <label class="form-label form-label-required">رقم الإيصال</label>
+                                    <input id="campaign-donation-receipt" name="receipt_number"
+                                        class="form-control @error('receipt_number') is-invalid @enderror"
+                                        value="{{ old('receipt_number') }}" placeholder="مثال: RC-2026-000123">
+                                    @error('receipt_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6 campaign-donation-cash-field">
+                                    <label class="form-label form-label-required">الخزينة</label>
+                                    <select id="campaign-donation-treasury" name="treasury_id" class="form-select @error('treasury_id') is-invalid @enderror">
+                                        <option value="">— اختر الخزينة —</option>
+                                        @foreach($campaignDonationTreasuries as $treasury)
+                                            <option value="{{ $treasury->id }}" @selected(old('treasury_id') == $treasury->id)>
+                                                {{ $treasury->name }} — {{ number_format((float) $treasury->current_balance, 2) }} {{ $treasury->currency }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('treasury_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="col-md-6 campaign-donation-in-kind-field d-none">
+                                    <label class="form-label form-label-required">القيمة التقديرية</label>
+                                    <div class="input-group">
+                                        <input id="campaign-donation-estimated-value" name="estimated_value" type="number" step="0.01" min="0.01"
+                                            class="form-control @error('estimated_value') is-invalid @enderror" value="{{ old('estimated_value') }}">
+                                        <span class="input-group-text">EGP</span>
+                                    </div>
+                                    @error('estimated_value')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6 campaign-donation-in-kind-field d-none">
+                                    <label class="form-label form-label-required">المخزن</label>
+                                    <select id="campaign-donation-warehouse" name="warehouse_id" class="form-select @error('warehouse_id') is-invalid @enderror">
+                                        <option value="">— اختر المخزن —</option>
+                                        @foreach($campaignWarehouses as $warehouse)
+                                            <option value="{{ $warehouse->id }}" @selected(old('warehouse_id') == $warehouse->id)>{{ $warehouse->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('warehouse_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">ملاحظات التخصيص</label>
+                                    <textarea name="allocation_note" class="form-control @error('allocation_note') is-invalid @enderror"
+                                        rows="2" placeholder="أي تفاصيل إضافية عن تخصيص التبرع...">{{ old('allocation_note') }}</textarea>
+                                    @error('allocation_note')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> حفظ التبرع
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    @if(request()->user()?->hasPermission('expenses.view'))
+        <div class="modal fade" id="campaignExpenseModal" tabindex="-1" aria-labelledby="campaignExpenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <form class="modal-content" method="POST" action="{{ route('campaigns.storeExpense', $campaign) }}">
+                    @csrf
+                    <input type="hidden" name="form_context" value="campaign_expense">
+                    <input type="hidden" name="currency" value="EGP">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title" id="campaignExpenseModalLabel">
+                                <i class="bi bi-receipt text-danger me-1"></i> إضافة مصروف للحملة
+                            </h5>
+                            <div class="small text-muted mt-1">{{ $campaign->name }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($campaignExpenseTreasuries->isEmpty())
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                لا توجد خزينة متاحة للصرف. يجب إنشاء أو تفعيل خزينة أولاً.
+                            </div>
+                        @endif
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-info-circle"></i>
+                                <span>بيانات المصروف</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">نوع المصروف</label>
+                                    <select name="type" class="form-select @error('type') is-invalid @enderror" required>
+                                        <option value="operational" @selected(old('type', 'operational') === 'operational')>تشغيلي</option>
+                                        <option value="aid" @selected(old('type') === 'aid')>مساعدات</option>
+                                        <option value="logistics" @selected(old('type') === 'logistics')>لوجستي</option>
+                                    </select>
+                                    @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">البند الفرعي</label>
+                                    <input list="campaignExpenseCategoryOptions" name="category"
+                                        class="form-control @error('category') is-invalid @enderror"
+                                        value="{{ old('category') }}" placeholder="اختر أو اكتب...">
+                                    <datalist id="campaignExpenseCategoryOptions">
+                                        <option value="إطعام">
+                                        <option value="مشتريات">
+                                        <option value="نقل ومواصلات">
+                                        <option value="دعاية وتسويق">
+                                        <option value="نثريات">
+                                        <option value="صيانة">
+                                    </datalist>
+                                    @error('category')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">المبلغ</label>
+                                    <div class="input-group">
+                                        <input name="amount" type="number" step="0.01" min="0.01" required
+                                            class="form-control @error('amount') is-invalid @enderror"
+                                            value="{{ old('amount') }}" placeholder="0.00">
+                                        <span class="input-group-text">EGP</span>
+                                    </div>
+                                    @error('amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">الخزينة (مصدر الصرف)</label>
+                                    <select name="treasury_id" class="form-select @error('treasury_id') is-invalid @enderror" required>
+                                        <option value="">— اختر الخزينة —</option>
+                                        @foreach($campaignExpenseTreasuries as $treasury)
+                                            <option value="{{ $treasury->id }}" @selected(old('treasury_id') == $treasury->id)>
+                                                {{ $treasury->name }} — الرصيد: {{ number_format((float) $treasury->current_balance, 2) }} {{ $treasury->currency }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('treasury_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">المستفيد (اختياري)</label>
+                                    <select name="beneficiary_id" class="form-select @error('beneficiary_id') is-invalid @enderror">
+                                        <option value="">— بدون مستفيد محدد —</option>
+                                        @foreach($campaignBeneficiaryOptions as $beneficiaryOption)
+                                            <option value="{{ $beneficiaryOption->id }}" @selected(old('beneficiary_id') == $beneficiaryOption->id)>
+                                                {{ $beneficiaryOption->full_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('beneficiary_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">تاريخ الصرف</label>
+                                    <input type="date" name="paid_at" class="form-control @error('paid_at') is-invalid @enderror"
+                                        value="{{ old('paid_at', now()->toDateString()) }}">
+                                    @error('paid_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">وصف المصروف</label>
+                                    <textarea name="description" class="form-control @error('description') is-invalid @enderror"
+                                        rows="3" placeholder="أضف تفاصيل المصروف...">{{ old('description') }}</textarea>
+                                    @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-danger" @disabled($campaignExpenseTreasuries->isEmpty())>
+                            <i class="bi bi-check-lg me-1"></i> حفظ المصروف
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     <!-- Manager Modal -->
     <div class="modal fade" id="managerModal" tabindex="-1">
@@ -879,5 +1326,193 @@
             </form>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const $ = window.jQuery;
+            const hasSelect2 = Boolean($ && $.fn && $.fn.select2);
+
+            if (hasSelect2) {
+                $('#campaign-allocation-type, #campaign-child-sponsorship-type').select2({
+                    theme: 'bootstrap-5',
+                    dir: 'rtl',
+                    width: '100%',
+                    allowClear: true,
+                    minimumResultsForSearch: 0,
+                    placeholder: 'ابحث واختر النوع...'
+                });
+            }
+
+            function configurePeopleList(config) {
+                const typeSelect = document.getElementById(config.typeSelectId);
+                const field = document.getElementById(config.fieldId);
+                const list = document.getElementById(config.listId);
+                const label = document.getElementById(config.labelId);
+                const help = document.getElementById(config.helpId);
+
+                if (!typeSelect || !field || !list) return;
+
+                function updateList() {
+                    const isActive = typeSelect.value === config.singleType || typeSelect.value === config.multipleType;
+                    const isMultiple = typeSelect.value === config.multipleType;
+
+                    if (hasSelect2 && $(list).hasClass('select2-hidden-accessible')) {
+                        $(list).select2('destroy');
+                    }
+
+                    field.classList.toggle('d-none', !isActive);
+                    list.disabled = !isActive;
+                    list.required = isActive;
+                    list.multiple = isMultiple;
+                    list.size = isMultiple ? Math.min(6, Math.max(2, list.options.length)) : 1;
+
+                    const placeholder = list.querySelector('[data-placeholder]');
+                    if (placeholder) {
+                        placeholder.disabled = isMultiple;
+                        if (isMultiple) placeholder.selected = false;
+                    }
+
+                    label.textContent = isMultiple ? config.multipleLabel : config.singleLabel;
+                    help.textContent = isMultiple ? 'يمكنك اختيار أكثر من اسم من القائمة.' : '';
+
+                    if (!isActive) {
+                        Array.from(list.options).forEach(option => option.selected = false);
+                    } else if (!isMultiple && list.selectedOptions.length > 1) {
+                        Array.from(list.selectedOptions).slice(1).forEach(option => option.selected = false);
+                    }
+
+                    if (isActive && hasSelect2) {
+                        $(list).select2({
+                            theme: 'bootstrap-5',
+                            dir: 'rtl',
+                            width: '100%',
+                            allowClear: !isMultiple,
+                            closeOnSelect: !isMultiple,
+                            minimumResultsForSearch: 0,
+                            placeholder: isMultiple ? config.multipleLabel : config.singleLabel
+                        });
+                    }
+                }
+
+                typeSelect.addEventListener('change', updateList);
+                if (hasSelect2) {
+                    $(typeSelect).on('change select2:select select2:clear', updateList);
+                }
+                updateList();
+            }
+
+            configurePeopleList({
+                typeSelectId: 'campaign-allocation-type',
+                fieldId: 'campaign-allocated-beneficiaries-field',
+                listId: 'campaign-allocated-beneficiaries',
+                labelId: 'campaign-allocated-beneficiaries-label',
+                helpId: 'campaign-allocated-beneficiaries-help',
+                singleType: 'شخص واحد',
+                multipleType: 'أكثر من مستفيد',
+                singleLabel: 'اختر المستفيد',
+                multipleLabel: 'اختر المستفيدين'
+            });
+
+            configurePeopleList({
+                typeSelectId: 'campaign-child-sponsorship-type',
+                fieldId: 'campaign-sponsors-field',
+                listId: 'campaign-sponsors-list',
+                labelId: 'campaign-sponsors-label',
+                helpId: 'campaign-sponsors-help',
+                singleType: 'كافل واحد',
+                multipleType: 'أكثر من كافل',
+                singleLabel: 'اختر الكافل',
+                multipleLabel: 'اختر الكفلاء'
+            });
+
+            const donorMode = document.getElementById('campaign-donor-mode');
+            const existingDonorField = document.getElementById('campaign-existing-donor-field');
+            const donorId = document.getElementById('campaign-donor-id');
+            const newDonorFields = document.getElementById('campaign-new-donor-fields');
+            const newDonorName = document.getElementById('campaign-new-donor-name');
+            const newDonorPhone = document.getElementById('campaign-new-donor-phone');
+
+            function updateDonorMode() {
+                if (!donorMode) return;
+
+                const isNew = donorMode.value === 'new';
+                existingDonorField?.classList.toggle('d-none', isNew);
+                newDonorFields?.classList.toggle('d-none', !isNew);
+
+                if (donorId) {
+                    donorId.disabled = isNew;
+                    donorId.required = !isNew;
+                    if (isNew) donorId.value = '';
+                }
+
+                newDonorFields?.querySelectorAll('input, select').forEach(function (field) {
+                    field.disabled = !isNew;
+                });
+                if (newDonorName) newDonorName.required = isNew;
+                if (newDonorPhone) newDonorPhone.required = isNew;
+            }
+
+            donorMode?.addEventListener('change', updateDonorMode);
+            updateDonorMode();
+
+            const donationType = document.getElementById('campaign-donation-type');
+            const cashFields = document.querySelectorAll('.campaign-donation-cash-field');
+            const inKindFields = document.querySelectorAll('.campaign-donation-in-kind-field');
+            const cashRequiredIds = [
+                'campaign-donation-amount',
+                'campaign-donation-cash-channel',
+                'campaign-donation-receipt',
+                'campaign-donation-treasury'
+            ];
+            const inKindRequiredIds = [
+                'campaign-donation-estimated-value',
+                'campaign-donation-warehouse'
+            ];
+
+            function setFinanceFieldsState(fields, active) {
+                fields.forEach(function (container) {
+                    container.classList.toggle('d-none', !active);
+                    container.querySelectorAll('input, select, textarea').forEach(function (field) {
+                        field.disabled = !active;
+                    });
+                });
+            }
+
+            function updateDonationType() {
+                if (!donationType) return;
+
+                const isCash = donationType.value === 'cash';
+                setFinanceFieldsState(cashFields, isCash);
+                setFinanceFieldsState(inKindFields, !isCash);
+                cashRequiredIds.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (field) field.required = isCash;
+                });
+                inKindRequiredIds.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (field) field.required = !isCash;
+                });
+            }
+
+            donationType?.addEventListener('change', updateDonationType);
+            updateDonationType();
+
+            const previousFormContext = @json(old('form_context'));
+            const modalId = previousFormContext === 'campaign_donation'
+                ? 'campaignDonationModal'
+                : (previousFormContext === 'campaign_expense' ? 'campaignExpenseModal' : null);
+
+            if (modalId && window.bootstrap) {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                }
+            }
+        });
+    </script>
 @endsection
 

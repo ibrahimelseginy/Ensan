@@ -31,6 +31,8 @@ final class PurchaseWebController extends Controller
 
     public function destroy(Supplier $supplier, Purchase $purchase): RedirectResponse
     {
+        abort_unless($purchase->supplier_id === $supplier->id, 404);
+
         $result = $this->purchaseService->deletePurchase($purchase);
 
         if ($result instanceof ChangeRequest) {

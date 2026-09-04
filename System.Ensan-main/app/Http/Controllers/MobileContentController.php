@@ -35,7 +35,7 @@ final class MobileContentController extends Controller
     public function bannerStore(Request $request)
     {
         $data = $request->validate([
-            'image' => 'required|image|max:5120',
+            'image' => 'required|any_image|max:5120',
             'title' => 'nullable|string',
             'link_type' => 'nullable|string',
             'link_id' => 'nullable|string',
@@ -153,7 +153,7 @@ final class MobileContentController extends Controller
         $campaigns = MobileHomeItem::where('type', 'campaign')->orderBy('sort_order')->get();
         $finalSection = MobileHomeItem::where('type', 'final')->first();
         $aboutUs = MobileHomeItem::where('type', 'about_us')->first();
-        
+
         $pillars = EnsanPillar::with(['projects', 'services'])->orderBy('sort_order')->get();
         $allProjects = Project::where('show_on_mobile', true)->get();
         $serviceItems = MobileHomeItem::where('type', 'service')->orderBy('sort_order')->get();
@@ -167,7 +167,7 @@ final class MobileContentController extends Controller
             'type' => 'required|string',
             'title' => 'nullable|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'icon' => 'nullable|nullable', // Keep validation simple, handle as file if present
             'price' => 'nullable|numeric',
             'share_price' => 'nullable|numeric',
@@ -176,7 +176,7 @@ final class MobileContentController extends Controller
             'cards' => 'nullable|array',
             'cards.*.title' => 'nullable|string',
             'cards.*.description' => 'nullable|string',
-            'cards.*.image' => 'nullable|image|max:5120'
+            'cards.*.image' => 'nullable|any_image|max:5120'
         ]);
 
         if ($request->hasFile('icon')) {
@@ -217,7 +217,7 @@ final class MobileContentController extends Controller
         $data = $request->validate([
             'title' => 'nullable|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'icon' => 'nullable|nullable',
             'price' => 'nullable|numeric',
             'share_price' => 'nullable|numeric',
@@ -227,7 +227,7 @@ final class MobileContentController extends Controller
             'cards.*.id' => 'nullable|integer',
             'cards.*.title' => 'nullable|string',
             'cards.*.description' => 'nullable|string',
-            'cards.*.image' => 'nullable|image|max:5120'
+            'cards.*.image' => 'nullable|any_image|max:5120'
         ]);
 
         if ($request->hasFile('icon')) {
@@ -342,12 +342,28 @@ final class MobileContentController extends Controller
             'title' => 'required',
             'content' => 'required',
             'category' => 'nullable|in:عام,حملات,تبرعات,عاجل',
-            'image' => 'nullable|image'
+            'image' => 'nullable|image',
+            'additional_images' => 'nullable|array',
+            'additional_images.*' => 'any_image|max:5120'
         ]);
-        $news = \App\Models\MobileNews::create($data);
+
+        $creationData = $data;
+        unset($creationData['additional_images']);
+
+        $news = \App\Models\MobileNews::create($creationData);
         if ($request->hasFile('image')) {
             $news->uploadImage($request->file('image'), 'mobile/news');
         }
+
+        if ($request->hasFile('additional_images')) {
+            $additional = [];
+            foreach ($request->file('additional_images') as $file) {
+                $path = $file->store('mobile/news/gallery', 'public');
+                $additional[] = $path;
+            }
+            $news->update(['additional_images' => $additional]);
+        }
+
         return back()->with('success', 'News added');
     }
 
@@ -357,8 +373,11 @@ final class MobileContentController extends Controller
             'title'                  => 'required|string',
             'content'                => 'required|string',
             'category'               => 'nullable|string|in:عام,حملات,تبرعات,عاجل',
-            'image'                  => 'nullable|image|max:5120',
+            'image'                  => 'nullable|any_image|max:5120',
             'delete_image'           => 'nullable|boolean',
+            'additional_images'      => 'nullable|array',
+            'additional_images.*'    => 'any_image|max:5120',
+            'delete_additional_images'=> 'nullable|boolean',
             'published_at'           => 'nullable|date',
             'views_count'            => 'nullable|string',
             'shares_count'           => 'nullable|string',
@@ -368,7 +387,7 @@ final class MobileContentController extends Controller
             'contact_number'         => 'nullable|string',
         ]);
 
-        unset($data['image'], $data['delete_image']);
+        unset($data['image'], $data['delete_image'], $data['additional_images'], $data['delete_additional_images']);
         $news->update($data);
 
         if ($request->hasFile('image')) {
@@ -376,6 +395,24 @@ final class MobileContentController extends Controller
         } elseif ($request->input('delete_image') == '1' && $news->image_path) {
             Storage::disk('public')->delete($news->image_path);
             $news->update(['image_path' => null]);
+        }
+
+        $currentAdditional = $news->additional_images ?? [];
+
+        if ($request->input('delete_additional_images') == '1') {
+            foreach ($currentAdditional as $path) {
+                Storage::disk('public')->delete($path);
+            }
+            $currentAdditional = [];
+            $news->update(['additional_images' => null]);
+        }
+
+        if ($request->hasFile('additional_images')) {
+            foreach ($request->file('additional_images') as $file) {
+                $path = $file->store('mobile/news/gallery', 'public');
+                $currentAdditional[] = $path;
+            }
+            $news->update(['additional_images' => $currentAdditional]);
         }
 
         return back()->with('success', 'تم تحديث الخبر بنجاح');
@@ -411,11 +448,11 @@ final class MobileContentController extends Controller
     {
         $query = \App\Models\MobileCaseApplication::query();
         $type = $request->get('type');
-        
+
         if ($type) {
             $query->where('case_type', $type);
         }
-        
+
         $applications = $query->orderByDesc('created_at')->get();
         return view('mobile.case_applications', compact('applications', 'type'));
     }
@@ -443,14 +480,14 @@ final class MobileContentController extends Controller
     {
         $oldStatus = $donation->status;
         $newStatus = $request->status;
-        
+
         $donation->update(['status' => $newStatus]);
-        
+
         // If the donation is newly verified, update the project/campaign funding stats
         if ($newStatus === 'verified' && $oldStatus !== 'verified') {
             $this->updateFundingStats($donation);
         }
-        
+
         return back()->with('success', 'Donation status updated');
     }
 
@@ -468,8 +505,8 @@ final class MobileContentController extends Controller
             $target = \App\Models\Project::withoutGlobalScopes()->find($matches[1]);
         } elseif (preg_match('/Campaign ID: (\d+)/i', $targetStr, $matches)) {
             $target = \App\Models\Campaign::find($matches[1]);
-        } 
-        
+        }
+
         // 2. Fallback: Search by exact name
         if (!$target) {
             $target = \App\Models\Project::withoutGlobalScopes()->where('name', trim($targetStr))->first();
@@ -623,15 +660,15 @@ final class MobileContentController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|unique:ensan_pillars,slug',
             'description' => 'nullable|string',
-            'icon' => 'required|image|max:2048',
-            'cover' => 'nullable|image|max:5120',
+            'icon' => 'required|any_image|max:2048',
+            'cover' => 'nullable|any_image|max:5120',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
             'cards' => 'nullable|array',
             'cards.*.title' => 'nullable|string',
             'cards.*.description' => 'nullable|string',
             'cards.*.price' => 'nullable|numeric',
-            'cards.*.image' => 'nullable|image|max:5120'
+            'cards.*.image' => 'nullable|any_image|max:5120'
         ]);
 
         $creationData = $request->except(['icon', 'cover', 'cards']);
@@ -678,8 +715,8 @@ final class MobileContentController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|unique:ensan_pillars,slug,' . $pillar->id,
             'description' => 'nullable|string',
-            'icon' => 'nullable|image|max:2048',
-            'cover' => 'nullable|image|max:5120',
+            'icon' => 'nullable|any_image|max:2048',
+            'cover' => 'nullable|any_image|max:5120',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
             'cards' => 'nullable|array',
@@ -687,7 +724,7 @@ final class MobileContentController extends Controller
             'cards.*.title' => 'nullable|string',
             'cards.*.description' => 'nullable|string',
             'cards.*.price' => 'nullable|numeric',
-            'cards.*.image' => 'nullable|image|max:5120'
+            'cards.*.image' => 'nullable|any_image|max:5120'
         ]);
 
         $updateData = $request->except(['icon', 'cover', 'cards']);
@@ -727,25 +764,25 @@ final class MobileContentController extends Controller
                             'price' => $cardData['price'] ?? $card->price,
                         ]);
                         $submittedCardIds[] = $card->id;
-                        
+
                         if ($request->hasFile("cards.{$index}.image")) {
                             $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/pillars/cards');
                         }
                     }
-                } 
+                }
                 // If it's a new card (skip if totally empty)
                 else {
                     if (empty($cardData['title']) && empty($cardData['description']) && empty($cardData['price']) && !$request->hasFile("cards.{$index}.image")) {
                         continue;
                     }
-                    
+
                     $card = $pillar->cards()->create([
                         'title' => $cardData['title'] ?? null,
                         'description' => $cardData['description'] ?? null,
                         'price' => $cardData['price'] ?? null,
                     ]);
                     $submittedCardIds[] = $card->id;
-                    
+
                     if ($request->hasFile("cards.{$index}.image")) {
                         $card->uploadImage($request->file("cards.{$index}.image"), 'mobile/pillars/cards');
                     }
@@ -779,7 +816,7 @@ final class MobileContentController extends Controller
         }
 
         $applications = \App\Models\MobileCaseApplication::whereIn('id', $ids)->get();
-        
+
         // Use each->delete() to ensure Model Events (and thus file deletion) are triggered
         $applications->each->delete();
 

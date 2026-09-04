@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class Warehouse extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'name',
         'location',

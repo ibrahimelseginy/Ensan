@@ -17,8 +17,8 @@
                 <div class="col-lg-8 animate-reveal-right text-end">
                     <nav aria-label="breadcrumb" class="mb-4 d-flex justify-content-end">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white-50 decoration-none">لوحة التحكم</a></li>
-                            <li class="breadcrumb-item active text-white" aria-current="page">تواصل معنا</li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-stats-main-50 decoration-none">لوحة التحكم</a></li>
+                            <li class="breadcrumb-item active text-stats-main" aria-current="page">تواصل معنا</li>
                         </ol>
                     </nav>
                     <div class="d-flex align-items-center justify-content-end gap-3 mb-3">
@@ -26,8 +26,8 @@
                             <i class="bi bi-mailbox2 ms-2"></i> صندوق الوارد
                         </div>
                     </div>
-                    <h1 class="display-3 fw-800 text-white mb-3 text-end">تواصل معنا</h1>
-                    <p class="lead text-white-50 mb-0 max-w-600 ms-auto me-0 text-end">
+                    <h1 class="display-3 fw-800 text-stats-main mb-3 text-end">تواصل معنا</h1>
+                    <p class="lead text-stats-main-50 mb-0 max-w-600 ms-auto me-0 text-end">
                         متابعة استفسارات ومقترحات زوار الموقع الإلكتروني وإدارة قنوات التواصل المباشرة للجمهور.
                     </p>
                 </div>
@@ -70,7 +70,7 @@
                                                     {{ mb_substr($msg->name, 0, 1) }}
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold text-white mb-1">{{ $msg->name }}</div>
+                                                    <div class="fw-bold text-stats-main mb-1">{{ $msg->name }}</div>
                                                     <div class="x-small text-slate-500 d-flex gap-2">
                                                         <span><i class="bi bi-envelope ms-1"></i>{{ $msg->email }}</span>
                                                         <span><i class="bi bi-phone ms-1"></i>{{ $msg->phone }}</span>
@@ -79,7 +79,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="small fw-bold text-white mb-1">
+                                            <div class="small fw-bold text-stats-main mb-1">
                                                 @if(($msg->subject ?? '') == 'General')
                                                     عام
                                                 @else
@@ -131,7 +131,7 @@
                                                     <div class="glow-pulse"></div>
                                                     <i class="bi bi-mailbox2-flag empty-icon-vibe"></i>
                                                 </div>
-                                                <h5 class="fw-bold text-white mt-4">لا يوجد رسائل حالياً</h5>
+                                                <h5 class="fw-bold text-stats-main mt-4">لا يوجد رسائل حالياً</h5>
                                                 <p class="ws-label">صندوق الوارد الخاص بك فارغ، لم تتصل أي رسائل جديدة.</p>
                                             </div>
                                         </td>
@@ -175,14 +175,14 @@
                             </div>
 
                             {{-- Contact Cards (4 Cards) --}}
-                            <h6 class="fw-bold text-white mb-4"><i class="bi bi-grid-3x3-gap me-2 text-indigo-400"></i> بطاقات التواصل السريع</h6>
+                            <h6 class="fw-bold text-stats-main mb-4"><i class="bi bi-grid-3x3-gap me-2 text-indigo-400"></i> بطاقات التواصل السريع</h6>
                             <div class="row g-4 mb-5">
                                 {{-- Phone Card --}}
                                 <div class="col-xl-4 col-md-6">
                                     <div class="detail-box-lux h-100">
                                         <div class="d-flex align-items-center gap-2 mb-3">
                                             <div class="channel-icon-circle bg-primary bg-opacity-10 text-primary-emphasis"><i class="bi bi-telephone"></i></div>
-                                            <span class="fw-bold text-white">بطاقة الهاتف</span>
+                                            <span class="fw-bold text-stats-main">بطاقة الهاتف</span>
                                         </div>
                                         <div>
                                             <label class="x-small text-slate-500 fw-bold">القيمة (الرقم)</label>
@@ -196,7 +196,7 @@
                                     <div class="detail-box-lux h-100">
                                         <div class="d-flex align-items-center gap-2 mb-3">
                                             <div class="channel-icon-circle bg-indigo-500 bg-opacity-10 text-indigo-400"><i class="bi bi-envelope"></i></div>
-                                            <span class="fw-bold text-white">بطاقة البريد</span>
+                                            <span class="fw-bold text-stats-main">بطاقة البريد</span>
                                         </div>
                                         <div>
                                             <label class="x-small text-slate-500 fw-bold">القيمة (الايميل)</label>
@@ -210,7 +210,7 @@
                                     <div class="detail-box-lux h-100">
                                         <div class="d-flex align-items-center gap-2 mb-3">
                                             <div class="channel-icon-circle bg-success bg-opacity-10 text-success-emphasis"><i class="bi bi-whatsapp"></i></div>
-                                            <span class="fw-bold text-white">بطاقة واتساب</span>
+                                            <span class="fw-bold text-stats-main">بطاقة واتساب</span>
                                         </div>
                                         <div>
                                             <label class="x-small text-slate-500 fw-bold">القيمة (الرقم)</label>
@@ -223,7 +223,7 @@
                             </div>
 
                             {{-- Detailed Info Section --}}
-                            <h6 class="fw-bold text-white mb-4"><i class="bi bi-info-circle me-2 text-indigo-400"></i> تفاصيل بيانات التواصل (العنوان والمواعيد)</h6>
+                            <h6 class="fw-bold text-stats-main mb-4"><i class="bi bi-info-circle me-2 text-indigo-400"></i> تفاصيل بيانات التواصل (العنوان والمواعيد)</h6>
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="label-lux">المقر الرئيسي (العنوان)</label>
@@ -274,7 +274,7 @@
                             </div>
                             <div class="card-body-lux p-4 p-md-5">
                                 {{-- Slider Section --}}
-                                <h6 class="fw-bold text-white mb-4"><i class="bi bi-images me-2 text-indigo-400"></i> معرض الصور (سلايدر)</h6>
+                                <h6 class="fw-bold text-stats-main mb-4"><i class="bi bi-images me-2 text-indigo-400"></i> معرض الصور (سلايدر)</h6>
                                 <div class="row g-4 mb-5">
                                     @for($i = 1; $i <= 10; $i++)
                                     <div class="col-md-4">
@@ -339,14 +339,14 @@
                             {{ mb_substr($msg->name, 0, 1) }}
                         </div>
                         <div class="text-end">
-                            <h5 class="fw-bold text-white mb-1">{{ $msg->name }}</h5>
+                            <h5 class="fw-bold text-stats-main mb-1">{{ $msg->name }}</h5>
                             <p class="mb-0 x-small ws-label">{{ $msg->email }} | {{ $msg->phone }}</p>
                         </div>
                     </div>
 
                     <div class="detail-box-lux mb-4 text-end">
                         <label class="detail-label-sleek">نوع الاستفسار</label>
-                        <div class="detail-content-sleek fs-5 fw-bold text-white">
+                        <div class="detail-content-sleek fs-5 fw-bold text-stats-main">
                             @if(($msg->subject ?? '') == 'General')
                                 عام
                             @else

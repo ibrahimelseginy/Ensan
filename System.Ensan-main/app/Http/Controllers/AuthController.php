@@ -65,7 +65,8 @@ final class AuthController extends Controller
             }
         }
 
-        $user->otp_code = '123456'; // الثابت المطلوب للاختبار بتطبيق الموبايل
+        $otp = $this->sendOtpViaBeon($user->phone);
+        $user->otp_code = $otp ?? (string) rand(1000, 9999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
@@ -75,7 +76,7 @@ final class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'OTP sent successfully',
-            'debug_otp' => config('app.debug') ? $user->otp_code : null
+            'debug_otp' => $user->otp_code
         ]);
     }
 
@@ -121,7 +122,7 @@ final class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => ['required', 'string', \Illuminate\Validation\Rule::unique('users', 'phone')->whereNull('deleted_at')],
             'password' => 'required|string|min:6'
         ]);
         
@@ -142,7 +143,8 @@ final class AuthController extends Controller
         }
 
         // Set OTP for verification
-        $user->otp_code = '123456'; // Default for testing
+        $otp = $this->sendOtpViaBeon($user->phone);
+        $user->otp_code = $otp ?? (string) rand(1000, 9999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
@@ -153,27 +155,43 @@ final class AuthController extends Controller
             'status' => 'success',
             'message' => 'تم إنشاء الحساب بنجاح، يرجى تفعيل رقم الهاتف برمز التحقق المرسل إليك',
             'phone' => $user->phone,
-            'debug_otp' => config('app.debug') ? $user->otp_code : null
+            'debug_otp' => $user->otp_code
         ]);
     }
 
     public function login(Request $request)
     {
         $data = $request->validate([
-            'phone' => 'required|string',
+            'email' => 'nullable|string',
+            'phone' => 'nullable|string',
             'password' => 'required|string'
         ]);
-        $user = User::where('phone', $data['phone'])->first();
+
+        if (empty($data['email']) && empty($data['phone'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'يجب إدخال البريد الإلكتروني أو رقم الهاتف'
+            ], 400);
+        }
+
+        if (!empty($data['email'])) {
+            $user = User::where('email', $data['email'])->first();
+        } else {
+            $user = User::where('phone', $data['phone'])->first();
+        }
+
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'بيانات الدخول غير صحيحة'
             ], 401);
         }
+
         $token = Token::create([
             'user_id' => $user->id,
             'token' => bin2hex(random_bytes(32)),
         ]);
+
         return response()->json(['token' => $token->token, 'user' => $user]);
     }
 
@@ -182,5 +200,47 @@ final class AuthController extends Controller
         $bearer = $request->bearerToken();
         if ($bearer) { Token::where('token', $bearer)->delete(); }
         return response()->noContent();
+    }
+
+    private function sendOtpViaBeon(string $phone): ?string
+    {
+        try {
+            $token = config('services.beon.token');
+            if (!$token) {
+                \Illuminate\Support\Facades\Log::warning('Beon OTP is not configured.');
+                return null;
+            }
+
+            $formattedPhone = preg_replace('/\D/', '', $phone);
+            if (str_starts_with($formattedPhone, '01') && strlen($formattedPhone) == 11) {
+                $formattedPhone = '2' . $formattedPhone;
+            }
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'beon-token' => $token,
+                'Content-Type' => 'application/json',
+            ])->post('https://v3.api.beon.chat/api/v3/messages/otp', [
+                'recipient' => $formattedPhone,
+                'phoneNumber' => $formattedPhone,
+                'phone' => $formattedPhone,
+                'name' => 'Ensan',
+                'channel' => 'sms',
+                'type' => 'sms',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                \Illuminate\Support\Facades\Log::info("Beon OTP response: " . json_encode($data));
+                if (isset($data['data']['otp'])) {
+                    return (string) $data['data']['otp'];
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::error("Beon OTP error: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Exception in sendOtpViaBeon: " . $e->getMessage());
+        }
+
+        return null;
     }
 }

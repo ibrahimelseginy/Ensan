@@ -11,6 +11,11 @@ final class WebEvent extends Model
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];
 
+    protected $attributes = [
+        'views_count' => 0,
+        'shares_count' => 0,
+    ];
+
     protected $table = 'web_events';
 
     protected $fillable = [

@@ -26,8 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \App\Http\Middleware\WebAuth::class,
             'permission' => \App\Http\Middleware\SecurePermissionMiddleware::class,
+            'own_user_or_permission' => \App\Http\Middleware\OwnUserOrPermission::class,
         ]);
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureHashedRouteKeys::class,
+            \App\Http\Middleware\KeepReviewRequestsInContext::class,
             \App\Http\Middleware\AuditLogger::class,
         ]);
         $middleware->api(append: [

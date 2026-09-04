@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Project extends Model
 {
-    use \App\Traits\UploadsImages;
+    use \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
     public function getImageColumns(): array
     {
@@ -84,6 +84,17 @@ final class Project extends Model
         static::addGlobalScope('exclude_guest_house', function ($q) {
             $q->where('name', 'not like', '%دار ضيافة%')
                 ->where('name', 'not like', '%ضيافة%');
+        });
+
+        static::saved(function (Project $project) {
+            \App\Models\Permission::updateOrCreate(
+                ['key' => "projects.manage.{$project->id}"],
+                ['name' => "إدارة مشروع: {$project->name}"]
+            );
+        });
+
+        static::deleted(function (Project $project) {
+            \App\Models\Permission::where('key', "projects.manage.{$project->id}")->delete();
         });
     }
 

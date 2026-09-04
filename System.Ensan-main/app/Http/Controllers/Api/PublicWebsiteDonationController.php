@@ -37,7 +37,7 @@ final class PublicWebsiteDonationController extends Controller
             'category_id'    => 'required|exists:donation_categories,id',
             'target_id'      => 'nullable|integer',
             'payment_method' => 'required|string',
-            'proof'          => $isRepresentative ? 'nullable' : 'required|image|max:5120',
+            'proof'          => $isRepresentative ? 'nullable' : 'required|any_image|max:5120',
             'notes'          => 'nullable|string',
         ]);
 
@@ -60,34 +60,13 @@ final class PublicWebsiteDonationController extends Controller
 
             $data = $request->only(['donor_name', 'donor_phone', 'amount', 'category_id', 'target_id', 'payment_method', 'notes']);
             
-            if ($isMobileMethod) {
-                // Route to MobileDonation model for specific dashboard tracking
-                $mobileData = [
-                    'donor_name'      => $request->donor_name,
-                    'donor_phone'     => $request->donor_phone,
-                    'donation_amount' => $request->amount,
-                    'payment_method'  => $request->payment_method,
-                    'notes'           => $request->notes,
-                    'donation_for'    => \App\Models\DonationCategory::find($request->category_id)?->name ?? 'عام',
-                    'status'          => 'pending',
-                    'account_number'  => $request->account_number ?? $request->sender_number ?? $request->from_account,
-                    'account_name'    => $request->account_name ?? $request->sender_name,
+            if (in_array($paymentMethod, ['instapay', 'vodafone_cash', 'vodafone', 'bank_transfer'])) {
+                $data['metadata'] = [
+                    'account_number' => $request->account_number ?? $request->sender_number ?? $request->from_account,
+                    'account_name'   => $request->account_name ?? $request->sender_name,
                 ];
-                
-                $mobileDonation = \App\Models\MobileDonation::create($mobileData);
-                
-                if ($request->hasFile('proof')) {
-                    $mobileDonation->uploadImage($request->file('proof'), 'mobile/donations/receipts');
-                }
-                
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'تم استلام طلب التبرع عبر ' . $request->payment_method . ' بنجاح، بانتظار المراجعة.',
-                    'donation_id' => $mobileDonation->id
-                ], 201);
             }
 
-            // Standard donation flow for other methods
             if ($request->hasFile('proof')) {
                 $data['proof_file'] = $request->file('proof');
             }

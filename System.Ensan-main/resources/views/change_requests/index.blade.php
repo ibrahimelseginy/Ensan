@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 
 {{-- Hero Section --}}
@@ -173,8 +173,8 @@
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="8" class="p-0 border-0">
-                                <div class="collapse p-4 border-bottom shadow-inner animate-fade-in" id="details-{{ $req->id }}" style="background: rgba(0,0,0,0.2);">
+                            <td colspan="9" class="p-0 border-0">
+                                <div class="collapse p-4 border-bottom shadow-sm animate-fade-in change-request-detail-collapse" id="details-{{ $req->id }}">
                                     @php
                                         $modelBasename = class_basename($req->model_type);
                                         $typeLabels = [
@@ -202,7 +202,7 @@
                                         $isDeleted = !$req->subject;
                                     @endphp
 
-                                    <div class="mb-4 bg-white bg-opacity-10 p-3 rounded border border-light border-opacity-10 shadow-sm">
+                                    <div class="mb-4 change-request-target-card p-3 rounded-4 border shadow-sm">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <h6 class="fw-bold mb-0 small text-uppercase text-muted opacity-75">
                                                 <i class="bi bi-bullseye me-1"></i> العنصر المستهدف:
@@ -338,6 +338,10 @@
                                                 'quantity' => 'الكمية',
                                                 'estimated_value' => 'القيمة التقديرية',
                                                 'allocation_note' => 'توجيه التبرع',
+                                                'allocation_type' => 'نوع تخصيص المستفيدين',
+                                                'allocated_beneficiary_ids' => 'المستفيدون المختارون',
+                                                'child_sponsorship_type' => 'نوع كفالة الطفل',
+                                                'sponsor_ids' => 'الكفلاء المختارون',
                                                 'status' => 'الحالة',
                                                 'name' => 'الاسم الكامل',
                                                 'phone' => 'رقم الهاتف',
@@ -404,7 +408,7 @@
                                                 'expense' => 'مصروفات (Expense)',
                                             ];
 
-                                            $fmt = function($k, $v) use ($valueMaps) {
+                                            $fmt = function($k, $v) use ($valueMaps, $permissionsMap, $beneficiariesMap, $sponsorsMap) {
                                                 if (is_null($v) || $v === '') return '<span class="text-muted italic small">فارغ</span>';
 
                                                 if (is_array($v)) {
@@ -413,6 +417,16 @@
                                                         foreach ($v as $pId) {
                                                             $pName = $permissionsMap[$pId] ?? ($permissionsMap[(int)$pId] ?? "#$pId");
                                                             $html .= '<span class="badge rounded-pill bg-light text-dark border p-1 px-2" style="font-size: 10px;">' . e($pName) . '</span>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
+                                                    if (in_array($k, ['allocated_beneficiary_ids', 'sponsor_ids'], true)) {
+                                                        $namesMap = $k === 'allocated_beneficiary_ids' ? $beneficiariesMap : $sponsorsMap;
+                                                        $html = '<div class="d-flex flex-wrap gap-1 mt-1">';
+                                                        foreach ($v as $entityId) {
+                                                            $entityName = $namesMap[$entityId] ?? ($namesMap[(int) $entityId] ?? "#$entityId");
+                                                            $html .= '<span class="badge rounded-pill bg-light text-dark border p-1 px-2" style="font-size: 10px;">' . e($entityName) . '</span>';
                                                         }
                                                         $html .= '</div>';
                                                         return $html;
@@ -459,6 +473,7 @@
                                                 @foreach($payloadData as $key => $val)
                                                     @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id']))
                                                     @continue(is_null($val) || $val === '')
+                                                    @continue(is_array($val) && empty($val))
                                                     
                                                     <div class="col-6 col-md-4 col-lg-3">
                                                         <div class="p-3 rounded-4 border border-secondary border-opacity-10 shadow-sm h-100" style="background: rgba(255,255,255,0.03);">

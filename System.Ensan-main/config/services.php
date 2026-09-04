@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'beon' => [
+        'token' => env('BEON_TOKEN'),
+    ],
+
 ];

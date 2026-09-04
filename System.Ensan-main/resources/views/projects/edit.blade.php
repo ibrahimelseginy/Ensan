@@ -25,20 +25,24 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label form-label-required">اسم المشروع</label>
-              <input name="name" class="form-control" value="{{ $project->name }}" required>
+              <input name="name" value="{{ old('name', $project->name) }}"
+                class="form-control @error('name') is-invalid @enderror" required autofocus>
+              @error('name')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
             </div>
             <div class="col-md-3">
               <label class="form-label form-label-required">الحالة</label>
               <select name="status" class="form-select" required>
-                <option value="active" @selected($project->status === 'active')>نشط</option>
-                <option value="archived" @selected($project->status === 'archived')>مؤرشف</option>
+                <option value="active" @selected(old('status', $project->status) === 'active')>نشط</option>
+                <option value="archived" @selected(old('status', $project->status) === 'archived')>مؤرشف</option>
               </select>
             </div>
             <div class="col-md-3">
               <label class="form-label">مشروع ثابت</label>
               <select name="fixed" class="form-select">
-                <option value="1" @selected($project->fixed)>نعم</option>
-                <option value="0" @selected(!$project->fixed)>لا</option>
+                <option value="1" @selected((string) old('fixed', (int) $project->fixed) === '1')>نعم</option>
+                <option value="0" @selected((string) old('fixed', (int) $project->fixed) === '0')>لا</option>
               </select>
               <div class="form-help-text">المشاريع الثابتة تظهر دائماً في القوائم</div>
             </div>
@@ -55,7 +59,7 @@
             <div class="col-12">
               <label class="form-label">وصف المشروع</label>
               <textarea name="description" class="form-control" rows="4"
-                placeholder="أضف وصفاً تفصيلياً للمشروع...">{{ $project->description }}</textarea>
+                placeholder="أضف وصفاً تفصيلياً للمشروع...">{{ old('description', $project->description) }}</textarea>
             </div>
           </div>
         </div>

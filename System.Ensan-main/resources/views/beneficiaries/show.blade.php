@@ -12,15 +12,23 @@
         <div class="d-flex gap-2">
           @php
             $statusClass = match ($beneficiary->status) {
+              'pending' => 'bg-info-subtle text-info',
               'new' => 'bg-info-subtle text-info',
               'under_review' => 'bg-warning-subtle text-warning',
               'accepted' => 'bg-success-subtle text-success',
+              'rejected' => 'bg-danger-subtle text-danger',
+              'archived_improved' => 'bg-secondary-subtle text-secondary',
+              'archived_deceased' => 'bg-dark text-white',
               default => 'bg-secondary-subtle text-secondary'
             };
             $statusText = match ($beneficiary->status) {
+              'pending' => 'تحت التقديم',
               'new' => 'جديد',
               'under_review' => 'تحت المراجعة',
               'accepted' => 'مقبول',
+              'rejected' => 'مرفوض',
+              'archived_improved' => 'أرشيف — تحسن / شفاء',
+              'archived_deceased' => 'أرشيف — توفي',
               default => $beneficiary->status
             };
           @endphp
@@ -96,6 +104,8 @@
                   @php
                     $typeText = match ($beneficiary->assistance_type) {
                       'financial' => 'مالية',
+                      'monthly' => 'كفالة شهرية',
+                      'one_time' => 'مساعدة مؤقتة',
                       'in_kind' => 'عينية',
                       'service' => 'خدمية',
                       default => $beneficiary->assistance_type
@@ -111,6 +121,10 @@
                 <span class="info-value font-monospace">{{ $beneficiary->phone ?? '—' }}</span>
               </div>
             </div>
+            <div class="col-md-6"><div class="info-row"><span class="info-label">الهاتف الإضافي</span><span class="info-value font-monospace">{{ $beneficiary->backup_phone ?? '—' }}</span></div></div>
+            <div class="col-md-6"><div class="info-row"><span class="info-label">الرقم القومي</span><span class="info-value font-monospace">{{ $beneficiary->national_id ?? '—' }}</span></div></div>
+            <div class="col-md-6"><div class="info-row"><span class="info-label">رقم الفيزا</span><span class="info-value font-monospace">{{ $beneficiary->visa_card_number ?? '—' }}</span></div></div>
+            <div class="col-md-6"><div class="info-row"><span class="info-label">المشروع</span><span class="info-value">{{ $beneficiary->project?->name ?? '—' }}</span></div></div>
             <div class="col-12">
               <div class="info-row">
                 <span class="info-label">العنوان</span>
@@ -125,9 +139,105 @@
                 </div>
               </div>
             @endif
+            @if(in_array($beneficiary->status, ['rejected', 'archived_improved', 'archived_deceased'], true))
+              <div class="col-12"><div class="alert alert-secondary mb-0"><strong>سبب الحالة:</strong> {{ $beneficiary->status === 'rejected' ? ($beneficiary->rejection_reason ?? '—') : ($beneficiary->archived_reason ?? '—') }}</div></div>
+            @endif
           </div>
         </div>
       </div>
+
+      @php($activeFamilyMembers = $beneficiary->familyMembers->where('active', true))
+      @if($activeFamilyMembers->isNotEmpty())
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="section-title mb-3"><i class="bi bi-people-fill"></i><h5 class="mb-0">ملفات أفراد الأسرة</h5></div>
+            <div class="alert alert-info py-2"><i class="bi bi-shield-lock me-1"></i> كل فرد ملف مستقل، والكفلاء الظاهرون أمامه مرتبطون بهذا الفرد فقط.</div>
+            <div class="row g-3">
+              @foreach($activeFamilyMembers as $member)
+                <div class="col-md-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                      <div><div class="fw-bold fs-6">{{ $member->full_name }}</div><div class="small text-muted">{{ $member->relationship_label }} @if($member->is_patient) — مريض @endif</div></div>
+                      <div class="d-flex align-items-center gap-1">
+                        <span class="badge bg-primary-subtle text-primary font-monospace">{{ $member->code }}</span>
+                        <a href="{{ route('beneficiary-family-members.show', $member) }}" class="btn btn-sm btn-outline-primary" title="فتح الملف المستقل"><i class="bi bi-box-arrow-up-left"></i></a>
+                      </div>
+                    </div>
+                    <div class="row g-2 small mb-3">
+                      <div class="col-6"><span class="text-muted">العمر:</span> {{ $member->birth_date ? $member->birth_date->age . ' سنة' : ($member->age ? $member->age . ' سنة' : '—') }}</div>
+                      <div class="col-6"><span class="text-muted">الميلاد:</span> {{ optional($member->birth_date)->format('Y-m-d') ?? '—' }}</div>
+                      <div class="col-6"><span class="text-muted">التعليم:</span> {{ $member->education_level ?? '—' }}</div>
+                      <div class="col-6"><span class="text-muted">الكفالة:</span> {{ $member->sponsorship_amount ? number_format((float)$member->sponsorship_amount, 2) . ' ج' : '—' }}</div>
+                      @if($member->phone)<div class="col-12"><span class="text-muted">الهاتف:</span> {{ $member->phone }}</div>@endif
+                      @if($member->case_details)<div class="col-12"><span class="text-muted">التفاصيل:</span> {{ $member->case_details }}</div>@endif
+                    </div>
+                    <div class="border-top pt-2">
+                      <div class="small fw-bold mb-2">الكفلاء / المتبرعون</div>
+                      <div class="d-flex flex-wrap gap-1">
+                        @forelse($member->sponsors as $sponsor)
+                          <a href="{{ route('donors.show', $sponsor) }}" class="badge bg-success-subtle text-success text-decoration-none p-2"><i class="bi bi-person-heart me-1"></i>{{ $sponsor->name }}</a>
+                        @empty
+                          <span class="small text-muted">لم يتم ربط كافل بهذا الفرد حتى الآن.</span>
+                        @endforelse
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </div>
+      @endif
+
+      {{-- Allocation & Sponsorship --}}
+      @if($beneficiary->allocation_type || $beneficiary->sponsors->isNotEmpty())
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="section-title mb-3">
+              <i class="bi bi-diagram-3"></i>
+              <h5 class="mb-0">التخصيص والكفالة</h5>
+            </div>
+            <div class="row g-3">
+              @if($beneficiary->allocation_type)
+                <div class="col-md-6">
+                  <div class="info-row align-items-start">
+                    <span class="info-label">نوع التخصيص</span>
+                    <span class="info-value">{{ $beneficiary->allocation_type }}</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="info-row align-items-start">
+                    <span class="info-label">المستفيدون</span>
+                    <span class="info-value d-flex flex-wrap gap-1">
+                      @forelse($beneficiary->allocatedBeneficiaries as $allocatedBeneficiary)
+                        <a href="{{ route('beneficiaries.show', $allocatedBeneficiary) }}" class="badge bg-primary-subtle text-primary text-decoration-none">
+                          {{ $allocatedBeneficiary->full_name }}
+                        </a>
+                      @empty
+                        —
+                      @endforelse
+                    </span>
+                  </div>
+                </div>
+              @endif
+              @if($beneficiary->sponsors->isNotEmpty())
+                <div class="col-12">
+                  <div class="info-row align-items-start">
+                    <span class="info-label">المتبرعون / الكفلاء</span>
+                    <span class="info-value d-flex flex-wrap gap-2">
+                      @foreach($beneficiary->sponsors as $sponsor)
+                        <a href="{{ route('donors.show', $sponsor) }}" class="badge bg-success-subtle text-success text-decoration-none p-2">
+                          <i class="bi bi-person-heart me-1"></i>{{ $sponsor->name }} — {{ $sponsor->code ?? ('DON-'.$sponsor->id) }}
+                        </a>
+                      @endforeach
+                    </span>
+                  </div>
+                </div>
+              @endif
+            </div>
+          </div>
+        </div>
+      @endif
 
       {{-- Donations History --}}
       <div class="card mb-4">

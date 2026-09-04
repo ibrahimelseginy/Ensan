@@ -20,12 +20,12 @@ final class JournalEntryController extends Controller
 
     public function index(): LengthAwarePaginator
     {
-        return $this->journalEntryService->getAllJournalEntries(20);
+        return $this->journalEntryService->getAllEntries(20);
     }
 
-    public function store(StoreJournalEntryRequest $request): JournalEntry
+    public function store(StoreJournalEntryRequest $request): mixed
     {
-        return $this->journalEntryService->createJournalEntry($request->validated());
+        return $this->journalEntryService->createEntry($request->validated());
     }
 
     public function show(JournalEntry $journalEntry): JournalEntry
@@ -36,7 +36,7 @@ final class JournalEntryController extends Controller
     public function update(UpdateJournalEntryRequest $request, JournalEntry $journalEntry): JournalEntry|JsonResponse
     {
         try {
-            return $this->journalEntryService->updateJournalEntry($journalEntry, $request->validated());
+            return $this->journalEntryService->updateEntry($journalEntry, $request->validated());
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], (int)$e->getCode() ?: 400);
         }
@@ -45,7 +45,7 @@ final class JournalEntryController extends Controller
     public function destroy(JournalEntry $journalEntry): Response|JsonResponse
     {
         try {
-            $this->journalEntryService->deleteJournalEntry($journalEntry);
+            $this->journalEntryService->deleteEntry($journalEntry);
             return response()->noContent();
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], (int)$e->getCode() ?: 400);

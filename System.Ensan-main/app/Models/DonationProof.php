@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class DonationProof extends Model
 {
+    use \App\Traits\UploadsImages;
+
     protected $fillable = [
         'donation_id',
         'web_donation_id',
@@ -40,6 +42,6 @@ final class DonationProof extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image_path ? asset('storage/' . $this->image_path) : null;
+        return $this->getFileUrl('image_path');
     }
 }

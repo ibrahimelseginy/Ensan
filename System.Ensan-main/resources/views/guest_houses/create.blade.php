@@ -29,6 +29,10 @@
             <input name="location" class="form-control">
           </div>
           <div class="col-md-6">
+            <label class="form-label">المحافظة</label>
+            <select name="governorate" class="form-select" required><option value="">— اختر المحافظة —</option><option value="كفر الشيخ" @selected(old('governorate')==='كفر الشيخ')>كفر الشيخ</option><option value="الغربية" @selected(old('governorate')==='الغربية')>الغربية</option></select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">الهاتف</label>
             <input name="phone" class="form-control">
           </div>

@@ -163,6 +163,7 @@ class PermissionSeeder extends Seeder
             // حضور الموظفين
             // ═══════════════════════════════════════
             ['key' => 'employee_attendance.view', 'name' => 'عرض حضور الموظفين'],
+            ['key' => 'employee_attendance.view_own', 'name' => 'عرض سجل الحضور الخاص'],
             ['key' => 'employee_attendance.create', 'name' => 'تسجيل حضور موظف'],
             ['key' => 'employee_attendance.edit', 'name' => 'تعديل حضور موظف'],
 
@@ -170,6 +171,7 @@ class PermissionSeeder extends Seeder
             // مهام الموظفين
             // ═══════════════════════════════════════
             ['key' => 'employee_tasks.view', 'name' => 'عرض مهام الموظفين'],
+            ['key' => 'employee_tasks.view_own', 'name' => 'عرض مهام الموظف الخاصة'],
             ['key' => 'employee_tasks.create', 'name' => 'إضافة مهمة موظف'],
             ['key' => 'employee_tasks.edit', 'name' => 'تعديل مهمة موظف'],
             ['key' => 'employee_tasks.delete', 'name' => 'حذف مهمة موظف'],
@@ -181,6 +183,7 @@ class PermissionSeeder extends Seeder
             ['key' => 'leaves.create', 'name' => 'إضافة إجازة'],
             ['key' => 'leaves.edit', 'name' => 'تعديل إجازة'],
             ['key' => 'leaves.delete', 'name' => 'حذف إجازة'],
+            ['key' => 'leaves.manage', 'name' => 'إدارة جميع طلبات الإجازات'],
 
             // ═══════════════════════════════════════
             // المتطوعين
@@ -194,6 +197,7 @@ class PermissionSeeder extends Seeder
             // حضور المتطوعين
             // ═══════════════════════════════════════
             ['key' => 'volunteer_attendance.view', 'name' => 'عرض حضور المتطوعين'],
+            ['key' => 'volunteer_attendance.view_own', 'name' => 'عرض سجل حضور المتطوع الخاص'],
             ['key' => 'volunteer_attendance.create', 'name' => 'تسجيل حضور متطوع'],
             ['key' => 'volunteer_attendance.edit', 'name' => 'تعديل حضور متطوع'],
 
@@ -262,6 +266,7 @@ class PermissionSeeder extends Seeder
             // سجلات النظام
             // ═══════════════════════════════════════
             ['key' => 'audits.view', 'name' => 'عرض سجلات النظام'],
+            ['key' => 'reports.view', 'name' => 'عرض التقارير'],
 
             // ═══════════════════════════════════════
             // المرفقات
@@ -312,7 +317,7 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $p) {
-            Permission::firstOrCreate(
+            Permission::updateOrCreate(
             ['key' => $p['key']],
             ['name' => $p['name']]
             );

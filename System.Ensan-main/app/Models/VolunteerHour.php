@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class VolunteerHour extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['user_id','date','hours','task'];
     protected $casts = ['date' => 'date'];
     public function user(): BelongsTo { return $this->belongsTo(User::class); }

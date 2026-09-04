@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\WebSetting;
-use App\Helpers\ImageOptimizer;
 
 class OptimizeExistingImages extends Command
 {
@@ -43,7 +42,7 @@ class OptimizeExistingImages extends Command
             // Determine storage directory from the current path
             $storageDir = dirname($currentPath);
 
-            $newPath = ImageOptimizer::optimizeExisting($currentPath, $storageDir);
+            $newPath = app(\App\Services\ImageUploadService::class)->uploadExisting($currentPath, $storageDir);
 
             if ($newPath !== null && $newPath !== $currentPath) {
                 // Update the database with the new WebP path

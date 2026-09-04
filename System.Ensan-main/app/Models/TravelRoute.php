@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class TravelRoute extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $table = 'travel_routes';
     protected $fillable = ['name','description'];
     protected $casts = [

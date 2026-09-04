@@ -94,7 +94,7 @@ final class DonationController extends Controller
     {
         $request->validate([
             'donation_id' => 'required|exists:donations,id',
-            'proof' => 'required|image|mimes:jpg,jpeg,png|max:5120', // 5MB
+            'proof' => 'required|any_image|max:5120', // 5MB
         ]);
 
         $path = $request->file('proof')->store('donation_proofs', 'public');

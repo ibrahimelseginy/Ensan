@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="page-header">
@@ -13,6 +13,12 @@
 
     <div class="card">
         <div class="card-body">
+            @if(!$canManageUsers)
+                <div class="alert alert-info border-0 bg-info bg-opacity-10 text-info-emphasis">
+                    <i class="bi bi-info-circle me-2"></i>
+                    أي تعديل ترسله سيظل معلقًا حتى يراجعه الأدمن ويوافق عليه.
+                </div>
+            @endif
             <form method="POST" action="{{ route('users.update', $user) }}" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <div class="row g-3">
@@ -20,16 +26,18 @@
                             value="{{ $user->name }}"></div>
                     <div class="col-md-6"><label class="form-label">البريد</label><input name="email" type="email"
                             class="form-control" value="{{ $user->email }}"></div>
-                    <div class="col-md-6">
-                        <label class="form-label">كلمة المرور (اختياري - اتركها فارغة إن لم تريد تغييرها)</label>
-                        <div class="input-group">
-                            <input name="password" type="password" class="form-control" id="password-input"
-                                autocomplete="new-password" placeholder="أدخل كلمة مرور جديدة فقط إن أردت تغييرها">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
-                                <i class="bi bi-eye" id="toggle-icon"></i>
-                            </button>
+                    @if($canManageUsers)
+                        <div class="col-md-6">
+                            <label class="form-label">كلمة المرور</label>
+                            <div class="input-group">
+                                <input name="password" type="password" class="form-control" id="password-input"
+                                    autocomplete="new-password" placeholder="أدخل كلمة مرور جديدة فقط إن أردت تغييرها">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="bi bi-eye" id="toggle-icon"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                     <script>
                         function togglePassword() {
                             const passwordInput = document.getElementById('password-input');
@@ -51,29 +59,32 @@
                             class="form-control" value="{{ $user->department }}"></div>
                     <div class="col-md-6"><label class="form-label">المسمى الوظيفي</label><input name="job_title"
                             class="form-control" value="{{ $user->job_title }}"></div>
-                    <div class="col-md-6"><label class="form-label">الراتب</label><input name="salary" type="number"
-                            step="0.01" class="form-control" value="{{ $user->salary }}"></div>
-                    <div class="col-md-6"><label class="form-label">تاريخ الانضمام</label><input name="join_date"
-                            type="date" class="form-control" value="{{ $user->join_date }}"></div>
-                    <div class="col-md-6"><label class="form-label">الرصيد السنوي لطلب الإجازات</label><input name="annual_leave_quota"
-                            type="number" class="form-control" value="{{ $user->annual_leave_quota ?? 21 }}"></div>
-                    <div class="col-md-6"><label class="form-label">رصيد الإجازات الحالي</label><input name="leave_balance"
-                            type="number" class="form-control" value="{{ $user->leave_balance ?? 21 }}"></div>
+                    @if($canManageUsers)
+                        <div class="col-md-6"><label class="form-label">الراتب</label><input name="salary" type="number"
+                                step="1" class="form-control" value="{{ $user->salary ? (int)$user->salary : '' }}"></div>
+                        <div class="col-md-6"><label class="form-label">تاريخ الانضمام</label><input name="join_date"
+                                type="date" class="form-control" value="{{ $user->join_date }}"></div>
+                        <div class="col-md-6"><label class="form-label">الرصيد السنوي لطلب الإجازات</label><input name="annual_leave_quota"
+                                type="number" class="form-control" value="{{ $user->annual_leave_quota ?? 21 }}"></div>
+                        <div class="col-md-6"><label class="form-label">رصيد الإجازات الحالي</label><input name="leave_balance"
+                                type="number" class="form-control" value="{{ $user->leave_balance ?? 21 }}"></div>
 
-                    <div class="col-md-6"><label class="form-label">تاريخ بداية العقد</label><input
-                            name="contract_start_date" type="date" class="form-control"
-                            value="{{ $user->contract_start_date ? $user->contract_start_date->format('Y-m-d') : '' }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">تاريخ نهاية العقد</label>
-                        <input name="contract_end_date" type="date" class="form-control"
-                            value="{{ $user->contract_end_date ? $user->contract_end_date->format('Y-m-d') : '' }}">
-                        <div class="form-text text-info">
-                            <i class="bi bi-info-circle me-1"></i>
-                            ملاحظة: سيتم إرسال إشعار قبل نهاية العقد بـ 60 يوم
+                        <div class="col-md-6"><label class="form-label">تاريخ بداية العقد</label><input
+                                name="contract_start_date" type="date" class="form-control"
+                                value="{{ $user->contract_start_date ? $user->contract_start_date->format('Y-m-d') : '' }}">
                         </div>
-                    </div>
+                        <div class="col-md-6">
+                            <label class="form-label">تاريخ نهاية العقد</label>
+                            <input name="contract_end_date" type="date" class="form-control"
+                                value="{{ $user->contract_end_date ? $user->contract_end_date->format('Y-m-d') : '' }}">
+                            <div class="form-text text-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                ملاحظة: سيتم إرسال إشعار قبل نهاية العقد بـ 60 يوم
+                            </div>
+                        </div>
+                    @endif
 
+                    @if($canManageUsers)
                     <div class="col-md-6">
                         <label class="form-label">الصورة الشخصية</label>
                         <input type="file" name="profile_photo" class="form-control" accept="image/*">
@@ -134,16 +145,20 @@
                         </div>
                     </div>
                     <div class="col-12">
+                        <input type="hidden" name="is_employee" value="1">
+                        <input type="hidden" name="active" value="0">
                         <div class="form-check"><input class="form-check-input" type="checkbox" name="active" value="1"
                                 @checked($user->active)><label class="form-check-label">نشط</label></div>
                     </div>
+                    @endif
                 </div>
                 <div class="d-flex gap-2 justify-content-end mt-4">
                     <a href="{{ route('users.show', $user) }}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-lg me-1"></i> إلغاء
                     </a>
                     <button class="btn btn-primary">
-                        <i class="bi bi-check-lg me-1"></i> حفظ التغييرات
+                        <i class="bi bi-check-lg me-1"></i>
+                        {{ $canManageUsers ? 'حفظ التغييرات' : 'إرسال طلب التعديل' }}
                     </button>
                 </div>
             </form>

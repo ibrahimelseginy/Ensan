@@ -16,10 +16,11 @@ final class StoreProjectActivityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'                => 'required|string|max:255',
-            'activity_date'       => 'required|date',
-            'responsible_user_id' => 'nullable|exists:users,id',
-            'notes'               => 'nullable|string'
+            'type'          => 'required|in:exhibition,advertising',
+            'activity_date' => 'required|date',
+            'location'      => 'nullable|string|max:255',
+            'revenue'       => 'nullable|numeric|min:0',
+            'description'   => 'nullable|string',
         ];
     }
 }

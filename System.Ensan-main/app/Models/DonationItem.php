@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class DonationItem extends Model
 {
+    use \App\Traits\UploadsImages;
+
     protected $fillable = [
         'category_id', 'title', 'description',
         'icon', 'image', 'status', 'sort_order', 'bg_style'
@@ -25,12 +27,12 @@ final class DonationItem extends Model
 
     public function getIconUrlAttribute(): ?string
     {
-        return $this->icon ? asset('storage/' . $this->icon) : null;
+        return $this->getFileUrl('icon');
     }
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        return $this->getFileUrl('image');
     }
 
     public function scopeActive($query)

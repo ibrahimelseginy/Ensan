@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class Leave extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HashedRouteKey;
 
     protected $fillable = [
         'user_id',

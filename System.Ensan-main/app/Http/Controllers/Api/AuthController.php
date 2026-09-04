@@ -69,7 +69,11 @@ final class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'phone' => $user->phone,
-                'role' => $user->role
+                'role' => $user->role,
+                'avatar_url' => $user->getFileUrl('profile_photo_path'),
+                'is_employee' => (bool) $user->is_employee,
+                'is_volunteer' => (bool) $user->is_volunteer,
+                'job_title' => $user->job_title,
             ]
         ]);
     }

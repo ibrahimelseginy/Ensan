@@ -34,7 +34,14 @@ final class MobileCaseApplication extends Model
         'status',
         'admin_notes',
         'user_id'
+        ,'guest_house_id'
+        ,'beneficiary_id'
+        ,'guest_house_stay_id'
     ];
+
+    public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
+    public function beneficiary() { return $this->belongsTo(Beneficiary::class); }
+    public function stay() { return $this->belongsTo(GuestHouseStay::class, 'guest_house_stay_id'); }
 
     public function getIdImageUrlAttribute(): ?string
     {

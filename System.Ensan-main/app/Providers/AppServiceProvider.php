@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,10 +23,28 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         \Illuminate\Support\Facades\Schema::defaultStringLength(191);
         Paginator::useBootstrapFive();
 
-        // Register Global Permission Gate
+        // ─── Custom: قاعدة رفع الصور تقبل جميع أنواع الصور الشائعة ───
+        Validator::extend('any_image', function ($attribute, $value, $parameters, $validator) {
+            if (!($value instanceof \Illuminate\Http\UploadedFile)) {
+                return false;
+            }
+            $allowedMimes = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                'image/webp', 'image/bmp', 'image/svg+xml', 'image/tiff',
+                'image/heic', 'image/heif', 'image/avif', 'image/x-icon',
+                'image/vnd.microsoft.icon',
+            ];
+            return in_array($value->getMimeType(), $allowedMimes, true);
+        }, 'يجب أن يكون الملف صورة صالحة (JPEG, PNG, GIF, WebP, BMP, SVG, TIFF, HEIC, AVIF).');
+
+
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
             // First, allow admins to bypass everything
             if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {

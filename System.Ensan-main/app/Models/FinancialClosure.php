@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class FinancialClosure extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['date', 'branch', 'closed_by', 'approved_by', 'approved'];
     protected $casts = ['date' => 'date', 'approved' => 'boolean'];
 

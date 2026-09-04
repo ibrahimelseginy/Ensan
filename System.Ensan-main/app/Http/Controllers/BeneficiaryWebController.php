@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Models\Beneficiary;
 use App\Models\Project;
 use App\Models\Campaign;
-use App\Models\GuestHouse;
 use App\Models\ChangeRequest;
 use App\Services\BeneficiaryService;
 use App\Http\Requests\StoreBeneficiaryRequest;
@@ -16,6 +15,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 final class BeneficiaryWebController extends Controller
 {
@@ -63,6 +65,29 @@ final class BeneficiaryWebController extends Controller
         return $this->beneficiaryService->exportToCsv($request->all());
     }
 
+    public function exportPdf(Request $request): Response
+    {
+        $beneficiaries = $this->beneficiaryService
+            ->getFilteredBeneficiaries($request->all(), 10000)
+            ->getCollection();
+
+        return $this->pdfResponse(
+            view('beneficiaries.pdf-list', compact('beneficiaries'))->render(),
+            'beneficiaries-' . now()->format('Y-m-d') . '.pdf',
+            'landscape'
+        );
+    }
+
+    public function pdf(Beneficiary $beneficiary): Response
+    {
+        $beneficiary->load(['project', 'familyMembers.sponsors']);
+
+        return $this->pdfResponse(
+            view('beneficiaries.pdf', compact('beneficiary'))->render(),
+            'beneficiary-' . ($beneficiary->code ?: $beneficiary->id) . '.pdf'
+        );
+    }
+
     public function create(): View
     {
         $projects = Project::query()->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
@@ -72,10 +97,9 @@ final class BeneficiaryWebController extends Controller
             )
             ->orderBy('name')->get();
 
-        $campaigns   = Campaign::orderByDesc('season_year')->orderBy('name')->get();
-        $guestHouses = GuestHouse::orderBy('name')->get();
-
-        return view('beneficiaries.create', compact('projects', 'campaigns', 'guestHouses'));
+        return view('beneficiaries.create', compact(
+            'projects'
+        ));
     }
 
     public function store(StoreBeneficiaryRequest $request): RedirectResponse
@@ -94,6 +118,8 @@ final class BeneficiaryWebController extends Controller
         if ($this->hasPendingRequest($beneficiary)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المستفيد لديه طلب مراجعة حالياً');
         }
+
+        $beneficiary->load(['allocatedBeneficiaries', 'sponsors', 'familyMembers.sponsors']);
 
         $duplicates = $this->beneficiaryService->checkDuplicates($beneficiary);
         $isDup      = !empty($duplicates);
@@ -115,10 +141,12 @@ final class BeneficiaryWebController extends Controller
             )
             ->orderBy('name')->get();
 
-        $campaigns   = Campaign::orderByDesc('season_year')->orderBy('name')->get();
-        $guestHouses = GuestHouse::orderBy('name')->get();
+        $beneficiary->load(['familyMembers.sponsors']);
 
-        return view('beneficiaries.edit', compact('beneficiary', 'projects', 'campaigns', 'guestHouses'));
+        return view('beneficiaries.edit', compact(
+            'beneficiary',
+            'projects'
+        ));
     }
 
     public function update(UpdateBeneficiaryRequest $request, Beneficiary $beneficiary): RedirectResponse
@@ -179,5 +207,22 @@ final class BeneficiaryWebController extends Controller
             ->where('model_id', $beneficiary->id)
             ->where('status', 'pending')
             ->exists();
+    }
+
+    private function pdfResponse(string $html, string $filename, string $orientation = 'portrait'): Response
+    {
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', $orientation);
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

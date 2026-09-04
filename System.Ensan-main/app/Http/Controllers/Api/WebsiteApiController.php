@@ -35,6 +35,32 @@ final class WebsiteApiController extends Controller
         $this->donationSettings = $donationSettings;
     }
 
+    private function getStorageUrl($path): ?string
+    {
+        if (!$path) return null;
+
+        // تنظيف المسار من أي URL كامل محفوظ بالخطأ
+        $path = \App\Traits\UploadsImages::normalizeImagePath($path);
+        if (!$path) return null;
+
+        // Storage::disk('public')->url() يقرأ APP_URL تلقائياً
+        // → local: http://127.0.0.1:8000/storage/path
+        // → production: https://system.ensaneg.com/storage/path
+        return Storage::disk('public')->url($path);
+    }
+
+    private function getMediaUrl($path): ?string
+    {
+        if (!$path) return null;
+
+        // تنظيف المسار من أي URL كامل محفوظ بالخطأ
+        $path = \App\Traits\UploadsImages::normalizeImagePath($path);
+        if (!$path) return null;
+
+        // استخدام Storage::disk('public')->url() للاتساق
+        return Storage::disk('public')->url($path);
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/website",
@@ -107,7 +133,7 @@ final class WebsiteApiController extends Controller
             for ($i = 1; $i <= 6; $i++) {
                 $path = $settings['gallery_image_' . $i] ?? null;
                 if ($path) {
-                    $gallery[] = url('/api/media?path=' . $path);
+                    $gallery[] = $this->getMediaUrl($path);
                 }
             }
 
@@ -116,7 +142,7 @@ final class WebsiteApiController extends Controller
                 for ($i = 1; $i <= 10; $i++) {
                     $path = $settings["gh_slider_$i"] ?? null;
                     if ($path) {
-                        $gallery[] = url('/api/media?path=' . $path);
+                        $gallery[] = $this->getMediaUrl($path);
                     }
                 }
             }
@@ -126,7 +152,7 @@ final class WebsiteApiController extends Controller
             for ($i = 1; $i <= 10; $i++) {
                 $path = $settings["news_slider_$i"] ?? null;
                 if ($path) {
-                    $newsSlider[] = url('/api/media?path=' . $path);
+                    $newsSlider[] = $this->getMediaUrl($path);
                 }
             }
 
@@ -137,7 +163,7 @@ final class WebsiteApiController extends Controller
                 'description' => $s('hero_description'),
                 'primary_button_text' => $s('hero_primary_button_text', 'تبرع الان'),
                 'primary_button_link' => $s('hero_primary_button_link', 'http://127.0.0.1:4200/donate'),
-                'image' => !empty($settings['hero_image']) ? url('/api/media?path=' . $settings['hero_image']) : null,
+                'image' => !empty($settings['hero_image']) ? $this->getMediaUrl($settings['hero_image']) : null,
                 'stat_beneficiaries' => $s('stats_beneficiaries', '300K'),
                 'stat_donations' => $s('stats_donations', '13M+'),
                 'stat_projects' => $s('stats_projects', '400K'),
@@ -186,23 +212,23 @@ final class WebsiteApiController extends Controller
                 'show_custom_text' => $s('featured_campaign_show_custom_text', '0'),
                 'custom_text' => $s('featured_campaign_custom_text'),
                 'image' => !empty($settings['featured_campaign_image'])
-                ? asset('storage/' . $settings['featured_campaign_image'])
+                ? $this->getStorageUrl($settings['featured_campaign_image'])
                 : null,
                 'icon_image' => !empty($settings['featured_campaign_icon_image'])
-                ? asset('storage/' . $settings['featured_campaign_icon_image'])
+                ? $this->getStorageUrl($settings['featured_campaign_icon_image'])
                 : null,
                 'custom_icons' => [
                     [
                         'label' => $s('featured_campaign_icon1_label'),
                         'value' => $s('featured_campaign_icon1_value'),
                         'type' => !empty($settings['featured_campaign_icon1_image']) ? 'image' : 'icon',
-                        'src' => !empty($settings['featured_campaign_icon1_image']) ? asset('storage/' . $settings['featured_campaign_icon1_image']) : $s('featured_campaign_icon1_class'),
+                        'src' => !empty($settings['featured_campaign_icon1_image']) ? $this->getStorageUrl($settings['featured_campaign_icon1_image']) : $s('featured_campaign_icon1_class'),
                     ],
                     [
                         'label' => $s('featured_campaign_icon2_label'),
                         'value' => $s('featured_campaign_icon2_value'),
                         'type' => !empty($settings['featured_campaign_icon2_image']) ? 'image' : 'icon',
-                        'src' => !empty($settings['featured_campaign_icon2_image']) ? asset('storage/' . $settings['featured_campaign_icon2_image']) : $s('featured_campaign_icon2_class'),
+                        'src' => !empty($settings['featured_campaign_icon2_image']) ? $this->getStorageUrl($settings['featured_campaign_icon2_image']) : $s('featured_campaign_icon2_class'),
                     ]
                 ],
                 'register_fields' => [
@@ -241,7 +267,7 @@ final class WebsiteApiController extends Controller
                     'donors_label' => $s('headquarters_stats_donors_label', 'متبرع نشط'),
                 ]
             ];
-            
+
             // Sponsorship Programs
             $sponsorship_programs = [
                 [
@@ -314,7 +340,7 @@ final class WebsiteApiController extends Controller
             $guestHouseData = [
                 'title' => $s('gh_home_title', $ghPage->title ?? 'ضيافة إنسان'),
                 'content' => $s('gh_home_content', $ghPage->content ?? ''),
-                'image' => !empty($settings['gh_home_image']) ? asset('storage/' . $settings['gh_home_image']) : (($ghPage && $ghPage->image_path) ? $ghPage->getFileUrl('image_path') : null),
+                'image' => !empty($settings['gh_home_image']) ? $this->getStorageUrl($settings['gh_home_image']) : (($ghPage && $ghPage->image_path) ? $ghPage->getFileUrl('image_path') : null),
                 'link' => '/guest-house'
             ];
 
@@ -443,10 +469,10 @@ final class WebsiteApiController extends Controller
                 ]
             ],
             'contact_channels' => $contactChannels,
-            'projects_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["project_slider_$i"]) ? asset('storage/' . $settings["project_slider_$i"]) : null, range(1, 10)))),
-            'campaigns_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["campaign_slider_$i"]) ? asset('storage/' . $settings["campaign_slider_$i"]) : null, range(1, 10)))),
-            'honor_wall_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["honor_wall_slider_$i"]) ? asset('storage/' . $settings["honor_wall_slider_$i"]) : null, range(1, 10)))),
-            'field_images' => array_values(array_filter(array_map(fn($i) => !empty($settings["field_image_$i"]) ? asset('storage/' . $settings["field_image_$i"]) : null, range(1, 4)))),
+            'projects_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["project_slider_$i"]) ? $this->getStorageUrl($settings["project_slider_$i"]) : null, range(1, 10)))),
+            'campaigns_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["campaign_slider_$i"]) ? $this->getStorageUrl($settings["campaign_slider_$i"]) : null, range(1, 10)))),
+            'honor_wall_slider' => array_values(array_filter(array_map(fn($i) => !empty($settings["honor_wall_slider_$i"]) ? $this->getStorageUrl($settings["honor_wall_slider_$i"]) : null, range(1, 10)))),
+            'field_images' => array_values(array_filter(array_map(fn($i) => !empty($settings["field_image_$i"]) ? $this->getStorageUrl($settings["field_image_$i"]) : null, range(1, 4)))),
             'beneficiary_evaluations' => [
                 'positive_reviews' => [
                     'value' => $s('eval_positive_reviews_value', '+500'),
@@ -510,7 +536,7 @@ final class WebsiteApiController extends Controller
         for ($i = 1; $i <= 10; $i++) {
             $key = "project_slider_$i";
             if (!empty($settings[$key])) {
-                $slider_images[] = asset('storage/' . $settings[$key]);
+                $slider_images[] = $this->getStorageUrl($settings[$key]);
             }
         }
 
@@ -727,13 +753,13 @@ final class WebsiteApiController extends Controller
                 ],
                 'slider_images' => collect(range(1, 10))->map(function ($i) use ($settings) {
                     $key = "campaign_slider_$i";
-                    return isset($settings[$key]) ? asset('storage/' . $settings[$key]) : null;
+                    return isset($settings[$key]) ? $this->getStorageUrl($settings[$key]) : null;
                 })->filter()->values(),
                 'featured_card' => [
                     'title' => $s('featured_campaign_title', 'حملة الشتاء'),
                     'desc' => $s('featured_campaign_desc', 'نعمل على توفير الدفء والكساء للأسر الأكثر احتياجاً في المناطق الجبلية والنائية.'),
-                    'image' => !empty($settings['featured_campaign_image']) ? asset('storage/' . $settings['featured_campaign_image']) : null,
-                    'icon' => !empty($settings['featured_campaign_icon_image']) ? asset('storage/' . $settings['featured_campaign_icon_image']) : null,
+                    'image' => !empty($settings['featured_campaign_image']) ? $this->getStorageUrl($settings['featured_campaign_image']) : null,
+                    'icon' => !empty($settings['featured_campaign_icon_image']) ? $this->getStorageUrl($settings['featured_campaign_icon_image']) : null,
                     'btn_color' => $settings['featured_campaign_btn_color'] ?? '#ffc107',
                     'primary_color' => $settings['featured_campaign_primary_color'] ?? '#ffc107',
                     'tint_color' => $settings['featured_campaign_tint_color'] ?? 'rgba(255, 193, 7, 0.1)',
@@ -752,13 +778,13 @@ final class WebsiteApiController extends Controller
                             'label' => $settings['featured_campaign_icon1_label'] ?? null,
                             'value' => $settings['featured_campaign_icon1_value'] ?? null,
                             'type' => !empty($settings['featured_campaign_icon1_image']) ? 'image' : 'icon',
-                            'src' => !empty($settings['featured_campaign_icon1_image']) ? asset('storage/' . $settings['featured_campaign_icon1_image']) : ($settings['featured_campaign_icon1_class'] ?? 'bi-star'),
+                            'src' => !empty($settings['featured_campaign_icon1_image']) ? $this->getStorageUrl($settings['featured_campaign_icon1_image']) : ($settings['featured_campaign_icon1_class'] ?? 'bi-star'),
                         ],
                         [
                             'label' => $settings['featured_campaign_icon2_label'] ?? null,
                             'value' => $settings['featured_campaign_icon2_value'] ?? null,
                             'type' => !empty($settings['featured_campaign_icon2_image']) ? 'image' : 'icon',
-                            'src' => !empty($settings['featured_campaign_icon2_image']) ? asset('storage/' . $settings['featured_campaign_icon2_image']) : ($settings['featured_campaign_icon2_class'] ?? 'bi-heart'),
+                            'src' => !empty($settings['featured_campaign_icon2_image']) ? $this->getStorageUrl($settings['featured_campaign_icon2_image']) : ($settings['featured_campaign_icon2_class'] ?? 'bi-heart'),
                         ]
                     ],
                 ],
@@ -767,7 +793,7 @@ final class WebsiteApiController extends Controller
                     'beneficiaries' => $settings['featured_campaign_beneficiaries'] ?? '2,500+',
                     'progress' => $settings['featured_campaign_progress'] ?? '65',
                     'button_text' => $settings['featured_campaign_button_text'] ?? 'ساهم الآن',
-                    'icon' => isset($settings['featured_campaign_icon']) ? asset('storage/' . $settings['featured_campaign_icon']) : null,
+                    'icon' => isset($settings['featured_campaign_icon']) ? $this->getStorageUrl($settings['featured_campaign_icon']) : null,
                     'status' => $settings['featured_campaign_status'] ?? 'نشطة الآن',
                 ],
             ],
@@ -887,7 +913,7 @@ final class WebsiteApiController extends Controller
         $slider = [];
         for ($i = 1; $i <= 10; $i++) {
             if (!empty($settings["volunteer_slider_$i"])) {
-                $slider[] = asset('storage/' . $settings["volunteer_slider_$i"]);
+                $slider[] = $this->getStorageUrl($settings["volunteer_slider_$i"]);
             }
         }
 
@@ -896,7 +922,7 @@ final class WebsiteApiController extends Controller
                 'title' => $s('volunteer_title', 'تطوع معنا'),
                 'subtitle' => $s('volunteer_subtitle', 'كن جزءاً من عائلة إنسان وساهم في التغيير'),
                 'description' => $s('volunteer_description'),
-                'image' => !empty($settings['volunteer_hero_image']) ? asset('storage/' . $settings['volunteer_hero_image']) : null,
+                'image' => !empty($settings['volunteer_hero_image']) ? $this->getStorageUrl($settings['volunteer_hero_image']) : null,
             ],
             'slider' => $slider,
             'stats' => [
@@ -941,7 +967,7 @@ final class WebsiteApiController extends Controller
         $slider = [];
         for ($i = 1; $i <= 10; $i++) {
             if (!empty($settings["gh_slider_$i"])) {
-                $slider[] = asset('storage/' . $settings["gh_slider_$i"]);
+                $slider[] = $this->getStorageUrl($settings["gh_slider_$i"]);
             }
         }
 
@@ -1275,11 +1301,11 @@ final class WebsiteApiController extends Controller
             if ($request->hasFile('cv')) {
                 // 3. Store the file using Laravel storage
                 $cvPath = $request->file('cv')->store('cvs', 'public');
-                
+
                 if (!$cvPath) {
                     throw new \Exception('Failed to store CV file physically on the server.');
                 }
-                
+
                 // 4. Save the returned path (e.g., cvs/hashedfilename.pdf) into the data array
                 $data['cv_path'] = $cvPath;
             } else {
@@ -1293,7 +1319,7 @@ final class WebsiteApiController extends Controller
             $volunteerRequest = WebVolunteerRequest::create($data);
 
             return response()->json(['message' => 'تم استلام طلب التطوع بنجاح، سنقوم بالتواصل معك قريباً']);
-            
+
         } catch (\Exception $e) {
             // 6. Log upload errors using Laravel logs
             \Illuminate\Support\Facades\Log::error('Volunteer CV Upload Error: ' . $e->getMessage(), [
@@ -1327,11 +1353,11 @@ final class WebsiteApiController extends Controller
             'phone' => 'required|string|max:50',
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string',
-            'image' => 'nullable|image|max:10240'
+            'image' => 'nullable|any_image|max:10240'
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/contact');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/contact');
         }
 
         WebContactMessage::create($data);
@@ -1357,7 +1383,7 @@ final class WebsiteApiController extends Controller
         $slider = [];
         for ($i = 1; $i <= 10; $i++) {
             if (!empty($settings["contact_slider_$i"])) {
-                $slider[] = asset('storage/' . $settings["contact_slider_$i"]);
+                $slider[] = $this->getStorageUrl($settings["contact_slider_$i"]);
             }
         }
 
@@ -1450,12 +1476,14 @@ final class WebsiteApiController extends Controller
             'expected_duration' => 'nullable|string',
             'medical_center' => 'nullable|string',
             'guest_house_id' => 'nullable|exists:guest_houses,id',
+            'treatment_type' => 'nullable|in:chemotherapy,radiation,other',
+            'sessions_count' => 'nullable|integer|min:1|max:1000',
             // Files
-            'patient_id' => 'nullable|file|image|max:10240',
-            'companion_id' => 'nullable|file|image|max:10240',
-            'medical_transfer' => 'nullable|file|image|max:10240',
-            'followup_card' => 'nullable|file|image|max:10240',
-            'medical_report' => 'nullable|file|image|max:10240'
+            'patient_id' => 'nullable|file|any_image|max:10240',
+            'companion_id' => 'nullable|file|any_image|max:10240',
+            'medical_transfer' => 'nullable|file|any_image|max:10240',
+            'followup_card' => 'nullable|file|any_image|max:10240',
+            'medical_report' => 'nullable|file|any_image|max:10240'
         ]);
 
         $fileFields = [
@@ -1468,7 +1496,7 @@ final class WebsiteApiController extends Controller
 
         foreach ($fileFields as $input => $column) {
             if ($request->hasFile($input)) {
-                $data[$column] = \App\Helpers\ImageOptimizer::optimize($request->file($input), 'website/bookings');
+                $data[$column] = app(\App\Services\ImageUploadService::class)->upload($request->file($input), 'website/bookings');
             }
         }
 
@@ -1529,12 +1557,12 @@ final class WebsiteApiController extends Controller
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'sponsorship_details' => 'nullable|string',
-            'image' => 'nullable|image|max:10240'
+            'image' => 'nullable|any_image|max:10240'
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($project->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/projects');
+            app(\App\Services\ImageUploadService::class)->delete($project->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/projects');
         }
 
         $project->update($data);
@@ -1552,12 +1580,12 @@ final class WebsiteApiController extends Controller
             'goal_amount' => 'nullable|numeric',
             'current_amount' => 'nullable|numeric',
             'beneficiaries_count' => 'nullable|integer',
-            'image' => 'nullable|image|max:10240'
+            'image' => 'nullable|any_image|max:10240'
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($campaign->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/campaigns');
+            app(\App\Services\ImageUploadService::class)->delete($campaign->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/campaigns');
         }
 
         $campaign->update($data);
@@ -1571,12 +1599,12 @@ final class WebsiteApiController extends Controller
             'name' => 'required|string',
             'role' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'sort_order' => 'integer'
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/board');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/board');
         }
 
         $member = WebBoardMember::create($data);
@@ -1589,13 +1617,13 @@ final class WebsiteApiController extends Controller
             'name' => 'required|string',
             'role' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'sort_order' => 'integer'
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($member->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/board');
+            app(\App\Services\ImageUploadService::class)->delete($member->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/board');
         }
 
         $member->update($data);
@@ -1778,14 +1806,14 @@ final class WebsiteApiController extends Controller
                 $key = "{$prefix}_{$i}";
                 if ($request->hasFile($key)) {
                     $oldPath = WebSetting::get($key);
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
-                    $path = \App\Helpers\ImageOptimizer::optimize($request->file($key), $folder);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
+                    $path = app(\App\Services\ImageUploadService::class)->upload($request->file($key), $folder);
                     WebSetting::set($key, $path, 'slider', 'image');
                 }
                 elseif ($request->has($key) && $request->input($key) === null) {
                     // Manual deletion if field is present but null
                     $oldPath = WebSetting::get($key);
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     WebSetting::set($key, null, 'slider', 'image');
                 }
             }
@@ -1795,18 +1823,18 @@ final class WebsiteApiController extends Controller
         foreach (['featured_campaign_icon', 'featured_campaign_icon1_image', 'featured_campaign_icon2_image', 'featured_campaign_image', 'gh_home_image', 'hero_image'] as $key) {
             if ($request->hasFile($key)) {
                 $oldPath = WebSetting::get($key);
-                \App\Helpers\ImageOptimizer::delete($oldPath);
+                app(\App\Services\ImageUploadService::class)->delete($oldPath);
 
                 $folder = ($key === 'featured_campaign_image') ? 'website/campaigns' :
                     (($key === 'gh_home_image') ? 'website/home' :
                     (($key === 'hero_image') ? 'website/hero' : 'website/campaigns/icons'));
 
-                $path = \App\Helpers\ImageOptimizer::optimize($request->file($key), $folder);
+                $path = app(\App\Services\ImageUploadService::class)->upload($request->file($key), $folder);
                 WebSetting::set($key, $path);
             }
             elseif ($request->has($key) && $request->input($key) === null) {
                 $oldPath = WebSetting::get($key);
-                \App\Helpers\ImageOptimizer::delete($oldPath);
+                app(\App\Services\ImageUploadService::class)->delete($oldPath);
                 WebSetting::set($key, null);
             }
         }
@@ -1816,6 +1844,11 @@ final class WebsiteApiController extends Controller
     }
 
     // Testimonials Management
+    public function getTestimonials()
+    {
+        return response()->json(WebTestimonial::orderByDesc('created_at')->get());
+    }
+
     public function storeTestimonial(Request $request)
     {
         $data = $request->validate([
@@ -1823,10 +1856,10 @@ final class WebsiteApiController extends Controller
             'role' => 'nullable|string',
             'content' => 'required|string',
             'rating' => 'integer|min:1|max:5',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|any_image|max:2048'
         ]);
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
         }
         $item = \App\Models\WebTestimonial::create($data);
         return response()->json(['message' => 'تم الإضافة بنجاح', 'data' => $item]);
@@ -1845,11 +1878,11 @@ final class WebsiteApiController extends Controller
             'role' => 'nullable|string',
             'content' => 'required|string',
             'rating' => 'required|integer|min:1|max:5',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|any_image|max:2048'
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
         }
 
         $data['status'] = 'pending'; // Default status for public submissions
@@ -1866,12 +1899,12 @@ final class WebsiteApiController extends Controller
             'role' => 'nullable|string',
             'content' => 'required|string',
             'rating' => 'integer|min:1|max:5',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|any_image|max:2048',
             'status' => 'nullable|in:pending,approved,rejected'
         ]);
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($testimonial->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+            app(\App\Services\ImageUploadService::class)->delete($testimonial->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
         }
         $testimonial->update($data);
         return response()->json(['message' => 'تم التحديث بنجاح', 'data' => $testimonial]);
@@ -1879,12 +1912,17 @@ final class WebsiteApiController extends Controller
 
     public function destroyTestimonial(\App\Models\WebTestimonial $testimonial)
     {
-        \App\Helpers\ImageOptimizer::delete($testimonial->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($testimonial->image_path);
         $testimonial->delete();
         return response()->json(['message' => 'تم الحذف بنجاح']);
     }
 
     // Features Management (Why Choose Us)
+    public function getFeatures()
+    {
+        return response()->json(WebFeature::orderBy('sort_order')->get());
+    }
+
     public function storeFeature(Request $request)
     {
         $data = $request->validate([
@@ -1916,6 +1954,11 @@ final class WebsiteApiController extends Controller
     }
 
     // Sectors Management
+    public function getSectors()
+    {
+        return response()->json(WebSector::orderBy('id')->get());
+    }
+
     public function storeSector(Request $request)
     {
         $data = $request->validate([
@@ -2000,10 +2043,10 @@ final class WebsiteApiController extends Controller
             'name' => 'required|string',
             'hours' => 'integer',
             'rank' => 'integer',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|any_image|max:2048'
         ]);
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/volunteers');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/volunteers');
         }
         $item = \App\Models\WebVolunteerWall::create($data);
         Cache::forget('website_landing_page_data');
@@ -2016,11 +2059,11 @@ final class WebsiteApiController extends Controller
             'name' => 'required|string',
             'hours' => 'integer',
             'rank' => 'integer',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|any_image|max:2048'
         ]);
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($item->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/volunteers');
+            app(\App\Services\ImageUploadService::class)->delete($item->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/volunteers');
         }
         $item->update($data);
         Cache::forget('website_landing_page_data');
@@ -2029,7 +2072,7 @@ final class WebsiteApiController extends Controller
 
     public function destroyVolunteerWall(\App\Models\WebVolunteerWall $item)
     {
-        \App\Helpers\ImageOptimizer::delete($item->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($item->image_path);
         $item->delete();
         Cache::forget('website_landing_page_data');
         return response()->json(['message' => 'تم الحذف بنجاح']);
@@ -2040,12 +2083,12 @@ final class WebsiteApiController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'logo' => 'required|image|max:2048',
+            'logo' => 'required|any_image|max:2048',
             'description' => 'nullable|string',
             'type' => 'nullable|in:gold,platinum,silver,bronze',
             'website_url' => 'nullable|url'
         ]);
-        $data['logo_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('logo'), 'website/partners');
+        $data['logo_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('logo'), 'website/partners');
         $item = WebPartner::create($data);
         Cache::forget('website_landing_page_data');
         return response()->json(['message' => 'تم الإضافة بنجاح', 'data' => $item]);
@@ -2055,14 +2098,14 @@ final class WebsiteApiController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'logo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|any_image|max:2048',
             'description' => 'nullable|string',
             'type' => 'nullable|in:gold,platinum,silver,bronze',
             'website_url' => 'nullable|url'
         ]);
         if ($request->hasFile('logo')) {
-            \App\Helpers\ImageOptimizer::delete($partner->logo_path);
-            $data['logo_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('logo'), 'website/partners');
+            app(\App\Services\ImageUploadService::class)->delete($partner->logo_path);
+            $data['logo_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('logo'), 'website/partners');
         }
         $partner->update($data);
         Cache::forget('website_landing_page_data');
@@ -2071,7 +2114,7 @@ final class WebsiteApiController extends Controller
 
     public function destroyPartner(WebPartner $partner)
     {
-        \App\Helpers\ImageOptimizer::delete($partner->logo_path);
+        app(\App\Services\ImageUploadService::class)->delete($partner->logo_path);
         $partner->delete();
         Cache::forget('website_landing_page_data');
         return response()->json(['message' => 'تم الحذف بنجاح']);
@@ -2083,7 +2126,7 @@ final class WebsiteApiController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'published_at' => 'nullable|date',
             'category' => 'nullable|string',
             'views_count' => 'nullable|integer',
@@ -2092,7 +2135,7 @@ final class WebsiteApiController extends Controller
             'contact_number' => 'nullable|string'
         ]);
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/news');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/news');
         }
         $item = WebNews::create($data);
         return response()->json(['message' => 'تم الإضافة بنجاح', 'data' => $item]);
@@ -2103,7 +2146,7 @@ final class WebsiteApiController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'published_at' => 'nullable|date',
             'category' => 'nullable|string',
             'views_count' => 'nullable|integer',
@@ -2112,8 +2155,8 @@ final class WebsiteApiController extends Controller
             'contact_number' => 'nullable|string'
         ]);
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($news->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/news');
+            app(\App\Services\ImageUploadService::class)->delete($news->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/news');
         }
         $news->update($data);
         return response()->json(['message' => 'تم التحديث بنجاح', 'data' => $news]);
@@ -2121,7 +2164,7 @@ final class WebsiteApiController extends Controller
 
     public function destroyNews(WebNews $news)
     {
-        \App\Helpers\ImageOptimizer::delete($news->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($news->image_path);
         $news->delete();
         return response()->json(['message' => 'تم الحذف بنجاح']);
     }
@@ -2136,7 +2179,7 @@ final class WebsiteApiController extends Controller
                 if (is_array($f)) {
                     $features[] = [
                         'text' => $f['text'] ?? '',
-                        'icon' => isset($f['icon']) && $f['icon'] ? (str_starts_with($f['icon'], 'http') ? $f['icon'] : asset('storage/' . $f['icon'])) : null,
+                        'icon' => isset($f['icon']) && $f['icon'] ? (str_starts_with($f['icon'], 'http') ? $f['icon'] : $this->getStorageUrl($f['icon'])) : null,
                     ];
                 } elseif (is_string($f)) {
                     $features[] = ['text' => $f, 'icon' => null];
@@ -2152,7 +2195,7 @@ final class WebsiteApiController extends Controller
                     $stats[] = [
                         'value' => $s['value'] ?? '',
                         'label' => $s['label'] ?? '',
-                        'icon' => isset($s['icon']) && $s['icon'] ? (str_starts_with($s['icon'], 'http') ? $s['icon'] : asset('storage/' . $s['icon'])) : null,
+                        'icon' => isset($s['icon']) && $s['icon'] ? (str_starts_with($s['icon'], 'http') ? $s['icon'] : $this->getStorageUrl($s['icon'])) : null,
                     ];
                 }
             }
@@ -2253,10 +2296,10 @@ final class WebsiteApiController extends Controller
             'action_url' => $c->action_url,
             // Pre-formatted strings for UI based on screenshots
             'ui' => [
-                'collected_format' => $c->ui_collected_override ?? (($settings['campaign_ui_collected_label'] ?? 'تم جمع') . ' ' . number_format($currentAmount ?? 0) . ' ج.م'),
-                'benefited_format' => $c->ui_beneficiaries_override ?? (($settings['campaign_ui_benefited_label'] ?? 'استفاد') . ' ' . number_format($beneficiariesCount ?? 0) . '+ أسرة'),
-                'share_format' => $c->ui_share_override ?? (($settings['campaign_ui_share_label'] ?? 'السهم') . ': ' . number_format($c->share_price ?? 0) . ' ج.م'),
-                'goal_format' => $c->ui_goal_override ?? (($settings['campaign_ui_goal_label'] ?? 'الهدف') . ': ' . number_format($c->goal_amount ?? 0) . ' ' . ($c->goal_unit ?? 'جنيه')),
+                'collected_format' => $c->ui_collected_override ?? (($settings['campaign_ui_collected_label'] ?? 'تم جمع') . ' ' . number_format((float) ($currentAmount ?? 0)) . ' ج.م'),
+                'benefited_format' => $c->ui_beneficiaries_override ?? (($settings['campaign_ui_benefited_label'] ?? 'استفاد') . ' ' . number_format((float) ($beneficiariesCount ?? 0)) . '+ أسرة'),
+                'share_format' => $c->ui_share_override ?? (($settings['campaign_ui_share_label'] ?? 'السهم') . ': ' . number_format((float) ($c->share_price ?? 0)) . ' ج.م'),
+                'goal_format' => $c->ui_goal_override ?? (($settings['campaign_ui_goal_label'] ?? 'الهدف') . ': ' . number_format((float) ($c->goal_amount ?? 0)) . ' ' . ($c->goal_unit ?? 'جنيه')),
                 'progress_override' => $c->ui_progress_override,
                 'contribute_btn' => $c->ui_contribute_btn,
                 'remind_btn' => $c->ui_remind_btn,
@@ -2324,11 +2367,11 @@ final class WebsiteApiController extends Controller
             'event_date' => 'nullable|date',
             'event_end_date' => 'nullable|date',
             'is_featured' => 'nullable|boolean',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/events');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/events');
         }
 
         $event = WebEvent::create($data);
@@ -2348,12 +2391,12 @@ final class WebsiteApiController extends Controller
             'event_date' => 'nullable|date',
             'event_end_date' => 'nullable|date',
             'is_featured' => 'nullable|boolean',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($event->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/events');
+            app(\App\Services\ImageUploadService::class)->delete($event->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/events');
         }
 
         $event->update($data);
@@ -2365,7 +2408,7 @@ final class WebsiteApiController extends Controller
      */
     public function destroyEvent(WebEvent $event)
     {
-        \App\Helpers\ImageOptimizer::delete($event->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($event->image_path);
         $event->delete();
         return response()->json(['message' => 'تم حذف الفعالية بنجاح']);
     }
@@ -2416,6 +2459,57 @@ final class WebsiteApiController extends Controller
         return response()->json(\App\Models\WebContactMessage::orderByDesc('created_at')->get());
     }
 
+    public function markContactMessageRead(WebContactMessage $message)
+    {
+        $message->update(['read' => true]);
+        return response()->json(['message' => 'تم تحديث حالة الرسالة', 'data' => $message]);
+    }
+
+    public function destroyContactMessage(WebContactMessage $message)
+    {
+        $message->delete();
+        return response()->json(['message' => 'تم حذف الرسالة بنجاح']);
+    }
+
+    public function getVolunteerRequests()
+    {
+        return response()->json(WebVolunteerRequest::orderByDesc('created_at')->get());
+    }
+
+    public function destroyVolunteerRequest(WebVolunteerRequest $request)
+    {
+        foreach (['cv_path', 'id_card_path'] as $column) {
+            if ($request->{$column}) {
+                app(\App\Services\ImageUploadService::class)->delete($request->{$column});
+            }
+        }
+        $request->delete();
+        return response()->json(['message' => 'تم حذف طلب التطوع بنجاح']);
+    }
+
+    public function getRoomBookings()
+    {
+        return response()->json(WebRoomBooking::with(['guestHouse', 'beneficiary'])->orderByDesc('created_at')->get());
+    }
+
+    public function updateRoomBookingStatus(Request $request, WebRoomBooking $booking)
+    {
+        $data = $request->validate(['status' => ['required', 'string', 'max:50']]);
+        $booking->update(['status' => $data['status']]);
+        return response()->json(['message' => 'تم تحديث حالة الحجز', 'data' => $booking]);
+    }
+
+    public function destroyRoomBooking(WebRoomBooking $booking)
+    {
+        foreach ($booking->getImageColumns() as $column) {
+            if ($booking->{$column}) {
+                app(\App\Services\ImageUploadService::class)->delete($booking->{$column});
+            }
+        }
+        $booking->delete();
+        return response()->json(['message' => 'تم حذف الحجز بنجاح']);
+    }
+
     /**
      * @OA\Post(
      *     path="/api/v1/website/opinions",
@@ -2444,7 +2538,7 @@ final class WebsiteApiController extends Controller
                 'opinion' => 'required|string',
                 'rating'  => 'nullable|integer|min:1|max:5',
                 'role'    => 'nullable|string|max:255',
-                'image'   => 'nullable|image|max:5120',
+                'image'   => 'nullable|any_image|max:5120',
             ]);
 
             // Format content to include contact info (since WebTestimonial doesn't have these columns)
@@ -2457,7 +2551,7 @@ final class WebsiteApiController extends Controller
 
             $imagePath = null;
             if ($request->hasFile('image')) {
-                $imagePath = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+                $imagePath = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
             }
 
             $testimonial = \App\Models\WebTestimonial::create([
@@ -2486,7 +2580,7 @@ final class WebsiteApiController extends Controller
                 'exception' => $e,
                 'input'     => $request->all()
             ]);
-            
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'حدث خطأ في السيرفر أثناء معالجة طلبك'
@@ -2585,21 +2679,24 @@ final class WebsiteApiController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[\x{0600}-\x{06FF}\s]+$/u', // Arabic only
+                'regex:/^[\x{0600}-\x{06FF}a-zA-Z\s]+$/u', // Arabic or English
                 function ($attribute, $value, $fail) {
                     $words = preg_split('/\s+/u', trim($value), -1, PREG_SPLIT_NO_EMPTY);
                     if (count($words) < 3) {
-                        $fail('يجب أن يتكون الاسم من 3 كلمات على الأقل باللغة العربية.');
+                        $fail('يجب أن يتكون الاسم من 3 كلمات على الأقل.');
                     }
                 },
             ],
-            'phone'   => 'required|string|digits:11|unique:web_donors,phone',
-            'email'   => 'nullable|email|unique:web_donors,email',
-            'country' => 'nullable|string|max:100',
+            'phone'    => 'required|string|digits:11|unique:web_donors,phone',
+            'email'    => 'nullable|email|unique:web_donors,email',
+            'country'  => 'nullable|string|max:100',
+            'password' => 'required|string|min:6',
         ], [
-            'name.regex'    => 'يجب أن يكون الاسم باللغة العربية فقط.',
-            'phone.digits'  => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
-            'phone.unique'  => 'رقم الهاتف مسجل بالفعل، الرجاء تسجيل الدخول.',
+            'name.regex'        => 'يجب أن يكون الاسم بالحروف العربية أو الإنجليزية فقط.',
+            'phone.digits'      => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
+            'phone.unique'      => 'رقم الهاتف مسجل بالفعل، الرجاء تسجيل الدخول.',
+            'password.required' => 'كلمة المرور مطلوبة.',
+            'password.min'      => 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
         ]);
 
         $user = \App\Models\WebDonor::create([
@@ -2607,7 +2704,7 @@ final class WebsiteApiController extends Controller
             'phone'        => $request->phone,
             'country'      => $request->country,
             'email'        => $request->email ?? ($request->phone . '@anasen.charity'),
-            'password'     => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
+            'password'     => \Illuminate\Support\Facades\Hash::make($request->password),
             'active'       => true,
             'otp_verified' => false, // first login will require OTP
         ]);
@@ -2634,9 +2731,11 @@ final class WebsiteApiController extends Controller
     public function publicLogin(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|digits:11',
+            'phone'    => 'required|string|digits:11',
+            'password' => 'required|string',
         ], [
-            'phone.digits' => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
+            'phone.digits'      => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
+            'password.required' => 'كلمة المرور مطلوبة.',
         ]);
 
         $user = \App\Models\WebDonor::where('phone', $request->phone)->first();
@@ -2648,36 +2747,23 @@ final class WebsiteApiController extends Controller
             ], 404);
         }
 
-        // First-time login: send OTP and require verification
-        if (!$user->otp_verified) {
-            $otp             = '12345'; // Fixed OTP as requested
-            $user->otp_code       = $otp;
-            $user->otp_expires_at = now()->addMinutes(10);
-            $user->save();
-
-            // TODO: Send OTP via SMS here (e.g. Twilio, Vonage, etc.)
-            // For now: log it for development
-            \Illuminate\Support\Facades\Log::info("OTP for {$user->phone}: {$otp}");
-
+        // Verify password
+        if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
             return response()->json([
-                'success'      => true,
-                'requires_otp' => true,
-                'message'      => 'تم إرسال رمز التحقق إلى رقم هاتفك. أدخل الرمز للمتابعة.',
-                'phone'        => $user->phone,
-                // In development, expose OTP so frontend can test without SMS
-                'otp_dev'      => app()->isLocal() ? $otp : null,
-            ]);
+                'success' => false,
+                'message' => 'كلمة المرور غير صحيحة.',
+            ], 401);
         }
 
-        // Subsequent logins: direct token
+        // User is authenticated, direct token
         $token = $user->createToken('EnsanWeb')->plainTextToken;
 
         return response()->json([
             'success'      => true,
             'requires_otp' => false,
-            'message'      => 'تم تسجيل الدخول بنجاح.',
-            'token'        => $token,
-            'user'         => [
+            'message' => 'تم تسجيل الدخول بنجاح.',
+            'token'   => $token,
+            'user'    => [
                 'id'          => $user->id,
                 'name'        => $user->name,
                 'phone'       => $user->phone,
@@ -2697,9 +2783,10 @@ final class WebsiteApiController extends Controller
     {
         $request->validate([
             'phone' => 'required|string|digits:11',
-            'otp'   => 'required|string|digits:5',
+            'otp'   => 'required|string|min:4|max:6',
         ], [
-            'otp.digits' => 'رمز التحقق يجب أن يتكون من 5 أرقام.',
+            'otp.min' => 'رمز التحقق غير صالح.',
+            'otp.max' => 'رمز التحقق غير صالح.',
         ]);
 
         $user = \App\Models\WebDonor::where('phone', $request->phone)->first();
@@ -2760,17 +2847,36 @@ final class WebsiteApiController extends Controller
             ], 429);
         }
 
-        $otp = '12345'; // Fixed OTP as requested
-        $user->otp_code       = $otp;
-        $user->otp_expires_at = now()->addMinutes(10);
+        $otp = $this->sendOtpViaBeon($user->phone);
+        $user->otp_code       = $otp ?? (string) rand(1000, 9999);
+        $user->otp_expires_at = now()->addMinutes(15);
         $user->save();
 
-        \Illuminate\Support\Facades\Log::info("Resent OTP for {$user->phone}: {$otp}");
+        \Illuminate\Support\Facades\Log::info("Resent OTP for {$user->phone}: {$user->otp_code}");
 
         return response()->json([
             'success' => true,
             'message' => 'تم إعادة إرسال رمز التحقق.',
             'otp_dev' => app()->isLocal() ? $otp : null,
+        ]);
+    }
+
+    /**
+     * Check if website donor phone is registered
+     */
+    public function publicCheckPhone(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|digits:11',
+        ], [
+            'phone.digits' => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
+        ]);
+
+        $exists = \App\Models\WebDonor::where('phone', $request->phone)->exists();
+
+        return response()->json([
+            'success' => true,
+            'exists' => $exists,
         ]);
     }
 
@@ -2785,19 +2891,20 @@ final class WebsiteApiController extends Controller
         }
 
         // --- Self-Healing Data Sync: Link orphan donations by phone number ---
+        $donorIds = [];
+        $donationColumns = [];
         try {
             $userPhone = $user->phone;
             if ($userPhone) {
                 // Find all matching donors in the system
-                $donorIds = \App\Models\Donor::where('phone', $userPhone)->pluck('id');
-                if ($donorIds->isNotEmpty()) {
+                $donorIds = \App\Models\Donor::where('phone', $userPhone)->pluck('id')->toArray();
+                if (!empty($donorIds)) {
                     // Update WebDonations that are not yet linked to this web_donor_id
                     \App\Models\WebDonation::whereIn('donor_id', $donorIds)
                         ->whereNull('web_donor_id')
                         ->update(['web_donor_id' => $user->id]);
-                    
+
                     // Update internal Donations as well to show in history
-                    // Check if column exists first to be safe
                     $donationColumns = \Illuminate\Support\Facades\Schema::getColumnListing('donations');
                     if (in_array('web_donor_id', $donationColumns)) {
                         \App\Models\Donation::whereIn('donor_id', $donorIds)
@@ -2807,38 +2914,102 @@ final class WebsiteApiController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Silently fail to not block the dashboard
             \Illuminate\Support\Facades\Log::error('Dashboard Data Sync Error: ' . $e->getMessage());
         }
         // --- End Sync ---
 
-        // Get all web donations for this donor
+        $donationsList = collect();
+        $totalAmountValue = 0;
+
+        // 1. Get all web donations for this donor
         $webDonations = \App\Models\WebDonation::where('web_donor_id', $user->id)
             ->with(['donationable', 'proof'])
             ->latest()
             ->get();
 
-        $totalAmountValue = $webDonations->where('status', 'verified')->sum('amount');
-        $donationsCount   = $webDonations->count();
-        $impactPercentage = $donationsCount > 0 ? min(100, $donationsCount * 12) : 0;
-
-        // Map all donations for history / recent_activity
-        $donationsList = $webDonations->map(function ($d) {
-            return [
-                'id'             => $d->id,
+        foreach ($webDonations as $d) {
+            $status = $d->status;
+            if ($status === 'verified' || $status === 'approved') {
+                $totalAmountValue += (float)$d->amount;
+            }
+            $donationsList->push([
+                'id'             => 'W-' . $d->id,
                 'date'           => $d->created_at->format('d/m/Y'),
                 'time'           => $d->created_at->format('H:i'),
                 'amount'         => (float) $d->amount,
                 'category'       => $d->donationable
                     ? ($d->donationable->title ?? $d->donationable->name ?? $d->category_label)
                     : $d->category_label,
-                'payment_method' => $d->payment_method_label,
-                'status'         => $this->translateStatus($d->status),
-                'status_key'     => $d->status,
-                'proof_url'      => $d->proof ? asset('storage/' . $d->proof->image_path) : null,
+                'payment_method' => $d->payment_method_label ?? $this->translatePaymentMethod($d->payment_method),
+                'status'         => $this->translateStatus($status),
+                'status_key'     => $status,
+                'proof_url'      => $d->proof ? $this->getStorageUrl($d->proof->image_path) : null,
                 'notes'          => $d->allocation_note,
-            ];
-        });
+                'created_at'     => $d->created_at,
+            ]);
+        }
+
+        // 2. Get Mobile Donations (Instapay, Vodafone Cash) by Phone Number
+        if ($user->phone) {
+            $mobileDonations = \App\Models\MobileDonation::where('donor_phone', $user->phone)->latest()->get();
+            foreach ($mobileDonations as $d) {
+                $status = $d->status;
+                if ($status === 'verified' || $status === 'approved') {
+                    $totalAmountValue += (float)$d->donation_amount;
+                }
+                $donationsList->push([
+                    'id'             => 'M-' . $d->id,
+                    'date'           => $d->created_at->format('d/m/Y'),
+                    'time'           => $d->created_at->format('H:i'),
+                    'amount'         => (float) $d->donation_amount,
+                    'category'       => $d->donation_for ?? 'عام',
+                    'payment_method' => $this->translatePaymentMethod($d->payment_method),
+                    'status'         => $this->translateStatus($status),
+                    'status_key'     => $status,
+                    'proof_url'      => $d->receipt_path ? $this->getStorageUrl($d->receipt_path) : null,
+                    'notes'          => $d->notes,
+                    'created_at'     => $d->created_at,
+                ]);
+            }
+        }
+
+        // 3. Get Internal CRM Donations
+        if (in_array('web_donor_id', $donationColumns)) {
+            $query = \App\Models\Donation::where('web_donor_id', $user->id);
+            if (!empty($donorIds)) {
+                $query->orWhereIn('donor_id', $donorIds);
+            }
+            $crmDonations = $query->latest()->get();
+            foreach ($crmDonations as $d) {
+                // Internal donations are usually considered verified
+                $totalAmountValue += (float)$d->amount;
+
+                $categoryName = 'عام';
+                if ($d->category) {
+                    $categoryName = $d->category->name ?? 'عام';
+                }
+
+                $donationsList->push([
+                    'id'             => 'C-' . $d->id,
+                    'date'           => $d->created_at->format('d/m/Y'),
+                    'time'           => $d->created_at->format('H:i'),
+                    'amount'         => (float) $d->amount,
+                    'category'       => $categoryName,
+                    'payment_method' => $this->translatePaymentMethod($d->payment_method),
+                    'status'         => 'مقبول',
+                    'status_key'     => 'verified',
+                    'proof_url'      => null, // CRM might not expose proof to web dashboard
+                    'notes'          => $d->notes ?? '',
+                    'created_at'     => $d->created_at,
+                ]);
+            }
+        }
+
+        // Sort all by date descending
+        $donationsList = $donationsList->sortByDesc('created_at')->values();
+
+        $donationsCount   = $donationsList->count();
+        $impactPercentage = $donationsCount > 0 ? min(100, $donationsCount * 12) : 0;
 
         return response()->json([
             'success' => true,
@@ -2850,7 +3021,7 @@ final class WebsiteApiController extends Controller
                 'city'        => $user->city,
                 'governorate' => $user->governorate,
                 'photo'       => $user->profile_photo_path
-                    ? asset('storage/' . $user->profile_photo_path)
+                    ? $this->getStorageUrl($user->profile_photo_path)
                     : null,
             ],
             'stats' => [
@@ -2903,11 +3074,11 @@ final class WebsiteApiController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[\x{0600}-\x{06FF}\s]+$/u', // Arabic only
+                'regex:/^[\x{0600}-\x{06FF}a-zA-Z\s]+$/u', // Arabic or English
                 function ($attribute, $value, $fail) {
                     $words = preg_split('/\s+/u', trim($value), -1, PREG_SPLIT_NO_EMPTY);
                     if (count($words) < 3) {
-                        $fail('يجب أن يتكون الاسم من 3 كلمات على الأقل باللغة العربية.');
+                        $fail('يجب أن يتكون الاسم من 3 كلمات على الأقل.');
                     }
                 },
             ],
@@ -2915,7 +3086,7 @@ final class WebsiteApiController extends Controller
             'city' => 'nullable|string|max:255',
             'governorate' => 'nullable|string|max:255',
         ], [
-            'name.regex' => 'يجب أن يكون الاسم باللغة العربية فقط.',
+            'name.regex' => 'يجب أن يكون الاسم بالحروف العربية أو الإنجليزية فقط.',
             'name.required' => 'الاسم مطلوب.',
             'email.email' => 'البريد الإلكتروني غير صالح.',
             'email.unique' => 'البريد الإلكتروني مسجل مسبقاً لمستخدم آخر.',
@@ -2934,7 +3105,7 @@ final class WebsiteApiController extends Controller
         if (in_array('governorate', $columns) && $request->has('governorate')) {
             $user->governorate = $request->governorate;
         }
-        
+
         $user->save();
 
         return response()->json([
@@ -2948,6 +3119,151 @@ final class WebsiteApiController extends Controller
                 'city' => $user->city,
                 'governorate' => $user->governorate
             ]
+        ]);
+    }
+
+    private function sendOtpViaBeon(string $phone): ?string
+    {
+        try {
+            $token = config('services.beon.token');
+            if (!$token) {
+                \Illuminate\Support\Facades\Log::warning('Beon OTP is not configured.');
+                return null;
+            }
+
+            $formattedPhone = preg_replace('/\D/', '', $phone);
+            if (str_starts_with($formattedPhone, '01') && strlen($formattedPhone) == 11) {
+                $formattedPhone = '2' . $formattedPhone;
+            }
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'beon-token' => $token,
+                'Content-Type' => 'application/json',
+            ])->post('https://v3.api.beon.chat/api/v3/messages/otp', [
+                'recipient' => $formattedPhone,
+                'phoneNumber' => $formattedPhone,
+                'phone' => $formattedPhone,
+                'name' => 'Ensan',
+                'channel' => 'sms',
+                'type' => 'sms',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                \Illuminate\Support\Facades\Log::info("Beon OTP response: " . json_encode($data));
+                if (isset($data['data']['otp'])) {
+                    return (string) $data['data']['otp'];
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::error("Beon OTP error: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Exception in sendOtpViaBeon: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    // ─── Complaints — Public ───────────────────────────────────────────────────
+
+    public function submitWebsiteComplaint(Request $request)
+    {
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'phone'       => 'required|string|max:30',
+            'email'       => 'nullable|email|max:255',
+            'source_type' => 'required|in:donor,beneficiary,employee',
+            'subject'     => 'required|string|max:255',
+            'message'     => 'required|string',
+        ], [
+            'name.required'        => 'الاسم مطلوب.',
+            'phone.required'       => 'رقم الهاتف مطلوب.',
+            'source_type.required' => 'نوع المُبلِّغ مطلوب.',
+            'source_type.in'       => 'نوع المُبلِّغ غير صحيح.',
+            'subject.required'     => 'موضوع الشكوى مطلوب.',
+            'message.required'     => 'نص الشكوى مطلوب.',
+        ]);
+
+        // store name/phone/email in message preamble so it's visible in the admin panel
+        $preamble = "المُبلِّغ: {$data['name']} | هاتف: {$data['phone']}";
+        if (!empty($data['email'])) {
+            $preamble .= " | بريد: {$data['email']}";
+        }
+
+        $complaint = \App\Models\Complaint::create([
+            'source_type' => $data['source_type'],
+            'source_id'   => 0,
+            'subject'     => $data['subject'],
+            'message'     => $preamble . "\n\n" . $data['message'],
+            'status'      => 'open',
+        ]);
+
+        return response()->json([
+            'message'       => 'تم تسجيل شكواك بنجاح.',
+            'tracking_code' => $complaint->tracking_code,
+        ], 201);
+    }
+
+    public function trackWebsiteComplaint(string $code)
+    {
+        $complaint = \App\Models\Complaint::where('tracking_code', strtoupper($code))->first();
+
+        if (!$complaint) {
+            return response()->json(['message' => 'لم يتم العثور على شكوى بهذا الكود.'], 404);
+        }
+
+        return response()->json([
+            'tracking_code' => $complaint->tracking_code,
+            'subject'       => $complaint->subject,
+            'source_type'   => $complaint->source_type,
+            'status'        => $complaint->status,
+            'resolution'    => $complaint->resolution,
+            'resolved_at'   => $complaint->resolved_at?->format('Y-m-d'),
+            'created_at'    => $complaint->created_at->format('Y-m-d'),
+        ]);
+    }
+
+    // ─── Complaints — Admin ────────────────────────────────────────────────────
+
+    public function adminListComplaints(Request $request)
+    {
+        $complaints = \App\Models\Complaint::orderByDesc('id')
+            ->paginate(20)
+            ->through(fn ($c) => [
+                'id'            => $c->id,
+                'tracking_code' => $c->tracking_code,
+                'subject'       => $c->subject,
+                'source_type'   => $c->source_type,
+                'status'        => $c->status,
+                'resolution'    => $c->resolution,
+                'resolved_at'   => $c->resolved_at?->format('Y-m-d'),
+                'created_at'    => $c->created_at->format('Y-m-d'),
+                'message'       => $c->message,
+            ]);
+
+        return response()->json($complaints);
+    }
+
+    public function adminUpdateComplaint(Request $request, \App\Models\Complaint $complaint)
+    {
+        $data = $request->validate([
+            'status'     => 'nullable|in:open,in_progress,closed',
+            'resolution' => 'nullable|string',
+        ]);
+
+        if (isset($data['status']) && $data['status'] === 'closed' && $complaint->status !== 'closed') {
+            $data['resolved_at'] = now();
+        } elseif (isset($data['status']) && $data['status'] !== 'closed') {
+            $data['resolved_at'] = null;
+        }
+
+        $complaint->update($data);
+
+        return response()->json([
+            'message'       => 'تم تحديث الشكوى بنجاح.',
+            'tracking_code' => $complaint->tracking_code,
+            'status'        => $complaint->status,
+            'resolution'    => $complaint->resolution,
         ]);
     }
 }

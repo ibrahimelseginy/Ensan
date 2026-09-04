@@ -280,7 +280,7 @@
             </a>
          </div>
          <div class="col-md-2 col-4">
-            <a href="{{ route('financial-closures.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
+            <a href="{{ route('closures.index') }}" class="glass-card p-3 text-center text-decoration-none d-block hover-lift">
                  <i class="bi bi-calendar-check fs-3 mb-2" style="color: #06b6d4;"></i>
                  <div class="fw-bold small">الإقفالات</div>
             </a>

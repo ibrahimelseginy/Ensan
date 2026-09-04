@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Account extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['code','name','type','parent_id','description'];
 
     public function parent() { return $this->belongsTo(Account::class, 'parent_id'); }

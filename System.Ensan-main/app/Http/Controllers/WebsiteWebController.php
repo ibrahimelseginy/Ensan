@@ -37,7 +37,7 @@ final class WebsiteWebController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:web_pages,slug',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',
@@ -57,7 +57,7 @@ final class WebsiteWebController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/pages');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/pages');
         }
 
         $data['is_published'] = $request->has('is_published'); // Checkbox handling
@@ -72,7 +72,7 @@ final class WebsiteWebController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:web_pages,slug,' . $page->id,
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string',
@@ -80,8 +80,8 @@ final class WebsiteWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($page->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/pages');
+            app(\App\Services\ImageUploadService::class)->delete($page->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/pages');
         }
 
         $data['is_published'] = $request->has('is_published');
@@ -123,12 +123,12 @@ final class WebsiteWebController extends Controller
             'name' => 'required|string',
             'role' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'sort_order' => 'integer'
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/board');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/board');
         }
 
         WebBoardMember::create($data);
@@ -142,13 +142,13 @@ final class WebsiteWebController extends Controller
             'name' => 'required|string',
             'role' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'sort_order' => 'integer'
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($member->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/board');
+            app(\App\Services\ImageUploadService::class)->delete($member->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/board');
         }
 
         unset($data['image']);
@@ -181,13 +181,13 @@ final class WebsiteWebController extends Controller
             'name' => 'required|string',
             'description' => 'nullable|string',
             'type' => 'required|in:gold,platinum,silver,bronze,corporate',
-            'logo' => 'nullable|image|max:5120',
+            'logo' => 'nullable|any_image|max:5120',
             'website_url' => 'nullable|url'
         ]);
 
         if ($request->hasFile('logo')) {
             @ini_set('memory_limit', '512M');
-            $data['logo_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('logo'), 'website/partners');
+            $data['logo_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('logo'), 'website/partners');
         }
 
         unset($data['logo']);
@@ -202,14 +202,14 @@ final class WebsiteWebController extends Controller
             'name' => 'required|string',
             'description' => 'nullable|string',
             'type' => 'required|in:gold,platinum,silver,bronze,corporate',
-            'logo' => 'nullable|image|max:5120',
+            'logo' => 'nullable|any_image|max:5120',
             'website_url' => 'nullable|url'
         ]);
 
         if ($request->hasFile('logo')) {
             @ini_set('memory_limit', '512M');
-            \App\Helpers\ImageOptimizer::delete($partner->logo_path);
-            $data['logo_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('logo'), 'website/partners');
+            app(\App\Services\ImageUploadService::class)->delete($partner->logo_path);
+            $data['logo_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('logo'), 'website/partners');
         }
 
         unset($data['logo']);
@@ -241,7 +241,8 @@ final class WebsiteWebController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:5120',
+            'images' => 'nullable|array',
+            'images.*' => 'any_image|max:5120',
             'category' => 'nullable|string',
             'statistic_number' => 'nullable|string',
             'statistic_description' => 'nullable|string',
@@ -252,9 +253,18 @@ final class WebsiteWebController extends Controller
             'contact_number' => 'nullable|string'
         ]);
 
-        if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/news');
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $imagePaths[] = app(\App\Services\ImageUploadService::class)->upload($image, 'website/news');
+            }
+            $data['images'] = $imagePaths;
+            $data['image_path'] = $imagePaths[0] ?? null;
         }
+
+        // Ensure non-nullable columns always have a value
+        $data['views_count']  = $data['views_count']  ?? '0';
+        $data['shares_count'] = $data['shares_count'] ?? '0';
 
         WebNews::create($data);
         Cache::forget('website_landing_page_data');
@@ -266,7 +276,8 @@ final class WebsiteWebController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:5120',
+            'images' => 'nullable|array',
+            'images.*' => 'any_image|max:5120',
             'views_count' => 'nullable|string',
             'shares_count' => 'nullable|string',
             'statistic_number' => 'nullable|string',
@@ -274,19 +285,41 @@ final class WebsiteWebController extends Controller
             'published_at' => 'nullable|date',
             'category' => 'nullable|string',
             'contact_name' => 'nullable|string',
-            'contact_number' => 'nullable|string'
+            'contact_number' => 'nullable|string',
+            'remove_images' => 'nullable|array'
         ]);
 
-        if ($request->input('delete_image') == '1') {
-            \App\Helpers\ImageOptimizer::delete($news->image_path);
-            $news->image_path = null;
-            $news->save();
+        $currentImages = $news->images ?? [];
+
+        // Remove selected images
+        if ($request->has('remove_images')) {
+            foreach ($request->remove_images as $path) {
+                app(\App\Services\ImageUploadService::class)->delete($path);
+                $currentImages = array_filter($currentImages, fn($img) => $img !== $path);
+            }
         }
 
-        if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($news->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/news');
+        // Handle full image reset if requested (backward compatibility)
+        if ($request->input('delete_image') == '1') {
+            if ($news->image_path) {
+                app(\App\Services\ImageUploadService::class)->delete($news->image_path);
+            }
+            $news->image_path = null;
+            // Also clear images array if it's the only one
+            if (count($currentImages) <= 1) {
+                $currentImages = [];
+            }
         }
+
+        // Add new images
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $currentImages[] = app(\App\Services\ImageUploadService::class)->upload($image, 'website/news');
+            }
+        }
+
+        $data['images'] = array_values($currentImages);
+        $data['image_path'] = $data['images'][0] ?? null;
 
         $news->update($data);
         Cache::forget('website_landing_page_data');
@@ -295,9 +328,16 @@ final class WebsiteWebController extends Controller
 
     public function newsDestroy(WebNews $news)
     {
-        if ($news->image_path) {
-            Storage::disk('public')->delete($news->image_path);
+        // Delete all associated images
+        $allImages = $news->images ?? [];
+        if ($news->image_path && !in_array($news->image_path, $allImages)) {
+            $allImages[] = $news->image_path;
         }
+
+        foreach ($allImages as $path) {
+            app(\App\Services\ImageUploadService::class)->delete($path);
+        }
+
         $news->delete();
         Cache::forget('website_landing_page_data');
         return back()->with('success', 'تم حذف الخبر بنجاح');
@@ -345,7 +385,7 @@ final class WebsiteWebController extends Controller
         }
         elseif ($request->input("delete_{$heroKey}") == '1') {
             $oldPath = \App\Models\WebSetting::get($heroKey);
-            \App\Helpers\ImageOptimizer::delete($oldPath);
+            app(\App\Services\ImageUploadService::class)->delete($oldPath);
             \App\Models\WebSetting::where('key', $heroKey)->delete();
         }
 
@@ -357,7 +397,7 @@ final class WebsiteWebController extends Controller
             }
             elseif ($request->input("delete_{$key}") == '1') {
                 $oldPath = \App\Models\WebSetting::get($key);
-                \App\Helpers\ImageOptimizer::delete($oldPath);
+                app(\App\Services\ImageUploadService::class)->delete($oldPath);
                 \App\Models\WebSetting::where('key', $key)->delete();
             }
         }
@@ -480,10 +520,10 @@ final class WebsiteWebController extends Controller
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'sponsorship_details' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
-            'icon' => 'nullable|image|max:5120',
-            'badge_icon_file' => 'nullable|image|max:2048',
-            'action_icon_file' => 'nullable|image|max:2048',
+            'image' => 'nullable|any_image|max:10240',
+            'icon' => 'nullable|any_image|max:5120',
+            'badge_icon_file' => 'nullable|any_image|max:2048',
+            'action_icon_file' => 'nullable|any_image|max:2048',
             'short_description' => 'nullable|string',
             'action_text' => 'nullable|string',
             'action_url' => 'nullable|string',
@@ -501,20 +541,20 @@ final class WebsiteWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($project->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/projects');
+            app(\App\Services\ImageUploadService::class)->delete($project->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/projects');
         }
         if ($request->hasFile('icon')) {
-            \App\Helpers\ImageOptimizer::delete($project->icon_path);
-            $data['icon_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('icon'), 'website/projects/icons');
+            app(\App\Services\ImageUploadService::class)->delete($project->icon_path);
+            $data['icon_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('icon'), 'website/projects/icons');
         }
         if ($request->hasFile('badge_icon_file')) {
-            \App\Helpers\ImageOptimizer::delete($project->badge_icon);
-            $data['badge_icon'] = \App\Helpers\ImageOptimizer::optimize($request->file('badge_icon_file'), 'website/projects/badges');
+            app(\App\Services\ImageUploadService::class)->delete($project->badge_icon);
+            $data['badge_icon'] = app(\App\Services\ImageUploadService::class)->upload($request->file('badge_icon_file'), 'website/projects/badges');
         }
         if ($request->hasFile('action_icon_file')) {
-            \App\Helpers\ImageOptimizer::delete($project->action_icon);
-            $data['action_icon'] = \App\Helpers\ImageOptimizer::optimize($request->file('action_icon_file'), 'website/projects/actions');
+            app(\App\Services\ImageUploadService::class)->delete($project->action_icon);
+            $data['action_icon'] = app(\App\Services\ImageUploadService::class)->upload($request->file('action_icon_file'), 'website/projects/actions');
         }
 
         // Handle Dynamic Icons in Features
@@ -599,10 +639,10 @@ final class WebsiteWebController extends Controller
             'category' => 'nullable|string',
             'website_content' => 'nullable|string',
             'sponsorship_details' => 'nullable|string',
-            'image' => 'nullable|image|max:10240',
-            'icon' => 'nullable|image|max:5120',
-            'badge_icon_file' => 'nullable|image|max:2048',
-            'action_icon_file' => 'nullable|image|max:2048',
+            'image' => 'nullable|any_image|max:10240',
+            'icon' => 'nullable|any_image|max:5120',
+            'badge_icon_file' => 'nullable|any_image|max:2048',
+            'action_icon_file' => 'nullable|any_image|max:2048',
             'short_description' => 'nullable|string',
             'action_text' => 'nullable|string',
             'action_url' => 'nullable|string',
@@ -628,16 +668,16 @@ final class WebsiteWebController extends Controller
         $data['show_subcategory'] = $request->has('show_subcategory');
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/projects');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/projects');
         }
         if ($request->hasFile('icon')) {
-            $data['icon_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('icon'), 'website/projects/icons');
+            $data['icon_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('icon'), 'website/projects/icons');
         }
         if ($request->hasFile('badge_icon_file')) {
-            $data['badge_icon'] = \App\Helpers\ImageOptimizer::optimize($request->file('badge_icon_file'), 'website/projects/badges');
+            $data['badge_icon'] = app(\App\Services\ImageUploadService::class)->upload($request->file('badge_icon_file'), 'website/projects/badges');
         }
         if ($request->hasFile('action_icon_file')) {
-            $data['action_icon'] = \App\Helpers\ImageOptimizer::optimize($request->file('action_icon_file'), 'website/projects/actions');
+            $data['action_icon'] = app(\App\Services\ImageUploadService::class)->upload($request->file('action_icon_file'), 'website/projects/actions');
         }
 
         // Handle Dynamic Icons in Features
@@ -697,7 +737,7 @@ final class WebsiteWebController extends Controller
             'status' => 'required|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'ui_contribute_btn' => 'nullable|string',
             'ui_remind_btn' => 'nullable|string',
             'ui_ended_btn' => 'nullable|string',
@@ -706,7 +746,7 @@ final class WebsiteWebController extends Controller
             'ui_benefited_label' => 'nullable|string',
             'ui_share_label' => 'nullable|string',
             'ui_goal_label' => 'nullable|string',
-            'icon' => 'nullable|image|max:5120',
+            'icon' => 'nullable|any_image|max:5120',
             'start_date_text' => 'nullable|string',
             'ui_progress_override' => 'nullable|string',
             'ui_collected_override' => 'nullable|string',
@@ -727,10 +767,10 @@ final class WebsiteWebController extends Controller
             @ini_set('memory_limit', '512M');
 
             if ($request->hasFile('image')) {
-                $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/campaigns');
+                $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/campaigns');
             }
             if ($request->hasFile('icon')) {
-                $data['icon_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('icon'), 'website/campaigns/icons');
+                $data['icon_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('icon'), 'website/campaigns/icons');
             }
             unset($data['image'], $data['icon']);
 
@@ -763,7 +803,7 @@ final class WebsiteWebController extends Controller
             'status' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
-            'image' => 'nullable|image|max:10240',
+            'image' => 'nullable|any_image|max:10240',
             'ui_contribute_btn' => 'nullable|string',
             'ui_remind_btn' => 'nullable|string',
             'ui_ended_btn' => 'nullable|string',
@@ -772,7 +812,7 @@ final class WebsiteWebController extends Controller
             'ui_benefited_label' => 'nullable|string',
             'ui_share_label' => 'nullable|string',
             'ui_goal_label' => 'nullable|string',
-            'icon' => 'nullable|image|max:5120',
+            'icon' => 'nullable|any_image|max:5120',
             'start_date_text' => 'nullable|string',
             'ui_progress_override' => 'nullable|string',
             'ui_collected_override' => 'nullable|string',
@@ -785,12 +825,12 @@ final class WebsiteWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($campaign->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/campaigns');
+            app(\App\Services\ImageUploadService::class)->delete($campaign->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/campaigns');
         }
         if ($request->hasFile('icon')) {
-            \App\Helpers\ImageOptimizer::delete($campaign->icon_path);
-            $data['icon_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('icon'), 'website/campaigns/icons');
+            app(\App\Services\ImageUploadService::class)->delete($campaign->icon_path);
+            $data['icon_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('icon'), 'website/campaigns/icons');
         }
 
         unset($data['image'], $data['icon']);
@@ -911,7 +951,7 @@ final class WebsiteWebController extends Controller
                     $key = "gallery_image_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                         \App\Models\WebSetting::where('key', $key)->delete();
                     }
                 }
@@ -923,7 +963,7 @@ final class WebsiteWebController extends Controller
                     $key = "field_image_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                         \App\Models\WebSetting::where('key', $key)->delete();
                     }
                 }
@@ -934,7 +974,7 @@ final class WebsiteWebController extends Controller
                 if ($request->input("delete_$imgKey") == '1') {
                     $oldPath = \App\Models\WebSetting::get($imgKey);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                         \App\Models\WebSetting::where('key', $imgKey)->delete();
                     }
                 }
@@ -981,7 +1021,7 @@ final class WebsiteWebController extends Controller
                     $key = "news_slider_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     }
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
@@ -994,7 +1034,7 @@ final class WebsiteWebController extends Controller
                     $key = "contact_slider_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     }
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
@@ -1007,7 +1047,7 @@ final class WebsiteWebController extends Controller
                     $key = "volunteer_slider_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     }
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
@@ -1019,7 +1059,7 @@ final class WebsiteWebController extends Controller
                 $key = 'volunteer_hero_image';
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                 }
                 \App\Models\WebSetting::where('key', $key)->delete();
             }
@@ -1029,7 +1069,7 @@ final class WebsiteWebController extends Controller
                 $key = 'gh_home_image';
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                 }
                 \App\Models\WebSetting::where('key', $key)->delete();
             }
@@ -1045,7 +1085,7 @@ final class WebsiteWebController extends Controller
                     $key = "honor_wall_slider_$i";
                     $oldPath = \App\Models\WebSetting::get($key);
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     }
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
@@ -1068,11 +1108,11 @@ final class WebsiteWebController extends Controller
                 $oldPath = \App\Models\WebSetting::get($key);
 
                 // Optimize: resize + convert to WebP + compress
-                $savedPath = \App\Helpers\ImageOptimizer::optimize($request->file($key), $path);
+                $savedPath = app(\App\Services\ImageUploadService::class)->upload($request->file($key), $path);
 
                 if ($savedPath) {
                     if ($oldPath) {
-                        \App\Helpers\ImageOptimizer::delete($oldPath);
+                        app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     }
                     \App\Models\WebSetting::set($key, $savedPath, $group, 'image');
                 }
@@ -1115,7 +1155,7 @@ final class WebsiteWebController extends Controller
                 $key = "contact_slider_$i";
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
             }
@@ -1161,7 +1201,7 @@ final class WebsiteWebController extends Controller
             $key = 'featured_campaign_icon';
             $oldPath = \App\Models\WebSetting::get($key);
             if ($oldPath) {
-                \App\Helpers\ImageOptimizer::delete($oldPath);
+                app(\App\Services\ImageUploadService::class)->delete($oldPath);
                 \App\Models\WebSetting::where('key', $key)->delete();
             }
         }
@@ -1213,7 +1253,7 @@ final class WebsiteWebController extends Controller
                 $key = "project_slider_$i";
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
             }
@@ -1272,7 +1312,7 @@ final class WebsiteWebController extends Controller
                 $key = "gh_slider_$i";
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
             }
@@ -1284,8 +1324,8 @@ final class WebsiteWebController extends Controller
             $key = "gh_gallery_image_$i";
             if ($request->hasFile($key)) {
                 $oldPath = \App\Models\WebSetting::get($key);
-                \App\Helpers\ImageOptimizer::delete($oldPath);
-                $path = \App\Helpers\ImageOptimizer::optimize($request->file($key), 'website/guest_house');
+                app(\App\Services\ImageUploadService::class)->delete($oldPath);
+                $path = app(\App\Services\ImageUploadService::class)->upload($request->file($key), 'website/guest_house');
                 \App\Models\WebSetting::set($key, $path, 'guest_house', 'image');
             }
         }
@@ -1327,7 +1367,7 @@ final class WebsiteWebController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
         ]);
@@ -1337,8 +1377,8 @@ final class WebsiteWebController extends Controller
         $data = $request->only(['title', 'content', 'meta_title', 'meta_description']);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($page->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/pages');
+            app(\App\Services\ImageUploadService::class)->delete($page->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/pages');
         }
 
         $page->update($data);
@@ -1365,7 +1405,7 @@ final class WebsiteWebController extends Controller
                 $key = "gh_slider_$i";
                 $oldPath = \App\Models\WebSetting::get($key);
                 if ($oldPath) {
-                    \App\Helpers\ImageOptimizer::delete($oldPath);
+                    app(\App\Services\ImageUploadService::class)->delete($oldPath);
                     \App\Models\WebSetting::where('key', $key)->delete();
                 }
             }
@@ -1392,11 +1432,11 @@ final class WebsiteWebController extends Controller
             'role' => 'nullable|string',
             'hours' => 'required|string',
             'rank' => 'required|integer',
-            'image' => 'nullable|image|max:5120'
+            'image' => 'nullable|any_image|max:5120'
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/volunteers');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/volunteers');
         }
 
         \App\Models\WebVolunteerWall::create($data);
@@ -1417,12 +1457,12 @@ final class WebsiteWebController extends Controller
             'role' => 'nullable|string',
             'hours' => 'required|string',
             'rank' => 'required|integer',
-            'image' => 'nullable|image|max:5120'
+            'image' => 'nullable|any_image|max:5120'
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($leader->image_path);
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/volunteers');
+            app(\App\Services\ImageUploadService::class)->delete($leader->image_path);
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/volunteers');
         }
 
         $leader->update($data);
@@ -1432,7 +1472,7 @@ final class WebsiteWebController extends Controller
 
     public function volunteerWallDestroy(\App\Models\WebVolunteerWall $leader)
     {
-        \App\Helpers\ImageOptimizer::delete($leader->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($leader->image_path);
         $leader->delete();
         \Illuminate\Support\Facades\Cache::forget('website_landing_page_data');
         return back()->with('success', 'تم الحذف بنجاح');
@@ -1450,7 +1490,7 @@ final class WebsiteWebController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'badge_text' => 'nullable|string',
             'badge_icon' => 'nullable|string',
             'tag_text' => 'nullable|string',
@@ -1463,7 +1503,7 @@ final class WebsiteWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/cards');
+            $data['image'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/cards');
         }
 
         $data['badge_visible'] = $request->has('badge_visible');
@@ -1484,7 +1524,7 @@ final class WebsiteWebController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'badge_text' => 'nullable|string',
             'badge_icon' => 'nullable|string',
             'tag_text' => 'nullable|string',
@@ -1497,8 +1537,8 @@ final class WebsiteWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            \App\Helpers\ImageOptimizer::delete($card->image);
-            $data['image'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/cards');
+            app(\App\Services\ImageUploadService::class)->delete($card->image);
+            $data['image'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/cards');
         }
 
         $data['badge_visible'] = $request->has('badge_visible');
@@ -1528,7 +1568,7 @@ final class WebsiteWebController extends Controller
             'role' => 'nullable|string|max:255',
             'content' => 'required|string',
             'rating' => 'nullable|integer|min:1|max:5',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|any_image|max:2048'
         ]);
 
         $data = $request->only(['name', 'role', 'content', 'rating', 'status']);
@@ -1536,7 +1576,7 @@ final class WebsiteWebController extends Controller
         $data['status'] = $data['status'] ?? 'approved';
 
         if ($request->hasFile('image')) {
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
         }
 
         WebTestimonial::create($data);
@@ -1550,7 +1590,7 @@ final class WebsiteWebController extends Controller
             'name' => 'required',
             'role' => 'nullable|string|max:255',
             'content' => 'required',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|any_image|max:5120',
             'rating' => 'nullable|integer|min:1|max:5',
         ], [
             'name.required' => 'الاسم مطلوب',
@@ -1566,9 +1606,9 @@ final class WebsiteWebController extends Controller
 
         if ($request->hasFile('image')) {
             if ($testimonial->image_path) {
-                \App\Helpers\ImageOptimizer::delete($testimonial->image_path);
+                app(\App\Services\ImageUploadService::class)->delete($testimonial->image_path);
             }
-            $data['image_path'] = \App\Helpers\ImageOptimizer::optimize($request->file('image'), 'website/testimonials');
+            $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/testimonials');
         }
 
         $testimonial->update($data);
@@ -1578,7 +1618,7 @@ final class WebsiteWebController extends Controller
 
     public function testimonialDestroy(WebTestimonial $testimonial)
     {
-        \App\Helpers\ImageOptimizer::delete($testimonial->image_path);
+        app(\App\Services\ImageUploadService::class)->delete($testimonial->image_path);
         $testimonial->delete();
         Cache::forget('website_landing_page_data');
         return back()->with('success', 'تم حفظ التعديلات بنجاح!');

@@ -1,8 +1,7 @@
-﻿<div class="modal fade" id="editCampaignModal{{ $campaign->id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+<div class="modal fade" id="editCampaignModal{{ $campaign->id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <form action="{{ route('website.campaigns.update', $campaign->id) }}" method="POST" enctype="multipart/form-data" class="modal-content glass-card border-0">
             @csrf
-            @method('PUT')
             <div class="modal-header border-0">
                 <h5 class="modal-title fw-bold">تعديل الحملة: {{ $campaign->name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

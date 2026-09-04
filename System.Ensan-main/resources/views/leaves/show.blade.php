@@ -23,7 +23,7 @@
                         <div class="col-md-6">
                             <div class="info-row">
                                 <span class="info-label text-muted d-block small mb-1">الموظف</span>
-                                <span class="info-value fw-bold fs-6">{{ $leave->user->name ?? '—' }}</span>
+                                <span class="info-value fw-bold fs-6">{{ $leave->user?->name ?? '—' }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">

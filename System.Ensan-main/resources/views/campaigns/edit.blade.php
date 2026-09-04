@@ -25,17 +25,18 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label form-label-required">اسم الحملة</label>
-              <input name="name" class="form-control" value="{{ $campaign->name }}" required>
+              <input name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $campaign->name) }}" required>
+              @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-3">
               <label class="form-label form-label-required">السنة</label>
-              <input name="season_year" class="form-control" type="number" value="{{ $campaign->season_year }}" required>
+              <input name="season_year" class="form-control" type="number" min="2000" max="2100" value="{{ old('season_year', $campaign->season_year) }}" required>
             </div>
             <div class="col-md-3">
               <label class="form-label form-label-required">الحالة</label>
               <select name="status" class="form-select" required>
-                <option value="active" @selected($campaign->status === 'active')>نشط</option>
-                <option value="archived" @selected($campaign->status === 'archived')>مؤرشف</option>
+                <option value="active" @selected(old('status', $campaign->status) === 'active')>نشط</option>
+                <option value="archived" @selected(old('status', $campaign->status) === 'archived')>مؤرشف</option>
               </select>
             </div>
           </div>
@@ -51,11 +52,12 @@
             <div class="col-md-6">
               <label class="form-label">تاريخ البداية</label>
               <input name="start_date" class="form-control" type="date"
-                value="{{ $campaign->start_date?->format('Y-m-d') }}">
+                value="{{ old('start_date', $campaign->start_date?->format('Y-m-d')) }}">
             </div>
             <div class="col-md-6">
               <label class="form-label">تاريخ النهاية</label>
-              <input name="end_date" class="form-control" type="date" value="{{ $campaign->end_date?->format('Y-m-d') }}">
+              <input name="end_date" class="form-control @error('end_date') is-invalid @enderror" type="date" value="{{ old('end_date', $campaign->end_date?->format('Y-m-d')) }}">
+              @error('end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
           </div>
         </div>
@@ -72,7 +74,7 @@
               <select name="project_id" class="form-select">
                 <option value="">— اختر المشروع —</option>
                 @foreach($projects as $p)
-                  <option value="{{ $p->id }}" @selected($campaign->project_id == $p->id)>{{ $p->name }}</option>
+                  <option value="{{ $p->id }}" @selected(old('project_id', $campaign->project_id) == $p->id)>{{ $p->name }}</option>
                 @endforeach
               </select>
             </div>

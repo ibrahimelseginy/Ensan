@@ -13,8 +13,8 @@ class RoleAccess
             abort(403);
         }
 
-        // Admin bypass
-        if ($user->roles->contains('key', 'admin')) {
+        // Admin bypass - استخدام query مباشرة لضمان عدم الاعتماد على علاقة غير محملة
+        if ($user->roles()->whereIn('key', ['admin', 'manager'])->exists()) {
             return $next($request);
         }
 

@@ -17,6 +17,7 @@ final class UpdateGuestHouseRequest extends FormRequest
     {
         return [
             'name'            => 'sometimes|string|max:255',
+            'governorate'     => 'required|in:كفر الشيخ,الغربية',
             'location'        => 'nullable|string|max:500',
             'phone'           => 'nullable|string|max:20',
             'capacity'        => 'nullable|integer|min:0',

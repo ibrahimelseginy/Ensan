@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class Supplier extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HashedRouteKey;
 
     protected $fillable = ['name', 'phone', 'website', 'address', 'merchant_name', 'source_name', 'project_id', 'notes'];
 

@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Beneficiary;
+use App\Models\BeneficiaryFamilyMember;
 use App\Models\ChangeRequest;
 use App\Repositories\BeneficiaryRepository;
 use App\Services\ChangeRequestService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Validation\ValidationException;
 
 final readonly class BeneficiaryService
 {
@@ -39,18 +44,38 @@ final readonly class BeneficiaryService
 
     public function createBeneficiary(array $data): mixed
     {
-        $data['status'] = $data['status'] ?? 'new';
-        if (empty($data['code'])) {
-            $data['code'] = 'BEN-' . strtoupper(Str::random(6));
+        $relationKeys = [
+            'allocated_beneficiary_ids', 'sponsor_ids', 'family_members',
+            'patient_relationship', 'patient_birth_date', 'patient_phone', 'patient_backup_phone',
+        ];
+        $relationData = Arr::only($data, $relationKeys);
+        $modelData = Arr::except($data, $relationKeys);
+
+        $this->mirrorFamilyMembersToLegacyJson($modelData, $relationData);
+        $relationData = array_merge($relationData, Arr::only($modelData, [
+            'patient_name', 'patient_age', 'patient_code', 'monthly_sponsorship_amount', 'notes_cases',
+        ]));
+
+        $modelData['status'] = $modelData['status'] ?? 'new';
+        if (empty($modelData['code'])) {
+            $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
         }
 
-        $executor = fn() => $this->beneficiaryRepository->create($data);
+        $payload = array_merge($modelData, $relationData);
+        $executor = function () use ($modelData, $relationData) {
+            return DB::transaction(function () use ($modelData, $relationData) {
+                $beneficiary = $this->beneficiaryRepository->create($modelData);
+                $this->syncAssignments($beneficiary, $relationData);
+
+                return $beneficiary;
+            });
+        };
 
         return ChangeRequestService::handleRequest(
             Beneficiary::class,
             null,
             'create',
-            $data,
+            $payload,
             $executor,
             true
         );
@@ -58,29 +83,190 @@ final readonly class BeneficiaryService
 
     public function updateBeneficiary(Beneficiary $beneficiary, array $data): mixed
     {
+        $relationKeys = [
+            'allocated_beneficiary_ids', 'sponsor_ids', 'family_members',
+            'patient_relationship', 'patient_birth_date', 'patient_phone', 'patient_backup_phone',
+        ];
+        $relationData = Arr::only($data, $relationKeys);
+        $modelData = Arr::except($data, $relationKeys);
+
+        $this->mirrorFamilyMembersToLegacyJson($modelData, $relationData);
+        $relationData = array_merge($relationData, Arr::only($modelData, [
+            'patient_name', 'patient_age', 'patient_code', 'monthly_sponsorship_amount', 'notes_cases',
+        ]));
+
         // Status transition validation
-        if (isset($data['status'])) {
-            $this->validateStatusTransition($beneficiary->status, $data['status']);
+        if (isset($modelData['status'])) {
+            $this->validateStatusTransition($beneficiary->status, $modelData['status']);
         }
 
         // Auto-generate code if missing
-        if (empty($data['code']) && empty($beneficiary->code)) {
-            $data['code'] = 'BEN-' . strtoupper(Str::random(6));
+        if (empty($modelData['code']) && empty($beneficiary->code)) {
+            $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
         }
 
-        $executor = function () use ($beneficiary, $data) {
-            $this->beneficiaryRepository->update($beneficiary, $data);
-            return $beneficiary;
+        $payload = array_merge($modelData, $relationData);
+        $executor = function () use ($beneficiary, $modelData, $relationData) {
+            return DB::transaction(function () use ($beneficiary, $modelData, $relationData) {
+                $this->beneficiaryRepository->update($beneficiary, $modelData);
+                $this->syncAssignments($beneficiary, $relationData);
+
+                return $beneficiary;
+            });
         };
 
         return ChangeRequestService::handleRequest(
             Beneficiary::class,
             $beneficiary->id,
             'update',
-            $data,
+            $payload,
             $executor,
             true
         );
+    }
+
+    public function syncAssignments(Beneficiary $beneficiary, array $data): void
+    {
+        if (array_key_exists('allocated_beneficiary_ids', $data)) {
+            $beneficiary->allocatedBeneficiaries()->sync(
+                array_values(array_unique(array_map('intval', $data['allocated_beneficiary_ids'] ?? [])))
+            );
+        }
+
+        if (array_key_exists('sponsor_ids', $data)) {
+            $beneficiary->sponsors()->sync(
+                array_values(array_unique(array_map('intval', $data['sponsor_ids'] ?? [])))
+            );
+        }
+
+        if (array_key_exists('family_members', $data)) {
+            $this->syncFamilyMembers($beneficiary, (array) $data['family_members']);
+        }
+
+        if (array_key_exists('patient_name', $data)) {
+            $this->syncPatientMember($beneficiary, $data);
+        }
+    }
+
+    private function syncFamilyMembers(Beneficiary $beneficiary, array $members): void
+    {
+        $savedIds = [];
+
+        foreach ($members as $position => $memberData) {
+            $name = trim((string) ($memberData['full_name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+
+            $relationship = (string) ($memberData['relationship'] ?? 'child');
+            if (! in_array($relationship, ['husband', 'wife', 'child', 'other'], true)) {
+                $relationship = 'other';
+            }
+
+            $memberId = isset($memberData['id']) ? (int) $memberData['id'] : 0;
+            $member = $memberId > 0
+                ? $beneficiary->familyMembers()->whereKey($memberId)->first()
+                : null;
+
+            $code = BeneficiaryFamilyMember::normalizeCode($memberData['code'] ?? null);
+            if ($code && BeneficiaryFamilyMember::where('code', $code)
+                ->when($member, fn ($query) => $query->whereKeyNot($member->id))
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    'family_members' => "كود فرد الأسرة {$code} مستخدم في ملف آخر.",
+                ]);
+            }
+
+            $payload = [
+                'relationship' => $relationship,
+                'full_name' => $name,
+                'birth_date' => $memberData['birth_date'] ?? null,
+                'age' => $memberData['age'] ?? null,
+                'code' => $code ?: $member?->code,
+                'national_id' => $memberData['national_id'] ?? null,
+                'phone' => $memberData['phone'] ?? null,
+                'backup_phone' => $memberData['backup_phone'] ?? null,
+                'sponsorship_amount' => $memberData['sponsorship_amount'] ?? null,
+                'education_level' => $memberData['education_level'] ?? null,
+                'case_details' => $memberData['case_details'] ?? null,
+                'is_patient' => false,
+                'active' => true,
+                'sort_order' => $relationship === 'child' ? ((int) $position + 1) : 0,
+            ];
+
+            if ($member) {
+                $member->update($payload);
+            } else {
+                $member = $beneficiary->familyMembers()->create($payload);
+            }
+
+            $savedIds[] = $member->id;
+        }
+
+        $beneficiary->familyMembers()
+            ->where('is_patient', false)
+            ->when($savedIds !== [], fn ($query) => $query->whereNotIn('id', $savedIds))
+            ->update(['active' => false]);
+    }
+
+    private function syncPatientMember(Beneficiary $beneficiary, array $data): void
+    {
+        $name = trim((string) ($data['patient_name'] ?? ''));
+        $member = $beneficiary->familyMembers()->where('is_patient', true)->first();
+
+        if ($name === '') {
+            $member?->update(['active' => false]);
+            return;
+        }
+
+        $code = BeneficiaryFamilyMember::normalizeCode($data['patient_code'] ?? null);
+        if ($code && BeneficiaryFamilyMember::where('code', $code)
+            ->when($member, fn ($query) => $query->whereKeyNot($member->id))
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'patient_code' => 'كود المريض مستخدم في ملف فرد أسرة آخر.',
+            ]);
+        }
+
+        $payload = [
+            'relationship' => $data['patient_relationship'] ?? 'patient',
+            'full_name' => $name,
+            'birth_date' => $data['patient_birth_date'] ?? null,
+            'age' => $data['patient_age'] ?? null,
+            'code' => $code ?: $member?->code,
+            'phone' => $data['patient_phone'] ?? null,
+            'backup_phone' => $data['patient_backup_phone'] ?? null,
+            'sponsorship_amount' => $data['monthly_sponsorship_amount'] ?? null,
+            'case_details' => $data['notes_cases'] ?? null,
+            'is_patient' => true,
+            'active' => true,
+            'sort_order' => 20,
+        ];
+
+        if ($member) {
+            $member->update($payload);
+        } else {
+            $beneficiary->familyMembers()->create($payload);
+        }
+    }
+
+    private function mirrorFamilyMembersToLegacyJson(array &$modelData, array $relationData): void
+    {
+        if (! array_key_exists('family_members', $relationData)) {
+            return;
+        }
+
+        $modelData['family_members_data'] = collect($relationData['family_members'] ?? [])
+            ->filter(fn ($member) => ($member['relationship'] ?? null) === 'child' && trim((string) ($member['full_name'] ?? '')) !== '')
+            ->map(fn ($member) => [
+                'name' => $member['full_name'],
+                'age_dob' => $member['birth_date'] ?? ($member['age'] ?? null),
+                'code' => $member['code'] ?? null,
+                'amount' => $member['sponsorship_amount'] ?? null,
+                'education' => $member['education_level'] ?? null,
+            ])
+            ->values()
+            ->all();
     }
 
     public function deleteBeneficiary(Beneficiary $beneficiary): mixed
@@ -112,18 +298,27 @@ final readonly class BeneficiaryService
         return response()->stream(function () use ($rows) {
             echo "\xEF\xBB\xBF"; // UTF-8 BOM
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['#', 'الاسم', 'الرقم القومي', 'الهاتف', 'الحالة', 'نوع المساعدة', 'المشروع', 'الحملة', 'تاريخ الإنشاء']);
+            fputcsv($out, [
+                '#', 'الكود', 'اسم ولي الأمر', 'الرقم القومي', 'رقم الفيزا', 'الهاتف الأساسي',
+                'الهاتف الإضافي', 'اسم المريض', 'الحالة', 'نوع المساعدة', 'المشروع',
+                'عدد أفراد الأسرة', 'أسماء أفراد الأسرة', 'تاريخ الإنشاء',
+            ]);
             
             foreach ($rows as $b) {
                 fputcsv($out, [
                     $b->id,
+                    $b->code,
                     $b->full_name,
                     $b->national_id,
+                    $b->visa_card_number,
                     $b->phone,
+                    $b->backup_phone,
+                    $b->patient_name,
                     $b->status,
                     $b->assistance_type,
                     optional($b->project)->name,
-                    optional($b->campaign)->name,
+                    $b->familyMembers->where('active', true)->count(),
+                    $b->familyMembers->where('active', true)->pluck('full_name')->implode(' | '),
                     optional($b->created_at)->format('Y-m-d')
                 ]);
             }
@@ -177,10 +372,12 @@ final readonly class BeneficiaryService
     private function validateStatusTransition(string $current, string $next): void
     {
         if ($current === $next) return;
-        if ($next === 'rejected') return; // Allow rejection from any state
+        if (in_array($next, ['rejected', 'archived_improved', 'archived_deceased'], true)) return;
+        if (in_array($current, ['rejected', 'archived_improved', 'archived_deceased'], true) && $next === 'under_review') return;
 
         $allowed = [
             'new'          => ['under_review', 'rejected'],
+            'pending'      => ['under_review', 'rejected'],
             'under_review' => ['accepted', 'rejected'],
             'accepted'     => ['rejected'],
             'rejected'     => ['new', 'under_review']

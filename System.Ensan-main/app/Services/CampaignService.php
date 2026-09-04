@@ -44,20 +44,25 @@ final readonly class CampaignService
 
     public function getCampaignStats(Campaign $campaign): array
     {
-        $cashSum      = (float) Donation::where('campaign_id', $campaign->id)->where('type', 'cash')->sum('amount');
-        $inKindSum    = (float) Donation::where('campaign_id', $campaign->id)->where('type', 'in_kind')->sum('estimated_value');
-        $expensesTotal = (float) Expense::where('campaign_id', $campaign->id)->sum('amount');
+        $activeDonations = Donation::where('campaign_id', $campaign->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+        $activeExpenses = Expense::where('campaign_id', $campaign->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+
+        $cashSum       = (float) (clone $activeDonations)->where('type', 'cash')->sum('amount');
+        $inKindSum     = (float) (clone $activeDonations)->where('type', 'in_kind')->sum('estimated_value');
+        $expensesTotal = (float) (clone $activeExpenses)->sum('amount');
         
         $donationsTotal = $cashSum + $inKindSum;
         
         return [
-            'donationsCount'     => Donation::where('campaign_id', $campaign->id)->count(),
+            'donationsCount'     => (clone $activeDonations)->count(),
             'cashSum'            => $cashSum,
             'inKindSum'          => $inKindSum,
             'beneficiariesCount' => Beneficiary::where('campaign_id', $campaign->id)->count(),
-            'expensesCount'      => Expense::where('campaign_id', $campaign->id)->count(),
-            'latestDonations'    => Donation::where('campaign_id', $campaign->id)->orderByDesc('id')->limit(5)->get(),
-            'latestExpenses'     => Expense::where('campaign_id', $campaign->id)->orderByDesc('id')->limit(5)->get(),
+            'expensesCount'      => (clone $activeExpenses)->count(),
+            'latestDonations'    => (clone $activeDonations)->orderByDesc('id')->limit(5)->get(),
+            'latestExpenses'     => (clone $activeExpenses)->orderByDesc('id')->limit(5)->get(),
             'latestBeneficiaries'=> Beneficiary::where('campaign_id', $campaign->id)->orderByDesc('id')->limit(5)->get(),
             'expensesTotal'      => $expensesTotal,
             'donationsTotal'     => $donationsTotal,

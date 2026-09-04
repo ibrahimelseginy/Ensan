@@ -42,6 +42,24 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-check-circle text-success me-1"></i>
+                            الحل المقدَّم
+                        </label>
+                        <textarea name="resolution" class="form-control" rows="4"
+                            placeholder="اكتب هنا الحل أو الإجراء المتخذ لحل الشكوى...">{{ $complaint->resolution }}</textarea>
+                        <div class="form-text">سيظهر هذا الحل للمُبلِّغ عند تتبع شكواه بكود التتبع.</div>
+                    </div>
+                    {{-- كود التتبع --}}
+                    <div class="col-12">
+                        <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-0">
+                            <i class="bi bi-qr-code fs-5"></i>
+                            <span>كود التتبع:
+                                <strong style="font-family: monospace; letter-spacing: 2px;">{{ $complaint->tracking_code }}</strong>
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <div class="d-flex gap-2 justify-content-end mt-4">
                     <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-outline-secondary">

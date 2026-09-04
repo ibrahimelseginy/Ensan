@@ -26,7 +26,7 @@
                 <div class="card-inner p-4">
                     <div class="d-flex justify-content-between align-items-start mb-4">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="donor-avatar bg-primary text-white fs-4 fw-bold shadow-sm">
+                            <div class="donor-avatar bg-primary text-stats-main fs-4 fw-bold shadow-sm">
                                 {{ mb_substr($donor->name, 0, 1) }}
                             </div>
                             <div>

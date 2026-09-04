@@ -10,17 +10,31 @@ final class StoreRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (bool) $this->user()?->hasPermission('roles.create');
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('key')) {
+            $this->merge(['key' => strtolower(trim((string) $this->input('key')))]);
+        }
     }
 
     public function rules(): array
     {
         return [
             'name'          => 'required|string|max:255|unique:roles,name',
-            'key'           => 'required|string|max:255|unique:roles,key',
+            'key'           => ['required', 'string', 'max:255', 'regex:/^[a-z][a-z0-9_.-]*$/', 'unique:roles,key'],
             'description'   => 'nullable|string',
             'permissions'   => 'nullable|array',
             'permissions.*' => 'exists:permissions,id'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'key.regex' => 'معرّف الدور يجب أن يبدأ بحرف إنجليزي ويحتوي على حروف صغيرة أو أرقام أو نقطة أو شرطة فقط.',
         ];
     }
 }

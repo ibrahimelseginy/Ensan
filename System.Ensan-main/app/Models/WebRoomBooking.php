@@ -83,12 +83,20 @@ final class WebRoomBooking extends Model
         'followup_card_path',
         'medical_report_path',
         'source'
+        ,'beneficiary_id'
+        ,'guest_house_stay_id'
+        ,'admin_notes'
+        ,'treatment_type'
+        ,'sessions_count'
     ];
 
     public function guestHouse()
     {
         return $this->belongsTo(GuestHouse::class);
     }
+
+    public function beneficiary() { return $this->belongsTo(Beneficiary::class); }
+    public function stay() { return $this->belongsTo(GuestHouseStay::class, 'guest_house_stay_id'); }
 
     public function getExpectedDurationArabicAttribute()
     {

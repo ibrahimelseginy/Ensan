@@ -17,7 +17,7 @@ final class SetCampaignManagerRequest extends FormRequest
     {
         return [
             'manager_user_id' => 'nullable|exists:users,id',
-            'manager_photo'   => 'nullable|image|max:5120'
+            'manager_photo'   => 'nullable|any_image|max:5120'
         ];
     }
 }

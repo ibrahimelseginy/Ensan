@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class Treasury extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $table = 'treasuries';
 
     /**

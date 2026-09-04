@@ -183,9 +183,9 @@
         @empty
         <div class="col-12 animate-up">
             <div class="glass-card text-center py-5">
-                <i class="bi bi-inbox display-4 text-white-50"></i>
-                <h5 class="text-white mt-4">لا يوجد طلبات حالياً</h5>
-                <p class="text-white-50">لم يقم أي مستخدم بإرسال طلبات تطوع عبر تطبيق الموبايل بعد.</p>
+                <i class="bi bi-inbox display-4 text-stats-main-50"></i>
+                <h5 class="text-stats-main mt-4">لا يوجد طلبات حالياً</h5>
+                <p class="text-stats-main-50">لم يقم أي مستخدم بإرسال طلبات تطوع عبر تطبيق الموبايل بعد.</p>
             </div>
         </div>
         @endforelse

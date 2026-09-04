@@ -132,7 +132,7 @@ final class DonationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'donation_id' => 'required|exists:donations,id',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:5120',
+            'image' => 'required|any_image|max:5120',
         ]);
 
         if ($validator->fails()) {

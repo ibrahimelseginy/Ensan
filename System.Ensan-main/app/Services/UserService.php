@@ -41,6 +41,8 @@ final readonly class UserService
     public function createUser(array $data, array $files = []): User
     {
         $data['password'] = Hash::make($data['password']);
+        $data['is_employee'] = true;
+        $data['is_volunteer'] = false;
         
         $roles = $data['roles'] ?? [];
         unset($data['roles']);
@@ -65,37 +67,79 @@ final readonly class UserService
         return $user;
     }
 
-    public function updateUser(User $user, array $data, array $files = []): User
+    public function updateUser(User $user, array $data, array $files = []): mixed
     {
-        if (!empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
-            $user->saveQuietly();
-        }
-        unset($data['password']);
+        unset(
+            $data['profile_photo'],
+            $data['contract_image'],
+            $data['criminal_record_image'],
+            $data['id_card_image']
+        );
 
-        // Roles
-        if (isset($data['roles'])) {
-            $user->roles()->sync($data['roles']);
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
         }
+
+        $roles = $data['roles'] ?? null;
         unset($data['roles']);
 
-        // Main update
-        if (!empty($data)) {
-            $this->userRepository->update($user, $data);
-        }
+        $isAdmin = request()->user()?->hasRole('admin') ?? false;
 
-        // Files
-        if (isset($files['profile_photo'])) {
-            $user->uploadImage($files['profile_photo'], 'profile-photos', 'profile_photo_path');
-        }
+        if ($isAdmin) {
+            // Accounts managed by an admin from this screen are employees.
+            $data['is_employee'] = true;
+            $data['is_volunteer'] = false;
+        } else {
+            // Store requested files without changing the current profile. Their
+            // paths are applied only after the admin approves the change request.
+            $fileColumns = [
+                'profile_photo'         => ['profile_photo_path', 'pending/user-profile'],
+                'contract_image'        => ['contract_image', 'pending/user-docs'],
+                'criminal_record_image' => ['criminal_record_image', 'pending/user-docs'],
+                'id_card_image'         => ['id_card_image', 'pending/user-docs'],
+            ];
 
-        foreach (['contract_image', 'criminal_record_image', 'id_card_image'] as $field) {
-            if (isset($files[$field])) {
-                $user->uploadImage($files[$field], 'user-docs', $field);
+            foreach ($fileColumns as $fileKey => [$column, $directory]) {
+                if (isset($files[$fileKey])) {
+                    $path = app(ImageUploadService::class)->upload($files[$fileKey], $directory);
+                    if ($path) {
+                        $data[$column] = $path;
+                    }
+                }
             }
         }
 
-        return $user;
+        $executor = function () use ($user, $data, $roles, $files) {
+            if ($roles !== null) {
+                $user->roles()->sync($roles);
+            }
+
+            if (!empty($data)) {
+                $this->userRepository->update($user, $data);
+            }
+
+            if (isset($files['profile_photo'])) {
+                $user->uploadImage($files['profile_photo'], 'profile-photos', 'profile_photo_path');
+            }
+
+            foreach (['contract_image', 'criminal_record_image', 'id_card_image'] as $field) {
+                if (isset($files[$field])) {
+                    $user->uploadImage($files[$field], 'user-docs', $field);
+                }
+            }
+
+            return $user->refresh();
+        };
+
+        return ChangeRequestService::handleRequest(
+            User::class,
+            $user->id,
+            'update',
+            $data,
+            $executor
+        );
     }
 
     public function deleteUser(User $user): mixed

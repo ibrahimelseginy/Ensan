@@ -5,71 +5,97 @@ namespace App\Traits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * UploadsImages — Trait للموديلات التي تحتوي على حقول صور
+ *
+ * الاستخدام:
+ *   use UploadsImages;
+ *
+ *   public function getImageColumn(): string  { return 'image_path'; }
+ *   public function getImageColumns(): array  { return ['image_path', 'icon_path']; }
+ *
+ * يستخدم تلقائياً الـ disk المحدد في IMAGE_UPLOAD_DISK (public أو uploads).
+ */
 trait UploadsImages
 {
-    /**
-     * اسم الحقل في قاعدة البيانات الذي يحفظ مسار الصورة الأساسية.
-     */
+    // -------------------------------------------------------------------------
+    // Overridable in Model
+    // -------------------------------------------------------------------------
+
+    /** اسم عمود الصورة الرئيسي في قاعدة البيانات */
     public function getImageColumn(): string
     {
         return 'image_path';
     }
 
-    /**
-     * تحديد أسماء الحقول التي تحتوي على صور/ملفات 
-     * (مفيد إذا كان الموديل يحتوي أكثر من صورة، يتم تجاوزه في الموديل).
-     */
+    /** جميع أعمدة الصور (مفيد عند الحذف التلقائي) */
     public function getImageColumns(): array
     {
         return [$this->getImageColumn()];
     }
 
-    /**
-     * تحديد الـ Disk المستخدم.
-     */
-    public function getDisk(): string
-    {
-        return config('filesystems.default', 'public');
-    }
+    // -------------------------------------------------------------------------
+    // uploadImage()
+    // -------------------------------------------------------------------------
 
     /**
-     * دالة لرفع الصورة وحذف القديمة في حال التحديث.
+     * رفع صورة وحذف القديمة تلقائياً.
+     *
+     * @param  UploadedFile $file
+     * @param  string       $directory  المجلد داخل الـ disk
+     * @param  string|null  $column     اسم العمود (يستخدم getImageColumn() افتراضياً)
      */
-    public function uploadImage(UploadedFile $file, string $directory = 'uploads', ?string $column = null): void
-    {
+    public function uploadImage(
+        UploadedFile $file,
+        string $directory = 'uploads',
+        ?string $column = null,
+    ): void {
         $column = $column ?? $this->getImageColumn();
 
-        // 1. حذف الصورة القديمة إن وجدت
+        // حذف الصورة القديمة
         $this->deleteImage($column, false);
 
-        // 2. رفع الصورة الجديدة وحفظ المسار النسبي
-        $path = $file->store($directory, $this->getDisk());
-        
-        // 3. التحديث في الموديل
-        $this->{$column} = $path;
-        $this->save();
+        // رفع وضغط وتحويل
+        $path = app(\App\Services\ImageUploadService::class)->upload($file, $directory);
+
+        if ($path) {
+            $this->{$column} = $path;
+            $this->save();
+        }
     }
 
+    // -------------------------------------------------------------------------
+    // deleteImage()
+    // -------------------------------------------------------------------------
+
     /**
-     * دالة لحذف الصورة من السيرفر.
+     * حذف الصورة من التخزين.
+     *
+     * @param  string|null $column
+     * @param  bool        $saveModel  حفظ الموديل بعد الحذف
      */
     public function deleteImage(?string $column = null, bool $saveModel = true): void
     {
-        $column = $column ?? $this->getImageColumn();
+        $column      = $column ?? $this->getImageColumn();
         $currentPath = $this->{$column};
 
-        if ($currentPath && Storage::disk($this->getDisk())->exists($currentPath)) {
-            Storage::disk($this->getDisk())->delete($currentPath);
+        if ($currentPath) {
+            app(\App\Services\ImageUploadService::class)->delete($currentPath);
         }
 
         $this->{$column} = null;
+
         if ($saveModel) {
             $this->save();
         }
     }
 
+    // -------------------------------------------------------------------------
+    // URL Accessors
+    // -------------------------------------------------------------------------
+
     /**
-     * دالة للحصول على الرابط الكامل للصورة الأساسية (Full URL).
+     * رابط الصورة الرئيسية الكامل.
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -77,42 +103,56 @@ trait UploadsImages
     }
 
     /**
-     * دالة عامة للحصول على الرابط الكامل لأي حقل صورة آخر.
+     * رابط كامل لأي عمود صورة.
      */
     public function getFileUrl(string $column): ?string
     {
-        $path = $this->{$column};
+        $raw = $this->{$column};
 
+        if (!$raw) {
+            return null;
+        }
+
+        return app(\App\Services\ImageUploadService::class)->url($raw);
+    }
+
+    /**
+     * تنظيف المسار وإرجاع المسار النسبي فقط.
+     */
+    public static function normalizeImagePath(?string $path): ?string
+    {
         if (!$path) {
             return null;
         }
 
-        // استخدام المسار المباشر إن أمكن، أو المسار عبر الميديا بروكسي (CORS fix for Mobile/Flutter)
-        // إذا كان الطلب من API أو نحن في البيئة المحلية، نفضل استخدام الميديا بروكسي لضمان الـ CORS
-        // استخدام المسار المباشر إن أمكن، أو المسار عبر الميديا بروكسي (CORS fix for Mobile/Flutter)
-        // إذا كان الطلب من API أو نحن في البيئة المحلية، نفضل استخدام الميديا بروكسي لضمان الـ CORS
-        if (request()->is('api/*') || app()->environment('local')) {
-            return url('/api/media?path=' . $path);
+        if (str_starts_with($path, 'http')) {
+            $parsed = parse_url($path);
+            $path   = $parsed['path'] ?? '';
         }
 
-        return url('storage/' . $path);
+        $path = preg_replace('/^\/?storage\//', '', $path);
+        $path = preg_replace('/^\/?uploads\//', '', $path);
+        $path = ltrim($path, '/');
+
+        return $path ?: null;
     }
-    
-    /**
-     * أحداث الموديل (Model Events)
-     * لحذف الصور تلقائياً عندما يتم حذف السجل نفسه.
-     */
-    protected static function bootUploadsImages()
+
+    // -------------------------------------------------------------------------
+    // Model Events — حذف الصور عند حذف السجل
+    // -------------------------------------------------------------------------
+
+    protected static function bootUploadsImages(): void
     {
         static::deleted(function ($model) {
+            // لا تحذف الصور عند الحذف الناعم (soft delete) — فقط عند force delete
             if (method_exists($model, 'isForceDeleting') && !$model->isForceDeleting()) {
                 return;
             }
-            
+
             foreach ($model->getImageColumns() as $column) {
-                $currentPath = $model->{$column};
-                if ($currentPath && Storage::disk($model->getDisk())->exists($currentPath)) {
-                    Storage::disk($model->getDisk())->delete($currentPath);
+                $path = $model->{$column};
+                if ($path) {
+                    app(\App\Services\ImageUploadService::class)->delete($path);
                 }
             }
         });

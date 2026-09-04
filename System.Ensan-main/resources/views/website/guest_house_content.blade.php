@@ -102,7 +102,7 @@
                                             <div class="gallery-card-sleek ratio ratio-16x9 rounded-4 border bg-light overflow-hidden position-relative group-hover-overlay" style="cursor: pointer;">
                                                 @php $sliderPath = $settings["gh_slider_$i"] ?? null; @endphp
                                                 @if($sliderPath)
-                                                    <img src="{{ asset('storage/' . $sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm" id="ghSliderPreview{{ $i }}">
+                                                    <img src="{{ app(\App\Services\ImageUploadService::class)->url($sliderPath) }}" class="w-100 h-100 object-fit-cover shadow-sm" id="ghSliderPreview{{ $i }}">
                                                 @else
                                                     <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50" id="ghSliderPlaceholder{{ $i }}">
                                                         <i class="bi bi-image fs-3 mb-1"></i>
@@ -307,7 +307,7 @@
 
                                 @foreach($docs as $doc)
                                     @if($doc['path'])
-                                        <a href="{{ asset('storage/' . $doc['path']) }}" target="_blank" class="btn btn-outline-light text-primary border d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-bg-light transition-all">
+                                        <a href="{{ app(\App\Services\ImageUploadService::class)->url($doc['path']) }}" target="_blank" class="btn btn-outline-light text-primary border d-flex align-items-center gap-2 px-3 py-2 rounded-3 hover-bg-light transition-all">
                                             <i class="bi {{ $doc['icon'] }}"></i>
                                             <span class="x-small fw-bold">{{ $doc['label'] }}</span>
                                         </a>

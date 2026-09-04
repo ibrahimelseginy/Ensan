@@ -44,20 +44,25 @@ final readonly class GuestHouseService
 
     public function getHouseStats(GuestHouse $house): array
     {
-        $cashSum      = (float) Donation::where('guest_house_id', $house->id)->where('type', 'cash')->sum('amount');
-        $inKindSum    = (float) Donation::where('guest_house_id', $house->id)->where('type', 'in_kind')->sum('estimated_value');
-        $expensesTotal = (float) Expense::where('guest_house_id', $house->id)->sum('amount');
+        $activeDonations = Donation::where('guest_house_id', $house->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+        $activeExpenses = Expense::where('guest_house_id', $house->id)
+            ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
+
+        $cashSum       = (float) (clone $activeDonations)->where('type', 'cash')->sum('amount');
+        $inKindSum     = (float) (clone $activeDonations)->where('type', 'in_kind')->sum('estimated_value');
+        $expensesTotal = (float) (clone $activeExpenses)->sum('amount');
         
         $donationsTotal = $cashSum + $inKindSum;
         
         return [
-            'donationsCount'     => Donation::where('guest_house_id', $house->id)->count(),
+            'donationsCount'     => (clone $activeDonations)->count(),
             'cashSum'            => $cashSum,
             'inKindSum'          => $inKindSum,
             'beneficiariesCount' => Beneficiary::where('guest_house_id', $house->id)->count(),
-            'expensesCount'      => Expense::where('guest_house_id', $house->id)->count(),
-            'latestDonations'    => Donation::where('guest_house_id', $house->id)->orderByDesc('id')->limit(5)->get(),
-            'latestExpenses'     => Expense::where('guest_house_id', $house->id)->orderByDesc('id')->limit(5)->get(),
+            'expensesCount'      => (clone $activeExpenses)->count(),
+            'latestDonations'    => (clone $activeDonations)->with('donor')->orderByDesc('id')->limit(5)->get(),
+            'latestExpenses'     => (clone $activeExpenses)->orderByDesc('id')->limit(5)->get(),
             'latestBeneficiaries'=> Beneficiary::where('guest_house_id', $house->id)->orderByDesc('id')->limit(5)->get(),
             'expensesTotal'      => $expensesTotal,
             'donationsTotal'     => $donationsTotal,

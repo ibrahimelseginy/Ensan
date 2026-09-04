@@ -43,7 +43,7 @@
                             <div class="col-md-2 col-6">
                                 <div class="position-relative ratio ratio-1x1 rounded-4 overflow-hidden border bg-light slider-upload-box group-hover-overlay">
                                     @if(isset($settings["project_slider_$i"]))
-                                        <img src="{{ asset('storage/' . $settings["project_slider_$i"]) }}" class="w-100 h-100 object-fit-cover shadow-sm" id="preview_slider_{{$i}}">
+                                        <img src="{{ app(\App\Services\ImageUploadService::class)->url($settings["project_slider_$i"]) }}" class="w-100 h-100 object-fit-cover shadow-sm" id="preview_slider_{{$i}}">
                                         <div class="position-absolute top-0 end-0 p-2">
                                             <span class="badge bg-success shadow-sm rounded-pill x-small">مرفوع</span>
                                         </div>

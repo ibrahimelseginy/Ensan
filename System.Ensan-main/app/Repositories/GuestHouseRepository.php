@@ -14,12 +14,15 @@ final readonly class GuestHouseRepository
     {
         $q      = $filters['q'] ?? '';
         $status = $filters['status'] ?? null;
+        $governorate = $filters['governorate'] ?? null;
 
         return GuestHouse::query()
+            ->withCount(['wings', 'beds', 'stays as resident_stays_count' => fn ($query) => $query->where('status', 'resident')])
             ->when($q !== '', function ($qb) use ($q) {
                 $qb->where('name', 'like', "%$q%")->orWhere('location', 'like', "%$q%");
             })
             ->when($status, fn($qb) => $qb->where('status', $status))
+            ->when($governorate, fn($qb) => $qb->where('governorate', $governorate))
             ->orderBy('name')
             ->paginate($perPage);
     }

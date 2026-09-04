@@ -17,7 +17,11 @@ final class MobileNews extends Model
     public const CATEGORY_DONATION = 'تبرعات';
     public const CATEGORY_URGENT = 'عاجل';
 
-    protected $fillable = ['title', 'content', 'image_path', 'category', 'views', 'shares'];
+    protected $fillable = ['title', 'content', 'image_path', 'additional_images', 'category', 'views', 'shares'];
+
+    protected $casts = [
+        'additional_images' => 'array',
+    ];
 
     public static function getCategories(): array
     {
@@ -34,7 +38,27 @@ final class MobileNews extends Model
         return 'image_path';
     }
 
+    public function getAdditionalImagesUrlsAttribute(): array
+    {
+        $urls = [];
+        $images = $this->additional_images ?? [];
 
+        $productionUrl = env('PRODUCTION_ASSET_URL');
+        $baseUrl = $productionUrl ? rtrim($productionUrl, '/') : url('');
 
-    protected $appends = ['image_url'];
+        foreach ($images as $img) {
+            if (request()->is('api/*')) {
+                $urls[] = $baseUrl . '/api/media?path=' . $img;
+            } else {
+                if (!empty($productionUrl) && !\Illuminate\Support\Facades\Storage::disk('public')->exists($img)) {
+                     $urls[] = $baseUrl . '/storage/' . $img;
+                } else {
+                     $urls[] = url('storage/' . $img);
+                }
+            }
+        }
+        return $urls;
+    }
+
+    protected $appends = ['image_url', 'additional_images_urls'];
 }

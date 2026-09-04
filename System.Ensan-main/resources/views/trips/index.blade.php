@@ -205,7 +205,7 @@
 
 {{-- Add Trip Form --}}
 <div class="summary-panel mb-4 d-print-none animate-slide-up animate-delay-2">
-    <h5 class="summary-title"><i class="bi bi-plus-circle text-success"></i> إضافة رحلة جديدة</h5>
+    <h5 class="summary-title" id="create-trip"><i class="bi bi-plus-circle text-success"></i> إضافة رحلة جديدة</h5>
     <form method="POST" action="{{ route('trips.store') }}">
         @csrf
         @if($errors->any())

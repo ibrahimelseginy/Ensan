@@ -14,10 +14,12 @@ final readonly class ProjectRepository
     {
         $q      = $filters['q'] ?? null;
         $status = $filters['status'] ?? null;
+        $fixed  = $filters['fixed'] ?? null;
 
         return Project::query()
             ->when($q, fn($qr) => $qr->where('name', 'like', '%' . $q . '%'))
             ->when($status, fn($qr) => $qr->where('status', $status))
+            ->when($fixed !== null && $fixed !== '', fn($qr) => $qr->where('fixed', (bool) $fixed))
             ->orderBy('name')
             ->paginate($perPage);
     }

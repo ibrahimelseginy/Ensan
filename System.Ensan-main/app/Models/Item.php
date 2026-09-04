@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Item extends Model
 {
-    use \App\Traits\UploadsImages;
+    use \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
     protected $appends = ['image_url'];
 
     protected $fillable = [

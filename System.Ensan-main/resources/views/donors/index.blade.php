@@ -62,7 +62,7 @@
             <label class="form-label fw-bold small text-uppercase text-muted">بحث سريع</label>
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="بحث بالاسم...">
+                <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="الاسم أو الكود أو الهاتف...">
             </div>
         </div>
         
@@ -130,7 +130,9 @@
                     <a href="{{ route('donors.show',$donor) }}" class="text-decoration-none text-dark stretched-link-custom">{{ $donor->name }}</a>
                 </h5>
                 <div class="text-muted small">
-                    {{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }} • {{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}
+                    <span class="font-monospace text-primary">{{ $donor->code ?? ('DON-'.$donor->id) }}</span>
+                    • {{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}
+                    • {{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}
                 </div>
              </div>
           </div>

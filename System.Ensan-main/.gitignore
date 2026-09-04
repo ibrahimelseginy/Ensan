@@ -13,9 +13,16 @@ Thumbs.db
 composer.phar
 composer-setup.php
 /ensandb/
+/ensandb
+/ensandb.sql
+/maintenance/backups/
 /.tools/
 /.gemini/
 /.idea/
 /.vscode/
 /public/storage/
+/public/hot
+/public/uploads/mobile/donations/receipts/
+/public/uploads/pending/
+/public/uploads/profiles/
 *.log

@@ -6,17 +6,17 @@ namespace App\Services;
 
 use App\Models\Donation;
 use App\Models\Donor;
+use App\Models\Beneficiary;
+use App\Models\BeneficiaryFamilyMember;
 use App\Models\Account;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\InventoryTransaction;
 use App\Repositories\DonationRepository;
 use App\Repositories\DonorRepository;
 use App\Services\ChangeRequestService;
 use App\Services\TreasuryIntegrationService;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Schema;
-use Carbon\Carbon;
 
 final readonly class DonationService
 {
@@ -33,9 +33,16 @@ final readonly class DonationService
 
     public function createDonation(array $data, bool $forceRequest = false): mixed
     {
+        $familyMemberIds = array_values(array_unique(array_map(
+            'intval',
+            array_filter((array) ($data['family_member_ids'] ?? []))
+        )));
+        unset($data['family_member_ids']);
+
         // 1. Handle Inline Donor Creation
         if (empty($data['donor_id']) && !empty($data['new_donor_name'])) {
             $donor = $this->donorRepository->create([
+                'code'            => $data['new_donor_code'] ?? null,
                 'name'            => $data['new_donor_name'],
                 'type'            => 'individual',
                 'phone'           => $data['new_donor_phone'] ?? null,
@@ -48,7 +55,12 @@ final readonly class DonationService
         }
 
         // Cleanup temporary donor fields
-        unset($data['new_donor_name'], $data['new_donor_phone'], $data['new_donor_address'], $data['new_donor_classification'], $data['new_donor_cycle']);
+        unset($data['new_donor_code'], $data['new_donor_name'], $data['new_donor_phone'], $data['new_donor_address'], $data['new_donor_classification'], $data['new_donor_cycle']);
+
+        if (array_key_exists('add_to_inventory', $data)) {
+            $data['auto_added_to_inventory'] = (bool) $data['add_to_inventory'];
+            unset($data['add_to_inventory']);
+        }
 
         // 2. Handle Allocation Note Magic Strings
         $this->processAllocationNotes($data);
@@ -58,14 +70,17 @@ final readonly class DonationService
             $data['received_at'] = now();
         }
 
-        $executor = function () use ($data) {
+        $executor = function () use ($data, $familyMemberIds) {
             $donation = $this->donationRepository->create($data);
             
             if ($donation->type === 'cash' && !empty($data['treasury_id'])) {
                 $this->treasuryIntegrationService->processDonationToTreasury($donation, (int)$data['treasury_id']);
+                $this->linkDonorToBeneficiaryFromDonation($donation);
             } else {
                 $this->processPostCreate($donation);
             }
+
+            $this->linkDonationToFamilyMembers($donation, $familyMemberIds);
             
             return $donation;
         };
@@ -86,6 +101,7 @@ final readonly class DonationService
 
         $executor = function () use ($donation, $data) {
             $this->donationRepository->update($donation, $data);
+            $this->linkDonorToBeneficiaryFromDonation($donation->fresh());
             return $donation;
         };
 
@@ -140,35 +156,145 @@ final readonly class DonationService
         $allocType   = $data['allocation_type'] ?? null;
         $currentNote = $data['allocation_note'] ?? '';
 
+        $benIds = [];
+        if (!empty($data['beneficiary_ids']) && is_array($data['beneficiary_ids'])) {
+            $benIds = array_map('intval', array_filter($data['beneficiary_ids']));
+        } elseif (!empty($data['beneficiary_id'])) {
+            $benIds = [(int)$data['beneficiary_id']];
+        }
+
+        $benString = !empty($benIds) ? implode(',', $benIds) : null;
+        $familyMemberId = !empty($data['family_member_id']) ? (int) $data['family_member_id'] : null;
+
         if ($allocType === 'sadaqa_jariya' && !str_contains($currentNote, 'sponsorship=')) {
             $data['allocation_note'] = trim("sponsorship=sadaqa_jariya\n" . $currentNote);
         } elseif ($allocType === 'sponsorship' && !str_contains($currentNote, 'sponsorship=')) {
             $sType = $data['sponsorship_type'] ?? 'طفل';
-            $benId = $data['beneficiary_id'] ?? null;
-            $magic = "sponsorship={$sType}" . ($benId ? ";beneficiary_id={$benId}" : "");
+            $magic = "sponsorship={$sType}" . ($benString ? ";beneficiary_ids={$benString}" : "");
+            if ($familyMemberId) {
+                $magic .= ";family_member_id={$familyMemberId}";
+            }
             $data['allocation_note'] = trim($magic . "\n" . $currentNote);
         }
 
         if (!empty($data['sponsorship_kind']) && !str_contains($currentNote, 'sponsorship=')) {
             $sKind = $data['sponsorship_kind'];
-            $benId = $data['beneficiary_id'] ?? null;
             $note  = "sponsorship=" . $sKind;
-            if ($benId && str_starts_with($sKind, 'kafalat_')) {
-                $note .= ";beneficiary_id=" . $benId;
+            if ($benString) {
+                $note .= ";beneficiary_ids=" . $benString;
+            }
+            if ($familyMemberId) {
+                $note .= ";family_member_id=" . $familyMemberId;
             }
             $data['allocation_note'] = trim($note . "\n" . $currentNote);
         }
 
-        unset($data['allocation_type'], $data['sponsorship_kind'], $data['sponsorship_type']);
+        unset($data['allocation_type'], $data['sponsorship_kind'], $data['sponsorship_type'], $data['beneficiary_ids'], $data['family_member_id']);
     }
 
-    private function processPostCreate(Donation $donation): void
+    public function processPostCreate(Donation $donation): void
     {
+        $this->linkDonorToBeneficiaryFromDonation($donation);
+
         if ($donation->type === 'cash') {
             $this->createCashJournal($donation);
         } else {
             $this->createInKindJournal($donation);
+            $this->addInKindDonationToInventory($donation);
         }
+    }
+
+    private function linkDonorToBeneficiaryFromDonation(Donation $donation): void
+    {
+        if (! $donation->donor_id || ! $donation->allocation_note) {
+            return;
+        }
+
+        $beneficiaryIds = [];
+        if (preg_match('/(?:^|;)beneficiary_ids=([\d,]+)/m', (string) $donation->allocation_note, $matches)) {
+            $beneficiaryIds = array_map('intval', explode(',', $matches[1]));
+        } elseif (preg_match('/(?:^|;)beneficiary_id=(\d+)/m', (string) $donation->allocation_note, $matches)) {
+            $beneficiaryIds = [(int) $matches[1]];
+        }
+
+        $beneficiaryIds = array_filter($beneficiaryIds, fn($id) => $id > 0 && Beneficiary::whereKey($id)->exists());
+        if (empty($beneficiaryIds)) {
+            return;
+        }
+
+        $donor = Donor::find($donation->donor_id);
+        if (! $donor) {
+            return;
+        }
+
+        $donor->sponsoredBeneficiaries()->syncWithoutDetaching($beneficiaryIds);
+
+        if (preg_match('/(?:^|;)family_member_id=(\d+)/m', (string) $donation->allocation_note, $memberMatches)) {
+            $familyMember = BeneficiaryFamilyMember::query()
+                ->whereKey((int) $memberMatches[1])
+                ->whereIn('beneficiary_id', $beneficiaryIds)
+                ->first();
+
+            $familyMember?->sponsors()->syncWithoutDetaching([$donor->id]);
+        }
+
+        if (! $donor->sponsored_beneficiary_id) {
+            $donor->forceFill(['sponsored_beneficiary_id' => reset($beneficiaryIds)])->save();
+        }
+    }
+
+    private function linkDonationToFamilyMembers(Donation $donation, array $familyMemberIds): void
+    {
+        if ($familyMemberIds === [] || ! $donation->donor_id) {
+            return;
+        }
+
+        $members = BeneficiaryFamilyMember::query()
+            ->whereIn('id', $familyMemberIds)
+            ->where('active', true)
+            ->get();
+
+        if ($members->isEmpty()) {
+            return;
+        }
+
+        $donation->familyMembers()->sync($members->modelKeys());
+
+        $donor = Donor::find($donation->donor_id);
+        if (! $donor) {
+            return;
+        }
+
+        $donor->sponsoredFamilyMembers()->syncWithoutDetaching($members->modelKeys());
+        $donor->sponsoredBeneficiaries()->syncWithoutDetaching(
+            $members->pluck('beneficiary_id')->unique()->values()->all()
+        );
+    }
+
+    private function addInKindDonationToInventory(Donation $donation): void
+    {
+        if (! $donation->auto_added_to_inventory || ! $donation->warehouse_id || ! $donation->item_id || ! $donation->quantity) {
+            return;
+        }
+
+        InventoryTransaction::firstOrCreate(
+            ['source_donation_id' => $donation->id, 'type' => 'in'],
+            [
+                'item_id' => $donation->item_id,
+                'warehouse_id' => $donation->warehouse_id,
+                'guest_house_id' => $donation->guest_house_id,
+                'quantity' => $donation->quantity,
+                'unit_cost' => $donation->quantity > 0 ? ((float) $donation->estimated_value / (float) $donation->quantity) : 0,
+                'total_cost' => $donation->estimated_value,
+                'reference' => 'GH-DON-' . $donation->id,
+                'notes' => 'تبرع عيني مضاف تلقائياً إلى مخزون دار الضيافة',
+                'transaction_date' => optional($donation->received_at)->toDateString() ?: now()->toDateString(),
+                'status' => 'approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'user_id' => auth()->id(),
+            ]
+        );
     }
 
     private function createCashJournal(Donation $donation): void

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class EmployeeAttendance extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = [
         'user_id',
         'date',

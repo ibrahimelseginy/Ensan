@@ -86,9 +86,22 @@ final class DonationWebController extends Controller
         $todayByChannel   = $stats['todayByChannel'];
         $inKindToday      = $stats['inKindToday'];
 
+        $receiptDonors = Donor::query()
+            ->with(['sponsoredFamilyMembers' => fn ($query) => $query->where('active', true), 'sponsoredFamilyMembers.beneficiary'])
+            ->orderBy('name')
+            ->get();
+        $receiptProjects = Project::orderBy('name')->get();
+        $allFamilyMembers = \App\Models\BeneficiaryFamilyMember::with('beneficiary')
+            ->where('active', true)
+            ->orderBy('full_name')
+            ->get();
+        $receiptTreasuries = Schema::hasTable('treasuries')
+            ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
+            : collect();
+
         return view('donations.index', compact(
             'cashDonations', 'inKindDonations', 'dailyCashSummary', 
-            'todayByChannel', 'inKindToday', 'q'
+            'todayByChannel', 'inKindToday', 'q', 'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries'
         ));
     }
 
@@ -98,10 +111,10 @@ final class DonationWebController extends Controller
         $filters  = $request->only(['q', 'project_id', 'campaign_id', 'month', 'year']);
         $filters['type'] = $infoType;
 
-        $query = Donation::with(['donor', 'project', 'campaign', 'warehouse'])
+        $query = Donation::with(['donor', 'warehouse', 'familyMembers'])
             ->where('type', $infoType)
-            ->when($filters['project_id'], fn($qr, $id) => $qr->where('project_id', $id))
-            ->when($filters['campaign_id'], fn($qr, $id) => $qr->where('campaign_id', $id))
+            ->when($filters['project_id'] ?? null, fn($qr, $id) => $qr->where('project_id', $id))
+            ->when($filters['campaign_id'] ?? null, fn($qr, $id) => $qr->where('campaign_id', $id))
             ->when($request->get('month'), fn($qr, $m) => $qr->whereMonth('received_at', $m))
             ->when($request->get('year'), fn($qr, $y) => $qr->whereYear('received_at', $y))
             ->orderByDesc('received_at');
@@ -113,24 +126,24 @@ final class DonationWebController extends Controller
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
             if ($infoType === 'cash') {
-                fputcsv($handle, ['ID', 'المتبرع', 'المبلغ', 'المشروع', 'الحملة', 'التاريخ', 'رقم الإيصال']);
+                fputcsv($handle, ['ID', 'المتبرع', 'المبلغ', 'وذلك قيمة', 'الأطفال / المرضى', 'الملاحظات', 'التاريخ', 'رقم الإيصال']);
                 $query->chunk(100, function ($donations) use ($handle) {
                     foreach ($donations as $d) {
                         fputcsv($handle, [
-                            $d->id, $d->donor->name ?? '—', $d->amount, 
-                            $d->project->name ?? '—', $d->campaign->name ?? '—', 
-                            $d->received_at->format('Y-m-d'), $d->receipt_number
+                            $d->id, $d->donor->name ?? '—', $d->amount,
+                            $d->purpose_label, $d->familyMembers->pluck('full_name')->implode(' | '),
+                            $d->display_allocation_note, optional($d->received_at)->format('Y-m-d'), $d->receipt_number
                         ]);
                     }
                 });
             } else {
-                fputcsv($handle, ['ID', 'المتبرع', 'القيمة التقديرية', 'المخزن', 'المشروع', 'الحملة', 'التاريخ']);
+                fputcsv($handle, ['ID', 'المتبرع', 'القيمة التقديرية', 'وذلك قيمة', 'الأطفال / المرضى', 'الملاحظات', 'المخزن', 'التاريخ']);
                 $query->chunk(100, function ($donations) use ($handle) {
                     foreach ($donations as $d) {
                         fputcsv($handle, [
-                            $d->id, $d->donor->name ?? '—', $d->estimated_value, 
-                            $d->warehouse->name ?? '—', $d->project->name ?? '—', 
-                            $d->campaign->name ?? '—', $d->received_at->format('Y-m-d')
+                            $d->id, $d->donor->name ?? '—', $d->estimated_value,
+                            $d->purpose_label, $d->familyMembers->pluck('full_name')->implode(' | '),
+                            $d->display_allocation_note, $d->warehouse->name ?? '—', optional($d->received_at)->format('Y-m-d')
                         ]);
                     }
                 });
@@ -141,25 +154,23 @@ final class DonationWebController extends Controller
 
     public function create(): View
     {
-        $donors      = Donor::orderBy('name')->get();
+        $donors      = Donor::query()
+            ->with(['sponsoredFamilyMembers' => fn ($query) => $query->where('active', true), 'sponsoredFamilyMembers.beneficiary'])
+            ->orderBy('name')
+            ->get();
         $projects    = Project::orderBy('name')->get();
-        $campaigns   = Campaign::orderByDesc('season_year')->orderBy('name')->get();
+        $allFamilyMembers = \App\Models\BeneficiaryFamilyMember::with('beneficiary')
+            ->where('active', true)
+            ->orderBy('full_name')
+            ->get();
         $warehouses  = Warehouse::when(Schema::hasColumn('warehouses', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         $treasuries  = collect();
         if (Schema::hasTable('treasuries')) {
             $treasuries = \App\Models\Treasury::when(Schema::hasColumn('treasuries', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         }
         $items         = \App\Models\Item::when(Schema::hasColumn('items', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
-        $guestHouses   = \App\Models\GuestHouse::where(fn($q) => $q->where('location', 'like', '%كفر%')->orWhere('location', 'like', '%طنطا%')->orWhere('name', 'like', '%كفر%')->orWhere('name', 'like', '%طنطا%'))->orderBy('name')->get();
-        $ghKafr        = $guestHouses->first(fn($gh) => (strpos($gh->location, 'كفر') !== false) || (strpos($gh->name, 'كفر') !== false));
-        $ghTanta       = $guestHouses->first(fn($gh) => (strpos($gh->location, 'طنطا') !== false) || (strpos($gh->name, 'طنطا') !== false));
-        $delegates     = Delegate::orderBy('name')->get();
-        $routes        = TravelRoute::orderBy('name')->get();
-        $beneficiaries = Beneficiary::select('id', 'full_name')->orderBy('full_name')->get();
-
         return view('donations.create', compact(
-            'donors', 'projects', 'campaigns', 'warehouses', 'treasuries',
-            'items', 'delegates', 'routes', 'beneficiaries', 'guestHouses', 'ghKafr', 'ghTanta'
+            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items'
         ));
     }
 
@@ -172,12 +183,12 @@ final class DonationWebController extends Controller
         }
 
         $donation = $result;
-        return redirect()->route('donors.index', ['selected_donor_id' => $donation->donor_id])->with('success', 'تم إضافة التبرع بنجاح.');
+        return redirect()->route('donations.show', $donation)->with('success', 'تم حفظ التبرع. يمكنك مراجعة الإيصال وطباعته الآن.');
     }
 
     public function show(Donation $donation): View
     {
-        $donation->load(['donor', 'project', 'campaign', 'warehouse', 'delegate', 'route']);
+        $donation->load(['donor', 'project', 'campaign', 'warehouse', 'delegate', 'route', 'familyMembers.beneficiary']);
         return view('donations.show', compact('donation'));
     }
 
@@ -190,8 +201,8 @@ final class DonationWebController extends Controller
         $delegates   = Delegate::orderBy('name')->get();
         $routes      = TravelRoute::orderBy('name')->get();
         $guestHouses = \App\Models\GuestHouse::where(fn($q) => $q->where('location', 'like', '%كفر%')->orWhere('location', 'like', '%طنطا%')->orWhere('name', 'like', '%كفر%')->orWhere('name', 'like', '%طنطا%'))->orderBy('name')->get();
-        $ghKafr      = $guestHouses->first(fn($gh) => (strpos($gh->location, 'كفر') !== false) || (strpos($gh->name, 'كفر') !== false));
-        $ghTanta     = $guestHouses->first(fn($gh) => (strpos($gh->location, 'طنطا') !== false) || (strpos($gh->name, 'طنطا') !== false));
+        $ghKafr      = $guestHouses->first(fn($gh) => str_contains((string)($gh->location ?? ''), 'كفر') || str_contains((string)($gh->name ?? ''), 'كفر'));
+        $ghTanta     = $guestHouses->first(fn($gh) => str_contains((string)($gh->location ?? ''), 'طنطا') || str_contains((string)($gh->name ?? ''), 'طنطا'));
         $beneficiaries = Beneficiary::select('id', 'full_name')->orderBy('full_name')->get();
 
         return view('donations.edit', compact(

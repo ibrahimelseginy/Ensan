@@ -20,9 +20,11 @@
                         @endif
 
                         <div class="d-grid gap-2">
-                            <a href="{{ route('roles.edit', $role) }}" class="btn btn-primary">
-                                <i class="bi bi-pencil-square me-2"></i> تعديل الدور
-                            </a>
+                            @if(request()->user()?->hasPermission('roles.edit'))
+                                <a href="{{ route('roles.edit', $role) }}" class="btn btn-primary">
+                                    <i class="bi bi-pencil-square me-2"></i> تعديل الدور
+                                </a>
+                            @endif
                             <a href="{{ route('roles.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-right me-2"></i> رجوع للقائمة
                             </a>
@@ -40,6 +42,7 @@
                             </h5>
                             <span class="badge bg-success-subtle text-success">{{ $role->permissions->count() }}
                                 صلاحية</span>
+                            <span class="badge bg-info-subtle text-info">{{ $role->users_count }} مستخدم</span>
                         </div>
                     </div>
                     <div class="card-body">

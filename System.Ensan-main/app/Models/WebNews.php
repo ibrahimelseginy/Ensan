@@ -11,6 +11,11 @@ final class WebNews extends Model
     use \App\Traits\UploadsImages;
     protected $appends = ['image_url'];
 
+    protected $attributes = [
+        'views_count' => 0,
+        'shares_count' => 0,
+    ];
+
     protected $fillable = [
         'title',
         'content',
@@ -22,10 +27,12 @@ final class WebNews extends Model
         'shares_count',
         'published_at',
         'statistic_number',
-        'statistic_description'
+        'statistic_description',
+        'images'
     ];
 
     protected $casts = [
-        'published_at' => 'datetime'
+        'published_at' => 'datetime',
+        'images' => 'array'
     ];
 }

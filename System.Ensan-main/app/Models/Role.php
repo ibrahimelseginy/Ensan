@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 final class Role extends Model
 {
+    use \App\Traits\HashedRouteKey;
+
     protected $fillable = ['name','key','description'];
 
     public function users(): BelongsToMany { return $this->belongsToMany(User::class); }

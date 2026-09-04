@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 final class MobileBanner extends Model
+{
     use \App\Traits\UploadsImages;
 
     protected $fillable = [
@@ -17,3 +18,4 @@ final class MobileBanner extends Model
     ];
 
     protected $appends = ['image_url'];
+}

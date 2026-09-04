@@ -88,7 +88,7 @@ final class ComplaintWebController extends Controller
         $users = User::orderBy('name')->get(); 
         return view('complaints.edit', compact('complaint','users')); 
     }
-    public function update(Request $request, Complaint $complaint) { 
+    public function update(Request $request, Complaint $complaint) {
         $pending = \App\Models\ChangeRequest::where('model_type', Complaint::class)
             ->where('model_id', $complaint->id)
             ->where('status', 'pending')
@@ -102,9 +102,17 @@ final class ComplaintWebController extends Controller
             'against_user_id' => 'nullable|exists:users,id',
             'status' => 'in:open,in_progress,closed',
             'subject' => 'required|string',
-            'message' => 'required|string'
-        ]); 
-        
+            'message' => 'required|string',
+            'resolution' => 'nullable|string',
+        ]);
+
+        // تحديد وقت الحل عند إغلاق الشكوى
+        if (($data['status'] ?? null) === 'closed' && $complaint->status !== 'closed') {
+            $data['resolved_at'] = now();
+        } elseif (($data['status'] ?? null) !== 'closed') {
+            $data['resolved_at'] = null;
+        }
+
         $executor = function () use ($complaint, $data) {
             $complaint->update($data);
             return $complaint;

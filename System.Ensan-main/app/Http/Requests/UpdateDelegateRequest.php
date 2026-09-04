@@ -21,7 +21,7 @@ final class UpdateDelegateRequest extends FormRequest
             'email'         => 'nullable|email|max:255',
             'route_id'      => 'nullable|exists:travel_routes,id',
             'user_id'       => 'nullable|exists:users,id',
-            'profile_photo' => 'nullable|image|max:2048'
+            'profile_photo' => 'nullable|any_image|max:2048'
         ];
     }
 }

@@ -28,9 +28,17 @@ final class ChangeRequestWebController extends Controller
             ->paginate(50); // Increased page size to reduce "disappearing" feel
 
         $permissionsMap = \App\Models\Permission::pluck('name', 'id')->toArray();
+        $beneficiariesMap = \App\Models\Beneficiary::pluck('full_name', 'id')->toArray();
+        $sponsorsMap = \App\Models\Donor::pluck('name', 'id')->toArray();
         $currentStatus = $request->status ?? 'all';
 
-        return view('change_requests.index', compact('requests', 'permissionsMap', 'currentStatus'));
+        return view('change_requests.index', compact(
+            'requests',
+            'permissionsMap',
+            'beneficiariesMap',
+            'sponsorsMap',
+            'currentStatus'
+        ));
     }
 
     public function approve(ChangeRequest $changeRequest)
@@ -43,8 +51,19 @@ final class ChangeRequestWebController extends Controller
             return back()->with('error', 'الطلب تمت معالجته مسبقاً');
         }
 
-        // Execute logic
         try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $changeRequest = ChangeRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($changeRequest->getKey());
+
+            if ($changeRequest->status !== 'pending') {
+                \Illuminate\Support\Facades\DB::rollBack();
+
+                return back()->with('error', 'الطلب تمت معالجته مسبقاً');
+            }
+
             $modelClass = $changeRequest->model_type;
             $payload = $changeRequest->payload;
 
@@ -61,7 +80,11 @@ final class ChangeRequestWebController extends Controller
                 
                 // Special handling for Donations postCreate if needed
                 if ($modelClass === 'App\Models\Donation') {
-                    \App\Services\DonationService::postCreate($instance);
+                    app(\App\Services\DonationService::class)->processPostCreate($instance);
+                } elseif ($modelClass === 'App\Models\Beneficiary') {
+                    app(\App\Services\BeneficiaryService::class)->syncAssignments($instance, $executionData);
+                } elseif ($modelClass === 'App\Models\Donor') {
+                    app(\App\Services\DonorService::class)->syncSponsoredBeneficiaries($instance, $executionData);
                 } elseif ($modelClass === 'App\Models\Expense') {
                     // Process Treasury for Expenses
                     $treasuryService = new \App\Services\TreasuryIntegrationService();
@@ -105,6 +128,14 @@ final class ChangeRequestWebController extends Controller
                     
                     if ($modelClass === 'App\Models\Role' && isset($executionData['permissions'])) {
                         $instance->permissions()->sync($executionData['permissions']);
+                    }
+
+                    if ($modelClass === 'App\Models\Beneficiary') {
+                        app(\App\Services\BeneficiaryService::class)->syncAssignments($instance, $executionData);
+                    }
+
+                    if ($modelClass === 'App\Models\Donor') {
+                        app(\App\Services\DonorService::class)->syncSponsoredBeneficiaries($instance, $executionData);
                     }
                     
                     // Sync Treasury Transaction for Donations
@@ -324,9 +355,17 @@ final class ChangeRequestWebController extends Controller
                 'reviewer_id' => auth()->id()
             ]);
 
+            \Illuminate\Support\Facades\DB::commit();
+
             return back()->with('success', 'تم قبول التغيير وتنفيذه بنجاح');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
+
+            report($e);
+
             return back()->with('error', 'حدث خطأ أثناء تنفيذ التغيير: ' . $e->getMessage());
         }
     }
@@ -372,6 +411,10 @@ final class ChangeRequestWebController extends Controller
                             $oldValues[$key] = $vals['from'];
                         }
                         $instance->update($oldValues);
+
+                        if ($modelClass === 'App\Models\Beneficiary') {
+                            app(\App\Services\BeneficiaryService::class)->syncAssignments($instance, $oldValues);
+                        }
                         
                         if ($modelClass === 'App\Models\Donation') {
                              $transaction = \App\Models\TreasuryTransaction::where('donation_id', $instance->id)->where('type', 'in')->first();
@@ -413,25 +456,41 @@ final class ChangeRequestWebController extends Controller
             abort(403, 'الرفض مسموح للأدمن فقط');
         }
 
-        if ($changeRequest->status !== 'pending') {
-            return back()->with('error', 'الطلب تمت معالجته مسبقاً');
-        }
-
-        $changeRequest->update([
-            'status' => 'rejected',
-            'reviewer_id' => request()->user()->id,
-            'rejection_reason' => $request->input('rejection_reason')
+        $validated = $request->validate([
+            'rejection_reason' => 'nullable|string|max:1000',
         ]);
 
-        // If it's a Leave request, update the Leave model status as well
-        if ($changeRequest->model_type === 'App\Models\Leave' && $changeRequest->model_id) {
-            $leave = \App\Models\Leave::find($changeRequest->model_id);
-            if ($leave) {
-                $leave->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => $request->input('rejection_reason')
-                ]);
+        $processed = \Illuminate\Support\Facades\DB::transaction(function () use ($changeRequest, $validated): bool {
+            $changeRequest = ChangeRequest::query()
+                ->lockForUpdate()
+                ->findOrFail($changeRequest->getKey());
+
+            if ($changeRequest->status !== 'pending') {
+                return false;
             }
+
+            $changeRequest->update([
+                'status' => 'rejected',
+                'reviewer_id' => request()->user()->id,
+                'rejection_reason' => $validated['rejection_reason'] ?? null,
+            ]);
+
+            // If it's a Leave request, update the Leave model status as well.
+            if ($changeRequest->model_type === 'App\Models\Leave' && $changeRequest->model_id) {
+                $leave = \App\Models\Leave::find($changeRequest->model_id);
+                if ($leave) {
+                    $leave->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => $validated['rejection_reason'] ?? null,
+                    ]);
+                }
+            }
+
+            return true;
+        });
+
+        if (! $processed) {
+            return back()->with('error', 'الطلب تمت معالجته مسبقاً');
         }
 
         return back()->with('success', 'تم رفض الطلب بنجاح. لم يتم تطبيق أي تغييرات.');
@@ -565,6 +624,9 @@ final class ChangeRequestWebController extends Controller
                         $revertData[$key] = $vals['from'];
                     }
                     $instance->update($revertData);
+                    if ($modelClass === 'App\Models\Beneficiary') {
+                        app(\App\Services\BeneficiaryService::class)->syncAssignments($instance, $revertData);
+                    }
                      // If financial update, we might need to fix amounts. 
                      // This is complex for bulk without shared service logic.
                 }
