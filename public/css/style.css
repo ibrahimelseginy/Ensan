@@ -1070,13 +1070,13 @@ body.theme-dark {
     background-color: rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* Fix all elements inside standard modal (excluding review action modal) */
-  .modal-content:not(.review-action-modal) *:not(.btn):not(.badge):not(.modal-header):not(.modal-body):not(.modal-footer):not(.modal-dialog):not([class*="review-"]) {
+  /* Fix all elements inside standard modal (excluding review action modal and admin login notifications modal) */
+  .modal-content:not(.review-action-modal):not(.admin-notif-content) *:not(.btn):not(.badge):not(.modal-header):not(.modal-body):not(.modal-footer):not(.modal-dialog):not([class*="review-"]):not([class*="admin-notif"]) {
     background-color: transparent !important;
   }
 
   /* Restore modal content background */
-  .modal-content:not(.review-action-modal) {
+  .modal-content:not(.review-action-modal):not(.admin-notif-content) {
     background-color: var(--bg-card) !important;
   }
 
