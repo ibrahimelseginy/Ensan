@@ -302,6 +302,239 @@
       body:not(.theme-dark) .btn-close-white {
           filter: invert(1) grayscale(100%) brightness(200%);
       }
+
+    /* Dashboard Overhaul Luxury Widgets System */
+    .lux-dashboard-card {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid rgba(0, 0, 0, 0.07);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .theme-dark .lux-dashboard-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    .lux-dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .lux-card-header {
+        padding: 1.1rem 1.35rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+    }
+
+    .theme-dark .lux-card-header {
+        border-bottom-color: rgba(255, 255, 255, 0.07);
+    }
+
+    .lux-card-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .lux-header-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    .theme-dark .lux-header-icon {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .lux-micro-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+
+    .lux-micro-table th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        color: #64748b;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(0, 0, 0, 0.015);
+    }
+
+    .theme-dark .lux-micro-table th {
+        color: #94a3b8;
+        border-bottom-color: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .lux-micro-table td {
+        padding: 0.85rem 1rem;
+        font-size: 0.88rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .theme-dark .lux-micro-table td {
+        border-bottom-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .lux-micro-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+    .lux-micro-table tbody tr:hover {
+        background: rgba(0, 0, 0, 0.025);
+    }
+
+    .theme-dark .lux-micro-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.035);
+    }
+
+    .badge-lux {
+        padding: 0.35em 0.75em;
+        font-size: 0.76rem;
+        font-weight: 600;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-lux-success {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+
+    .badge-lux-danger {
+        background: rgba(244, 63, 94, 0.12);
+        color: #f43f5e;
+    }
+
+    .badge-lux-info {
+        background: rgba(14, 165, 233, 0.12);
+        color: #0ea5e9;
+    }
+
+    .badge-lux-warning {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    .badge-lux-neutral {
+        background: rgba(148, 163, 184, 0.15);
+        color: #64748b;
+    }
+
+    .theme-dark .badge-lux-neutral {
+        background: rgba(148, 163, 184, 0.2);
+        color: #cbd5e1;
+    }
+
+    .lux-micro-table a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .theme-dark .lux-micro-table a {
+        color: #f8fafc !important;
+    }
+
+    .theme-dark .lux-micro-table a:hover {
+        color: #38bdf8 !important;
+    }
+
+    /* Feed Activity items */
+    .lux-feed-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        margin-bottom: 0.4rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .theme-dark .lux-feed-item {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .lux-feed-item:hover {
+        transform: translateX(-4px);
+        background: rgba(0, 0, 0, 0.035);
+    }
+
+    .theme-dark .lux-feed-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .lux-feed-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    /* Inventory Progress Bars */
+    .stock-meter-container {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stock-meter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .stock-meter-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.88rem;
+    }
+
+    .stock-progress-track {
+        height: 8px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .theme-dark .stock-progress-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .stock-progress-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
 </style>
 @endsection
 
@@ -525,35 +758,65 @@
       </div>
     </div>
 
-    <div class="row g-3 mt-1">
-      <div class="col-md-6">
-        <div class="card kpi-card p-3 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold">الحملات النشطة</h5>
+    {{-- Luxury Widgets 1 & 2: Active Campaigns & Active Projects --}}
+    <div class="row g-4 mb-4 mt-3">
+      <div class="col-lg-6 animate-slide-up animate-delay-1">
+        <div class="lux-dashboard-card h-100">
+          <div class="lux-card-header">
+            <h5 class="lux-card-title">
+              <span class="lux-header-icon text-primary"><i class="bi bi-flag-fill"></i></span>
+              الحملات النشطة
+              <span class="badge-lux badge-lux-info ms-2" style="font-size: 0.82rem; padding: 0.25em 0.65em;">{{ count($activeCampaigns) }}</span>
+            </h5>
+            @if($user->hasPermission('campaigns.view'))
+              <a href="{{ route('campaigns.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7">
+                عرض الكل <i class="bi bi-arrow-left ms-1"></i>
+              </a>
+            @endif
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.85rem;">
-              <thead class="bg-transparent text-muted">
+            <table class="table lux-micro-table align-middle mb-0 text-center">
+              <thead>
                 <tr>
-                  <th class="text-start">الحملة</th>
+                  <th class="text-start ps-3">اسم الحملة</th>
                   <th>التبرعات</th>
                   <th>المصروفات</th>
-                  <th>الصافي</th>
+                  <th class="pe-3">الصافي</th>
                 </tr>
               </thead>
               <tbody>
                 @forelse($activeCampaigns as $camp)
                   <tr>
-                    <td class="text-start fw-bold"><a href="{{ route('campaigns.show', $camp) }}"
-                        class="text-decoration-none text-dark">{{ $camp->name }}</a></td>
-                    <td class="text-success">{{ number_format($camp->total_donations) }}</td>
-                    <td class="text-danger">{{ number_format($camp->total_expenses) }}</td>
-                    <td class="fw-bold {{ $camp->net_balance >= 0 ? 'text-success' : 'text-danger' }}">
-                      {{ number_format($camp->net_balance) }}</td>
+                    <td class="text-start ps-3 fw-bold">
+                      <a href="{{ route('campaigns.show', $camp) }}" class="d-inline-flex align-items-center gap-2 text-reset">
+                        <span class="d-inline-block rounded-circle bg-primary" style="width: 8px; height: 8px;"></span>
+                        {{ $camp->name }}
+                      </a>
+                    </td>
+                    <td>
+                      <span class="badge-lux badge-lux-success">
+                        <i class="bi bi-arrow-down-left me-1"></i>{{ number_format($camp->total_donations) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge-lux badge-lux-danger">
+                        <i class="bi bi-arrow-up-right me-1"></i>{{ number_format($camp->total_expenses) }}
+                      </span>
+                    </td>
+                    <td class="pe-3">
+                      <span class="badge-lux {{ $camp->net_balance > 0 ? 'badge-lux-success' : ($camp->net_balance < 0 ? 'badge-lux-danger' : 'badge-lux-neutral') }}">
+                        {{ number_format($camp->net_balance) }}
+                      </span>
+                    </td>
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-2">لا توجد حملات نشطة حالياً</td>
+                    <td colspan="4" class="text-center text-muted py-4">
+                      <div class="py-3">
+                        <i class="bi bi-inbox text-muted opacity-50 display-6 d-block mb-2"></i>
+                        <span class="fs-7">لا توجد حملات نشطة حالياً</span>
+                      </div>
+                    </td>
                   </tr>
                 @endforelse
               </tbody>
@@ -561,34 +824,64 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card kpi-card p-3 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold">المشاريع النشطة</h5>
+
+      <div class="col-lg-6 animate-slide-up animate-delay-2">
+        <div class="lux-dashboard-card h-100">
+          <div class="lux-card-header">
+            <h5 class="lux-card-title">
+              <span class="lux-header-icon text-success"><i class="bi bi-folder-fill"></i></span>
+              المشاريع النشطة
+              <span class="badge-lux badge-lux-success ms-2" style="font-size: 0.82rem; padding: 0.25em 0.65em;">{{ count($activeProjects) }}</span>
+            </h5>
+            @if($user->hasPermission('projects.view'))
+              <a href="{{ route('projects.index') }}" class="btn btn-sm btn-outline-success rounded-pill px-3 fs-7">
+                عرض الكل <i class="bi bi-arrow-left ms-1"></i>
+              </a>
+            @endif
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.85rem;">
-              <thead class="bg-transparent text-muted">
+            <table class="table lux-micro-table align-middle mb-0 text-center">
+              <thead>
                 <tr>
-                  <th class="text-start">المشروع</th>
+                  <th class="text-start ps-3">اسم المشروع</th>
                   <th>التبرعات</th>
                   <th>المصروفات</th>
-                  <th>الصافي</th>
+                  <th class="pe-3">الصافي</th>
                 </tr>
               </thead>
               <tbody>
                 @forelse($activeProjects as $proj)
                   <tr>
-                    <td class="text-start fw-bold"><a href="{{ route('projects.show', $proj) }}"
-                        class="text-decoration-none text-dark">{{ $proj->name }}</a></td>
-                    <td class="text-success">{{ number_format($proj->total_donations) }}</td>
-                    <td class="text-danger">{{ number_format($proj->total_expenses) }}</td>
-                    <td class="fw-bold {{ $proj->net_balance >= 0 ? 'text-success' : 'text-danger' }}">
-                      {{ number_format($proj->net_balance) }}</td>
+                    <td class="text-start ps-3 fw-bold">
+                      <a href="{{ route('projects.show', $proj) }}" class="d-inline-flex align-items-center gap-2 text-reset">
+                        <span class="d-inline-block rounded-circle bg-success" style="width: 8px; height: 8px;"></span>
+                        {{ $proj->name }}
+                      </a>
+                    </td>
+                    <td>
+                      <span class="badge-lux badge-lux-success">
+                        <i class="bi bi-arrow-down-left me-1"></i>{{ number_format($proj->total_donations) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge-lux badge-lux-danger">
+                        <i class="bi bi-arrow-up-right me-1"></i>{{ number_format($proj->total_expenses) }}
+                      </span>
+                    </td>
+                    <td class="pe-3">
+                      <span class="badge-lux {{ $proj->net_balance > 0 ? 'badge-lux-success' : ($proj->net_balance < 0 ? 'badge-lux-danger' : 'badge-lux-neutral') }}">
+                        {{ number_format($proj->net_balance) }}
+                      </span>
+                    </td>
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-2">لا توجد مشاريع نشطة حالياً</td>
+                    <td colspan="4" class="text-center text-muted py-4">
+                      <div class="py-3">
+                        <i class="bi bi-folder-x text-muted opacity-50 display-6 d-block mb-2"></i>
+                        <span class="fs-7">لا توجد مشاريع نشطة حالياً</span>
+                      </div>
+                    </td>
                   </tr>
                 @endforelse
               </tbody>
@@ -598,82 +891,143 @@
       </div>
     </div>
 
-    {{-- Activity Feeds Row --}}
-    <div class="row g-4 mb-4 mt-3">
-      <div class="col-lg-6">
-        <div class="summary-panel h-100">
-          <h5 class="summary-title"><i class="bi bi-cash-coin text-success"></i> آخر التبرعات</h5>
-          <div class="activity-feed">
-            @foreach($latestDonations as $d)
-              <div class="activity-item">
-                <div class="activity-icon bg-success text-white">
-                  <i class="bi bi-{{ $d->type === 'cash' ? 'cash' : 'gift' }}"></i>
+    {{-- Luxury Widgets 3, 4 & 5: Activity Feeds & Top 5 Inventory Items (Positioned lower as requested) --}}
+    <div class="row g-4 mb-5 mt-5 pt-3">
+      {{-- Widget 3: Latest Donations --}}
+      <div class="col-lg-4 animate-slide-up animate-delay-1">
+        <div class="lux-dashboard-card h-100">
+          <div class="lux-card-header">
+            <h5 class="lux-card-title">
+              <span class="lux-header-icon text-emerald" style="color: #10b981;"><i class="bi bi-cash-coin"></i></span>
+              آخر التبرعات
+            </h5>
+            @if($user->hasPermission('donations.view'))
+              <a href="{{ route('donations.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fs-7">
+                عرض الكل
+              </a>
+            @endif
+          </div>
+          <div class="p-3">
+            @forelse($latestDonations as $d)
+              <div class="lux-feed-item">
+                <div class="lux-feed-avatar" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                  <i class="bi bi-{{ $d->type === 'cash' ? 'cash-stack' : 'gift-fill' }}"></i>
                 </div>
-                <div class="activity-content">
-                  <div class="activity-title">
+                <div class="flex-grow-1 overflow-hidden me-2">
+                  <div class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">
                     @if($d->donor_id)
-                      <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none text-dark">{{ $d->donor?->name ?? '—' }}</a>
+                      <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none text-reset">{{ $d->donor?->name ?? '—' }}</a>
                     @else
                       {{ $d->donor?->name ?? 'متبرع مجهول' }}
                     @endif
                   </div>
-                  <div class="activity-meta">{{ $d->type === 'cash' ? 'تبرع نقدي' : 'تبرع عيني' }}</div>
+                  <div class="text-muted small" style="font-size: 0.78rem;">
+                    <i class="bi bi-dot me-1"></i>{{ $d->type === 'cash' ? 'تبرع نقدي' : 'تبرع عيني' }}
+                  </div>
                 </div>
-                <div class="activity-value text-success">+{{ number_format($d->type === 'cash' ? $d->amount : $d->estimated_value, 0) }}</div>
+                <div class="fw-bold text-success text-nowrap" style="font-size: 0.95rem;">
+                  +{{ number_format($d->type === 'cash' ? $d->amount : $d->estimated_value, 0) }}
+                </div>
               </div>
-            @endforeach
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="summary-panel h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="summary-title mb-0"><i class="bi bi-wallet2 text-danger"></i> آخر المصروفات</h5>
-            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3" href="{{ route('expenses.index') }}">عرض الكل</a>
-          </div>
-          @if(count($latestExpenses) > 0)
-            <div class="activity-feed">
-              @foreach($latestExpenses as $ex)
-                <div class="activity-item">
-                  <div class="activity-icon bg-danger text-white">
-                    <i class="bi bi-receipt"></i>
-                  </div>
-                  <div class="activity-content">
-                    <div class="activity-title">{{ $ex->category ?? 'غير محدد' }}</div>
-                    <div class="activity-meta">{{ optional($ex->created_at)->format('Y-m-d') }}</div>
-                  </div>
-                  <div class="activity-value text-danger">-{{ number_format($ex->amount, 0) }}</div>
-                </div>
-              @endforeach
-            </div>
-          @else
-            <div class="text-center py-4 text-muted">لا توجد مصروفات حديثة</div>
-          @endif
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-3 mt-1">
-      <div class="col-md-6">
-        <div class="card kpi-card p-3 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold">أعلى 5 أصناف في المخزون</h5>
-            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3" href="{{ route('warehouses.index') }}">عرض
-              الكل</a>
-          </div>
-          <ul class="list-unstyled list-simple mb-0">
-            @forelse($inventoryLevels as $inv)
-              <li>
-                <div>
-                  <div class="fw-bold">{{ $inv->item->name ?? '—' }}</div>
-                  <div class="small text-muted">{{ $inv->item->category ?? '' }}</div>
-                </div>
-                <span class="chip">{{ $inv->current_stock }}</span>
-              </li>
             @empty
-              <li class="text-center text-muted py-2">المخزون فارغ</li>
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-coin display-6 opacity-40 d-block mb-2"></i>
+                <span class="fs-7">لا توجد تبرعات حديثة</span>
+              </div>
             @endforelse
-          </ul>
+          </div>
+        </div>
+      </div>
+
+      {{-- Widget 4: Latest Expenses --}}
+      <div class="col-lg-4 animate-slide-up animate-delay-2">
+        <div class="lux-dashboard-card h-100">
+          <div class="lux-card-header">
+            <h5 class="lux-card-title">
+              <span class="lux-header-icon text-danger" style="color: #f43f5e;"><i class="bi bi-receipt-cutoff"></i></span>
+              آخر المصروفات
+            </h5>
+            @if($user->hasPermission('expenses.view'))
+              <a href="{{ route('expenses.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fs-7">
+                عرض الكل
+              </a>
+            @endif
+          </div>
+          <div class="p-3">
+            @forelse($latestExpenses as $ex)
+              <div class="lux-feed-item">
+                <div class="lux-feed-avatar" style="background: rgba(244, 63, 94, 0.12); color: #f43f5e;">
+                  <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="flex-grow-1 overflow-hidden me-2">
+                  <div class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">
+                    {{ $ex->category ?? 'مصروف غير محدد' }}
+                  </div>
+                  <div class="text-muted small" style="font-size: 0.78rem;">
+                    <i class="bi bi-calendar3 me-1"></i>{{ optional($ex->created_at)->format('Y-m-d') }}
+                  </div>
+                </div>
+                <div class="fw-bold text-danger text-nowrap" style="font-size: 0.95rem;">
+                  -{{ number_format($ex->amount, 0) }}
+                </div>
+              </div>
+            @empty
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-wallet-2 display-6 opacity-40 d-block mb-2"></i>
+                <span class="fs-7">لا توجد مصروفات حديثة</span>
+              </div>
+            @endforelse
+          </div>
+        </div>
+      </div>
+
+      {{-- Widget 5: Top 5 Inventory Items --}}
+      <div class="col-lg-4 animate-slide-up animate-delay-3">
+        <div class="lux-dashboard-card h-100">
+          <div class="lux-card-header">
+            <h5 class="lux-card-title">
+              <span class="lux-header-icon text-warning" style="color: #f59e0b;"><i class="bi bi-boxes"></i></span>
+              أعلى 5 أصناف في المخزون
+            </h5>
+            @if($user->hasPermission('warehouses.view'))
+              <a href="{{ route('warehouses.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fs-7">
+                عرض الكل
+              </a>
+            @endif
+          </div>
+          @php
+            $maxStock = 1;
+            if(count($inventoryLevels) > 0) {
+                $maxStock = max(array_map(fn($item) => (float)($item->current_stock ?? 0), is_object($inventoryLevels) ? $inventoryLevels->all() : (array)$inventoryLevels)) ?: 1;
+            }
+          @endphp
+          <div class="stock-meter-container">
+            @forelse($inventoryLevels as $inv)
+              @php
+                $currStock = (float)($inv->current_stock ?? 0);
+                $pct = min(100, max(5, round(($currStock / $maxStock) * 100)));
+              @endphp
+              <div class="stock-meter-item">
+                <div class="stock-meter-info">
+                  <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">
+                    <i class="bi bi-box-seam me-1 text-warning"></i>
+                    {{ $inv->item->name ?? 'صنف غير محدد' }}
+                  </div>
+                  <span class="badge-lux badge-lux-info">
+                    {{ number_format($currStock, 3) }}
+                  </span>
+                </div>
+                <div class="stock-progress-track">
+                  <div class="stock-progress-fill" style="width: {{ $pct }}%; background: linear-gradient(90deg, #f59e0b, #eab308);"></div>
+                </div>
+              </div>
+            @empty
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-box-seam display-6 opacity-40 d-block mb-2"></i>
+                <span class="fs-7">المخزون فارغ حالياً</span>
+              </div>
+            @endforelse
+          </div>
         </div>
       </div>
     </div>
