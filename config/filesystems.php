@@ -41,7 +41,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => public_path('storage'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('FILESYSTEM_PUBLIC_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -68,11 +68,12 @@ return [
         | الصور ترفع إلى: public/uploads/{directory}/{file.webp}
         | الرابط النهائي: https://domain.com/uploads/{directory}/{file.webp}
         | لا يحتاج إلى php artisan storage:link
+        |----------------------------------------------------------------------
         */
         'uploads' => [
             'driver'     => 'local',
             'root'       => public_path('uploads'),
-            'url'        => env('APP_URL') . '/uploads',
+            'url'        => env('FILESYSTEM_UPLOADS_URL', '/uploads'),
             'visibility' => 'public',
             'throw'      => false,
             'report'     => false,

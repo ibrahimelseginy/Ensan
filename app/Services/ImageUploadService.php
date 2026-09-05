@@ -204,10 +204,15 @@ final class ImageUploadService
      * @param  string|null $path   المسار النسبي المخزَّن في قاعدة البيانات
      * @return string|null
      */
-    public function url(?string $path): ?string
+    public function url(?string $path, bool $absolute = false): ?string
     {
         if (!$path) {
             return null;
+        }
+
+        // Return full external URLs as-is
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
         }
 
         $cleaned = $this->normalizePath($path);
@@ -215,18 +220,45 @@ final class ImageUploadService
             return null;
         }
 
+        // Helper to format final URL (relative for web pages, absolute for API)
+        $format = function (string $relative) use ($absolute): string {
+            $isApi = function_exists('request') && request()?->is('api/*');
+            if ($absolute || $isApi) {
+                return url($relative);
+            }
+            return $relative;
+        };
+
+        // 1. Direct check in public/uploads/
+        if (file_exists(public_path('uploads/' . $cleaned))) {
+            return $format('/uploads/' . $cleaned);
+        }
+
+        // 2. Direct check in public/storage/
+        if (file_exists(public_path('storage/' . $cleaned))) {
+            return $format('/storage/' . $cleaned);
+        }
+
+        // 3. Direct check in storage/app/public/
+        if (file_exists(storage_path('app/public/' . $cleaned))) {
+            return $format('/storage/' . $cleaned);
+        }
+
+        // 4. Check via Storage disks
         $disk     = env('IMAGE_UPLOAD_DISK', 'uploads');
         $fallback = ($disk === 'uploads') ? 'public' : 'uploads';
 
         if (Storage::disk($disk)->exists($cleaned)) {
-            return Storage::disk($disk)->url($cleaned);
+            $storageUrl = Storage::disk($disk)->url($cleaned);
+            return $format($storageUrl);
         }
 
         if (Storage::disk($fallback)->exists($cleaned)) {
-            return Storage::disk($fallback)->url($cleaned);
+            $storageUrl = Storage::disk($fallback)->url($cleaned);
+            return $format($storageUrl);
         }
 
-        return Storage::disk($disk)->url($cleaned);
+        return null;
     }
 
     /**
@@ -257,7 +289,7 @@ final class ImageUploadService
             return null;
         }
 
-        if (str_starts_with($path, 'http')) {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             $parsed = parse_url($path);
             $path   = $parsed['path'] ?? '';
         }
@@ -285,9 +317,19 @@ final class ImageUploadService
             return false;
         }
 
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return true;
+        }
+
         $cleaned = $this->normalizePath($path);
         if (!$cleaned) {
             return false;
+        }
+
+        if (file_exists(public_path('uploads/' . $cleaned)) ||
+            file_exists(public_path('storage/' . $cleaned)) ||
+            file_exists(storage_path('app/public/' . $cleaned))) {
+            return true;
         }
 
         $disk     = env('IMAGE_UPLOAD_DISK', 'uploads');

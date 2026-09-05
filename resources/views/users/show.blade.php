@@ -30,15 +30,18 @@
                 <div class="card border-0 shadow-sm text-center h-100">
                     <div class="card-body p-4">
                         <div class="mb-4 position-relative d-inline-block">
-                            <div class="rounded-circle shadow-lg overflow-hidden bg-white d-flex align-items-center justify-content-center mx-auto profile-avatar-container" style="width: 160px; height: 160px; border: 5px solid white;">
-                                @if($user->profile_photo_path)
+                            <div class="rounded-circle shadow-lg overflow-hidden bg-white d-flex align-items-center justify-content-center mx-auto profile-avatar-container" style="width: 160px; height: 160px; border: 5px solid white; position: relative;">
+                                @if($user->image_url)
                                     <img src="{{ $user->image_url }}"
                                         class="w-100 h-100"
                                         style="object-fit: cover;" alt="{{ $user->name }}"
-                                        onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&color=7F9CF5&background=EBF4FF';">
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-100 h-100 bg-primary-subtle text-primary align-items-center justify-content-center fw-bold display-4" style="display: none;">
+                                        {{ strtoupper(mb_substr($user->name, 0, 1)) }}
+                                    </div>
                                 @else
                                     <div class="w-100 h-100 bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold display-4">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                        {{ strtoupper(mb_substr($user->name, 0, 1)) }}
                                     </div>
                                 @endif
                             </div>
@@ -55,7 +58,7 @@
                                     @csrf
                                     @method('PUT')
                                     <input type="file" id="profile_photo_upload" name="profile_photo" accept="image/*"
-                                        onchange="if(confirm('سيتم إرسال الصورة الجديدة إلى الأدمن للموافقة. هل تريد المتابعة؟')) document.getElementById('avatar-form').submit()">
+                                        onchange="if(confirm('{{ $canManageUsers ? 'هل تريد تغيير الصورة الشخصية؟' : 'سيتم إرسال الصورة الجديدة إلى الأدمن للموافقة. هل تريد المتابعة؟' }}')) document.getElementById('avatar-form').submit()">
                                 </form>
                             @endif
                         </div>
@@ -184,59 +187,80 @@
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light text-center">
-                                    <label class="text-muted small d-block mb-2">صورة العقد</label>
-                                    @if($user->contract_image)
-                                        <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="d-block mb-2">
-                                            @if(Str::endsWith($user->contract_image, '.pdf'))
-                                                <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 100%;">
-                                                    <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                                </div>
-                                            @else
-                                                <img src="{{ $user->getFileUrl('contract_image') }}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
-                                            @endif
+                                <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <label class="text-muted small d-block mb-2 fw-semibold">صورة العقد</label>
+                                        @if($user->getFileUrl('contract_image'))
+                                            <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
+                                                @if(Str::endsWith($user->contract_image, '.pdf'))
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                        <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
+                                                    </div>
+                                                @else
+                                                    <img src="{{ $user->getFileUrl('contract_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
+                                                @endif
+                                            </a>
+                                        @else
+                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                        @endif
+                                    </div>
+                                    @if($user->getFileUrl('contract_image'))
+                                        <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                            <i class="bi bi-eye me-1"></i> عرض
                                         </a>
-                                        <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">عرض</a>
-                                    @else
-                                        <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
                                     @endif
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light text-center">
-                                    <label class="text-muted small d-block mb-2">الفيش الجنائي</label>
-                                    @if($user->criminal_record_image)
-                                        <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="d-block mb-2">
-                                            @if(Str::endsWith($user->criminal_record_image, '.pdf'))
-                                                <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 100%;">
-                                                    <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                                </div>
-                                            @else
-                                                <img src="{{ $user->getFileUrl('criminal_record_image') }}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
-                                            @endif
+                                <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <label class="text-muted small d-block mb-2 fw-semibold">الفيش الجنائي</label>
+                                        @if($user->getFileUrl('criminal_record_image'))
+                                            <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
+                                                @if(Str::endsWith($user->criminal_record_image, '.pdf'))
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                        <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
+                                                    </div>
+                                                @else
+                                                    <img src="{{ $user->getFileUrl('criminal_record_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
+                                                @endif
+                                            </a>
+                                        @else
+                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                        @endif
+                                    </div>
+                                    @if($user->getFileUrl('criminal_record_image'))
+                                        <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                            <i class="bi bi-eye me-1"></i> عرض
                                         </a>
-                                        <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">عرض</a>
-                                    @else
-                                        <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
                                     @endif
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light text-center">
-                                    <label class="text-muted small d-block mb-2">البطاقة الشخصية</label>
-                                    @if($user->id_card_image)
-                                        <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="d-block mb-2">
-                                            @if(Str::endsWith($user->id_card_image, '.pdf'))
-                                                <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 100%;">
-                                                    <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                                </div>
-                                            @else
-                                                <img src="{{ $user->getFileUrl('id_card_image') }}" class="img-thumbnail" style="height: 80px; width: 100%; object-fit: cover;">
-                                            @endif
+                                <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <label class="text-muted small d-block mb-2 fw-semibold">البطاقة الشخصية</label>
+                                        @if($user->getFileUrl('id_card_image'))
+                                            <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
+                                                @if(Str::endsWith($user->id_card_image, '.pdf'))
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                        <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
+                                                    </div>
+                                                @else
+                                                    <img src="{{ $user->getFileUrl('id_card_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
+                                                @endif
+                                            </a>
+                                        @else
+                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                        @endif
+                                    </div>
+                                    @if($user->getFileUrl('id_card_image'))
+                                        <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                            <i class="bi bi-eye me-1"></i> عرض
                                         </a>
-                                        <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">عرض</a>
-                                    @else
-                                        <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
                                     @endif
                                 </div>
                             </div>
