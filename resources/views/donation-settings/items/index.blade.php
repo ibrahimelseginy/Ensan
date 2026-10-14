@@ -101,11 +101,11 @@
                         <table class="table table-hover align-middle mb-0 text-end">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="px-3 py-3 text-muted x-small fw-bold font-tajawal">البند</th>
-                                    <th class="px-3 py-3 text-muted x-small fw-bold font-tajawal">التصنيف</th>
-                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-tajawal">الترتيب</th>
-                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-tajawal">الحالة</th>
-                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-tajawal">الإجراءات</th>
+                                    <th class="px-3 py-3 text-muted x-small fw-bold font-ibm">البند</th>
+                                    <th class="px-3 py-3 text-muted x-small fw-bold font-ibm">التصنيف</th>
+                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-ibm">الترتيب</th>
+                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-ibm">الحالة</th>
+                                    <th class="px-3 py-3 text-muted x-small fw-bold text-center font-ibm">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="border-top-0">
@@ -242,7 +242,7 @@
     .x-small { font-size: 0.75rem; }
     .max-w-600 { max-width: 600px; }
     .transition-all { transition: all 0.3s ease; }
-    .font-tajawal { font-family: 'Tajawal', sans-serif !important; }
+    .font-ibm { font-family: 'IBM Plex Sans Arabic', sans-serif !important; }
 
     /* Premium Hero */
     .premium-hero-sleek { 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 <div class="container-fluid">
   {{-- Page Header --}}
@@ -40,7 +40,10 @@
       </div>
     </div>
     <div class="btn-group">
-      <button onclick="window.print()" class="btn btn-outline-primary">
+      <button type="button" onclick="EnsanPrintPreview.open(null, {title: 'ملف المستفيد — {{ $beneficiary->name }}'})" class="btn btn-outline-info" title="معاينة الملف قبل الطباعة">
+        <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+      </button>
+      <button onclick="window.print()" class="btn btn-outline-primary" title="طباعة فورية">
         <i class="bi bi-printer me-1"></i> طباعة
       </button>
       @if(optional(auth()->user())->hasRole('admin') || optional(auth()->user())->hasRole('manager'))
@@ -255,7 +258,7 @@
                     <th>المتبرع</th>
                     <th>القيمة</th>
                     <th>التاريخ</th>
-                    <th>التفاصيل</th>
+                    <th class="text-center" style="min-width: 150px;">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,8 +276,19 @@
                         <span class="text-muted small">{{ $d->currency }}</span>
                       </td>
                       <td>{{ $d->received_at?->format('Y-m-d') }}</td>
-                      <td><a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-light border"><i
-                            class="bi bi-eye"></i></a></td>
+                      <td class="text-center">
+                        <div class="d-inline-flex gap-1">
+                          <a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-outline-primary px-2 py-1" title="عرض التفاصيل">
+                            <i class="bi bi-eye me-1"></i> عرض
+                          </a>
+                          <a href="{{ route('donations.show', $d) }}?preview=1" target="_blank" class="btn btn-sm btn-outline-info px-2 py-1" title="معاينة الوصل قبل الطباعة">
+                            <i class="bi bi-eye me-1"></i> معاينة
+                          </a>
+                          <a href="{{ route('donations.show', $d) }}?print=1" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1" title="طباعة الإيصال">
+                            <i class="bi bi-printer me-1"></i> طباعة
+                          </a>
+                        </div>
+                      </td>
                     </tr>
                   @endforeach
                 </tbody>

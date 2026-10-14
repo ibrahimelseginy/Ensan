@@ -39,7 +39,7 @@ use App\Http\Controllers\ImageUploadController;
 Route::get('/media', [MediaController::class, 'serve'])->name('media.serve');
 
 // === Image Upload Routes (Authenticated) ===
-Route::middleware([\App\Http\Middleware\TokenAuth::class])->prefix('v1/upload')->group(function () {
+Route::middleware([\App\Http\Middleware\TokenAuth::class, 'throttle:heavy-ops'])->prefix('v1/upload')->group(function () {
     Route::post('image',   [ImageUploadController::class, 'upload'])->name('api.upload.image');
     Route::post('images',  [ImageUploadController::class, 'uploadMultiple'])->name('api.upload.images');
     Route::delete('image', [ImageUploadController::class, 'destroy'])->name('api.upload.image.destroy');
@@ -50,11 +50,13 @@ Route::prefix('v1')->group(function () {
         }
         );
 
-        Route::post('auth/register', [AuthController::class , 'register']);
-        Route::post('auth/login', [AuthController::class , 'login']);
-        Route::post('auth/login-phone', [AuthController::class , 'loginByPhone']);
-        Route::post('auth/verify-otp', [AuthController::class , 'verifyOtp']);
-        Route::post('auth/logout', [AuthController::class , 'logout'])->middleware(\App\Http\Middleware\TokenAuth::class);
+        Route::prefix('auth')->middleware('throttle:auth-strict')->group(function () {
+            Route::post('register', [AuthController::class , 'register']);
+            Route::post('login', [AuthController::class , 'login']);
+            Route::post('login-phone', [AuthController::class , 'loginByPhone']);
+            Route::post('verify-otp', [AuthController::class , 'verifyOtp']);
+            Route::post('logout', [AuthController::class , 'logout'])->middleware(\App\Http\Middleware\TokenAuth::class);
+        });
 
         // v1 Public Content (Anasen)
         Route::get('public/campaigns', [PublicContentController::class, 'campaigns']);
@@ -69,7 +71,7 @@ Route::prefix('v1')->group(function () {
         Route::get('website/stats', [WebsiteApiController::class, 'getStats']);
         Route::get('website/notification', [WebsiteApiController::class, 'breakingNews']);
         Route::get('website/donation-page', [WebsiteApiController::class, 'donationPage']);
-        Route::post('website/donate', [PublicWebsiteDonationController::class, 'submit']);
+        Route::post('website/donate', [PublicWebsiteDonationController::class, 'submit'])->middleware('throttle:submissions');
         Route::get('website/projects', [WebsiteApiController::class, 'projects']);
         Route::get('website/projects/{project}', [WebsiteApiController::class, 'projectShow']);
         Route::get('website/campaigns', [WebsiteApiController::class, 'campaigns']);
@@ -91,21 +93,21 @@ Route::prefix('v1')->group(function () {
         Route::get('website/guest-house', [WebsiteApiController::class, 'guestHousePage']);
         Route::get('website/contact', [WebsiteApiController::class, 'contactPage']);
 
-        Route::post('website/volunteer', [WebsiteApiController::class, 'submitVolunteer']);
-        Route::post('website/contact', [WebsiteApiController::class, 'submitContact']);
-        Route::post('website/room-booking', [WebsiteApiController::class, 'submitRoomBooking']);
-        Route::post('website/subscribe', [WebsiteApiController::class, 'submitSubscription']);
-        Route::post('website/testimonials', [WebsiteApiController::class, 'submitTestimonial']);
-        Route::post('website/opinions', [WebsiteApiController::class, 'shareOpinion']);
+        Route::post('website/volunteer', [WebsiteApiController::class, 'submitVolunteer'])->middleware('throttle:submissions');
+        Route::post('website/contact', [WebsiteApiController::class, 'submitContact'])->middleware('throttle:submissions');
+        Route::post('website/room-booking', [WebsiteApiController::class, 'submitRoomBooking'])->middleware('throttle:submissions');
+        Route::post('website/subscribe', [WebsiteApiController::class, 'submitSubscription'])->middleware('throttle:submissions');
+        Route::post('website/testimonials', [WebsiteApiController::class, 'submitTestimonial'])->middleware('throttle:submissions');
+        Route::post('website/opinions', [WebsiteApiController::class, 'shareOpinion'])->middleware('throttle:submissions');
 
         // Complaints — Public (no auth)
-        Route::post('website/complaints', [WebsiteApiController::class, 'submitWebsiteComplaint']);
-        Route::get('website/complaints/track/{code}', [WebsiteApiController::class, 'trackWebsiteComplaint']);
-        Route::post('website/register', [WebsiteApiController::class, 'publicRegister']);
-        Route::post('website/login', [WebsiteApiController::class, 'publicLogin']);
-        Route::post('website/verify-otp', [WebsiteApiController::class, 'publicVerifyOtp']);
-        Route::post('website/resend-otp', [WebsiteApiController::class, 'publicResendOtp']);
-        Route::post('website/check-phone', [WebsiteApiController::class, 'publicCheckPhone']);
+        Route::post('website/complaints', [WebsiteApiController::class, 'submitWebsiteComplaint'])->middleware('throttle:submissions');
+        Route::get('website/complaints/track/{code}', [WebsiteApiController::class, 'trackWebsiteComplaint'])->middleware('throttle:heavy-ops');
+        Route::post('website/register', [WebsiteApiController::class, 'publicRegister'])->middleware('throttle:auth-strict');
+        Route::post('website/login', [WebsiteApiController::class, 'publicLogin'])->middleware('throttle:auth-strict');
+        Route::post('website/verify-otp', [WebsiteApiController::class, 'publicVerifyOtp'])->middleware('throttle:auth-strict');
+        Route::post('website/resend-otp', [WebsiteApiController::class, 'publicResendOtp'])->middleware('throttle:auth-strict');
+        Route::post('website/check-phone', [WebsiteApiController::class, 'publicCheckPhone'])->middleware('throttle:auth-strict');
 
 
         // Admin Website Management
@@ -284,7 +286,7 @@ Route::prefix('v1')->group(function () {
         });
         Route::prefix('website')->group(function () {
             // --- Anasen REST API ---
-            Route::prefix('auth')->group(function () {
+            Route::prefix('auth')->middleware('throttle:auth-strict')->group(function () {
                 Route::post('login', [\App\Http\Controllers\Api\Anasen\AuthController::class, 'login']);
                 Route::post('verify-otp', [\App\Http\Controllers\Api\Anasen\AuthController::class, 'verifyOtp']);
                 Route::post('logout', [\App\Http\Controllers\Api\Anasen\AuthController::class, 'logout'])

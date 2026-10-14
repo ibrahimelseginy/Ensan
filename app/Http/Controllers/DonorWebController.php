@@ -68,11 +68,17 @@ final class DonorWebController extends Controller
         $guestHouses   = GuestHouse::where(fn($q) => $q->where('location', 'like', '%كفر%')->orWhere('location', 'like', '%طنطا%')->orWhere('name', 'like', '%كفر%')->orWhere('name', 'like', '%طنطا%'))->orderBy('name')->get();
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
 
+        $q              = $filters['q'] ?? '';
+        $type           = $filters['type'] ?? '';
+        $classification = $filters['classification'] ?? '';
+        $active         = $filters['active'] ?? '';
+
         return view('donors.index', compact(
             'donors', 'donStats', 'totals', 'allDonors', 
             'selectedDonor', 'donationsHistory', 'selectedDonorId', 
             'warehouses', 'paidThisMonth', 'projects', 'campaigns', 
-            'guestHouses', 'beneficiaries'
+            'guestHouses', 'beneficiaries',
+            'q', 'type', 'classification', 'active'
         ));
     }
 
@@ -203,6 +209,74 @@ final class DonorWebController extends Controller
         return redirect()->route('donors.show', $donor)->with('success', 'تم تعديل المتبرع بنجاح.');
     }
 
+    public function printReport(Request $request): View
+    {
+        $selectedIds = $request->input('ids');
+        $filters = $request->only(['q', 'type', 'classification', 'active']);
+
+        if (!empty($selectedIds)) {
+            $ids = is_array($selectedIds) ? $selectedIds : explode(',', (string)$selectedIds);
+            $donors = Donor::whereIn('id', $ids)->orderByDesc('id')->get();
+            $reportTitle = 'كشف بيانات المتبرعين المحددين';
+        } else {
+            $q              = $filters['q'] ?? '';
+            $type           = $filters['type'] ?? null;
+            $classification = $filters['classification'] ?? null;
+            $active         = $filters['active'] ?? null;
+
+            $donors = Donor::query()
+                ->when($q !== '', function ($query) use ($q) {
+                    $parsed = \App\Helpers\ArabicSearchHelper::parseQuery($q);
+                    $variants = $parsed['variants'];
+                    $codes = $parsed['codes'];
+                    $numbers = $parsed['numbers'];
+
+                    $query->where(function ($w) use ($variants, $codes, $numbers) {
+                        foreach ($variants as $var) {
+                            $w->orWhere('name', 'like', "%{$var}%")
+                              ->orWhere('code', 'like', "%{$var}%")
+                              ->orWhere('phone', 'like', "%{$var}%");
+                        }
+                        foreach ($codes as $c) {
+                            $w->orWhere('code', 'like', "%{$c}%");
+                        }
+                        foreach ($numbers as $num) {
+                            $w->orWhere('id', (int)$num)
+                              ->orWhere('phone', 'like', "%{$num}%")
+                              ->orWhere('code', 'like', "%{$num}%");
+                        }
+                    });
+                })
+                ->when($type, fn($query, $t) => $query->where('type', $t))
+                ->when($classification, fn($query, $c) => $query->where('classification', $c))
+                ->when(!is_null($active) && $active !== '', fn($query, $a) => $query->where('active', (bool)$a))
+                ->orderByDesc('id')
+                ->limit(1000)
+                ->get();
+
+            $reportTitle = 'تقرير المتبرعين — كشف مفصل بالتصفية';
+        }
+
+        $donorIds = $donors->pluck('id');
+        $donStats = Donation::select('donor_id', DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))
+            ->whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->groupBy('donor_id')
+            ->get()
+            ->keyBy('donor_id');
+
+        $totalAmount = (float) Donation::whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->sum(DB::raw('COALESCE(amount, estimated_value, 0)'));
+        $totalCount  = (int) Donation::whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
+        return view('donors.print-report', compact(
+            'donors', 'donStats', 'reportTitle', 'totalAmount', 'totalCount', 'filters'
+        ));
+    }
+
     public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
@@ -232,6 +306,11 @@ final class DonorWebController extends Controller
 
     private function hasPendingRequest(Donor $donor): bool
     {
+        $user = request()->user();
+        if ($user && ($user->hasRole('admin') || $user->hasRole('manager'))) {
+            return false;
+        }
+
         return ChangeRequest::where('model_type', Donor::class)
             ->where('model_id', $donor->id)
             ->where('status', 'pending')

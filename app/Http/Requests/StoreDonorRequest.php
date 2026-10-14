@@ -19,7 +19,18 @@ final class StoreDonorRequest extends FormRequest
     {
         return [
             'code'                       => 'nullable|string|max:191|regex:/^[A-Z0-9_-]+$/|unique:donors,code',
-            'name'                       => 'required|string|max:255',
+            'name'                       => [
+                'required',
+                'string',
+                'max:255',
+                'unique:donors,name',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $parts = preg_split('/\s+/u', trim((string) $value), -1, PREG_SPLIT_NO_EMPTY);
+                    if (count($parts) < 3) {
+                        $fail('يجب أن يكون اسم المتبرع ثلاثياً على الأقل (مثال: محمد أحمد علي).');
+                    }
+                },
+            ],
             'type'                       => 'required|in:individual,organization',
             'phone'                      => 'nullable|string|max:20',
             'email'                      => 'nullable|email',
@@ -48,6 +59,7 @@ final class StoreDonorRequest extends FormRequest
             && $this->input('recurring_cycle') === 'monthly';
 
         $this->merge([
+            'name' => is_string($this->input('name')) ? preg_replace('/\s+/u', ' ', trim($this->input('name'))) : $this->input('name'),
             'code' => Donor::normalizeCode($this->input('code')),
             'active' => $this->has('active') ? $this->boolean('active') : true,
             'sponsorship_type' => $isMonthly ? 'monthly_sponsor' : ($this->input('sponsorship_type') ?: 'none'),
@@ -96,6 +108,8 @@ final class StoreDonorRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.required' => 'يرجى إدخال اسم المتبرع.',
+            'name.unique' => 'اسم المتبرع مسجل مسبقاً، ولا يمكن تكرار اسم المتبرع.',
             'code.regex' => 'كود المتبرع يقبل الحروف الإنجليزية والأرقام والشرطة فقط.',
             'code.unique' => 'كود المتبرع مستخدم بالفعل، اختر كودًا آخر.',
         ];

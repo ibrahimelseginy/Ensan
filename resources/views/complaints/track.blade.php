@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تتبع الشكوى | مؤسسة إنسان</title>
@@ -8,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root { --primary: #2ecc71; --primary-dark: #27ae60; }
-        body { background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; flex-direction: column; }
         .brand-header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white; padding: 2rem 0; text-align: center;

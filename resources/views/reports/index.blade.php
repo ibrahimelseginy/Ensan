@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="d-flex align-items-center justify-content-between mb-4">
@@ -8,16 +8,24 @@
             </h4>
             <p class="text-muted mb-0 small">نظرة عامة على أداء المؤسسة والبيانات</p>
         </div>
-        @if(!empty($q))
-            <div class="d-flex gap-2">
-                <button onclick="downloadPDF()" class="btn btn-primary shadow-sm">
+        <div class="d-flex gap-2">
+            @if(!empty($q))
+                <button onclick="downloadPDF()" class="btn btn-outline-danger shadow-sm">
                     <i class="bi bi-file-earmark-pdf"></i> تحميل PDF
                 </button>
+            @endif
+            <button type="button" onclick="EnsanPrintPreview.open(null, {title: 'التقارير والإحصائيات العامة'})" class="btn btn-outline-info shadow-sm">
+                <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+            </button>
+            <button type="button" onclick="window.print()" class="btn btn-outline-primary shadow-sm">
+                <i class="bi bi-printer me-1"></i> طباعة
+            </button>
+            @if(!empty($q))
                 <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary shadow-sm">
                     <i class="bi bi-arrow-right"></i> عودة للوحة التقارير
                 </a>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     @if(!empty($q))

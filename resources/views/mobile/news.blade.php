@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <div class="news-mgmt-page bg-theme-page min-vh-100">
     {{-- Elite Hero Section --}}
@@ -348,7 +348,7 @@
 </div>
 
 <style>
-    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'Tajawal', 'Outfit', sans-serif; }
+    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'IBM Plex Sans Arabic', 'Outfit', sans-serif; }
     .bg-theme-page { background-color: var(--ws-bg-page); }
     .fw-900 { font-weight: 900; }
     .font-outfit { font-family: 'Outfit', sans-serif; }

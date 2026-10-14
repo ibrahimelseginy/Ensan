@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Helpers\ArabicSearchHelper;
 use App\Models\Donation;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,7 +14,9 @@ final readonly class DonationRepository
 {
     public function paginateFiltered(array $filters, int $perPage = 10, string $pageName = 'page'): LengthAwarePaginator
     {
-        $q            = $filters['q'] ?? '';
+        $q            = trim((string)($filters['q'] ?? ''));
+        $month        = !empty($filters['month']) ? (int)$filters['month'] : null;
+        $year         = !empty($filters['year']) ? (int)$filters['year'] : null;
         $type         = $filters['type'] ?? null;
         $projectId    = $filters['project_id'] ?? null;
         $campaignId   = $filters['campaign_id'] ?? null;
@@ -26,15 +29,51 @@ final readonly class DonationRepository
             ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
             ->when($guestHouseId, fn($qr) => $qr->where('guest_house_id', $guestHouseId))
             ->when($channel, fn($qr) => $qr->where('cash_channel', $channel))
+            ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
+            ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
             ->when($q !== '', function ($qr) use ($q) {
-                $qr->where(function ($w) use ($q) {
-                    $w->whereHas('donor', fn($d) => $d
-                        ->where('name', 'like', '%' . $q . '%')
-                        ->orWhere('code', 'like', '%' . $q . '%'))
-                      ->orWhere('receipt_number', 'like', '%' . $q . '%')
-                      ->orWhereHas('project', fn($p) => $p->where('name', 'like', '%' . $q . '%'))
-                      ->orWhereHas('campaign', fn($c) => $c->where('name', 'like', '%' . $q . '%'))
-                      ->orWhereHas('warehouse', fn($wh) => $wh->where('name', 'like', '%' . $q . '%'));
+                $parsed = ArabicSearchHelper::parseQuery($q);
+                $variants = $parsed['variants'];
+                $codes = $parsed['codes'];
+                $numbers = $parsed['numbers'];
+
+                $qr->where(function ($w) use ($variants, $codes, $numbers, $q) {
+                    $w->whereHas('donor', function ($d) use ($variants, $codes, $numbers) {
+                        $d->where(function ($sub) use ($variants, $codes, $numbers) {
+                            foreach ($variants as $var) {
+                                $sub->orWhere('name', 'like', "%{$var}%")
+                                    ->orWhere('code', 'like', "%{$var}%")
+                                    ->orWhere('phone', 'like', "%{$var}%");
+                            }
+                            foreach ($codes as $c) {
+                                $sub->orWhere('code', 'like', "%{$c}%");
+                            }
+                            foreach ($numbers as $num) {
+                                $sub->orWhere('phone', 'like', "%{$num}%")
+                                    ->orWhere('id', (int)$num);
+                            }
+                        });
+                    })
+                    ->orWhere('receipt_number', 'like', "%{$q}%");
+
+                    foreach ($codes as $c) {
+                        $w->orWhere('receipt_number', 'like', "%{$c}%");
+                    }
+
+                    $w->orWhereHas('project', function ($p) use ($variants) {
+                        $p->where(function ($sub) use ($variants) {
+                            foreach ($variants as $var) {
+                                $sub->orWhere('name', 'like', "%{$var}%");
+                            }
+                        });
+                    })
+                    ->orWhereHas('campaign', fn($c) => $c->where('name', 'like', "%{$q}%"))
+                    ->orWhereHas('warehouse', fn($wh) => $wh->where('name', 'like', "%{$q}%"));
+
+                    foreach ($numbers as $num) {
+                        $w->orWhere('id', (int)$num)
+                          ->orWhere('receipt_number', 'like', "%{$num}%");
+                    }
                 });
             })
             ->orderByDesc('received_at')

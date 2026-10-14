@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('styles')
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
@@ -30,9 +30,14 @@
             <div class="form-text">كود ثابت لا يمكن تغييره بعد إنشاء المتبرع.</div>
           </div>
           <div class="col-md-4">
-            <label class="form-label">الاسم</label>
+            <label class="form-label fw-bold">الاسم بالكامل (ثلاثي على الأقل) <span class="text-danger">*</span></label>
             <input name="name" class="form-control @error('name') is-invalid @enderror"
-              value="{{ old('name', $donor->name) }}">
+              value="{{ old('name', $donor->name) }}"
+              placeholder="مثال: محمد أحمد علي"
+              pattern="^(\S+\s+){2,}\S+.*$"
+              title="يجب إدخال اسم ثلاثي على الأقل (3 كلمات مفصولة بمسافات)"
+              required>
+            <div class="form-text">يجب أن يكون الاسم ثلاثياً على الأقل ومميزاً غير مكرر.</div>
             @error('name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror

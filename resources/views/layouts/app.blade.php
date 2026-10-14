@@ -1,16 +1,47 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="{{ (isset($_COOKIE['ui_theme']) && $_COOKIE['ui_theme'] === 'dark') ? 'theme-dark' : '' }}" data-bs-theme="{{ (isset($_COOKIE['ui_theme']) && $_COOKIE['ui_theme'] === 'dark') ? 'dark' : 'light' }}">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>مؤسسة انسان الخيرية</title>
+  {{-- Anti-FOUC Immediate Theme Script: prevents white flash on refresh/load --}}
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('ui.theme');
+        if (!theme) {
+          var m = document.cookie.match(/(?:^|; )ui_theme=([^;]*)/);
+          if (m) theme = decodeURIComponent(m[1]);
+        }
+        if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('theme-dark');
+          document.documentElement.setAttribute('data-bs-theme', 'dark');
+          document.documentElement.style.backgroundColor = '#020617';
+          document.documentElement.style.color = '#f8fafc';
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('theme-dark');
+          document.documentElement.setAttribute('data-bs-theme', 'light');
+          document.documentElement.style.backgroundColor = '';
+          document.documentElement.style.color = '';
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    /* Critical Anti-Flash Styles */
+    html.theme-dark,
+    html.theme-dark body {
+      background-color: #020617 !important;
+      color: #f8fafc !important;
+    }
+  </style>
   <link rel="icon" href="{{ asset('images/heart-icon.png') }}" type="image/png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="{{ asset('css/bootstrap.rtl.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/bootstrap-icons.css') }}" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -152,7 +183,7 @@
       body:not(.theme-dark) {
           background-color: var(--bg-soft) !important;
           color: var(--text-main) !important;
-          font-family: 'Tajawal', sans-serif;
+          font-family: 'IBM Plex Sans Arabic', sans-serif;
       }
 
       /* Premium Card System */
@@ -621,9 +652,105 @@
             background-color: #0f172a !important;
         }
 
-        /* Ensure dropdown is above other elements */
+        /* Ensure dropdown is completely non-transparent and above all other elements */
         .dropdown-menu {
-            z-index: 10000 !important;
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 10060 !important;
+        }
+
+        .theme-dark .dropdown-menu,
+        [data-bs-theme="dark"] .dropdown-menu,
+        html.theme-dark .dropdown-menu {
+            background-color: #0f172a !important;
+            background: #0f172a !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 10060 !important;
+        }
+
+        .dropdown.show,
+        .dropdown:has(.show),
+        .dropdown:has(.dropdown-menu.show) {
+            position: relative !important;
+            z-index: 10050 !important;
+        }
+
+        .kpi-card:has(.dropdown-menu.show),
+        .card:has(.dropdown-menu.show),
+        [class*="col-"]:has(.dropdown-menu.show),
+        tr:has(.dropdown-menu.show) {
+            position: relative !important;
+            z-index: 10040 !important;
+            overflow: visible !important;
+        }
+
+        /* Paper Sheets Immunity from Theme-Dark Text Inversion */
+        #printableDonorSheet,
+        #printableDonationVoucher,
+        .official-voucher-card,
+        .a4-paper-sheet,
+        #universalPrintPaperBody {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        html.theme-dark #printableDonorSheet,
+        html.theme-dark #printableDonorSheet *,
+        body.theme-dark #printableDonorSheet,
+        body.theme-dark #printableDonorSheet *,
+        [data-bs-theme="dark"] #printableDonorSheet,
+        [data-bs-theme="dark"] #printableDonorSheet *,
+        html.theme-dark #printableDonationVoucher,
+        html.theme-dark #printableDonationVoucher *,
+        body.theme-dark #printableDonationVoucher,
+        body.theme-dark #printableDonationVoucher *,
+        html.theme-dark .official-voucher-card,
+        html.theme-dark .official-voucher-card *,
+        body.theme-dark .official-voucher-card,
+        body.theme-dark .official-voucher-card *,
+        html.theme-dark .a4-paper-sheet,
+        html.theme-dark .a4-paper-sheet *,
+        body.theme-dark .a4-paper-sheet,
+        body.theme-dark .a4-paper-sheet *,
+        html.theme-dark #universalPrintPaperBody,
+        html.theme-dark #universalPrintPaperBody * {
+            color-scheme: light !important;
+        }
+
+        html.theme-dark #printableDonorSheet div,
+        html.theme-dark #printableDonorSheet p,
+        html.theme-dark #printableDonorSheet span,
+        html.theme-dark #printableDonorSheet td,
+        html.theme-dark #printableDonorSheet th,
+        html.theme-dark #printableDonorSheet strong,
+        html.theme-dark #printableDonorSheet b,
+        html.theme-dark #printableDonorSheet h1,
+        html.theme-dark #printableDonorSheet h2,
+        html.theme-dark #printableDonorSheet h3,
+        html.theme-dark #printableDonorSheet h4,
+        html.theme-dark #printableDonorSheet h5,
+        html.theme-dark #printableDonorSheet h6,
+        html.theme-dark #printableDonorSheet small,
+        body.theme-dark #printableDonorSheet div,
+        body.theme-dark #printableDonorSheet p,
+        body.theme-dark #printableDonorSheet span,
+        body.theme-dark #printableDonorSheet td,
+        body.theme-dark #printableDonorSheet th,
+        body.theme-dark #printableDonorSheet strong,
+        body.theme-dark #printableDonorSheet b,
+        body.theme-dark #printableDonorSheet h1,
+        body.theme-dark #printableDonorSheet h2,
+        body.theme-dark #printableDonorSheet h3,
+        body.theme-dark #printableDonorSheet h4,
+        body.theme-dark #printableDonorSheet h5,
+        body.theme-dark #printableDonorSheet h6,
+        body.theme-dark #printableDonorSheet small {
+            color: #0f172a !important;
         }
 
         /* Search Bar Enhancements */
@@ -695,17 +822,23 @@
       body:not(.theme-dark) .btn-close-white {
           filter: invert(1) grayscale(100%) brightness(200%);
       }
-      /* Premium Global Toasts - Modern Redesign */
+      /* Premium Global Toasts - Modern Bottom-Left Redesign */
       .toast-container-elite {
           position: fixed;
-          top: 30px;
-          left: 50%;
-          transform: translateX(-50%);
+          bottom: 24px;
+          left: 24px;
           z-index: 10500;
           display: flex;
-          flex-direction: column;
+          flex-direction: column-reverse;
           gap: 12px;
           pointer-events: none;
+          max-width: 440px;
+          width: auto;
+      }
+      .toast-fade-out {
+          opacity: 0 !important;
+          transform: translateY(16px) scale(0.96) !important;
+          transition: opacity 0.4s ease, transform 0.4s ease !important;
       }
       .toast-elite {
           min-width: 340px;
@@ -1323,8 +1456,11 @@
       }
       @media (max-width: 575.98px) {
           .toast-container-elite {
-              top: 12px;
-              width: calc(100% - 20px);
+              bottom: 16px;
+              left: 12px;
+              right: 12px;
+              width: calc(100% - 24px);
+              max-width: none;
           }
           .review-request-toast {
               min-width: 0;
@@ -1396,11 +1532,11 @@
       }
       .btn-close-toast:hover { opacity: 1; color: #ffffff; transform: scale(1.1); }
 
-      @keyframes toastSlideDown {
-          0% { opacity: 0; transform: translateY(-30px) scale(0.95); }
+      @keyframes toastSlideUpLeft {
+          0% { opacity: 0; transform: translateY(24px) scale(0.95); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
       }
-      .animate-toast-in { animation: toastSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      .animate-toast-in { animation: toastSlideUpLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>
 
 {{-- ============================================================ --}}
@@ -1519,7 +1655,13 @@
   @yield('styles')
 </head>
 
-<body>
+<body class="{{ (isset($_COOKIE['ui_theme']) && $_COOKIE['ui_theme'] === 'dark') ? 'theme-dark' : '' }}">
+  <script>
+    if (document.documentElement.classList.contains('theme-dark')) {
+      document.body.classList.add('theme-dark');
+      document.body.style.backgroundColor = '#020617';
+    }
+  </script>
   <div id="global-loader">
       <div class="spinner-premium"></div>
   </div>
@@ -1559,7 +1701,7 @@
                   <i class="bi bi-check-lg toast-icon"></i>
               </div>
               <div class="toast-text">
-                  <div class="toast-title">نجاح العملية</div>
+                  <div class="toast-title">تم التنفيذ بنجاح</div>
                   <span class="toast-msg">{{ session('success') }}</span>
               </div>
               <button type="button" class="btn-close-toast" onclick="this.parentElement.style.display='none'">&times;</button>
@@ -1600,7 +1742,7 @@
         toasts.forEach(function(toast) {
           toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
           toast.style.opacity = '0';
-          toast.style.transform = 'translateY(-15px)';
+          toast.style.transform = 'translateY(15px)';
           setTimeout(function() { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
         });
       }, 2000);
@@ -1654,11 +1796,9 @@
             @endif
 
             @if($navUser && $navUser->hasPermission('notifications.view'))
-              <button class="btn btn-glass-pill position-relative"
-                type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas">
+              <button class="btn btn-glass-pill"
+                type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات">
                 <i class="bi bi-bell fs-5"></i>
-                <span id="notificationBellBadge"
-                  class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger d-none">0</span>
               </button>
             @endif
 
@@ -2617,93 +2757,7 @@
   @endif
 
   @if($navUser && $navUser->hasPermission('notifications.view'))
-    <style>
-      .notification-center-popup {
-        position: fixed;
-        inset: 0;
-        z-index: 10950;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        background: rgba(2, 6, 23, .38);
-        backdrop-filter: blur(3px);
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity .25s ease, visibility .25s ease;
-      }
-      .notification-center-popup.show {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
-      .notification-center-popup-card {
-        width: min(520px, 94vw);
-        overflow: hidden;
-        border: 1px solid rgba(148, 163, 184, .25);
-        border-top: 5px solid var(--bs-primary);
-        border-radius: 20px;
-        background: var(--bg-card, #fff);
-        color: var(--text-main, #0f172a);
-        box-shadow: 0 28px 80px rgba(2, 6, 23, .4);
-        transform: translateY(18px) scale(.96);
-        transition: transform .25s ease;
-      }
-      .notification-center-popup.show .notification-center-popup-card {
-        transform: translateY(0) scale(1);
-      }
-      .notification-center-popup-icon {
-        width: 54px;
-        height: 54px;
-        flex: 0 0 54px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 1.55rem;
-      }
-      .notification-center-popup-progress {
-        height: 5px;
-        width: 100%;
-        transform-origin: right center;
-        background: var(--bs-primary);
-      }
-      .notification-center-popup.show .notification-center-popup-progress {
-        animation: notification-popup-countdown 10s linear forwards;
-      }
-      @keyframes notification-popup-countdown {
-        from { transform: scaleX(1); }
-        to { transform: scaleX(0); }
-      }
-    </style>
 
-    <div id="notificationCenterPopup" class="notification-center-popup" role="alertdialog" aria-live="assertive" aria-modal="true" aria-labelledby="notificationCenterPopupTitle">
-      <div id="notificationCenterPopupCard" class="notification-center-popup-card">
-        <div class="p-4">
-          <div class="d-flex align-items-start gap-3">
-            <span id="notificationCenterPopupIcon" class="notification-center-popup-icon bg-primary bg-opacity-10 text-primary">
-              <i class="bi bi-bell-fill"></i>
-            </span>
-            <div class="flex-grow-1">
-              <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                <h5 id="notificationCenterPopupTitle" class="fw-bold mb-0">إشعار جديد</h5>
-                <button id="notificationCenterPopupClose" type="button" class="btn-close" aria-label="إغلاق"></button>
-              </div>
-              <p id="notificationCenterPopupText" class="mb-2 lh-lg fw-medium"></p>
-              <div id="notificationCenterPopupMore" class="small text-muted d-none"></div>
-              <div class="d-flex gap-2 mt-3">
-                <a id="notificationCenterPopupLink" href="#" class="btn btn-primary rounded-pill px-4">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> فتح الإشعار
-                </a>
-                <button id="notificationCenterPopupDismiss" type="button" class="btn btn-light rounded-pill px-3">إغلاق</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="notificationCenterPopupProgress" class="notification-center-popup-progress"></div>
-      </div>
-    </div>
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
       <div class="offcanvas-header">
@@ -2733,15 +2787,7 @@
         var bellBadge = document.getElementById('notificationBellBadge');
         var fKey = 'sidebar.notifications.filter';
         var seenKey = 'notifications.seen.v1.{{ $navUser->id }}';
-        var popup = document.getElementById('notificationCenterPopup');
-        var popupCard = document.getElementById('notificationCenterPopupCard');
-        var popupIcon = document.getElementById('notificationCenterPopupIcon');
-        var popupText = document.getElementById('notificationCenterPopupText');
-        var popupMore = document.getElementById('notificationCenterPopupMore');
-        var popupLink = document.getElementById('notificationCenterPopupLink');
-        var popupClose = document.getElementById('notificationCenterPopupClose');
-        var popupDismiss = document.getElementById('notificationCenterPopupDismiss');
-        var popupProgress = document.getElementById('notificationCenterPopupProgress');
+        var popup = null;
         var popupTimer = null;
         var audioContext = null;
         var pendingSound = false;
@@ -2806,55 +2852,16 @@
           document.addEventListener(eventName, unlockNotificationSound, { once: true, passive: true });
         });
 
-        var hideCenterPopup = function () {
-          if (popupTimer) window.clearTimeout(popupTimer);
-          popupTimer = null;
-          popup.classList.remove('show');
-        };
 
-        var showCenterPopup = function (item, extraCount) {
-          var allowedTypes = ['success', 'info', 'warning', 'danger', 'secondary'];
-          var type = allowedTypes.includes(item.type) ? item.type : 'primary';
-          var icons = {
-            success: 'check-circle-fill', info: 'info-circle-fill', warning: 'exclamation-triangle-fill',
-            danger: 'exclamation-octagon-fill', secondary: 'bell-fill', primary: 'bell-fill'
-          };
-          hideCenterPopup();
-          popupCard.style.borderTopColor = 'var(--bs-' + type + ')';
-          popupIcon.className = 'notification-center-popup-icon bg-' + type + ' bg-opacity-10 text-' + type;
-          popupIcon.innerHTML = '<i class="bi bi-' + icons[type] + '"></i>';
-          popupText.textContent = item.text || 'لديك إشعار جديد';
-          popupLink.href = item.link || '{{ route('notifications.index') }}';
-          popupLink.className = 'btn btn-' + type + ' rounded-pill px-4';
-          popupMore.textContent = extraCount > 0 ? 'وهناك ' + extraCount + ' إشعار آخر جديد.' : '';
-          popupMore.classList.toggle('d-none', extraCount === 0);
-          popupProgress.className = 'notification-center-popup-progress bg-' + type;
-
-          // Restart the ten-second progress animation even for consecutive alerts.
-          void popupProgress.offsetWidth;
-          popup.classList.add('show');
-          playNotificationSound();
-          popupTimer = window.setTimeout(hideCenterPopup, 10000);
-        };
 
         var notifyAboutNewItems = function (items) {
-          if (document.hidden || !Array.isArray(items) || items.length === 0) return;
+          // Notifications are not popped up as intrusive dialogs.
+          // They update the badge and can be reviewed via the notifications menu/page or upon login.
+          if (!Array.isArray(items) || items.length === 0) return;
           var seen = readSeen();
-          var unseen = items.filter(function (item) { return !seen[notificationSignature(item)]; });
-          if (unseen.length === 0) return;
-
-          var priority = { danger: 0, warning: 1, info: 2, success: 3, secondary: 4 };
-          unseen.sort(function (a, b) { return (priority[a.type] ?? 9) - (priority[b.type] ?? 9); });
-          unseen.forEach(function (item) { seen[notificationSignature(item)] = Date.now(); });
+          items.forEach(function (item) { seen[notificationSignature(item)] = Date.now(); });
           saveSeen(seen);
-          showCenterPopup(unseen[0], unseen.length - 1);
         };
-
-        popupClose.addEventListener('click', hideCenterPopup);
-        popupDismiss.addEventListener('click', hideCenterPopup);
-        popup.addEventListener('click', function (event) {
-          if (event.target === popup) hideCenterPopup();
-        });
         var updateBellBadge = function (items) {
           var count = Array.isArray(items) ? items.length : 0;
           if (!bellBadge) return;
@@ -2958,7 +2965,7 @@
   @endif
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
@@ -3131,24 +3138,38 @@
       var themeKey = 'ui.theme', themeBtn = document.getElementById('themeToggle');
 
       var applyTheme = function (v) {
-        document.body.classList.toggle('theme-dark', v === 'dark');
+        var isDark = (v === 'dark');
+        document.documentElement.classList.toggle('theme-dark', isDark);
+        document.body.classList.toggle('theme-dark', isDark);
+        document.documentElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+        if (isDark) {
+          document.documentElement.style.backgroundColor = '#020617';
+          document.body.style.backgroundColor = '#020617';
+        } else {
+          document.documentElement.style.backgroundColor = '';
+          document.body.style.backgroundColor = '';
+        }
+        document.cookie = 'ui_theme=' + (isDark ? 'dark' : 'light') + '; path=/; max-age=31536000; SameSite=Lax';
         if (themeBtn) {
-            themeBtn.innerHTML = v === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon"></i>';
-            // Also update the sidebar toggle color if needed
+            themeBtn.innerHTML = isDark ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon"></i>';
             const sidebarToggle = document.getElementById('sidebarToggle');
             if(sidebarToggle) {
-                sidebarToggle.classList.toggle('text-white', v === 'dark');
-                sidebarToggle.classList.toggle('text-dark', v !== 'dark');
+                sidebarToggle.classList.toggle('text-white', isDark);
+                sidebarToggle.classList.toggle('text-dark', !isDark);
             }
         }
       };
 
-      var curTheme = localStorage.getItem(themeKey) || 'light';
+      var curTheme = localStorage.getItem(themeKey);
+      if (!curTheme) {
+        var m = document.cookie.match(/(?:^|; )ui_theme=([^;]*)/);
+        curTheme = m ? decodeURIComponent(m[1]) : (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light');
+      }
       applyTheme(curTheme);
 
       if (themeBtn) {
         themeBtn.addEventListener('click', function () {
-          curTheme = (document.body.classList.contains('theme-dark') ? 'light' : 'dark');
+          curTheme = (document.documentElement.classList.contains('theme-dark') || document.body.classList.contains('theme-dark') ? 'light' : 'dark');
           localStorage.setItem(themeKey, curTheme);
           applyTheme(curTheme);
         });
@@ -3251,7 +3272,7 @@
         const toast = document.createElement('div');
         toast.className = `toast-elite ${type} animate-toast-in`;
         const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-        const title = type === 'success' ? 'تم بنجاح' : 'تنبيه في النظام';
+        const title = type === 'success' ? 'تم التنفيذ بنجاح' : 'تنبيه في النظام';
 
         toast.innerHTML = `
             <div class="toast-content">
@@ -3274,7 +3295,40 @@
     document.addEventListener('DOMContentLoaded', function() {
         initToasts();
     });
+
+    // Global Dropdown Stacking Handler: elevates card & dropdown above all siblings
+    document.addEventListener('show.bs.dropdown', function (e) {
+        const toggle = e.target;
+        const dropdown = toggle.closest('.dropdown');
+        if (dropdown) {
+            dropdown.style.zIndex = '10050';
+            dropdown.style.position = 'relative';
+        }
+        const parentCard = toggle.closest('.kpi-card, .card, [class*="col-"], tr');
+        if (parentCard) {
+            parentCard.style.zIndex = '10040';
+            parentCard.style.overflow = 'visible';
+        }
+    });
+    document.addEventListener('hidden.bs.dropdown', function (e) {
+        const toggle = e.target;
+        const dropdown = toggle.closest('.dropdown');
+        if (dropdown) {
+            dropdown.style.zIndex = '';
+            dropdown.style.position = '';
+        }
+        const parentCard = toggle.closest('.kpi-card, .card, [class*="col-"], tr');
+        if (parentCard) {
+            parentCard.style.zIndex = '';
+            parentCard.style.overflow = '';
+        }
+    });
   </script>
+
+  {{-- Universal Print Preview Component & Script --}}
+  @include('components.universal_print_preview')
+  <script src="{{ asset('js/print-preview.js') }}?v={{ file_exists(public_path('js/print-preview.js')) ? filemtime(public_path('js/print-preview.js')) : time() }}"></script>
+
   @yield('scripts')
 </body>
 

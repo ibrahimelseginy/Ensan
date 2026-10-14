@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <div class="container-fluid py-4 min-vh-100 bg-theme-page">
     <div class="d-flex justify-content-between align-items-center mb-5 animate-reveal-down px-2">
@@ -193,7 +193,7 @@
 </div>
 
 <style>
-    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'Tajawal', 'Outfit', sans-serif; }
+    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'IBM Plex Sans Arabic', 'Outfit', sans-serif; }
     .bg-theme-page { background-color: var(--ws-bg-page); }
     .fw-800 { font-weight: 800; }
     .font-outfit { font-family: 'Outfit', sans-serif; }

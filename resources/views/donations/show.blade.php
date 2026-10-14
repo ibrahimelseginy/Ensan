@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
   <div class="container-fluid">
     {{-- Page Header --}}
@@ -8,8 +8,11 @@
         تفاصيل التبرع
       </h4>
       <div class="btn-group">
-        <button type="button" onclick="window.print()" class="btn btn-outline-success">
-          <i class="bi bi-printer me-1"></i> طباعة الإيصال
+        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#receiptPreviewModal" onclick="window.showModalElement ? window.showModalElement(document.getElementById('receiptPreviewModal')) : null" title="معاينة الوصل قبل الطباعة">
+          <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+        </button>
+        <button type="button" onclick="printDonationVoucher()" class="btn btn-success">
+          <i class="bi bi-printer me-1"></i> طباعة الوصل
         </button>
         <a class="btn btn-outline-primary" href="{{ route('donations.edit', $donation) }}">
           <i class="bi bi-pencil me-1"></i> تعديل
@@ -25,6 +28,24 @@
       <div class="col-lg-8">
         <div class="card">
           <div class="card-body">
+            {{-- Printable Receipt Header (Print only) --}}
+            <div class="receipt-print-header d-none pb-3 mb-4 border-bottom border-2 border-dark text-dark">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="text-start">
+                  <h4 class="fw-bold mb-1">مؤسسة إنسان الخيرية</h4>
+                  <div class="small text-muted">إدارة الموارد المالية والتبرعات</div>
+                </div>
+                <div class="text-center">
+                  <h3 class="fw-bolder mb-1">إيصال استلام تبرع</h3>
+                  <div class="fw-bold font-monospace">رقم: {{ $donation->receipt_number ?: ('REC-' . $donation->id) }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="small">التاريخ: {{ optional($donation->received_at)->format('Y/m/d') ?? now()->format('Y/m/d') }}</div>
+                  <div class="small">الحالة: {{ $donation->status === 'cancelled' ? 'ملغي' : 'معتمد' }}</div>
+                </div>
+              </div>
+            </div>
+
             <div class="section-title mb-3">
               <i class="bi bi-info-circle"></i>
               <h5 class="mb-0">معلومات التبرع</h5>
@@ -167,6 +188,21 @@
                 </div>
               </div>
             @endif
+            {{-- Printable Receipt Footer (Print only) --}}
+            <div class="receipt-print-footer d-none justify-content-between align-items-end mt-5 pt-4 border-top border-dark text-dark">
+              <div class="text-center" style="min-width: 150px;">
+                <div class="fw-bold mb-5">المستلم / المحصل</div>
+                <div class="border-top border-dark pt-1 small">التوقيع والاسم</div>
+              </div>
+              <div class="text-center" style="min-width: 150px;">
+                <div class="fw-bold mb-4">ختم المؤسسة</div>
+                <div class="rounded-circle border border-2 border-dark mx-auto" style="width: 65px; height: 65px; opacity: 0.25;"></div>
+              </div>
+              <div class="text-center" style="min-width: 150px;">
+                <div class="fw-bold mb-5">إدارة الحسابات</div>
+                <div class="border-top border-dark pt-1 small">التوقيع والاعتماد</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -218,6 +254,42 @@
         </div>
       </div>
     </div>
+  </div>
+
+  {{-- Receipt Preview Modal --}}
+  <div class="modal fade" id="receiptPreviewModal" tabindex="-1" aria-labelledby="receiptPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-light py-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-receipt text-success fs-5"></i>
+            <h5 class="modal-title fw-bold text-dark mb-0 fs-6" id="receiptPreviewModalLabel">معاينة وصل استلام التبرع الرسمي</h5>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-3">
+              <i class="bi bi-printer me-1"></i> طباعة هذا الوصل
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body p-3 p-md-4" style="background-color: #f1f5f9;">
+          <div class="d-flex justify-content-center">
+            @include('donations.partials.receipt_voucher')
+          </div>
+        </div>
+        <div class="modal-footer bg-light py-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+          <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-4">
+            <i class="bi bi-printer me-1"></i> طباعة الوصل الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Printable Voucher Container (Active for Print Output) --}}
+  <div id="printableDonationVoucher" class="d-none">
+    @include('donations.partials.receipt_voucher')
   </div>
 
   {{-- Cancellation Modal --}}
@@ -272,13 +344,87 @@
       }
   </script>
 
+  @if(request('preview'))
+  <script>
+      window.addEventListener('load', function() {
+          setTimeout(function() {
+              var previewEl = document.getElementById('receiptPreviewModal');
+              if (previewEl && typeof bootstrap !== 'undefined') {
+                  bootstrap.Modal.getOrCreateInstance(previewEl).show();
+              }
+          }, 200);
+      });
+  </script>
+  @endif
+
+  <script>
+      function printDonationVoucher() {
+          var voucher = document.getElementById('printableDonationVoucher');
+          if (!voucher || voucher.innerHTML.trim() === '') {
+              voucher = document.querySelector('#receiptPreviewModal .modal-body');
+          }
+          if (!voucher) {
+              window.print();
+              return;
+          }
+          if (typeof window.printHtmlDocument === 'function') {
+              window.printHtmlDocument(voucher.innerHTML, 'إيصال استلام تبرع - {{ $donation->receipt_number ?: $donation->id }}', true);
+          } else {
+              window.print();
+          }
+      }
+  </script>
+
+  @if(request('print'))
+  <script>
+      window.addEventListener('load', function() {
+          setTimeout(function() {
+              printDonationVoucher();
+          }, 400);
+      });
+  </script>
+  @endif
+
   <style>
     @media print {
-      .navbar, .sidebar-fixed, .btn-group, .col-lg-4, #cancelModal { display:none !important; }
-      body { padding-top:0 !important; }
-      .container-fluid, .col-lg-8 { width:100% !important; max-width:100% !important; }
-      .card { border:1px solid #bbb !important; box-shadow:none !important; }
-      .page-header::before { content:'إيصال استلام تبرع — مؤسسة إنسان'; display:block; width:100%; text-align:center; font-size:1.5rem; font-weight:800; margin-bottom:1rem; }
+      @page {
+        size: A4 landscape;
+        margin: 8mm 10mm;
+      }
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .sidebar, .sidebar-fixed, .navbar, .page-header, .card:not(.official-voucher-card), .modal-header, .modal-footer, .btn, .modal-backdrop, .toast-container, #cancelModal, #receiptPreviewModal {
+        display: none !important;
+      }
+      .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+      }
+      #printableDonationVoucher {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 5mm !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .official-voucher-card {
+        border: 2px solid #047857 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+      }
     }
   </style>
 @endsection

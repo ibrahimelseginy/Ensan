@@ -37,8 +37,13 @@
             @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
           <div class="col-md-4">
-            <label class="form-label">الاسم بالكامل</label>
-            <input name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+            <label class="form-label fw-bold">الاسم بالكامل (ثلاثي على الأقل) <span class="text-danger">*</span></label>
+            <input name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
+              placeholder="مثال: محمد أحمد علي"
+              pattern="^(\S+\s+){2,}\S+.*$"
+              title="يجب إدخال اسم ثلاثي على الأقل (3 كلمات مفصولة بمسافات)"
+              required>
+            <div class="form-text">يجب أن يكون الاسم ثلاثياً على الأقل ومميزاً غير مكرر.</div>
             @error('name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror

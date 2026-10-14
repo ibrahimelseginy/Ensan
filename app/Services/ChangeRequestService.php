@@ -22,14 +22,31 @@ class ChangeRequestService
     {
         $user = request()->user() ?? auth()->user();
 
-        // If forceRequest is false, auto-approve for logged in users / admins
-        $canAutoApprove = !$forceRequest;
+        // Admin and manager roles auto-approve and execute immediately
+        $isAdminOrManager = $user && (
+            $user->hasRole('admin') ||
+            $user->hasRole('manager')
+        );
+
+        $canAutoApprove = $isAdminOrManager || !$forceRequest;
 
         if ($canAutoApprove) {
             $result = $executor();
 
             if ($user) {
                 try {
+                    if ($modelId) {
+                        \App\Models\ChangeRequest::where('model_type', $modelType)
+                            ->where('model_id', $modelId)
+                            ->where('status', 'pending')
+                            ->update([
+                                'status' => 'approved',
+                                'reviewer_id' => $user->id,
+                                'reviewed_at' => now(),
+                                'review_notes' => 'تم الاعتماد والتنفيذ المباشر من قبل الإدارة'
+                            ]);
+                    }
+
                     \App\Models\ChangeRequest::create([
                         'user_id' => $user->id,
                         'model_type' => $modelType,
@@ -37,7 +54,9 @@ class ChangeRequestService
                         'action' => $action,
                         'payload' => $payload,
                         'status' => 'approved',
-                        'reviewer_id' => $user->id
+                        'reviewer_id' => $user->id,
+                        'reviewed_at' => now(),
+                        'review_notes' => 'تم التنفيذ الفوري للمدير/المسؤول'
                     ]);
                 } catch (\Exception $e) {
                     // Ignore audit log error

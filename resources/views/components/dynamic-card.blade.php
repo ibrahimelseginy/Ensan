@@ -126,7 +126,7 @@
     }
 
     /* Typography */
-    .card-title-modern { font-family: 'Tajawal', sans-serif; font-size: 1.4rem; }
+    .card-title-modern { font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 1.4rem; }
     .card-desc-text { font-size: 0.9rem; line-height: 1.5; }
 
     /* Buttons Stack */

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use App\Models\Donor;
 
 final class UpdateDonorRequest extends FormRequest
 {
@@ -16,8 +18,24 @@ final class UpdateDonorRequest extends FormRequest
 
     public function rules(): array
     {
+        $donorId = $this->route('donor') instanceof Donor
+            ? $this->route('donor')->id
+            : ($this->donor?->id ?? $this->route('donor'));
+
         return [
-            'name'                       => 'sometimes|string|max:255',
+            'name'                       => [
+                'sometimes',
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('donors', 'name')->ignore($donorId),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $parts = preg_split('/\s+/u', trim((string) $value), -1, PREG_SPLIT_NO_EMPTY);
+                    if (count($parts) < 3) {
+                        $fail('يجب أن يكون اسم المتبرع ثلاثياً على الأقل (مثال: محمد أحمد علي).');
+                    }
+                },
+            ],
             'type'                       => 'sometimes|in:individual,organization',
             'phone'                      => 'nullable|string|max:20',
             'email'                      => 'nullable|email',
@@ -44,6 +62,14 @@ final class UpdateDonorRequest extends FormRequest
     {
         $isMonthly = $this->input('classification') === 'recurring'
             && $this->input('recurring_cycle') === 'monthly';
+
+        if ($this->has('name')) {
+            $this->merge([
+                'name' => is_string($this->input('name'))
+                    ? preg_replace('/\s+/u', ' ', trim($this->input('name')))
+                    : $this->input('name'),
+            ]);
+        }
 
         if ($this->has('active')) {
             $this->merge([
@@ -93,5 +119,13 @@ final class UpdateDonorRequest extends FormRequest
                 );
             }
         }];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'يرجى إدخال اسم المتبرع.',
+            'name.unique' => 'اسم المتبرع مسجل مسبقاً، ولا يمكن تكرار اسم المتبرع.',
+        ];
     }
 }

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%);">
@@ -196,9 +196,14 @@
         </div>
       </div>
 
-      <div class="d-print-none text-center mt-4">
+      <div class="d-print-none text-center mt-4 d-flex justify-content-center gap-2">
         <a href="{{ route('trips.index') }}" class="btn btn-secondary">العودة للقائمة</a>
-        <button onclick="window.print()" class="btn btn-primary">طباعة مرة أخرى</button>
+        <button type="button" onclick="EnsanPrintPreview.open('#printCard', {title: 'إيصال مشوار — مؤسسة إنسان'})" class="btn btn-outline-info">
+          <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+        </button>
+        <button onclick="window.print()" class="btn btn-primary">
+          <i class="bi bi-printer me-1"></i> طباعة مرة أخرى
+        </button>
       </div>
     </div>
 @endif
@@ -419,6 +424,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 animate-fade-in" style="z-index: 9999;">
                   <li><a class="dropdown-item py-2" href="{{ route('donations.show', $t->id) }}"><i class="bi bi-eye me-2 text-primary"></i> عرض التفاصيل</a></li>
+                  <li><a class="dropdown-item py-2 text-info" href="{{ route('trips.index', ['print_id' => $t->id, 'preview' => 1]) }}"><i class="bi bi-eye me-2"></i> معاينة الإيصال</a></li>
                   <li><a class="dropdown-item py-2" href="{{ route('trips.index', ['print_id' => $t->id]) }}"><i class="bi bi-printer me-2 text-dark"></i> طباعة الإيصال</a></li>
                   @php $currentUser = request()->user(); @endphp
                   @if($currentUser)
@@ -765,11 +771,11 @@
 </style>
   <style>
     body.has-print-card {
-      font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Cairo', sans-serif
+      font-family: 'IBM Plex Sans Arabic', sans-serif
     }
 
     .print-card {
-      font-family: 'Segoe UI', 'Tahoma', 'Arial', 'Cairo', sans-serif;
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
       line-height: 1.6
     }
 
@@ -904,9 +910,17 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       if (document.getElementById('printCard')) {
-        document.body.classList.add('has-print-card');
-        try { window.__oldTitle = document.title; document.title = ' '; } catch (e) { }
-        window.print();
+        @if(request('preview'))
+          setTimeout(function() {
+            if (window.EnsanPrintPreview) {
+              window.EnsanPrintPreview.open('#printCard', {title: 'إيصال مشوار — مؤسسة إنسان'});
+            }
+          }, 350);
+        @else
+          document.body.classList.add('has-print-card');
+          try { window.__oldTitle = document.title; document.title = ' '; } catch (e) { }
+          window.print();
+        @endif
       }
     });
   </script>

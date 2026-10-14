@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\MobileApiController;
 use App\Http\Controllers\Api\EnsanPillarController;
 use App\Http\Controllers\AuthController;
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth-strict')->group(function () {
     Route::post('check-phone', [AuthController::class, 'checkPhone']);
     Route::post('login-phone', [AuthController::class, 'loginByPhone']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
@@ -58,12 +58,12 @@ Route::get('/volunteer', function () {
         'required_fields' => ['name', 'phone'],
     ], 405);
 });
-Route::post('/volunteer', [MobileApiController::class , 'submitVolunteerRequest']);
-Route::post('/case-application', [MobileApiController::class , 'submitCaseApplication']);
-Route::post('/guest-house', [MobileApiController::class , 'submitGuestHouseBooking']);
+Route::post('/volunteer', [MobileApiController::class , 'submitVolunteerRequest'])->middleware('throttle:submissions');
+Route::post('/case-application', [MobileApiController::class , 'submitCaseApplication'])->middleware('throttle:submissions');
+Route::post('/guest-house', [MobileApiController::class , 'submitGuestHouseBooking'])->middleware('throttle:submissions');
 Route::get('/notifications/categories', [MobileApiController::class, 'getNotificationCategories']);
 Route::get('/notifications', [MobileApiController::class , 'getNotifications']);
-Route::post('/donation', [MobileApiController::class , 'submitDonation']);
+Route::post('/donation', [MobileApiController::class , 'submitDonation'])->middleware('throttle:submissions');
 Route::get('/contact-info', [MobileApiController::class, 'getContactInfo']);
 
 // Integrated Service Pillars (Zad, Midrar, etc.)
@@ -75,11 +75,11 @@ Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
         Route::get('/', [MobileApiController::class, 'getProfile']);
         Route::match(['POST', 'PUT', 'PATCH'], '/', [MobileApiController::class, 'updateProfile']);
         Route::delete('/', [MobileApiController::class, 'deleteProfile']);
-        Route::post('/photo', [MobileApiController::class, 'uploadProfilePhoto']);
+        Route::post('/photo', [MobileApiController::class, 'uploadProfilePhoto'])->middleware('throttle:heavy-ops');
     });
     
     Route::prefix('auth')->group(function () {
-        Route::match(['POST', 'PUT', 'PATCH'], '/change-password', [MobileApiController::class, 'changePassword']);
+        Route::match(['POST', 'PUT', 'PATCH'], '/change-password', [MobileApiController::class, 'changePassword'])->middleware('throttle:auth-strict');
     });
     
     Route::get('/donation-records', [MobileApiController::class, 'getDonations']);

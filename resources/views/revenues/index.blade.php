@@ -11,6 +11,9 @@
                 <h1 class="display-5 fw-bold text-white mb-2" style="color: #ffffff !important;">لوحة الإيرادات والتبرعات</h1>
                 <p class="text-white text-opacity-75 lead" style="color: rgba(255,255,255,0.8) !important;">نظرة شاملة على مصادر الدخل، أنواع التبرعات، ونمط النمو المالي.</p>
                 <div class="d-flex gap-3 mt-4">
+                    <button class="btn btn-outline-light btn-lg px-4 rounded-pill shadow-premium fw-bold" onclick="EnsanPrintPreview.open(null, {title: 'تقرير الإيرادات والنمو المالي'})">
+                        <i class="bi bi-eye me-2"></i> معاينة قبل الطباعة
+                    </button>
                     <button class="btn btn-outline-light btn-lg px-4 rounded-pill shadow-premium fw-bold" onclick="window.print()">
                         <i class="bi bi-printer me-2"></i> طباعة التقرير
                     </button>

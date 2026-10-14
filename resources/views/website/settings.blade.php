@@ -1,7 +1,7 @@
 @extends('layouts.app', ['hideGlobalAlerts' => true])
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <div class="settings-page">
     <div class="premium-hero-sleek">
@@ -432,7 +432,7 @@
 </div> {{-- Closing settings-page started at line 6 --}}
 
 <style>
-    body { font-family: 'Tajawal', sans-serif; }
+    body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
     .settings-page { min-height: 100vh; }
 
     /* Premium Hero */

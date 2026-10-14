@@ -298,12 +298,12 @@
                     <option value="100" @selected(($perPage ?? 20) == 100)>100</option>
                 </select>
             </div>
-            <div class="col-md-4 d-flex align-items-end gap-2">
+            <div class="col-md-5 d-flex align-items-end gap-2">
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
                 <a class="btn btn-outline-success" data-no-loader href="{{ route('beneficiaries.export', request()->query()) }}" title="تصدير Excel"><i class="bi bi-file-earmark-excel me-1"></i> إكسل</a>
                 <a class="btn btn-outline-danger" data-no-loader href="{{ route('beneficiaries.export-pdf', request()->query()) }}" title="تحميل PDF"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
-                <button class="btn btn-outline-primary" type="button" onclick="window.print()" title="طباعة الكشف"><i class="bi bi-printer me-1"></i> طباعة</button>
+                <button class="btn btn-outline-info" type="button" onclick="EnsanPrintPreview.open('#tableContainer', {title: 'كشف المستفيدين والحالات', orientation: 'landscape'})" title="معاينة قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة</button>
             </div>
         </div>
     </form>

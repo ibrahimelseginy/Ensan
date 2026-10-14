@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // It is only auto-added for the file passed via the `api:` parameter above.
             // So we must include the full prefix 'api/v1/mobile' here.
             // Final path: /api/v1/mobile/*
-            Route::middleware('api')
+            Route::middleware(['api', 'throttle:mobile-api'])
                 ->prefix('api/v1/mobile')
                 ->group(base_path('routes/mobile_api.php'));
         },
@@ -33,8 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\KeepReviewRequestsInContext::class,
             \App\Http\Middleware\AuditLogger::class,
         ]);
-        $middleware->api(append: [
-            //
+        $middleware->api(prepend: [
+            'throttle:api',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

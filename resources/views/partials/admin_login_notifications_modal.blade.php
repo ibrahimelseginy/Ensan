@@ -1,9 +1,14 @@
 <style>
-    /* Admin Login Notifications Modal - High-End Solid Dark Theme */
+    /* Admin Login Notifications Modal - 100% Solid Opaque Dark Theme */
     .admin-login-notifications-modal {
-        background-color: rgba(2, 6, 23, 0.82) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
+        background-color: rgba(3, 7, 18, 0.96) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+    }
+
+    .modal-backdrop.show {
+        background-color: #020617 !important;
+        opacity: 0.95 !important;
     }
 
     .admin-login-notifications-modal .modal-dialog {
@@ -16,34 +21,48 @@
     .admin-notif-content {
         max-height: 90vh;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
         border-radius: 20px !important;
-        background-color: #0f172a !important; /* Solid Slate 900 - completely opaque */
+        background-color: #0f172a !important; /* Solid Slate 900 - معتم صلب 100% */
         background: #0f172a !important;
         color: #f8fafc !important;
         opacity: 1 !important;
-        box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 35px 90px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
     }
 
     .admin-login-notifications-modal .modal-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
         background-color: #1e293b !important; /* Solid Dark Slate */
         background: #1e293b !important;
         padding: 1.25rem 1.75rem !important;
+        opacity: 1 !important;
     }
 
     .admin-login-notifications-modal .modal-footer {
-        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
         background-color: #1e293b !important; /* Solid Dark Slate */
         background: #1e293b !important;
         padding: 1.15rem 1.75rem !important;
+        opacity: 1 !important;
     }
 
     .admin-login-notifications-modal .modal-body {
         overflow-y: auto;
-        background-color: #0b1120 !important; /* Solid Deep Slate - 100% non-transparent */
+        background-color: #0b1120 !important; /* Solid Deep Slate - 100% غير شفاف */
         background: #0b1120 !important;
         padding: 1.75rem !important;
+        opacity: 1 !important;
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE / Edge */
+    }
+
+    /* إخفاء شريط التمرير بالكامل مع الحفاظ على إمكانية التمرير */
+    .admin-login-notifications-modal .modal-body::-webkit-scrollbar,
+    .admin-login-notifications-modal .modal-content::-webkit-scrollbar,
+    .admin-login-notifications-modal::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
     .admin-notif-heading {
@@ -106,7 +125,9 @@
     /* Intro Alert Box */
     .admin-notif-intro {
         background: #152033 !important;
-        border: 1px solid rgba(59, 130, 246, 0.25) !important;
+        background-color: #152033 !important;
+        opacity: 1 !important;
+        border: 1px solid rgba(59, 130, 246, 0.3) !important;
         border-inline-start: 4px solid #3b82f6 !important;
         border-radius: 14px !important;
         color: #e2e8f0 !important;
@@ -118,9 +139,11 @@
     /* Suggested Actions Box */
     .admin-notif-suggestions {
         padding: 1.15rem 1.35rem !important;
-        border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 16px !important;
         background: #141e30 !important; /* Solid Dark */
+        background-color: #141e30 !important;
+        opacity: 1 !important;
     }
 
     .admin-notif-suggestions .suggestions-title {
@@ -160,12 +183,13 @@
     .admin-notif-card {
         height: 100%;
         padding: 1.25rem !important;
-        border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-inline-start-width: 4px !important;
         border-radius: 16px !important;
         background: #162032 !important; /* Solid Dark Card - 100% opaque */
         background-color: #162032 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+        opacity: 1 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
         transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         display: flex;
         flex-direction: column;

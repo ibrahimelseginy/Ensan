@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap");
 
 :root {
   /* Brand Colors - Modern Corporate (Emerald & Slate) */
@@ -81,7 +81,9 @@
 .animate-delay-5 { animation-delay: 0.5s; }
 
 /* Dark Mode - Deep Navy & Slate */
-body.theme-dark {
+html.theme-dark,
+body.theme-dark,
+[data-bs-theme="dark"] {
   /* Primary - Brighter for Dark Mode */
   --primary: #10b981;
   /* Emerald 500 */
@@ -127,7 +129,7 @@ body.theme-dark img[alt*="logo"] {
 /* Global Reset & Typography */
 body {
   font-family:
-    "Tajawal",
+    'IBM Plex Sans Arabic',
     system-ui,
     -apple-system,
     sans-serif;
@@ -787,7 +789,9 @@ body.sidebar-collapsed .content-wrapper {
 }
 
 /* Dark Mode - Comprehensive Enhancements */
-body.theme-dark {
+html.theme-dark,
+body.theme-dark,
+[data-bs-theme="dark"] {
 
   /* All Icons */
   .bi {
@@ -2969,6 +2973,111 @@ a:not(.stretched-link) {
     box-shadow: none !important;
     border: 1px solid #ddd !important;
   }
+
+  body.printing-universal-preview * {
+    visibility: hidden !important;
+  }
+
+  body.printing-universal-preview #universalPrintPaper,
+  body.printing-universal-preview #universalPrintPaper * {
+    visibility: visible !important;
+  }
+
+  body.printing-universal-preview #universalPrintPaper {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  body.printing-universal-preview .modal-backdrop,
+  body.printing-universal-preview .modal-header,
+  body.printing-universal-preview .modal-footer {
+    display: none !important;
+  }
+}
+
+/* Universal Print Preview System */
+.print-preview-canvas {
+  background-color: #1e293b !important;
+  min-height: 520px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.a4-paper-sheet {
+  background: #ffffff !important;
+  color: #111827 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 16mm 14mm;
+  transition: transform 0.2s ease, width 0.3s ease;
+  transform-origin: top center;
+  box-sizing: border-box;
+  font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.a4-paper-sheet.portrait {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 100%;
+}
+
+.a4-paper-sheet.landscape {
+  width: 297mm;
+  min-height: 210mm;
+  max-width: 100%;
+}
+
+.a4-paper-sheet table {
+  color: #111827 !important;
+  border-color: #cbd5e1 !important;
+  font-size: 0.88rem;
+}
+
+.a4-paper-sheet table th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 600;
+  border-bottom: 2px solid #94a3b8 !important;
+}
+
+.a4-paper-sheet table td {
+  border-color: #e2e8f0 !important;
+}
+
+.a4-paper-sheet .card {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.a4-paper-sheet .kpi-card,
+.a4-paper-sheet .stat-card,
+.a4-paper-sheet .summary-panel {
+  border: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+.a4-paper-sheet h1, .a4-paper-sheet h2, .a4-paper-sheet h3,
+.a4-paper-sheet h4, .a4-paper-sheet h5, .a4-paper-sheet h6 {
+  color: #0f172a !important;
+}
+
+.a4-paper-sheet .badge {
+  border: 1px solid #cbd5e1 !important;
 }
 
 /* Chart Styles */
@@ -3659,16 +3768,51 @@ body {
 }
 
 .dashboard-hero .hero-actions .btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  backdrop-filter: blur(8px);
   font-weight: 600;
   transition: var(--transition-base);
 }
 
-.dashboard-hero .hero-actions .btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.dashboard-hero .hero-actions .btn.btn-light,
+.dashboard-hero .hero-actions .btn.btn-white,
+.dashboard-hero .hero-actions .btn.bg-white {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+}
+
+.dashboard-hero .hero-actions .btn.btn-light *,
+.dashboard-hero .hero-actions .btn.btn-white *,
+.dashboard-hero .hero-actions .btn.bg-white * {
+  color: #0f172a !important;
+}
+
+.dashboard-hero .hero-actions .btn.btn-light:hover,
+.dashboard-hero .hero-actions .btn.btn-white:hover,
+.dashboard-hero .hero-actions .btn.bg-white:hover {
+  background: #f1f5f9 !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+.dashboard-hero .hero-actions .btn:not(.btn-light):not(.btn-white):not(.bg-white) {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(8px);
+}
+
+.dashboard-hero .hero-actions .btn:not(.btn-light):not(.btn-white):not(.bg-white) * {
+  color: #ffffff !important;
+}
+
+.dashboard-hero .hero-actions .btn:not(.btn-light):not(.btn-white):not(.bg-white):hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -5021,11 +5165,34 @@ body.theme-dark .page-link:hover {
 /* Light & Dark Mode Dropdown Menu Enhancements (Table Actions) */
 .dropdown-menu {
   background-color: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
   border-radius: 12px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22) !important;
   padding: 6px !important;
-  z-index: 1060 !important;
+  z-index: 10060 !important;
+}
+
+/* Ensure the dropdown container lifts above all sibling buttons and cards when active */
+.dropdown.show,
+.dropdown:focus-within,
+.dropdown:has(.show),
+.dropdown:has(.dropdown-menu.show) {
+  position: relative !important;
+  z-index: 10050 !important;
+}
+
+/* Ensure parent cards/rows don't trap or cut off open dropdowns */
+.kpi-card:has(.dropdown-menu.show),
+.card:has(.dropdown-menu.show),
+[class*="col-"]:has(.dropdown-menu.show),
+tr:has(.dropdown-menu.show) {
+  position: relative !important;
+  z-index: 10040 !important;
+  overflow: visible !important;
 }
 
 .dropdown-item {
@@ -5063,10 +5230,17 @@ body.theme-dark .page-link:hover {
 }
 
 /* Dark Mode Table Dropdowns */
-.theme-dark .dropdown-menu {
+.theme-dark .dropdown-menu,
+[data-bs-theme="dark"] .dropdown-menu,
+html.theme-dark .dropdown-menu {
   background-color: #0f172a !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6) !important;
+  background: #0f172a !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85) !important;
+  z-index: 10060 !important;
 }
 
 .theme-dark .dropdown-item {
@@ -5447,3 +5621,395 @@ body:not(.theme-dark) #reviewRequestActionModal .review-execution-flow {
   background-color: #0f172a !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* ============================================================
+ * Universal High-Contrast Button Typography & Readability Fixes
+ * يضمن وضوح ألوان ونصوص الأزرار وأيقوناتها في كافة الشاشات والقوالب
+ * ============================================================ */
+
+/* Solid Buttons Font Contrast */
+.btn-primary, 
+.btn-primary:focus,
+.btn-primary:active {
+  color: #ffffff !important;
+}
+.btn-primary *, .btn-primary i, .btn-primary span {
+  color: #ffffff !important;
+}
+
+.btn-success,
+.btn-success:focus,
+.btn-success:active {
+  color: #ffffff !important;
+}
+.btn-success *, .btn-success i, .btn-success span {
+  color: #ffffff !important;
+}
+
+.btn-danger,
+.btn-danger:focus,
+.btn-danger:active {
+  color: #ffffff !important;
+}
+.btn-danger *, .btn-danger i, .btn-danger span {
+  color: #ffffff !important;
+}
+
+.btn-dark,
+.btn-dark:focus,
+.btn-dark:active {
+  color: #ffffff !important;
+}
+.btn-dark *, .btn-dark i, .btn-dark span {
+  color: #ffffff !important;
+}
+
+.btn-secondary,
+.btn-secondary:focus,
+.btn-secondary:active {
+  color: #ffffff !important;
+}
+.btn-secondary *, .btn-secondary i, .btn-secondary span {
+  color: #ffffff !important;
+}
+
+.btn-info,
+.btn-info:focus,
+.btn-info:active {
+  color: #ffffff !important;
+}
+.btn-info *, .btn-info i, .btn-info span {
+  color: #ffffff !important;
+}
+
+.btn-warning,
+.btn-warning:focus,
+.btn-warning:active {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+.btn-warning *, .btn-warning i, .btn-warning span {
+  color: #0f172a !important;
+}
+
+/* Light & White Buttons: must have crystal clear dark text */
+.btn-light,
+.btn-white,
+.btn.bg-white {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+.btn-light:hover,
+.btn-white:hover,
+.btn.bg-white:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Fix Hero Actions Buttons on all hero banners */
+.dashboard-hero .hero-actions .btn.btn-light,
+.dashboard-hero .hero-actions .btn.btn-white,
+.dashboard-hero .hero-actions .btn.bg-white {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+}
+
+.dashboard-hero .hero-actions .btn.btn-light:hover,
+.dashboard-hero .hero-actions .btn.btn-white:hover,
+.dashboard-hero .hero-actions .btn.bg-white:hover {
+  background-color: #f8fafc !important;
+  border-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.dashboard-hero .hero-actions .btn:not(.btn-light):not(.btn-white):not(.bg-white) {
+  color: #ffffff !important;
+}
+.dashboard-hero .hero-actions .btn:not(.btn-light):not(.btn-white):not(.bg-white) * {
+  color: #ffffff !important;
+}
+
+/* Outline Buttons High Contrast in Light & Dark Mode */
+.btn-outline-primary {
+  color: #0284c7 !important;
+  border-color: #0284c7 !important;
+}
+.btn-outline-primary:hover {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+.btn-outline-primary:hover * {
+  color: #ffffff !important;
+}
+
+.btn-outline-success {
+  color: #059669 !important;
+  border-color: #059669 !important;
+}
+.btn-outline-success:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+.btn-outline-success:hover * {
+  color: #ffffff !important;
+}
+
+.btn-outline-warning {
+  color: #d97706 !important;
+  border-color: #d97706 !important;
+}
+.btn-outline-warning:hover {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+.btn-outline-warning:hover * {
+  color: #ffffff !important;
+}
+
+.btn-outline-danger {
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+.btn-outline-danger:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+.btn-outline-danger:hover * {
+  color: #ffffff !important;
+}
+
+.theme-dark .btn-outline-primary {
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+}
+.theme-dark .btn-outline-primary:hover {
+  background-color: #38bdf8 !important;
+  color: #0f172a !important;
+}
+.theme-dark .btn-outline-primary:hover * {
+  color: #0f172a !important;
+}
+
+.theme-dark .btn-outline-success {
+  color: #34d399 !important;
+  border-color: #34d399 !important;
+}
+.theme-dark .btn-outline-success:hover {
+  background-color: #34d399 !important;
+  color: #0f172a !important;
+}
+.theme-dark .btn-outline-success:hover * {
+  color: #0f172a !important;
+}
+
+.theme-dark .btn-outline-warning {
+  color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+}
+.theme-dark .btn-outline-warning:hover {
+  background-color: #fbbf24 !important;
+  color: #0f172a !important;
+}
+.theme-dark .btn-outline-warning:hover * {
+  color: #0f172a !important;
+}
+
+.theme-dark .btn-outline-secondary {
+  color: #cbd5e1 !important;
+  border-color: #64748b !important;
+}
+.theme-dark .btn-outline-secondary:hover * {
+  color: #ffffff !important;
+}
+
+/* ============================================================
+ * Filter Toolbar & Button UX Standardization
+ * توحيد أحجام وارتفاعات الأزرار وحقول الإدخال لتجربة مستخدم مثالية
+ * ============================================================ */
+
+/* Remove dropdown arrow when .no-arrow is applied */
+.dropdown-toggle.no-arrow::after,
+.no-arrow.dropdown-toggle::after,
+.no-arrow::after {
+  display: none !important;
+}
+
+/* Square Icon Buttons for toolbars and actions */
+.btn-icon-square,
+.btn-square {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-icon-square i,
+.btn-square i {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+/* Standardized 44px height across filter form controls & buttons */
+.chart-container form .form-control,
+.chart-container form .form-select,
+.chart-container form .input-group-text,
+.chart-container form .btn,
+.filter-row .form-control,
+.filter-row .form-select,
+.filter-row .input-group-text,
+.filter-row .btn {
+  height: 44px !important;
+  min-height: 44px !important;
+  font-size: 0.925rem;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.chart-container form .input-group {
+  height: 44px !important;
+}
+
+.chart-container form .input-group .form-control,
+.chart-container form .input-group .input-group-text {
+  height: 100% !important;
+}
+
+.chart-container form .input-group .input-group-text {
+  border-top-right-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+}
+
+.chart-container form .input-group .form-control {
+  border-top-left-radius: 10px !important;
+  border-bottom-left-radius: 10px !important;
+}
+
+.chart-container form .btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600;
+  gap: 0.4rem;
+}
+
+/* ==========================================================================
+   OFFICIAL PRINT / PREVIEW PAPER SHEETS (100% CONTRAST & DARK MODE IMMUNITY)
+   ========================================================================== */
+#printableDonorSheet,
+#printableDonationVoucher,
+.official-voucher-card,
+.a4-paper-sheet,
+#universalPrintPaperBody {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+html.theme-dark #printableDonorSheet,
+html.theme-dark #printableDonorSheet *,
+body.theme-dark #printableDonorSheet,
+body.theme-dark #printableDonorSheet *,
+[data-bs-theme="dark"] #printableDonorSheet,
+[data-bs-theme="dark"] #printableDonorSheet *,
+html.theme-dark #printableDonationVoucher,
+html.theme-dark #printableDonationVoucher *,
+body.theme-dark #printableDonationVoucher,
+body.theme-dark #printableDonationVoucher *,
+html.theme-dark .official-voucher-card,
+html.theme-dark .official-voucher-card *,
+body.theme-dark .official-voucher-card,
+body.theme-dark .official-voucher-card *,
+html.theme-dark .a4-paper-sheet,
+html.theme-dark .a4-paper-sheet *,
+body.theme-dark .a4-paper-sheet,
+body.theme-dark .a4-paper-sheet *,
+html.theme-dark #universalPrintPaperBody,
+html.theme-dark #universalPrintPaperBody * {
+  color-scheme: light !important;
+}
+
+/* Force dark readable text on all headings, bolds, and regular text */
+html.theme-dark #printableDonorSheet strong,
+html.theme-dark #printableDonorSheet b,
+html.theme-dark #printableDonorSheet .fw-bold,
+html.theme-dark #printableDonorSheet .fw-bolder,
+html.theme-dark #printableDonorSheet .text-dark,
+html.theme-dark #printableDonorSheet h1,
+html.theme-dark #printableDonorSheet h2,
+html.theme-dark #printableDonorSheet h3,
+html.theme-dark #printableDonorSheet h4,
+html.theme-dark #printableDonorSheet h5,
+html.theme-dark #printableDonorSheet h6,
+body.theme-dark #printableDonorSheet strong,
+body.theme-dark #printableDonorSheet b,
+body.theme-dark #printableDonorSheet .fw-bold,
+body.theme-dark #printableDonorSheet .fw-bolder,
+body.theme-dark #printableDonorSheet .text-dark,
+body.theme-dark #printableDonorSheet h1,
+body.theme-dark #printableDonorSheet h2,
+body.theme-dark #printableDonorSheet h3,
+body.theme-dark #printableDonorSheet h4,
+body.theme-dark #printableDonorSheet h5,
+body.theme-dark #printableDonorSheet h6 {
+  color: #0f172a !important;
+}
+
+html.theme-dark #printableDonorSheet .text-muted,
+body.theme-dark #printableDonorSheet .text-muted {
+  color: #334155 !important;
+}
+
+html.theme-dark #printableDonorSheet .text-success,
+body.theme-dark #printableDonorSheet .text-success {
+  color: #047857 !important;
+}
+
+html.theme-dark #printableDonorSheet .text-primary,
+body.theme-dark #printableDonorSheet .text-primary {
+  color: #1d4ed8 !important;
+}
+
+html.theme-dark #printableDonorSheet .text-warning,
+body.theme-dark #printableDonorSheet .text-warning {
+  color: #b45309 !important;
+}
+
+html.theme-dark #printableDonorSheet table,
+body.theme-dark #printableDonorSheet table {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+html.theme-dark #printableDonorSheet table thead th,
+body.theme-dark #printableDonorSheet table thead th {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border: 1px solid #94a3b8 !important;
+  font-weight: 800 !important;
+}
+
+html.theme-dark #printableDonorSheet table tbody td,
+body.theme-dark #printableDonorSheet table tbody td {
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  background-color: transparent !important;
+}
+
+html.theme-dark #printableDonorSheet table tbody tr:nth-child(even),
+body.theme-dark #printableDonorSheet table tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+

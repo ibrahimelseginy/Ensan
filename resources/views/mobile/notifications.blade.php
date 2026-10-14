@@ -215,7 +215,7 @@
 @endforeach
 
 <style>
-    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'Tajawal', 'Outfit', sans-serif; }
+    body { background-color: var(--ws-bg-page) !important; color: var(--ws-text-primary) !important; font-family: 'IBM Plex Sans Arabic', 'Outfit', sans-serif; }
     .bg-theme-page { background-color: var(--ws-bg-page); }
     .fw-800 { font-weight: 800; }
     .font-outfit { font-family: 'Outfit', sans-serif; }

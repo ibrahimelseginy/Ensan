@@ -16,7 +16,7 @@ use App\Models\ChangeRequest;
 use App\Services\DonationService;
 use App\Http\Requests\StoreDonationRequest;
 use App\Http\Requests\UpdateDonationRequest;
-use Illuminate\Http\RedirectResponse;
+use App\Services\DonorService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Schema;
@@ -25,12 +25,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 final class DonationWebController extends Controller
 {
     public function __construct(
-        private DonationService $donationService
+        private DonationService $donationService,
+        private DonorService $donorService
     ) {}
 
     public function index(Request $request): View
     {
         $q               = (string) $request->input('q', '');
+        $month           = $request->input('month');
+        $year            = $request->input('year');
         $projectId       = $request->input('project_id');
         $campaignId      = $request->input('campaign_id');
         $guestHouseId    = $request->input('guest_house_id');
@@ -38,6 +41,8 @@ final class DonationWebController extends Controller
 
         $filters = [
             'q'              => $q,
+            'month'          => $month,
+            'year'           => $year,
             'project_id'     => $projectId,
             'campaign_id'    => $campaignId,
             'guest_house_id' => $guestHouseId,
@@ -99,9 +104,14 @@ final class DonationWebController extends Controller
             ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
             : collect();
 
+        $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
+        $upcomingDueDonors = $this->donorService->getUpcomingDueDonors(7);
+
         return view('donations.index', compact(
             'cashDonations', 'inKindDonations', 'dailyCashSummary', 
-            'todayByChannel', 'inKindToday', 'q', 'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries'
+            'todayByChannel', 'inKindToday', 'q', 'month', 'year', 'allDonors',
+            'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries',
+            'upcomingDueDonors'
         ));
     }
 

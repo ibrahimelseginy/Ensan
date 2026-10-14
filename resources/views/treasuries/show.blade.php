@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -75,9 +75,14 @@
             <div class="chart-container mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 section-title"><i class="bi bi-clock-history me-2"></i>آخر الحركات</h5>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.print()">
-                        <i class="bi bi-printer me-1"></i> طباعة كشف حساب
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="EnsanPrintPreview.open('.table-responsive', {title: 'كشف حساب الخزينة — {{ $treasury->name }}'})">
+                            <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i> طباعة كشف حساب
+                        </button>
+                    </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 small">

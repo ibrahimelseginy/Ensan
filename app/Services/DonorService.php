@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Helpers\ArabicSearchHelper;
 use App\Models\Donor;
 use App\Models\Donation;
 use App\Models\ChangeRequest;
@@ -30,10 +31,25 @@ final readonly class DonorService
 
         $query = Donor::query()
             ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($w) use ($q) {
-                    $w->where('name', 'like', "%$q%")
-                      ->orWhere('code', 'like', "%$q%")
-                      ->orWhere('phone', 'like', "%$q%");
+                $parsed = ArabicSearchHelper::parseQuery($q);
+                $variants = $parsed['variants'];
+                $codes = $parsed['codes'];
+                $numbers = $parsed['numbers'];
+
+                $query->where(function ($w) use ($variants, $codes, $numbers, $q) {
+                    foreach ($variants as $var) {
+                        $w->orWhere('name', 'like', "%{$var}%")
+                          ->orWhere('code', 'like', "%{$var}%")
+                          ->orWhere('phone', 'like', "%{$var}%");
+                    }
+                    foreach ($codes as $c) {
+                        $w->orWhere('code', 'like', "%{$c}%");
+                    }
+                    foreach ($numbers as $num) {
+                        $w->orWhere('id', (int)$num)
+                          ->orWhere('phone', 'like', "%{$num}%")
+                          ->orWhere('code', 'like', "%{$num}%");
+                    }
                 });
             })
             ->when($type, fn($query, $t) => $query->where('type', $t))
@@ -181,6 +197,11 @@ final readonly class DonorService
             return $donor;
         };
 
+        $user = request()->user() ?? auth()->user();
+        if ($user && ($user->hasRole('admin') || $user->hasRole('manager'))) {
+            $forceRequest = false;
+        }
+
         return ChangeRequestService::handleRequest(
             Donor::class,
             $donor->id,
@@ -194,6 +215,11 @@ final readonly class DonorService
     public function deleteDonor(Donor $donor): mixed
     {
         $executor = fn() => $this->donorRepository->delete($donor);
+        $user = request()->user() ?? auth()->user();
+        $forceRequest = true;
+        if ($user && ($user->hasRole('admin') || $user->hasRole('manager'))) {
+            $forceRequest = false;
+        }
 
         return ChangeRequestService::handleRequest(
             Donor::class,
@@ -201,18 +227,18 @@ final readonly class DonorService
             'delete',
             ['note' => 'حذف متبرع'],
             $executor,
-            true
+            $forceRequest
         );
     }
 
-    public function getDonorStats(int $donorId): array
+    public function getDonorStats(int $donorId): object
     {
         $stats = Donation::select(DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))
             ->where('donor_id', $donorId)
             ->where('status', '!=', 'cancelled')
             ->first();
 
-        return [
+        return (object) [
             'count' => (int)($stats->count ?? 0),
             'total' => (float)($stats->total ?? 0.0)
         ];
@@ -291,5 +317,60 @@ final readonly class DonorService
     private function nextDonorCode(): string
     {
         return Donor::nextAvailableCode();
+    }
+
+    public function getUpcomingDueDonors(int $daysAhead = 7)
+    {
+        $currentDay = (int) now()->day;
+        $upcomingDays = [];
+        for ($i = 0; $i < $daysAhead; $i++) {
+            $upcomingDays[] = (($currentDay + $i - 1) % 31) + 1;
+        }
+
+        return Donor::where('active', true)
+            ->where(function ($q) {
+                $q->where('classification', 'recurring')
+                  ->orWhereNotNull('monthly_donation_day');
+            })
+            ->whereIn('monthly_donation_day', $upcomingDays)
+            ->orderByRaw("CASE 
+                WHEN monthly_donation_day = {$currentDay} THEN 0 
+                WHEN monthly_donation_day > {$currentDay} THEN monthly_donation_day - {$currentDay} 
+                ELSE (monthly_donation_day + 31) - {$currentDay} 
+            END ASC")
+            ->get()
+            ->map(function ($donor) use ($currentDay) {
+                $day = (int) $donor->monthly_donation_day;
+                if ($day === $currentDay) {
+                    $donor->due_status = 'اليوم !';
+                    $donor->due_badge = 'danger';
+                    $donor->due_color = '#ef4444';
+                    $donor->days_left = 0;
+                } elseif ($day === $currentDay + 1 || ($currentDay === 31 && $day === 1)) {
+                    $donor->due_status = 'غداً';
+                    $donor->due_badge = 'warning';
+                    $donor->due_color = '#f59e0b';
+                    $donor->days_left = 1;
+                } else {
+                    $diff = $day > $currentDay ? ($day - $currentDay) : ($day + 31 - $currentDay);
+                    $donor->due_status = "بعد {$diff} أيام";
+                    $donor->due_badge = 'info';
+                    $donor->due_color = '#3b82f6';
+                    $donor->days_left = $diff;
+                }
+
+                $amountVal = $donor->sponsorship_monthly_amount ?: 2500;
+                $amountText = number_format((float) $amountVal, 0) . ' ج.م';
+                $waMsg = "السلام عليكم ورحمة الله وبركاته، أستاذ/ " . $donor->name . "، تحية طيبة من مؤسسة إنسان الخيرية. نود تذكير سيادتكم بموعد استحقاق التبرع/الكفالة الشهرية وقدرها " . $amountText . ". نسأل الله أن يبارك لكم ويجعلها في ميزان حسناتكم.";
+                $cleanPhone = preg_replace('/[^0-9]/', '', (string) $donor->phone);
+                if (str_starts_with($cleanPhone, '0')) {
+                    $cleanPhone = '20' . substr($cleanPhone, 1);
+                } elseif (!str_starts_with($cleanPhone, '20') && strlen($cleanPhone) === 10) {
+                    $cleanPhone = '20' . $cleanPhone;
+                }
+                $donor->whatsapp_url = $cleanPhone ? ('https://wa.me/' . $cleanPhone . '?text=' . urlencode($waMsg)) : null;
+
+                return $donor;
+            });
     }
 }

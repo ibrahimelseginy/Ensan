@@ -58,19 +58,19 @@ Route::get('/', function () {
 })->middleware('auth');
 
 Route::get('login', [LoginWebController::class , 'show'])->name('login');
-Route::post('login', [LoginWebController::class , 'login'])->name('login.post');
+Route::post('login', [LoginWebController::class , 'login'])->middleware('throttle:auth-strict')->name('login.post');
 Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 
 // تتبع الشكاوي - صفحة عامة بدون تسجيل دخول
 Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->name('complaint.track');
-Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->name('complaint.track.search');
+Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->middleware('throttle:heavy-ops')->name('complaint.track.search');
 
 
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {
 
     // --- Image Upload (AJAX / Fetch from Web Dashboard) ---
-    Route::prefix('upload')->group(function () {
+    Route::prefix('upload')->middleware('throttle:heavy-ops')->group(function () {
         Route::post('image',   [ImageUploadController::class, 'upload'])->name('upload.image');
         Route::post('images',  [ImageUploadController::class, 'uploadMultiple'])->name('upload.images');
         Route::delete('image', [ImageUploadController::class, 'destroy'])->name('upload.image.destroy');
@@ -91,12 +91,14 @@ Route::middleware(['auth'])->group(function () {
 
     // --- Donors & Donations ---
     Route::middleware('permission:donors.view')->group(function () {
+        Route::get('donors/print-report', [DonorWebController::class, 'printReport'])->middleware('throttle:heavy-ops')->name('donors.print-report');
+        Route::post('donors/print-report', [DonorWebController::class, 'printReport'])->middleware('throttle:heavy-ops')->name('donors.print-report.post');
         Route::resource('donors', DonorWebController::class);
         Route::post('donors/bulk-destroy', [DonorWebController::class, 'bulkDestroy'])->name('donors.bulk-destroy');
     });
 
     Route::middleware('permission:donations.view')->group(function () {
-        Route::get('donations/export', [DonationWebController::class, 'export'])->name('donations.export');
+        Route::get('donations/export', [DonationWebController::class, 'export'])->middleware('throttle:heavy-ops')->name('donations.export');
         Route::resource('donations', DonationWebController::class);
         Route::post('donations/bulk-destroy', [DonationWebController::class, 'bulkDestroy'])->name('donations.bulk-destroy');
     });

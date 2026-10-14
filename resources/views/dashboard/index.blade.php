@@ -535,6 +535,66 @@
         border-radius: 10px;
         transition: width 0.6s ease;
     }
+
+    /* Executive KPIs & Monthly Targets Card */
+    .kpi-target-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 255, 0.95) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.15) !important;
+        position: relative;
+    }
+    .theme-dark .kpi-target-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    @media (min-width: 992px) {
+        .border-end-lg {
+            border-right: 1px solid var(--border, rgba(0,0,0,0.08)) !important;
+        }
+    }
+    
+    /* Due Donors Smart Alert List */
+    .due-donor-item {
+        transition: all 0.25s ease;
+        border: 1px solid var(--border, rgba(0,0,0,0.06));
+        border-right: 4px solid #3b82f6 !important;
+        background: var(--bg-card, #ffffff);
+    }
+    .due-donor-item.due-today {
+        border-right-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.02);
+    }
+    .due-donor-item.due-tomorrow {
+        border-right-color: #f59e0b !important;
+        background: rgba(245, 158, 11, 0.02);
+    }
+    .due-donor-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Campaigns Radar */
+    .campaign-radar-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--border, rgba(0,0,0,0.07));
+        background: var(--bg-card, #ffffff);
+        position: relative;
+        overflow: hidden;
+    }
+    .campaign-radar-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+    .campaign-radar-card .campaign-glow {
+        position: absolute;
+        top: -30px;
+        left: -30px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        filter: blur(35px);
+        opacity: 0.15;
+        pointer-events: none;
+    }
 </style>
 @endsection
 
@@ -561,6 +621,55 @@
             </div>
         </div>
         <i class="bi bi-speedometer2 hero-icon d-none d-md-block"></i>
+    </div>
+
+    {{-- Executive KPIs & Monthly Targets (شريط إنجاز الهدف المالي والكفالات ومؤشرات الأداء الحيوية) --}}
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden kpi-target-card animate-slide-up">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 border-bottom pb-3">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary-subtle text-primary rounded-pill p-2 fs-6">
+                <i class="bi bi-bullseye"></i>
+              </span>
+              <h5 class="mb-0 fw-bold">شريط إنجاز المستهدف المالي الشهري</h5>
+            </div>
+            <p class="text-muted small mb-0 mt-1">متابعة حية للهدف المالي والتبرعات المحصلة لشهر {{ now()->translatedFormat('F Y') }}</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fs-7 fw-semibold">
+              <i class="bi bi-clock-history me-1"></i> متبقي {{ $daysLeftInMonth }} يوم على نهاية الشهر
+            </span>
+          </div>
+        </div>
+
+        <div class="row align-items-center">
+          {{-- Financial Target Progress --}}
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-baseline mb-2">
+              <span class="fw-bold fs-6">
+                <i class="bi bi-cash-coin text-success me-1"></i> المستهدف المالي الشهري
+              </span>
+              <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fs-7 fw-bold font-monospace">
+                {{ $monthlyTargetPct }}% مُنجز
+              </span>
+            </div>
+            <div class="d-flex align-items-baseline gap-2 mb-2">
+              <h3 class="fw-black text-dark mb-0 font-monospace">{{ number_format($monthDonationsAchieved, 0) }}</h3>
+              <span class="text-muted fs-7">من إجمالي {{ number_format($monthlyFinancialTarget, 0) }} ج.م</span>
+            </div>
+            <div class="progress mb-2" style="height: 14px; border-radius: 8px; background-color: rgba(16, 185, 129, 0.12);">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                style="width: {{ $monthlyTargetPct }}%; background: linear-gradient(90deg, #10b981 0%, #059669 100%);" 
+                aria-valuenow="{{ $monthlyTargetPct }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between text-muted fs-7">
+              <span><i class="bi bi-check2-circle text-success me-1"></i> تم تحصيل: <strong>{{ number_format($monthDonationsAchieved, 0) }} ج.م</strong></span>
+              <span><i class="bi bi-hourglass-split text-muted me-1"></i> متبقي: <strong>{{ number_format($monthlyTargetRemaining, 0) }} ج.م</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     {{-- Primary Stats Row --}}
@@ -697,58 +806,16 @@
     </div>
 
     <div class="row g-3">
-      <div class="col-md-8">
-        <div class="card border-0 shadow-sm h-100 overflow-visible">
-          <div class="card-header bg-white py-3 border-0 overflow-visible">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-activity me-2 text-primary"></i> آخر سجلات النظام</h5>
+      <div class="col-12">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-bell me-2 text-warning"></i> التنبيهات</h5>
+            @if($isAdmin && Route::has('audits.index'))
+              <a href="{{ route('audits.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                <i class="bi bi-activity me-1"></i> عرض سجلات النظام كاملة
+              </a>
+            @endif
           </div>
-          @if($isAdmin)
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                  <tr>
-                    <th class="py-3 ps-3 text-secondary small text-uppercase">#</th>
-                    <th class="py-3 text-secondary small text-uppercase">التاريخ</th>
-                    <th class="py-3 text-secondary small text-uppercase">المستخدم</th>
-                    <th class="py-3 text-secondary small text-uppercase">الطريقة</th>
-                    <th class="py-3 text-secondary small text-uppercase">المسار</th>
-                    <th class="py-3 text-secondary small text-uppercase">الحالة</th>
-                    <th class="py-3 text-secondary small text-uppercase">IP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach($audits as $a)
-                    <tr>
-                      <td class="ps-3 text-muted">{{ $a->id }}</td>
-                      <td class="text-nowrap">{{ optional($a->created_at)->format('Y-m-d H:i') }}</td>
-                      <td class="fw-bold">{{ optional($audUserMap->get($a->user_id))->name ?? '—' }}</td>
-                      <td>
-                          @php
-                              $methodColors = ['GET' => 'info', 'POST' => 'success', 'PUT' => 'warning', 'DELETE' => 'danger'];
-                              $color = $methodColors[$a->method] ?? 'secondary';
-                          @endphp
-                          <span class="badge bg-{{ $color }}-subtle text-{{ $color }} border border-{{ $color }}-subtle">{{ $a->method }}</span>
-                      </td>
-                      <td class="small text-muted font-monospace">{{ Str::limit($a->path, 25) }}</td>
-                      <td>
-                          <span class="badge {{ $a->status_code >= 400 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }}">
-                              {{ $a->status_code ?? '—' }}
-                          </span>
-                      </td>
-                      <td><span class="small text-muted font-monospace">{{ $a->ip ?? '—' }}</span></td>
-                    </tr>
-                  @endforeach
-                </tbody>
-              </table>
-            </div>
-          @else
-            <div class="text-muted py-3 text-center">لا تُعرض السجلات إلا للمسؤولين</div>
-          @endif
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card p-3 h-100">
-          <h5 class="mb-3 fw-bold">التنبيهات</h5>
           @forelse($notifications as $n)
             <div class="alert alert-{{ $n['type'] }} py-2 mb-2 small shadow-sm border-0">{{ $n['text'] }}</div>
           @empty
@@ -758,74 +825,199 @@
       </div>
     </div>
 
-    {{-- Luxury Widgets 1 & 2: Active Campaigns & Active Projects --}}
-    <div class="row g-4 mb-4 mt-3">
-      <div class="col-lg-6 animate-slide-up animate-delay-1">
-        <div class="lux-dashboard-card h-100">
-          <div class="lux-card-header">
-            <h5 class="lux-card-title">
-              <span class="lux-header-icon text-primary"><i class="bi bi-flag-fill"></i></span>
-              الحملات النشطة
-              <span class="badge-lux badge-lux-info ms-2" style="font-size: 0.82rem; padding: 0.25em 0.65em;">{{ count($activeCampaigns) }}</span>
-            </h5>
-            @if($user->hasPermission('campaigns.view'))
-              <a href="{{ route('campaigns.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7">
+    {{-- Smart Alerts: Due Donors & Campaigns Radar --}}
+    <div class="row g-4 mb-4 mt-2">
+      {{-- 1. Smart Alerts: Upcoming Due Donors This Week (متبرعون حان موعد تبرعهم الشهري) --}}
+      <div class="col-lg-5 animate-slide-up animate-delay-1">
+        <div class="lux-dashboard-card h-100 d-flex flex-column">
+          <div class="lux-card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="lux-card-title mb-0">
+                <span class="lux-header-icon text-warning"><i class="bi bi-bell-fill"></i></span>
+                تنبيهات الاستحقاق الشهري
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle ms-2 rounded-pill fs-8">
+                  {{ $upcomingDueDonors->count() }} هذا الأسبوع
+                </span>
+              </h5>
+              <div class="text-muted small mt-1">متبرعون يحين موعد تبرعهم خلال الـ 7 أيام القادمة للتذكير المباشر</div>
+            </div>
+            @if(Route::has('donors.index'))
+              <a href="{{ route('donors.index') }}?classification=recurring" class="btn btn-sm btn-outline-warning rounded-pill px-3 fs-8">
                 عرض الكل <i class="bi bi-arrow-left ms-1"></i>
               </a>
             @endif
           </div>
-          <div class="table-responsive">
-            <table class="table lux-micro-table align-middle mb-0 text-center">
-              <thead>
-                <tr>
-                  <th class="text-start ps-3">اسم الحملة</th>
-                  <th>التبرعات</th>
-                  <th>المصروفات</th>
-                  <th class="pe-3">الصافي</th>
-                </tr>
-              </thead>
-              <tbody>
-                @forelse($activeCampaigns as $camp)
-                  <tr>
-                    <td class="text-start ps-3 fw-bold">
-                      <a href="{{ route('campaigns.show', $camp) }}" class="d-inline-flex align-items-center gap-2 text-reset">
-                        <span class="d-inline-block rounded-circle bg-primary" style="width: 8px; height: 8px;"></span>
-                        {{ $camp->name }}
-                      </a>
-                    </td>
-                    <td>
-                      <span class="badge-lux badge-lux-success">
-                        <i class="bi bi-arrow-down-left me-1"></i>{{ number_format($camp->total_donations) }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge-lux badge-lux-danger">
-                        <i class="bi bi-arrow-up-right me-1"></i>{{ number_format($camp->total_expenses) }}
-                      </span>
-                    </td>
-                    <td class="pe-3">
-                      <span class="badge-lux {{ $camp->net_balance > 0 ? 'badge-lux-success' : ($camp->net_balance < 0 ? 'badge-lux-danger' : 'badge-lux-neutral') }}">
-                        {{ number_format($camp->net_balance) }}
-                      </span>
-                    </td>
-                  </tr>
-                @empty
-                  <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
-                      <div class="py-3">
-                        <i class="bi bi-inbox text-muted opacity-50 display-6 d-block mb-2"></i>
-                        <span class="fs-7">لا توجد حملات نشطة حالياً</span>
-                      </div>
-                    </td>
-                  </tr>
-                @endforelse
-              </tbody>
-            </table>
+          <div class="p-3 flex-grow-1 overflow-auto" style="max-height: 480px;">
+            @forelse($upcomingDueDonors as $dueDonor)
+              <div class="due-donor-item rounded-3 p-2 mb-2 shadow-2xs {{ $dueDonor->days_left === 0 ? 'due-today' : ($dueDonor->days_left === 1 ? 'due-tomorrow' : '') }}" style="border-right-width: 3.5px !important;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <div class="d-flex align-items-center gap-1">
+                    <a href="{{ route('donors.show', $dueDonor) }}" class="fw-bold text-dark text-decoration-none hover-primary fs-7">
+                      {{ $dueDonor->name }}
+                    </a>
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace rounded-pill fs-8">
+                      {{ $dueDonor->code }}
+                    </span>
+                  </div>
+                  <span class="badge bg-{{ $dueDonor->due_badge }}-subtle text-{{ $dueDonor->due_badge }} border border-{{ $dueDonor->due_badge }}-subtle rounded-pill px-2 py-0.5 fs-8 fw-bold font-monospace">
+                    <i class="bi bi-clock-history me-1"></i>{{ $dueDonor->due_status }}
+                  </span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center small text-muted mb-2 pt-1 border-top border-light-subtle" style="font-size: 0.78rem;">
+                  <span>
+                    <i class="bi bi-cash-stack text-success me-1"></i> تبرع: 
+                    <strong class="text-dark font-monospace">{{ $dueDonor->sponsorship_monthly_amount ? number_format((float) $dueDonor->sponsorship_monthly_amount, 0) . ' ج.م' : 'مبلغ حر' }}</strong>
+                  </span>
+                  <span>
+                    <i class="bi bi-calendar3 text-primary me-1"></i> استحقاق: 
+                    <strong class="text-dark font-monospace">{{ $dueDonor->monthly_donation_day }}</strong> من الشهر
+                  </span>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-1 pt-1 border-top border-light-subtle">
+                  @if($dueDonor->whatsapp_url)
+                    <a href="{{ $dueDonor->whatsapp_url }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-2.5 py-0.5 fs-8 fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="إرسال رسالة تذكير مجهزة عبر واتساب">
+                      <i class="bi bi-whatsapp"></i> تذكير واتساب
+                    </a>
+                  @endif
+                  @if($dueDonor->phone)
+                    <a href="tel:{{ $dueDonor->phone }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0.5 fs-8 font-monospace d-inline-flex align-items-center gap-1" title="اتصال هاتفي سريع">
+                      <i class="bi bi-telephone-fill" style="font-size: 0.7rem;"></i> {{ $dueDonor->phone }}
+                    </a>
+                  @endif
+                  <a href="{{ route('donations.create', ['donor_id' => $dueDonor->id, 'amount' => $dueDonor->sponsorship_monthly_amount]) }}" class="btn btn-sm btn-primary rounded-pill px-2.5 py-0.5 fs-8 fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs ms-auto" title="تسجيل تبرع مباشر باسم هذا المتبرع">
+                    <i class="bi bi-plus-circle"></i> تسجيل التبرع
+                  </a>
+                </div>
+              </div>
+            @empty
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2 opacity-75"></i>
+                <div class="fw-bold fs-6">لا يوجد متبرعون مستحقون حالياً</div>
+                <small>تم تحصيل أو لا توجد مواعيد استحقاق خلال الأيام القادمة.</small>
+              </div>
+            @endforelse
           </div>
         </div>
       </div>
 
-      <div class="col-lg-6 animate-slide-up animate-delay-2">
+      {{-- 2. Campaigns Radar (رادار الحملات الموسمية النشطة) --}}
+      <div class="col-lg-7 animate-slide-up animate-delay-2">
+        <div class="lux-dashboard-card h-100 d-flex flex-column">
+          <div class="lux-card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="lux-card-title mb-0">
+                <span class="lux-header-icon text-info"><i class="bi bi-radar"></i></span>
+                رادار الحملات الموسمية النشطة
+                <span class="badge bg-info-subtle text-info border border-info-subtle ms-2 rounded-pill fs-8">
+                  {{ count($activeCampaigns) }} حملات جارية
+                </span>
+              </h5>
+              <div class="text-muted small mt-1">متابعة نسب إنجاز الأهداف المالية والأسر المستهدفة في الحملات النشطة</div>
+            </div>
+            @if(Route::has('campaigns.index'))
+              <a href="{{ route('campaigns.index') }}" class="btn btn-sm btn-outline-info rounded-pill px-3 fs-8">
+                كافة الحملات <i class="bi bi-arrow-left ms-1"></i>
+              </a>
+            @endif
+          </div>
+          <div class="p-3 flex-grow-1 overflow-auto" style="max-height: 480px;">
+            <div class="row g-3">
+              @forelse($activeCampaigns as $camp)
+                <div class="col-12">
+                  <div class="campaign-radar-card rounded-3 p-3 shadow-2xs border">
+                    <div class="campaign-glow" style="background-color: {{ $camp->ui_theme_color ?: '#0284c7' }};"></div>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge p-2 rounded-circle" style="background-color: {{ $camp->ui_theme_color ?: '#0284c7' }}22; color: {{ $camp->ui_theme_color ?: '#0284c7' }};">
+                          <i class="bi bi-flag-fill fs-6"></i>
+                        </span>
+                        <div>
+                          <a href="{{ route('campaigns.show', $camp) }}" class="fw-bold text-dark text-decoration-none hover-primary fs-6">
+                            {{ $camp->name }}
+                          </a>
+                          @if($camp->season_title)
+                            <div class="text-muted fs-8">{{ $camp->season_title }}</div>
+                          @endif
+                        </div>
+                      </div>
+                      <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 font-monospace fs-8 fw-bold">
+                        {{ $camp->calc_progress_pct }}% إنجاز
+                      </span>
+                    </div>
+
+                    {{-- Financial Goal Progress --}}
+                    <div class="mb-3 pt-2">
+                      <div class="d-flex justify-content-between text-muted fs-8 mb-1">
+                        <span>
+                          <i class="bi bi-cash-coin text-success me-1"></i> تم جمع: 
+                          <strong class="text-dark font-monospace">{{ number_format($camp->total_donations, 0) }} ج.م</strong>
+                        </span>
+                        <span>
+                          المستهدف: 
+                          <strong class="text-dark font-monospace">{{ number_format($camp->target_goal, 0) }} ج.م</strong>
+                        </span>
+                      </div>
+                      <div class="progress" style="height: 10px; border-radius: 6px; background-color: rgba(2, 132, 199, 0.1);">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                          style="width: {{ $camp->calc_progress_pct }}%; background: linear-gradient(90deg, #0284c7 0%, #06b6d4 100%);"
+                          aria-valuenow="{{ $camp->calc_progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </div>
+
+                    {{-- Beneficiaries Reach Progress --}}
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between text-muted fs-8 mb-1">
+                        <span>
+                          <i class="bi bi-people-fill text-primary me-1"></i> تم الوصول لـ: 
+                          <strong class="text-dark font-monospace">{{ number_format($camp->reached_beneficiaries) }} أسرة</strong>
+                        </span>
+                        <span>
+                          المستهدف: 
+                          <strong class="text-dark font-monospace">{{ number_format($camp->target_beneficiaries) }} أسرة</strong> 
+                          ({{ $camp->beneficiaries_pct }}%)
+                        </span>
+                      </div>
+                      <div class="progress" style="height: 8px; border-radius: 6px; background-color: rgba(16, 185, 129, 0.1);">
+                        <div class="progress-bar" role="progressbar"
+                          style="width: {{ $camp->beneficiaries_pct }}%; background: linear-gradient(90deg, #10b981 0%, #34d399 100%);"
+                          aria-valuenow="{{ $camp->beneficiaries_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </div>
+
+                    {{-- Card Actions --}}
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light-subtle">
+                      <span class="text-muted fs-8">
+                        <i class="bi bi-hourglass-split me-1"></i> متبقي: <strong class="text-danger font-monospace">{{ number_format($camp->remaining_amount, 0) }} ج.م</strong>
+                      </span>
+                      <div class="d-flex gap-2">
+                        <a href="{{ route('campaigns.show', $camp) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fs-8">
+                          <i class="bi bi-eye me-1"></i> التفاصيل
+                        </a>
+                        <a href="{{ route('donations.create', ['campaign_id' => $camp->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3 fs-8">
+                          <i class="bi bi-heart-fill me-1"></i> تبرع للحملة
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @empty
+                <div class="col-12 text-center py-5 text-muted">
+                  <i class="bi bi-flag text-muted fs-1 d-block mb-2 opacity-50"></i>
+                  <div class="fw-bold">لا توجد حملات نشطة حالياً</div>
+                  <small>يمكنك تفعيل حملة من شاشة إدارة الحملات لتظهر هنا في الرادار.</small>
+                </div>
+              @endforelse
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Active Projects Financials Widget --}}
+    <div class="row g-4 mb-4">
+      <div class="col-12 animate-slide-up">
         <div class="lux-dashboard-card h-100">
           <div class="lux-card-header">
             <h5 class="lux-card-title">
@@ -4437,48 +4629,16 @@
     </div>
 
     <div class="row g-3">
-      <div class="col-md-8">
+      <div class="col-12">
         <div class="card p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold">آخر سجلات النظام</h5>
+            <h5 class="mb-0 fw-bold">التنبيهات</h5>
+            @if($isAdmin && Route::has('audits.index'))
+              <a href="{{ route('audits.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                <i class="bi bi-activity me-1"></i> عرض سجلات النظام كاملة
+              </a>
+            @endif
           </div>
-          @if($isAdmin)
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="bg-transparent">
-                  <tr>
-                    <th>#</th>
-                    <th>التاريخ</th>
-                    <th>المستخدم</th>
-                    <th>الطريقة</th>
-                    <th>المسار</th>
-                    <th>الحالة</th>
-                    <th>IP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach($audits as $a)
-                    <tr>
-                      <td>{{ $a->id }}</td>
-                      <td>{{ optional($a->created_at)->format('Y-m-d H:i') }}</td>
-                      <td>{{ optional($audUserMap->get($a->user_id))->name ?? '—' }}</td>
-                      <td><span class="badge bg-secondary-subtle text-body border">{{ $a->method }}</span></td>
-                      <td class="small text-muted">{{ Str::limit($a->path, 20) }}</td>
-                      <td>{{ $a->status_code ?? '—' }}</td>
-                      <td><span class="small text-muted">{{ $a->ip ?? '—' }}</span></td>
-                    </tr>
-                  @endforeach
-                </tbody>
-              </table>
-            </div>
-          @else
-            <div class="text-muted py-3 text-center">لا تُعرض السجلات إلا للمسؤولين</div>
-          @endif
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card p-3 h-100">
-          <h5 class="mb-3 fw-bold">التنبيهات</h5>
           @forelse($notifications as $n)
             <div class="alert alert-{{ $n['type'] }} py-2 mb-2 small shadow-sm border-0">{{ $n['text'] }}</div>
           @empty

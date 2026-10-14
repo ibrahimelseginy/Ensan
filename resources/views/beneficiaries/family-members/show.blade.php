@@ -11,6 +11,7 @@
       </div>
     </div>
     <div class="d-flex gap-2 no-print">
+      <button type="button" onclick="EnsanPrintPreview.open(null, {title: 'ملف الفرد المكفول — {{ $familyMember->full_name }}'})" class="btn btn-outline-info"><i class="bi bi-eye me-1"></i> معاينة قبل الطباعة</button>
       <button type="button" onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer me-1"></i> طباعة الملف</button>
       <a href="{{ route('beneficiaries.show', $familyMember->beneficiary) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i> ملف ولي الأمر</a>
     </div>

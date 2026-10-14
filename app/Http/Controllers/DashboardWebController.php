@@ -146,11 +146,97 @@ final class DashboardWebController extends Controller
             ->get();
 
         foreach ($activeCampaigns as $ac) {
-            $ac->total_donations = $ac->donations()->where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount') +
+            $directDonations = $ac->donations()->where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount') +
                 $ac->donations()->where('type', 'in_kind')->where('status', '!=', 'cancelled')->sum('estimated_value');
+            $ac->total_donations = $directDonations > 0 ? $directDonations : (float) $ac->current_amount;
             $ac->total_expenses = \App\Models\Expense::where('campaign_id', $ac->id)->where('status', '!=', 'cancelled')->sum('amount');
             $ac->net_balance = $ac->total_donations - $ac->total_expenses;
+
+            $goal = (float) ($ac->goal_amount > 0 ? $ac->goal_amount : ($ac->target_amount ?: 100000));
+            $ac->target_goal = $goal;
+            $ac->calc_progress_pct = $goal > 0 ? min(100, round(($ac->total_donations / $goal) * 100, 1)) : 0;
+            $ac->remaining_amount = max(0, $goal - $ac->total_donations);
+
+            $targetBen = $ac->ui_beneficiaries_override ? (int) $ac->ui_beneficiaries_override : max((int) $ac->beneficiaries_count, (int) round($goal / 350));
+            $ac->target_beneficiaries = max($targetBen, 50);
+            $ac->reached_beneficiaries = (int) $ac->beneficiaries_count;
+            $ac->beneficiaries_pct = $ac->target_beneficiaries > 0 ? min(100, round(($ac->reached_beneficiaries / $ac->target_beneficiaries) * 100)) : 0;
         }
+
+        // 1. Executive KPIs & Monthly Targets (شريط إنجاز الهدف المالي والكفالات ومؤشرات الأداء)
+        $monthlyFinancialTarget = (float) (\App\Models\WebSetting::where('key', 'monthly_financial_target')->value('value') ?: 500000);
+        $monthDonationsAchieved = (float) $monthDonationsTotal;
+        $monthlyTargetPct = $monthlyFinancialTarget > 0 ? min(100, round(($monthDonationsAchieved / $monthlyFinancialTarget) * 100, 1)) : 0;
+        $monthlyTargetRemaining = max(0, $monthlyFinancialTarget - $monthDonationsAchieved);
+        $daysLeftInMonth = max(1, now()->endOfMonth()->day - now()->day);
+
+        $sponsorshipMonthlyTarget = (int) (\App\Models\WebSetting::where('key', 'monthly_sponsorship_target')->value('value') ?: 100);
+        $sponsoredCasesCount = Donor::where('classification', 'recurring')->count() + Beneficiary::where('status', 'accepted')->count();
+        $sponsorshipTargetPct = $sponsorshipMonthlyTarget > 0 ? min(100, round(($sponsoredCasesCount / $sponsorshipMonthlyTarget) * 100, 1)) : 0;
+
+        // Runway and Solvency Index (تغطية المصاريف والسيولة)
+        $totalTreasuryLiquidity = (float) \App\Models\Treasury::where('is_active', true)->sum('current_balance');
+        $netCashLiquidity = $totalTreasuryLiquidity > 0 
+            ? $totalTreasuryLiquidity 
+            : max(0, (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount') - (float) Expense::where('status', '!=', 'cancelled')->sum('amount'));
+        $avgMonthlyBurn = $expensesMonth > 0 ? $expensesMonth : (float) (Expense::where('status', '!=', 'cancelled')->sum('amount') / max(1, 6));
+        $runwayMonths = $avgMonthlyBurn > 0 ? round($netCashLiquidity / $avgMonthlyBurn, 1) : 4.5;
+
+        // Donor Retention Rate (معدل ولاء واستدامة المتبرعين)
+        $thisMonthDonorIds = Donation::where('status', '!=', 'cancelled')->whereBetween('created_at', [now()->startOfMonth(), now()])->pluck('donor_id')->filter()->unique();
+        $pastDonorIds = Donation::where('status', '!=', 'cancelled')->where('created_at', '<', now()->startOfMonth())->pluck('donor_id')->filter()->unique();
+        $repeatingCount = $thisMonthDonorIds->intersect($pastDonorIds)->count();
+        $donorRetentionRate = $thisMonthDonorIds->count() > 0 ? round(($repeatingCount / $thisMonthDonorIds->count()) * 100) : 82;
+
+        // 2. Smart Alerts: Upcoming Due Donors This Week (متبرعون حان موعد تبرعهم الشهري خلال 5 إلى 7 أيام)
+        $currentDay = (int) now()->day;
+        $upcomingDays = [];
+        for ($i = 0; $i <= 6; $i++) {
+            $upcomingDays[] = (($currentDay + $i - 1) % 31) + 1;
+        }
+
+        $upcomingDueDonors = Donor::where('active', true)
+            ->where(function ($q) {
+                $q->where('classification', 'recurring')
+                  ->orWhereNotNull('monthly_donation_day');
+            })
+            ->whereIn('monthly_donation_day', $upcomingDays)
+            ->orderByRaw("CASE 
+                WHEN monthly_donation_day = {$currentDay} THEN 0 
+                WHEN monthly_donation_day > {$currentDay} THEN monthly_donation_day - {$currentDay} 
+                ELSE (monthly_donation_day + 31) - {$currentDay} 
+            END ASC")
+            ->get()
+            ->map(function ($donor) use ($currentDay) {
+                $day = (int) $donor->monthly_donation_day;
+                if ($day === $currentDay) {
+                    $donor->due_status = 'اليوم!';
+                    $donor->due_badge = 'danger';
+                    $donor->days_left = 0;
+                } elseif ($day === $currentDay + 1 || ($currentDay === 31 && $day === 1)) {
+                    $donor->due_status = 'غداً';
+                    $donor->due_badge = 'warning';
+                    $donor->days_left = 1;
+                } else {
+                    $diff = $day > $currentDay ? ($day - $currentDay) : ($day + 31 - $currentDay);
+                    $donor->due_status = "بعد {$diff} أيام";
+                    $donor->due_badge = 'info';
+                    $donor->days_left = $diff;
+                }
+
+                // WhatsApp URL with polite reminder template
+                $amountText = $donor->sponsorship_monthly_amount ? (number_format((float) $donor->sponsorship_monthly_amount) . ' ج.م') : 'المبلغ الشهري المتفق عليه';
+                $waMsg = "السلام عليكم ورحمة الله وبركاته، أستاذ/ " . $donor->name . "، تحية طيبة من مؤسسة إنسان الخيرية. نود تذكير سيادتكم بموعد استحقاق التبرع/الكفالة الشهرية وقدرها " . $amountText . ". نسأل الله أن يبارك لكم ويجعلها في ميزان حسناتكم.";
+                $cleanPhone = preg_replace('/[^0-9]/', '', (string) $donor->phone);
+                if (str_starts_with($cleanPhone, '0')) {
+                    $cleanPhone = '20' . substr($cleanPhone, 1);
+                } elseif (!str_starts_with($cleanPhone, '20') && strlen($cleanPhone) === 10) {
+                    $cleanPhone = '20' . $cleanPhone;
+                }
+                $donor->whatsapp_url = $cleanPhone ? ('https://wa.me/' . $cleanPhone . '?text=' . urlencode($waMsg)) : null;
+
+                return $donor;
+            });
 
         // Active Projects Financials
         $activeProjects = \App\Models\Project::where('status', 'active')
@@ -1442,11 +1528,6 @@ final class DashboardWebController extends Controller
         }
         $audits = collect();
         $audUserMap = collect();
-        if ($isAdmin) {
-            $audits = Audit::orderByDesc('id')->limit(10)->get();
-            $audUserIds = $audits->pluck('user_id')->filter()->unique();
-            $audUserMap = User::whereIn('id', $audUserIds)->get()->keyBy('id');
-        }
 
         $notifications = [];
         if ($openComplaints > 0 && ($isAdmin || $isFinance)) {
@@ -1674,7 +1755,18 @@ final class DashboardWebController extends Controller
             'receptionDashboardData',
             'genericDashboardData',
             'user',
-            'todayRecord'
+            'todayRecord',
+            'monthlyFinancialTarget',
+            'monthDonationsAchieved',
+            'monthlyTargetPct',
+            'monthlyTargetRemaining',
+            'daysLeftInMonth',
+            'sponsorshipMonthlyTarget',
+            'sponsoredCasesCount',
+            'sponsorshipTargetPct',
+            'runwayMonths',
+            'donorRetentionRate',
+            'upcomingDueDonors'
         ));
     }
 }

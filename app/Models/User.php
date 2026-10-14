@@ -50,7 +50,7 @@ class User extends Authenticatable
     }
 
     protected $appends = ['image_url'];
-    protected $hidden = ['password'];
+    protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
         'is_employee' => 'boolean',
