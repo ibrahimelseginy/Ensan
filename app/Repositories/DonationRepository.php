@@ -28,7 +28,17 @@ final readonly class DonationRepository
             ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
             ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
             ->when($guestHouseId, fn($qr) => $qr->where('guest_house_id', $guestHouseId))
-            ->when($channel, fn($qr) => $qr->where('cash_channel', $channel))
+            ->when($channel, function($qr) use ($channel) {
+                if ($channel === 'cash') {
+                    $qr->where(function($sub) {
+                        $sub->where('cash_channel', 'cash')
+                            ->orWhereNull('cash_channel')
+                            ->orWhere('cash_channel', '');
+                    });
+                } else {
+                    $qr->where('cash_channel', $channel);
+                }
+            })
             ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
             ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
             ->when($q !== '', function ($qr) use ($q) {

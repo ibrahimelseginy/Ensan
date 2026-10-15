@@ -20,10 +20,17 @@ class TokenAuth
             \Log::error('Mobile API: Invalid token', ['token' => substr($bearer, 0, 10) . '...', 'url' => $request->fullUrl()]);
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+
+        // Check if token has expired
+        if ($token->expires_at && $token->expires_at->isPast()) {
+            \Log::warning('Mobile API: Expired token used', ['user_id' => $token->user_id]);
+            return response()->json(['message' => 'Token has expired. Please log in again.'], 401);
+        }
+
         $user = User::find($token->user_id);
-        if (!$user) {
-            \Log::error('Mobile API: User not found for token', ['user_id' => $token->user_id]);
-            return response()->json(['message' => 'Unauthorized'], 401);
+        if (!$user || !$user->active) {
+            \Log::error('Mobile API: User inactive or not found for token', ['user_id' => $token->user_id]);
+            return response()->json(['message' => 'Account is inactive or not found'], 401);
         }
         // Use merge as it's more standard and accessible across controllers
         $request->merge(['auth_user' => $user]);

@@ -143,6 +143,14 @@
             padding: 10px;
         }
 
+        .badge,
+        .badge * {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
         .report-signatures {
             border-top: 1.5px dashed #cbd5e1;
             padding-top: 24px;
@@ -275,7 +283,7 @@
                         <td style="font-family: monospace; font-weight: 800; color: #047857;">{{ $donor->code ?? ('DON-'.$donor->id) }}</td>
                         <td style="text-align: right; font-weight: 700; color: #0f172a;">{{ $donor->name }}</td>
                         <td>
-                            <span class="badge {{ $donor->type === 'individual' ? 'bg-info bg-opacity-25 text-dark border border-info' : 'bg-primary bg-opacity-25 text-primary border border-primary' }}">
+                            <span class="badge text-white shadow-sm" style="background-color: {{ $donor->type === 'individual' ? '#2563eb' : '#0891b2' }} !important; color: #ffffff !important; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
                                 {{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}
                             </span>
                         </td>
@@ -284,7 +292,7 @@
                         <td style="font-weight: 800; color: #0f172a;">{{ $st ? number_format($st->total, 0) : '0' }} ج.م</td>
                         <td style="font-weight: 700;">{{ $st ? $st->count : 0 }}</td>
                         <td>
-                            <span class="badge {{ $donor->active ? 'bg-success bg-opacity-25 text-success border border-success' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary' }}">
+                            <span class="badge text-white shadow-sm" style="background-color: {{ $donor->active ? '#059669' : '#64748b' }} !important; color: #ffffff !important; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
                                 {{ $donor->active ? 'نشط' : 'غير نشط' }}
                             </span>
                         </td>

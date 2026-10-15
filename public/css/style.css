@@ -330,12 +330,12 @@ input[type="number"] {
 
 /* Content Wrapper */
 .content-wrapper {
-  margin-right: var(--sidebar-width);
-  margin-left: 0;
-  width: calc(100% - var(--sidebar-width));
-  max-width: calc(100% - var(--sidebar-width));
-  padding: 1rem 2.5rem 2.5rem;
-  /* Reduced top padding to eliminate gap */
+  margin-right: var(--sidebar-width) !important;
+  margin-left: 0 !important;
+  width: calc(100% - var(--sidebar-width)) !important;
+  max-width: calc(100% - var(--sidebar-width)) !important;
+  padding: 1.25rem 2rem 2.5rem;
+  box-sizing: border-box !important;
   min-height: calc(100vh - var(--nav-height));
   transition:
     margin-right 0.3s ease,
@@ -349,9 +349,10 @@ body.sidebar-collapsed .sidebar-fixed {
 }
 
 body.sidebar-collapsed .content-wrapper {
-  margin-right: 0;
-  width: 100%;
-  max-width: 100%;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 @media (max-width: 991.98px) {
@@ -5962,53 +5963,125 @@ body.theme-dark #printableDonorSheet h2,
 body.theme-dark #printableDonorSheet h3,
 body.theme-dark #printableDonorSheet h4,
 body.theme-dark #printableDonorSheet h5,
-body.theme-dark #printableDonorSheet h6 {
+body.theme-dark #printableDonorSheet h6,
+html.theme-dark .a4-paper-sheet strong,
+html.theme-dark .a4-paper-sheet b,
+html.theme-dark .a4-paper-sheet .fw-bold,
+html.theme-dark .a4-paper-sheet .text-dark,
+html.theme-dark .a4-paper-sheet h1,
+html.theme-dark .a4-paper-sheet h2,
+html.theme-dark .a4-paper-sheet h3,
+html.theme-dark .a4-paper-sheet h4,
+html.theme-dark .a4-paper-sheet h5,
+html.theme-dark .a4-paper-sheet h6,
+body.theme-dark .a4-paper-sheet strong,
+body.theme-dark .a4-paper-sheet b,
+body.theme-dark .a4-paper-sheet .fw-bold,
+body.theme-dark .a4-paper-sheet .text-dark,
+body.theme-dark .a4-paper-sheet h1,
+body.theme-dark .a4-paper-sheet h2,
+body.theme-dark .a4-paper-sheet h3,
+body.theme-dark .a4-paper-sheet h4,
+body.theme-dark .a4-paper-sheet h5,
+body.theme-dark .a4-paper-sheet h6,
+html.theme-dark #universalPrintPaper strong,
+html.theme-dark #universalPrintPaper b,
+html.theme-dark #universalPrintPaper .fw-bold,
+html.theme-dark #universalPrintPaper .text-dark,
+html.theme-dark #universalPrintPaper h1,
+html.theme-dark #universalPrintPaper h2,
+html.theme-dark #universalPrintPaper h3,
+html.theme-dark #universalPrintPaper h4,
+html.theme-dark #universalPrintPaper h5,
+html.theme-dark #universalPrintPaper h6,
+body.theme-dark #universalPrintPaper strong,
+body.theme-dark #universalPrintPaper b,
+body.theme-dark #universalPrintPaper .fw-bold,
+body.theme-dark #universalPrintPaper .text-dark,
+body.theme-dark #universalPrintPaper h1,
+body.theme-dark #universalPrintPaper h2,
+body.theme-dark #universalPrintPaper h3,
+body.theme-dark #universalPrintPaper h4,
+body.theme-dark #universalPrintPaper h5,
+body.theme-dark #universalPrintPaper h6 {
   color: #0f172a !important;
 }
 
 html.theme-dark #printableDonorSheet .text-muted,
-body.theme-dark #printableDonorSheet .text-muted {
+body.theme-dark #printableDonorSheet .text-muted,
+html.theme-dark .a4-paper-sheet .text-muted,
+body.theme-dark .a4-paper-sheet .text-muted,
+html.theme-dark #universalPrintPaper .text-muted,
+body.theme-dark #universalPrintPaper .text-muted {
   color: #334155 !important;
 }
 
 html.theme-dark #printableDonorSheet .text-success,
-body.theme-dark #printableDonorSheet .text-success {
+body.theme-dark #printableDonorSheet .text-success,
+html.theme-dark .a4-paper-sheet .text-success,
+body.theme-dark .a4-paper-sheet .text-success,
+html.theme-dark #universalPrintPaper .text-success,
+body.theme-dark #universalPrintPaper .text-success {
   color: #047857 !important;
 }
 
 html.theme-dark #printableDonorSheet .text-primary,
-body.theme-dark #printableDonorSheet .text-primary {
+body.theme-dark #printableDonorSheet .text-primary,
+html.theme-dark .a4-paper-sheet .text-primary,
+body.theme-dark .a4-paper-sheet .text-primary,
+html.theme-dark #universalPrintPaper .text-primary,
+body.theme-dark #universalPrintPaper .text-primary {
   color: #1d4ed8 !important;
 }
 
 html.theme-dark #printableDonorSheet .text-warning,
-body.theme-dark #printableDonorSheet .text-warning {
+body.theme-dark #printableDonorSheet .text-warning,
+html.theme-dark .a4-paper-sheet .text-warning,
+body.theme-dark .a4-paper-sheet .text-warning,
+html.theme-dark #universalPrintPaper .text-warning,
+body.theme-dark #universalPrintPaper .text-warning {
   color: #b45309 !important;
 }
 
 html.theme-dark #printableDonorSheet table,
-body.theme-dark #printableDonorSheet table {
+body.theme-dark #printableDonorSheet table,
+html.theme-dark .a4-paper-sheet table,
+body.theme-dark .a4-paper-sheet table,
+html.theme-dark #universalPrintPaper table,
+body.theme-dark #universalPrintPaper table {
   color: #0f172a !important;
   background-color: #ffffff !important;
 }
 
 html.theme-dark #printableDonorSheet table thead th,
-body.theme-dark #printableDonorSheet table thead th {
-  background-color: #e2e8f0 !important;
-  color: #0f172a !important;
-  border: 1px solid #94a3b8 !important;
+body.theme-dark #printableDonorSheet table thead th,
+html.theme-dark .a4-paper-sheet table thead th,
+body.theme-dark .a4-paper-sheet table thead th,
+html.theme-dark #universalPrintPaper table thead th,
+body.theme-dark #universalPrintPaper table thead th {
+  background-color: #047857 !important;
+  color: #ffffff !important;
+  border: 1px solid #065f46 !important;
   font-weight: 800 !important;
 }
 
 html.theme-dark #printableDonorSheet table tbody td,
-body.theme-dark #printableDonorSheet table tbody td {
+body.theme-dark #printableDonorSheet table tbody td,
+html.theme-dark .a4-paper-sheet table tbody td,
+body.theme-dark .a4-paper-sheet table tbody td,
+html.theme-dark #universalPrintPaper table tbody td,
+body.theme-dark #universalPrintPaper table tbody td {
   color: #0f172a !important;
   border: 1px solid #cbd5e1 !important;
   background-color: transparent !important;
 }
 
 html.theme-dark #printableDonorSheet table tbody tr:nth-child(even),
-body.theme-dark #printableDonorSheet table tbody tr:nth-child(even) {
+body.theme-dark #printableDonorSheet table tbody tr:nth-child(even),
+html.theme-dark .a4-paper-sheet table tbody tr:nth-child(even),
+body.theme-dark .a4-paper-sheet table tbody tr:nth-child(even),
+html.theme-dark #universalPrintPaper table tbody tr:nth-child(even),
+body.theme-dark #universalPrintPaper table tbody tr:nth-child(even) {
   background-color: #f8fafc !important;
 }
 

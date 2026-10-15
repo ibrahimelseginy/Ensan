@@ -93,11 +93,15 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:donors.view')->group(function () {
         Route::get('donors/print-report', [DonorWebController::class, 'printReport'])->middleware('throttle:heavy-ops')->name('donors.print-report');
         Route::post('donors/print-report', [DonorWebController::class, 'printReport'])->middleware('throttle:heavy-ops')->name('donors.print-report.post');
+        Route::get('donors/export/pdf', [DonorWebController::class, 'exportPdf'])->middleware('throttle:heavy-ops')->name('donors.export-pdf');
+        Route::post('donors/export/pdf', [DonorWebController::class, 'exportPdf'])->middleware('throttle:heavy-ops')->name('donors.export-pdf.post');
         Route::resource('donors', DonorWebController::class);
         Route::post('donors/bulk-destroy', [DonorWebController::class, 'bulkDestroy'])->name('donors.bulk-destroy');
     });
 
     Route::middleware('permission:donations.view')->group(function () {
+        Route::get('donations/cash', [DonationWebController::class, 'cashIndex'])->name('donations.cash');
+        Route::get('donations/in-kind', [DonationWebController::class, 'inKindIndex'])->name('donations.in-kind');
         Route::get('donations/export', [DonationWebController::class, 'export'])->middleware('throttle:heavy-ops')->name('donations.export');
         Route::resource('donations', DonationWebController::class);
         Route::post('donations/bulk-destroy', [DonationWebController::class, 'bulkDestroy'])->name('donations.bulk-destroy');

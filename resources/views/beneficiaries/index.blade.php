@@ -130,6 +130,45 @@
   .theme-dark .beneficiary-action-menu .dropdown-item.text-danger {
     color: #fb7185 !important;
   }
+
+  @media print {
+    body > *,
+    .navbar,
+    .sidebar-fixed,
+    .dashboard-hero,
+    .filter-card,
+    .table-responsive,
+    .pagination,
+    footer,
+    #universalPrintPreviewModal {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    #printableBeneficiariesRoster {
+      display: block !important;
+      visibility: visible !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    #printableBeneficiariesRoster * {
+      visibility: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    #printableBeneficiariesRoster .official-voucher-card {
+      border: 2px solid #059669 !important;
+      box-shadow: none !important;
+      max-width: 100% !important;
+      padding: 15px !important;
+    }
+  }
 </style>
 @endsection
 @section('content')
@@ -302,8 +341,7 @@
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
                 <a class="btn btn-outline-success" data-no-loader href="{{ route('beneficiaries.export', request()->query()) }}" title="تصدير Excel"><i class="bi bi-file-earmark-excel me-1"></i> إكسل</a>
-                <a class="btn btn-outline-danger" data-no-loader href="{{ route('beneficiaries.export-pdf', request()->query()) }}" title="تحميل PDF"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
-                <button class="btn btn-outline-info" type="button" onclick="EnsanPrintPreview.open('#tableContainer', {title: 'كشف المستفيدين والحالات', orientation: 'landscape'})" title="معاينة قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة</button>
+                <button class="btn btn-outline-info" type="button" onclick="openBeneficiariesPrintPreview()" title="معاينة الكشف الرسمي قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة الكشف</button>
             </div>
         </div>
     </form>
@@ -478,6 +516,7 @@
     <div class="d-flex gap-2 align-items-center mt-2">
       <select id="bulkActionSelect" class="form-select" style="width:auto">
         <option value="">إجراء جماعي...</option>
+        <option value="print">طباعة كشف الحالات المحددة</option>
         <option value="status_under_review">نقل إلى تحت المراجعة</option>
         <option value="status_accepted">نقل إلى مقبول</option>
         <option value="delete" class="text-danger">حذف المحدد</option>
@@ -495,6 +534,34 @@
   </form>
 
   <script>
+    function openBeneficiariesPrintPreview(forceSelected = false) {
+      const checkedBoxes = Array.from(document.querySelectorAll('.row-check:checked'));
+      const rosterRows = document.querySelectorAll('#printableBeneficiariesRoster .roster-row');
+
+      if (checkedBoxes.length > 0 || forceSelected) {
+        if (checkedBoxes.length === 0) {
+          alert('يرجى تحديد مستفيد واحد على الأقل للطباعة');
+          return;
+        }
+        const checkedIds = new Set(checkedBoxes.map(cb => String(cb.value)));
+        rosterRows.forEach(row => {
+          const id = row.getAttribute('data-id');
+          row.style.display = checkedIds.has(id) ? '' : 'none';
+        });
+      } else {
+        rosterRows.forEach(row => row.style.display = '');
+      }
+
+      if (window.EnsanPrintPreview) {
+        window.EnsanPrintPreview.open('#printableBeneficiariesRoster', {
+          title: 'كشف المستفيدين والحالات — معتمد ورسمي',
+          orientation: 'landscape'
+        });
+      } else {
+        window.print();
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       document.querySelectorAll('.beneficiary-actions').forEach(function (dropdown) {
         const table = dropdown.closest('.beneficiaries-table');
@@ -531,6 +598,11 @@
 
       if (selectedIds.length === 0) {
         alert('يرجى اختيار مستفيد واحد على الأقل');
+        return;
+      }
+
+      if (action === 'print') {
+        openBeneficiariesPrintPreview(true);
         return;
       }
 
@@ -583,6 +655,9 @@
       </div>
     </div>
   </div>
+
+  {{-- Official Printable Beneficiaries Roster (Used for Print Preview & Print) --}}
+  @include('beneficiaries.partials.printable_roster')
 @endsection
 
 {{-- Cancel/Delete Modal --}}

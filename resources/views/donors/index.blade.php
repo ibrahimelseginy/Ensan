@@ -9,11 +9,12 @@
         background: #1e293b !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 12px !important;
-        display: flex !important;
-        align-items: center !important;
+        display: block !important;
         position: relative !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
         transition: all 0.2s ease !important;
+        padding: 0 !important;
+        overflow: hidden !important;
     }
 
     [data-bs-theme="light"] .select2-container--bootstrap-5 .select2-selection,
@@ -33,11 +34,18 @@
         padding-right: 14px !important;
         padding-left: 42px !important;
         line-height: 42px !important;
+        height: 42px !important;
         color: #f8fafc !important;
         font-weight: 500 !important;
         font-size: 0.92rem !important;
         direction: rtl !important;
         text-align: right !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
     }
 
     [data-bs-theme="light"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered,
@@ -53,52 +61,63 @@
     /* Elegant Custom Clear Button on the Left in RTL */
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
         position: absolute !important;
-        left: 12px !important;
+        left: 10px !important;
         right: auto !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         width: 22px !important;
         height: 22px !important;
-        line-height: 20px !important;
+        line-height: 1 !important;
         border-radius: 50% !important;
-        background: rgba(239, 68, 68, 0.15) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
         background-image: none !important;
-        color: #f87171 !important;
-        border: 1px solid rgba(239, 68, 68, 0.3) !important;
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        font-family: inherit, Arial, sans-serif !important;
-        display: flex !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer !important;
         text-indent: 0 !important;
-        overflow: visible !important;
-        white-space: normal !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
         padding: 0 !important;
         margin: 0 !important;
-        z-index: 5 !important;
+        z-index: 10 !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    [data-bs-theme="light"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear,
+    body:not(.theme-dark) .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #64748b !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear span {
-        display: inline-block !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         line-height: 1 !important;
+        width: 100% !important;
+        height: 100% !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover {
-        background: #ef4444 !important;
-        color: #ffffff !important;
-        border-color: #ef4444 !important;
-        transform: translateY(-50%) scale(1.1) !important;
-        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+        background: rgba(239, 68, 68, 0.15) !important;
+        color: #ef4444 !important;
+        border-color: rgba(239, 68, 68, 0.4) !important;
+        transform: translateY(-50%) scale(1.08) !important;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:empty::before {
         content: '×';
         line-height: 1;
-        font-size: 15px;
+        font-size: 14px;
     }
 
     /* Dropdown Arrow */
@@ -400,7 +419,7 @@
             </div>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-lg-2 col-md-6">
             <label class="form-label fw-bold small text-uppercase text-muted">تصنيف التبرع</label>
             <select name="classification" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
                 <option value="">الكل</option>
@@ -408,26 +427,36 @@
                 <option value="recurring" @selected(($classification ?? '')==='recurring')>متكرر</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <label class="form-label fw-bold small text-uppercase text-muted">حالة الحساب</label>
+        <div class="col-lg-1 col-md-6">
+            <label class="form-label fw-bold small text-uppercase text-muted">الحالة</label>
             <select name="active" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
                 <option value="">الكل</option>
                 <option value="1" @selected(($active ?? '')==='1')>نشط</option>
                 <option value="0" @selected(($active ?? '')==='0')>غير نشط</option>
             </select>
         </div>
-        <div class="col-md-2">
-            <div class="d-flex gap-2 align-items-center w-100" style="height: 44px;">
-                <button class="btn btn-primary flex-fill fw-bold" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                    <i class="bi bi-funnel fs-6"></i>
+        <div class="col-lg-3 col-md-12">
+            <div class="d-flex flex-wrap gap-2 align-items-center w-100" style="height: 44px;">
+                <button type="submit" class="btn btn-primary fw-bold px-2.5 flex-grow-1" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="تطبيق التصفية">
+                    <i class="bi bi-funnel"></i>
                     <span>تصفية</span>
                 </button>
                 <a class="btn btn-outline-secondary btn-icon-square" href="{{ route('donors.index') }}" title="مسح التصفية" style="width: 44px; min-width: 44px; height: 44px; padding: 0; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                    <i class="bi bi-x-lg fs-6"></i>
+                    <i class="bi bi-x-lg"></i>
                 </a>
-                <button type="button" class="btn btn-outline-success btn-icon-square" onclick="printFilteredDonors()" title="طباعة نتائج التصفية الحالية" style="width: 44px; min-width: 44px; height: 44px; padding: 0; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                    <i class="bi bi-printer fs-6"></i>
+                
+                {{-- زرار عرض (معاينة قبل الطباعة) --}}
+                <button type="button" class="btn btn-outline-info fw-bold px-2.5 flex-grow-1" onclick="previewFilteredDonors()" title="معاينة كشف المتبرعين قبل الطباعة" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                    <i class="bi bi-eye"></i>
+                    <span>عرض</span>
                 </button>
+
+                {{-- زرار الطباعة --}}
+                <button type="button" class="btn btn-outline-success fw-bold px-2.5 flex-grow-1" onclick="directPrintFilteredDonors()" title="طباعة كشف المتبرعين بالتصفية الحالية" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                    <i class="bi bi-printer"></i>
+                    <span>طباعة</span>
+                </button>
+
             </div>
         </div>
     </form>
@@ -451,7 +480,9 @@
                     data-total-formatted="{{ $st ? number_format($st->total, 0) : '0' }}"
                     data-count="{{ $st ? $st->count : 0 }}"
                     data-active="{{ $donor->active ? 'نشط' : 'غير نشط' }}"
-                    style="cursor: pointer; width: 1.25rem; height: 1.25rem;">
+                    onchange="updateDonorBulkBar()"
+                    onclick="event.stopPropagation(); updateDonorBulkBar();"
+                    style="cursor: pointer; width: 1.35rem; height: 1.35rem; z-index: 2;">
              <div class="position-relative">
                 <div class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-primary" style="width: 56px; height: 56px;">
                   <i class="bi {{ $donor->type === 'individual' ? 'bi-person' : 'bi-building' }} fs-3"></i>
@@ -543,19 +574,26 @@
 </div>
 
 {{-- Bulk Action Bar --}}
-<div class="d-flex gap-3 align-items-center mt-3 p-3 rounded-4 shadow-lg flex-wrap" id="donorBulkBar" style="display:none;">
+<div class="gap-3 align-items-center mt-3 p-3 rounded-4 shadow-lg flex-wrap" id="donorBulkBar" style="display:none !important; background: #0f172a; border: 1px solid rgba(255,255,255,0.15);">
     <div class="d-flex align-items-center gap-2">
-        <input type="checkbox" id="selectAllDonors" class="form-check-input mt-0" onclick="document.querySelectorAll('.donor-check').forEach(cb=>cb.checked=this.checked); updateDonorBulkBar();" style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+        <input type="checkbox" id="selectAllDonors" class="form-check-input mt-0" onclick="toggleAllDonors(this.checked)" style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
         <span class="small fw-bold text-white px-2.5 py-1 bg-white bg-opacity-10 rounded-pill" id="donorSelectedCount">0 محدد</span>
     </div>
     
-    <div class="ms-auto d-flex align-items-center gap-2">
+    <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+        {{-- Preview Selected Button --}}
+        <button type="button" class="btn btn-info btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm rounded-pill text-white" onclick="previewSelectedDonors()" title="معاينة بيانات المتبرعين المحددين">
+            <i class="bi bi-eye-fill fs-6"></i>
+            <span>عرض المحدد</span>
+        </button>
+
         {{-- Print Selected Button --}}
-        <button type="button" class="btn btn-success btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm rounded-pill" onclick="printSelectedDonors()">
+        <button type="button" class="btn btn-success btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm rounded-pill" onclick="printSelectedDonors()" title="طباعة كشف المتبرعين المحددين">
             <i class="bi bi-printer-fill fs-6"></i>
             <span>طباعة المحدد</span>
             <span class="badge bg-white text-success rounded-pill font-monospace" id="printSelectedCount">0</span>
         </button>
+
 
         {{-- Delete Selected Button --}}
         <button type="button" class="btn btn-outline-danger btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-1 rounded-pill" onclick="submitDonorBulkDelete()">
@@ -571,6 +609,12 @@
     <div id="donorBulkPrintIds"></div>
 </form>
 
+{{-- Hidden Form for Bulk PDF Download --}}
+<form id="donorBulkPdfForm" method="POST" action="{{ route('donors.export-pdf.post') }}" target="_blank" style="display:none;">
+    @csrf
+    <div id="donorBulkPdfIds"></div>
+</form>
+
 {{-- Hidden Bulk Delete Form --}}
 <form id="donorBulkDeleteForm" method="POST" action="{{ route('donors.bulk-destroy') }}" style="display:none;">
     @csrf
@@ -578,7 +622,7 @@
 </form>
 
 {{-- Hidden Container for Client-Side Universal Print Preview --}}
-<div id="donorsPrintContainer" style="display:none;"></div>
+<div id="donorsPrintContainer" class="d-none"></div>
 
 <div class="mt-3">{{ $donors->links() }}</div>
 
@@ -684,13 +728,43 @@
         if (e.target.classList.contains('donor-check')) updateDonorBulkBar();
     });
 
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('.kpi-card');
+        if (!card) return;
+        if (e.target.closest('button, a, .dropdown, input, select, label')) return;
+        const cb = card.querySelector('.donor-check');
+        if (cb) {
+            cb.checked = !cb.checked;
+            updateDonorBulkBar();
+        }
+    });
+
+    function toggleAllDonors(checked) {
+        document.querySelectorAll('.donor-check').forEach(cb => cb.checked = checked);
+        updateDonorBulkBar();
+    }
+
     function updateDonorBulkBar() {
-        const checked = document.querySelectorAll('.donor-check:checked').length;
+        const checkedBoxes = document.querySelectorAll('.donor-check:checked');
+        const checked = checkedBoxes.length;
+        const total = document.querySelectorAll('.donor-check').length;
         const bar = document.getElementById('donorBulkBar');
-        document.getElementById('donorSelectedCount').textContent = checked + ' محدد';
+        const selectAllCb = document.getElementById('selectAllDonors');
+
+        if (selectAllCb) {
+            selectAllCb.checked = (total > 0 && checked === total);
+            selectAllCb.indeterminate = (checked > 0 && checked < total);
+        }
+
+        const countLabel = document.getElementById('donorSelectedCount');
+        if (countLabel) countLabel.textContent = checked + ' محدد';
+
         const printCountEl = document.getElementById('printSelectedCount');
         if (printCountEl) printCountEl.textContent = checked;
-        bar.style.display = checked > 0 ? 'flex' : 'none';
+
+        if (bar) {
+            bar.style.setProperty('display', checked > 0 ? 'flex' : 'none', 'important');
+        }
     }
 
     function getDonorObjectFromCheckbox(cb) {
@@ -718,66 +792,69 @@
             totalDonationCount += d.count;
 
             rowsHtml += `
-                <tr style="text-align: center;">
-                    <td style="font-weight: bold; width: 35px;">${idx + 1}</td>
-                    <td style="font-family: monospace; font-weight: 800; color: #047857;">${d.code}</td>
-                    <td style="text-align: right; font-weight: 700; color: #0f172a;">${d.name}</td>
-                    <td><span class="badge ${d.type === 'فرد' ? 'bg-info bg-opacity-25 text-dark border border-info' : 'bg-primary bg-opacity-25 text-primary border border-primary'}">${d.type}</span></td>
-                    <td dir="ltr" style="font-family: monospace; font-weight: 600;">${d.phone}</td>
-                    <td>${d.classification}</td>
-                    <td style="font-weight: 800; color: #0f172a;">${Number(d.total).toLocaleString()} ج.م</td>
-                    <td style="font-weight: 700;">${d.count}</td>
-                    <td><span class="badge ${d.active === 'نشط' ? 'bg-success bg-opacity-25 text-success border border-success' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary'}">${d.active}</span></td>
+                <tr style="text-align: center; background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                    <td style="font-weight: bold; width: 35px; color: #0f172a; padding: 6px 4px;">${idx + 1}</td>
+                    <td style="font-family: monospace; font-weight: 800; color: #047857; padding: 6px 4px;">${d.code}</td>
+                    <td style="text-align: right; font-weight: 700; color: #0f172a; padding: 6px 8px;">${d.name}</td>
+                    <td style="padding: 6px 4px;"><span class="badge text-white" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background-color: ${d.type === 'فرد' ? '#2563eb' : '#0891b2'} !important; color: #ffffff !important;">${d.type}</span></td>
+                    <td dir="ltr" style="font-family: monospace; font-weight: 600; color: #0f172a; padding: 6px 4px;">${d.phone}</td>
+                    <td style="color: #0f172a; padding: 6px 4px;">${d.classification}</td>
+                    <td style="font-weight: 800; color: #047857; font-family: monospace; padding: 6px 6px;">${Number(d.total).toLocaleString()} ج.م</td>
+                    <td style="font-weight: 700; color: #0f172a; padding: 6px 4px;">${d.count}</td>
+                    <td style="padding: 6px 4px;"><span class="badge text-white" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background-color: ${d.active === 'نشط' ? '#059669' : '#64748b'} !important; color: #ffffff !important;">${d.active}</span></td>
                 </tr>
             `;
         });
 
         return `
-            <div id="donorsPrintContent" class="p-2" dir="rtl" style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div id="donorsPrintContent" class="donors-sheet-content position-relative mx-auto" dir="rtl" style="width: 100%; font-family: 'Cairo', system-ui, -apple-system, sans-serif; background: #ffffff !important; color: #0f172a !important; box-sizing: border-box;">
+                
+                {{-- KPI Summary Boxes --}}
                 <div class="row g-2 mb-3 text-center print-kpi-summary">
                     <div class="col-4">
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
-                            <div style="font-size: 11px; color: #64748b; font-weight: bold;">عدد المتبرعين المشمولين بالكشف</div>
+                        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px;">
+                            <div style="font-size: 11.5px; color: #475569; font-weight: bold;">عدد المتبرعين المشمولين بالكشف</div>
                             <div style="font-size: 18px; font-weight: 900; color: #0f172a;">${donorsList.length} متبرع</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px;">
-                            <div style="font-size: 11px; color: #065f46; font-weight: bold;">إجمالي حصيلة التبرعات</div>
-                            <div style="font-size: 18px; font-weight: 900; color: #047857;">${Number(totalDonationAmount).toLocaleString()} ج.م</div>
+                        <div style="background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 8px; padding: 10px;">
+                            <div style="font-size: 11.5px; color: #065f46; font-weight: bold;">إجمالي حصيلة التبرعات</div>
+                            <div style="font-size: 18px; font-weight: 900; color: #047857; font-family: monospace;">${Number(totalDonationAmount).toLocaleString()} ج.م</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
-                            <div style="font-size: 11px; color: #64748b; font-weight: bold;">إجمالي عدد حركات التبرع</div>
+                        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px;">
+                            <div style="font-size: 11.5px; color: #475569; font-weight: bold;">إجمالي عدد حركات التبرع</div>
                             <div style="font-size: 18px; font-weight: 900; color: #0f172a;">${totalDonationCount} تبرع</div>
                         </div>
                     </div>
                 </div>
 
-                <table class="table table-bordered table-sm align-middle" style="width: 100%; border-color: #cbd5e1; font-size: 12px; margin-bottom: 0;">
+                {{-- Data Table --}}
+                <table class="table table-bordered table-sm align-middle mb-2" style="width: 100%; border-color: #cbd5e1; font-size: 11.5px;">
                     <thead style="background-color: #047857 !important; color: #ffffff !important; text-align: center;">
                         <tr>
-                            <th style="width: 35px; color: #fff !important;">#</th>
-                            <th style="color: #fff !important; width: 110px;">كود المتبرع</th>
-                            <th style="color: #fff !important; text-align: right;">اسم المتبرع</th>
-                            <th style="color: #fff !important; width: 85px;">نوع الجهة</th>
-                            <th style="color: #fff !important; width: 115px;">رقم الهاتف</th>
-                            <th style="color: #fff !important; width: 95px;">تصنيف التبرع</th>
-                            <th style="color: #fff !important; width: 120px;">إجمالي التبرعات</th>
-                            <th style="color: #fff !important; width: 75px;">عدد المرات</th>
-                            <th style="color: #fff !important; width: 75px;">الحالة</th>
+                            <th style="width: 35px; color: #ffffff !important; background-color: #047857 !important;">#</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 110px;">كود المتبرع</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; text-align: right;">اسم المتبرع</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 85px;">نوع الجهة</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 115px;">رقم الهاتف</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 95px;">تصنيف التبرع</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 120px;">إجمالي التبرعات</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 75px;">عدد المرات</th>
+                            <th style="color: #ffffff !important; background-color: #047857 !important; width: 75px;">الحالة</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${rowsHtml}
                     </tbody>
-                    <tfoot style="background: #f8fafc; font-weight: bold; border-top: 2px solid #047857;">
+                    <tfoot style="background: #f1f5f9; font-weight: bold; border-top: 2px solid #047857;">
                         <tr style="text-align: center;">
-                            <td colspan="6" style="text-align: right; padding-right: 14px; font-size: 13px;">الإجمالي العام للكشف:</td>
-                            <td style="color: #047857; font-size: 13px; font-weight: 900;">${Number(totalDonationAmount).toLocaleString()} ج.م</td>
-                            <td style="font-size: 13px; font-weight: 900;">${totalDonationCount}</td>
-                            <td>—</td>
+                            <td colspan="6" style="text-align: right; padding-right: 14px; font-size: 12.5px; font-weight: 800; color: #0f172a;">الإجمالي العام للكشف:</td>
+                            <td style="color: #047857; font-size: 13px; font-weight: 900; font-family: monospace;">${Number(totalDonationAmount).toLocaleString()} ج.م</td>
+                            <td style="font-size: 13px; font-weight: 900; color: #0f172a;">${totalDonationCount}</td>
+                            <td style="color: #64748b;">—</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -785,16 +862,47 @@
         `;
     }
 
-    function printSelectedDonors() {
-        const checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
+    // معاينة المحدد
+    function previewSelectedDonors() {
+        let checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
         if (checkedBoxes.length === 0) {
-            alert('يرجى تحديد متبرع واحد على الأقل للطباعة');
+            alert('يرجى تحديد متبرع واحد على الأقل للمعاينة');
             return;
         }
 
         const donorsList = checkedBoxes.map(getDonorObjectFromCheckbox);
         const container = document.getElementById('donorsPrintContainer');
         container.innerHTML = buildDonorsPrintHTML(donorsList, 'كشف بيانات المتبرعين المحددين');
+        container.style.display = 'none';
+        container.classList.add('d-none');
+
+        if (window.EnsanPrintPreview) {
+            window.EnsanPrintPreview.open('#donorsPrintContainer', {
+                title: 'كشف بيانات المتبرعين المحددين (' + donorsList.length + ' متبرع)',
+                orientation: 'landscape'
+            });
+        }
+    }
+
+    // طباعة المحدد
+    function printSelectedDonors() {
+        let checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
+        if (checkedBoxes.length === 0) {
+            const allBoxes = Array.from(document.querySelectorAll('.donor-check'));
+            if (allBoxes.length === 0) {
+                alert('لا توجد بيانات متبرعين لعرضها أو طباعتها');
+                return;
+            }
+            allBoxes.forEach(cb => cb.checked = true);
+            updateDonorBulkBar();
+            checkedBoxes = allBoxes;
+        }
+
+        const donorsList = checkedBoxes.map(getDonorObjectFromCheckbox);
+        const container = document.getElementById('donorsPrintContainer');
+        container.innerHTML = buildDonorsPrintHTML(donorsList, 'كشف بيانات المتبرعين المحددين');
+        container.style.display = 'none';
+        container.classList.add('d-none');
 
         if (window.EnsanPrintPreview) {
             window.EnsanPrintPreview.open('#donorsPrintContainer', {
@@ -814,7 +922,55 @@
         }
     }
 
-    function printFilteredDonors() {
+    // تنزيل المحدد كـ PDF
+    function downloadSelectedDonorsPdf() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
+        if (checkedBoxes.length === 0) {
+            alert('يرجى تحديد متبرع واحد على الأقل لتنزيل ملف الـ PDF');
+            return;
+        }
+
+        const form = document.getElementById('donorBulkPdfForm');
+        const idsDiv = document.getElementById('donorBulkPdfIds');
+        idsDiv.innerHTML = '';
+        checkedBoxes.forEach(cb => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = cb.value;
+            idsDiv.appendChild(inp);
+        });
+        form.submit();
+    }
+
+    // معاينة نتائج التصفية (زرار عرض)
+    function previewFilteredDonors() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
+        if (checkedBoxes.length > 0) {
+            previewSelectedDonors();
+            return;
+        }
+
+        const allBoxes = Array.from(document.querySelectorAll('.donor-check'));
+        if (allBoxes.length === 0) {
+            alert('لا توجد بيانات متبرعين لعرضها بالتصفية الحالية');
+            return;
+        }
+
+        const donorsList = allBoxes.map(getDonorObjectFromCheckbox);
+        const container = document.getElementById('donorsPrintContainer');
+        container.innerHTML = buildDonorsPrintHTML(donorsList, 'كشف المتبرعين — نتائج التصفية');
+        container.style.display = 'none';
+        container.classList.add('d-none');
+
+        if (window.EnsanPrintPreview) {
+            window.EnsanPrintPreview.open('#donorsPrintContainer', {
+                title: 'كشف المتبرعين — نتائج التصفية (' + donorsList.length + ' متبرع)',
+                orientation: 'landscape'
+            });
+        }
+    }
+
+    // طباعة نتائج التصفية (زرار طباعة)
+    function directPrintFilteredDonors() {
         const checkedBoxes = Array.from(document.querySelectorAll('.donor-check:checked'));
         if (checkedBoxes.length > 0) {
             printSelectedDonors();
@@ -823,23 +979,32 @@
 
         const allBoxes = Array.from(document.querySelectorAll('.donor-check'));
         if (allBoxes.length === 0) {
-            alert('لا توجد بيانات متبرعين لعرضها أو طباعتها بالتصفية الحالية');
+            alert('لا توجد بيانات متبرعين لطباعتها بالتصفية الحالية');
             return;
         }
 
         const donorsList = allBoxes.map(getDonorObjectFromCheckbox);
         const container = document.getElementById('donorsPrintContainer');
         container.innerHTML = buildDonorsPrintHTML(donorsList, 'كشف المتبرعين — نتائج التصفية');
+        container.style.display = 'none';
+        container.classList.add('d-none');
 
         if (window.EnsanPrintPreview) {
             window.EnsanPrintPreview.open('#donorsPrintContainer', {
                 title: 'كشف المتبرعين — نتائج التصفية (' + donorsList.length + ' متبرع)',
                 orientation: 'landscape'
             });
+            setTimeout(() => {
+                window.EnsanPrintPreview.executePrint();
+            }, 300);
         } else {
             const url = "{{ route('donors.print-report') }}" + window.location.search;
             window.open(url, '_blank');
         }
+    }
+
+    function printFilteredDonors() {
+        previewFilteredDonors();
     }
 
     function submitDonorBulkDelete() {

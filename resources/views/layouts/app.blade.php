@@ -168,15 +168,22 @@
       html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single {
           padding-right: 0.75rem;
           padding-left: 2.5rem;
+          position: relative;
+          overflow: hidden;
       }
       html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
           right: auto;
           left: 0.75rem;
+          z-index: 10;
       }
       html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
           padding-right: 0;
-          padding-left: 0;
+          padding-left: 2rem;
           text-align: right;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          box-sizing: border-box;
       }
 
       /* Global Layout Improvements */
@@ -692,8 +699,11 @@
         /* Paper Sheets Immunity from Theme-Dark Text Inversion */
         #printableDonorSheet,
         #printableDonationVoucher,
+        #printableBeneficiaryDossier,
+        #printableBeneficiariesRoster,
         .official-voucher-card,
         .a4-paper-sheet,
+        #universalPrintPaper,
         #universalPrintPaperBody {
             background-color: #ffffff !important;
             color: #0f172a !important;
@@ -709,6 +719,14 @@
         html.theme-dark #printableDonationVoucher *,
         body.theme-dark #printableDonationVoucher,
         body.theme-dark #printableDonationVoucher *,
+        html.theme-dark #printableBeneficiaryDossier,
+        html.theme-dark #printableBeneficiaryDossier *,
+        body.theme-dark #printableBeneficiaryDossier,
+        body.theme-dark #printableBeneficiaryDossier *,
+        html.theme-dark #printableBeneficiariesRoster,
+        html.theme-dark #printableBeneficiariesRoster *,
+        body.theme-dark #printableBeneficiariesRoster,
+        body.theme-dark #printableBeneficiariesRoster *,
         html.theme-dark .official-voucher-card,
         html.theme-dark .official-voucher-card *,
         body.theme-dark .official-voucher-card,
@@ -717,6 +735,10 @@
         html.theme-dark .a4-paper-sheet *,
         body.theme-dark .a4-paper-sheet,
         body.theme-dark .a4-paper-sheet *,
+        html.theme-dark #universalPrintPaper,
+        html.theme-dark #universalPrintPaper *,
+        body.theme-dark #universalPrintPaper,
+        body.theme-dark #universalPrintPaper *,
         html.theme-dark #universalPrintPaperBody,
         html.theme-dark #universalPrintPaperBody * {
             color-scheme: light !important;
@@ -749,7 +771,77 @@
         body.theme-dark #printableDonorSheet h4,
         body.theme-dark #printableDonorSheet h5,
         body.theme-dark #printableDonorSheet h6,
-        body.theme-dark #printableDonorSheet small {
+        body.theme-dark #printableDonorSheet small,
+        html.theme-dark #universalPrintPaper p,
+        html.theme-dark #universalPrintPaper span,
+        html.theme-dark #universalPrintPaper td,
+        html.theme-dark #universalPrintPaper th,
+        html.theme-dark #universalPrintPaper strong,
+        html.theme-dark #universalPrintPaper b,
+        html.theme-dark #universalPrintPaper h1,
+        html.theme-dark #universalPrintPaper h2,
+        html.theme-dark #universalPrintPaper h3,
+        html.theme-dark #universalPrintPaper h4,
+        html.theme-dark #universalPrintPaper h5,
+        html.theme-dark #universalPrintPaper h6,
+        body.theme-dark #universalPrintPaper p,
+        body.theme-dark #universalPrintPaper span,
+        body.theme-dark #universalPrintPaper td,
+        body.theme-dark #universalPrintPaper th,
+        body.theme-dark #universalPrintPaper strong,
+        body.theme-dark #universalPrintPaper b,
+        body.theme-dark #universalPrintPaper h3,
+        body.theme-dark #universalPrintPaper h4,
+        body.theme-dark #universalPrintPaper h5,
+        body.theme-dark #universalPrintPaper h6,
+        html.theme-dark #printableBeneficiaryDossier p,
+        html.theme-dark #printableBeneficiaryDossier span,
+        html.theme-dark #printableBeneficiaryDossier td,
+        html.theme-dark #printableBeneficiaryDossier th,
+        html.theme-dark #printableBeneficiaryDossier strong,
+        html.theme-dark #printableBeneficiaryDossier b,
+        html.theme-dark #printableBeneficiaryDossier h1,
+        html.theme-dark #printableBeneficiaryDossier h2,
+        html.theme-dark #printableBeneficiaryDossier h3,
+        html.theme-dark #printableBeneficiaryDossier h4,
+        html.theme-dark #printableBeneficiaryDossier h5,
+        html.theme-dark #printableBeneficiaryDossier h6,
+        body.theme-dark #printableBeneficiaryDossier p,
+        body.theme-dark #printableBeneficiaryDossier span,
+        body.theme-dark #printableBeneficiaryDossier td,
+        body.theme-dark #printableBeneficiaryDossier th,
+        body.theme-dark #printableBeneficiaryDossier strong,
+        body.theme-dark #printableBeneficiaryDossier b,
+        body.theme-dark #printableBeneficiaryDossier h1,
+        body.theme-dark #printableBeneficiaryDossier h2,
+        body.theme-dark #printableBeneficiaryDossier h3,
+        body.theme-dark #printableBeneficiaryDossier h4,
+        body.theme-dark #printableBeneficiaryDossier h5,
+        body.theme-dark #printableBeneficiaryDossier h6,
+        html.theme-dark #printableBeneficiariesRoster p,
+        html.theme-dark #printableBeneficiariesRoster span,
+        html.theme-dark #printableBeneficiariesRoster td,
+        html.theme-dark #printableBeneficiariesRoster th,
+        html.theme-dark #printableBeneficiariesRoster strong,
+        html.theme-dark #printableBeneficiariesRoster b,
+        html.theme-dark #printableBeneficiariesRoster h1,
+        html.theme-dark #printableBeneficiariesRoster h2,
+        html.theme-dark #printableBeneficiariesRoster h3,
+        html.theme-dark #printableBeneficiariesRoster h4,
+        html.theme-dark #printableBeneficiariesRoster h5,
+        html.theme-dark #printableBeneficiariesRoster h6,
+        body.theme-dark #printableBeneficiariesRoster p,
+        body.theme-dark #printableBeneficiariesRoster span,
+        body.theme-dark #printableBeneficiariesRoster td,
+        body.theme-dark #printableBeneficiariesRoster th,
+        body.theme-dark #printableBeneficiariesRoster strong,
+        body.theme-dark #printableBeneficiariesRoster b,
+        body.theme-dark #printableBeneficiariesRoster h1,
+        body.theme-dark #printableBeneficiariesRoster h2,
+        body.theme-dark #printableBeneficiariesRoster h3,
+        body.theme-dark #printableBeneficiariesRoster h4,
+        body.theme-dark #printableBeneficiariesRoster h5,
+        body.theme-dark #printableBeneficiariesRoster h6 {
             color: #0f172a !important;
         }
 
@@ -2733,7 +2825,7 @@
       @endif
     </div>
   </div>
-  <div class="container content-wrapper fade-in">
+  <div class="content-wrapper fade-in">
     @if(!isset($hideGlobalAlerts) || !$hideGlobalAlerts)
 
     @endif

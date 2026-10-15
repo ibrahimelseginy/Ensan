@@ -22,8 +22,8 @@
             }
         }
 
-        // Vanilla CSS fallback (ensures modal displays 100% of the time, even if Bootstrap fails)
-        if (!openedWithBootstrap || !modalEl.classList.contains('show')) {
+        // Vanilla CSS fallback ONLY if Bootstrap was NOT available or errored
+        if (!openedWithBootstrap) {
             modalEl.classList.add('show');
             modalEl.style.display = 'block';
             modalEl.style.backgroundColor = 'rgba(15, 23, 42, 0.75)';
@@ -51,6 +51,7 @@
                 var inst = bootstrap.Modal.getInstance(modalEl);
                 if (inst) {
                     inst.hide();
+                    return;
                 }
             } catch (e) {}
         }
@@ -130,6 +131,11 @@
 
             // Clone and sanitize
             var cloned = sourceEl.cloneNode(true);
+            cloned.classList.remove('d-none');
+            cloned.style.display = 'block';
+            cloned.style.visibility = 'visible';
+            cloned.removeAttribute('hidden');
+
             this.sanitizeClonedContent(cloned);
 
             // Update title / heading
@@ -152,6 +158,34 @@
 
             // Inject into paper sheet body
             var paperBody = document.getElementById('universalPrintPaperBody');
+            var outerHeader = document.querySelector('#universalPrintPaper .print-paper-header');
+            var outerFooter = document.querySelector('#universalPrintPaper .print-paper-footer');
+            var paper = document.getElementById('universalPrintPaper');
+
+            // Detect if cloned content is already a self-contained official document with its own header/footer
+            var isSelfContained = cloned.classList.contains('official-voucher-card') ||
+                                  Boolean(cloned.querySelector('.official-voucher-card, .print-paper-header, .voucher-header, .roster-header'));
+
+            if (outerHeader) {
+                outerHeader.style.display = isSelfContained ? 'none' : '';
+            }
+            if (outerFooter) {
+                outerFooter.style.display = isSelfContained ? 'none' : '';
+            }
+            if (paper) {
+                if (isSelfContained) {
+                    paper.style.border = 'none';
+                    paper.style.outline = 'none';
+                    paper.style.padding = '0';
+                    paper.style.boxShadow = 'none';
+                } else {
+                    paper.style.border = '';
+                    paper.style.outline = '';
+                    paper.style.padding = '';
+                    paper.style.boxShadow = '';
+                }
+            }
+
             if (paperBody) {
                 paperBody.innerHTML = '';
                 paperBody.appendChild(cloned);
@@ -174,9 +208,26 @@
             if (modalEl) {
                 hideModalElement(modalEl);
             }
+            var outerHeader = document.querySelector('#universalPrintPaper .print-paper-header');
+            var outerFooter = document.querySelector('#universalPrintPaper .print-paper-footer');
+            var paper = document.getElementById('universalPrintPaper');
+            if (outerHeader) outerHeader.style.display = '';
+            if (outerFooter) outerFooter.style.display = '';
+            if (paper) {
+                paper.style.border = '';
+                paper.style.outline = '';
+                paper.style.padding = '';
+                paper.style.boxShadow = '';
+            }
         },
 
         sanitizeClonedContent: function (el) {
+            // Guarantee root and content elements are visible
+            el.classList.remove('d-none');
+            el.style.display = 'block';
+            el.style.visibility = 'visible';
+            el.removeAttribute('hidden');
+
             var selectorsToRemove = [
                 '#universalPrintPreviewModal',
                 '#receiptPreviewModal',
@@ -207,6 +258,17 @@
                 });
             });
 
+            // Unhide hidden printable children (containers that were stored hidden in DOM)
+            var hiddenChildren = el.querySelectorAll('.d-none, [style*="display: none"], [style*="display:none"], [hidden]');
+            hiddenChildren.forEach(function (child) {
+                if (!child.matches('.no-print, .d-print-none, .action-buttons, button, .dropdown, .pagination, input[type="hidden"]')) {
+                    child.classList.remove('d-none');
+                    child.removeAttribute('hidden');
+                    child.style.display = 'block';
+                    child.style.visibility = 'visible';
+                }
+            });
+
             // Clean scroll and fixed heights on tables and wrappers so all rows show
             var scrollElements = el.querySelectorAll('.table-responsive, [style*="overflow"], [style*="max-height"]');
             scrollElements.forEach(function (item) {
@@ -215,12 +277,13 @@
                 item.style.height = 'auto';
             });
 
-            // Remove box-shadows and ensure text visibility
+            // Remove box-shadows and ensure clean light presentation on paper
             var cards = el.querySelectorAll('.card, .kpi-card, .stat-card, .chart-container');
             cards.forEach(function (card) {
                 card.style.boxShadow = 'none';
-                card.style.background = '#ffffff';
+                card.style.background = '#f8fafc';
                 card.style.color = '#0f172a';
+                card.style.border = '1px solid #e2e8f0';
             });
         },
 
@@ -357,7 +420,9 @@
             '.text-center { text-align: center !important; }' +
             '.text-start { text-align: right !important; }' +
             '.text-end { text-align: left !important; }' +
-            '#printableDonorSheet, .a4-paper-sheet, #printableDonationVoucher { width: 100% !important; max-width: 100% !important; margin: 0 auto !important; padding: 18px !important; border: 2px solid #059669 !important; border-radius: 6px !important; box-shadow: none !important; background: #ffffff !important; color: #0f172a !important; transform: none !important; }' +
+            '#printableDonorSheet, .a4-paper-sheet, #printableDonationVoucher, #universalPrintPaper { width: 100% !important; max-width: 100% !important; margin: 0 auto !important; padding: 18px !important; border: 2px solid #059669 !important; border-radius: 6px !important; box-shadow: none !important; background: #ffffff !important; color: #0f172a !important; transform: none !important; }' +
+            '#universalPrintPaper, #universalPrintPaper * { visibility: visible !important; }' +
+            '#universalPrintPaper .no-print, #universalPrintPaper .d-print-none, #universalPrintPaper button, #universalPrintPaper .btn { display: none !important; }' +
             '.text-dark { color: #0f172a !important; }' +
             '.text-muted { color: #64748b !important; }' +
             '.text-success { color: #047857 !important; }' +
@@ -366,6 +431,7 @@
             '.bg-light { background-color: #f8fafc !important; }' +
             '.table { color: #0f172a !important; border-color: #cbd5e1 !important; width: 100% !important; margin-bottom: 0 !important; border-collapse: collapse !important; }' +
             '.table th, .table td { padding: 6px 8px !important; border: 1px solid #cbd5e1 !important; }' +
+            '.table thead th, #universalPrintPaper table thead th { background-color: #047857 !important; color: #ffffff !important; font-weight: 700 !important; }' +
             '.table-light th, .table-light td { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: 700 !important; }' +
             '.table-bordered th, .table-bordered td { border: 1px solid #cbd5e1 !important; }' +
             '.badge { display: inline-block; padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 700; line-height: 1; text-align: center; border-radius: 0.375rem; }' +

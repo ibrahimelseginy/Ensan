@@ -128,6 +128,10 @@ final class LoginWebController extends Controller
         // Session Fixation Prevention: Regenerate session ID
         $request->session()->regenerate();
         $request->session()->put('user_id', $user->id);
+        $request->session()->put('_sec_ua_fp', hash('sha256', ($request->userAgent() ?? '') . '|' . config('app.key')));
+        $request->session()->put('_sec_pwd_hash', (string) $user->password);
+        $request->session()->put('_sec_last_activity', time());
+        $request->session()->put('_sec_login_ip', $ip);
 
         // Clean legacy cookie if present
         cookie()->queue(cookie()->forget('remember_user'));

@@ -18,6 +18,7 @@ use App\Http\Requests\StoreDonationRequest;
 use App\Http\Requests\UpdateDonationRequest;
 use App\Services\DonorService;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -29,68 +30,73 @@ final class DonationWebController extends Controller
         private DonorService $donorService
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $q               = (string) $request->input('q', '');
-        $month           = $request->input('month');
-        $year            = $request->input('year');
-        $projectId       = $request->input('project_id');
-        $campaignId      = $request->input('campaign_id');
-        $guestHouseId    = $request->input('guest_house_id');
-        $channel         = $request->input('channel');
-
-        $filters = [
-            'q'              => $q,
-            'month'          => $month,
-            'year'           => $year,
-            'project_id'     => $projectId,
-            'campaign_id'    => $campaignId,
-            'guest_house_id' => $guestHouseId,
-            'channel'        => $channel,
-        ];
-
-        // Cash Donations Paginator
-        $cashFilters = array_merge($filters, ['type' => 'cash']);
-        $cashDonations = $this->donationService->searchDonations($cashFilters, 10, 'cash_page');
-
-        // In-Kind Donations Paginator
-        $inKindDonations = collect();
-        if (!$channel) {
-            $inKindFilters = array_merge($filters, ['type' => 'in_kind']);
-            $inKindDonations = $this->donationService->searchDonations($inKindFilters, 10, 'inkind_page');
+        if ($request->filled('channel') || $request->input('type') === 'cash') {
+            return redirect()->route('donations.cash', $request->query());
+        }
+        if ($request->input('type') === 'in_kind' || $request->filled('warehouse_id')) {
+            return redirect()->route('donations.in-kind', $request->query());
+        }
+        if ($request->filled('q') || $request->filled('month') || $request->filled('year')) {
+            return redirect()->route('donations.cash', $request->query());
         }
 
-        // Statistics
-        $stats = [
-            'dailyCashSummary' => collect(),
-            'todayByChannel'   => [
-                'cash'          => ['count' => 0, 'total' => 0.0],
-                'instapay'      => ['count' => 0, 'total' => 0.0],
-                'vodafone_cash' => ['count' => 0, 'total' => 0.0],
-                'delegate'      => ['count' => 0, 'total' => 0.0],
+        // Overall Totals
+        $cashTotal = (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount');
+        $cashCount = (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->count();
+
+        $inKindTotal = (float) Donation::where('type', 'in_kind')->where('status', '!=', 'cancelled')->sum('estimated_value');
+        $inKindCount = (int) Donation::where('type', 'in_kind')->where('status', '!=', 'cancelled')->count();
+
+        // Channel Totals (All, Cash, Vodafone Cash, InstaPay, Delegate, In-Kind)
+        $channelMetrics = [
+            'all' => [
+                'total' => $cashTotal,
+                'count' => $cashCount,
             ],
-            'inKindToday'      => (object)['count' => 0, 'total' => 0]
+            'cash' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')
+                    ->where(fn($q) => $q->where('cash_channel', 'cash')->orWhereNull('cash_channel')->orWhere('cash_channel', ''))->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')
+                    ->where(fn($q) => $q->where('cash_channel', 'cash')->orWhereNull('cash_channel')->orWhere('cash_channel', ''))->count(),
+            ],
+            'vodafone_cash' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'vodafone_cash')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'vodafone_cash')->count(),
+            ],
+            'instapay' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'instapay')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'instapay')->count(),
+            ],
+            'delegate' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'delegate')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'delegate')->count(),
+            ],
+            'in_kind' => [
+                'total' => $inKindTotal,
+                'count' => $inKindCount,
+            ],
         ];
 
-        if (!$channel && !$q) {
-            $dashboardStats = $this->donationService->getDashboardStats($filters);
-            $stats['dailyCashSummary'] = $dashboardStats['dailySummary'];
-            
-            foreach ($dashboardStats['todayByChannel'] as $r) {
-                $key = $r->cash_channel ?: 'cash';
-                $stats['todayByChannel'][$key] = [
-                    'count' => (int) $r->count,
-                    'total' => (float) $r->total
-                ];
-            }
-            
-            $stats['inKindToday'] = $dashboardStats['todayInKind'];
+        // Today Stats
+        $dashboardStats = $this->donationService->getDashboardStats([]);
+        $todayByChannel = [
+            'cash'          => ['count' => 0, 'total' => 0.0],
+            'instapay'      => ['count' => 0, 'total' => 0.0],
+            'vodafone_cash' => ['count' => 0, 'total' => 0.0],
+            'delegate'      => ['count' => 0, 'total' => 0.0],
+        ];
+        foreach ($dashboardStats['todayByChannel'] as $r) {
+            $key = $r->cash_channel ?: 'cash';
+            $todayByChannel[$key] = [
+                'count' => (int) $r->count,
+                'total' => (float) $r->total
+            ];
         }
+        $inKindToday = $dashboardStats['todayInKind'];
 
-        $dailyCashSummary = $stats['dailyCashSummary'];
-        $todayByChannel   = $stats['todayByChannel'];
-        $inKindToday      = $stats['inKindToday'];
-
+        // Helpers for Quick Receipt Modal
         $receiptDonors = Donor::query()
             ->with(['sponsoredFamilyMembers' => fn ($query) => $query->where('active', true), 'sponsoredFamilyMembers.beneficiary'])
             ->orderBy('name')
@@ -105,13 +111,197 @@ final class DonationWebController extends Controller
             : collect();
 
         $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
-        $upcomingDueDonors = $this->donorService->getUpcomingDueDonors(7);
 
         return view('donations.index', compact(
-            'cashDonations', 'inKindDonations', 'dailyCashSummary', 
-            'todayByChannel', 'inKindToday', 'q', 'month', 'year', 'allDonors',
-            'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries',
-            'upcomingDueDonors'
+            'cashTotal', 'cashCount', 'inKindTotal', 'inKindCount',
+            'channelMetrics', 'todayByChannel', 'inKindToday',
+            'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries', 'allDonors'
+        ));
+    }
+
+    public function cashIndex(Request $request): View
+    {
+        $q               = (string) $request->input('q', '');
+        $month           = $request->input('month');
+        $year            = $request->input('year');
+        $projectId       = $request->input('project_id');
+        $campaignId      = $request->input('campaign_id');
+        $guestHouseId    = $request->input('guest_house_id');
+        $channel         = $request->input('channel');
+        if ($channel === 'all' || $channel === '') {
+            $channel = null;
+        }
+
+        $filters = [
+            'q'              => $q,
+            'month'          => $month,
+            'year'           => $year,
+            'project_id'     => $projectId,
+            'campaign_id'    => $campaignId,
+            'guest_house_id' => $guestHouseId,
+            'channel'        => $channel,
+            'type'           => 'cash',
+        ];
+
+        $cashDonations = $this->donationService->searchDonations($filters, 20, 'page');
+
+        // Filtered totals
+        $totalAmount = (float) Donation::where('type', 'cash')
+            ->where('status', '!=', 'cancelled')
+            ->when($channel, function($qr) use ($channel) {
+                if ($channel === 'cash') {
+                    $qr->where(function($sub) {
+                        $sub->where('cash_channel', 'cash')
+                            ->orWhereNull('cash_channel')
+                            ->orWhere('cash_channel', '');
+                    });
+                } else {
+                    $qr->where('cash_channel', $channel);
+                }
+            })
+            ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
+            ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
+            ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
+            ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
+            ->sum('amount');
+
+        $totalCount = (int) Donation::where('type', 'cash')
+            ->where('status', '!=', 'cancelled')
+            ->when($channel, function($qr) use ($channel) {
+                if ($channel === 'cash') {
+                    $qr->where(function($sub) {
+                        $sub->where('cash_channel', 'cash')
+                            ->orWhereNull('cash_channel')
+                            ->orWhere('cash_channel', '');
+                    });
+                } else {
+                    $qr->where('cash_channel', $channel);
+                }
+            })
+            ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
+            ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
+            ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
+            ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
+            ->count();
+
+        // Channel Totals (All, Cash, Vodafone Cash, InstaPay, Delegate, In-Kind)
+        $channelMetrics = [
+            'all' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->count(),
+            ],
+            'cash' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')
+                    ->where(fn($q) => $q->where('cash_channel', 'cash')->orWhereNull('cash_channel')->orWhere('cash_channel', ''))->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')
+                    ->where(fn($q) => $q->where('cash_channel', 'cash')->orWhereNull('cash_channel')->orWhere('cash_channel', ''))->count(),
+            ],
+            'vodafone_cash' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'vodafone_cash')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'vodafone_cash')->count(),
+            ],
+            'instapay' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'instapay')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'instapay')->count(),
+            ],
+            'delegate' => [
+                'total' => (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'delegate')->sum('amount'),
+                'count' => (int) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->where('cash_channel', 'delegate')->count(),
+            ],
+            'in_kind' => [
+                'total' => (float) Donation::where('type', 'in_kind')->where('status', '!=', 'cancelled')->sum('estimated_value'),
+                'count' => (int) Donation::where('type', 'in_kind')->where('status', '!=', 'cancelled')->count(),
+            ],
+        ];
+
+        // Today stats
+        $dashboardStats = $this->donationService->getDashboardStats([]);
+        $todayByChannel = [
+            'cash'          => ['count' => 0, 'total' => 0.0],
+            'instapay'      => ['count' => 0, 'total' => 0.0],
+            'vodafone_cash' => ['count' => 0, 'total' => 0.0],
+            'delegate'      => ['count' => 0, 'total' => 0.0],
+        ];
+        foreach ($dashboardStats['todayByChannel'] as $r) {
+            $key = $r->cash_channel ?: 'cash';
+            $todayByChannel[$key] = [
+                'count' => (int) $r->count,
+                'total' => (float) $r->total
+            ];
+        }
+
+        $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
+        $receiptDonors = Donor::query()
+            ->with(['sponsoredFamilyMembers' => fn ($query) => $query->where('active', true), 'sponsoredFamilyMembers.beneficiary'])
+            ->orderBy('name')
+            ->get();
+        $receiptProjects = Project::orderBy('name')->get();
+        $allFamilyMembers = \App\Models\BeneficiaryFamilyMember::with('beneficiary')
+            ->where('active', true)
+            ->orderBy('full_name')
+            ->get();
+        $receiptTreasuries = Schema::hasTable('treasuries')
+            ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
+            : collect();
+
+        return view('donations.cash', compact(
+            'cashDonations', 'totalAmount', 'totalCount', 'channelMetrics', 'todayByChannel',
+            'q', 'month', 'year', 'channel', 'projectId', 'campaignId',
+            'allDonors', 'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries'
+        ));
+    }
+
+    public function inKindIndex(Request $request): View
+    {
+        $q               = (string) $request->input('q', '');
+        $month           = $request->input('month');
+        $year            = $request->input('year');
+        $projectId       = $request->input('project_id');
+        $campaignId      = $request->input('campaign_id');
+        $warehouseId     = $request->input('warehouse_id');
+
+        $filters = [
+            'q'              => $q,
+            'month'          => $month,
+            'year'           => $year,
+            'project_id'     => $projectId,
+            'campaign_id'    => $campaignId,
+            'warehouse_id'   => $warehouseId,
+            'type'           => 'in_kind',
+        ];
+
+        $inKindDonations = $this->donationService->searchDonations($filters, 20, 'page');
+
+        // Filtered totals
+        $totalEstimated = (float) Donation::where('type', 'in_kind')
+            ->where('status', '!=', 'cancelled')
+            ->when($warehouseId, fn($qr) => $qr->where('warehouse_id', $warehouseId))
+            ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
+            ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
+            ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
+            ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
+            ->sum('estimated_value');
+
+        $totalCount = (int) Donation::where('type', 'in_kind')
+            ->where('status', '!=', 'cancelled')
+            ->when($warehouseId, fn($qr) => $qr->where('warehouse_id', $warehouseId))
+            ->when($month, fn($qr) => $qr->whereMonth('received_at', $month))
+            ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
+            ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
+            ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))
+            ->count();
+
+        $dashboardStats = $this->donationService->getDashboardStats([]);
+        $inKindToday    = $dashboardStats['todayInKind'];
+
+        $warehouses = Warehouse::orderBy('name')->get();
+        $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
+        $receiptProjects = Project::orderBy('name')->get();
+
+        return view('donations.in_kind', compact(
+            'inKindDonations', 'totalEstimated', 'totalCount', 'inKindToday',
+            'q', 'month', 'year', 'warehouseId', 'projectId', 'campaignId',
+            'warehouses', 'allDonors', 'receiptProjects'
         ));
     }
 

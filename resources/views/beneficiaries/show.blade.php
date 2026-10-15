@@ -40,11 +40,11 @@
       </div>
     </div>
     <div class="btn-group">
-      <button type="button" onclick="EnsanPrintPreview.open(null, {title: 'ملف المستفيد — {{ $beneficiary->name }}'})" class="btn btn-outline-info" title="معاينة الملف قبل الطباعة">
-        <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
+      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: 'استمارة وملف المستفيد — {{ $beneficiary->full_name }}'}) : window.print()" class="btn btn-outline-info" title="معاينة الاستمارة الرسمية قبل الطباعة">
+        <i class="bi bi-eye me-1"></i> معاينة الاستمارة الرسمية
       </button>
-      <button onclick="window.print()" class="btn btn-outline-primary" title="طباعة فورية">
-        <i class="bi bi-printer me-1"></i> طباعة
+      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: 'استمارة وملف المستفيد — {{ $beneficiary->full_name }}'}) : window.print()" class="btn btn-outline-primary" title="طباعة الاستمارة الرسمية">
+        <i class="bi bi-printer me-1"></i> طباعة الاستمارة
       </button>
       @if(optional(auth()->user())->hasRole('admin') || optional(auth()->user())->hasRole('manager'))
         <a class="btn btn-outline-primary" href="{{ route('beneficiaries.edit', $beneficiary) }}">
@@ -391,78 +391,51 @@
   </div>
 </div>
 
+{{-- Official Printable Beneficiary Dossier (Hidden in DOM, used for Print & Preview) --}}
+@include('beneficiaries.partials.printable_dossier')
+
 {{-- Print Styles --}}
 <style>
   @media print {
-    /* Hide navigation and buttons */
+    /* Hide everything on page by default */
+    body > *,
     .navbar,
     .sidebar-fixed,
-    .btn-group,
-    .page-header .btn,
-    form,
-    body {
-      padding-top: 0 !important;
-    }
-
-    /* Hide action buttons and forms */
-    .btn-group,
-    form {
+    .container-fluid,
+    .modal-backdrop,
+    #universalPrintPreviewModal,
+    header,
+    nav,
+    footer {
       display: none !important;
+      visibility: hidden !important;
     }
 
-    /* Optimize layout for print */
-    .container-fluid {
-      max-width: 100%;
-    }
-
-    .card {
-      border: 1px solid #dee2e6 !important;
-      box-shadow: none !important;
-      page-break-inside: avoid;
-    }
-
-    /* Add header for print */
-    .page-header::before {
-      content: "تقرير المستفيد - مؤسسة إنسان";
-      display: block;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #10b981;
-    }
-
-    /* Ensure table fits on page */
-    table {
-      font-size: 0.85rem;
-    }
-
-    /* Preserve colors for badges */
-    .badge,
-    .bg-primary,
-    .bg-success-subtle,
-    .bg-info-subtle,
-    .bg-warning-subtle {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    /* Hide action buttons in table */
-    table td:last-child {
-      display: none;
-    }
-    table th:last-child {
-      display: none;
-    }
-
-    /* Adjust sidebar for print */
-    .col-lg-4 {
-      display: none;
-    }
-    .col-lg-8 {
+    /* Display ONLY the official printable dossier */
+    #printableBeneficiaryDossier {
+      display: block !important;
+      visibility: visible !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
       width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    #printableBeneficiaryDossier * {
+      visibility: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    #printableBeneficiaryDossier .official-voucher-card {
+      border: 2px solid #059669 !important;
+      box-shadow: none !important;
       max-width: 100% !important;
+      padding: 20px !important;
     }
   }
       /* --- LIGHT MODE ADAPTATION --- */

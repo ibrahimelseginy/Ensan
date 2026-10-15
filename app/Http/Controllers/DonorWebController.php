@@ -20,6 +20,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 final class DonorWebController extends Controller
 {
@@ -275,6 +278,90 @@ final class DonorWebController extends Controller
         return view('donors.print-report', compact(
             'donors', 'donStats', 'reportTitle', 'totalAmount', 'totalCount', 'filters'
         ));
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        $selectedIds = $request->input('ids');
+        $filters = $request->only(['q', 'type', 'classification', 'active']);
+
+        if (!empty($selectedIds)) {
+            $ids = is_array($selectedIds) ? $selectedIds : explode(',', (string)$selectedIds);
+            $donors = Donor::whereIn('id', $ids)->orderByDesc('id')->get();
+            $reportTitle = 'كشف بيانات المتبرعين المحددين';
+        } else {
+            $q              = $filters['q'] ?? '';
+            $type           = $filters['type'] ?? null;
+            $classification = $filters['classification'] ?? null;
+            $active         = $filters['active'] ?? null;
+
+            $donors = Donor::query()
+                ->when($q !== '', function ($query) use ($q) {
+                    $parsed = \App\Helpers\ArabicSearchHelper::parseQuery($q);
+                    $variants = $parsed['variants'];
+                    $codes = $parsed['codes'];
+                    $numbers = $parsed['numbers'];
+
+                    $query->where(function ($w) use ($variants, $codes, $numbers) {
+                        foreach ($variants as $var) {
+                            $w->orWhere('name', 'like', "%{$var}%")
+                              ->orWhere('code', 'like', "%{$var}%")
+                              ->orWhere('phone', 'like', "%{$var}%");
+                        }
+                        foreach ($codes as $c) {
+                            $w->orWhere('code', 'like', "%{$c}%");
+                        }
+                        foreach ($numbers as $num) {
+                            $w->orWhere('id', (int)$num)
+                              ->orWhere('phone', 'like', "%{$num}%")
+                              ->orWhere('code', 'like', "%{$num}%");
+                        }
+                    });
+                })
+                ->when($type, fn($query, $t) => $query->where('type', $t))
+                ->when($classification, fn($query, $c) => $query->where('classification', $c))
+                ->when(!is_null($active) && $active !== '', fn($query, $a) => $query->where('active', (bool)$a))
+                ->orderByDesc('id')
+                ->limit(2000)
+                ->get();
+
+            $reportTitle = 'كشف بيانات المتبرعين — نتائج التصفية';
+        }
+
+        $donorIds = $donors->pluck('id');
+        $donStats = Donation::select('donor_id', DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))
+            ->whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->groupBy('donor_id')
+            ->get()
+            ->keyBy('donor_id');
+
+        $totalAmount = (float) Donation::whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->sum(DB::raw('COALESCE(amount, estimated_value, 0)'));
+        $totalCount  = (int) Donation::whereIn('donor_id', $donorIds)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $html = view('donors.pdf-list', compact(
+            'donors', 'donStats', 'reportTitle', 'totalAmount', 'totalCount'
+        ))->render();
+
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'donors-report-' . now()->format('Y-m-d') . '.pdf';
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
