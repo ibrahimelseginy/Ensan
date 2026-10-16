@@ -294,13 +294,35 @@
                 item.style.height = 'auto';
             });
 
-            // Remove box-shadows and ensure clean light presentation on paper
-            var cards = el.querySelectorAll('.card, .kpi-card, .stat-card, .chart-container');
+            // Remove box-shadows and ensure clean pure white presentation on paper
+            var cards = el.querySelectorAll('.card, .kpi-card, .stat-card, .chart-container, .card-header, .card-body, .card-footer, .list-group-item, [class*="card"]');
             cards.forEach(function (card) {
-                card.style.boxShadow = 'none';
-                card.style.background = '#f8fafc';
-                card.style.color = '#0f172a';
-                card.style.border = '1px solid #e2e8f0';
+                card.style.setProperty('box-shadow', 'none', 'important');
+                card.style.setProperty('background', '#ffffff', 'important');
+                card.style.setProperty('background-color', '#ffffff', 'important');
+                card.style.setProperty('color', '#0f172a', 'important');
+                card.style.setProperty('border-color', '#e2e8f0', 'important');
+            });
+            if (el.matches && el.matches('.card, .kpi-card, .stat-card, .chart-container, .card-header, .card-body')) {
+                el.style.setProperty('box-shadow', 'none', 'important');
+                el.style.setProperty('background', '#ffffff', 'important');
+                el.style.setProperty('background-color', '#ffffff', 'important');
+                el.style.setProperty('color', '#0f172a', 'important');
+                el.style.setProperty('border-color', '#e2e8f0', 'important');
+            }
+
+            // Compact excessive vertical spaces to prevent 1-page content from spilling onto an empty second page
+            var spacedItems = el.querySelectorAll('.mb-4, .mb-5, .my-4, .my-5, .pt-4, .pt-5, .pb-4, .pb-5');
+            spacedItems.forEach(function (item) {
+                if (item.classList.contains('mb-4') || item.classList.contains('mb-5')) {
+                    item.style.setProperty('margin-bottom', '8px', 'important');
+                }
+                if (item.classList.contains('pt-4') || item.classList.contains('pt-5')) {
+                    item.style.setProperty('padding-top', '8px', 'important');
+                }
+                if (item.classList.contains('pb-4') || item.classList.contains('pb-5')) {
+                    item.style.setProperty('padding-bottom', '8px', 'important');
+                }
             });
         },
 
@@ -420,9 +442,9 @@
             '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">' +
             '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">' +
             '<style>' +
-            '@page { size: ' + (isLandscape ? 'A4 landscape' : 'A4 portrait') + '; margin: 6mm 8mm; }' +
+            '@page { size: ' + (isLandscape ? 'A4 landscape' : 'A4 portrait') + '; margin: 4mm 6mm; }' +
             '* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; box-sizing: border-box !important; }' +
-            'html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; color: #0f172a !important; font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif !important; direction: rtl; font-size: 12.5px; line-height: 1.5; }' +
+            'html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; color: #0f172a !important; font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif !important; direction: rtl; font-size: 11.5px; line-height: 1.4; }' +
             '/* Standalone Grid & Flex Rules (Independent of external CDN) */' +
             '.d-flex { display: flex !important; }' +
             '.justify-content-between { justify-content: space-between !important; }' +
@@ -437,26 +459,31 @@
             '.text-center { text-align: center !important; }' +
             '.text-start { text-align: right !important; }' +
             '.text-end { text-align: left !important; }' +
-            '#printableDonorSheet, .a4-paper-sheet, #printableDonationVoucher, #universalPrintPaper { width: 100% !important; max-width: 100% !important; margin: 0 auto !important; padding: 18px !important; border: 2px solid #059669 !important; border-radius: 6px !important; box-shadow: none !important; background: #ffffff !important; color: #0f172a !important; transform: none !important; }' +
+            '#printableDonorSheet, .a4-paper-sheet, #printableDonationVoucher, #universalPrintPaper { width: 100% !important; max-width: 100% !important; margin: 0 auto !important; padding: 8px 12px !important; border: 1.5px solid #059669 !important; border-radius: 6px !important; box-shadow: none !important; background: #ffffff !important; color: #0f172a !important; transform: none !important; }' +
             '#universalPrintPaper, #universalPrintPaper * { visibility: visible !important; }' +
             '#universalPrintPaper .no-print, #universalPrintPaper .d-print-none, #universalPrintPaper button, #universalPrintPaper .btn { display: none !important; }' +
+            '.print-paper-header { margin-bottom: 6px !important; padding-bottom: 6px !important; break-inside: avoid !important; page-break-inside: avoid !important; }' +
+            '.print-paper-footer { margin-top: 8px !important; padding-top: 6px !important; break-inside: avoid !important; page-break-inside: avoid !important; }' +
+            '.print-paper-footer * { break-inside: avoid !important; }' +
+            '.card, .kpi-card, .stat-card, tr, .signatures-section, .sig-box { break-inside: avoid !important; page-break-inside: avoid !important; }' +
             '.text-dark { color: #0f172a !important; }' +
             '.text-muted { color: #64748b !important; }' +
             '.text-success { color: #047857 !important; }' +
             '.text-primary { color: #1d4ed8 !important; }' +
             '.text-warning { color: #b45309 !important; }' +
             '.bg-light { background-color: #f8fafc !important; }' +
-            '.table { color: #0f172a !important; border-color: #cbd5e1 !important; width: 100% !important; margin-bottom: 0 !important; border-collapse: collapse !important; }' +
-            '.table th, .table td { padding: 6px 8px !important; border: 1px solid #cbd5e1 !important; }' +
+            '.table { color: #0f172a !important; border-color: #cbd5e1 !important; width: 100% !important; margin-bottom: 6px !important; border-collapse: collapse !important; }' +
+            '.table th, .table td { padding: 4px 6px !important; border: 1px solid #cbd5e1 !important; }' +
             '.table thead th, #universalPrintPaper table thead th { background-color: #047857 !important; color: #ffffff !important; font-weight: 700 !important; }' +
             '.table-light th, .table-light td { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: 700 !important; }' +
             '.table-bordered th, .table-bordered td { border: 1px solid #cbd5e1 !important; }' +
-            '.badge { display: inline-block; padding: 0.35em 0.65em; font-size: 0.75em; font-weight: 700; line-height: 1; text-align: center; border-radius: 0.375rem; }' +
+            '.badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.72em; font-weight: 700; line-height: 1; text-align: center; border-radius: 0.25rem; }' +
             '.bg-success-subtle { background-color: #d1fae5 !important; color: #065f46 !important; }' +
             '.bg-info-subtle { background-color: #e0f2fe !important; color: #075985 !important; }' +
+            '.card, .card-header, .card-body, .card-footer, .list-group, .list-group-item { background: #ffffff !important; background-color: #ffffff !important; color: #0f172a !important; border-color: #e2e8f0 !important; box-shadow: none !important; margin-bottom: 6px !important; }' +
             '</style>' +
             '</head>' +
-            '<body style="padding: 4px;">' +
+            '<body style="padding: 0; margin: 0;">' +
             htmlContent +
             '</body>' +
             '</html>');

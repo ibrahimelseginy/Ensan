@@ -24,7 +24,7 @@
 
 <div id="printableBeneficiaryDossier" class="d-none">
   <div class="official-voucher-card bg-white text-dark p-4 p-md-5 position-relative mx-auto"
-       style="max-width: 860px; width: 100%; min-height: auto !important; height: auto !important; border: 2px solid #059669; outline: none; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, -apple-system, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.6; margin-bottom: 0 !important;"
+       style="max-width: 860px; width: 100%; min-height: auto !important; height: auto !important; border: 2px solid #059669; outline: none; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif !important; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.6; margin-bottom: 0 !important;"
        dir="rtl">
 
     {{-- Embedded Scoped Styles: Guarantee pure white paper & dark text in any theme --}}
@@ -39,6 +39,7 @@
       [data-bs-theme="dark"] #printableBeneficiaryDossier * {
           color-scheme: light !important;
           box-sizing: border-box !important;
+          font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif !important;
       }
       #printableBeneficiaryDossier,
       #printableBeneficiaryDossier .official-voucher-card {

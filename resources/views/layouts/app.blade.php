@@ -3191,7 +3191,7 @@
       <div class="offcanvas-header border-bottom py-3">
         <div class="d-flex align-items-center gap-2">
           <h5 id="notifOffcanvasLabel" class="mb-0 fw-bold">الإشعارات</h5>
-          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.78rem;">0</span>
+          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 d-none" style="font-size: 0.78rem;">0</span>
         </div>
         <div class="d-flex align-items-center gap-2">
           <button type="button" id="testNotifSoundBtn" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.78rem;" title="تشغيل صوت التنبيه">
@@ -3202,7 +3202,7 @@
         </div>
       </div>
       <div class="offcanvas-body">
-        <div class="d-flex gap-2 mb-3">
+        <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
           <select id="notifSideFilter" class="form-select form-select-sm" style="width:auto">
             <option value="">الكل</option>
             <option value="success">نجاح</option>
@@ -3212,6 +3212,9 @@
             <option value="secondary">عام</option>
           </select>
           <a href="{{ route('notifications.index') }}" class="btn btn-light btn-sm">عرض الكل</a>
+          <button type="button" id="markAllReadBtn" class="btn btn-outline-secondary btn-sm ms-auto" title="تحديد الكل كمقروء">
+            <i class="bi bi-check2-all"></i> تحديد كمقروء
+          </button>
         </div>
         <div id="notifSideList" class="d-flex flex-column gap-2"></div>
       </div>
@@ -3225,11 +3228,13 @@
         var bellBtn = document.getElementById('notificationBellBtn');
         var testSoundBtn = document.getElementById('testNotifSoundBtn');
         var offcanvasCount = document.getElementById('notifOffcanvasCount');
+        var markAllBtn = document.getElementById('markAllReadBtn');
         var fKey = 'sidebar.notifications.filter';
         var seenKey = 'notifications.seen.v1.{{ $navUser->id }}';
         var audioContext = null;
         var pendingSound = false;
         var lastItemCount = null;
+        var currentItems = [];
 
         var notificationSignature = function (item) {
           return [item.category || '', item.type || '', item.text || '', item.link || ''].join('|');
@@ -3248,6 +3253,19 @@
           try { localStorage.setItem(seenKey, JSON.stringify(seen)); } catch (e) {}
         };
 
+        var getUnreadCount = function (items) {
+          if (!Array.isArray(items)) return 0;
+          var seen = readSeen();
+          var unread = 0;
+          items.forEach(function (item) {
+            var sig = notificationSignature(item);
+            if (!seen[sig]) {
+              unread++;
+            }
+          });
+          return unread;
+        };
+
         var getAudioContext = function () {
           if (!audioContext) {
             var AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -3264,7 +3282,6 @@
         var synthesizeChime = function (context) {
           try {
             var now = context.currentTime;
-            // Two-tone modern pleasant chime: A5 (880Hz) -> E6 (1318.5Hz)
             var notes = [
               { freq: 880, start: 0, duration: 0.20, gain: 0.28 },
               { freq: 1318.5, start: 0.13, duration: 0.36, gain: 0.32 }
@@ -3324,9 +3341,54 @@
           document.addEventListener(eventName, unlockNotificationSound, { once: true, passive: true });
         });
 
+        var updateBellBadge = function (unreadCount) {
+          if (bellBadge) {
+            bellBadge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+            if (unreadCount > 0) {
+              bellBadge.classList.remove('d-none');
+              bellBadge.style.display = 'inline-flex';
+            } else {
+              bellBadge.classList.add('d-none');
+              bellBadge.style.display = 'none';
+            }
+          }
+          if (offcanvasCount) {
+            offcanvasCount.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+            if (unreadCount > 0) {
+              offcanvasCount.classList.remove('d-none');
+              offcanvasCount.style.display = 'inline-block';
+            } else {
+              offcanvasCount.classList.add('d-none');
+              offcanvasCount.style.display = 'none';
+            }
+          }
+        };
+
+        var markAllAsSeen = function () {
+          if (!Array.isArray(currentItems) || currentItems.length === 0) return;
+          var seen = readSeen();
+          currentItems.forEach(function (item) {
+            seen[notificationSignature(item)] = Date.now();
+          });
+          saveSeen(seen);
+          lastItemCount = 0;
+          updateBellBadge(0);
+          if (list) {
+            var dots = list.querySelectorAll('.notif-unread-dot');
+            dots.forEach(function (d) { d.remove(); });
+          }
+        };
+
+        if (markAllBtn) {
+          markAllBtn.addEventListener('click', function () {
+            markAllAsSeen();
+          });
+        }
+
         if (bellBtn) {
           bellBtn.addEventListener('click', function () {
             playNotificationSound();
+            markAllAsSeen();
           });
         }
 
@@ -3337,40 +3399,19 @@
           });
         }
 
-        var notifyAboutNewItems = function (items) {
-          if (!Array.isArray(items) || items.length === 0) return;
-          var seen = readSeen();
-          items.forEach(function (item) { seen[notificationSignature(item)] = Date.now(); });
-          saveSeen(seen);
-        };
-
-        var updateBellBadge = function (items) {
-          var count = Array.isArray(items) ? items.length : 0;
-          if (bellBadge) {
-            bellBadge.textContent = count > 99 ? '99+' : String(count);
-            if (count > 0) {
-              bellBadge.classList.remove('d-none');
-              bellBadge.style.display = 'inline-flex';
-            } else {
-              bellBadge.classList.add('d-none');
-              bellBadge.style.display = 'none';
-            }
-          }
-          if (offcanvasCount) {
-            offcanvasCount.textContent = count > 99 ? '99+' : String(count);
-          }
-        };
-
         var render = function (items) {
-          updateBellBadge(items);
           list.innerHTML = '';
           if (!items || !items.length) {
             list.innerHTML = '<div class="alert alert-secondary text-center py-5 border-0 bg-opacity-10" style="background: var(--gray-100)"><i class="bi bi-bell-slash fs-1 d-block mb-3 opacity-25"></i><p class="mb-0 fw-medium">لا توجد إشعارات حالياً</p></div>';
             return;
           }
           var val = filter.value;
+          var seen = readSeen();
           items.forEach(function (n) {
             if (val && n.type !== val) return;
+
+            var sig = notificationSignature(n);
+            var isUnread = !seen[sig];
 
             var card = document.createElement('div');
             card.className = 'card border-0 mb-3 notification-card border-' + n.type;
@@ -3414,6 +3455,14 @@
             headRight.appendChild(badge);
             header.appendChild(headRight);
 
+            if (isUnread) {
+              var unreadDot = document.createElement('span');
+              unreadDot.className = 'notif-unread-dot badge bg-danger rounded-pill px-2 py-0.5';
+              unreadDot.style.fontSize = '0.68rem';
+              unreadDot.textContent = 'جديد';
+              header.appendChild(unreadDot);
+            }
+
             var textPara = document.createElement('p');
             textPara.className = 'mb-3 lh-base fw-medium';
             textPara.style.fontSize = '0.95rem';
@@ -3425,6 +3474,12 @@
             link.href = n.link;
             link.className = 'btn btn-' + n.type + ' btn-sm rounded-pill px-4 shadow-sm';
             link.innerHTML = '<i class="bi bi-box-arrow-up-right me-1"></i> فتح';
+            link.addEventListener('click', function () {
+              var s = readSeen();
+              s[sig] = Date.now();
+              saveSeen(s);
+              updateBellBadge(getUnreadCount(currentItems));
+            });
             actionDiv.appendChild(link);
 
             cardBody.appendChild(header);
@@ -3439,30 +3494,33 @@
           fetch('{{ route('notifications.index') }}?format=json')
             .then(function (r) { if (!r.ok) throw new Error('Notification request failed'); return r.json(); })
             .then(function (d) {
-              var items = d.items || [];
-              var currentCount = items.length;
+              currentItems = d.items || [];
+              var unreadCount = getUnreadCount(currentItems);
 
-              render(items);
-              notifyAboutNewItems(items);
+              render(currentItems);
+              updateBellBadge(unreadCount);
 
-              // Sound triggering logic:
+              // Sound triggering logic for unread items:
               if (lastItemCount === null) {
-                lastItemCount = currentCount;
-                if (currentCount > 0 && !sessionStorage.getItem('ensan_notif_sound_played')) {
+                lastItemCount = unreadCount;
+                if (unreadCount > 0 && !sessionStorage.getItem('ensan_notif_sound_played')) {
                   sessionStorage.setItem('ensan_notif_sound_played', '1');
                   playNotificationSound();
                 }
-              } else if (currentCount > lastItemCount) {
-                lastItemCount = currentCount;
+              } else if (unreadCount > lastItemCount) {
+                lastItemCount = unreadCount;
                 playNotificationSound();
               } else {
-                lastItemCount = currentCount;
+                lastItemCount = unreadCount;
               }
             })
-            .catch(function () { render([]); });
+            .catch(function () { render([]); updateBellBadge(0); });
         };
 
-        off.addEventListener('shown.bs.offcanvas', load);
+        off.addEventListener('shown.bs.offcanvas', function () {
+          markAllAsSeen();
+        });
+
         filter.addEventListener('change', function () { localStorage.setItem(fKey, filter.value || ''); load(); });
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
         load();

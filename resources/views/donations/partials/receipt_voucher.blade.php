@@ -11,7 +11,7 @@
 @endphp
 
 <div class="official-voucher-card bg-white text-dark p-4 p-md-5 position-relative mx-auto" 
-     style="max-width: 860px; width: 100%; border: 2.5px solid #059669; outline: 1px solid #10b981; outline-offset: -5px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important;">
+     style="max-width: 860px; width: 100%; border: 2.5px solid #059669; outline: 1px solid #10b981; outline-offset: -5px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif !important; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important;">
   
   {{-- Embedded Scoped Styles: Guarantee pure white paper & dark text in any theme --}}
   <style>
@@ -25,6 +25,7 @@
     [data-bs-theme="dark"] .official-voucher-card * {
         color-scheme: light !important;
         box-sizing: border-box !important;
+        font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif !important;
     }
 
     .official-voucher-card {

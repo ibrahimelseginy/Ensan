@@ -21,6 +21,7 @@
     [data-bs-theme="dark"] #universalPrintPaper * {
         color-scheme: light !important;
         box-sizing: border-box !important;
+        font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif !important;
     }
 
     #universalPrintPaper {
@@ -168,18 +169,64 @@
         color: #b45309 !important;
     }
 
-    /* Cards and KPI summaries on Paper */
+    /* Cards and KPI summaries on Paper: Always PURE WHITE */
+    #universalPrintPaper,
+    body.theme-dark #universalPrintPaper,
+    html.theme-dark #universalPrintPaper,
+    [data-bs-theme="dark"] #universalPrintPaper {
+        --bg-card: #ffffff !important;
+        --ws-bg-card-header: #ffffff !important;
+        --bs-card-bg: #ffffff !important;
+        --bs-body-bg: #ffffff !important;
+        --bs-card-color: #0f172a !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+
     #universalPrintPaper .card,
+    #universalPrintPaper .card-header,
+    #universalPrintPaper .card-body,
+    #universalPrintPaper .card-footer,
     #universalPrintPaper .stat-card,
     #universalPrintPaper .kpi-card,
     #universalPrintPaper .chart-container,
+    #universalPrintPaper .list-group,
+    #universalPrintPaper .list-group-item,
+    #universalPrintPaper [class*="card"],
     body.theme-dark #universalPrintPaper .card,
+    body.theme-dark #universalPrintPaper .card-header,
+    body.theme-dark #universalPrintPaper .card-body,
+    body.theme-dark #universalPrintPaper .card-footer,
     body.theme-dark #universalPrintPaper .stat-card,
     body.theme-dark #universalPrintPaper .kpi-card,
-    body.theme-dark #universalPrintPaper .chart-container {
-        background: #f8fafc !important;
-        border: 1px solid #cbd5e1 !important;
+    body.theme-dark #universalPrintPaper .chart-container,
+    body.theme-dark #universalPrintPaper .list-group,
+    body.theme-dark #universalPrintPaper .list-group-item,
+    body.theme-dark #universalPrintPaper [class*="card"],
+    html.theme-dark #universalPrintPaper .card,
+    html.theme-dark #universalPrintPaper .card-header,
+    html.theme-dark #universalPrintPaper .card-body,
+    html.theme-dark #universalPrintPaper .card-footer,
+    html.theme-dark #universalPrintPaper .stat-card,
+    html.theme-dark #universalPrintPaper .kpi-card,
+    html.theme-dark #universalPrintPaper .chart-container,
+    html.theme-dark #universalPrintPaper .list-group,
+    html.theme-dark #universalPrintPaper .list-group-item,
+    html.theme-dark #universalPrintPaper [class*="card"],
+    [data-bs-theme="dark"] #universalPrintPaper .card,
+    [data-bs-theme="dark"] #universalPrintPaper .card-header,
+    [data-bs-theme="dark"] #universalPrintPaper .card-body,
+    [data-bs-theme="dark"] #universalPrintPaper .card-footer,
+    [data-bs-theme="dark"] #universalPrintPaper .stat-card,
+    [data-bs-theme="dark"] #universalPrintPaper .kpi-card,
+    [data-bs-theme="dark"] #universalPrintPaper .chart-container,
+    [data-bs-theme="dark"] #universalPrintPaper .list-group,
+    [data-bs-theme="dark"] #universalPrintPaper .list-group-item,
+    [data-bs-theme="dark"] #universalPrintPaper [class*="card"] {
+        background-color: #ffffff !important;
+        background: #ffffff !important;
         color: #0f172a !important;
+        border-color: #e2e8f0 !important;
         box-shadow: none !important;
     }
 
@@ -334,26 +381,26 @@
                         </div>
 
                         {{-- Official Footer (تذييل واعتمادات رسمية) --}}
-                        <div class="print-paper-footer pt-3 mt-4 border-top border-dark border-opacity-25 position-relative" style="z-index: 1;">
-                            <div class="row align-items-center text-center g-2 small">
+                        <div class="print-paper-footer pt-2 mt-2 border-top border-dark border-opacity-25 position-relative" style="z-index: 1; break-inside: avoid !important; page-break-inside: avoid !important;">
+                            <div class="row align-items-center text-center g-1 small">
                                 <div class="col-4">
-                                    <div class="mb-2" style="color: #475569 !important;">الموظف المسؤول / المختص</div>
-                                    <div class="border-bottom border-dark border-dashed mx-auto" style="width: 120px; height: 18px;"></div>
+                                    <div class="mb-1" style="color: #475569 !important; font-size: 0.78rem;">الموظف المسؤول / المختص</div>
+                                    <div class="border-bottom border-dark border-dashed mx-auto" style="width: 110px; height: 12px;"></div>
                                     <div class="fw-bold small mt-1" style="color: #0f172a !important;">{{ auth()->user()->name ?? '..................' }}</div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="mb-1" style="color: #475569 !important;">ختم المؤسسة الرسمي</div>
-                                    <div class="rounded-circle border border-2 border-success mx-auto d-flex align-items-center justify-content-center" style="width: 55px; height: 55px; opacity: 0.35;">
-                                        <i class="bi bi-patch-check text-success fs-3"></i>
+                                    <div class="mb-1" style="color: #475569 !important; font-size: 0.78rem;">ختم المؤسسة الرسمي</div>
+                                    <div class="rounded-circle border border-2 border-success mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; opacity: 0.35;">
+                                        <i class="bi bi-patch-check text-success fs-4"></i>
                                     </div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="mb-2" style="color: #475569 !important;">الاعتماد الإداري / المالي</div>
-                                    <div class="border-bottom border-dark border-dashed mx-auto" style="width: 120px; height: 18px;"></div>
+                                    <div class="mb-1" style="color: #475569 !important; font-size: 0.78rem;">الاعتماد الإداري / المالي</div>
+                                    <div class="border-bottom border-dark border-dashed mx-auto" style="width: 110px; height: 12px;"></div>
                                     <div class="small mt-1" style="color: #64748b !important;">توقيع معتمد</div>
                                 </div>
                             </div>
-                            <div class="text-center pt-2 mt-2 border-top" style="font-size: 0.7rem; color: #64748b !important;">
+                            <div class="text-center pt-1 mt-1 border-top" style="font-size: 0.68rem; color: #64748b !important;">
                                 <div>تم استخراج هذه الوثيقة آلياً من نظام مؤسسة إنسان الخيرية — يحظر التعديل اليدوي أو الكشط.</div>
                             </div>
                         </div>

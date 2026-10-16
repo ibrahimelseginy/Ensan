@@ -104,6 +104,28 @@
             background: #111827 !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
         }
+        #universalPrintPaper #printableReportsContainer .card,
+        #universalPrintPaper #printableReportsContainer .card-header,
+        #universalPrintPaper #printableReportsContainer .card-body,
+        #universalPrintPaper #printableReportsContainer .card-footer {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            box-shadow: none !important;
+            border-color: #e2e8f0 !important;
+        }
+        @media print {
+            #printableReportsContainer .card,
+            #printableReportsContainer .card-header,
+            #printableReportsContainer .card-body,
+            #printableReportsContainer .card-footer {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                box-shadow: none !important;
+                border-color: #e2e8f0 !important;
+            }
+        }
         .reports-nav-grid {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
@@ -338,17 +360,23 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">إجمالي المتبرعين</small>
-                                    <strong class="fs-5 text-dark">{{ $donorsTotal }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">إجمالي المتبرعين</small>
+                                        <strong class="fs-5 text-dark">{{ $donorsTotal }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">متبرعون دائمون</small>
-                                    <strong class="fs-5 text-success">{{ $donorsRecurring }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">متبرعون دائمون</small>
+                                        <strong class="fs-5 text-success">{{ $donorsRecurring }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">عدد العمليات</small>
-                                    <strong class="fs-5 text-primary">{{ $donationsCount }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">عدد العمليات</small>
+                                        <strong class="fs-5 text-primary">{{ $donationsCount }}</strong>
+                                    </div>
                                 </div>
                             </div>
                             <h6 class="small fw-bold text-muted mb-2">أبرز أغراض وتصنيفات التبرعات:</h6>
@@ -379,13 +407,17 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-6 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">إجمالي المسجلين</small>
-                                    <strong class="fs-5 text-dark">{{ $beneficiariesTotal }}</strong>
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">إجمالي المسجلين</small>
+                                        <strong class="fs-5 text-dark">{{ $beneficiariesTotal }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-6 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">مجموع الكفالات الشهرية</small>
-                                    <strong class="fs-5 text-primary">{{ number_format($totalSponsorshipAmount, 0) }} ج.م</strong>
+                                <div class="col-6">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">مجموع الكفالات الشهرية</small>
+                                        <strong class="fs-5 text-primary">{{ number_format($totalSponsorshipAmount, 0) }} ج.م</strong>
+                                    </div>
                                 </div>
                             </div>
                             <h6 class="small fw-bold text-muted mb-2">توزيع المستفيدين حسب الحالة:</h6>
@@ -416,17 +448,23 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">عدد الدور</small>
-                                    <strong class="fs-5 text-dark">{{ $totalGuestHouses }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">عدد الدور</small>
+                                        <strong class="fs-5 text-dark">{{ $totalGuestHouses }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">إجمالي الأجنحة</small>
-                                    <strong class="fs-5 text-dark">{{ $totalWings }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">إجمالي الأجنحة</small>
+                                        <strong class="fs-5 text-dark">{{ $totalWings }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">نسبة الإشغال</small>
-                                    <strong class="fs-5 text-danger">{{ $overallOccupancyRate }}%</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">نسبة الإشغال</small>
+                                        <strong class="fs-5 text-danger">{{ $overallOccupancyRate }}%</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="list-group list-group-flush small">
@@ -460,21 +498,29 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-3 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">المستودعات</small>
-                                    <strong class="fs-6 text-dark">{{ $warehousesCount }}</strong>
+                                <div class="col-3">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">المستودعات</small>
+                                        <strong class="fs-6 text-dark">{{ $warehousesCount }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-3 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">الأصناف</small>
-                                    <strong class="fs-6 text-dark">{{ $itemsCount }}</strong>
+                                <div class="col-3">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">الأصناف</small>
+                                        <strong class="fs-6 text-dark">{{ $itemsCount }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-3 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">صافي الرصيد</small>
-                                    <strong class="fs-6 text-success">{{ number_format($netInventoryQty, 0) }}</strong>
+                                <div class="col-3">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">صافي الرصيد</small>
+                                        <strong class="fs-6 text-success">{{ number_format($netInventoryQty, 0) }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-3 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">أصناف منخفضة</small>
-                                    <strong class="fs-6 text-danger">{{ $lowStockCount }}</strong>
+                                <div class="col-3">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">أصناف منخفضة</small>
+                                        <strong class="fs-6 text-danger">{{ $lowStockCount }}</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center p-2 rounded-2 bg-light border">
@@ -498,17 +544,23 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">المشاريع</small>
-                                    <strong class="fs-5 text-dark">{{ $projectsCount }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">المشاريع</small>
+                                        <strong class="fs-5 text-dark">{{ $projectsCount }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">الحملات</small>
-                                    <strong class="fs-5 text-dark">{{ $campaignsCount }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">الحملات</small>
+                                        <strong class="fs-5 text-dark">{{ $campaignsCount }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">نسبة الإنجاز</small>
-                                    <strong class="fs-5 text-info">{{ $overallCampaignProgress }}%</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">نسبة الإنجاز</small>
+                                        <strong class="fs-5 text-info">{{ $overallCampaignProgress }}%</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="list-group list-group-flush small">
@@ -543,17 +595,23 @@
                         </div>
                         <div class="card-body px-4">
                             <div class="row g-2 text-center mb-3">
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">إجمالي المتطوعين</small>
-                                    <strong class="fs-5 text-dark">{{ $volunteersCount }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">إجمالي المتطوعين</small>
+                                        <strong class="fs-5 text-dark">{{ $volunteersCount }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">ساعات التطوع</small>
-                                    <strong class="fs-5 text-dark">{{ number_format($volunteerHoursTotal, 1) }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">ساعات التطوع</small>
+                                        <strong class="fs-5 text-dark">{{ number_format($volunteerHoursTotal, 1) }}</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 p-2 bg-light rounded-3">
-                                    <small class="text-muted d-block">المهام المنجزة</small>
-                                    <strong class="fs-5 text-success">{{ $tasksCompleted }} / {{ $tasksTotal }}</strong>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded-3 border h-100">
+                                        <small class="text-muted d-block">المهام المنجزة</small>
+                                        <strong class="fs-5 text-success">{{ $tasksCompleted }} / {{ $tasksTotal }}</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center p-2 rounded-2 bg-light border small">

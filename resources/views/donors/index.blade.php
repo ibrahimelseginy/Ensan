@@ -807,7 +807,7 @@
         });
 
         return `
-            <div id="donorsPrintContent" class="donors-sheet-content position-relative mx-auto" dir="rtl" style="width: 100%; font-family: 'Cairo', system-ui, -apple-system, sans-serif; background: #ffffff !important; color: #0f172a !important; box-sizing: border-box;">
+            <div id="donorsPrintContent" class="donors-sheet-content position-relative mx-auto" dir="rtl" style="width: 100%; font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif; background: #ffffff !important; color: #0f172a !important; box-sizing: border-box;">
                 
                 {{-- KPI Summary Boxes --}}
                 <div class="row g-2 mb-3 text-center print-kpi-summary">
