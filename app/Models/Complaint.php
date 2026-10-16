@@ -21,7 +21,7 @@ final class Complaint extends Model
     protected static function booted(): void
     {
         static::creating(function (Complaint $complaint) {
-            if (empty($complaint->tracking_code)) {
+            if (empty($complaint->tracking_code) || static::where('tracking_code', $complaint->tracking_code)->exists()) {
                 $complaint->tracking_code = static::generateUniqueTrackingCode();
             }
         });

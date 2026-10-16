@@ -65,6 +65,27 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->middleware('throttle:heavy-ops')->name('complaint.track');
 Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->middleware('throttle:heavy-ops')->name('complaint.track.search');
 
+// مسار أمان احتياطي لتغذية ملفات التخزين والمرفقات في حال تمت معالجتها عبر لارافيل
+Route::get('storage/{path}', function (string $path) {
+    $path = str_replace(["\0", '..'], '', $path);
+    $path = ltrim($path, '/');
+
+    $candidates = [
+        storage_path('app/public/' . $path),
+        public_path('storage/' . $path),
+        public_path('uploads/' . $path),
+        storage_path('app/' . $path),
+    ];
+
+    foreach ($candidates as $file) {
+        if (is_file($file) && is_readable($file)) {
+            return response()->file($file);
+        }
+    }
+
+    abort(404);
+})->where('path', '.*')->name('storage.fallback');
+
 
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {

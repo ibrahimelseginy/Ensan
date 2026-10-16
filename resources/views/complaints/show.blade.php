@@ -1,10 +1,18 @@
 @extends('layouts.app')
 @section('content')
-    <div class="page-header">
-        <h4 class="mb-0">
-            <i class="bi bi-exclamation-triangle text-primary"></i>
-            تفاصيل الشكوى
-        </h4>
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h4 class="mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle text-primary"></i>
+                تفاصيل الشكوى
+                @if($complaint->tracking_code)
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace fs-6 px-2.5 py-1">
+                        {{ $complaint->tracking_code }}
+                    </span>
+                @endif
+            </h4>
+            <div class="text-muted small">عرض كافة تفاصيل ومجريات حل الشكوى المسجلة</div>
+        </div>
         <div class="btn-group">
             <a class="btn btn-outline-primary" href="{{ route('complaints.edit', $complaint) }}">
                 <i class="bi bi-pencil me-1"></i> تعديل
@@ -27,27 +35,30 @@
 
                     <div class="row g-3">
                         {{-- كود التتبع --}}
+                        @php
+                            $showCode = $complaint->tracking_code ?: ('ENS-' . str_pad((string)$complaint->id, 6, '0', STR_PAD_LEFT));
+                        @endphp
                         <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 rounded-3" style="background: #f0fdf4; border: 1.5px solid #86efac;">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3.5 rounded-3" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.12) 100%); border: 1.5px solid #10b981; border-radius: 14px;">
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="p-2.5 rounded-3 bg-success bg-opacity-10 text-success">
+                                    <div class="p-2.5 rounded-3 bg-success bg-opacity-15 text-success">
                                         <i class="bi bi-shield-check fs-2"></i>
                                     </div>
                                     <div>
-                                        <div class="text-muted small fw-bold">كود التتبع المعتمد للشكوى</div>
+                                        <div class="text-muted small fw-bold">كود الشكوى المعتمد (كود التتبع الخاص)</div>
                                         <div class="fw-bold fs-4" style="font-family: monospace; letter-spacing: 2px; color: #059669;">
-                                            {{ $complaint->tracking_code }}
+                                            {{ $showCode }}
                                         </div>
                                         <div class="small text-muted mt-0.5">
-                                            يمكن للمراجع أو الموظف تتبع مراحل الحل فوراً عبر الرابط العام
+                                            يمكن للشاكي أو الإدارة تتبع مراحل الحل فوراً عبر الرابط العام
                                         </div>
                                     </div>
                                 </div>
-                                <div class="d-flex gap-2 align-items-center">
-                                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="navigator.clipboard.writeText('{{ $complaint->tracking_code }}'); this.innerText='تم النسخ!'; setTimeout(() => this.innerText='نسخ الكود', 2000)">
+                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 bg-white" onclick="navigator.clipboard.writeText('{{ $showCode }}'); this.innerText='تم النسخ!'; setTimeout(() => this.innerText='نسخ الكود', 2000)">
                                         <i class="bi bi-clipboard me-1"></i> نسخ الكود
                                     </button>
-                                    <a href="{{ route('complaint.track', ['code' => $complaint->tracking_code]) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                                    <a href="{{ route('complaint.track', ['code' => $showCode]) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
                                         <i class="bi bi-box-arrow-up-right me-1"></i> تتبع الشكوى الآن
                                     </a>
                                 </div>

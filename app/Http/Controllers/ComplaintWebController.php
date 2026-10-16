@@ -11,8 +11,24 @@ use Illuminate\Http\Request;
 
 final class ComplaintWebController extends Controller
 {
-    public function index() { 
-        $complaints = Complaint::orderByDesc('id')->paginate(20); 
+    public function index(Request $request) { 
+        $query = Complaint::query();
+
+        if ($search = $request->input('search')) {
+            $search = trim($search);
+            $query->where(function($q) use ($search) {
+                $q->where('tracking_code', 'like', "%{$search}%")
+                  ->orWhere('subject', 'like', "%{$search}%")
+                  ->orWhere('complainant_name', 'like', "%{$search}%")
+                  ->orWhere('complainant_phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $complaints = $query->orderByDesc('id')->paginate(20)->withQueryString(); 
 
         // Add pending check for each complaint
         $complaints->each(function($c) {
@@ -54,6 +70,11 @@ final class ComplaintWebController extends Controller
             'message' => 'required|string'
         ], $messages);
 
+        // Guarantee unique tracking code for every single complaint
+        if (empty($data['tracking_code']) || Complaint::where('tracking_code', $data['tracking_code'])->exists()) {
+            $data['tracking_code'] = Complaint::generateUniqueTrackingCode();
+        }
+
         // Ensure we have a person identified or named
         if (empty($data['source_id']) && empty($data['complainant_name'])) {
             return back()->withInput()->withErrors(['source_id' => 'يرجى اختيار الشخص صاحب الشكوى من القائمة أو كتابة اسمه يدوياً.']);
@@ -93,11 +114,12 @@ final class ComplaintWebController extends Controller
         );
 
         if ($result instanceof \App\Models\ChangeRequest) {
-            return redirect()->route('change-requests.index')->with('success', 'تم إرسال الشكوى للمراجعة.');
+            return redirect()->route('change-requests.index')->with('success', 'تم إرسال الشكوى للمراجعة بنجاح. كود الشكوى المخصص: ' . ($data['tracking_code'] ?? ''));
         }
 
+        $trackingCode = $result->tracking_code ?: ($data['tracking_code'] ?? '');
         return redirect()->route('complaints.show', $result)
-            ->with('success', 'تم حفظ وتسجيل الشكوى بنجاح. كود التتبع المعتمد هو: ' . $result->tracking_code);
+            ->with('success', 'تم حفظ وتسجيل الشكوى بنجاح. كود التتبع المعتمد هو: ' . $trackingCode);
     }
     public function show(Complaint $complaint) { 
         $pending = \App\Models\ChangeRequest::where('model_type', Complaint::class)

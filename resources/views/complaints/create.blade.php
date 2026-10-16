@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $trackingCode = old('tracking_code', $trackingCode ?? \App\Models\Complaint::generateUniqueTrackingCode());
+@endphp
+
 @section('content')
     {{-- Page Header --}}
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
@@ -8,7 +12,7 @@
                 <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
                 إضافة شكوى جديدة
             </h4>
-            <div class="text-muted small">تسجيل شكوى جديدة وتحديد صاحب الشكوى ومتابعتها</div>
+            <div class="text-muted small">تسجيل شكوى جديدة وتحديد صاحب الشكوى ومتابعتها عبر كود تتبع خاص ومميز</div>
         </div>
         <a href="{{ route('complaints.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-right me-1"></i> رجوع للشكاوى
@@ -39,36 +43,45 @@
                 <input type="hidden" name="source_id" id="hidden_source_id" value="{{ old('source_id', '') }}">
 
                 <div class="row g-4">
-                    {{-- كود التتبع المعتمد للشكوى مسبقاً --}}
+                    {{-- كود الشكوى المخصص (كود التتبع المعتمد لكل شكوى) --}}
                     <div class="col-12">
-                        <div class="p-3.5 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
-                             style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid #10b981; border-radius: 14px;">
+                        <div class="p-3.5 p-md-4 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" 
+                             style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.12) 100%); border: 2px solid #10b981; border-radius: 16px;">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="p-2.5 rounded-3 bg-success bg-opacity-10 text-success">
-                                    <i class="bi bi-upc-scan fs-3"></i>
+                                <div class="p-3 rounded-3 bg-success bg-opacity-15 text-success shadow-sm">
+                                    <i class="bi bi-upc-scan fs-2"></i>
                                 </div>
                                 <div>
-                                    <div class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2.5 py-1 mb-1 fw-bold">
-                                        <i class="bi bi-shield-check me-1"></i> كود التتبع الرسمي المخصص للشاكي
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge bg-success text-white px-2.5 py-1 fw-bold">
+                                            <i class="bi bi-shield-check me-1"></i> كود الشكوى الخاص
+                                        </span>
+                                        <span class="text-muted small fw-medium">كود فريد مخصص لهذه الشكوى</span>
                                     </div>
-                                    <div class="fw-bold font-monospace fs-4 text-success" id="displayTrackingCode" style="letter-spacing: 2px;">
-                                        {{ $trackingCode ?? ('ENS-' . strtoupper(\Illuminate\Support\Str::random(6))) }}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-white text-success border border-success border-2 font-monospace fs-4 px-3 py-1 shadow-sm" id="displayTrackingCode" style="letter-spacing: 2px;">
+                                            {{ $trackingCode }}
+                                        </span>
                                     </div>
-                                    <div class="text-muted small mt-0.5">
-                                        يمكن إعطاء هذا الكود للشاكي فوراً لمتابعة مراحل الحل عبر الرابط العام: 
+                                    <div class="text-muted small mt-1.5">
+                                        يتم إنشاء هذا الكود تلقائياً لتمييز الشكوى، ويمكن إعطاؤه للشاكي لمتابعة حالة الشكوى عبر: 
                                         <a href="{{ route('complaint.track') }}" target="_blank" class="fw-bold text-success text-decoration-none">
-                                            {{ route('complaint.track') }}
+                                            {{ route('complaint.track') }} <i class="bi bi-box-arrow-up-right small"></i>
                                         </a>
                                     </div>
                                 </div>
                             </div>
 
-                            <input type="hidden" name="tracking_code" value="{{ old('tracking_code', $trackingCode ?? '') }}">
+                            <input type="hidden" name="tracking_code" id="tracking_code_input" value="{{ $trackingCode }}">
 
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-bold" 
-                                        onclick="navigator.clipboard.writeText('{{ $trackingCode ?? '' }}'); this.innerText='تم النسخ!'; setTimeout(() => this.innerText='نسخ الكود', 2000)">
-                                    <i class="bi bi-clipboard me-1"></i> نسخ الكود للشاكي
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-bold bg-white" 
+                                        onclick="generateNewTrackingCode()" title="توليد كود شكوى جديد آخر">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> توليد كود آخر
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 py-1.5 fw-bold bg-white shadow-sm" 
+                                        onclick="copyTrackingCode(this)" title="نسخ كود الشكوى">
+                                    <i class="bi bi-clipboard me-1"></i> نسخ كود الشكوى
                                 </button>
                             </div>
                         </div>
@@ -288,6 +301,53 @@
                 return;
             }
             document.getElementById('hidden_source_id').value = selectEl.value || '';
+        }
+
+        let currentTrackingCode = @json($trackingCode);
+
+        function copyTrackingCode(btn) {
+            const codeToCopy = currentTrackingCode || document.getElementById('tracking_code_input').value;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(codeToCopy).then(() => {
+                    showCopyFeedback(btn);
+                }).catch(() => {
+                    fallbackCopy(codeToCopy, btn);
+                });
+            } else {
+                fallbackCopy(codeToCopy, btn);
+            }
+        }
+
+        function fallbackCopy(text, btn) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showCopyFeedback(btn);
+        }
+
+        function showCopyFeedback(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2-circle me-1 text-success"></i> تم النسخ بنجاح!';
+            btn.classList.add('border-success');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('border-success');
+            }, 2500);
+        }
+
+        function generateNewTrackingCode() {
+            const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+            let rand = '';
+            for (let i = 0; i < 6; i++) {
+                rand += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            const newCode = 'ENS-' + rand;
+            currentTrackingCode = newCode;
+            document.getElementById('displayTrackingCode').innerText = newCode;
+            document.getElementById('tracking_code_input').value = newCode;
         }
 
         // Initialize state on page load

@@ -17,6 +17,43 @@
         </div>
     </div>
 
+    {{-- Search & Filter Bar --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ route('complaints.index') }}" class="row g-2 align-items-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0" 
+                               placeholder="ابحث بكود التتبع (ENS-...) أو العنوان أو اسم الشاكي..." 
+                               value="{{ request('search') }}">
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">جميع الحالات</option>
+                        <option value="open" @selected(request('status') === 'open')>مفتوحة</option>
+                        <option value="in_progress" @selected(request('status') === 'in_progress')>جارية</option>
+                        <option value="resolved" @selected(request('status') === 'resolved')>تم الحل</option>
+                        <option value="closed" @selected(request('status') === 'closed')>مغلقة</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-3">
+                        <i class="bi bi-funnel me-1"></i> تصفية
+                    </button>
+                    @if(request()->hasAny(['search', 'status']))
+                        <a href="{{ route('complaints.index') }}" class="btn btn-outline-secondary px-3">
+                            <i class="bi bi-x-circle me-1"></i> إعادة ضبط
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Complaints Table --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="table-responsive" style="min-height: 400px; overflow-x: auto; overflow-y: visible;">
