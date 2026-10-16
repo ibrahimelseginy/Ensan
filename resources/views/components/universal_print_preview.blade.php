@@ -2,8 +2,8 @@
 <style>
     /* Virtual Paper Workbench Canvas */
     .print-preview-canvas {
-        background: #090e17 !important;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 0) !important;
+        background: #f1f5f9 !important;
+        background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 0) !important;
         background-size: 20px 20px !important;
         min-height: 80vh !important;
         overflow-y: auto !important;
@@ -27,25 +27,43 @@
         background: #ffffff !important;
         color: #0f172a !important;
         direction: rtl !important;
-        border: 2px solid #059669 !important;
-        border-radius: 6px !important;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6) !important;
-        padding: 24px 28px !important;
+        border: none !important;
+        outline: none !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+        padding: 0 !important;
         margin: 0 auto !important;
         transform-origin: top center;
         transition: transform 0.2s ease, width 0.2s ease;
     }
 
+    /* When containing a self-contained official card, ensure no duplicate outer border, padding, or excess height */
+    #universalPrintPaper:has(.official-voucher-card),
+    #universalPrintPaper.is-voucher {
+        border: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        min-height: auto !important;
+        height: auto !important;
+    }
+
     #universalPrintPaper.portrait {
         width: 210mm !important;
         max-width: 100% !important;
-        min-height: 297mm !important;
+        min-height: auto !important;
     }
 
     #universalPrintPaper.landscape {
         width: 297mm !important;
         max-width: 100% !important;
-        min-height: 210mm !important;
+        min-height: auto !important;
+    }
+
+    .a4-paper-sheet,
+    .official-voucher-card {
+        min-height: auto !important;
     }
 
     /* Dark Mode Defeat: Prevent white-on-white or dark-on-dark text */
@@ -224,62 +242,62 @@
 <div class="modal fade" id="universalPrintPreviewModal" tabindex="-1" aria-labelledby="universalPrintPreviewModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden">
-            <!-- Modal Header / Toolbar -->
-            <div class="modal-header bg-dark text-white py-2 px-3 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
+            <!-- Modal Header / Toolbar (Image 2 Look: Clean Light Bar with Green Accent) -->
+            <div class="modal-header bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="rounded-circle bg-success bg-opacity-20 text-success p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="bi bi-file-earmark-text-fill fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-white mb-0 fs-6" id="universalPrintPreviewModalLabel">
-                            معاينة قبل الطباعة الرسمية
+                        <h5 class="modal-title fw-bold text-dark mb-0 fs-6" id="universalPrintPreviewModalLabel">
+                            معاينة الوثيقة والتقرير الرسمي
                         </h5>
-                        <small class="text-white-50" id="universalPreviewDocSubtitle">محاكاة دقيقة لمظهر الورقة المطبوعة (A4)</small>
+                        <small class="text-muted" id="universalPreviewDocSubtitle">هذا هو الشكل النهائي الدقيق للمستند كما سيظهر في الطباعة (A4)</small>
                     </div>
                 </div>
 
                 {{-- Preview Controls Toolbar --}}
                 <div class="d-flex align-items-center gap-2">
                     {{-- Orientation Toggle --}}
-                    <div class="btn-group btn-group-sm bg-secondary bg-opacity-25 rounded p-1" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-light active px-2 py-1" id="btnPreviewPortrait" onclick="window.EnsanPrintPreview.setOrientation('portrait')" title="وضع طولي (A4 Portrait)">
+                    <div class="btn-group btn-group-sm bg-white border rounded p-0.5" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-success active px-2 py-1" id="btnPreviewPortrait" onclick="window.EnsanPrintPreview.setOrientation('portrait')" title="وضع طولي (A4 Portrait)">
                             <i class="bi bi-file-earmark me-1"></i> طولي
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-light px-2 py-1" id="btnPreviewLandscape" onclick="window.EnsanPrintPreview.setOrientation('landscape')" title="وضع عرضي (A4 Landscape)">
+                        <button type="button" class="btn btn-sm btn-outline-success px-2 py-1" id="btnPreviewLandscape" onclick="window.EnsanPrintPreview.setOrientation('landscape')" title="وضع عرضي (A4 Landscape)">
                             <i class="bi bi-file-earmark-break me-1"></i> عرضي
                         </button>
                     </div>
 
                     {{-- Zoom / Scale Controls --}}
-                    <div class="btn-group btn-group-sm bg-secondary bg-opacity-25 rounded p-1 d-none d-md-inline-flex" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-light px-2" onclick="window.EnsanPrintPreview.zoom(-0.1)" title="تصغير">
-                            <i class="bi bi-zoom-out"></i>
+                    <div class="btn-group btn-group-sm bg-white border rounded p-0.5 d-none d-md-inline-flex" role="group">
+                        <button type="button" class="btn btn-sm btn-light border-0 px-2" onclick="window.EnsanPrintPreview.zoom(-0.1)" title="تصغير">
+                            <i class="bi bi-zoom-out text-dark"></i>
                         </button>
-                        <span class="px-2 text-white small d-flex align-items-center font-monospace" id="previewZoomLevel">100%</span>
-                        <button type="button" class="btn btn-sm btn-outline-light px-2" onclick="window.EnsanPrintPreview.zoom(0.1)" title="تكبير">
-                            <i class="bi bi-zoom-in"></i>
+                        <span class="px-2 text-dark small d-flex align-items-center font-monospace" id="previewZoomLevel">100%</span>
+                        <button type="button" class="btn btn-sm btn-light border-0 px-2" onclick="window.EnsanPrintPreview.zoom(0.1)" title="تكبير">
+                            <i class="bi bi-zoom-in text-dark"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-light px-2" onclick="window.EnsanPrintPreview.resetZoom()" title="إعادة الضبط للحجم الطبيعي">
-                            <i class="bi bi-arrows-fullscreen"></i>
+                        <button type="button" class="btn btn-sm btn-light border-0 px-2" onclick="window.EnsanPrintPreview.resetZoom()" title="إعادة الضبط للحجم الطبيعي">
+                            <i class="bi bi-arrows-fullscreen text-dark"></i>
                         </button>
                     </div>
 
                     {{-- Print Now Button --}}
                     <button type="button" class="btn btn-success btn-sm px-3 fw-bold shadow-sm d-flex align-items-center gap-2" onclick="window.EnsanPrintPreview.executePrint()">
-                        <i class="bi bi-printer-fill fs-6"></i>
-                        <span>أمر الطباعة الآن</span>
+                        <i class="bi bi-printer me-1"></i>
+                        <span>طباعة الآن</span>
                     </button>
 
                     {{-- Close Button --}}
-                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
 
             <!-- Modal Body (Virtual Paper Workbench) -->
-            <div class="modal-body p-3 p-md-4 print-preview-canvas" id="printPreviewCanvas" style="background: #090e17 !important;">
+            <div class="modal-body p-3 p-md-4 print-preview-canvas" id="printPreviewCanvas" style="background: #f1f5f9 !important;">
                 <div class="d-flex justify-content-center">
                     <div id="universalPrintPaper" class="a4-paper-sheet portrait position-relative"
-                         style="background: #ffffff !important; color: #0f172a !important; border: 2.5px solid #059669 !important; outline: 1px solid #10b981 !important; outline-offset: -5px !important; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6) !important; padding: 24px 28px !important;">
+                         style="background: #ffffff !important; color: #0f172a !important; border: none !important; outline: none !important; border-radius: 8px !important; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important; padding: 0 !important;">
                         
                         {{-- Background Watermark --}}
                         <div class="print-paper-watermark position-absolute top-50 start-50 translate-middle text-center" style="opacity: 0.035; pointer-events: none; z-index: 0; user-select: none;">

@@ -3,19 +3,22 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
   <style>
-    /* Premium Portal Hub Styling */
+    /* Premium Portal Hub Styling - Compact & Balanced */
     .donation-portal-card {
         background: rgba(15, 23, 42, 0.7);
         border: 2px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        padding: 32px 28px;
+        border-radius: 18px;
+        padding: 20px 18px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        width: 100%;
         height: 100%;
+        min-height: 440px;
+        box-sizing: border-box;
         text-decoration: none !important;
         cursor: pointer;
     }
@@ -23,7 +26,7 @@
     body:not(.theme-dark) .donation-portal-card {
         background: #ffffff;
         border-color: #e2e8f0;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     }
 
     .donation-portal-card.card-cash {
@@ -31,12 +34,12 @@
     }
     .donation-portal-card.card-cash:hover {
         border-color: #10b981;
-        transform: translateY(-6px);
-        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.25);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(16, 185, 129, 0.22);
     }
     [data-bs-theme="light"] .donation-portal-card.card-cash:hover,
     body:not(.theme-dark) .donation-portal-card.card-cash:hover {
-        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+        box-shadow: 0 16px 32px rgba(16, 185, 129, 0.12);
     }
 
     .donation-portal-card.card-inkind {
@@ -44,46 +47,49 @@
     }
     .donation-portal-card.card-inkind:hover {
         border-color: #f59e0b;
-        transform: translateY(-6px);
-        box-shadow: 0 20px 40px rgba(245, 158, 11, 0.25);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(245, 158, 11, 0.22);
     }
     [data-bs-theme="light"] .donation-portal-card.card-inkind:hover,
     body:not(.theme-dark) .donation-portal-card.card-inkind:hover {
-        box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15);
+        box-shadow: 0 16px 32px rgba(245, 158, 11, 0.12);
     }
 
     .portal-icon-wrapper {
-        width: 84px;
-        height: 84px;
-        border-radius: 24px;
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.75rem;
-        margin-bottom: 24px;
+        font-size: 1.8rem;
+        margin-bottom: 14px;
         transition: all 0.3s ease;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
     }
     .donation-portal-card:hover .portal-icon-wrapper {
-        transform: scale(1.1) rotate(-4deg);
+        transform: scale(1.06) rotate(-3deg);
     }
 
     .portal-icon-cash {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: #ffffff;
-        box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
     }
     .portal-icon-inkind {
         background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         color: #ffffff;
-        box-shadow: 0 12px 28px rgba(245, 158, 11, 0.35);
+        box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
     }
 
     .portal-title {
-        font-size: 1.85rem;
-        font-weight: 900;
-        margin-bottom: 6px;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 4px;
         color: #ffffff;
+        min-height: 30px;
+        display: flex;
+        align-items: center;
     }
     [data-bs-theme="light"] .portal-title,
     body:not(.theme-dark) .portal-title {
@@ -91,10 +97,13 @@
     }
 
     .portal-subtitle {
-        font-size: 1.05rem;
+        font-size: 0.88rem;
         color: #94a3b8;
-        margin-bottom: 24px;
+        margin-bottom: 14px;
         font-weight: 500;
+        min-height: 20px;
+        display: flex;
+        align-items: center;
     }
     [data-bs-theme="light"] .portal-subtitle,
     body:not(.theme-dark) .portal-subtitle {
@@ -102,12 +111,14 @@
     }
 
     .portal-stat-badge {
-        padding: 14px 18px;
-        border-radius: 16px;
+        padding: 10px 14px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
+        min-height: 64px;
+        box-sizing: border-box;
     }
     .stat-badge-cash {
         background: rgba(16, 185, 129, 0.12);
@@ -121,16 +132,19 @@
     .portal-features-list {
         list-style: none;
         padding: 0;
-        margin: 0 0 28px 0;
+        margin: 0 0 16px 0;
+        min-height: auto;
     }
     .portal-features-list li {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 0;
-        font-size: 0.95rem;
+        gap: 8px;
+        padding: 5px 0;
+        font-size: 0.86rem;
         color: #cbd5e1;
         border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        min-height: 32px;
+        box-sizing: border-box;
     }
     [data-bs-theme="light"] .portal-features-list li,
     body:not(.theme-dark) .portal-features-list li {
@@ -143,11 +157,11 @@
 
     .bg-watermark-icon {
         position: absolute;
-        bottom: -15px;
-        left: -15px;
+        bottom: -10px;
+        left: -10px;
         top: auto;
-        font-size: 7.5rem;
-        opacity: 0.07 !important;
+        font-size: 5.5rem;
+        opacity: 0.06 !important;
         pointer-events: none;
         user-select: none;
         z-index: 0;
@@ -231,11 +245,11 @@
 </div>
 
 {{-- TWO PRIMARY CATEGORY ICONS / CARDS (الأيقونتان الرئيستان كما طلب المستخدم تماماً) --}}
-<div class="row g-4 mb-5">
+<div class="row g-3 g-xl-4 mb-4 align-items-stretch">
     
     {{-- Card 1: تبرعات نقدية --}}
-    <div class="col-lg-6">
-        <div class="donation-portal-card card-cash" onclick="window.location.href='{{ route('donations.cash') }}'">
+    <div class="col-lg-6 d-flex flex-column">
+        <div class="donation-portal-card card-cash w-100 h-100" onclick="window.location.href='{{ route('donations.cash') }}'">
             <i class="bi bi-cash-coin bg-watermark-icon text-success"></i>
             
             <div>
@@ -251,13 +265,13 @@
                 {{-- Current Stats Badge --}}
                 <div class="portal-stat-badge stat-badge-cash">
                     <div>
-                        <div class="small text-muted fw-bold mb-1">إجمالي التحصيلات النقدية</div>
-                        <div class="fs-4 fw-bolder text-success font-monospace">
-                            {{ number_format($cashTotal, 0) }} <small class="fs-6">ج.م</small>
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.78rem;">إجمالي التحصيلات النقدية</div>
+                        <div class="fs-5 fw-bolder text-success font-monospace">
+                            {{ number_format($cashTotal, 0) }} <small style="font-size: 0.8rem;">ج.م</small>
                         </div>
                     </div>
                     <div class="text-start">
-                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fs-6 font-monospace">
+                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill small font-monospace">
                             <i class="bi bi-receipt me-1"></i> {{ $cashCount }} عملية مسجلة
                         </span>
                     </div>
@@ -286,17 +300,17 @@
 
             {{-- Action Button --}}
             <div class="mt-2">
-                <a href="{{ route('donations.cash') }}" class="btn btn-success btn-lg fw-bold rounded-pill w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm" onclick="event.stopPropagation();">
+                <a href="{{ route('donations.cash') }}" class="btn btn-success fw-bold rounded-pill w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 shadow-sm" onclick="event.stopPropagation();">
                     <span>دخول صفحة التبرعات النقدية الكاملة</span>
-                    <i class="bi bi-arrow-left fs-5"></i>
+                    <i class="bi bi-arrow-left"></i>
                 </a>
             </div>
         </div>
     </div>
 
     {{-- Card 2: تبرعات عينية --}}
-    <div class="col-lg-6">
-        <div class="donation-portal-card card-inkind" onclick="window.location.href='{{ route('donations.in-kind') }}'">
+    <div class="col-lg-6 d-flex flex-column">
+        <div class="donation-portal-card card-inkind w-100 h-100" onclick="window.location.href='{{ route('donations.in-kind') }}'">
             <i class="bi bi-box-seam-fill bg-watermark-icon text-warning"></i>
             
             <div>
@@ -312,13 +326,13 @@
                 {{-- Current Stats Badge --}}
                 <div class="portal-stat-badge stat-badge-inkind">
                     <div>
-                        <div class="small text-muted fw-bold mb-1">إجمالي القيمة التقديرية</div>
-                        <div class="fs-4 fw-bolder text-warning font-monospace">
-                            {{ number_format($inKindTotal, 0) }} <small class="fs-6">ج.م</small>
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.78rem;">إجمالي القيمة التقديرية</div>
+                        <div class="fs-5 fw-bolder text-warning font-monospace">
+                            {{ number_format($inKindTotal, 0) }} <small style="font-size: 0.8rem;">ج.م</small>
                         </div>
                     </div>
                     <div class="text-start">
-                        <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill fs-6 font-monospace">
+                        <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill small font-monospace">
                             <i class="bi bi-box-seam me-1"></i> {{ $inKindCount }} عملية مسجلة
                         </span>
                     </div>
@@ -347,9 +361,9 @@
 
             {{-- Action Button --}}
             <div class="mt-2">
-                <a href="{{ route('donations.in-kind') }}" class="btn btn-warning btn-lg fw-bold rounded-pill w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm text-dark" onclick="event.stopPropagation();">
+                <a href="{{ route('donations.in-kind') }}" class="btn btn-warning fw-bold rounded-pill w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 shadow-sm text-dark" onclick="event.stopPropagation();">
                     <span>دخول صفحة التبرعات العينية الكاملة</span>
-                    <i class="bi bi-arrow-left fs-5"></i>
+                    <i class="bi bi-arrow-left"></i>
                 </a>
             </div>
         </div>
@@ -487,6 +501,8 @@
         ];
     });
 @endphp
+@endsection
+
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {

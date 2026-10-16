@@ -118,20 +118,144 @@
                         </div>
                     </div>
                     <div class="form-section mt-4">
-                        <div class="form-section-title"><i class="bi bi-heart-pulse"></i> <span>الملف الطبي وحجز السرير</span></div>
+                    <div class="form-section mt-4">
+                        <div class="form-section-title"><i class="bi bi-heart-pulse"></i> <span>الملف الطبي والمرفقات</span></div>
                         <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label">نوع العلاج</label><select name="treatment_type" class="form-select"><option value="">— اختر —</option><option value="chemotherapy" @selected(old('treatment_type')==='chemotherapy')>كيماوي</option><option value="radiation" @selected(old('treatment_type')==='radiation')>إشعاع</option><option value="other" @selected(old('treatment_type')==='other')>أخرى</option></select></div>
-                            <div class="col-md-5"><label class="form-label">المركز الطبي</label><input name="medical_center" value="{{ old('medical_center') }}" class="form-control"></div>
-                            <div class="col-md-3"><label class="form-label">عدد الجلسات</label><input type="number" min="1" name="sessions_count" value="{{ old('sessions_count') }}" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">صورة وجه البطاقة</label><input type="file" name="patient_id_front" accept="image/*" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">صورة ظهر البطاقة</label><input type="file" name="patient_id_back" accept="image/*" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">كارت متابعة الكيماوي</label><input type="file" name="followup_card" class="form-control"></div>
-                            <div class="col-md-6"><label class="form-label">جواب تحويل الإشعاع</label><input type="file" name="referral_letter" class="form-control"></div>
-                            <div class="col-md-5"><label class="form-label">حجز السرير</label><select name="guest_house_bed_id" class="form-select"><option value="">— حفظ الملف دون إقامة —</option>@foreach($availableBeds as $bed)<option value="{{ $bed->id }}" @selected(old('guest_house_bed_id')==$bed->id)>{{ $bed->wing->name }} / سرير {{ $bed->number }}</option>@endforeach</select></div>
-                            <div class="col-md-4"><label class="form-label">تاريخ الوصول</label><input type="date" name="arrival_date" value="{{ old('arrival_date', now()->toDateString()) }}" class="form-control"></div>
-                            <div class="col-md-3"><label class="form-label">عدد أيام الإقامة</label><input type="number" min="1" max="365" name="expected_days" value="{{ old('expected_days', 7) }}" class="form-control"></div>
-                            <div class="col-12"><label class="form-label">ملاحظات طبية</label><textarea name="medical_notes" class="form-control" rows="2">{{ old('medical_notes') }}</textarea></div>
+                            <div class="col-md-4">
+                                <label class="form-label form-label-required fw-bold">نوع الحالة / العلاج</label>
+                                <select id="beneficiary-treatment-type" name="treatment_type" class="form-select" onchange="toggleTreatmentDocs(this.value)">
+                                    <option value="">— اختر نوع العلاج —</option>
+                                    <option value="chemotherapy" @selected(old('treatment_type')==='chemotherapy')>مريض كيماوي</option>
+                                    <option value="radiation" @selected(old('treatment_type')==='radiation')>مريض إشعاع</option>
+                                    <option value="other" @selected(old('treatment_type')==='other')>أخرى / جراحة</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">المركز الطبي / المستشفى</label>
+                                <input name="medical_center" value="{{ old('medical_center') }}" class="form-control" placeholder="مثال: مركز أورام كفر الشيخ">
+                            </div>
+                            <div class="col-md-3" id="sessions-count-container">
+                                <label class="form-label">عدد الجلسات المقررة</label>
+                                <input type="number" min="1" name="sessions_count" value="{{ old('sessions_count') }}" class="form-control" placeholder="عدد الجلسات">
+                            </div>
+
+                            {{-- National ID Images --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-card-image text-primary me-1"></i> صورة وجه البطاقة الشخصية</label>
+                                <input type="file" name="patient_id_front" accept="image/*" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-card-image text-primary me-1"></i> صورة ظهر البطاقة الشخصية</label>
+                                <input type="file" name="patient_id_back" accept="image/*" class="form-control">
+                            </div>
+
+                            {{-- Treatment Specific Documents --}}
+                            <div class="col-md-6" id="chemo-card-container">
+                                <div class="p-2 border rounded-3 bg-light">
+                                    <label class="form-label fw-bold text-success mb-1">
+                                        <i class="bi bi-file-earmark-medical me-1"></i> كارت المتابعة لمريض الكيماوي
+                                    </label>
+                                    <input type="file" name="followup_card" accept="image/*,.pdf" class="form-control form-control-sm">
+                                    <div class="form-text small">مرفق كارت المتابعة الخاص بجرعات الكيماوي.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="radiation-card-container">
+                                <div class="p-2 border rounded-3 bg-light">
+                                    <label class="form-label fw-bold text-warning mb-1">
+                                        <i class="bi bi-file-earmark-text me-1"></i> جواب تحويل بعدد الجلسات (الإشعاع)
+                                    </label>
+                                    <input type="file" name="referral_letter" accept="image/*,.pdf" class="form-control form-control-sm">
+                                    <div class="form-text small">خطاب أو جواب التحويل الطبي بعدد جلسات الإشعاع.</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">تاريخ الوصول</label>
+                                <input type="date" name="arrival_date" value="{{ old('arrival_date', now()->toDateString()) }}" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">عدد أيام الإقامة المتوقعة</label>
+                                <input type="number" min="1" max="365" name="expected_days" value="{{ old('expected_days', 7) }}" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">ملاحظات طبية خاصة بالحالة</label>
+                                <textarea name="medical_notes" class="form-control" rows="2" placeholder="أي تفاصيل خاصة بالحالة الصحية أو المرافقين...">{{ old('medical_notes') }}</textarea>
+                            </div>
                         </div>
+                    </div>
+
+                    {{-- Visual Bed Selection Grid --}}
+                    <div class="form-section mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="form-section-title mb-0"><i class="bi bi-hospital-bed"></i> <span>حجز السرير (مخطط المربعات)</span></div>
+                            <div class="d-flex gap-2 small">
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> أخضر: فاضي متاح</span>
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> أحمر: محجوز</span>
+                            </div>
+                        </div>
+
+                        {{-- Selected Bed Notice --}}
+                        <div id="modalBedNotice" class="alert alert-success py-2 px-3 mb-3 d-flex justify-content-between align-items-center {{ old('guest_house_bed_id') ? '' : 'd-none' }}">
+                            <div>
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                <span>السرير المختار للحجز:</span>
+                                <strong id="modalBedNoticeLabel" class="ms-1">{{ old('guest_house_bed_id') ? 'سرير مسجل مسبقاً' : '' }}</strong>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="clearModalBedSelection()">إلغاء حجز السرير</button>
+                        </div>
+
+                        <input type="hidden" name="guest_house_bed_id" id="modalBedInput" value="{{ old('guest_house_bed_id') }}">
+
+                        @forelse($guestHouseWings as $wing)
+                            <div class="p-3 border rounded-3 mb-3 bg-light-subtle">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="text-primary"><i class="bi bi-door-closed me-1"></i> {{ $wing->name }}</strong>
+                                    <span class="badge bg-secondary-subtle text-secondary small">{{ $wing->beds->count() }} سرير</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($wing->beds as $bed)
+                                        @php
+                                            $isOccupied = (bool) $bed->activeStay;
+                                            $isMaintenance = $bed->status === 'maintenance';
+                                            $isSelected = (string)old('guest_house_bed_id') === (string)$bed->id;
+                                        @endphp
+                                        @if($isOccupied)
+                                            <div class="p-2 rounded-3 text-center text-white bg-danger shadow-sm d-flex flex-column align-items-center justify-content-center"
+                                                 style="width: 86px; height: 74px; opacity: 0.85; cursor: not-allowed;"
+                                                 title="محجوز: {{ $bed->activeStay?->beneficiary?->full_name }}">
+                                                <i class="bi bi-person-fill fs-5 mb-0"></i>
+                                                <span class="fw-bold small">سرير {{ $bed->number }}</span>
+                                                <span style="font-size: 0.65rem;">محجوز</span>
+                                            </div>
+                                        @elseif($isMaintenance)
+                                            <div class="p-2 rounded-3 text-center text-white bg-secondary shadow-sm d-flex flex-column align-items-center justify-content-center"
+                                                 style="width: 86px; height: 74px; opacity: 0.7; cursor: not-allowed;"
+                                                 title="صيانة">
+                                                <i class="bi bi-tools fs-5 mb-0"></i>
+                                                <span class="fw-bold small">سرير {{ $bed->number }}</span>
+                                                <span style="font-size: 0.65rem;">صيانة</span>
+                                            </div>
+                                        @else
+                                            <button type="button"
+                                                    class="btn p-2 rounded-3 text-center text-white bg-success shadow-sm d-flex flex-column align-items-center justify-content-center modal-bed-square {{ $isSelected ? 'border border-3 border-warning ring' : '' }}"
+                                                    data-bed-id="{{ $bed->id }}"
+                                                    data-bed-label="{{ $wing->name }} — سرير {{ $bed->number }}"
+                                                    style="width: 86px; height: 74px; transition: transform 0.15s, box-shadow 0.15s;"
+                                                    onclick="selectModalBed(this)">
+                                                <i class="bi bi-hospital-bed fs-5 mb-0"></i>
+                                                <span class="fw-bold small">سرير {{ $bed->number }}</span>
+                                                <span style="font-size: 0.65rem;">فاضي</span>
+                                            </button>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center text-muted py-3 border rounded-3 bg-light">
+                                <i class="bi bi-info-circle me-1"></i> لم يتم إضافة أجنحة أو أسِرّة لهذه الدار بعد. يمكنك حفظ الملف دون حجز سرير.
+                            </div>
+                        @endforelse
+                    </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -424,7 +424,6 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 animate-fade-in" style="z-index: 9999;">
                   <li><a class="dropdown-item py-2" href="{{ route('donations.show', $t->id) }}"><i class="bi bi-eye me-2 text-primary"></i> عرض التفاصيل</a></li>
-                  <li><a class="dropdown-item py-2 text-info" href="{{ route('trips.index', ['print_id' => $t->id, 'preview' => 1]) }}"><i class="bi bi-eye me-2"></i> معاينة الإيصال</a></li>
                   <li><a class="dropdown-item py-2" href="{{ route('trips.index', ['print_id' => $t->id]) }}"><i class="bi bi-printer me-2 text-dark"></i> طباعة الإيصال</a></li>
                   @php $currentUser = request()->user(); @endphp
                   @if($currentUser)

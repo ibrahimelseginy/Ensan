@@ -394,16 +394,31 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 rounded-3" style="min-width: 200px; z-index: 1060;">
                             <li><a class="dropdown-item py-1.5" href="{{ route('donations.show', $d) }}"><i class="bi bi-eye text-primary me-2"></i>عرض التفاصيل</a></li>
-                            <li><a class="dropdown-item py-1.5 text-info" href="{{ route('donations.show', $d) }}?preview=1" target="_blank"><i class="bi bi-file-earmark-text text-info me-2"></i>معاينة الوصل قبل الطباعة</a></li>
                             <li><a class="dropdown-item py-1.5 text-success" href="{{ route('donations.show', $d) }}?print=1" target="_blank"><i class="bi bi-printer text-success me-2"></i>طباعة الإيصال</a></li>
                             @if(auth()->check() && $d->status !== 'cancelled')
+                                @php
+                                    $isManagerUser = auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager');
+                                @endphp
                                 <li><hr class="dropdown-divider my-1"></li>
-                                <li><a class="dropdown-item py-1.5 text-warning" href="{{ route('donations.edit', $d) }}"><i class="bi bi-pencil me-2"></i>طلب تعديل</a></li>
-                                <li>
-                                    <button type="button" class="dropdown-item py-1.5 text-danger" onclick="openCancelModal('{{ $d->id }}', true)">
-                                        <i class="bi bi-x-circle me-2"></i>طلب إلغاء
-                                    </button>
-                                </li>
+                                @if($isManagerUser)
+                                    <li><a class="dropdown-item py-1.5 text-warning" href="{{ route('donations.edit', $d) }}"><i class="bi bi-pencil me-2"></i>تعديل</a></li>
+                                    <li>
+                                        <form action="{{ route('donations.destroy', $d) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من رغبتك في إلغاء وحذف هذا التبرع مباشرة؟');">
+                                            @csrf @method('DELETE')
+                                            <input type="hidden" name="cancellation_reason" value="تم الإلغاء المباشر بواسطة المدير">
+                                            <button type="submit" class="dropdown-item py-1.5 text-danger">
+                                                <i class="bi bi-trash me-2"></i>حذف / إلغاء التبرع
+                                            </button>
+                                        </form>
+                                    </li>
+                                @else
+                                    <li><a class="dropdown-item py-1.5 text-warning" href="{{ route('donations.edit', $d) }}"><i class="bi bi-pencil me-2"></i>طلب تعديل</a></li>
+                                    <li>
+                                        <button type="button" class="dropdown-item py-1.5 text-danger" onclick="openCancelModal('{{ $d->id }}', true)">
+                                            <i class="bi bi-x-circle me-2"></i>طلب إلغاء
+                                        </button>
+                                    </li>
+                                @endif
                             @endif
                         </ul>
                     </div>

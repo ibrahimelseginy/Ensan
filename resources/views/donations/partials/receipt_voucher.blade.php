@@ -10,9 +10,122 @@
   };
 @endphp
 
-<div class="official-voucher-card bg-white text-dark p-4 p-md-5 rounded-3 shadow-sm position-relative mx-auto" 
-     style="max-width: 820px; width: 100%; border: 3px double #059669; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; box-sizing: border-box;">
+<div class="official-voucher-card bg-white text-dark p-4 p-md-5 position-relative mx-auto" 
+     style="max-width: 860px; width: 100%; border: 2.5px solid #059669; outline: 1px solid #10b981; outline-offset: -5px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important;">
   
+  {{-- Embedded Scoped Styles: Guarantee pure white paper & dark text in any theme --}}
+  <style>
+    .official-voucher-card,
+    .official-voucher-card *,
+    body.theme-dark .official-voucher-card,
+    body.theme-dark .official-voucher-card *,
+    html.theme-dark .official-voucher-card,
+    html.theme-dark .official-voucher-card *,
+    [data-bs-theme="dark"] .official-voucher-card,
+    [data-bs-theme="dark"] .official-voucher-card * {
+        color-scheme: light !important;
+        box-sizing: border-box !important;
+    }
+
+    .official-voucher-card {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        direction: rtl !important;
+    }
+
+    .official-voucher-card div,
+    .official-voucher-card p,
+    .official-voucher-card span:not(.badge):not(.badge *),
+    .official-voucher-card td,
+    .official-voucher-card th,
+    .official-voucher-card strong,
+    .official-voucher-card b,
+    .official-voucher-card small,
+    body.theme-dark .official-voucher-card div,
+    body.theme-dark .official-voucher-card p,
+    body.theme-dark .official-voucher-card span:not(.badge):not(.badge *),
+    body.theme-dark .official-voucher-card td,
+    body.theme-dark .official-voucher-card th,
+    body.theme-dark .official-voucher-card strong,
+    body.theme-dark .official-voucher-card b,
+    body.theme-dark .official-voucher-card small,
+    html.theme-dark .official-voucher-card div,
+    html.theme-dark .official-voucher-card p,
+    html.theme-dark .official-voucher-card span:not(.badge):not(.badge *),
+    html.theme-dark .official-voucher-card td,
+    html.theme-dark .official-voucher-card th,
+    html.theme-dark .official-voucher-card strong,
+    html.theme-dark .official-voucher-card b,
+    html.theme-dark .official-voucher-card small {
+        color: #0f172a !important;
+    }
+
+    .official-voucher-card .text-muted,
+    body.theme-dark .official-voucher-card .text-muted,
+    html.theme-dark .official-voucher-card .text-muted {
+        color: #475569 !important;
+    }
+
+    .official-voucher-card .text-success,
+    body.theme-dark .official-voucher-card .text-success,
+    html.theme-dark .official-voucher-card .text-success {
+        color: #047857 !important;
+    }
+
+    .official-voucher-card .text-dark,
+    body.theme-dark .official-voucher-card .text-dark,
+    html.theme-dark .official-voucher-card .text-dark {
+        color: #0f172a !important;
+    }
+
+    .official-voucher-card .bg-light,
+    body.theme-dark .official-voucher-card .bg-light,
+    html.theme-dark .official-voucher-card .bg-light {
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    .official-voucher-card .voucher-amount-box {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+        border: 2px solid #059669 !important;
+    }
+
+    .official-voucher-card .voucher-amount-box * {
+        color: #047857 !important;
+    }
+
+    .official-voucher-card .voucher-title-box {
+        background-color: #f0fdf4 !important;
+        border: 2px solid #059669 !important;
+    }
+
+    .official-voucher-card .voucher-body-box {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .official-voucher-card .badge,
+    .official-voucher-card .badge *,
+    body.theme-dark .official-voucher-card .badge,
+    html.theme-dark .official-voucher-card .badge {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .official-voucher-card .badge.bg-secondary-subtle {
+        background-color: #e2e8f0 !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    .official-voucher-card .badge.bg-secondary-subtle * {
+        color: #0f172a !important;
+    }
+  </style>
+
   {{-- Watermark in background --}}
   <div class="voucher-watermark position-absolute top-50 start-50 translate-middle text-center" 
        style="opacity: 0.04; pointer-events: none; z-index: 0; user-select: none;">
@@ -32,12 +145,12 @@
 
       {{-- Center Title Box --}}
       <div class="text-center px-3">
-        <div class="d-inline-block px-4 py-2 rounded-2 border border-2 border-success" style="background-color: #f0fdf4;">
+        <div class="voucher-title-box d-inline-block px-4 py-2 rounded-2">
           <h4 class="fw-bolder mb-0 text-success">إيصال استلام تبرع</h4>
           <div class="fw-bold font-monospace text-muted mt-1" style="font-size: 0.75rem; letter-spacing: 1px;">DONATION OFFICIAL RECEIPT</div>
         </div>
         <div class="mt-1">
-          <span class="badge {{ $donation->type === 'cash' ? 'bg-success' : 'bg-info' }} px-3 py-1 text-white">
+          <span class="badge {{ $donation->type === 'cash' ? 'bg-success' : 'bg-info' }} px-3 py-1 text-white shadow-sm" style="background-color: {{ $donation->type === 'cash' ? '#059669' : '#0891b2' }} !important;">
             تبرع {{ $donation->type === 'cash' ? 'نقدي' : 'عيني' }}
           </span>
         </div>
@@ -54,8 +167,7 @@
     </div>
 
     {{-- Prominent Amount Box --}}
-    <div class="d-flex justify-content-between align-items-center p-3 mb-4 rounded-3 border border-2 border-success" 
-         style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
+    <div class="voucher-amount-box d-flex justify-content-between align-items-center p-3 mb-4 rounded-3">
       <div class="fw-bold fs-6 text-success d-flex align-items-center gap-2">
         <i class="bi bi-cash-stack fs-4"></i>
         <span>المبلغ المستلم:</span>
@@ -66,8 +178,8 @@
     </div>
 
     {{-- Voucher Body Details --}}
-    <div class="p-3 mb-4 rounded-3 border" style="background-color: #f8fafc; border-color: #e2e8f0 !important; line-height: 1.9;">
-      <div class="row g-2 align-items-center border-bottom pb-2 mb-2">
+    <div class="voucher-body-box p-3 mb-4 rounded-3" style="line-height: 1.9;">
+      <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
         <div class="col-sm-3 text-muted fw-bold">وصلنا من السيد / السيدة:</div>
         <div class="col-sm-9 fw-bolder fs-6 text-dark d-flex flex-wrap align-items-center gap-2">
           <span>{{ $donation->donor?->name ?? 'فاعل خير' }}</span>
@@ -82,14 +194,14 @@
         </div>
       </div>
 
-      <div class="row g-2 align-items-center border-bottom pb-2 mb-2">
+      <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
         <div class="col-sm-3 text-muted fw-bold">مبلغ وقدره (بالحروف):</div>
         <div class="col-sm-9 fw-bold text-success fs-6">
           {{ $tafqeetText }}
         </div>
       </div>
 
-      <div class="row g-2 align-items-center border-bottom pb-2 mb-2">
+      <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
         <div class="col-sm-3 text-muted fw-bold">وذلك تبرعاً عن:</div>
         <div class="col-sm-9 fw-bolder text-dark">
           {{ $donation->purpose_label }}
@@ -113,7 +225,7 @@
       </div>
 
       @if($donation->display_allocation_note)
-      <div class="row g-2 align-items-center border-top pt-2 mt-2">
+      <div class="row g-2 align-items-center border-top pt-2 mt-2" style="border-color: #e2e8f0 !important;">
         <div class="col-sm-3 text-muted fw-bold">ملاحظات التخصيص:</div>
         <div class="col-sm-9 text-dark">{{ $donation->display_allocation_note }}</div>
       </div>
@@ -121,10 +233,10 @@
     </div>
 
     {{-- Official Signatures & Stamp --}}
-    <div class="row text-center pt-3 pb-2 border-top border-2 border-dark mt-4">
+    <div class="row text-center pt-3 pb-2 border-top border-2 mt-4" style="border-color: #0f172a !important;">
       <div class="col-4">
         <div class="fw-bold small mb-5 text-dark">المستلم / المحصل</div>
-        <div class="border-top border-dark mx-auto pt-1 small text-muted" style="width: 140px;">
+        <div class="border-top mx-auto pt-1 small text-muted" style="border-color: #475569 !important; width: 140px;">
           {{ auth()->user()?->name ?? 'التوقيع' }}
         </div>
       </div>
@@ -137,13 +249,13 @@
       </div>
       <div class="col-4">
         <div class="fw-bold small mb-5 text-dark">أمين الصندوق / الإدارة المالية</div>
-        <div class="border-top border-dark mx-auto pt-1 small text-muted" style="width: 140px;">الاعتماد والتوقيع</div>
+        <div class="border-top mx-auto pt-1 small text-muted" style="border-color: #475569 !important; width: 140px;">الاعتماد والتوقيع</div>
       </div>
     </div>
 
     {{-- Quranic Verse & Footer Note --}}
-    <div class="text-center pt-3 mt-3 border-top" style="font-size: 0.78rem;">
-      <div class="fw-bold text-muted mb-1 font-monospace" style="color: #047857 !important;">
+    <div class="text-center pt-3 mt-3 border-top" style="border-color: #cbd5e1 !important; font-size: 0.78rem;">
+      <div class="fw-bold mb-1 font-monospace" style="color: #047857 !important;">
         ﴿ وَمَا تُنفِقُوا مِنْ خَيْرٍ فَإِنَّ اللَّهَ بِهِ عَلِيمٌ ﴾
       </div>
       <div class="text-muted small">

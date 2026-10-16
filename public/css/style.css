@@ -1075,20 +1075,14 @@ body.theme-dark,
     background-color: rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* Fix all elements inside standard modal (excluding review action modal and admin login notifications modal) */
-  .modal-content:not(.review-action-modal):not(.admin-notif-content) *:not(.btn):not(.badge):not(.modal-header):not(.modal-body):not(.modal-footer):not(.modal-dialog):not([class*="review-"]):not([class*="admin-notif"]) {
-    background-color: transparent !important;
+  /* Standard solid modal content background */
+  .modal-content {
+    background-color: var(--bg-card) !important;
+    opacity: 1 !important;
   }
 
-  /* Restore modal content background */
-  .modal-content:not(.review-action-modal):not(.admin-notif-content) {
-    background-color: var(--bg-card) !important;
-  }
-
-  .modal-header:not(.review-action-modal .modal-header),
-  .modal-footer:not(.review-action-modal .modal-footer) {
-    background-color: var(--bg-card) !important;
-  } .modal-footer {
+  .modal-header,
+  .modal-footer {
     background-color: var(--bg-card) !important;
   }
 
@@ -3029,13 +3023,13 @@ a:not(.stretched-link) {
 
 .a4-paper-sheet.portrait {
   width: 210mm;
-  min-height: 297mm;
+  min-height: auto;
   max-width: 100%;
 }
 
 .a4-paper-sheet.landscape {
   width: 297mm;
-  min-height: 210mm;
+  min-height: auto;
   max-width: 100%;
 }
 
@@ -5196,7 +5190,10 @@ tr:has(.dropdown-menu.show) {
   overflow: visible !important;
 }
 
-.dropdown-item {
+.dropdown-item,
+button.dropdown-item,
+.dropdown-menu button,
+.dropdown-menu form button {
   color: var(--dark) !important;
   font-size: 0.875rem !important;
   font-weight: 600 !important;
@@ -5206,20 +5203,24 @@ tr:has(.dropdown-menu.show) {
   align-items: center !important;
   gap: 8px !important;
   transition: all 0.2s ease !important;
+  background-color: transparent !important;
   background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-.dropdown-item:hover, .dropdown-item:focus {
+.dropdown-item:hover, .dropdown-item:focus,
+button.dropdown-item:hover, button.dropdown-item:focus {
   background-color: rgba(16, 185, 129, 0.1) !important;
   color: #059669 !important;
 }
 
-.dropdown-item.text-warning:hover {
+.dropdown-item.text-warning:hover, button.dropdown-item.text-warning:hover {
   background-color: rgba(245, 158, 11, 0.1) !important;
   color: #d97706 !important;
 }
 
-.dropdown-item.text-danger:hover {
+.dropdown-item.text-danger:hover, button.dropdown-item.text-danger:hover {
   background-color: rgba(239, 68, 68, 0.1) !important;
   color: #dc2626 !important;
 }
@@ -5231,22 +5232,31 @@ tr:has(.dropdown-menu.show) {
 }
 
 /* Dark Mode Table Dropdowns */
+body.theme-dark .dropdown-menu,
 .theme-dark .dropdown-menu,
 [data-bs-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .dropdown-menu,
 html.theme-dark .dropdown-menu {
   background-color: #0f172a !important;
   background: #0f172a !important;
   opacity: 1 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85) !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.92) !important;
   z-index: 10060 !important;
 }
 
-.theme-dark .dropdown-item {
+.theme-dark .dropdown-item,
+body.theme-dark button.dropdown-item,
+.theme-dark button.dropdown-item,
+[data-bs-theme="dark"] button.dropdown-item,
+[data-theme="dark"] button.dropdown-item {
   color: #e2e8f0 !important;
+  background-color: transparent !important;
   background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .theme-dark .dropdown-item:hover, .theme-dark .dropdown-item:focus {
@@ -6084,5 +6094,170 @@ html.theme-dark #universalPrintPaper table tbody tr:nth-child(even),
 body.theme-dark #universalPrintPaper table tbody tr:nth-child(even) {
   background-color: #f8fafc !important;
 }
+
+/* ========================================================
+   GLOBAL SOLID MODALS & NON-TRANSPARENT CARDS
+   ======================================================== */
+.modal-content,
+.modal-dialog .modal-content {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Dark mode solid modals */
+html.theme-dark .modal-content,
+body.theme-dark .modal-content,
+.theme-dark .modal-content,
+[data-bs-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-content {
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Modal cards, sections and inputs inside modals */
+.modal .card,
+.modal .glass-card,
+.modal .glass-container,
+.modal .solid-card {
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+html.theme-dark .modal .card,
+html.theme-dark .modal .glass-card,
+html.theme-dark .modal .glass-container,
+html.theme-dark .modal .solid-card,
+body.theme-dark .modal .card,
+body.theme-dark .modal .glass-card,
+body.theme-dark .modal .glass-container,
+body.theme-dark .modal .solid-card {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #ffffff !important;
+}
+
+/* Inputs, textareas, selects inside modals */
+html.theme-dark .modal .form-control,
+html.theme-dark .modal .form-select,
+html.theme-dark .modal input,
+html.theme-dark .modal select,
+html.theme-dark .modal textarea,
+body.theme-dark .modal .form-control,
+body.theme-dark .modal .form-select,
+body.theme-dark .modal input,
+body.theme-dark .modal select,
+body.theme-dark .modal textarea {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+  opacity: 1 !important;
+}
+
+/* ========================================================
+   SELECT & DROPDOWN ARROW SPACING (RTL)
+   ======================================================== */
+[dir="rtl"] .form-select,
+html[dir="rtl"] .form-select,
+body.rtl .form-select,
+.form-select {
+  padding-left: 2.75rem !important;
+  padding-right: 1.15rem !important;
+  background-position: left 0.85rem center !important;
+}
+
+/* Select2 RTL arrow and text spacing */
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single,
+.select2-container[dir="rtl"] .select2-selection--single,
+[dir="rtl"] .select2-container .select2-selection--single {
+  padding-left: 2.75rem !important;
+  padding-right: 1.15rem !important;
+}
+
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single .select2-selection__arrow,
+.select2-container[dir="rtl"] .select2-selection--single .select2-selection__arrow,
+[dir="rtl"] .select2-container .select2-selection--single .select2-selection__arrow {
+  left: 10px !important;
+  right: auto !important;
+  width: 24px !important;
+}
+
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single .select2-selection__rendered,
+.select2-container[dir="rtl"] .select2-selection--single .select2-selection__rendered,
+[dir="rtl"] .select2-container .select2-selection--single .select2-selection__rendered {
+  padding-left: 2rem !important;
+  margin-left: 0.75rem !important;
+  padding-right: 0 !important;
+}
+
+/* Clear button spacing in Select2 */
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single .select2-selection__clear,
+.select2-container[dir="rtl"] .select2-selection--single .select2-selection__clear {
+  left: 2.2rem !important;
+  right: auto !important;
+  margin-right: 0 !important;
+  color: #94a3b8 !important;
+  font-size: 1.1rem !important;
+  line-height: 1 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single .select2-selection__clear:hover,
+.select2-container[dir="rtl"] .select2-selection--single .select2-selection__clear:hover {
+  color: #ef4444 !important;
+}
+
+/* ========================================================
+   DROPDOWN ACTION BUTTONS DEFAULT STATE (NO OUTLINE/BOX)
+   ======================================================== */
+.dropdown-menu button.dropdown-item,
+.dropdown-menu form button.dropdown-item,
+.dropdown-menu form button,
+.beneficiary-action-menu button,
+.beneficiary-action-menu button.dropdown-item {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  text-align: right !important;
+  padding: 0.5rem 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.dropdown-menu button.dropdown-item:hover,
+.dropdown-menu button.dropdown-item:focus,
+.beneficiary-action-menu button:hover,
+.beneficiary-action-menu button:focus {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #059669 !important;
+}
+
+.dropdown-menu button.dropdown-item.text-danger:hover,
+.dropdown-menu button.dropdown-item.text-danger:focus,
+.beneficiary-action-menu button.text-danger:hover,
+.beneficiary-action-menu button.text-danger:focus {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #dc2626 !important;
+}
+
 
 

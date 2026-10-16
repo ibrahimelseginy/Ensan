@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
@@ -173,6 +173,49 @@
                 if (modalElement) window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
             }
         });
+
+        function selectModalBed(btn) {
+            const bedId = btn.getAttribute('data-bed-id');
+            const bedLabel = btn.getAttribute('data-bed-label');
+            const input = document.getElementById('modalBedInput');
+            const notice = document.getElementById('modalBedNotice');
+            const noticeLabel = document.getElementById('modalBedNoticeLabel');
+
+            if (input) input.value = bedId;
+            if (noticeLabel) noticeLabel.textContent = bedLabel;
+            if (notice) notice.classList.remove('d-none');
+
+            document.querySelectorAll('.modal-bed-square').forEach(b => {
+                b.classList.remove('border', 'border-3', 'border-warning', 'shadow-lg');
+                b.style.transform = 'scale(1)';
+            });
+            btn.classList.add('border', 'border-3', 'border-warning', 'shadow-lg');
+            btn.style.transform = 'scale(1.06)';
+        }
+
+        function clearModalBedSelection() {
+            const input = document.getElementById('modalBedInput');
+            const notice = document.getElementById('modalBedNotice');
+            if (input) input.value = '';
+            if (notice) notice.classList.add('d-none');
+            document.querySelectorAll('.modal-bed-square').forEach(b => {
+                b.classList.remove('border', 'border-3', 'border-warning', 'shadow-lg');
+                b.style.transform = 'scale(1)';
+            });
+        }
+
+        function toggleTreatmentDocs(type) {
+            const chemoContainer = document.getElementById('chemo-card-container');
+            const radiationContainer = document.getElementById('radiation-card-container');
+            const sessionsContainer = document.getElementById('sessions-count-container');
+
+            if (chemoContainer) {
+                chemoContainer.classList.toggle('border-success', type === 'chemotherapy');
+            }
+            if (radiationContainer) {
+                radiationContainer.classList.toggle('border-warning', type === 'radiation');
+            }
+        }
     </script>
 @endsection
 @section('content')

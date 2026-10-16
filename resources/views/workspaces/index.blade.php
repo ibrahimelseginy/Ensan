@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 
 
@@ -18,37 +18,37 @@
 
   <div class="row g-4 mb-4">
     <div class="col-md-4">
-      <div class="card kpi-card border-0 shadow-sm p-3 h-100">
+      <div class="card kpi-card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; border-right: 4px solid #059669 !important;">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="ws-stat-val text-success">{{ number_format($totalRevenue, 2) }} ج.م</div>
-            <div class="ws-stat-lbl">إجمالي الأرباح (الإيرادات)</div>
+            <div class="ws-stat-val text-success fw-bold fs-4">{{ number_format($totalRevenue, 2) }} ج.م</div>
+            <div class="ws-stat-lbl text-muted small fw-bold mt-1">إجمالي الأرباح (الإيرادات)</div>
           </div>
-          <div class="bg-success bg-opacity-10 p-2 rounded text-success"><i class="bi bi-graph-up-arrow fs-4"></i></div>
+          <div class="bg-success bg-opacity-10 p-2.5 rounded-3 text-success"><i class="bi bi-graph-up-arrow fs-4"></i></div>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="ws-stat-card" style="border-color:#dc3545">
+      <div class="card kpi-card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; border-right: 4px solid #dc3545 !important;">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="ws-stat-val text-danger">{{ number_format($totalExpenses, 2) }} ج.م</div>
-            <div class="ws-stat-lbl">إجمالي المصروفات</div>
+            <div class="ws-stat-val text-danger fw-bold fs-4">{{ number_format($totalExpenses, 2) }} ج.م</div>
+            <div class="ws-stat-lbl text-muted small fw-bold mt-1">إجمالي المصروفات</div>
           </div>
-          <div class="bg-danger bg-opacity-10 p-2 rounded text-danger"><i class="bi bi-graph-down-arrow fs-4"></i></div>
+          <div class="bg-danger bg-opacity-10 p-2.5 rounded-3 text-danger"><i class="bi bi-graph-down-arrow fs-4"></i></div>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="ws-stat-card" style="border-color:{{ $netBalance >= 0 ? '#0d6efd' : '#fd7e14' }}">
+      <div class="card kpi-card border-0 shadow-sm p-3 h-100" style="border-radius: 16px; border-right: 4px solid {{ $netBalance >= 0 ? '#059669' : '#fd7e14' }} !important;">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="ws-stat-val {{ $netBalance >= 0 ? 'text-primary' : 'text-warning' }}">
+            <div class="ws-stat-val {{ $netBalance >= 0 ? 'text-success' : 'text-warning' }} fw-bold fs-4">
               {{ number_format($netBalance, 2) }} ج.م
             </div>
-            <div class="ws-stat-lbl">صافي الحسابات</div>
+            <div class="ws-stat-lbl text-muted small fw-bold mt-1">صافي الحسابات</div>
           </div>
-          <div class="bg-primary bg-opacity-10 p-2 rounded text-primary"><i class="bi bi-wallet2 fs-4"></i></div>
+          <div class="bg-primary bg-opacity-10 p-2.5 rounded-3 text-primary"><i class="bi bi-wallet2 fs-4"></i></div>
         </div>
       </div>
     </div>
@@ -56,23 +56,34 @@
 
   <div class="row g-4">
     <div class="col-lg-8">
-      <form method="GET" class="card border-0 shadow-sm mb-4 p-4">
-        <div class="row g-2 align-items-end">
-          <div class="col-md-5">
-            <label class="form-label">بحث بالاسم أو الموقع</label>
-            <input name="q" value="{{ $q ?? '' }}" class="form-control" placeholder="القاعة الرئيسية...">
+      <form method="GET" class="card border-0 shadow-sm mb-4 p-4" style="border-radius: 16px;">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">بحث بالاسم أو الموقع</label>
+            <input name="q" value="{{ $q ?? '' }}" class="form-control" placeholder="القاعة الرئيسية..." style="height: 44px; border-radius: 10px;">
           </div>
           <div class="col-md-3">
-            <label class="form-label">الحالة</label>
-            <select name="status" class="form-select">
+            <label class="form-label fw-bold small text-muted">الحالة</label>
+            <select name="status" class="form-select" style="height: 44px; border-radius: 10px;">
               <option value="">الكل</option>
               <option value="available" @selected(($status ?? '') === 'available')>متاح</option>
               <option value="busy" @selected(($status ?? '') === 'busy')>مشغول</option>
               <option value="maintenance" @selected(($status ?? '') === 'maintenance')>صيانة</option>
             </select>
           </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100">تصفية</button>
+          <div class="col-md-3">
+            <label class="form-label fw-bold small text-muted d-none d-md-block" style="visibility: hidden;">إجراء</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary fw-bold w-100" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="bi bi-funnel"></i>
+                <span>تصفية</span>
+              </button>
+              @if(!empty($q) || !empty($status))
+                <a href="{{ route('workspaces.index') }}" class="btn btn-outline-secondary" style="height: 44px; width: 44px; min-width: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;" title="إعادة تعيين">
+                  <i class="bi bi-x-lg"></i>
+                </a>
+              @endif
+            </div>
           </div>
         </div>
       </form>

@@ -281,9 +281,6 @@
                           <a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-outline-primary px-2 py-1" title="عرض التفاصيل">
                             <i class="bi bi-eye me-1"></i> عرض
                           </a>
-                          <a href="{{ route('donations.show', $d) }}?preview=1" target="_blank" class="btn btn-sm btn-outline-info px-2 py-1" title="معاينة الوصل قبل الطباعة">
-                            <i class="bi bi-eye me-1"></i> معاينة
-                          </a>
                           <a href="{{ route('donations.show', $d) }}?print=1" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1" title="طباعة الإيصال">
                             <i class="bi bi-printer me-1"></i> طباعة
                           </a>

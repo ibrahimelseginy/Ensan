@@ -393,7 +393,7 @@
             </select>
         </div>
         
-        <div class="col-md-3">
+        <div class="col-lg-2 col-md-6">
             <label class="form-label fw-bold small text-uppercase text-muted">نوع الجهة</label>
             <div class="segmented-type-card" role="group">
                 <input type="radio" class="btn-check" name="type" id="typeAll" value="" {{ ($type ?? '') == '' ? 'checked' : '' }} onchange="this.form.submit()">
@@ -427,7 +427,7 @@
                 <option value="recurring" @selected(($classification ?? '')==='recurring')>متكرر</option>
             </select>
         </div>
-        <div class="col-lg-1 col-md-6">
+        <div class="col-lg-2 col-md-6">
             <label class="form-label fw-bold small text-uppercase text-muted">الحالة</label>
             <select name="active" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
                 <option value="">الكل</option>

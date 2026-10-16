@@ -39,11 +39,13 @@
             max-width: 1100px;
             margin: 0 auto;
             background: #ffffff;
-            border: 1px solid #cbd5e1;
+            border: 2.5px solid #059669;
+            outline: 1px solid #10b981;
+            outline-offset: -5px;
             border-radius: 8px;
             padding: 40px;
             position: relative;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
         }
 
         .sheet-watermark {

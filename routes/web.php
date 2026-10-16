@@ -61,8 +61,8 @@ Route::get('login', [LoginWebController::class , 'show'])->name('login');
 Route::post('login', [LoginWebController::class , 'login'])->middleware('throttle:auth-strict')->name('login.post');
 Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 
-// تتبع الشكاوي - صفحة عامة بدون تسجيل دخول
-Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->name('complaint.track');
+// تتبع الشكاوي - صفحة عامة بدون تسجيل دخول محمية بمعدل طلبات ومكافحة تخمين
+Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->middleware('throttle:heavy-ops')->name('complaint.track');
 Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->middleware('throttle:heavy-ops')->name('complaint.track.search');
 
 
@@ -218,9 +218,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('trips', [TripWebController::class, 'store'])->name('trips.store');
     });
 
-    Route::middleware('permission:reports.view')
-        ->get('reports', [ReportsWebController::class, 'index'])
-        ->name('reports.index');
+    Route::middleware('permission:reports.view')->group(function () {
+        Route::get('reports', [ReportsWebController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [ReportsWebController::class, 'export'])->name('reports.export');
+        Route::get('reports/print', [ReportsWebController::class, 'printReport'])->name('reports.print');
+    });
 
     // --- Admin & RBAC ---
     Route::middleware('permission:users.view')->group(function () {
@@ -613,6 +615,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('guest-houses/{guest_house}/inventory/issues', [GuestHouseWebController::class, 'issueInventory'])->name('guest-houses.inventory.issue');
         Route::post('guest-houses/{guest_house}/meals', [GuestHouseWebController::class, 'storeMeal'])->name('guest-houses.meals.store');
         Route::post('guest-houses/{guest_house}/stays/{stay}/depart', [GuestHouseWebController::class, 'departStay'])->name('guest-houses.stays.depart');
+        Route::post('guest-houses/{guest_house}/stays/depart-all', [GuestHouseWebController::class, 'departAllStays'])->name('guest-houses.stays.departAll');
         Route::post('guest-houses/{guest_house}/stays/{stay}/return', [GuestHouseWebController::class, 'returnStay'])->name('guest-houses.stays.return');
         Route::post('guest-houses/{guest_house}/bookings/{booking}/decision', [GuestHouseWebController::class, 'decideBooking'])->name('guest-houses.bookings.decision');
         Route::post('guest-houses/{guest_house}/mobile-cases/{application}/decision', [GuestHouseWebController::class, 'decideMobileCase'])->name('guest-houses.mobile-cases.decision');

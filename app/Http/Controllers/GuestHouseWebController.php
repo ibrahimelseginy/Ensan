@@ -115,6 +115,12 @@ final class GuestHouseWebController extends Controller
             ->where('guest_house_id', $guest_house->id)->where('status', 'approved')
             ->whereIn('type', ['in', 'out'])->groupBy('warehouse_id', 'item_id')
             ->with(['item', 'warehouse'])->having('stock', '!=', 0)->get();
+        $inventoryLogs = InventoryTransaction::query()
+            ->where('guest_house_id', $guest_house->id)
+            ->with(['item', 'warehouse'])
+            ->latest('transaction_date')
+            ->limit(25)
+            ->get();
         $todayMeals = $guest_house->meals()->whereDate('meal_date', today())
             ->with('servings.beneficiary')->get()->keyBy('meal_type');
         $pendingBookings = WebRoomBooking::query()
@@ -150,6 +156,7 @@ final class GuestHouseWebController extends Controller
             ,'guestHouseCustodies'
             ,'inventoryCustodies'
             ,'guestHouseInventory'
+            ,'inventoryLogs'
             ,'todayMeals'
             ,'pendingBookings'
             ,'pendingMobileCases'
@@ -396,8 +403,26 @@ final class GuestHouseWebController extends Controller
         if ($stay->status !== 'resident') {
             return back()->with('error', 'هذه الحالة غير مقيمة حاليًا.');
         }
-        $stay->update(['status' => 'departed', 'departed_at' => now()]);
+        $stay->update(['status' => 'departed', 'departed_at' => now(), 'departure_notes' => 'مغادرة الحالة']);
         return back()->with('success', 'تم تسجيل مغادرة الحالة وأصبح السرير متاحًا.');
+    }
+
+    public function departAllStays(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $count = 0;
+        DB::transaction(function () use ($guest_house, &$count): void {
+            $stays = $guest_house->stays()->where('status', 'resident')->get();
+            foreach ($stays as $stay) {
+                $stay->update([
+                    'status' => 'departed',
+                    'departed_at' => now(),
+                    'departure_notes' => 'مغادرة جماعية نهاية الأسبوع (الخميس)',
+                ]);
+                $count++;
+            }
+        });
+
+        return back()->with('success', "تم تسجيل مغادرة {$count} حالة بنجاح (الخميس) وإخلاء الأسِرّة.");
     }
 
     public function returnStay(Request $request, GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse

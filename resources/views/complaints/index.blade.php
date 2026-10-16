@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
     {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -36,13 +36,29 @@
                         <tr>
                             <td class="text-muted">{{ $c->id }}</td>
                             <td>
-                                <span style="font-family: monospace; font-size: 0.85rem; color: #16a34a; font-weight: bold; letter-spacing: 1px;">
-                                    {{ $c->tracking_code ?? '—' }}
-                                </span>
+                                @if(!empty($c->tracking_code))
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="{{ route('complaint.track', ['code' => $c->tracking_code]) }}" target="_blank" 
+                                           class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 text-decoration-none px-2.5 py-1.5 fw-bold"
+                                           style="font-family: monospace; letter-spacing: 1px;"
+                                           title="اضغط للتتبع المباشر للشكوى">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>{{ $c->tracking_code }}
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-link text-muted p-1" title="نسخ الكود" onclick="navigator.clipboard.writeText('{{ $c->tracking_code }}'); this.innerHTML='<i class=\'bi bi-check-lg text-success\'></i>'; setTimeout(() => this.innerHTML='<i class=\'bi bi-clipboard\'></i>', 1500);">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td>
-                                <span class="badge bg-secondary-subtle text-secondary">{{ $c->source_type }}
-                                    #{{ $c->source_id }}</span>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="fw-bold text-dark">{{ $c->source_name }}</span>
+                                    <span class="badge bg-secondary-subtle text-secondary align-self-start" style="font-size: 0.72rem;">
+                                        {{ $c->source_type_name }} {{ $c->source_id > 0 ? '#'.$c->source_id : '' }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="fw-medium">{{ $c->subject }}</td>
                             <td>
@@ -77,6 +93,13 @@
                                                 <i class="bi bi-eye me-2 opacity-50"></i> تفاصيل
                                             </a>
                                         </li>
+                                        @if(!empty($c->tracking_code))
+                                            <li>
+                                                <a class="dropdown-item rounded-2 text-success" href="{{ route('complaint.track', ['code' => $c->tracking_code]) }}" target="_blank">
+                                                    <i class="bi bi-box-arrow-up-right me-2 opacity-75"></i> تتبع الشكوى مباشرة
+                                                </a>
+                                            </li>
+                                        @endif
                                         @if($c->pendingRequest)
                                             <li>
                                                 <span class="dropdown-item rounded-2 text-warning bg-warning bg-opacity-10">

@@ -23,9 +23,66 @@
 @endphp
 
 <div id="printableBeneficiaryDossier" class="d-none">
-  <div class="official-voucher-card a4-paper-sheet bg-white text-dark p-4 p-md-5 rounded-3 position-relative mx-auto"
-       style="max-width: 860px; width: 100%; border: 3px double #059669; font-family: 'Cairo', system-ui, -apple-system, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.6;"
+  <div class="official-voucher-card bg-white text-dark p-4 p-md-5 position-relative mx-auto"
+       style="max-width: 860px; width: 100%; min-height: auto !important; height: auto !important; border: 2px solid #059669; outline: none; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, -apple-system, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.6; margin-bottom: 0 !important;"
        dir="rtl">
+
+    {{-- Embedded Scoped Styles: Guarantee pure white paper & dark text in any theme --}}
+    <style>
+      #printableBeneficiaryDossier,
+      #printableBeneficiaryDossier *,
+      body.theme-dark #printableBeneficiaryDossier,
+      body.theme-dark #printableBeneficiaryDossier *,
+      html.theme-dark #printableBeneficiaryDossier,
+      html.theme-dark #printableBeneficiaryDossier *,
+      [data-bs-theme="dark"] #printableBeneficiaryDossier,
+      [data-bs-theme="dark"] #printableBeneficiaryDossier * {
+          color-scheme: light !important;
+          box-sizing: border-box !important;
+      }
+      #printableBeneficiaryDossier,
+      #printableBeneficiaryDossier .official-voucher-card {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          min-height: auto !important;
+          height: auto !important;
+      }
+      #printableBeneficiaryDossier div,
+      #printableBeneficiaryDossier p,
+      #printableBeneficiaryDossier span:not(.badge):not(.badge *),
+      #printableBeneficiaryDossier td,
+      #printableBeneficiaryDossier th,
+      #printableBeneficiaryDossier strong,
+      #printableBeneficiaryDossier b,
+      #printableBeneficiaryDossier small,
+      body.theme-dark #printableBeneficiaryDossier div,
+      body.theme-dark #printableBeneficiaryDossier p,
+      body.theme-dark #printableBeneficiaryDossier span:not(.badge):not(.badge *),
+      body.theme-dark #printableBeneficiaryDossier td,
+      body.theme-dark #printableBeneficiaryDossier th,
+      body.theme-dark #printableBeneficiaryDossier strong,
+      body.theme-dark #printableBeneficiaryDossier b,
+      body.theme-dark #printableBeneficiaryDossier small,
+      html.theme-dark #printableBeneficiaryDossier div,
+      html.theme-dark #printableBeneficiaryDossier p,
+      html.theme-dark #printableBeneficiaryDossier span:not(.badge):not(.badge *),
+      html.theme-dark #printableBeneficiaryDossier td,
+      html.theme-dark #printableBeneficiaryDossier th,
+      html.theme-dark #printableBeneficiaryDossier strong,
+      html.theme-dark #printableBeneficiaryDossier b,
+      html.theme-dark #printableBeneficiaryDossier small {
+          color: #0f172a !important;
+      }
+      #printableBeneficiaryDossier .badge,
+      #printableBeneficiaryDossier .badge *,
+      body.theme-dark #printableBeneficiaryDossier .badge,
+      body.theme-dark #printableBeneficiaryDossier .badge *,
+      html.theme-dark #printableBeneficiaryDossier .badge,
+      html.theme-dark #printableBeneficiaryDossier .badge * {
+          color: #ffffff !important;
+          font-weight: 700 !important;
+      }
+    </style>
 
     {{-- Watermark in background --}}
     <div class="voucher-watermark position-absolute top-50 start-50 translate-middle text-center"
@@ -106,7 +163,7 @@
               <td class="bg-light fw-bold text-muted" style="background: #f8fafc !important; color: #475569 !important;">المشروع التابع له:</td>
               <td style="color: #0f172a !important;">{{ $beneficiary->project?->name ?: 'عام / غير مقيد' }}</td>
               <td class="bg-light fw-bold text-muted" style="background: #f8fafc !important; color: #475569 !important;">حالة الملف:</td>
-              <td><span class="badge bg-secondary bg-opacity-25 text-dark border">{{ $statusText }}</span></td>
+              <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 fw-bold">{{ $statusText }}</span></td>
             </tr>
             <tr>
               <td class="bg-light fw-bold text-muted" style="background: #f8fafc !important; color: #475569 !important;">العنوان بالتفصيل:</td>

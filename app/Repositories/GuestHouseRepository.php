@@ -17,6 +17,7 @@ final readonly class GuestHouseRepository
         $governorate = $filters['governorate'] ?? null;
 
         return GuestHouse::query()
+            ->with(['manager', 'wings'])
             ->withCount(['wings', 'beds', 'stays as resident_stays_count' => fn ($query) => $query->where('status', 'resident')])
             ->when($q !== '', function ($qb) use ($q) {
                 $qb->where('name', 'like', "%$q%")->orWhere('location', 'like', "%$q%");

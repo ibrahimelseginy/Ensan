@@ -6,9 +6,63 @@
 @endphp
 
 <div id="printableBeneficiariesRoster" class="d-none">
-  <div class="official-voucher-card a4-paper-sheet bg-white text-dark p-3 p-md-4 rounded-3 position-relative mx-auto"
-       style="max-width: 1100px; width: 100%; border: 3px double #059669; font-family: 'Cairo', system-ui, -apple-system, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.5;"
+  <div class="official-voucher-card a4-paper-sheet bg-white text-dark p-3 p-md-4 position-relative mx-auto"
+       style="max-width: 1100px; width: 100%; border: 2px solid #059669; outline: none; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, -apple-system, sans-serif; box-sizing: border-box; background: #ffffff !important; color: #0f172a !important; line-height: 1.5;"
        dir="rtl">
+
+    {{-- Embedded Scoped Styles: Guarantee pure white paper & dark text in any theme --}}
+    <style>
+      #printableBeneficiariesRoster,
+      #printableBeneficiariesRoster *,
+      body.theme-dark #printableBeneficiariesRoster,
+      body.theme-dark #printableBeneficiariesRoster *,
+      html.theme-dark #printableBeneficiariesRoster,
+      html.theme-dark #printableBeneficiariesRoster *,
+      [data-bs-theme="dark"] #printableBeneficiariesRoster,
+      [data-bs-theme="dark"] #printableBeneficiariesRoster * {
+          color-scheme: light !important;
+          box-sizing: border-box !important;
+      }
+      #printableBeneficiariesRoster .official-voucher-card {
+          background: #ffffff !important;
+          color: #0f172a !important;
+      }
+      #printableBeneficiariesRoster div,
+      #printableBeneficiariesRoster p,
+      #printableBeneficiariesRoster span:not(.badge):not(.badge *),
+      #printableBeneficiariesRoster td,
+      #printableBeneficiariesRoster th,
+      #printableBeneficiariesRoster strong,
+      #printableBeneficiariesRoster b,
+      #printableBeneficiariesRoster small,
+      body.theme-dark #printableBeneficiariesRoster div,
+      body.theme-dark #printableBeneficiariesRoster p,
+      body.theme-dark #printableBeneficiariesRoster span:not(.badge):not(.badge *),
+      body.theme-dark #printableBeneficiariesRoster td,
+      body.theme-dark #printableBeneficiariesRoster th,
+      body.theme-dark #printableBeneficiariesRoster strong,
+      body.theme-dark #printableBeneficiariesRoster b,
+      body.theme-dark #printableBeneficiariesRoster small,
+      html.theme-dark #printableBeneficiariesRoster div,
+      html.theme-dark #printableBeneficiariesRoster p,
+      html.theme-dark #printableBeneficiariesRoster span:not(.badge):not(.badge *),
+      html.theme-dark #printableBeneficiariesRoster td,
+      html.theme-dark #printableBeneficiariesRoster th,
+      html.theme-dark #printableBeneficiariesRoster strong,
+      html.theme-dark #printableBeneficiariesRoster b,
+      html.theme-dark #printableBeneficiariesRoster small {
+          color: #0f172a !important;
+      }
+      #printableBeneficiariesRoster .badge,
+      #printableBeneficiariesRoster .badge *,
+      body.theme-dark #printableBeneficiariesRoster .badge,
+      body.theme-dark #printableBeneficiariesRoster .badge *,
+      html.theme-dark #printableBeneficiariesRoster .badge,
+      html.theme-dark #printableBeneficiariesRoster .badge * {
+          color: #ffffff !important;
+          font-weight: 700 !important;
+      }
+    </style>
 
     {{-- Watermark in background --}}
     <div class="voucher-watermark position-absolute top-50 start-50 translate-middle text-center"

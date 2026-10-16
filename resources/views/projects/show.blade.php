@@ -14,6 +14,92 @@
 @endsection
 @section('content')
     <style>
+        .project-table-container {
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--card-bg, #ffffff);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .project-table-scroll {
+            overflow-x: auto;
+            max-height: 560px;
+            scrollbar-width: thin;
+        }
+        .project-table-scroll::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .project-table-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 4px;
+        }
+        .table-project-beneficiaries {
+            min-width: 1080px;
+            margin-bottom: 0 !important;
+        }
+        .table-project-beneficiaries thead th {
+            background-color: var(--bg-soft, #f8fafc) !important;
+            color: var(--text-muted, #64748b) !important;
+            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1.5px solid var(--border, #e2e8f0) !important;
+            padding: 12px 14px !important;
+            white-space: nowrap;
+        }
+        .table-project-beneficiaries tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        .table-project-beneficiaries tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.04) !important;
+        }
+        .table-project-beneficiaries tbody td {
+            padding: 12px 14px !important;
+            border-bottom: 1px solid var(--border, #f1f5f9) !important;
+            vertical-align: middle;
+            font-size: 0.86rem;
+        }
+        .theme-dark .project-table-container {
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            background: #111827 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+        .theme-dark .table-project-beneficiaries thead th {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+            border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .theme-dark .table-project-beneficiaries tbody td {
+            border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+            color: #e2e8f0 !important;
+        }
+        .theme-dark .table-project-beneficiaries tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.04) !important;
+        }
+        .theme-dark .table-project-beneficiaries .text-dark {
+            color: #f8fafc !important;
+        }
+        .theme-dark .table-project-beneficiaries .badge.bg-light {
+            background-color: #334155 !important;
+            color: #f1f5f9 !important;
+            border-color: #475569 !important;
+        }
+        .action-btn-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .action-btn-circle:hover {
+            transform: scale(1.12);
+        }
+
         .gh-metric-card {
             background: #fff;
             border-radius: 12px;

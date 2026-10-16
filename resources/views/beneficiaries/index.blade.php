@@ -51,6 +51,13 @@
     direction: rtl;
     text-align: right;
     z-index: 1070 !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22) !important;
   }
 
   .beneficiary-action-menu li,
@@ -59,7 +66,9 @@
     margin: 0;
   }
 
-  .beneficiary-action-menu .dropdown-item {
+  .beneficiary-action-menu .dropdown-item,
+  .beneficiary-action-menu button.dropdown-item,
+  .beneficiary-action-menu form button {
     width: 100%;
     min-height: 42px;
     display: grid !important;
@@ -71,6 +80,10 @@
     line-height: 1.35;
     text-align: right;
     white-space: nowrap;
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   .beneficiary-action-menu .action-icon {
@@ -87,6 +100,13 @@
 
   .beneficiary-action-menu .dropdown-divider {
     margin: 5px 4px !important;
+  }
+
+  .beneficiary-action-menu .dropdown-item:hover,
+  .beneficiary-action-menu button.dropdown-item:hover {
+    background-color: rgba(5, 150, 105, 0.12) !important;
+    background: rgba(5, 150, 105, 0.12) !important;
+    color: #059669 !important;
   }
 
   .beneficiary-action-menu .dropdown-item.text-info {
@@ -118,9 +138,25 @@
     background: rgba(255, 255, 255, .08) !important;
   }
 
-  .theme-dark .beneficiary-action-menu {
-    border-color: rgba(148, 163, 184, .22) !important;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, .55) !important;
+  .theme-dark .beneficiary-action-menu,
+  [data-bs-theme="dark"] .beneficiary-action-menu,
+  [data-theme="dark"] .beneficiary-action-menu,
+  html.theme-dark .beneficiary-action-menu {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, .92) !important;
+  }
+
+  .theme-dark .beneficiary-action-menu .dropdown-item:hover,
+  .theme-dark .beneficiary-action-menu button.dropdown-item:hover,
+  [data-bs-theme="dark"] .beneficiary-action-menu .dropdown-item:hover {
+    background-color: rgba(16, 185, 129, 0.18) !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    color: #34d399 !important;
   }
 
   .theme-dark .beneficiary-action-menu .dropdown-item.text-info {
@@ -340,7 +376,6 @@
             <div class="col-md-5 d-flex align-items-end gap-2">
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
-                <a class="btn btn-outline-success" data-no-loader href="{{ route('beneficiaries.export', request()->query()) }}" title="تصدير Excel"><i class="bi bi-file-earmark-excel me-1"></i> إكسل</a>
                 <button class="btn btn-outline-info" type="button" onclick="openBeneficiariesPrintPreview()" title="معاينة الكشف الرسمي قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة الكشف</button>
             </div>
         </div>
@@ -450,7 +485,10 @@
               <td>{{ $b->project?->name ?? '—' }}</td>
               <td>{{ optional($b->created_at)->format('Y-m-d') ?? '—' }}</td>
               <td class="text-end beneficiary-action-cell">
-                @if(isset($b->pendingRequest) && $b->pendingRequest)
+                @php
+                  $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));
+                @endphp
+                @if(isset($b->pendingRequest) && $b->pendingRequest && !$isManagerUser)
                     <span class="badge bg-warning bg-opacity-10 text-warning d-flex align-items-center px-2 py-1 rounded-pill small">
                         <i class="bi bi-hourglass-split me-1"></i> قيد المراجعة
                     </span>
@@ -462,7 +500,11 @@
                         <ul class="dropdown-menu dropdown-menu-end beneficiary-action-menu">
                             <li><a class="dropdown-item" href="{{ route('beneficiaries.show', $b) }}"><i class="bi bi-eye text-primary action-icon"></i><span class="action-label">عرض</span></a></li>
                             
-                            <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil text-warning action-icon"></i><span class="action-label">طلب تعديل</span></a></li>
+                            @if($isManagerUser)
+                                <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil text-warning action-icon"></i><span class="action-label">تعديل</span></a></li>
+                            @else
+                                <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil text-warning action-icon"></i><span class="action-label">طلب تعديل</span></a></li>
+                            @endif
 
                             @php
                               $attCount = $b->attachments_count ?? 0;
@@ -475,18 +517,18 @@
                                 <form action="{{ route('beneficiaries.update', $b) }}" method="POST">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="{{ $next }}">
-                                    <button type="submit" class="dropdown-item text-info"><i class="bi bi-arrow-repeat text-info action-icon"></i><span class="action-label">طلب {{ $next_ar }}</span></button>
+                                    <button type="submit" class="dropdown-item text-info bg-transparent border-0 shadow-none"><i class="bi bi-arrow-repeat text-info action-icon"></i><span class="action-label">{{ $isManagerUser ? '' : 'طلب ' }}{{ $next_ar }}</span></button>
                                 </form>
                             </li>
                             @endif
 
                             @if($b->status !== 'rejected')
                             <li>
-                                <form action="{{ route('beneficiaries.update', $b) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من طلب نقل هذا المستفيد إلى المرفوضين؟');">
+                                <form action="{{ route('beneficiaries.update', $b) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من {{ $isManagerUser ? 'نقل' : 'طلب نقل' }} هذا المستفيد إلى المرفوضين؟');">
                                     @csrf @method('PUT')
                                     <input type="hidden" name="status" value="rejected">
-                                    <input type="hidden" name="rejection_reason" value="تم طلب النقل إلى المرفوض من قائمة المستفيدين">
-                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle action-icon"></i><span class="action-label">طلب نقل إلى مرفوض</span></button>
+                                    <input type="hidden" name="rejection_reason" value="تم النقل إلى المرفوض من قائمة المستفيدين">
+                                    <button type="submit" class="dropdown-item text-danger bg-transparent border-0 shadow-none"><i class="bi bi-x-circle action-icon"></i><span class="action-label">{{ $isManagerUser ? 'نقل إلى مرفوض' : 'طلب نقل إلى مرفوض' }}</span></button>
                                 </form>
                             </li>
                             @endif
@@ -495,11 +537,22 @@
 
                             <li><hr class="dropdown-divider"></li>
 
+                            @if($isManagerUser)
                             <li>
-                                <button type="button" class="dropdown-item text-danger" onclick="openCancelModal('{{ route('beneficiaries.destroy', $b) }}')">
+                                <form action="{{ route('beneficiaries.destroy', $b) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من رغبتك في حذف هذا المستفيد نهائياً؟');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="dropdown-item text-danger bg-transparent border-0 shadow-none">
+                                        <i class="bi bi-trash text-danger action-icon"></i><span class="action-label">حذف المستفيد</span>
+                                    </button>
+                                </form>
+                            </li>
+                            @else
+                            <li>
+                                <button type="button" class="dropdown-item text-danger bg-transparent border-0 shadow-none" onclick="openCancelModal('{{ route('beneficiaries.destroy', $b) }}')">
                                     <i class="bi bi-x-circle action-icon"></i><span class="action-label">طلب إلغاء</span>
                                 </button>
                             </li>
+                            @endif
                         </ul>
                     </div>
                 @endif

@@ -174,17 +174,34 @@
             }
             if (paper) {
                 if (isSelfContained) {
-                    paper.style.border = 'none';
-                    paper.style.outline = 'none';
-                    paper.style.padding = '0';
-                    paper.style.boxShadow = 'none';
+                    paper.classList.add('is-voucher');
+                    paper.style.setProperty('border', 'none', 'important');
+                    paper.style.setProperty('outline', 'none', 'important');
+                    paper.style.setProperty('padding', '0', 'important');
+                    paper.style.setProperty('box-shadow', 'none', 'important');
+                    paper.style.setProperty('background', 'transparent', 'important');
+                    paper.style.setProperty('min-height', 'auto', 'important');
+                    paper.style.setProperty('height', 'auto', 'important');
                 } else {
-                    paper.style.border = '';
-                    paper.style.outline = '';
-                    paper.style.padding = '';
-                    paper.style.boxShadow = '';
+                    paper.classList.remove('is-voucher');
+                    paper.style.setProperty('border', 'none', 'important');
+                    paper.style.setProperty('outline', 'none', 'important');
+                    paper.style.setProperty('min-height', 'auto', 'important');
+                    paper.style.setProperty('height', 'auto', 'important');
+                    paper.style.removeProperty('padding');
+                    paper.style.removeProperty('box-shadow');
+                    paper.style.removeProperty('background');
                 }
             }
+
+            // Remove any artificial forced 297mm min-height from cloned sheets to eliminate empty bottom space
+            cloned.style.setProperty('min-height', 'auto', 'important');
+            cloned.style.setProperty('height', 'auto', 'important');
+            var subElements = cloned.querySelectorAll('.a4-paper-sheet, .official-voucher-card');
+            subElements.forEach(function(sub) {
+                sub.style.setProperty('min-height', 'auto', 'important');
+                sub.style.setProperty('height', 'auto', 'important');
+            });
 
             if (paperBody) {
                 paperBody.innerHTML = '';

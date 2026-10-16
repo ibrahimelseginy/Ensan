@@ -13,9 +13,14 @@
             <h1 class="hero-title fw-bold text-white mb-3" style="color: #ffffff !important;">إدارة دار الضيافة</h1>
             <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">إدارة مرافق الإقامة والضيافة التابعة للمؤسسة لضمان أفضل خدمة للمستفيدين.</p>
             <div class="hero-actions d-flex gap-2">
-                <a href="{{ route('guest-houses.create') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
-                    <i class="bi bi-plus-lg me-1"></i> إضافة دار جديدة
-                </a>
+                @php
+                    $isManager = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || auth()->user()->is_admin);
+                @endphp
+                @if($isManager)
+                    <a href="{{ route('guest-houses.create') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
+                        <i class="bi bi-plus-lg me-1"></i> إضافة دار جديدة
+                    </a>
+                @endif
                 <a href="{{ route('dashboard.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
                     <i class="bi bi-arrow-right me-1"></i> العودة للرئيسية
                 </a>
@@ -60,6 +65,23 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        {{-- Quick Governorate Tabs --}}
+        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+            <span class="text-muted small fw-bold me-1"><i class="bi bi-geo me-1 text-primary"></i> تصفية المحافظات:</span>
+            <a href="{{ route('guest-houses.index', array_merge(request()->except('governorate'), ['governorate' => ''])) }}"
+               class="btn btn-sm rounded-pill px-3 fw-bold {{ empty($governorate) ? 'btn-primary' : 'btn-outline-secondary' }}">
+                <i class="bi bi-buildings me-1"></i> كل الدور
+            </a>
+            <a href="{{ route('guest-houses.index', array_merge(request()->except('governorate'), ['governorate' => 'كفر الشيخ'])) }}"
+               class="btn btn-sm rounded-pill px-3 fw-bold {{ ($governorate ?? '') === 'كفر الشيخ' ? 'btn-success' : 'btn-outline-secondary' }}">
+                <i class="bi bi-geo-alt-fill me-1 text-success"></i> دور كفر الشيخ
+            </a>
+            <a href="{{ route('guest-houses.index', array_merge(request()->except('governorate'), ['governorate' => 'الغربية'])) }}"
+               class="btn btn-sm rounded-pill px-3 fw-bold {{ ($governorate ?? '') === 'الغربية' ? 'btn-info text-white' : 'btn-outline-secondary' }}">
+                <i class="bi bi-geo-alt-fill me-1 text-info"></i> دور الغربية
+            </a>
         </div>
 
         {{-- Filter Bar --}}
@@ -115,7 +137,7 @@
                     </div>
                     
                     <div class="p-4">
-                        <div class="row g-3 mb-4">
+                        <div class="row g-3 mb-3">
                             <div class="col-6">
                                 <div class="small text-muted mb-1">الأجنحة والأسِرّة</div>
                                 <div class="fw-bold"><i class="bi bi-hospital-bed text-primary me-2"></i>{{ $h->wings_count }} جناح · {{ $h->beds_count }} سرير</div>
@@ -128,6 +150,19 @@
                             <div class="col-12">
                                 <div class="small text-muted mb-1">مدير الدار</div>
                                 <div class="fw-bold"><i class="bi bi-person-badge text-primary me-2"></i>{{ $h->manager->name }}</div>
+                            </div>
+                            @endif
+
+                            @if($h->wings && $h->wings->isNotEmpty())
+                            <div class="col-12 pt-2 border-top">
+                                <div class="small text-muted mb-1"><i class="bi bi-grid-3x3-gap text-primary me-1"></i> الأجنحة الداخلية:</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach($h->wings as $wing)
+                                        <span class="badge bg-light text-dark border px-2 py-1 small fw-semibold">
+                                            {{ $wing->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </div>
                             @endif
                         </div>

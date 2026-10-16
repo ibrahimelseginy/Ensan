@@ -238,12 +238,28 @@
             </div>
             <div class="d-grid gap-2">
               @if($donation->status !== 'cancelled')
-                <a href="{{ route('donations.edit', $donation) }}" class="btn btn-outline-warning">
-                  <i class="bi bi-pencil me-1"></i> طلب تعديل التبرع
-                </a>
-                <button class="btn btn-outline-warning w-100" onclick="openCancelModal('{{ $donation->id }}', true)">
-                    <i class="bi bi-x-circle me-1"></i> طلب إلغاء التبرع
-                </button>
+                @php
+                  $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));
+                @endphp
+                @if($isManagerUser)
+                  <a href="{{ route('donations.edit', $donation) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i> تعديل التبرع
+                  </a>
+                  <form action="{{ route('donations.destroy', $donation) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من رغبتك في إلغاء وحذف هذا التبرع مباشرة؟');">
+                    @csrf @method('DELETE')
+                    <input type="hidden" name="cancellation_reason" value="تم الإلغاء المباشر بواسطة المدير">
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                      <i class="bi bi-trash me-1"></i> حذف / إلغاء التبرع
+                    </button>
+                  </form>
+                @else
+                  <a href="{{ route('donations.edit', $donation) }}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil me-1"></i> طلب تعديل التبرع
+                  </a>
+                  <button class="btn btn-outline-warning w-100" onclick="openCancelModal('{{ $donation->id }}', true)">
+                      <i class="bi bi-x-circle me-1"></i> طلب إلغاء التبرع
+                  </button>
+                @endif
               @else
                 <div class="alert alert-danger mb-0 text-center fw-bold">
                   <i class="bi bi-x-octagon"></i> هذا التبرع ملغي
@@ -258,16 +274,21 @@
 
   {{-- Receipt Preview Modal --}}
   <div class="modal fade" id="receiptPreviewModal" tabindex="-1" aria-labelledby="receiptPreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-light py-2 border-bottom">
           <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-receipt text-success fs-5"></i>
-            <h5 class="modal-title fw-bold text-dark mb-0 fs-6" id="receiptPreviewModalLabel">معاينة وصل استلام التبرع الرسمي</h5>
+            <div class="rounded-circle bg-success bg-opacity-10 text-success p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+              <i class="bi bi-file-earmark-text-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold text-dark mb-0 fs-6" id="receiptPreviewModalLabel">معاينة وصل استلام التبرع الرسمي</h5>
+              <small class="text-muted">هذا هو الشكل النهائي الدقيق للوصل كما سيظهر في الطباعة (A4)</small>
+            </div>
           </div>
-          <div class="d-flex gap-2">
-            <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-3">
-              <i class="bi bi-printer me-1"></i> طباعة هذا الوصل
+          <div class="d-flex gap-2 align-items-center">
+            <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-3 shadow-sm fw-bold">
+              <i class="bi bi-printer me-1"></i> طباعة الوصل الآن
             </button>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -279,7 +300,7 @@
         </div>
         <div class="modal-footer bg-light py-2">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
-          <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-4">
+          <button type="button" onclick="printDonationVoucher()" class="btn btn-success btn-sm px-4 fw-bold shadow-sm">
             <i class="bi bi-printer me-1"></i> طباعة الوصل الآن
           </button>
         </div>

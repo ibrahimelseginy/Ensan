@@ -170,7 +170,10 @@ final class BeneficiaryWebController extends Controller
 
     public function destroy(Beneficiary $beneficiary): RedirectResponse
     {
-        if ($this->hasPendingRequest($beneficiary)) {
+        $user = auth()->user();
+        $isManager = $user && ($user->hasRole('admin') || $user->hasRole('manager'));
+
+        if (!$isManager && $this->hasPendingRequest($beneficiary)) {
             return redirect()->route('change-requests.index')->with('info', 'هذا المستفيد لديه طلب مراجعة حالياً');
         }
 

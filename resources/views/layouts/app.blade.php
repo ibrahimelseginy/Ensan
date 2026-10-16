@@ -376,6 +376,7 @@
           color: var(--text-muted) !important;
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           padding: 0 !important;
+          position: relative !important;
       }
       .btn-glass-pill:hover {
           background: var(--bg) !important;
@@ -383,6 +384,40 @@
           transform: translateY(-2px);
           box-shadow: 0 10px 20px rgba(0,0,0,0.05);
           border-color: var(--primary) !important;
+      }
+      .notif-bell-badge {
+          position: absolute !important;
+          top: -3px !important;
+          right: -3px !important;
+          min-width: 20px !important;
+          height: 20px !important;
+          padding: 0 5px !important;
+          border-radius: 999px !important;
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+          color: #ffffff !important;
+          font-size: 0.72rem !important;
+          font-weight: 800 !important;
+          line-height: 1 !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          text-align: center !important;
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6), 0 0 0 2px var(--bg, #ffffff) !important;
+          animation: bellBadgePulse 2.5s infinite !important;
+          pointer-events: none !important;
+          z-index: 20 !important;
+          font-family: inherit !important;
+          letter-spacing: -0.2px;
+      }
+      .theme-dark .notif-bell-badge,
+      html.theme-dark .notif-bell-badge,
+      [data-bs-theme="dark"] .notif-bell-badge,
+      body.dark-mode .notif-bell-badge {
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.75), 0 0 0 2px #1e293b !important;
+      }
+      @keyframes bellBadgePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.12); }
       }
 
       .btn-reports-elite {
@@ -579,33 +614,54 @@
          * ====================================================== */
         .modal-content {
             background-color: #ffffff !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
         .modal-footer {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
         }
 
         /* ======================================================
          * Modal: Dark Mode - All Modal Sections
          * Targets both theme-dark class (custom) and data-bs-theme (Bootstrap 5)
          * ====================================================== */
+        html.theme-dark .modal-content,
         body.theme-dark .modal-content,
+        .theme-dark .modal-content,
         [data-bs-theme="dark"] .modal-content,
         [data-theme="dark"] .modal-content {
-            background-color: #1a1d21 !important;
+            background-color: #0f172a !important;
             color: #e2e8f0 !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
+        html.theme-dark .modal-body,
         body.theme-dark .modal-body,
+        .theme-dark .modal-body,
         [data-bs-theme="dark"] .modal-body,
         [data-theme="dark"] .modal-body {
-            background-color: #1a1d21 !important;
+            background-color: #0f172a !important;
             color: #e2e8f0 !important;
         }
 
+        html.theme-dark .modal-header,
+        body.theme-dark .modal-header,
+        .theme-dark .modal-header,
+        [data-bs-theme="dark"] .modal-header,
+        [data-theme="dark"] .modal-header {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+        }
+
+        html.theme-dark .modal-footer,
         body.theme-dark .modal-footer,
+        .theme-dark .modal-footer,
         [data-bs-theme="dark"] .modal-footer,
         [data-theme="dark"] .modal-footer {
-            background-color: #1a1d21 !important;
+            background-color: #0f172a !important;
             border-top: 1px solid rgba(255,255,255,0.07) !important;
         }
 
@@ -659,25 +715,72 @@
             background-color: #0f172a !important;
         }
 
-        /* Ensure dropdown is completely non-transparent and above all other elements */
-        .dropdown-menu {
+        /* Ensure dropdown is completely solid, non-transparent and above all other elements */
+        .dropdown-menu,
+        .beneficiary-action-menu,
+        [data-bs-toggle="dropdown"] + .dropdown-menu {
             background-color: #ffffff !important;
             background: #ffffff !important;
             opacity: 1 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
             z-index: 10060 !important;
         }
 
+        body.theme-dark .dropdown-menu,
+        body.theme-dark .beneficiary-action-menu,
         .theme-dark .dropdown-menu,
+        .theme-dark .beneficiary-action-menu,
         [data-bs-theme="dark"] .dropdown-menu,
-        html.theme-dark .dropdown-menu {
+        [data-bs-theme="dark"] .beneficiary-action-menu,
+        [data-theme="dark"] .dropdown-menu,
+        [data-theme="dark"] .beneficiary-action-menu,
+        html.theme-dark .dropdown-menu,
+        html.theme-dark .beneficiary-action-menu {
             background-color: #0f172a !important;
             background: #0f172a !important;
             opacity: 1 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85) !important;
             z-index: 10060 !important;
+        }
+
+        /* Reset any button styles inside dropdown menu so buttons don't have opaque/white rectangles */
+        .dropdown-menu .dropdown-item,
+        .dropdown-menu button.dropdown-item,
+        .dropdown-menu form button,
+        .beneficiary-action-menu .dropdown-item,
+        .beneficiary-action-menu button.dropdown-item,
+        .beneficiary-action-menu form button {
+            background-color: transparent !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        .dropdown-menu .dropdown-item:hover,
+        .dropdown-menu button.dropdown-item:hover,
+        .beneficiary-action-menu .dropdown-item:hover,
+        .beneficiary-action-menu button.dropdown-item:hover {
+            background-color: rgba(5, 150, 105, 0.12) !important;
+            background: rgba(5, 150, 105, 0.12) !important;
+            color: #059669 !important;
+        }
+
+        body.theme-dark .dropdown-menu .dropdown-item:hover,
+        body.theme-dark .dropdown-menu button.dropdown-item:hover,
+        .theme-dark .dropdown-menu .dropdown-item:hover,
+        .theme-dark .dropdown-menu button.dropdown-item:hover,
+        [data-bs-theme="dark"] .dropdown-menu .dropdown-item:hover,
+        [data-bs-theme="dark"] .dropdown-menu button.dropdown-item:hover {
+            background-color: rgba(16, 185, 129, 0.18) !important;
+            background: rgba(16, 185, 129, 0.18) !important;
+            color: #34d399 !important;
         }
 
         .dropdown.show,
@@ -841,7 +944,39 @@
         body.theme-dark #printableBeneficiariesRoster h3,
         body.theme-dark #printableBeneficiariesRoster h4,
         body.theme-dark #printableBeneficiariesRoster h5,
-        body.theme-dark #printableBeneficiariesRoster h6 {
+        body.theme-dark #printableBeneficiariesRoster h6,
+        html.theme-dark .official-voucher-card div,
+        html.theme-dark .official-voucher-card p,
+        html.theme-dark .official-voucher-card span:not(.badge):not(.badge *),
+        html.theme-dark .official-voucher-card td,
+        html.theme-dark .official-voucher-card th,
+        html.theme-dark .official-voucher-card strong,
+        html.theme-dark .official-voucher-card b,
+        html.theme-dark .official-voucher-card small,
+        body.theme-dark .official-voucher-card div,
+        body.theme-dark .official-voucher-card p,
+        body.theme-dark .official-voucher-card span:not(.badge):not(.badge *),
+        body.theme-dark .official-voucher-card td,
+        body.theme-dark .official-voucher-card th,
+        body.theme-dark .official-voucher-card strong,
+        body.theme-dark .official-voucher-card b,
+        body.theme-dark .official-voucher-card small,
+        html.theme-dark #printableDonationVoucher div,
+        html.theme-dark #printableDonationVoucher p,
+        html.theme-dark #printableDonationVoucher span:not(.badge):not(.badge *),
+        html.theme-dark #printableDonationVoucher td,
+        html.theme-dark #printableDonationVoucher th,
+        html.theme-dark #printableDonationVoucher strong,
+        html.theme-dark #printableDonationVoucher b,
+        html.theme-dark #printableDonationVoucher small,
+        body.theme-dark #printableDonationVoucher div,
+        body.theme-dark #printableDonationVoucher p,
+        body.theme-dark #printableDonationVoucher span:not(.badge):not(.badge *),
+        body.theme-dark #printableDonationVoucher td,
+        body.theme-dark #printableDonationVoucher th,
+        body.theme-dark #printableDonationVoucher strong,
+        body.theme-dark #printableDonationVoucher b,
+        body.theme-dark #printableDonationVoucher small {
             color: #0f172a !important;
         }
 
@@ -1888,9 +2023,10 @@
             @endif
 
             @if($navUser && $navUser->hasPermission('notifications.view'))
-              <button class="btn btn-glass-pill"
-                type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات">
+              <button class="btn btn-glass-pill" id="notificationBellBtn"
+                type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات" title="الإشعارات">
                 <i class="bi bi-bell fs-5"></i>
+                <span id="notificationBellBadge" class="notif-bell-badge d-none">0</span>
               </button>
             @endif
 
@@ -2852,12 +2988,21 @@
 
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
-      <div class="offcanvas-header">
-        <h5 id="notifOffcanvasLabel" class="mb-0">الإشعارات</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <div class="offcanvas-header border-bottom py-3">
+        <div class="d-flex align-items-center gap-2">
+          <h5 id="notifOffcanvasLabel" class="mb-0 fw-bold">الإشعارات</h5>
+          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.78rem;">0</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" id="testNotifSoundBtn" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.78rem;" title="تشغيل صوت التنبيه">
+            <i class="bi bi-volume-up-fill"></i>
+            <span>تجربة الصوت</span>
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
       </div>
       <div class="offcanvas-body">
-        <div class="d-flex gap-2 mb-2">
+        <div class="d-flex gap-2 mb-3">
           <select id="notifSideFilter" class="form-select form-select-sm" style="width:auto">
             <option value="">الكل</option>
             <option value="success">نجاح</option>
@@ -2877,12 +3022,14 @@
         var list = document.getElementById('notifSideList');
         var filter = document.getElementById('notifSideFilter');
         var bellBadge = document.getElementById('notificationBellBadge');
+        var bellBtn = document.getElementById('notificationBellBtn');
+        var testSoundBtn = document.getElementById('testNotifSoundBtn');
+        var offcanvasCount = document.getElementById('notifOffcanvasCount');
         var fKey = 'sidebar.notifications.filter';
         var seenKey = 'notifications.seen.v1.{{ $navUser->id }}';
-        var popup = null;
-        var popupTimer = null;
         var audioContext = null;
         var pendingSound = false;
+        var lastItemCount = null;
 
         var notificationSignature = function (item) {
           return [item.category || '', item.type || '', item.text || '', item.link || ''].join('|');
@@ -2904,62 +3051,115 @@
         var getAudioContext = function () {
           if (!audioContext) {
             var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) audioContext = new AudioContextClass();
+            if (AudioContextClass) {
+              audioContext = new AudioContextClass();
+            }
+          }
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume().catch(function () {});
           }
           return audioContext;
         };
 
+        var synthesizeChime = function (context) {
+          try {
+            var now = context.currentTime;
+            // Two-tone modern pleasant chime: A5 (880Hz) -> E6 (1318.5Hz)
+            var notes = [
+              { freq: 880, start: 0, duration: 0.20, gain: 0.28 },
+              { freq: 1318.5, start: 0.13, duration: 0.36, gain: 0.32 }
+            ];
+
+            notes.forEach(function (n) {
+              var osc = context.createOscillator();
+              var gain = context.createGain();
+
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(n.freq, now + n.start);
+
+              gain.gain.setValueAtTime(0.0001, now + n.start);
+              gain.gain.linearRampToValueAtTime(n.gain, now + n.start + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + n.start + n.duration);
+
+              osc.connect(gain);
+              gain.connect(context.destination);
+
+              osc.start(now + n.start);
+              osc.stop(now + n.start + n.duration + 0.05);
+            });
+          } catch (e) {
+            console.warn('Notification audio playback error:', e);
+          }
+        };
+
         var playNotificationSound = function () {
           var context = getAudioContext();
-          if (!context || context.state !== 'running') {
+          if (!context) return;
+          if (context.state !== 'running') {
             pendingSound = true;
+            context.resume().then(function () {
+              if (context.state === 'running') {
+                pendingSound = false;
+                synthesizeChime(context);
+              }
+            }).catch(function () {});
             return;
           }
           pendingSound = false;
-          var start = context.currentTime;
-          [784, 1047].forEach(function (frequency, index) {
-            var oscillator = context.createOscillator();
-            var gain = context.createGain();
-            oscillator.type = 'sine';
-            oscillator.frequency.value = frequency;
-            gain.gain.setValueAtTime(0.0001, start + (index * .2));
-            gain.gain.exponentialRampToValueAtTime(.18, start + (index * .2) + .02);
-            gain.gain.exponentialRampToValueAtTime(0.0001, start + (index * .2) + .16);
-            oscillator.connect(gain);
-            gain.connect(context.destination);
-            oscillator.start(start + (index * .2));
-            oscillator.stop(start + (index * .2) + .18);
-          });
+          synthesizeChime(context);
         };
 
         var unlockNotificationSound = function () {
           var context = getAudioContext();
           if (!context) return;
-          Promise.resolve(context.resume()).then(function () {
-            if (pendingSound) playNotificationSound();
+          context.resume().then(function () {
+            if (pendingSound) {
+              playNotificationSound();
+            }
           }).catch(function () {});
         };
 
-        ['pointerdown', 'keydown', 'touchstart'].forEach(function (eventName) {
+        ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(function (eventName) {
           document.addEventListener(eventName, unlockNotificationSound, { once: true, passive: true });
         });
 
+        if (bellBtn) {
+          bellBtn.addEventListener('click', function () {
+            playNotificationSound();
+          });
+        }
 
+        if (testSoundBtn) {
+          testSoundBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            playNotificationSound();
+          });
+        }
 
         var notifyAboutNewItems = function (items) {
-          // Notifications are not popped up as intrusive dialogs.
-          // They update the badge and can be reviewed via the notifications menu/page or upon login.
           if (!Array.isArray(items) || items.length === 0) return;
           var seen = readSeen();
           items.forEach(function (item) { seen[notificationSignature(item)] = Date.now(); });
           saveSeen(seen);
         };
+
         var updateBellBadge = function (items) {
           var count = Array.isArray(items) ? items.length : 0;
-          if (!bellBadge) return;
-          bellBadge.textContent = count > 99 ? '99+' : String(count);
-          bellBadge.classList.toggle('d-none', count === 0);
+          if (bellBadge) {
+            bellBadge.textContent = count > 99 ? '99+' : String(count);
+            if (count > 0) {
+              bellBadge.classList.remove('d-none');
+              bellBadge.style.display = 'inline-flex';
+            } else {
+              bellBadge.classList.add('d-none');
+              bellBadge.style.display = 'none';
+            }
+          }
+          if (offcanvasCount) {
+            offcanvasCount.textContent = count > 99 ? '99+' : String(count);
+          }
         };
+
         var render = function (items) {
           updateBellBadge(items);
           list.innerHTML = '';
@@ -2993,7 +3193,6 @@
               'secondary': 'عام'
             };
 
-            // Header: Icon and Label
             var header = document.createElement('div');
             header.className = 'd-flex align-items-center justify-content-between mb-3';
 
@@ -3014,13 +3213,11 @@
             headRight.appendChild(badge);
             header.appendChild(headRight);
 
-            // Text Content
             var textPara = document.createElement('p');
             textPara.className = 'mb-3 lh-base fw-medium';
             textPara.style.fontSize = '0.95rem';
             textPara.textContent = n.text;
 
-            // Action
             var actionDiv = document.createElement('div');
             actionDiv.className = 'd-flex justify-content-start';
             var link = document.createElement('a');
@@ -3036,16 +3233,34 @@
             list.appendChild(card);
           });
         };
+
         var load = function () {
           fetch('{{ route('notifications.index') }}?format=json')
             .then(function (r) { if (!r.ok) throw new Error('Notification request failed'); return r.json(); })
             .then(function (d) {
               var items = d.items || [];
+              var currentCount = items.length;
+
               render(items);
               notifyAboutNewItems(items);
+
+              // Sound triggering logic:
+              if (lastItemCount === null) {
+                lastItemCount = currentCount;
+                if (currentCount > 0 && !sessionStorage.getItem('ensan_notif_sound_played')) {
+                  sessionStorage.setItem('ensan_notif_sound_played', '1');
+                  playNotificationSound();
+                }
+              } else if (currentCount > lastItemCount) {
+                lastItemCount = currentCount;
+                playNotificationSound();
+              } else {
+                lastItemCount = currentCount;
+              }
             })
             .catch(function () { render([]); });
         };
+
         off.addEventListener('shown.bs.offcanvas', load);
         filter.addEventListener('change', function () { localStorage.setItem(fKey, filter.value || ''); load(); });
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
