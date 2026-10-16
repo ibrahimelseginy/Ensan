@@ -6104,7 +6104,15 @@ body.theme-dark #universalPrintPaper table tbody tr:nth-child(even) {
    GLOBAL SOLID MODALS & NON-TRANSPARENT CARDS
    ======================================================== */
 .modal-content,
-.modal-dialog .modal-content {
+.modal-dialog .modal-content,
+.modal form.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+.service-modal .modal-content,
+.service-modal .modal-header,
+.service-modal .modal-body,
+.service-modal .modal-footer {
   background-color: #ffffff !important;
   background: #ffffff !important;
   opacity: 1 !important;
@@ -6119,12 +6127,50 @@ html.theme-dark .modal-content,
 body.theme-dark .modal-content,
 .theme-dark .modal-content,
 [data-bs-theme="dark"] .modal-content,
-[data-theme="dark"] .modal-content {
+[data-theme="dark"] .modal-content,
+html.theme-dark .modal-header,
+body.theme-dark .modal-header,
+.theme-dark .modal-header,
+[data-bs-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-header,
+html.theme-dark .modal-body,
+body.theme-dark .modal-body,
+.theme-dark .modal-body,
+[data-bs-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-body,
+html.theme-dark .modal-footer,
+body.theme-dark .modal-footer,
+.theme-dark .modal-footer,
+[data-bs-theme="dark"] .modal-footer,
+[data-theme="dark"] .modal-footer,
+html.theme-dark .service-modal .modal-content,
+body.theme-dark .service-modal .modal-content,
+.theme-dark .service-modal .modal-content,
+[data-bs-theme="dark"] .service-modal .modal-content,
+[data-theme="dark"] .service-modal .modal-content,
+html.theme-dark .service-modal .modal-header,
+body.theme-dark .service-modal .modal-header,
+.theme-dark .service-modal .modal-header,
+[data-bs-theme="dark"] .service-modal .modal-header,
+[data-theme="dark"] .service-modal .modal-header,
+html.theme-dark .service-modal .modal-body,
+body.theme-dark .service-modal .modal-body,
+.theme-dark .service-modal .modal-body,
+[data-bs-theme="dark"] .service-modal .modal-body,
+[data-theme="dark"] .service-modal .modal-body,
+html.theme-dark .service-modal .modal-footer,
+body.theme-dark .service-modal .modal-footer,
+.theme-dark .service-modal .modal-footer,
+[data-bs-theme="dark"] .service-modal .modal-footer,
+[data-theme="dark"] .service-modal .modal-footer {
   background-color: #0f172a !important;
   background: #0f172a !important;
   color: #f8fafc !important;
-  border: 1px solid #334155 !important;
+  border-color: #334155 !important;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Modal cards, sections and inputs inside modals */

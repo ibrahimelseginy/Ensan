@@ -447,14 +447,17 @@
     }
 
     .service-modal {
-        --kfs-surface: var(--ws-bg-card, #ffffff);
-        --kfs-input: var(--ws-bg-input, #ffffff);
-        --kfs-text: var(--ws-text-primary, #0f172a);
-        --kfs-muted: var(--ws-text-secondary, #64748b);
-        --kfs-border: var(--ws-border, #e2e8f0);
+        --kfs-surface: #ffffff;
+        --kfs-input: #ffffff;
+        --kfs-text: #0f172a;
+        --kfs-muted: #64748b;
+        --kfs-border: #e2e8f0;
     }
 
-    .theme-dark .service-modal {
+    .theme-dark .service-modal,
+    html.theme-dark .service-modal,
+    body.theme-dark .service-modal,
+    [data-bs-theme="dark"] .service-modal {
         --kfs-surface: #0f172a;
         --kfs-input: #111c30;
         --kfs-text: #f8fafc;
@@ -471,11 +474,15 @@
     .service-modal .modal-content {
         max-height: calc(100dvh - 2rem);
         overflow: hidden;
-        border: 1px solid var(--kfs-border);
-        border-radius: 1.25rem;
-        background: var(--kfs-surface);
-        color: var(--kfs-text);
-        box-shadow: 0 30px 70px rgba(2, 8, 23, .28);
+        border: 1px solid var(--kfs-border) !important;
+        border-radius: 1.25rem !important;
+        background-color: var(--kfs-surface) !important;
+        background: var(--kfs-surface) !important;
+        color: var(--kfs-text) !important;
+        opacity: 1 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: 0 30px 70px rgba(2, 8, 23, .28) !important;
     }
 
     .service-modal form {
@@ -483,13 +490,17 @@
         flex-direction: column;
         min-height: 0;
         max-height: calc(100dvh - 2rem);
+        background: inherit !important;
+        background-color: inherit !important;
     }
 
     .service-modal .modal-header,
     .service-modal .modal-footer {
         flex: 0 0 auto;
-        border-color: var(--kfs-border);
-        background: var(--kfs-surface);
+        border-color: var(--kfs-border) !important;
+        background-color: var(--kfs-surface) !important;
+        background: var(--kfs-surface) !important;
+        opacity: 1 !important;
     }
 
     .service-modal .modal-header {
@@ -528,6 +539,9 @@
         overflow-y: auto;
         padding: 1.25rem;
         overscroll-behavior: contain;
+        background-color: var(--kfs-surface) !important;
+        background: var(--kfs-surface) !important;
+        opacity: 1 !important;
     }
 
     .service-modal .modal-footer {
@@ -535,6 +549,9 @@
         justify-content: flex-start;
         gap: .6rem;
         padding: .9rem 1.25rem;
+        background-color: var(--kfs-surface) !important;
+        background: var(--kfs-surface) !important;
+        opacity: 1 !important;
     }
 
     .service-modal .form-label {

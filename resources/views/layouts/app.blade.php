@@ -809,28 +809,54 @@
     <style>
 
         /* ======================================================
-         * Modal: Global Solid Background (Light Mode)
+         * Modal & Add Cards: Global Solid Non-Transparent Background (Light Mode)
          * ====================================================== */
-        .modal-content {
+        .modal-content,
+        .modal-dialog .modal-content,
+        .modal .modal-content,
+        .modal form.modal-content,
+        .modal .card,
+        .service-modal .modal-content {
             background-color: #ffffff !important;
+            background: #ffffff !important;
             opacity: 1 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
         }
-        .modal-footer {
+        .modal-header,
+        .modal-body,
+        .modal-footer,
+        .service-modal .modal-header,
+        .service-modal .modal-body,
+        .service-modal .modal-footer {
             background-color: #ffffff !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
         }
 
         /* ======================================================
-         * Modal: Dark Mode - All Modal Sections
-         * Targets both theme-dark class (custom) and data-bs-theme (Bootstrap 5)
+         * Modal & Add Cards: Dark Mode - Non-Transparent Background
          * ====================================================== */
         html.theme-dark .modal-content,
         body.theme-dark .modal-content,
         .theme-dark .modal-content,
         [data-bs-theme="dark"] .modal-content,
-        [data-theme="dark"] .modal-content {
+        [data-theme="dark"] .modal-content,
+        html.theme-dark .modal-dialog .modal-content,
+        body.theme-dark .modal-dialog .modal-content,
+        .theme-dark .modal-dialog .modal-content,
+        [data-bs-theme="dark"] .modal-dialog .modal-content,
+        [data-theme="dark"] .modal-dialog .modal-content,
+        html.theme-dark .modal .card,
+        body.theme-dark .modal .card,
+        .theme-dark .modal .card,
+        html.theme-dark .service-modal .modal-content,
+        body.theme-dark .service-modal .modal-content,
+        .theme-dark .service-modal .modal-content,
+        [data-bs-theme="dark"] .service-modal .modal-content,
+        [data-theme="dark"] .service-modal .modal-content {
             background-color: #0f172a !important;
+            background: #0f172a !important;
             color: #e2e8f0 !important;
             opacity: 1 !important;
             backdrop-filter: none !important;
@@ -841,27 +867,48 @@
         body.theme-dark .modal-body,
         .theme-dark .modal-body,
         [data-bs-theme="dark"] .modal-body,
-        [data-theme="dark"] .modal-body {
+        [data-theme="dark"] .modal-body,
+        html.theme-dark .service-modal .modal-body,
+        body.theme-dark .service-modal .modal-body,
+        .theme-dark .service-modal .modal-body,
+        [data-bs-theme="dark"] .service-modal .modal-body,
+        [data-theme="dark"] .service-modal .modal-body {
             background-color: #0f172a !important;
+            background: #0f172a !important;
             color: #e2e8f0 !important;
+            opacity: 1 !important;
         }
 
         html.theme-dark .modal-header,
         body.theme-dark .modal-header,
         .theme-dark .modal-header,
         [data-bs-theme="dark"] .modal-header,
-        [data-theme="dark"] .modal-header {
+        [data-theme="dark"] .modal-header,
+        html.theme-dark .service-modal .modal-header,
+        body.theme-dark .service-modal .modal-header,
+        .theme-dark .service-modal .modal-header,
+        [data-bs-theme="dark"] .service-modal .modal-header,
+        [data-theme="dark"] .service-modal .modal-header {
             background-color: #0f172a !important;
-            color: #e2e8f0 !important;
+            background: #0f172a !important;
+            color: #f8fafc !important;
+            opacity: 1 !important;
         }
 
         html.theme-dark .modal-footer,
         body.theme-dark .modal-footer,
         .theme-dark .modal-footer,
         [data-bs-theme="dark"] .modal-footer,
-        [data-theme="dark"] .modal-footer {
+        [data-theme="dark"] .modal-footer,
+        html.theme-dark .service-modal .modal-footer,
+        body.theme-dark .service-modal .modal-footer,
+        .theme-dark .service-modal .modal-footer,
+        [data-bs-theme="dark"] .service-modal .modal-footer,
+        [data-theme="dark"] .service-modal .modal-footer {
             background-color: #0f172a !important;
+            background: #0f172a !important;
             border-top: 1px solid rgba(255,255,255,0.07) !important;
+            opacity: 1 !important;
         }
 
         /* Fix form labels in modals for dark mode */
@@ -1351,7 +1398,9 @@
       }
       .toast-review-action:hover {
           background: rgba(255, 255, 255, 0.24);
-          transform: translateY      /* Review request details and inline execution - High Contrast & Clarity */
+          transform: translateY(-1px);
+      }
+      /* Review request details and inline execution - High Contrast & Clarity */
       .modal-backdrop.show {
           background-color: rgba(3, 7, 18, 0.82) !important;
           backdrop-filter: blur(10px) !important;
@@ -3365,12 +3414,13 @@
         };
 
         var markAllAsSeen = function () {
-          if (!Array.isArray(currentItems) || currentItems.length === 0) return;
-          var seen = readSeen();
-          currentItems.forEach(function (item) {
-            seen[notificationSignature(item)] = Date.now();
-          });
-          saveSeen(seen);
+          if (Array.isArray(currentItems) && currentItems.length > 0) {
+            var seen = readSeen();
+            currentItems.forEach(function (item) {
+              seen[notificationSignature(item)] = Date.now();
+            });
+            saveSeen(seen);
+          }
           lastItemCount = 0;
           updateBellBadge(0);
           if (list) {
@@ -3387,7 +3437,6 @@
 
         if (bellBtn) {
           bellBtn.addEventListener('click', function () {
-            playNotificationSound();
             markAllAsSeen();
           });
         }
@@ -3495,7 +3544,15 @@
             .then(function (r) { if (!r.ok) throw new Error('Notification request failed'); return r.json(); })
             .then(function (d) {
               currentItems = d.items || [];
-              var unreadCount = getUnreadCount(currentItems);
+              var isOffcanvasOpen = off && (off.classList.contains('show') || off.classList.contains('showing'));
+              if (isOffcanvasOpen) {
+                var seen = readSeen();
+                currentItems.forEach(function (item) {
+                  seen[notificationSignature(item)] = Date.now();
+                });
+                saveSeen(seen);
+              }
+              var unreadCount = isOffcanvasOpen ? 0 : getUnreadCount(currentItems);
 
               render(currentItems);
               updateBellBadge(unreadCount);
@@ -3517,9 +3574,14 @@
             .catch(function () { render([]); updateBellBadge(0); });
         };
 
-        off.addEventListener('shown.bs.offcanvas', function () {
-          markAllAsSeen();
-        });
+        if (off) {
+          off.addEventListener('show.bs.offcanvas', function () {
+            markAllAsSeen();
+          });
+          off.addEventListener('shown.bs.offcanvas', function () {
+            markAllAsSeen();
+          });
+        }
 
         filter.addEventListener('change', function () { localStorage.setItem(fKey, filter.value || ''); load(); });
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
