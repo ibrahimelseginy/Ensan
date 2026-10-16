@@ -11,7 +11,22 @@ final class WebDynamicCard extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title',
+        'description',
+        'image',
+        'badge_text',
+        'badge_icon',
+        'tag_text',
+        'main_button_text',
+        'main_button_action',
+        'sort_order',
+        'card_color',
+        'stats_data',
+        'buttons_data',
+        'badge_visible',
+        'is_active',
+    ];
 
     protected $casts = [
         'badge_visible' => 'boolean',

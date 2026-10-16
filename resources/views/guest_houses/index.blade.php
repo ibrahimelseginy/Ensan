@@ -182,9 +182,13 @@
                                     <i class="bi bi-hourglass-split me-1"></i> قيد المراجعة
                                 </span>
                             @else
-                                <form method="POST" action="{{ route('guest-houses.destroy', $h) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الدار؟');">
+                                <form method="POST" action="{{ route('guest-houses.destroy', $h) }}" 
+                                      class="d-inline"
+                                      data-confirm-delete
+                                      data-confirm-title="تأكيد حذف دار الضيافة"
+                                      data-name="{{ $h->name }}">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger border-0 rounded-circle"><i class="bi bi-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" title="حذف دار الضيافة"><i class="bi bi-trash"></i></button>
                                 </form>
                             @endif
                         </div>

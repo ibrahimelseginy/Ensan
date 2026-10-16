@@ -29,8 +29,7 @@ final class AuthController extends Controller
             ]
         );
 
-        // MVP OTP: 12345
-        $user->otp_code = '12345';
+        $user->otp_code = (string) random_int(100000, 999999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 

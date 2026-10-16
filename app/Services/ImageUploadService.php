@@ -79,10 +79,14 @@ final class ImageUploadService
                 // Ignore if it fails to make dir
             }
 
-            $extension = strtolower($file->getClientOriginalExtension());
-            if (!$extension) {
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic', 'heif', 'avif'];
+            $extension = strtolower((string) $file->getClientOriginalExtension());
+            if (!in_array($extension, $allowedExtensions, true)) {
                 try {
-                    $extension = $file->guessExtension() ?: 'jpg';
+                    $guessed = $file->guessExtension();
+                    $extension = ($guessed && in_array(strtolower($guessed), $allowedExtensions, true))
+                        ? strtolower($guessed)
+                        : 'jpg';
                 } catch (\Throwable $e) {
                     $extension = 'jpg';
                 }
@@ -292,6 +296,13 @@ final class ImageUploadService
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             $parsed = parse_url($path);
             $path   = $parsed['path'] ?? '';
+        }
+
+        // Prevent path traversal and null-byte injection
+        $path = str_replace(["\0", '..'], '', $path);
+        $path = str_replace('\\', '/', $path);
+        while (str_contains($path, '//')) {
+            $path = str_replace('//', '/', $path);
         }
 
         $path = preg_replace('/^\/?storage\//', '', $path);

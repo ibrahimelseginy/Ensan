@@ -122,7 +122,7 @@ final class ImageUploadController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $request->validate([
-            'path' => 'required|string|max:500',
+            'path' => ['required', 'string', 'max:500', 'not_regex:/\.\./'],
         ]);
 
         $path = $request->input('path');

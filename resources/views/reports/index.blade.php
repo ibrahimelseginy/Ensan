@@ -98,54 +98,148 @@
         </div>
     </div>
 
-    {{-- Tabs Navigation --}}
-    <ul class="nav nav-pills nav-fill bg-white p-2 rounded-3 shadow-sm mb-4 gap-1 flex-nowrap overflow-auto" id="reportsNavTabs" style="scrollbar-width: thin;">
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'all' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'all'])) }}">
-                <i class="bi bi-grid-1x2-fill me-1"></i> التقرير الشامل العام
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'donations' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'donations'])) }}">
-                <i class="bi bi-cash-coin me-1"></i> التبرعات والمتبرعين
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'beneficiaries' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'beneficiaries'])) }}">
-                <i class="bi bi-people-fill me-1"></i> المستفيدين والمساعدات
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'guest_houses' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'guest_houses'])) }}">
-                <i class="bi bi-hospital-fill me-1"></i> دور الضيافة والأسرة
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'inventory' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'inventory'])) }}">
-                <i class="bi bi-box-seam-fill me-1"></i> المخازن والمستودعات
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'finance' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'finance'])) }}">
-                <i class="bi bi-wallet2 me-1"></i> المالية والمصروفات
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'campaigns' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'campaigns'])) }}">
-                <i class="bi bi-megaphone-fill me-1"></i> الحملات والمشاريع
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'volunteers' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'volunteers'])) }}">
-                <i class="bi bi-person-workspace me-1"></i> المتطوعين والمهام
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-nowrap {{ $tab === 'complaints' ? 'active fw-bold' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'complaints'])) }}">
-                <i class="bi bi-chat-left-dots-fill me-1"></i> الشكاوى والمقترحات
-            </a>
-        </li>
-    </ul>
+    <style>
+        .reports-tabs-card {
+            background: #ffffff;
+            border-radius: 14px;
+        }
+        .theme-dark .reports-tabs-card {
+            background: #111827 !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        .reports-nav-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+            gap: 0.65rem !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            list-style: none !important;
+        }
+        @media (max-width: 576px) {
+            .reports-nav-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        .report-tab-btn {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 0.65rem !important;
+            padding: 0.75rem 1rem !important;
+            border-radius: 10px !important;
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            text-decoration: none !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            height: 100% !important;
+        }
+        .report-tab-btn i {
+            font-size: 1.15rem;
+            color: inherit;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        .report-tab-btn:hover {
+            color: #10b981 !important;
+            background: #ecfdf5 !important;
+            border-color: #a7f3d0 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+        }
+        .report-tab-btn:hover i {
+            transform: scale(1.15);
+        }
+        .report-tab-btn.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: #059669 !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35) !important;
+        }
+        .report-tab-btn.active i {
+            color: #ffffff !important;
+        }
+        .theme-dark .report-tab-btn {
+            color: #94a3b8 !important;
+            background: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        .theme-dark .report-tab-btn:hover {
+            color: #34d399 !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+        }
+        .theme-dark .report-tab-btn.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border-color: #10b981 !important;
+        }
+    </style>
+
+    {{-- Tabs Navigation - Responsive Grid Under Each Other --}}
+    <div class="card border-0 shadow-sm mb-4 reports-tabs-card">
+        <div class="card-body p-2.5">
+            <ul class="reports-nav-grid" id="reportsNavTabs">
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'all' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'all'])) }}">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>التقرير الشامل العام</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'donations' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'donations'])) }}">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>التبرعات والمتبرعين</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'beneficiaries' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'beneficiaries'])) }}">
+                        <i class="bi bi-people-fill"></i>
+                        <span>المستفيدين والمساعدات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'guest_houses' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'guest_houses'])) }}">
+                        <i class="bi bi-hospital-fill"></i>
+                        <span>دور الضيافة والأسرة</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'inventory' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'inventory'])) }}">
+                        <i class="bi bi-box-seam-fill"></i>
+                        <span>المخازن والمستودعات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'finance' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'finance'])) }}">
+                        <i class="bi bi-wallet2"></i>
+                        <span>المالية والمصروفات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'campaigns' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'campaigns'])) }}">
+                        <i class="bi bi-megaphone-fill"></i>
+                        <span>الحملات والمشاريع</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'volunteers' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'volunteers'])) }}">
+                        <i class="bi bi-person-workspace"></i>
+                        <span>المتطوعين والمهام</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link report-tab-btn {{ $tab === 'complaints' ? 'active' : '' }}" href="{{ route('reports.index', array_merge(request()->except('tab'), ['tab' => 'complaints'])) }}">
+                        <i class="bi bi-chat-left-dots-fill"></i>
+                        <span>الشكاوى والمقترحات</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
     {{-- Main Container for Print / View --}}
     <div id="printableReportsContainer">

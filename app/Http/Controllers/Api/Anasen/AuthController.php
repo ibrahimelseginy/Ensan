@@ -33,8 +33,7 @@ final class AuthController extends Controller
         }
 
         try {
-            // For MVP, we use a fixed OTP 12345
-            $otp = '12345';
+            $otp = (string) random_int(100000, 999999);
             $normalizedName = trim((string) $request->input('name', ''));
             $normalizedName = $normalizedName !== '' ? $normalizedName : null;
             
@@ -65,7 +64,7 @@ final class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP sent successfully (MVP: 12345)',
+                'message' => 'OTP sent successfully',
             ]);
 
         } catch (\Exception $e) {

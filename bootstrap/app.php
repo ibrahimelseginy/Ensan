@@ -32,9 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureHashedRouteKeys::class,
             \App\Http\Middleware\KeepReviewRequestsInContext::class,
             \App\Http\Middleware\AuditLogger::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
         $middleware->api(prepend: [
             'throttle:api',
+        ], append: [
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -135,7 +135,7 @@ final readonly class BeneficiaryRepository
 
     public function getDonations(int $beneficiaryId): Collection
     {
-        return \App\Models\Donation::whereRaw("allocation_note REGEXP 'beneficiary_id={$beneficiaryId}([^0-9]|$)'")
+        return \App\Models\Donation::whereRaw("allocation_note REGEXP ?", ['beneficiary_id=' . (int) $beneficiaryId . '([^0-9]|$)'])
             ->with(['donor', 'project', 'campaign', 'guestHouse'])
             ->orderByDesc('received_at')
             ->get();

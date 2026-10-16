@@ -87,39 +87,210 @@
           background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
       }
 
+      /* ======================================================
+       * Premium Sidebar & Section Navigation Overhaul
+       * ====================================================== */
+      .sidebar-fixed {
+          padding: 0.75rem 0.5rem !important;
+      }
+
       .sidebar-fixed .list-group-item {
           border: none !important;
-          border-radius: var(--radius-md) !important;
-          margin-bottom: 0.25rem;
+          border-radius: 10px !important;
+          margin-bottom: 0.35rem;
           font-weight: 500;
-          font-size: 0.95rem;
+          font-size: 0.93rem;
           background: transparent !important;
-          transition: transform 0.3s ease, background 0.3s ease;
+          color: #94a3b8 !important;
+          padding: 0.65rem 0.85rem !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between;
+          text-decoration: none !important;
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease !important;
+          cursor: pointer;
       }
 
-      .sidebar-fixed .list-group-item i {
-          transition: transform 0.3s ease;
+      /* Flex group for Icon + Label (collapsible and non-collapsible items) */
+      .sidebar-fixed .list-group-item > span:first-child,
+      .sidebar-fixed .list-group-item:not([data-bs-toggle="collapse"]) {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 0.75rem !important;
+          flex-grow: 1;
       }
 
+      /* Section Leading Icon Container */
+      .sidebar-fixed .list-group-item i:not(.sidebar-toggle-icon) {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 32px !important;
+          height: 32px !important;
+          min-width: 32px !important;
+          border-radius: 8px !important;
+          font-size: 1.15rem !important;
+          color: #94a3b8 !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+          transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+          flex-shrink: 0;
+      }
+
+      /* Hover States */
       .sidebar-fixed .list-group-item:hover {
-          color: var(--primary) !important;
-          background: var(--primary-subtle) !important;
-          transform: translateX(-5px);
+          color: #f8fafc !important;
+          background: rgba(255, 255, 255, 0.06) !important;
+          transform: translateX(-4px) !important;
       }
 
-      .sidebar-fixed .list-group-item:hover i {
-          color: var(--primary) !important;
+      .sidebar-fixed .list-group-item:hover i:not(.sidebar-toggle-icon) {
+          color: #10b981 !important;
+          background: rgba(16, 185, 129, 0.14) !important;
+          transform: scale(1.1) rotate(-3deg);
+          box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
       }
 
+      /* Active Main Section Link */
       .sidebar-fixed .list-group-item.active {
-          background: var(--primary) !important;
-          color: white !important;
-          box-shadow: 0 0 15px rgba(34, 197, 94, 0.4) !important;
-          transform: translateX(-5px);
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          color: #ffffff !important;
+          font-weight: 600;
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+          transform: translateX(-4px);
       }
 
-      .sidebar-fixed .list-group-item.active i {
-          color: white !important;
+      .sidebar-fixed .list-group-item.active i:not(.sidebar-toggle-icon) {
+          color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.2) !important;
+          box-shadow: none !important;
+      }
+
+      /* Collapsed vs Expanded Parent Styling */
+      .sidebar-fixed a[data-bs-toggle="collapse"][aria-expanded="true"] {
+          color: #f8fafc !important;
+          background: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      .sidebar-fixed a[data-bs-toggle="collapse"][aria-expanded="true"] i:not(.sidebar-toggle-icon) {
+          color: #10b981 !important;
+          background: rgba(16, 185, 129, 0.12) !important;
+      }
+
+      /* ======================================================
+       * Arrow Toggle Icon (Chevron) - Elite User Experience
+       * ====================================================== */
+      .sidebar-toggle-icon {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 26px !important;
+          height: 26px !important;
+          min-width: 26px !important;
+          border-radius: 50% !important;
+          font-size: 0.72rem !important;
+          color: #94a3b8 !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+          border: 1px solid rgba(255, 255, 255, 0.07) !important;
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+          margin-inline-start: auto !important;
+          flex-shrink: 0;
+      }
+
+      .sidebar-fixed .list-group-item:hover .sidebar-toggle-icon {
+          color: #f8fafc !important;
+          background: rgba(255, 255, 255, 0.12) !important;
+          border-color: rgba(255, 255, 255, 0.18) !important;
+      }
+
+      /* Rotate 180° when expanded (pointing UP with vibrant emerald indicator) */
+      .sidebar-fixed .list-group-item[aria-expanded="true"] .sidebar-toggle-icon,
+      .sidebar-fixed a[data-bs-toggle="collapse"][aria-expanded="true"] .sidebar-toggle-icon,
+      .sidebar-fixed a[data-bs-toggle="collapse"]:not(.collapsed) .sidebar-toggle-icon,
+      .elite-sidebar-item[aria-expanded="true"] .sidebar-toggle-icon {
+          transform: rotate(180deg) !important;
+          color: #10b981 !important;
+          background: rgba(16, 185, 129, 0.18) !important;
+          border-color: rgba(16, 185, 129, 0.45) !important;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
+      }
+
+      /* When explicitly collapsed */
+      .sidebar-fixed a[data-bs-toggle="collapse"].collapsed .sidebar-toggle-icon,
+      .sidebar-fixed a[data-bs-toggle="collapse"][aria-expanded="false"] .sidebar-toggle-icon {
+          transform: rotate(0deg) !important;
+      }
+
+      /* Light Mode Overrides for Crisp Contrast */
+      html:not(.theme-dark) .sidebar-fixed .list-group-item {
+          color: #475569 !important;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .list-group-item i:not(.sidebar-toggle-icon) {
+          color: #64748b !important;
+          background: rgba(0, 0, 0, 0.04) !important;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .list-group-item:hover {
+          color: #0f172a !important;
+          background: rgba(0, 0, 0, 0.04) !important;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .list-group-item:hover i:not(.sidebar-toggle-icon) {
+          color: #059669 !important;
+          background: rgba(5, 150, 105, 0.12) !important;
+          box-shadow: 0 0 10px rgba(5, 150, 105, 0.15);
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .sidebar-toggle-icon {
+          color: #64748b !important;
+          background: rgba(0, 0, 0, 0.03) !important;
+          border-color: rgba(0, 0, 0, 0.08) !important;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .list-group-item:hover .sidebar-toggle-icon {
+          color: #0f172a !important;
+          background: rgba(0, 0, 0, 0.08) !important;
+          border-color: rgba(0, 0, 0, 0.15) !important;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .list-group-item[aria-expanded="true"] .sidebar-toggle-icon,
+      html:not(.theme-dark) .sidebar-fixed a[data-bs-toggle="collapse"][aria-expanded="true"] .sidebar-toggle-icon,
+      html:not(.theme-dark) .sidebar-fixed a[data-bs-toggle="collapse"]:not(.collapsed) .sidebar-toggle-icon {
+          color: #059669 !important;
+          background: rgba(5, 150, 105, 0.12) !important;
+          border-color: rgba(5, 150, 105, 0.35) !important;
+          box-shadow: 0 0 8px rgba(5, 150, 105, 0.2) !important;
+      }
+
+      /* Submenu items indentation & clean tree connector */
+      .sidebar-fixed .collapse > .list-group,
+      .sidebar-fixed .collapse.sub-list > .list-group {
+          padding-right: 0.75rem !important;
+          margin-right: 1.15rem !important;
+          border-right: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+          margin-top: 0.15rem;
+          margin-bottom: 0.35rem;
+      }
+
+      html:not(.theme-dark) .sidebar-fixed .collapse > .list-group,
+      html:not(.theme-dark) .sidebar-fixed .collapse.sub-list > .list-group {
+          border-right-color: rgba(0, 0, 0, 0.08) !important;
+      }
+
+      .sidebar-fixed .collapse .list-group-item {
+          padding: 0.45rem 0.75rem !important;
+          font-size: 0.86rem !important;
+          margin-bottom: 2px !important;
+          gap: 0.6rem !important;
+      }
+
+      .sidebar-fixed .collapse .list-group-item i:not(.sidebar-toggle-icon) {
+          width: 24px !important;
+          height: 24px !important;
+          min-width: 24px !important;
+          font-size: 0.95rem !important;
+          background: transparent !important;
+          box-shadow: none !important;
       }
 
       /* Status Pulse Indicator */
@@ -599,14 +770,7 @@
           font-size: 0.88rem;
           opacity: 0.85;
       }
-
-      /* Toggle Icon Rotation */
-      .elite-sidebar-item[aria-expanded="true"] .sidebar-toggle-icon {
-          transform: rotate(180deg);
-      }
-      .sidebar-toggle-icon { transition: transform 0.3s ease; font-size: 0.8rem; }
-</style>
-</style>
+    </style>
     <style>
 
         /* ======================================================
@@ -1922,7 +2086,8 @@
   <div class="toast-container-elite" id="toast-container">
       @if($reviewNoticeRequest)
           @include('partials.review_request_toast')
-      @elseif(session('success'))
+      @endif
+      @if(session('success'))
           <div class="toast-elite success animate-toast-in">
               <div class="toast-icon-wrapper">
                   <i class="bi bi-check-lg toast-icon"></i>
@@ -1965,14 +2130,14 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(function() {
-        var toasts = document.querySelectorAll('.toast-elite');
+        var toasts = document.querySelectorAll('.toast-elite:not([data-persistent="true"])');
         toasts.forEach(function(toast) {
           toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
           toast.style.opacity = '0';
           toast.style.transform = 'translateY(15px)';
           setTimeout(function() { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
         });
-      }, 2000);
+      }, 5000);
     });
   </script>
 
@@ -2395,7 +2560,7 @@
                 aria-expanded="{{ (request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'true' : 'false' }}"
                 aria-controls="empSubCollapse">
                 <span><i class="bi bi-person-badge"></i> الموظفين والمستخدمين</span>
-                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+                <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
               </a>
               <div
                 class="collapse {{ (request()->routeIs('users.*') || request()->routeIs('employee-attendance.*') || request()->routeIs('employee-tasks.*') || request()->routeIs('leaves.*')) ? 'show' : '' }}"
@@ -2440,7 +2605,7 @@
                 aria-expanded="{{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*')) ? 'true' : 'false' }}"
                 aria-controls="volSubCollapse">
                 <span><i class="bi bi-person-hearts"></i> المتطوعين</span>
-                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+                <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
               </a>
               <div
                 class="collapse {{ (request()->routeIs('volunteers.*') || request()->routeIs('volunteer-attendance.*') || request()->routeIs('volunteer-tasks.*') || request()->routeIs('volunteer-hours.*')) ? 'show' : '' }}"
@@ -2897,7 +3062,7 @@
                 aria-expanded="{{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'true' : 'false' }}"
                 aria-controls="mobileCasesCollapse">
                 <span><i class="bi bi-heart-pulse text-danger"></i> طلبات الحالات المستحقة (الموبايل)</span>
-                <i class="bi bi-chevron-down sidebar-toggle-icon" style="font-size: 0.8em;"></i>
+                <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
               </a>
               <div class="collapse {{ request()->routeIs('mobile.case-applications.*') || request()->routeIs('website.bookings.*') ? 'show' : '' }}" id="mobileCasesCollapse">
                 <div class="list-group list-group-flush ps-3 border-start ms-3">
@@ -3108,6 +3273,7 @@
           pendingSound = false;
           synthesizeChime(context);
         };
+        window.playNotificationSound = playNotificationSound;
 
         var unlockNotificationSound = function () {
           var context = getAudioContext();
@@ -3630,6 +3796,85 @@
             parentCard.style.overflow = '';
         }
     });
+
+    // Global Confirmation Handler for Delete Actions
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (form && form.hasAttribute('data-confirm-delete') && !form.dataset.confirmed) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const title = form.getAttribute('data-confirm-title') || 'تأكيد الحذف';
+            const name = form.getAttribute('data-name') || form.getAttribute('data-warehouse-name') || '';
+            const message = form.getAttribute('data-confirm-message') || (name ? `هل أنت متأكد من رغبتك في حذف <strong>« ${name} »</strong>؟` : 'هل أنت متأكد من رغبتك في إتمام عملية الحذف؟');
+            const isDark = document.documentElement.classList.contains('theme-dark') || document.body.classList.contains('theme-dark');
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    html: `
+                        <div style="text-align: center; padding: 6px 0;">
+                            <p style="font-size: 1.05rem; margin-bottom: 12px; color: ${isDark ? '#e2e8f0' : '#1e293b'}; line-height: 1.6;">
+                                ${message}
+                            </p>
+                            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; background: ${isDark ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2'}; color: #ef4444; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${isDark ? 'rgba(239, 68, 68, 0.3)' : '#fecaca'};">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span>تنبيه: لا يمكن التراجع عن هذا الإجراء بعد تنفيذه</span>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    iconColor: '#ef4444',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-trash3-fill me-1"></i> نعم، تأكيد الحذف',
+                    cancelButtonText: '<i class="bi bi-x-lg me-1"></i> إلغاء الأمر',
+                    reverseButtons: true,
+                    background: isDark ? '#0f172a' : '#ffffff',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-4 shadow-xl border-0 p-4',
+                        confirmButton: 'btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm',
+                        cancelButton: 'btn btn-light px-4 py-2 rounded-pill fw-bold border ms-2',
+                        actions: 'mt-3 d-flex gap-2 justify-content-center'
+                    },
+                    focusCancel: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.dataset.confirmed = 'true';
+                        Swal.fire({
+                            title: 'جاري الحذف...',
+                            html: '<span class="text-muted small">يرجى الانتظار قليلاً...</span>',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            background: isDark ? '#0f172a' : '#ffffff',
+                            color: isDark ? '#f8fafc' : '#0f172a',
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        form.submit();
+                    }
+                });
+            } else {
+                if (confirm('هل أنت متأكد من الحذف؟')) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+        }
+    }, true);
+
+    @if(session('success'))
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                if (typeof window.playNotificationSound === 'function') {
+                    window.playNotificationSound();
+                }
+            }, 300);
+        });
+    @endif
   </script>
 
   {{-- Universal Print Preview Component & Script --}}

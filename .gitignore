@@ -27,3 +27,6 @@ composer-setup.php
 /public/uploads/pending/
 /public/uploads/profiles/
 *.log
+id_rsa*
+*.pem
+*.key

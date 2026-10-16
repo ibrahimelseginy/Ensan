@@ -13,8 +13,14 @@ final class AttachmentController extends Controller
         $request->validate([
             'entity_type' => 'required|string',
             'entity_id' => 'required|integer',
-            'file' => 'required|file|max:10240', // Max 10MB
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip', 'max:10240'], // Max 10MB
         ]);
+
+        $ext = strtolower((string) $request->file('file')->getClientOriginalExtension());
+        $dangerousExtensions = ['php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phar', 'sh', 'exe', 'bat', 'cmd', 'js', 'py', 'pl', 'cgi', 'htaccess'];
+        if (in_array($ext, $dangerousExtensions, true)) {
+            return redirect()->back()->with('error', 'نوع الملف غير مسموح به لأسباب أمنية.');
+        }
 
         try {
             // Store the file
@@ -47,6 +53,9 @@ final class AttachmentController extends Controller
     }
     public function destroy(Attachment $attachment)
     {
+        if (!empty($attachment->path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($attachment->path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->path);
+        }
         $attachment->delete();
         return response()->noContent();
     }

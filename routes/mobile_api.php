@@ -49,8 +49,6 @@ Route::get('/projects', [MobileApiController::class , 'getProjects']);
 Route::get('/campaigns', [MobileApiController::class , 'getCampaigns']);
 Route::get('/news/categories', [MobileApiController::class, 'getNewsCategories']);
 Route::get('/news', [MobileApiController::class , 'getNews']);
-Route::post('/news', [MobileApiController::class , 'storeNews']);
-Route::get('/volunteer-requests', [MobileApiController::class , 'getVolunteerRequests']);
 Route::get('/volunteer', function () {
     return response()->json([
         'status' => 'error',
@@ -94,5 +92,7 @@ Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
         Route::get('leaves', [MobileApiController::class, 'getEmployeeLeaves']);
         Route::post('leaves', [MobileApiController::class, 'requestEmployeeLeave']);
         Route::get('payrolls', [MobileApiController::class, 'getEmployeePayrolls']);
+        Route::get('volunteer-requests', [MobileApiController::class, 'getVolunteerRequests']);
+        Route::post('news', [MobileApiController::class, 'storeNews']);
     });
 });

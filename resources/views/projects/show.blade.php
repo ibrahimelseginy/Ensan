@@ -396,9 +396,12 @@
                                             </div>
                                             <div class="d-flex gap-2 justify-content-end border-top pt-2 mt-auto">
                                                 <form method="POST" action="{{ route('campaigns.destroy', $pc) }}"
-                                                    onsubmit="return confirm('حذف الحملة؟');">
+                                                    class="d-inline"
+                                                    data-confirm-delete
+                                                    data-confirm-title="تأكيد حذف الحملة"
+                                                    data-name="{{ $pc->title }}">
                                                     @csrf @method('DELETE')
-                                                    <button class="btn btn-link text-danger btn-sm p-0">حذف</button>
+                                                    <button type="submit" class="btn btn-link text-danger btn-sm p-0">حذف</button>
                                                 </form>
                                                 <span class="text-muted">|</span>
                                                 <a href="{{ route('campaigns.edit', $pc) }}"
@@ -480,7 +483,7 @@
 
                         <div class="table-responsive">
                             @php $zadFamilies = $project->beneficiaries()->whereNotNull('mother_name')->orderByDesc('id')->limit(50)->get(); @endphp
-                            <table class="table table-sm table-hover align-middle small">
+                            <table class="table table-sm table-hover align-middle small" style="min-width: 820px;">
                                 <thead class="bg-body-tertiary">
                                     <tr>
                                         <th>الام</th>
@@ -513,9 +516,14 @@
                                                 </button>
 
                                                 <!-- Delete Button -->
-                                                <form action="{{ route('projects.destroyZadFamily', [$project, $family]) }}" method="POST" onsubmit="return confirm('حذف؟')" class="d-inline">
+                                                <form action="{{ route('projects.destroyZadFamily', [$project, $family]) }}" 
+                                                    method="POST" 
+                                                    class="d-inline"
+                                                    data-confirm-delete
+                                                    data-confirm-title="تأكيد حذف ملف الأسرة"
+                                                    data-name="{{ $family->family_name }}">
                                                     @csrf @method('DELETE')
-                                                    <button class="btn btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                                                    <button type="submit" class="btn btn-link text-danger p-0" title="حذف الأسرة"><i class="bi bi-trash"></i></button>
                                                 </form>
                                             </div>
                                         </td>
@@ -594,12 +602,49 @@
                     </div>
                 </div>
             @else
+                @php
+                    $genericBeneficiaries = $project->beneficiaries()
+                        ->whereNull('mother_name')
+                        ->with(['allocatedBeneficiaries:id,full_name', 'sponsors:id,name'])
+                        ->orderByDesc('id')
+                        ->limit(100)
+                        ->get();
+                @endphp
                 <!-- Generic Beneficiaries Section -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="gh-section-title">
-                            <span><i class="bi bi-people-fill text-primary me-2"></i> ملف المستفيدين</span>
-                            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">إضافة مستفيد</button>
+                <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-people-fill fs-5"></i>
+                                </span>
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark">ملف المستفيدين</h5>
+                                    <small class="text-muted">المستفيدين المسجلين تحت هذا المشروع</small>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 ms-2 fw-bold" style="font-size: 0.82rem;">
+                                    {{ $genericBeneficiaries->count() }} مستفيد
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-primary btn-sm px-3 py-1.5 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-1.5" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    <span>إضافة مستفيد</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Search Filter Bar --}}
+                        <div class="row g-2 mb-3 align-items-center">
+                            <div class="col-md-7 col-lg-6">
+                                <div class="position-relative">
+                                    <input type="text" id="filterBeneficiariesTable" class="form-control form-control-sm pe-5 rounded-pill" placeholder="بحث فوري في المستفيدين (بالاسم، الكود، الرقم القومي، الهاتف)...">
+                                    <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-lg-6 text-md-start text-muted small">
+                                <span>عرض <strong id="visibleBenCount" class="text-primary">{{ $genericBeneficiaries->count() }}</strong> من <strong class="text-dark">{{ $genericBeneficiaries->count() }}</strong> مستفيد</span>
+                            </div>
                         </div>
                         
                         <div @class(['collapse mb-4', 'show' => old('form_context') === 'project_beneficiary']) id="beneficiaryForm">
@@ -743,81 +788,138 @@
                             </form>
                         </div>
 
-                        <div class="table-responsive">
-                            @php
-                                $genericBeneficiaries = $project->beneficiaries()
-                                    ->whereNull('mother_name')
-                                    ->with(['allocatedBeneficiaries:id,full_name', 'sponsors:id,name'])
-                                    ->orderByDesc('id')
-                                    ->limit(50)
-                                    ->get();
-                            @endphp
-                            <table class="table table-sm table-hover align-middle small">
-                                <thead class="bg-body-tertiary">
-                                    <tr>
-                                        <th>الكود</th>
-                                        <th>الاسم</th>
-                                        <th>الرقم القومي</th>
-                                        <th>الهاتف</th>
-                                        <th>العنوان</th>
-                                        <th>المساعدة</th>
-                                        <th>التخصيص</th>
-                                        <th>كفالة الطفل</th>
-                                        <th>ملاحظات</th>
-                                        <th style="width: 80px">إجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($genericBeneficiaries as $ben)
-                                    <tr>
-                                        <td class="text-nowrap">{{ $ben->code ?? '—' }}</td>
-                                        <td>{{ $ben->full_name }}</td>
-                                        <td class="text-nowrap">{{ $ben->national_id ?? '—' }}</td>
-                                        <td>{{ $ben->phone ?? '—' }}</td>
-                                        <td>{{ $ben->address ?? '—' }}</td>
-                                        <td>
-                                            {{ match($ben->assistance_type) {
-                                                'financial' => 'مالية',
-                                                'in_kind' => 'عينية',
-                                                'service' => 'خدمية',
-                                                default => $ben->assistance_type ?? '—'
-                                            } }}
-                                        </td>
-                                        <td>
-                                            <div>{{ $ben->allocation_type ?? '—' }}</div>
-                                            @if($ben->allocatedBeneficiaries->isNotEmpty())
-                                                <div class="text-muted mt-1" style="font-size: .72rem">
-                                                    {{ $ben->allocatedBeneficiaries->pluck('full_name')->join('، ') }}
+                        <div class="project-table-container">
+                            <div class="project-table-scroll">
+                                <table class="table table-hover align-middle table-project-beneficiaries" id="projectBeneficiariesTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 100px;">الكود</th>
+                                            <th style="min-width: 190px;">الاسم الكامل</th>
+                                            <th style="min-width: 145px;">الرقم القومي</th>
+                                            <th style="min-width: 130px;">الهاتف</th>
+                                            <th style="min-width: 150px;">العنوان</th>
+                                            <th style="min-width: 100px;">المساعدة</th>
+                                            <th style="min-width: 120px;">التخصيص</th>
+                                            <th style="min-width: 120px;">كفالة الطفل</th>
+                                            <th style="min-width: 130px;">ملاحظات</th>
+                                            <th style="width: 120px; text-align: center;">إجراء</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($genericBeneficiaries as $ben)
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-light text-dark border font-monospace px-2 py-1">{{ $ben->code ?? '—' }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 0.85rem; flex-shrink: 0;">
+                                                        {{ mb_substr($ben->full_name, 0, 1) }}
+                                                    </div>
+                                                    <div>
+                                                        <a href="{{ route('beneficiaries.show', $ben) }}" class="fw-bold text-dark text-decoration-none hover-primary d-block">
+                                                            {{ $ben->full_name }}
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div>{{ $ben->child_sponsorship_type ?? '—' }}</div>
-                                            @if($ben->sponsors->isNotEmpty())
-                                                <div class="text-muted mt-1" style="font-size: .72rem">
-                                                    {{ $ben->sponsors->pluck('name')->join('، ') }}
+                                            </td>
+                                            <td class="text-nowrap font-monospace text-muted small">
+                                                {{ $ben->national_id ?? '—' }}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                @if($ben->phone)
+                                                    <a href="tel:{{ $ben->phone }}" class="text-decoration-none text-body small d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-telephone text-success"></i>
+                                                        <span dir="ltr">{{ $ben->phone }}</span>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($ben->address)
+                                                    <span class="text-muted small d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-geo-alt text-danger"></i> {{ $ben->address }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($ben->assistance_type === 'financial')
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-cash me-1"></i> مالية</span>
+                                                @elseif($ben->assistance_type === 'in_kind')
+                                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-box me-1"></i> عينية</span>
+                                                @elseif($ben->assistance_type === 'service')
+                                                    <span class="badge bg-purple-subtle text-purple border border-purple-subtle px-2 py-1"><i class="bi bi-gear me-1"></i> خدمية</span>
+                                                @else
+                                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">{{ $ben->assistance_type ?? '—' }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span class="badge bg-light text-dark border">{{ $ben->allocation_type ?? '—' }}</span>
+                                                    @if($ben->allocatedBeneficiaries->isNotEmpty())
+                                                        <div class="text-muted mt-1 small" style="font-size: 0.72rem;">
+                                                            {{ $ben->allocatedBeneficiaries->pluck('full_name')->join('، ') }}
+                                                        </div>
+                                                    @endif
                                                 </div>
-                                            @endif
-                                        </td>
-                                        <td>{{ $ben->notes ?? '—' }}</td>
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                <a class="btn btn-link text-primary p-0" href="{{ route('beneficiaries.edit', $ben) }}" title="تعديل كل بيانات المستفيد">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-
-                                                <form action="{{ route('projects.destroyBeneficiaryFile', [$project, $ben]) }}" method="POST" onsubmit="return confirm('حذف المستفيد؟')" class="d-inline">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="10" class="text-center py-3 text-muted">لا يوجد مستفيدين مسجلين لهذا المشروع</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span class="badge bg-light text-dark border">{{ $ben->child_sponsorship_type ?? '—' }}</span>
+                                                    @if($ben->sponsors->isNotEmpty())
+                                                        <div class="text-muted mt-1 small" style="font-size: 0.72rem;">
+                                                            {{ $ben->sponsors->pluck('name')->join('، ') }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted small text-truncate d-inline-block" style="max-width: 140px;" title="{{ $ben->notes }}">
+                                                    {{ $ben->notes ?? '—' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center" style="padding: 10px 14px;">
+                                                <div class="d-inline-flex align-items-center gap-1.5 justify-content-center">
+                                                    <a class="action-btn-circle btn btn-sm btn-outline-primary" 
+                                                       href="{{ route('beneficiaries.edit', $ben) }}" 
+                                                       title="تعديل بيانات المستفيد">
+                                                        <i class="bi bi-pencil-fill" style="font-size: 0.75rem;"></i>
+                                                    </a>
+                                                    <a class="action-btn-circle btn btn-sm btn-outline-info" 
+                                                       href="{{ route('beneficiaries.show', $ben) }}" 
+                                                       title="عرض ملف المستفيد">
+                                                        <i class="bi bi-eye-fill" style="font-size: 0.75rem;"></i>
+                                                    </a>
+                                                    <form action="{{ route('projects.destroyBeneficiaryFile', [$project, $ben]) }}" 
+                                                        method="POST" 
+                                                        class="d-inline"
+                                                        data-confirm-delete
+                                                        data-confirm-title="تأكيد حذف المستفيد من المشروع"
+                                                        data-name="{{ $ben->full_name }}">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="action-btn-circle btn btn-sm btn-outline-danger" 
+                                                                title="حذف المستفيد من المشروع">
+                                                            <i class="bi bi-trash3-fill" style="font-size: 0.75rem;"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center py-5 text-muted">
+                                                <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
+                                                <span class="fw-bold">لا يوجد مستفيدون مسجلون لهذا المشروع حتى الآن</span>
+                                                <p class="small text-muted mb-0">يمكنك إضافة مستفيد جديد باستخدام الزر أعلاه</p>
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <!-- Edit Modals -->
@@ -1122,10 +1224,14 @@
                                     <div class="fw-bold">{{ $mv->user->name }}</div>
                                     <div class="small text-muted">{{ $mv->month }}/{{ $mv->year }}</div>
                                 </div>
-                                <form action="{{ route('projects.destroyMonthlyVolunteer', [$project, $mv]) }}" method="POST"
-                                    onsubmit="return confirm('حذف؟')">
+                                <form action="{{ route('projects.destroyMonthlyVolunteer', [$project, $mv]) }}" 
+                                    method="POST"
+                                    class="d-inline"
+                                    data-confirm-delete
+                                    data-confirm-title="تأكيد حذف المتطوع"
+                                    data-name="{{ $mv->user->name }}">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-x-circle"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="حذف"><i class="bi bi-x-circle"></i></button>
                                 </form>
                             </div>
                         @empty
@@ -1413,6 +1519,26 @@
                 if (modalElement) {
                     window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
                 }
+            }
+
+            // Instant Beneficiaries Search Filter
+            const filterBenInput = document.getElementById('filterBeneficiariesTable');
+            const projectBenTable = document.getElementById('projectBeneficiariesTable');
+            const visibleBenCount = document.getElementById('visibleBenCount');
+            if (filterBenInput && projectBenTable) {
+                filterBenInput.addEventListener('input', function () {
+                    const q = this.value.toLowerCase().trim();
+                    const rows = projectBenTable.querySelectorAll('tbody tr');
+                    let visible = 0;
+                    rows.forEach(function (r) {
+                        if (r.cells.length < 2) return;
+                        const text = r.textContent.toLowerCase();
+                        const match = !q || text.includes(q);
+                        r.style.display = match ? '' : 'none';
+                        if (match) visible++;
+                    });
+                    if (visibleBenCount) visibleBenCount.textContent = visible;
+                });
             }
         });
     </script>

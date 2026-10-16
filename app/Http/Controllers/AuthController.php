@@ -66,7 +66,7 @@ final class AuthController extends Controller
         }
 
         $otp = $this->sendOtpViaBeon($user->phone);
-        $user->otp_code = $otp ?? (string) rand(1000, 9999);
+        $user->otp_code = $otp ?? (string) random_int(1000, 9999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
@@ -75,8 +75,7 @@ final class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'OTP sent successfully',
-            'debug_otp' => $user->otp_code
+            'message' => 'OTP sent successfully'
         ]);
     }
 
@@ -144,7 +143,7 @@ final class AuthController extends Controller
 
         // Set OTP for verification
         $otp = $this->sendOtpViaBeon($user->phone);
-        $user->otp_code = $otp ?? (string) rand(1000, 9999);
+        $user->otp_code = $otp ?? (string) random_int(1000, 9999);
         $user->otp_expires_at = Carbon::now()->addMinutes(15);
         $user->save();
 
@@ -154,8 +153,7 @@ final class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم إنشاء الحساب بنجاح، يرجى تفعيل رقم الهاتف برمز التحقق المرسل إليك',
-            'phone' => $user->phone,
-            'debug_otp' => $user->otp_code
+            'phone' => $user->phone
         ]);
     }
 

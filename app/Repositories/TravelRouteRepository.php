@@ -18,8 +18,9 @@ final readonly class TravelRouteRepository
         $maxCities    = $filters['max_cities'] ?? null;
         $hasDelegates = $filters['has_delegates'] ?? null;
         $hasDonations = $filters['has_donations'] ?? null;
-        $sort         = $filters['sort'] ?? 'name';
-        $dir          = $filters['dir'] ?? 'asc';
+        $allowedSorts = ['name', 'cities_count', 'delegates_count', 'donations_count', 'donation_total'];
+        $sort         = in_array($filters['sort'] ?? '', $allowedSorts, true) ? $filters['sort'] : 'name';
+        $dir          = strtolower((string) ($filters['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
 
         return TravelRoute::query()
             ->select('travel_routes.*')

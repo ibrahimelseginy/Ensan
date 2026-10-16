@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 
@@ -102,11 +102,13 @@
                                                     title="تعديل">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('warehouses.destroy', $w) }}" method="POST" class="d-inline"
-                                                    onsubmit="return confirm('هل أنت متأكد من حذف هذا المخزن؟');">
+                                                <form action="{{ route('warehouses.destroy', $w) }}" method="POST" class="d-inline form-delete-warehouse"
+                                                    data-confirm-delete
+                                                    data-confirm-title="تأكيد حذف المخزن"
+                                                    data-name="{{ $w->name }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-delete-warehouse" title="حذف المخزن" data-warehouse-name="{{ $w->name }}">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
@@ -134,5 +136,80 @@
         @endif
     </div>
 
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-delete-warehouse').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                const form = this.closest('form');
+                if (!form || form.dataset.confirmed) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const name = this.getAttribute('data-warehouse-name') || form.getAttribute('data-name') || 'هذا المخزن';
+                const isDark = document.documentElement.classList.contains('theme-dark') || document.body.classList.contains('theme-dark');
+
+                Swal.fire({
+                    title: 'تأكيد حذف المخزن',
+                    html: `
+                        <div style="text-align: center; padding: 6px 0;">
+                            <p style="font-size: 1.05rem; margin-bottom: 12px; color: ${isDark ? '#e2e8f0' : '#1e293b'}; line-height: 1.6;">
+                                هل أنت متأكد من رغبتك في حذف المخزن:
+                            </p>
+                            <div style="font-weight: 700; color: #ef4444; font-size: 1.25rem; margin-bottom: 18px; direction: rtl;">
+                                « ${name} »
+                            </div>
+                            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; background: ${isDark ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2'}; color: #ef4444; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; border: 1px solid ${isDark ? 'rgba(239, 68, 68, 0.3)' : '#fecaca'};">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span>تنبيه: سيتم حذف هذا المخزن نهائياً من النظام</span>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    iconColor: '#ef4444',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-trash3-fill me-1"></i> نعم، تأكيد الحذف',
+                    cancelButtonText: '<i class="bi bi-x-lg me-1"></i> إلغاء الأمر',
+                    reverseButtons: true,
+                    background: isDark ? '#0f172a' : '#ffffff',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-4 shadow-xl border-0 p-4',
+                        confirmButton: 'btn btn-danger px-4 py-2 rounded-pill fw-bold shadow-sm',
+                        cancelButton: 'btn btn-light px-4 py-2 rounded-pill fw-bold border ms-2',
+                        actions: 'mt-3 d-flex gap-2 justify-content-center'
+                    },
+                    focusCancel: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.dataset.confirmed = 'true';
+                        Swal.fire({
+                            title: 'جاري حذف المخزن...',
+                            html: '<span class="text-muted small">يرجى الانتظار بينما يتم إتمام الحذف...</span>',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            background: isDark ? '#0f172a' : '#ffffff',
+                            color: isDark ? '#f8fafc' : '#0f172a',
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        @if(session('success'))
+            if (typeof window.playNotificationSound === 'function') {
+                window.playNotificationSound();
+            }
+        @endif
+    });
+</script>
 @endsection
 

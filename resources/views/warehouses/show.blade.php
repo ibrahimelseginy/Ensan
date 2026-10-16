@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid">
@@ -22,7 +22,9 @@
                     <i class="bi bi-pencil me-1"></i> تعديل
                 </a>
                 <form action="{{ route('warehouses.destroy', $warehouse) }}" method="POST"
-                    onsubmit="return confirm('هل أنت متأكد من حذف هذا المخزن؟');">
+                    data-confirm-delete
+                    data-confirm-title="تأكيد حذف المخزن"
+                    data-name="{{ $warehouse->name }}">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-trash me-1"></i> حذف

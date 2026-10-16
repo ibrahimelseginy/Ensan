@@ -173,8 +173,8 @@ final class ChangeRequestWebController extends Controller
                                  $je = \App\Models\JournalEntry::where('reference', "DON-{$instance->id}")->first();
                                  if ($je) {
                                       \App\Models\JournalEntryLine::where('journal_entry_id', $je->id)
-                                          ->update(['debit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN debit > 0 THEN {$executionData['amount']} ELSE 0 END"), 
-                                                    'credit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN credit > 0 THEN {$executionData['amount']} ELSE 0 END")]);
+                                          ->update(['debit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN debit > 0 THEN " . (float) ($executionData['amount'] ?? 0) . " ELSE 0 END"), 
+                                                    'credit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN credit > 0 THEN " . (float) ($executionData['amount'] ?? 0) . " ELSE 0 END")]);
                                  }
                              }
                          }
@@ -238,8 +238,8 @@ final class ChangeRequestWebController extends Controller
                                 if ($je) {
                                      \App\Models\JournalEntryLine::where('journal_entry_id', $je->id)
                                          ->update([
-                                             'debit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN debit > 0 THEN {$instance->amount} ELSE 0 END"), 
-                                             'credit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN credit > 0 THEN {$instance->amount} ELSE 0 END")
+                                             'debit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN debit > 0 THEN " . (float) ($instance->amount ?? 0) . " ELSE 0 END"), 
+                                             'credit' => \Illuminate\Support\Facades\DB::raw("CASE WHEN credit > 0 THEN " . (float) ($instance->amount ?? 0) . " ELSE 0 END")
                                          ]);
                                 }
                             }

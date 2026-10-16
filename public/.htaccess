@@ -18,6 +18,12 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Block access to hidden files (.env, .git, etc.) except .well-known
+    RewriteRule "(^|/)\.(?!well-known)" - [F]
+
+    # Block direct access to sensitive extensions
+    RewriteRule "(?i)\.(env|sql|bak|config|json|lock|git|md|yml|yaml|sh|log)$" - [F]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

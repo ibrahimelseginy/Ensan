@@ -30,6 +30,7 @@ final class WebDonor extends Authenticatable
     protected $hidden = [
         'password',
         'otp_code',
+        'otp_expires_at',
     ];
 
     protected $casts = [
