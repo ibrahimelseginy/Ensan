@@ -36,10 +36,7 @@
                 <span>معاينة للطباعة</span>
             </button>
 
-            <a href="{{ route('reports.export', request()->all()) }}" class="btn btn-outline-success shadow-sm d-flex align-items-center gap-1">
-                <i class="bi bi-file-earmark-excel"></i>
-                <span>تصدير Excel (CSV)</span>
-            </a>
+
         </div>
     </div>
 
@@ -619,9 +616,7 @@
                         <a href="{{ route('reports.print', request()->all() + ['mode' => 'print', 'tab' => 'donations']) }}" target="_blank" class="btn btn-sm btn-outline-success">
                             <i class="bi bi-printer me-1"></i> طباعة تقرير التبرعات
                         </a>
-                        <a href="{{ route('reports.export', request()->all() + ['tab' => 'donations']) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسل
-                        </a>
+
                     </div>
                 </div>
                 <div class="card-body px-4">
@@ -719,9 +714,7 @@
                         <a href="{{ route('reports.print', request()->all() + ['mode' => 'print', 'tab' => 'beneficiaries']) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-printer me-1"></i> طباعة تقرير المستفيدين
                         </a>
-                        <a href="{{ route('reports.export', request()->all() + ['tab' => 'beneficiaries']) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسل
-                        </a>
+
                     </div>
                 </div>
                 <div class="card-body px-4">
@@ -818,9 +811,7 @@
                         <a href="{{ route('reports.print', request()->all() + ['mode' => 'print', 'tab' => 'guest_houses']) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-printer me-1"></i> طباعة تقرير دور الضيافة
                         </a>
-                        <a href="{{ route('reports.export', request()->all() + ['tab' => 'guest_houses']) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسل
-                        </a>
+
                     </div>
                 </div>
                 <div class="card-body px-4">
@@ -953,9 +944,7 @@
                         <a href="{{ route('reports.print', request()->all() + ['mode' => 'print', 'tab' => 'inventory']) }}" target="_blank" class="btn btn-sm btn-outline-warning text-dark">
                             <i class="bi bi-printer me-1"></i> طباعة تقرير المخزون
                         </a>
-                        <a href="{{ route('reports.export', request()->all() + ['tab' => 'inventory']) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسل
-                        </a>
+
                     </div>
                 </div>
                 <div class="card-body px-4">
@@ -1048,9 +1037,7 @@
                         <a href="{{ route('reports.print', request()->all() + ['mode' => 'print', 'tab' => 'finance']) }}" target="_blank" class="btn btn-sm btn-outline-danger">
                             <i class="bi bi-printer me-1"></i> طباعة تقرير المالية
                         </a>
-                        <a href="{{ route('reports.export', request()->all() + ['tab' => 'finance']) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-excel me-1"></i> تصدير إكسل
-                        </a>
+
                     </div>
                 </div>
                 <div class="card-body px-4">

@@ -213,6 +213,11 @@ input[type="number"] {
       overflow: hidden;
   }
 
+  .btn-glass-pill,
+  #notificationBellBtn {
+      overflow: visible !important;
+  }
+
   .btn:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);

@@ -567,7 +567,8 @@
           box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12) !important;
       }
 
-      .btn-glass-pill {
+      .btn-glass-pill,
+      #notificationBellBtn {
           width: 44px;
           height: 44px;
           border-radius: 50px !important;
@@ -580,6 +581,7 @@
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           padding: 0 !important;
           position: relative !important;
+          overflow: visible !important;
       }
       .btn-glass-pill:hover {
           background: var(--bg) !important;
@@ -590,17 +592,18 @@
       }
       .notif-bell-badge {
           position: absolute !important;
-          top: -3px !important;
-          right: -3px !important;
-          min-width: 20px !important;
-          height: 20px !important;
+          top: -2px !important;
+          right: -2px !important;
+          min-width: 22px !important;
+          height: 22px !important;
           padding: 0 5px !important;
           border-radius: 999px !important;
+          background: #ef4444 !important;
           background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
           color: #ffffff !important;
-          font-size: 0.72rem !important;
+          font-size: 0.74rem !important;
           font-weight: 800 !important;
-          line-height: 1 !important;
+          line-height: 22px !important;
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
@@ -608,9 +611,9 @@
           box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6), 0 0 0 2px var(--bg, #ffffff) !important;
           animation: bellBadgePulse 2.5s infinite !important;
           pointer-events: none !important;
-          z-index: 20 !important;
+          z-index: 999 !important;
           font-family: inherit !important;
-          letter-spacing: -0.2px;
+          letter-spacing: normal !important;
       }
       .theme-dark .notif-bell-badge,
       html.theme-dark .notif-bell-badge,
@@ -2220,7 +2223,7 @@
             @endif
 
             @if($navUser && $navUser->hasPermission('notifications.view'))
-              <button class="btn btn-glass-pill" id="notificationBellBtn"
+              <button class="btn btn-glass-pill" id="notificationBellBtn" style="overflow: visible !important;"
                 type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات" title="الإشعارات">
                 <i class="bi bi-bell fs-5"></i>
                 <span id="notificationBellBadge" class="notif-bell-badge d-none">0</span>
