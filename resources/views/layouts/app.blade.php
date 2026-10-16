@@ -315,8 +315,40 @@
 
       @media (max-width: 992px) {
           .sidebar { transform: translateX(100%); }
-          .main-content { margin-right: 0; }
+          .main-content { margin-right: 0; padding: 1.25rem 0.85rem; }
           .sidebar.show { transform: translateX(0); }
+      }
+
+      @media (max-width: 768px) {
+          .main-content {
+              padding: 0.85rem 0.5rem !important;
+          }
+          .container-fluid {
+              padding-left: 0.4rem !important;
+              padding-right: 0.4rem !important;
+          }
+          .card {
+              border-radius: 16px !important;
+          }
+          .card-header {
+              padding: 0.85rem 1rem !important;
+          }
+          .card-body {
+              padding: 1rem !important;
+          }
+          .table-responsive {
+              -webkit-overflow-scrolling: touch !important;
+              border-radius: 12px;
+          }
+          .modal-dialog {
+              margin: 0.5rem !important;
+          }
+          .modal-content {
+              border-radius: 20px !important;
+          }
+          .btn-group {
+              flex-wrap: wrap;
+          }
       }
 
       /* Glassmorphism Cards */
