@@ -601,15 +601,37 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
         </div>
         @endif
 
-        {{-- 11. الخدمات العامة (Popup) --}}
-        @if($u && ($u->hasPermission('reception.view') || $u->hasPermission('guest_houses.view') || $u->hasPermission('workspaces.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppServices" data-category="operations" data-title="الخدمات العامة" data-keywords="استقبال دار ضيافة مساحات عمل services">
+        {{-- 11. الاستقبال وخدمة العملاء --}}
+        @if($u && $u->hasPermission('reception.view'))
+        <a href="{{ route('reception.index') }}" class="ensan-app-card" data-category="operations" data-title="الاستقبال وخدمة العملاء" data-keywords="استقبال خدمة عملاء زوار استفسارات reception">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0284c7, #38bdf8); box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.45);">
-                <i class="bi bi-briefcase-fill"></i>
+                <i class="bi bi-telephone-inbound-fill"></i>
             </div>
-            <div class="ensan-app-title">الخدمات العامة</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 3 خدمات <i class="bi bi-chevron-down"></i></span>
-        </div>
+            <div class="ensan-app-title">الاستقبال والعملاء</div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
+        </a>
+        @endif
+
+        {{-- 12. إدارة دار الضيافة --}}
+        @if($u && $u->hasPermission('guest_houses.view'))
+        <a href="{{ route('guest-houses.index') }}" class="ensan-app-card" data-category="operations" data-title="إدارة دار الضيافة" data-keywords="دار ضيافة غرف نزلاء إقامة guest house">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.45);">
+                <i class="bi bi-house-door-fill"></i>
+            </div>
+            <div class="ensan-app-title">إدارة دار الضيافة</div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
+        </a>
+        @endif
+
+        {{-- 13. مساحات العمل Ensan Workspace --}}
+        @if($u && $u->hasPermission('workspaces.view'))
+        <a href="{{ route('workspaces.index') }}" class="ensan-app-card" data-category="operations" data-title="مساحات العمل" data-keywords="مساحات عمل قاعات مكاتب مشتركة workspaces">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #2dd4bf); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
+                <i class="bi bi-easel2-fill"></i>
+            </div>
+            <div class="ensan-app-title">مساحات العمل</div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
+        </a>
         @endif
 
         {{-- 12. الزيارات الميدانية --}}
@@ -1264,67 +1286,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
     </div>
 </div>
 
-{{-- 7. Modal: الخدمات العامة --}}
-<div class="modal fade ensan-sub-modal" id="modalAppServices" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0284c7, #38bdf8);">
-                        <i class="bi bi-briefcase-fill"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold mb-0">الخدمات والمرافق العامة</h5>
-                        <p class="text-muted small mb-0">الاستقبال، دار الضيافة، ومساحة العمل Ensan Workspace</p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="ensan-sub-grid">
-                    @if($u->hasPermission('reception.view'))
-                    <a href="{{ route('reception.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
-                            <i class="bi bi-telephone-inbound"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">الاستقبال وخدمة العملاء</div>
-                            <small class="text-muted">سجل الزوار والاستفسارات اليومية</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
 
-                    @if($u->hasPermission('guest_houses.view'))
-                    <a href="{{ route('guest-houses.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
-                            <i class="bi bi-house"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">إدارة دار الضيافة</div>
-                            <small class="text-muted">الغرف، الإشغال، وحجوزات النزلاء</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-
-                    @if($u->hasPermission('workspaces.view'))
-                    <a href="{{ route('workspaces.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
-                            <i class="bi bi-easel"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">مساحات العمل Ensan Workspace</div>
-                            <small class="text-muted">حجوزات القاعات والمكاتب المشتركة</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 {{-- 8. Modal: الموقع الإلكتروني --}}
 <div class="modal fade ensan-sub-modal" id="modalAppWebsite" tabindex="-1" aria-hidden="true">
