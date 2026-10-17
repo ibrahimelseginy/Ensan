@@ -162,7 +162,7 @@
                     <span class="text-white fw-bold small opacity-90">مؤسسة إنسان الخيرية</span>
                 </div>
                 <h2 class="hero-title fw-black text-white mb-2">
-                    مرحباً بك، {{ $currentUser->name ?? 'في منظومة إنسان' }}
+                    مرحباً بك {{ $currentUser->name ?? 'في منظومة إنسان' }}
                 </h2>
 
                 {{-- Live Hijri, Gregorian & Clock Badges --}}
