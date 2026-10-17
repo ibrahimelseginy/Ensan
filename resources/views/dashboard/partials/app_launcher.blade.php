@@ -1,5 +1,8 @@
 @php
     $u = auth()->user();
+    if (!$u) {
+        return;
+    }
 @endphp
 
 <style>
@@ -219,72 +222,89 @@ body.theme-dark .ensan-app-card:hover,
     color: #ffffff !important;
 }
 
-/* Modals Styling - 100% Solid Non-Transparent */
-.ensan-sub-modal .modal-content {
-    border-radius: 24px;
-    border: 1px solid #cbd5e1 !important;
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
-    overflow: hidden;
-    opacity: 1 !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+/* Hide scrollbars completely on modals and their children */
+.modal::-webkit-scrollbar,
+.modal *::-webkit-scrollbar,
+.ensan-sub-modal::-webkit-scrollbar,
+.ensan-sub-modal *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
+.modal,
+.modal *,
+.ensan-sub-modal,
+.ensan-sub-modal * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+/* Modals Styling - 100% Solid Dark & Non-Transparent (Universal) */
+.ensan-sub-modal .modal-content,
 html.theme-dark .ensan-sub-modal .modal-content,
 html[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
 body.theme-dark .ensan-sub-modal .modal-content,
 body[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
 .theme-dark .ensan-sub-modal .modal-content,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-content {
-    background-color: #0f172a !important;
-    background: #0f172a !important;
-    border: 1px solid #334155 !important;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95) !important;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background-color: #0b1220 !important;
+    background: #0b1220 !important;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.85) !important;
+    overflow: hidden;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    color: #ffffff !important;
 }
 
-.ensan-sub-modal .modal-header {
-    background-color: #f8fafc !important;
-    background: #f8fafc !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    opacity: 1 !important;
-}
-
+.ensan-sub-modal .modal-header,
 html.theme-dark .ensan-sub-modal .modal-header,
 html[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
 body.theme-dark .ensan-sub-modal .modal-header,
 body[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
 .theme-dark .ensan-sub-modal .modal-header,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-header {
-    background-color: #1e293b !important;
-    background: #1e293b !important;
-    border-bottom: 1px solid #334155 !important;
+    background-color: #111a2e !important;
+    background: #111a2e !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     opacity: 1 !important;
+    color: #ffffff !important;
 }
 
-.ensan-sub-modal .modal-body {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    opacity: 1 !important;
+.ensan-sub-modal .modal-header .modal-title,
+.ensan-sub-modal .modal-header h5 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
 }
 
+.ensan-sub-modal .modal-header .text-muted,
+.ensan-sub-modal .modal-header p {
+    color: #94a3b8 !important;
+}
+
+.ensan-sub-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+}
+
+.ensan-sub-modal .modal-body,
 html.theme-dark .ensan-sub-modal .modal-body,
 html[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
 body.theme-dark .ensan-sub-modal .modal-body,
 body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
 .theme-dark .ensan-sub-modal .modal-body,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
-    background-color: #0f172a !important;
-    background: #0f172a !important;
+    background-color: #0b1220 !important;
+    background: #0b1220 !important;
     opacity: 1 !important;
+    padding: 0.5rem 0.25rem 1.25rem;
 }
 
 .ensan-sub-grid {
@@ -300,58 +320,64 @@ body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
     }
 }
 
-/* Sub-Service Tiles - 100% Solid Non-Transparent */
-.ensan-sub-tile {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 1rem 1.2rem;
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 16px;
-    text-decoration: none !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    cursor: pointer;
-    opacity: 1 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-}
-
+/* Sub-Service Tiles - 100% Solid Dark Gradient Matching Launcher Cards */
+.ensan-sub-tile,
 html.theme-dark .ensan-sub-tile,
 html[data-bs-theme="dark"] .ensan-sub-tile,
 body.theme-dark .ensan-sub-tile,
 body[data-bs-theme="dark"] .ensan-sub-tile,
 .theme-dark .ensan-sub-tile,
 [data-bs-theme="dark"] .ensan-sub-tile {
-    background-color: #1e293b !important;
-    background: #1e293b !important;
-    border: 1px solid #384968 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1rem 1.2rem;
+    background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+    background-color: #0b1220 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px;
+    text-decoration: none !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
     opacity: 1 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    color: #ffffff !important;
 }
 
-.ensan-sub-tile:hover {
-    transform: translateY(-2px);
-    background-color: #f1f5f9 !important;
-    background: #f1f5f9 !important;
-    border-color: #10b981 !important;
-    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.2) !important;
-}
-
+.ensan-sub-tile:hover,
 html.theme-dark .ensan-sub-tile:hover,
 html[data-bs-theme="dark"] .ensan-sub-tile:hover,
 body.theme-dark .ensan-sub-tile:hover,
 body[data-bs-theme="dark"] .ensan-sub-tile:hover,
 .theme-dark .ensan-sub-tile:hover,
 [data-bs-theme="dark"] .ensan-sub-tile:hover {
-    background-color: #253554 !important;
-    background: #253554 !important;
+    transform: translateY(-3px);
+    background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+    background-color: #0e1728 !important;
     border-color: #10b981 !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28) !important;
+}
+
+.ensan-sub-tile-title {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+}
+
+.ensan-sub-tile small,
+.ensan-sub-tile .text-muted {
+    color: #94a3b8 !important;
+}
+
+.ensan-sub-tile-arrow {
+    color: #64748b !important;
+    transition: all 0.2s ease;
+}
+
+.ensan-sub-tile:hover .ensan-sub-tile-arrow {
+    color: #10b981 !important;
+    transform: translateX(-4px);
 }
 
 .ensan-sub-tile-icon {
@@ -756,7 +782,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('manage_logistics'))
+                    @if($u && $u->hasPermission('manage_logistics'))
                     <a href="{{ route('logistics.dashboard') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-grid-1x2"></i>
@@ -769,7 +795,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('delegates.view'))
+                    @if($u && $u->hasPermission('delegates.view'))
                     <a href="{{ route('delegates.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-person-badge"></i>
@@ -782,7 +808,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('travel_routes.view'))
+                    @if($u && $u->hasPermission('travel_routes.view'))
                     <a href="{{ route('travel-routes.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-geo"></i>
@@ -795,7 +821,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('trips.view'))
+                    @if($u && $u->hasPermission('trips.view'))
                     <a href="{{ route('trips.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-pin-map"></i>
@@ -808,7 +834,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('kafr_el_sheikh_deliveries.view'))
+                    @if($u && $u->hasPermission('kafr_el_sheikh_deliveries.view'))
                     <a href="{{ route('kafr-el-sheikh-services.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-truck"></i>
@@ -832,7 +858,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('manage_logistics') || $u->hasRole('admin'))
+                    @if($u && ($u->hasPermission('manage_logistics') || $u->hasRole('admin')))
                     <a href="{{ route('tanta-workers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-purple-subtle text-purple">
                             <i class="bi bi-person-workspace"></i>
@@ -868,7 +894,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasRole('hr') || $u->hasPermission('hr.evaluations'))
+                    @if($u && ($u->hasRole('hr') || $u->hasPermission('hr.evaluations')))
                     <a href="{{ route('hr.evaluations') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-speedometer2"></i>
@@ -881,7 +907,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('users.view'))
+                    @if($u && $u->hasPermission('users.view'))
                     <a href="{{ route('users.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-people"></i>
@@ -927,7 +953,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
 
-                    @if($u->hasPermission('payrolls.view'))
+                    @if($u && $u->hasPermission('payrolls.view'))
                     <a href="{{ route('payrolls.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-cash-stack"></i>
@@ -940,7 +966,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('volunteers.view'))
+                    @if($u && $u->hasPermission('volunteers.view'))
                     <a href="{{ route('volunteers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-purple-subtle text-purple">
                             <i class="bi bi-heart-pulse"></i>
@@ -1009,7 +1035,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('treasuries.view'))
+                    @if($u && $u->hasPermission('treasuries.view'))
                     <a href="{{ route('treasuries.dashboard') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-speedometer2"></i>
@@ -1066,7 +1092,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
 
-                    @if($u->hasPermission('closures.view'))
+                    @if($u && $u->hasPermission('closures.view'))
                     <a href="{{ route('closures.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-lock"></i>
@@ -1079,7 +1105,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('accounts.view'))
+                    @if($u && $u->hasPermission('accounts.view'))
                     <a href="{{ route('accounts.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-secondary-subtle text-secondary">
                             <i class="bi bi-diagram-3"></i>
@@ -1115,7 +1141,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('inventory.view'))
+                    @if($u && $u->hasPermission('inventory.view'))
                     <a href="{{ route('warehouses.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-building"></i>
@@ -1128,7 +1154,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('items.view'))
+                    @if($u && $u->hasPermission('items.view'))
                     <a href="{{ route('items.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-box-seam"></i>
@@ -1141,7 +1167,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('suppliers.view'))
+                    @if($u && $u->hasPermission('suppliers.view'))
                     <a href="{{ route('suppliers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-shop"></i>
@@ -1154,7 +1180,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('inventory_transactions.view'))
+                    @if($u && $u->hasPermission('inventory_transactions.view'))
                     <a href="{{ route('inventory-transactions.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-arrow-left-right"></i>
@@ -1190,7 +1216,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('campaigns.view'))
+                    @if($u && $u->hasPermission('campaigns.view'))
                     <a href="{{ route('campaigns.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-megaphone"></i>
@@ -1203,7 +1229,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('ramadan_bags.view'))
+                    @if($u && $u->hasPermission('ramadan_bags.view'))
                     <a href="{{ route('ramadan-bags.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-bag-heart"></i>
@@ -1216,7 +1242,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('ramadan_iftars.view'))
+                    @if($u && $u->hasPermission('ramadan_iftars.view'))
                     <a href="{{ route('ramadan-iftars.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-cup-hot"></i>
@@ -1252,7 +1278,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('school_collaborations.view'))
+                    @if($u && $u->hasPermission('school_collaborations.view'))
                     <a href="{{ route('school-collaborations.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-building"></i>
@@ -1265,7 +1291,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('memberships.view'))
+                    @if($u && $u->hasPermission('memberships.view'))
                     <a href="{{ route('memberships.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-card-checklist"></i>
@@ -1278,7 +1304,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('oncology_medicine_reps.view'))
+                    @if($u && $u->hasPermission('oncology_medicine_reps.view'))
                     <a href="{{ route('oncology-medicine-reps.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-capsule"></i>
@@ -1316,7 +1342,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('website.settings.view_edit'))
+                    @if($u && $u->hasPermission('website.settings.view_edit'))
                     <a href="{{ route('website.settings.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-gear-wide-connected"></i>
@@ -1329,7 +1355,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.headquarters.view'))
+                    @if($u && $u->hasPermission('website.headquarters.view'))
                     <a href="{{ route('website.headquarters.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-geo-alt"></i>
@@ -1342,7 +1368,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.partners.view'))
+                    @if($u && $u->hasPermission('website.partners.view'))
                     <a href="{{ route('website.partners.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-award"></i>
@@ -1355,7 +1381,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.board.view'))
+                    @if($u && $u->hasPermission('website.board.view'))
                     <a href="{{ route('website.board.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-secondary-subtle text-secondary">
                             <i class="bi bi-people"></i>
@@ -1368,7 +1394,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.content.view_edit'))
+                    @if($u && $u->hasPermission('website.content.view_edit'))
                     <a href="{{ route('website.content') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-window-sidebar"></i>
@@ -1381,7 +1407,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.campaigns_content.view_edit'))
+                    @if($u && $u->hasPermission('website.campaigns_content.view_edit'))
                     <a href="{{ route('website.campaigns.content') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-megaphone"></i>
@@ -1394,7 +1420,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.volunteer_requests.view'))
+                    @if($u && $u->hasPermission('website.volunteer_requests.view'))
                     <a href="{{ route('website.volunteer-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-person-plus"></i>
@@ -1407,7 +1433,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.donation_page.view_edit'))
+                    @if($u && $u->hasPermission('website.donation_page.view_edit'))
                     <a href="{{ route('website.donation-page.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-heart-fill"></i>
@@ -1420,7 +1446,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.donation_settings.view_edit'))
+                    @if($u && $u->hasPermission('website.donation_settings.view_edit'))
                     <a href="{{ route('website.donation-settings.unified') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-purple-subtle text-purple">
                             <i class="bi bi-ui-checks-grid"></i>
@@ -1433,7 +1459,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.accounts.view'))
+                    @if($u && $u->hasPermission('website.accounts.view'))
                     <a href="{{ route('website.accounts.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-person-badge"></i>
@@ -1446,7 +1472,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('website.donation_accounts.view'))
+                    @if($u && $u->hasPermission('website.donation_accounts.view'))
                     <a href="{{ route('website.donation-accounts.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-wallet2"></i>
@@ -1526,7 +1552,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('mobile.home_content.view_edit'))
+                    @if($u && $u->hasPermission('mobile.home_content.view_edit'))
                     <a href="{{ route('mobile.home_content.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-sliders"></i>
@@ -1539,7 +1565,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.news.view'))
+                    @if($u && $u->hasPermission('mobile.news.view'))
                     <a href="{{ route('mobile.news.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-newspaper"></i>
@@ -1552,7 +1578,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.volunteer_requests.view'))
+                    @if($u && $u->hasPermission('mobile.volunteer_requests.view'))
                     <a href="{{ route('mobile.volunteer-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-person-plus"></i>
@@ -1565,7 +1591,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.bookings.view'))
+                    @if($u && $u->hasPermission('mobile.bookings.view'))
                     <a href="{{ route('mobile.bookings.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-calendar2-check"></i>
@@ -1578,7 +1604,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.donations.view'))
+                    @if($u && $u->hasPermission('mobile.donations.view'))
                     <a href="{{ route('mobile.donations.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-cash-coin"></i>
@@ -1591,7 +1617,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.donors.view'))
+                    @if($u && $u->hasPermission('mobile.donors.view'))
                     <a href="{{ route('mobile.donors_auth.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-person-badge-fill"></i>
@@ -1604,7 +1630,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('mobile.notifications.view'))
+                    @if($u && $u->hasPermission('mobile.notifications.view'))
                     <a href="{{ route('mobile.notifications.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-bell"></i>
@@ -1640,7 +1666,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u->hasPermission('users.view'))
+                    @if($u && $u->hasPermission('users.view'))
                     <a href="{{ route('users.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-person-gear"></i>
@@ -1653,7 +1679,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('roles.view'))
+                    @if($u && $u->hasPermission('roles.view'))
                     <a href="{{ route('roles.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-shield-lock"></i>
@@ -1666,7 +1692,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('audits.view'))
+                    @if($u && $u->hasPermission('audits.view'))
                     <a href="{{ route('audits.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-journal-text"></i>
@@ -1679,7 +1705,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
                     </a>
                     @endif
 
-                    @if($u->hasPermission('change_requests.view'))
+                    @if($u && $u->hasPermission('change_requests.view'))
                     <a href="{{ route('change-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-arrow-repeat"></i>

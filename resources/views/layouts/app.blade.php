@@ -939,6 +939,26 @@
             opacity: 1 !important;
         }
 
+        /* Hide modal and page scrollbars cleanly */
+        .modal::-webkit-scrollbar,
+        .modal *::-webkit-scrollbar,
+        .ensan-sub-modal::-webkit-scrollbar,
+        .ensan-sub-modal *::-webkit-scrollbar,
+        body.modal-open::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        .modal,
+        .modal *,
+        .ensan-sub-modal,
+        .ensan-sub-modal *,
+        body.modal-open {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+
         /* Fix form labels in modals for dark mode */
         body.theme-dark .modal .form-label,
         body.theme-dark .modal label,
