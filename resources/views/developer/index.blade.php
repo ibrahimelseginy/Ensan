@@ -233,17 +233,17 @@
           </div>
 
           <!-- Name & Title -->
-          <h3 class="fw-bold mb-1" style="letter-spacing: -0.5px;">Ibrahim Elseginy</h3>
-          <div class="text-primary fw-bold mb-2">@Ibrahim Elseginy</div>
+          <h3 class="fw-bold mb-1" style="letter-spacing: -0.5px;">م/ إبراهيم السجيني</h3>
+          <div class="text-primary fw-bold mb-2">@Ibrahim Elseginy &bull; فرصة Dev</div>
           <p class="text-muted small mb-3">
-            مهندس ومطور برمجيات وأنظمة سحابية متقدمة
+            رائد أعمال &bull; صاحب ومؤسس شركة فرصة Dev
             <br>
-            Senior Full-Stack & Systems Architect
+            Entrepreneur & Founder of Forsah Dev
           </p>
 
           <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-success-subtle text-success small fw-semibold mb-4 border border-success-subtle">
             <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 8px; height: 8px;"></span>
-            مطور نظام إنسان لإدارة المؤسسات والجمعيات الخيرية
+            صاحب ومؤسس شركة فرصة Dev للحلول البرمجية
           </div>
 
           <!-- Contact Buttons -->
@@ -278,78 +278,92 @@
         <div class="solid-card p-4 h-100 d-flex flex-column justify-content-between">
           
           <div>
-            <div class="d-flex align-items-center gap-2 mb-3">
-              <div class="p-2 rounded bg-primary-subtle text-primary">
-                <i class="bi bi-building-gear fs-4"></i>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="p-3 rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 58px; height: 58px;">
+                <i class="bi bi-rocket-takeoff-fill fs-3"></i>
               </div>
               <div>
-                <h4 class="fw-bold mb-0">نظام إنسان السحابي (Ensan ERP)</h4>
-                <small class="text-muted">منظومة رقمية شاملة لإدارة التبرعات، العمليات، والموارد</small>
+                <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-1 fw-bold">القصة والمسيرة الريادية</div>
+                <h4 class="fw-bold mb-0 text-main">م/ إبراهيم السجيني</h4>
+                <div class="text-primary fw-bold small">رائد أعمال &bull; صاحب ومؤسس شركة فرصة Dev</div>
               </div>
             </div>
 
-            <p class="text-secondary leading-relaxed mb-4">
-              تم تصميم وبرمجة نظام <strong>إنسان</strong> بأحدث المعايير البرمجية لتلبية احتياجات المؤسسات والجمعيات الخيرية بكفاءة عالية، مع التركيز على سهولة الاستخدام، الأمان الرقمي، والسرعة الفائقة في معالجة البيانات والتقارير المالية.
-            </p>
+            <div class="p-3 rounded-4 mb-4 border" style="background: rgba(37, 99, 235, 0.04); border-color: rgba(37, 99, 235, 0.15) !important;">
+              <p class="text-secondary leading-relaxed mb-2" style="font-size: 1.02rem; line-height: 1.85;">
+                رحلة شغف وابتكار تقني تصنع فارقاً حقيقياً في عالم الأعمال الرقمي. تأسست رؤية <strong>م/ إبراهيم السجيني</strong> على الإيمان العميق بأن البرمجيات الذكية ليست مجرد كود، بل هي القوة الدافعة لتمكين المؤسسات والشركات من إطلاق كامل إمكاناتها وتحقيق قفزات نوعية في الأداء والنمو.
+              </p>
+              <p class="text-secondary leading-relaxed mb-0" style="font-size: 0.95rem; line-height: 1.8;">
+                من خلال تأسيس وإدارة <strong>شركة فرصة Dev</strong>، يقود م/ إبراهيم منظومة لتطوير الحلول السحابية المتقدمة والأنظمة المؤسسية المتكاملة، مقدماً نموذجاً ريادياً يجمع بين الهندسة البرمجية المتينة، الرؤية الاقتصادية، والتركيز المطلق على تجربة العميل والنجاح المستدام.
+              </p>
+            </div>
 
             <div class="row g-3 mb-4">
               <div class="col-sm-6">
                 <div class="feature-item-card">
                   <div class="text-primary fw-bold mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-lock-fill"></i>
-                    <span>أمان وصلاحيات متقدمة</span>
+                    <i class="bi bi-briefcase-fill"></i>
+                    <span>شركة فرصة Dev</span>
                   </div>
-                  <small class="text-muted">نظام دقيق لإدارة أدوار المستخدمين (RBAC) وسجلات مراقبة شاملة لكل حركة بالنظام.</small>
+                  <small class="text-muted">بيت خبرة تقني متخصص في هندسة وبناء الحلول الرقمية والأنظمة السحابية المتطورة للشركات والمؤسسات.</small>
                 </div>
               </div>
 
               <div class="col-sm-6">
                 <div class="feature-item-card">
                   <div class="text-success fw-bold mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <span>مؤشرات مالية لحظية</span>
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <span>ريادة الأعمال والابتكار</span>
                   </div>
-                  <small class="text-muted">رادار المتبرعين، تحليل التدفقات النقدية والعينية، ومتابعة دقيقة للأهداف الشهرية.</small>
+                  <small class="text-muted">تطوير نماذج عمل تكنولوجية مبتكرة تحول الأفكار والمشاريع الطموحة إلى قصص نجاح وواقع ملموس.</small>
                 </div>
               </div>
 
               <div class="col-sm-6">
                 <div class="feature-item-card">
                   <div class="text-info fw-bold mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-boxes"></i>
-                    <span>إدارة المخازن واللوجيستك</span>
+                    <i class="bi bi-cpu-fill"></i>
+                    <span>التحول الرقمي المؤسسي</span>
                   </div>
-                  <small class="text-muted">أتمتة خطوط السير، توزيع المساعدات، ومراقبة دقيقة للأرصدة السلعية.</small>
+                  <small class="text-muted">أتمتة العمليات الإدارية والمالية المعقدة لتسهيل الإدارة ورفع كفاءة وصنع القرار باحترافية.</small>
                 </div>
               </div>
 
               <div class="col-sm-6">
                 <div class="feature-item-card">
                   <div class="text-warning fw-bold mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-phone-fill"></i>
-                    <span>ربط فوري للتطبيقات والموقع</span>
+                    <i class="bi bi-shield-check"></i>
+                    <span>حلول مخصصة وشراكات</span>
                   </div>
-                  <small class="text-muted">تكامل مباشر بين الموقع الإلكتروني وتطبيقات الجوال وبوابات التبرع الذاتية.</small>
+                  <small class="text-muted">شراكات عمل موثوقة طويلة الأمد تضمن الدعم الفني، الجودة العالية، والتطوير المستمر للأنظمة.</small>
                 </div>
               </div>
             </div>
 
-            <h6 class="fw-bold mb-2 text-muted text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">التقنيات المستخدمة في البناء والتطوير</h6>
+            <div class="p-3 rounded-3 mb-4 border-start border-4 border-primary" style="background: rgba(15, 23, 42, 0.03);">
+              <div class="fst-italic text-secondary small">
+                <i class="bi bi-quote fs-5 text-primary me-1"></i>
+                "في عالم الأعمال المتسارع، لا نكتفي بمواكبة التقنية، بل نصنع منها <strong>فرصة</strong> حقيقية تعيد تعريف النجاح والريادة."
+              </div>
+              <div class="text-end fw-bold text-primary small mt-1">— م/ إبراهيم السجيني</div>
+            </div>
+
+            <h6 class="fw-bold mb-2 text-muted text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">مجالات الخبرة والتخصص الريادي</h6>
             <div class="d-flex flex-wrap gap-2 mb-4">
-              <span class="tech-pill"><i class="bi bi-filetype-php text-primary"></i> Laravel Framework</span>
-              <span class="tech-pill"><i class="bi bi-database text-warning"></i> MySQL Optimized</span>
-              <span class="tech-pill"><i class="bi bi-bootstrap text-info"></i> Modern Responsive UI</span>
-              <span class="tech-pill"><i class="bi bi-server text-success"></i> Linux Cloud Server</span>
-              <span class="tech-pill"><i class="bi bi-code-square text-danger"></i> RESTful APIs</span>
+              <span class="tech-pill"><i class="bi bi-stars text-primary"></i> ريادة الأعمال والشركات الناشئة</span>
+              <span class="tech-pill"><i class="bi bi-code-slash text-success"></i> فرصة Dev (Forsah Dev)</span>
+              <span class="tech-pill"><i class="bi bi-cloud-check text-info"></i> أنظمة سحابية متقدمة (Cloud ERP)</span>
+              <span class="tech-pill"><i class="bi bi-diagram-3 text-warning"></i> استشارات التحول الرقمي</span>
+              <span class="tech-pill"><i class="bi bi-phone text-danger"></i> حلول الويب وتطبيقات الجوال</span>
             </div>
           </div>
 
           <!-- Bottom Action -->
           <div class="border-top pt-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <span class="text-muted small">لأي استفسار تقني أو طلبات تطوير:</span>
+            <span class="text-muted small">لأي استفسار أو شراكات عمل وتطوير أنظمة:</span>
             <div class="d-flex gap-2">
               <a href="https://wa.me/201556592017" target="_blank" class="btn btn-sm btn-outline-success fw-bold">
-                <i class="bi bi-whatsapp me-1"></i> تواصل الآن
+                <i class="bi bi-whatsapp me-1"></i> تواصل مع فرصة Dev
               </a>
               @if(auth()->check())
                 <a href="{{ route('dashboard.index') }}" class="btn btn-sm btn-primary fw-bold">
