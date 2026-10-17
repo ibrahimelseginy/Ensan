@@ -1774,7 +1774,7 @@ final class WebsiteWebController extends Controller
             \App\Models\WebRoomBooking::create($data);
         }
 
-        return redirect()->route('guest-house.content')->with('success', 'تم إنشاء بيانات الحجز التجريبية بنجاح');
+        return redirect()->route('website.guest-house.content')->with('success', 'تم إنشاء بيانات الحجز التجريبية بنجاح');
     }
     public function donationPage()
     {

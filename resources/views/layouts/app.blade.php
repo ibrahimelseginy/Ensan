@@ -2254,14 +2254,14 @@
           </div>
       @endif
 
-      @if(session('error') || $errors->any())
+      @if(session('error') || (isset($errors) && $errors->any()))
           <div class="toast-elite error animate-toast-in">
               <div class="toast-icon-wrapper">
                   <i class="bi bi-exclamation-triangle toast-icon"></i>
               </div>
               <div class="toast-text">
                   <div class="toast-title">تنبيه بالخطأ</div>
-                  <span class="toast-msg">{{ session('error') ?? $errors->first() }}</span>
+                  <span class="toast-msg">{{ session('error') ?? (isset($errors) ? $errors->first() : '') }}</span>
               </div>
               <button type="button" class="btn-close-toast" onclick="this.parentElement.style.display='none'">&times;</button>
           </div>
