@@ -2578,6 +2578,10 @@
                 });
               })();
               </script>
+            @else
+              <a href="{{ route('login') }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                <i class="bi bi-box-arrow-in-right me-1"></i> تسجيل الدخول
+              </a>
             @endif
         </div>
       </div>
