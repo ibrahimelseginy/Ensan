@@ -215,8 +215,8 @@
 .ensan-sub-modal .modal-content {
     border-radius: 24px;
     border: 1px solid #cbd5e1 !important;
-    background: #ffffff !important;
     background-color: #ffffff !important;
+    background: #ffffff !important;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
     overflow: hidden;
     opacity: 1 !important;
@@ -224,19 +224,24 @@
     -webkit-backdrop-filter: none !important;
 }
 
-.theme-dark .ensan-sub-modal .modal-content {
-    background: #0f172a !important;
+html.theme-dark .ensan-sub-modal .modal-content,
+html[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+body.theme-dark .ensan-sub-modal .modal-content,
+body[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+.theme-dark .ensan-sub-modal .modal-content,
+[data-bs-theme="dark"] .ensan-sub-modal .modal-content {
     background-color: #0f172a !important;
+    background: #0f172a !important;
     border: 1px solid #334155 !important;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95) !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 
 .ensan-sub-modal .modal-header {
-    background: #f8fafc !important;
     background-color: #f8fafc !important;
+    background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
     padding: 1.25rem 1.5rem;
     display: flex;
@@ -245,22 +250,32 @@
     opacity: 1 !important;
 }
 
-.theme-dark .ensan-sub-modal .modal-header {
-    background: #131d31 !important;
-    background-color: #131d31 !important;
+html.theme-dark .ensan-sub-modal .modal-header,
+html[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
+body.theme-dark .ensan-sub-modal .modal-header,
+body[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
+.theme-dark .ensan-sub-modal .modal-header,
+[data-bs-theme="dark"] .ensan-sub-modal .modal-header {
+    background-color: #1e293b !important;
+    background: #1e293b !important;
     border-bottom: 1px solid #334155 !important;
     opacity: 1 !important;
 }
 
 .ensan-sub-modal .modal-body {
-    background: #ffffff !important;
     background-color: #ffffff !important;
+    background: #ffffff !important;
     opacity: 1 !important;
 }
 
-.theme-dark .ensan-sub-modal .modal-body {
-    background: #0b1120 !important;
-    background-color: #0b1120 !important;
+html.theme-dark .ensan-sub-modal .modal-body,
+html[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+body.theme-dark .ensan-sub-modal .modal-body,
+body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+.theme-dark .ensan-sub-modal .modal-body,
+[data-bs-theme="dark"] .ensan-sub-modal .modal-body {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
     opacity: 1 !important;
 }
 
@@ -283,8 +298,8 @@
     align-items: center;
     gap: 0.9rem;
     padding: 1rem 1.2rem;
-    background: #ffffff !important;
     background-color: #ffffff !important;
+    background: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 16px;
     text-decoration: none !important;
@@ -296,27 +311,39 @@
     -webkit-backdrop-filter: none !important;
 }
 
-.theme-dark .ensan-sub-tile {
-    background: #1e293b !important;
+html.theme-dark .ensan-sub-tile,
+html[data-bs-theme="dark"] .ensan-sub-tile,
+body.theme-dark .ensan-sub-tile,
+body[data-bs-theme="dark"] .ensan-sub-tile,
+.theme-dark .ensan-sub-tile,
+[data-bs-theme="dark"] .ensan-sub-tile {
     background-color: #1e293b !important;
+    background: #1e293b !important;
     border: 1px solid #384968 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
     opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .ensan-sub-tile:hover {
     transform: translateY(-2px);
-    background: #f1f5f9 !important;
     background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
     border-color: #10b981 !important;
     box-shadow: 0 6px 18px rgba(16, 185, 129, 0.2) !important;
 }
 
-.theme-dark .ensan-sub-tile:hover {
-    background: #253554 !important;
+html.theme-dark .ensan-sub-tile:hover,
+html[data-bs-theme="dark"] .ensan-sub-tile:hover,
+body.theme-dark .ensan-sub-tile:hover,
+body[data-bs-theme="dark"] .ensan-sub-tile:hover,
+.theme-dark .ensan-sub-tile:hover,
+[data-bs-theme="dark"] .ensan-sub-tile:hover {
     background-color: #253554 !important;
+    background: #253554 !important;
     border-color: #10b981 !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
 }
 
 .ensan-sub-tile-icon {

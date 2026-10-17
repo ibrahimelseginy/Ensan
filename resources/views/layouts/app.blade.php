@@ -816,7 +816,9 @@
         .modal .modal-content,
         .modal form.modal-content,
         .modal .card,
-        .service-modal .modal-content {
+        .service-modal .modal-content,
+        .ensan-sub-modal .modal-content,
+        .ensan-sub-tile {
             background-color: #ffffff !important;
             background: #ffffff !important;
             opacity: 1 !important;
@@ -828,7 +830,9 @@
         .modal-footer,
         .service-modal .modal-header,
         .service-modal .modal-body,
-        .service-modal .modal-footer {
+        .service-modal .modal-footer,
+        .ensan-sub-modal .modal-header,
+        .ensan-sub-modal .modal-body {
             background-color: #ffffff !important;
             background: #ffffff !important;
             opacity: 1 !important;
@@ -854,7 +858,19 @@
         body.theme-dark .service-modal .modal-content,
         .theme-dark .service-modal .modal-content,
         [data-bs-theme="dark"] .service-modal .modal-content,
-        [data-theme="dark"] .service-modal .modal-content {
+        [data-theme="dark"] .service-modal .modal-content,
+        html.theme-dark .ensan-sub-modal .modal-content,
+        html[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+        body.theme-dark .ensan-sub-modal .modal-content,
+        body[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+        .theme-dark .ensan-sub-modal .modal-content,
+        [data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+        html.theme-dark .ensan-sub-tile,
+        html[data-bs-theme="dark"] .ensan-sub-tile,
+        body.theme-dark .ensan-sub-tile,
+        body[data-bs-theme="dark"] .ensan-sub-tile,
+        .theme-dark .ensan-sub-tile,
+        [data-bs-theme="dark"] .ensan-sub-tile {
             background-color: #0f172a !important;
             background: #0f172a !important;
             color: #e2e8f0 !important;
@@ -872,7 +888,13 @@
         body.theme-dark .service-modal .modal-body,
         .theme-dark .service-modal .modal-body,
         [data-bs-theme="dark"] .service-modal .modal-body,
-        [data-theme="dark"] .service-modal .modal-body {
+        [data-theme="dark"] .service-modal .modal-body,
+        html.theme-dark .ensan-sub-modal .modal-body,
+        html[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+        body.theme-dark .ensan-sub-modal .modal-body,
+        body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+        .theme-dark .ensan-sub-modal .modal-body,
+        [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
             background-color: #0f172a !important;
             background: #0f172a !important;
             color: #e2e8f0 !important;
@@ -888,9 +910,15 @@
         body.theme-dark .service-modal .modal-header,
         .theme-dark .service-modal .modal-header,
         [data-bs-theme="dark"] .service-modal .modal-header,
-        [data-theme="dark"] .service-modal .modal-header {
-            background-color: #0f172a !important;
-            background: #0f172a !important;
+        [data-theme="dark"] .service-modal .modal-header,
+        html.theme-dark .ensan-sub-modal .modal-header,
+        html[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
+        body.theme-dark .ensan-sub-modal .modal-header,
+        body[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
+        .theme-dark .ensan-sub-modal .modal-header,
+        [data-bs-theme="dark"] .ensan-sub-modal .modal-header {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
             color: #f8fafc !important;
             opacity: 1 !important;
         }
