@@ -333,24 +333,21 @@ input[type="number"] {
   background: var(--bg-card);
 }
 
-/* Content Wrapper */
+/* Full Width Content Wrapper (Sidebar Removed) */
+.sidebar-fixed,
+.sidebar-overlay,
+.elite-sidebar-toggle {
+  display: none !important;
+}
+
 .content-wrapper {
-  margin-right: var(--sidebar-width) !important;
+  margin-right: 0 !important;
   margin-left: 0 !important;
-  width: calc(100% - var(--sidebar-width)) !important;
-  max-width: calc(100% - var(--sidebar-width)) !important;
+  width: 100% !important;
+  max-width: 100% !important;
   padding: 1.25rem 2rem 2.5rem;
   box-sizing: border-box !important;
   min-height: calc(100vh - var(--nav-height));
-  transition:
-    margin-right 0.3s ease,
-    width 0.3s ease,
-    max-width 0.3s ease;
-}
-
-/* Sidebar Collapsed State (Desktop) */
-body.sidebar-collapsed .sidebar-fixed {
-  transform: translateX(100%);
 }
 
 body.sidebar-collapsed .content-wrapper {
@@ -358,6 +355,34 @@ body.sidebar-collapsed .content-wrapper {
   margin-left: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
+}
+
+/* Home Launcher Button in Navbar */
+.btn-home-nav {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--text-main);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none !important;
+  cursor: pointer;
+}
+
+.btn-home-nav:hover {
+  background: #10b981;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-home-nav:hover i,
+.btn-home-nav:hover span {
+  color: #ffffff !important;
+}
+
+.theme-dark .btn-home-nav {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #f8fafc;
 }
 
 @media (max-width: 991.98px) {

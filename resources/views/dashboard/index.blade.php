@@ -600,6 +600,9 @@
 
 @section('content')
 <div class="container-fluid py-4 px-3 px-md-4">
+    {{-- Central App Launcher Hub for All Roles --}}
+    @include('dashboard.partials.app_launcher')
+
   @if($isAdmin ?? false)
     {{-- Premium Dashboard Hero --}}
     @php
