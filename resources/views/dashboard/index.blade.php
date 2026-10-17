@@ -59,30 +59,62 @@
     {{-- Unified Hero Banner & Command Hub (Merged Block) --}}
     <div class="dashboard-hero animate-slide-up mb-4 p-4 rounded-4 shadow-sm position-relative overflow-hidden">
         <style>
-            #ensanAppSearch,
-            html.theme-dark #ensanAppSearch,
-            html[data-bs-theme="dark"] #ensanAppSearch,
-            body.theme-dark #ensanAppSearch,
-            [data-bs-theme="dark"] #ensanAppSearch {
+            .hero-search-wrap {
+                max-width: 440px;
+                margin-right: auto;
+            }
+            @media (max-width: 991px) {
+                .hero-search-wrap {
+                    max-width: 100%;
+                    margin-top: 0.75rem;
+                }
+            }
+
+            .hero-clean-search,
+            #ensanAppSearch.hero-clean-search,
+            html.theme-dark #ensanAppSearch.hero-clean-search,
+            html[data-bs-theme="dark"] #ensanAppSearch.hero-clean-search,
+            body.theme-dark #ensanAppSearch.hero-clean-search,
+            [data-bs-theme="dark"] #ensanAppSearch.hero-clean-search {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
-                color: #0f172a !important;
-                -webkit-text-fill-color: #0f172a !important;
-                border: 0 !important;
-                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15) !important;
+                color: #1e293b !important;
+                -webkit-text-fill-color: #1e293b !important;
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 12px !important;
+                padding: 0.75rem 2.85rem 0.75rem 1.25rem !important;
+                height: 48px !important;
+                font-size: 0.95rem !important;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+                transition: all 0.25s ease;
             }
-            #ensanAppSearch::placeholder {
+
+            #ensanAppSearch.hero-clean-search::placeholder {
                 color: #64748b !important;
                 -webkit-text-fill-color: #64748b !important;
                 opacity: 0.9 !important;
+                font-size: 0.92rem !important;
             }
-            #ensanAppSearch:focus {
+
+            #ensanAppSearch.hero-clean-search:focus {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
                 color: #0f172a !important;
                 -webkit-text-fill-color: #0f172a !important;
-                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.45) !important;
+                border-color: #10b981 !important;
+                box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25) !important;
                 outline: none !important;
+            }
+
+            .hero-search-icon {
+                position: absolute;
+                right: 1.1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #059669 !important;
+                font-size: 1.15rem;
+                pointer-events: none;
+                z-index: 3;
             }
 
             /* Force all Hero texts and labels to be pure brilliant white in both light and dark mode */
@@ -150,18 +182,12 @@
                 </div>
             </div>
 
-            {{-- Integrated Search Box on the Left/Hero (Always Solid White in Dark and Light) --}}
+            {{-- Clean Standalone Search Box Matching Navbar Style (Image 2) --}}
             <div class="col-lg-5 col-md-12">
-                <div class="p-3 p-md-4 rounded-4 border border-white border-opacity-15 shadow-sm" style="background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-                    <label for="ensanAppSearch" class="text-white small fw-bold mb-2 d-flex align-items-center justify-content-between">
-                        <span><i class="bi bi-search me-1"></i> بحث سريع في الأقسام والخدمات</span>
-                        <kbd class="bg-white bg-opacity-20 text-white px-2 py-0.5 rounded small">اضغط / للبحث</kbd>
-                    </label>
-                    <div class="position-relative">
-                        <input type="text" id="ensanAppSearch" class="form-control rounded-pill px-4 py-2.5 shadow-sm" 
-                               style="background-color: #ffffff !important; background: #ffffff !important; color: #0f172a !important;"
-                               placeholder="ابحث عن متبرعين، كفالات، تقارير، إعدادات..." autocomplete="off">
-                    </div>
+                <div class="position-relative hero-search-wrap">
+                    <input type="text" id="ensanAppSearch" class="form-control hero-clean-search" 
+                           placeholder="ابحث عن تقارير، متبرعين، أو مهام..." autocomplete="off">
+                    <i class="bi bi-search hero-search-icon"></i>
                 </div>
             </div>
         </div>
