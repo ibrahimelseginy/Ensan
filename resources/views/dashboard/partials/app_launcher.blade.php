@@ -352,6 +352,61 @@
     transform: translateX(-4px);
     color: #10b981;
 }
+/* Category Filter Pills */
+.launcher-categories-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    scrollbar-width: none;
+}
+.launcher-categories-bar::-webkit-scrollbar { display: none; }
+.launcher-cat-btn {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: var(--text-main);
+    padding: 0.55rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 1 !important;
+}
+.launcher-cat-btn:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    transform: translateY(-2px);
+}
+.launcher-cat-btn.active {
+    background: #10b981 !important;
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+}
+.theme-dark .launcher-cat-btn {
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc;
+}
+.theme-dark .launcher-cat-btn:hover {
+    background: #27374f !important;
+}
+.theme-dark .launcher-cat-btn.active {
+    background: #10b981 !important;
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+}
+
 </style>
 
 <div class="ensan-launcher-section animate-slide-up">
@@ -369,8 +424,30 @@
 
         <div class="launcher-search-box">
             <i class="bi bi-search launcher-search-icon"></i>
-            <input type="text" id="ensanAppSearch" class="launcher-search-input" placeholder="ابحث في الأقسام والخدمات..." autocomplete="off">
+            <input type="text" id="ensanAppSearch" class="launcher-search-input" placeholder="ابحث في الأقسام والخدمات... (أو اضغط / للبحث السريع)" autocomplete="off">
         </div>
+    </div>
+
+    {{-- Categories / Domain Tabs --}}
+    <div class="launcher-categories-bar mb-4">
+        <button type="button" class="launcher-cat-btn active" data-category="all">
+            <i class="bi bi-grid-fill"></i> جميع الأقسام
+        </button>
+        <button type="button" class="launcher-cat-btn" data-category="finance">
+            <i class="bi bi-cash-stack"></i> التبرعات والمالية
+        </button>
+        <button type="button" class="launcher-cat-btn" data-category="operations">
+            <i class="bi bi-truck"></i> العمليات واللوجيستك
+        </button>
+        <button type="button" class="launcher-cat-btn" data-category="hr">
+            <i class="bi bi-people-fill"></i> الموارد البشرية
+        </button>
+        <button type="button" class="launcher-cat-btn" data-category="digital">
+            <i class="bi bi-globe2"></i> الرقمية والموقع
+        </button>
+        <button type="button" class="launcher-cat-btn" data-category="admin">
+            <i class="bi bi-shield-check"></i> الإدارة والنظام
+        </button>
     </div>
 
     {{-- Main App Cards Grid --}}
@@ -378,7 +455,7 @@
 
         {{-- 0. المؤشرات والتحليلات (Dashboard Analytics & KPIs) --}}
         @if($u && $u->hasPermission('dashboard.view'))
-        <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
+        <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-category="finance digital" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.45);">
                 <i class="bi bi-speedometer2"></i>
             </div>
@@ -389,7 +466,7 @@
 
         {{-- 1. المتبرعون --}}
         @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('donors.view'))
-        <a href="{{ route('donors.index') }}" class="ensan-app-card" data-title="المتبرعون" data-keywords="متبرع تبرع donors كفلاء">
+        <a href="{{ route('donors.index') }}" class="ensan-app-card" data-category="finance" data-title="المتبرعون" data-keywords="متبرع تبرع donors كفلاء">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.45);">
                 <i class="bi bi-people-fill"></i>
             </div>
@@ -400,7 +477,7 @@
 
         {{-- 2. التبرعات --}}
         @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('donations.view'))
-        <a href="{{ route('donations.index') }}" class="ensan-app-card" data-title="التبرعات" data-keywords="تبرعات إيصالات كاش عيني donations">
+        <a href="{{ route('donations.index') }}" class="ensan-app-card" data-category="finance" data-title="التبرعات" data-keywords="تبرعات إيصالات كاش عيني donations">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.45);">
                 <i class="bi bi-gift-fill"></i>
             </div>
@@ -411,7 +488,7 @@
 
         {{-- 3. المستفيدون --}}
         @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('beneficiaries.view'))
-        <a href="{{ route('beneficiaries.index') }}" class="ensan-app-card" data-title="المستفيدون" data-keywords="مستفيد حالات أسر أيتام beneficiaries">
+        <a href="{{ route('beneficiaries.index') }}" class="ensan-app-card" data-category="operations finance" data-title="المستفيدون" data-keywords="مستفيد حالات أسر أيتام beneficiaries">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #e11d48, #f43f5e); box-shadow: 0 10px 20px -5px rgba(225, 29, 72, 0.45);">
                 <i class="bi bi-person-heart"></i>
             </div>
@@ -422,7 +499,7 @@
 
         {{-- 4. اللوجيستك (Popup) --}}
         @if($u && ($u->hasPermission('manage_logistics') || $u->hasPermission('delegates.view') || $u->hasPermission('travel_routes.view') || $u->hasPermission('trips.view') || $u->hasPermission('kafr_el_sheikh_deliveries.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppLogistics" data-title="اللوجيستك" data-keywords="مناديب خطوط سير رحلات كفر الشيخ طنطا logistics">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppLogistics" data-category="operations" data-title="اللوجيستك" data-keywords="مناديب خطوط سير رحلات كفر الشيخ طنطا logistics">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #ea580c, #f97316); box-shadow: 0 10px 20px -5px rgba(234, 88, 12, 0.45);">
                 <i class="bi bi-signpost-2-fill"></i>
             </div>
@@ -433,7 +510,7 @@
 
         {{-- 5. الموارد البشرية HR (Popup) --}}
         @if($u && ($u->hasRole('hr') || $u->hasPermission('volunteers.view') || $u->hasPermission('users.view') || $u->hasPermission('hr.evaluations') || $u->hasPermission('payrolls.view') || $u->hasPermission('tasks.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.45);">
                 <i class="bi bi-person-lines-fill"></i>
             </div>
@@ -444,7 +521,7 @@
 
         {{-- 6. الحسابات والمالية (Popup) --}}
         @if($u && ($u->hasPermission('treasuries.view') || $u->hasPermission('closures.view') || $u->hasPermission('accounts.view') || $u->hasPermission('expenses.view') || $u->roles->contains('key', 'finance')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppFinance" data-title="الحسابات والمالية" data-keywords="خزائن مصروفات إيرادات قيود إغلاق يوميات شجرة حسابات finance">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppFinance" data-category="finance" data-title="الحسابات والمالية" data-keywords="خزائن مصروفات إيرادات قيود إغلاق يوميات شجرة حسابات finance">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-calculator-fill"></i>
             </div>
@@ -455,7 +532,7 @@
 
         {{-- 7. إدارة المخازن (Popup) --}}
         @if($u && ($u->hasPermission('inventory.view') || $u->hasPermission('items.view') || $u->hasPermission('suppliers.view') || $u->hasPermission('inventory_transactions.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppInventory" data-title="إدارة المخازن" data-keywords="مستودعات أصناف موردين حركات مخزون جرد inventory">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppInventory" data-category="operations" data-title="إدارة المخازن" data-keywords="مستودعات أصناف موردين حركات مخزون جرد inventory">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.45);">
                 <i class="bi bi-boxes"></i>
             </div>
@@ -466,7 +543,7 @@
 
         {{-- 8. إدارة المشاريع --}}
         @if($u && !$u->hasRole('hr') && !$u->hasRole('marketer') && ($u->hasPermission('projects.view') || $u->hasPermission('manage_project')))
-        <a href="{{ route('projects.index') }}" class="ensan-app-card" data-title="إدارة المشاريع" data-keywords="مشاريع إعمار آبار تنموية projects">
+        <a href="{{ route('projects.index') }}" class="ensan-app-card" data-category="operations" data-title="إدارة المشاريع" data-keywords="مشاريع إعمار آبار تنموية projects">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.45);">
                 <i class="bi bi-kanban-fill"></i>
             </div>
@@ -477,7 +554,7 @@
 
         {{-- 9. حملات موسمية (Popup) --}}
         @if($u && ($u->hasPermission('campaigns.view') || $u->hasPermission('ramadan_bags.view') || $u->hasPermission('ramadan_iftars.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCampaigns" data-title="حملات موسمية" data-keywords="حملات رمضان شنط إفطار أضاحي شتاء campaigns">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCampaigns" data-category="operations finance" data-title="حملات موسمية" data-keywords="حملات رمضان شنط إفطار أضاحي شتاء campaigns">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.45);">
                 <i class="bi bi-megaphone-fill"></i>
             </div>
@@ -488,7 +565,7 @@
 
         {{-- 10. الشراكات والعضويات (Popup) --}}
         @if($u && ($u->hasPermission('manage_specialized_services') || $u->hasPermission('school_collaborations.view') || $u->hasPermission('memberships.view') || $u->hasPermission('oncology_medicine_reps.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-title="الشراكات والعضوية" data-keywords="مدارس جامعات عضويات اشتراكات أدوية أورام partnerships">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="hr" data-title="الشراكات والعضوية" data-keywords="مدارس جامعات عضويات اشتراكات أدوية أورام partnerships">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0891b2, #06b6d4); box-shadow: 0 10px 20px -5px rgba(8, 145, 178, 0.45);">
                 <i class="bi bi-diagram-3-fill"></i>
             </div>
@@ -499,7 +576,7 @@
 
         {{-- 11. الخدمات العامة (Popup) --}}
         @if($u && ($u->hasPermission('reception.view') || $u->hasPermission('guest_houses.view') || $u->hasPermission('workspaces.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppServices" data-title="الخدمات العامة" data-keywords="استقبال دار ضيافة مساحات عمل services">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppServices" data-category="operations" data-title="الخدمات العامة" data-keywords="استقبال دار ضيافة مساحات عمل services">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0284c7, #38bdf8); box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.45);">
                 <i class="bi bi-briefcase-fill"></i>
             </div>
@@ -510,7 +587,7 @@
 
         {{-- 12. الزيارات الميدانية --}}
         @if($u && $u->hasPermission('beneficiaries.view'))
-        <a href="{{ route('visits.index') }}" class="ensan-app-card" data-title="الزيارات الميدانية" data-keywords="زيارات باحثين فحص ميداني visits">
+        <a href="{{ route('visits.index') }}" class="ensan-app-card" data-category="operations" data-title="الزيارات الميدانية" data-keywords="زيارات باحثين فحص ميداني visits">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #db2777, #ec4899); box-shadow: 0 10px 20px -5px rgba(219, 39, 119, 0.45);">
                 <i class="bi bi-geo-alt-fill"></i>
             </div>
@@ -521,7 +598,7 @@
 
         {{-- 13. الموقع الإلكتروني (Popup) --}}
         @if($u && ($u->hasPermission('website.view') || $u->hasPermission('website.settings.view_edit') || $u->hasPermission('website.headquarters.view') || $u->hasPermission('website.partners.view') || $u->hasPermission('website.board.view') || $u->hasPermission('website.content.view_edit')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppWebsite" data-title="الموقع الإلكتروني" data-keywords="موقع إعدادات شركاء مجلس أمناء تبرعات صفحات website">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppWebsite" data-category="digital" data-title="الموقع الإلكتروني" data-keywords="موقع إعدادات شركاء مجلس أمناء تبرعات صفحات website">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #4338ca, #6366f1); box-shadow: 0 10px 20px -5px rgba(67, 56, 202, 0.45);">
                 <i class="bi bi-globe2"></i>
             </div>
@@ -532,7 +609,7 @@
 
         {{-- 14. تطبيق الموبايل (Popup) --}}
         @if($u && ($u->hasPermission('mobile.view') || $u->hasPermission('mobile.home_content.view_edit') || $u->hasPermission('mobile.news.view') || $u->hasPermission('mobile.volunteer_requests.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppMobile" data-title="تطبيق الموبايل" data-keywords="تطبيق موبايل إشعارات حجوزات تبرعات mobile app">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppMobile" data-category="digital" data-title="تطبيق الموبايل" data-keywords="تطبيق موبايل إشعارات حجوزات تبرعات mobile app">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #c026d3, #d946ef); box-shadow: 0 10px 20px -5px rgba(192, 38, 211, 0.45);">
                 <i class="bi bi-phone-fill"></i>
             </div>
@@ -543,7 +620,7 @@
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
         @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('change_requests.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل settings admin">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل settings admin">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
@@ -554,7 +631,7 @@
 
         {{-- 16. الشكاوى والمقترحات --}}
         @if($u && ($u->hasPermission('complaints.view') || $u->hasPermission('complaints.create') || $u->roles->contains('key', 'finance')))
-        <a href="{{ route('complaints.index') }}" class="ensan-app-card" data-title="الشكاوى والمقترحات" data-keywords="شكاوى مقترحات تتبع complaints">
+        <a href="{{ route('complaints.index') }}" class="ensan-app-card" data-category="admin" data-title="الشكاوى والمقترحات" data-keywords="شكاوى مقترحات تتبع complaints">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.45);">
                 <i class="bi bi-chat-dots-fill"></i>
             </div>
@@ -565,7 +642,7 @@
 
         {{-- 17. التقارير الشاملة --}}
         @if($u && ($u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
-        <a href="{{ route('reports.index') }}" class="ensan-app-card" data-title="التقارير الشاملة" data-keywords="تقارير مالية إحصاءات طباعة تصدير reports">
+        <a href="{{ route('reports.index') }}" class="ensan-app-card" data-category="finance digital admin" data-title="التقارير الشاملة" data-keywords="تقارير مالية إحصاءات طباعة تصدير reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #059669, #34d399); box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.45);">
                 <i class="bi bi-bar-chart-fill"></i>
             </div>
@@ -574,6 +651,18 @@
         </a>
         @endif
 
+    </div>
+
+    {{-- Empty Search State --}}
+    <div id="launcherEmptyState" class="text-center py-5 d-none bg-card rounded-4 border p-4 my-3">
+        <div class="p-3 rounded-circle bg-warning-subtle text-warning d-inline-flex mb-3">
+            <i class="bi bi-search fs-2"></i>
+        </div>
+        <h5 class="fw-bold mb-1 text-main">لم يتم العثور على أي قسم يطابق بحثك</h5>
+        <p class="text-muted small mb-3">تأكد من كتابة الكلمة بشكل صحيح، أو جرّب اختيار تصنيف آخر.</p>
+        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-4" id="clearSearchBtn">
+            إعادة تعيين البحث
+        </button>
     </div>
 </div>
 
@@ -1600,29 +1689,74 @@
     </div>
 </div>
 
-{{-- Real-time Client-side Search Script --}}
+{{-- Real-time Client-side Search & Category Filtering Script --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('ensanAppSearch');
     const cards = document.querySelectorAll('#ensanAppsGrid .ensan-app-card');
+    const catButtons = document.querySelectorAll('.launcher-cat-btn');
+    const emptyState = document.getElementById('launcherEmptyState');
+    const clearBtn = document.getElementById('clearSearchBtn');
 
-    if (!searchInput || !cards.length) return;
+    let activeCategory = 'all';
 
-    searchInput.addEventListener('input', function() {
-        const query = this.value.trim().toLowerCase();
-        
+    function applyFilter() {
+        const query = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+        let visibleCount = 0;
+
         cards.forEach(card => {
             const title = (card.getAttribute('data-title') || '').toLowerCase();
             const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+            const categories = (card.getAttribute('data-category') || '').split(' ');
 
-            if (!query || title.includes(query) || keywords.includes(query)) {
+            const matchesQuery = !query || title.includes(query) || keywords.includes(query);
+            const matchesCat = activeCategory === 'all' || categories.includes(activeCategory);
+
+            if (matchesQuery && matchesCat) {
                 card.style.display = 'flex';
                 card.style.opacity = '1';
-                card.style.transform = '';
+                visibleCount++;
             } else {
                 card.style.display = 'none';
             }
         });
+
+        if (emptyState) {
+            emptyState.classList.toggle('d-none', visibleCount > 0);
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilter);
+    }
+
+    catButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            catButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeCategory = this.getAttribute('data-category');
+            applyFilter();
+        });
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (searchInput) searchInput.value = '';
+            activeCategory = 'all';
+            catButtons.forEach(b => b.classList.remove('active'));
+            const allBtn = document.querySelector('.launcher-cat-btn[data-category="all"]');
+            if (allBtn) allBtn.classList.add('active');
+            applyFilter();
+        });
+    }
+
+    // Keyboard shortcut: Press / to search anywhere
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) && searchInput && document.activeElement !== searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
     });
 });
 </script>

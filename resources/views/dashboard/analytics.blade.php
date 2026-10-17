@@ -601,7 +601,7 @@
 @section('content')
 <div class="container-fluid py-4 px-3 px-md-4">
     {{-- Back to App Launcher Navigation Bar --}}
-    <div class="d-flex align-items-center justify-content-between mb-4 bg-card p-3 rounded-4 border animate-slide-up">
+    <div class="d-flex align-items-center justify-content-between mb-3 bg-card p-3 rounded-4 border animate-slide-up">
         <div class="d-flex align-items-center gap-3">
             <a href="{{ route('dashboard.index') }}" class="btn btn-primary rounded-pill px-3 py-1 fw-bold d-inline-flex align-items-center gap-2">
                 <i class="bi bi-grid-fill"></i>
@@ -612,6 +612,25 @@
         <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold font-monospace">
             {{ date('Y-m-d') }}
         </span>
+    </div>
+
+    {{-- Quick Section Navigation for Analytics --}}
+    <div class="d-flex align-items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none animate-slide-up" style="scrollbar-width: none;">
+        <a href="#kpiTargetSection" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+            <i class="bi bi-bullseye text-primary"></i> المستهدف المالي
+        </a>
+        <a href="#statsRowSection" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+            <i class="bi bi-bar-chart text-success"></i> الأرقام الرئيسية
+        </a>
+        <a href="#chartsRowSection" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+            <i class="bi bi-graph-up text-info"></i> حركة التبرعات
+        </a>
+        <a href="#alertsRadarSection" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+            <i class="bi bi-bell text-warning"></i> التنبيهات والرادار
+        </a>
+        <a href="#activeProjectsSection" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+            <i class="bi bi-kanban text-purple"></i> المشاريع النشطة
+        </a>
     </div>
 
   @if($isAdmin ?? false)
@@ -638,7 +657,7 @@
     </div>
 
     {{-- Executive KPIs & Monthly Targets (شريط إنجاز الهدف المالي والكفالات ومؤشرات الأداء الحيوية) --}}
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden kpi-target-card animate-slide-up">
+    <div id="kpiTargetSection" class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden kpi-target-card animate-slide-up">
       <div class="card-body p-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 border-bottom pb-3">
           <div>
@@ -687,7 +706,7 @@
     </div>
 
     {{-- Primary Stats Row --}}
-    <div class="row g-3 mb-4">
+    <div id="statsRowSection" class="row g-3 mb-4">
         <div class="col-6 col-lg animate-slide-up animate-delay-1">
             <a href="{{ route('donors.index') }}" class="stat-card stat-info text-decoration-none">
                 <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
@@ -776,7 +795,7 @@
     $maxVal = $maxVal > 0 ? $maxVal : 1; @endphp
     
     {{-- Charts Row --}}
-    <div class="row g-4 mb-4">
+    <div id="chartsRowSection" class="row g-4 mb-4">
       <div class="col-lg-8">
         <div class="chart-container h-100">
           <div class="chart-header">
@@ -840,7 +859,7 @@
     </div>
 
     {{-- Smart Alerts: Due Donors & Campaigns Radar --}}
-    <div class="row g-4 mb-4 mt-2">
+    <div id="alertsRadarSection" class="row g-4 mb-4 mt-2">
       {{-- 1. Smart Alerts: Upcoming Due Donors This Week (متبرعون حان موعد تبرعهم الشهري) --}}
       <div class="col-lg-5 animate-slide-up animate-delay-1">
         <div class="lux-dashboard-card h-100 d-flex flex-column">
@@ -1030,7 +1049,7 @@
     </div>
 
     {{-- Active Projects Financials Widget --}}
-    <div class="row g-4 mb-4">
+    <div id="activeProjectsSection" class="row g-4 mb-4">
       <div class="col-12 animate-slide-up">
         <div class="lux-dashboard-card h-100">
           <div class="lux-card-header">
