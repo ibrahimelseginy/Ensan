@@ -187,10 +187,11 @@
     }
 
     .brand-slogan {
-      font-size: 0.88rem;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.95rem;
+      color: #ecfdf5;
       margin: 0;
-      font-weight: 400;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
     /* Center Showcase Content */
@@ -205,6 +206,7 @@
       margin-bottom: 1.25rem;
       color: #ffffff;
       letter-spacing: -0.5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
     }
 
     .showcase-title span {
@@ -214,10 +216,12 @@
     }
 
     .showcase-desc {
-      font-size: 1.02rem;
-      line-height: 1.75;
-      color: rgba(255, 255, 255, 0.88);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #f8fafc;
+      font-weight: 500;
       margin-bottom: 2rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     /* Feature Cards */
@@ -231,56 +235,65 @@
       display: flex;
       align-items: center;
       gap: 1.15rem;
-      padding: 1rem 1.35rem;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 1.1rem 1.4rem;
+      background: rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 16px;
-      transition: transform 0.25s ease, background 0.25s ease;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
     }
 
     .feature-item:hover {
       transform: translateX(-6px);
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(0, 0, 0, 0.35);
+      border-color: rgba(52, 211, 153, 0.5);
     }
 
     .feature-icon-box {
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 12px;
       background: rgba(16, 185, 129, 0.35);
+      border: 1px solid rgba(110, 231, 183, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       color: #a7f3d0;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .feature-text-title {
-      font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 2px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      margin-bottom: 3px;
       color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .feature-text-sub {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #f1fdf6;
+      line-height: 1.5;
       margin: 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     }
 
     /* Showcase Quote Footer */
     .showcase-footer {
       padding-top: 1.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.16);
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #f8fafc;
       display: flex;
       align-items: center;
       gap: 0.65rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     /* ===================================================
