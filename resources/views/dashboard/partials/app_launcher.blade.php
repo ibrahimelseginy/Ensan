@@ -314,6 +314,17 @@
     {{-- Main App Cards Grid --}}
     <div class="ensan-apps-grid" id="ensanAppsGrid">
 
+        {{-- 0. المؤشرات والتحليلات (Dashboard Analytics & KPIs) --}}
+        @if($u && $u->hasPermission('dashboard.view'))
+        <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.45);">
+                <i class="bi bi-speedometer2"></i>
+            </div>
+            <div class="ensan-app-title">المؤشرات والتحليلات</div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-graph-up-arrow"></i> المستهدف والرسوم</span>
+        </a>
+        @endif
+
         {{-- 1. المتبرعون --}}
         @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('donors.view'))
         <a href="{{ route('donors.index') }}" class="ensan-app-card" data-title="المتبرعون" data-keywords="متبرع تبرع donors كفلاء">

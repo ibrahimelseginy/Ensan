@@ -23,6 +23,16 @@ final class DashboardWebController extends Controller
 {
     public function index()
     {
+        return $this->renderDashboard('dashboard.index');
+    }
+
+    public function analytics()
+    {
+        return $this->renderDashboard('dashboard.analytics');
+    }
+
+    private function renderDashboard(string $viewName)
+    {
         $donorsCount = Donor::count();
         $beneficiariesCount = Beneficiary::count();
         $warehousesCount = Warehouse::count();
@@ -1676,7 +1686,7 @@ final class DashboardWebController extends Controller
             ];
         }
 
-        return view('dashboard.index', compact(
+        return view($viewName, compact(
             'donorsCount',
             'beneficiariesCount',
             'warehousesCount',

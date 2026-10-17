@@ -98,9 +98,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // --- Core Dashboard ---
-    Route::middleware('permission:dashboard.view')
-        ->get('dashboard', [DashboardWebController::class, 'index'])
-        ->name('dashboard.index');
+    Route::middleware('permission:dashboard.view')->group(function () {
+        Route::get('dashboard', [DashboardWebController::class, 'index'])->name('dashboard.index');
+        Route::get('dashboard/analytics', [DashboardWebController::class, 'analytics'])->name('dashboard.analytics');
+    });
 
     Route::middleware('permission:notifications.view')
         ->get('notifications', [NotificationWebController::class, 'index'])
