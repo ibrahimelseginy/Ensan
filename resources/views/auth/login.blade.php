@@ -827,11 +827,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="form-footer">
-          <div class="security-badge">
-            <i class="bi bi-shield-check"></i>
-            <span>اتصال مشفر 256-bit</span>
-          </div>
+        <div class="form-footer" style="justify-content: center;">
           <div>
             جميع الحقوق محفوظة &copy; {{ date('Y') }}
           </div>
