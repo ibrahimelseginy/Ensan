@@ -255,14 +255,14 @@
             </a>
 
             <!-- Direct Call -->
-            <a href="tel:01556592017" class="btn-call-custom justify-content-center">
+            <a href="tel:01069388721" class="btn-call-custom justify-content-center">
               <i class="bi bi-telephone-fill fs-5"></i>
-              <span>اتصال هاتفي مباشر (01556592017)</span>
+              <span>اتصال هاتفي مباشر (01069388721)</span>
             </a>
 
             <!-- Copy Number -->
-            <button type="button" class="btn-copy-custom" onclick="copyPhoneNumber('01556592017')">
-              <i class="bi bi-clipboard me-1"></i> نسخ رقم الهاتف (01556592017)
+            <button type="button" class="btn-copy-custom" onclick="copyPhoneNumber('01069388721')">
+              <i class="bi bi-clipboard me-1"></i> نسخ رقم الاتصال (01069388721)
             </button>
           </div>
 
@@ -371,13 +371,15 @@
       تمت برمجة وتطوير النظام بواسطة 
       <strong class="text-primary">Ibrahim Elseginy</strong> &copy; {{ date('Y') }}
       <span class="mx-2">&bull;</span>
-      هاتف / واتساب: <a href="tel:01556592017" class="text-decoration-none fw-bold text-secondary">01556592017</a>
+      اتصال هاتفي: <a href="tel:01069388721" class="text-decoration-none fw-bold text-secondary">01069388721</a>
+      <span class="mx-2">&bull;</span>
+      واتساب: <a href="https://wa.me/201556592017" target="_blank" rel="noopener" class="text-decoration-none fw-bold text-success">01556592017</a>
     </div>
   </footer>
 
   <!-- Copy Toast Notification -->
   <div class="copy-toast" id="copyToast">
-    <i class="bi bi-check2-circle me-1 text-success"></i> تم نسخ رقم الهاتف (01556592017) بنجاح!
+    <i class="bi bi-check2-circle me-1 text-success"></i> تم نسخ رقم الاتصال (01069388721) بنجاح!
   </div>
 
   <script>
