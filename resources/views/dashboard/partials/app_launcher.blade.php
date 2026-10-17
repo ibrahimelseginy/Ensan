@@ -4,30 +4,36 @@
 
 <style>
 /* ==============================================================
- * ENSAN APP LAUNCHER & HUB STYLES
+ * ENSAN APP LAUNCHER & HUB STYLES (100% Solid Non-Transparent)
  * ============================================================== */
 .ensan-launcher-section {
     margin-bottom: 2.5rem;
 }
 
 .launcher-header-bar {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 20px;
     padding: 1.25rem 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
     margin-bottom: 1.75rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .theme-dark .launcher-header-bar {
-    background: #0f172a;
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    opacity: 1 !important;
 }
 
 .launcher-search-box {
@@ -41,18 +47,24 @@
     width: 100%;
     padding: 0.75rem 2.75rem 0.75rem 1rem;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg);
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
     color: var(--text-main);
     font-size: 0.95rem;
     font-weight: 500;
     transition: all 0.25s ease;
 }
 
+.theme-dark .launcher-search-input {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
 .launcher-search-input:focus {
     outline: none;
-    border-color: var(--primary, #10b981);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
 }
 
 .launcher-search-icon {
@@ -85,10 +97,11 @@
     }
 }
 
-/* App Card */
+/* App Card - 100% Solid Non-Transparent */
 .ensan-app-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 20px;
     padding: 1.4rem 1rem 1.2rem;
     text-align: center;
@@ -102,24 +115,31 @@
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
     min-height: 165px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .theme-dark .ensan-app-card {
-    background: linear-gradient(145deg, #131d31 0%, #0b1220 100%);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45) !important;
+    opacity: 1 !important;
 }
 
 .ensan-app-card:hover {
     transform: translateY(-6px);
-    border-color: rgba(16, 185, 129, 0.4);
-    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(16, 185, 129, 0.2);
+    border-color: #10b981 !important;
+    box-shadow: 0 16px 32px rgba(16, 185, 129, 0.2) !important;
 }
 
 .theme-dark .ensan-app-card:hover {
-    border-color: rgba(16, 185, 129, 0.5);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.3);
+    background: #24344d !important;
+    background-color: #24344d !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
 }
 
 .ensan-app-card:active {
@@ -139,6 +159,7 @@
     margin-bottom: 0.9rem;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
     flex-shrink: 0;
+    opacity: 1 !important;
 }
 
 .ensan-app-card:hover .ensan-app-icon {
@@ -167,53 +188,80 @@
     align-items: center;
     gap: 4px;
     transition: all 0.2s ease;
+    opacity: 1 !important;
 }
 
 .badge-sub {
-    background: rgba(16, 185, 129, 0.12);
-    color: #10b981;
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #10b981 !important;
 }
 
 .theme-dark .badge-sub {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: #34d399 !important;
 }
 
 .badge-direct {
-    background: rgba(148, 163, 184, 0.14);
-    color: var(--text-muted);
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: var(--text-muted) !important;
 }
 
 .ensan-app-card:hover .badge-sub {
-    background: #10b981;
-    color: #ffffff;
+    background: #10b981 !important;
+    color: #ffffff !important;
 }
 
-/* Modals Styling */
+/* Modals Styling - 100% Solid Non-Transparent */
 .ensan-sub-modal .modal-content {
     border-radius: 24px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
     overflow: hidden;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .theme-dark .ensan-sub-modal .modal-content {
-    background: #0f172a;
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+    background: #0f172a !important;
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8) !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .ensan-sub-modal .modal-header {
-    border-bottom: 1px solid var(--border);
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     padding: 1.25rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    opacity: 1 !important;
 }
 
 .theme-dark .ensan-sub-modal .modal-header {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: #131d31 !important;
+    background-color: #131d31 !important;
+    border-bottom: 1px solid #334155 !important;
+    opacity: 1 !important;
+}
+
+.ensan-sub-modal .modal-body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.theme-dark .ensan-sub-modal .modal-body {
+    background: #0b1120 !important;
+    background-color: #0b1120 !important;
+    opacity: 1 !important;
 }
 
 .ensan-sub-grid {
@@ -229,44 +277,58 @@
     }
 }
 
+/* Sub-Service Tiles - 100% Solid Non-Transparent */
 .ensan-sub-tile {
     display: flex;
     align-items: center;
     gap: 0.9rem;
-    padding: 0.9rem 1.1rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    padding: 1rem 1.2rem;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 16px;
     text-decoration: none !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
+    opacity: 1 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .theme-dark .ensan-sub-tile {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.08);
+    background: #1e293b !important;
+    background-color: #1e293b !important;
+    border: 1px solid #384968 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+    opacity: 1 !important;
 }
 
 .ensan-sub-tile:hover {
     transform: translateY(-2px);
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.4);
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.2) !important;
 }
 
 .theme-dark .ensan-sub-tile:hover {
-    background: rgba(16, 185, 129, 0.15);
-    border-color: rgba(16, 185, 129, 0.5);
+    background: #253554 !important;
+    background-color: #253554 !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
 }
 
 .ensan-sub-tile-icon {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     flex-shrink: 0;
+    opacity: 1 !important;
 }
 
 .ensan-sub-tile-content {
