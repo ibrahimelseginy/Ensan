@@ -6400,9 +6400,22 @@ body.theme-dark .ensan-app-card,
 body[data-bs-theme="dark"] .ensan-app-card,
 .theme-dark .ensan-app-card,
 [data-bs-theme="dark"] .ensan-app-card {
-  background-color: #1e293b !important;
-  background: #1e293b !important;
-  border-color: #334155 !important;
+  background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+  background-color: #0b1220 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.theme-dark .ensan-app-card:hover,
+html[data-bs-theme="dark"] .ensan-app-card:hover,
+body.theme-dark .ensan-app-card:hover,
+body[data-bs-theme="dark"] .ensan-app-card:hover,
+.theme-dark .ensan-app-card:hover,
+[data-bs-theme="dark"] .ensan-app-card:hover {
+  background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+  background-color: #0e1728 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 16px 36px rgba(16, 185, 129, 0.25) !important;
 }
 
 html.theme-dark .ensan-sub-modal .modal-content,

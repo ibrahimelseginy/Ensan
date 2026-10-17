@@ -121,11 +121,15 @@
     -webkit-backdrop-filter: none !important;
 }
 
-.theme-dark .ensan-app-card {
-    background: #1e293b !important;
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45) !important;
+.theme-dark .ensan-app-card,
+html.theme-dark .ensan-app-card,
+html[data-bs-theme="dark"] .ensan-app-card,
+body.theme-dark .ensan-app-card,
+[data-bs-theme="dark"] .ensan-app-card {
+    background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+    background-color: #0b1220 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
     opacity: 1 !important;
 }
 
@@ -135,11 +139,15 @@
     box-shadow: 0 14px 28px rgba(16, 185, 129, 0.2) !important;
 }
 
-.theme-dark .ensan-app-card:hover {
-    background: #24344d !important;
-    background-color: #24344d !important;
+.theme-dark .ensan-app-card:hover,
+html.theme-dark .ensan-app-card:hover,
+html[data-bs-theme="dark"] .ensan-app-card:hover,
+body.theme-dark .ensan-app-card:hover,
+[data-bs-theme="dark"] .ensan-app-card:hover {
+    background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+    background-color: #0e1728 !important;
     border-color: #10b981 !important;
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 18px 36px rgba(16, 185, 129, 0.28) !important;
 }
 
 .ensan-app-card:active {
@@ -438,6 +446,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
 
 <div class="ensan-launcher-section animate-slide-up">
     {{-- Header Bar with Search & Counter --}}
+    @if(!isset($hideSearchHeader) || !$hideSearchHeader)
     <div class="launcher-header-bar">
         <div class="d-flex align-items-center gap-3">
             <div class="p-2 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 46px; height: 46px;">
@@ -454,6 +463,7 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
             <input type="text" id="ensanAppSearch" class="launcher-search-input" placeholder="ابحث في الأقسام والخدمات... (أو اضغط / للبحث السريع)" autocomplete="off">
         </div>
     </div>
+    @endif
 
     {{-- Categories / Domain Tabs --}}
     <div class="launcher-categories-bar mb-4">

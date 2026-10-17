@@ -2273,10 +2273,20 @@
               <span class="fw-800 text-primary">مؤسسة إنسان الخيرية</span>
             @endif
           </a>
-          <a href="{{ route('dashboard.index') }}" class="btn-home-nav d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill" title="الرجوع لصفحة الأيقونات الرئيسية">
-            <i class="bi bi-grid-fill text-primary fs-5"></i>
-            <span class="fw-bold fs-7 d-none d-sm-inline">الرئيسية</span>
-          </a>
+          @if(request()->routeIs('dashboard.index'))
+            <a href="#ensanAppsGrid" class="btn-home-nav d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill" title="لوحة الأيقونات الرئيسية">
+              <i class="bi bi-grid-fill text-primary fs-5"></i>
+              <span class="fw-bold fs-7 d-none d-sm-inline">الرئيسية</span>
+            </a>
+          @else
+            <button type="button" class="btn-home-nav d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill border-0" 
+                    data-bs-toggle="modal" data-bs-target="#globalAppLauncherModal" 
+                    id="btnGlobalLauncherNav"
+                    title="فتح لوحة الأيقونات والتطبيقات (سريعة)">
+              <i class="bi bi-grid-fill text-primary fs-5"></i>
+              <span class="fw-bold fs-7 d-none d-sm-inline">الرئيسية</span>
+            </button>
+          @endif
         </div>
 
         {{-- Center: Search --}}
@@ -3424,6 +3434,79 @@
   {{-- Universal Print Preview Component & Script --}}
   @include('components.universal_print_preview')
   <script src="{{ asset('js/print-preview.js') }}?v={{ file_exists(public_path('js/print-preview.js')) ? filemtime(public_path('js/print-preview.js')) : time() }}"></script>
+
+  @if(!request()->routeIs('dashboard.index') && auth()->check())
+  {{-- Global In-Page App Launcher Modal --}}
+  <div class="modal fade" id="globalAppLauncherModal" tabindex="-1" aria-labelledby="globalAppLauncherModalLabel" aria-hidden="true" style="z-index: 1055;">
+      <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden" style="background-color: var(--bs-body-bg, #0f172a);">
+              <div class="modal-header border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center gap-3">
+                      <div class="p-2 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                          <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+                      </div>
+                      <div>
+                          <h5 class="modal-title fw-bold mb-0 text-main" id="globalAppLauncherModalLabel">بوابة التطبيقات والخدمات</h5>
+                          <small class="text-muted">انتقل لأي قسم مباشرة أو استعرض خدماته الفرعية دون مغادرة صفحتك الحالية</small>
+                      </div>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                      <a href="{{ route('dashboard.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold">
+                          <i class="bi bi-box-arrow-up-right me-1"></i> فتح كصفحة كاملة
+                      </a>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+              </div>
+              <div class="modal-body p-3 p-md-4">
+                  @include('dashboard.partials.app_launcher')
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const launcherBtn = document.getElementById('btnGlobalLauncherNav');
+      const launcherModalEl = document.getElementById('globalAppLauncherModal');
+      let hoverTimeout = null;
+
+      if (launcherBtn && launcherModalEl) {
+          // Hover support (opens on 300ms hover)
+          launcherBtn.addEventListener('mouseenter', function() {
+              hoverTimeout = setTimeout(function() {
+                  if (window.bootstrap && window.bootstrap.Modal) {
+                      const modal = bootstrap.Modal.getOrCreateInstance(launcherModalEl);
+                      modal.show();
+                  }
+              }, 300);
+          });
+
+          launcherBtn.addEventListener('mouseleave', function() {
+              if (hoverTimeout) clearTimeout(hoverTimeout);
+          });
+      }
+
+      // Handle sub-modals opened from within global launcher modal seamlessly
+      if (launcherModalEl) {
+          document.querySelectorAll('.ensan-sub-modal').forEach(function(subModal) {
+              subModal.addEventListener('show.bs.modal', function() {
+                  const globalInstance = bootstrap.Modal.getInstance(launcherModalEl);
+                  if (globalInstance && launcherModalEl.classList.contains('show')) {
+                      globalInstance.hide();
+                      const returnHandler = function() {
+                          subModal.removeEventListener('hidden.bs.modal', returnHandler);
+                          setTimeout(function() {
+                              bootstrap.Modal.getOrCreateInstance(launcherModalEl).show();
+                          }, 150);
+                      };
+                      subModal.addEventListener('hidden.bs.modal', returnHandler);
+                  }
+              });
+          });
+      }
+  });
+  </script>
+  @endif
 
   @yield('scripts')
 </body>
