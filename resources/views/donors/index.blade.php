@@ -314,7 +314,7 @@
 
 @section('content')
 {{-- Premium Dashboard Hero --}}
-<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%);">
+<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #cf6a8b 0%, #b24d6f 50%, #923251 100%); box-shadow: 0 10px 30px -10px rgba(178, 77, 111, 0.45);">
     <div class="hero-content">
         <div class="hero-greeting">إدارة الموارد ❤️</div>
         <h1 class="hero-title">المتبرعون</h1>
