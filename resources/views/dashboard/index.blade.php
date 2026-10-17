@@ -67,19 +67,59 @@
                 background: #ffffff !important;
                 background-color: #ffffff !important;
                 color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
                 border: 0 !important;
                 box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15) !important;
             }
             #ensanAppSearch::placeholder {
                 color: #64748b !important;
+                -webkit-text-fill-color: #64748b !important;
                 opacity: 0.9 !important;
             }
             #ensanAppSearch:focus {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
                 color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
                 box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.45) !important;
                 outline: none !important;
+            }
+
+            /* Force all Hero texts and labels to be pure brilliant white in both light and dark mode */
+            .dashboard-hero h2,
+            .dashboard-hero .hero-title,
+            .dashboard-hero .text-white,
+            .dashboard-hero .text-white-50,
+            .dashboard-hero label,
+            .dashboard-hero label span,
+            .dashboard-hero .badge:not(.bg-white),
+            .dashboard-hero .badge:not(.bg-white) span,
+            .dashboard-hero .hero-greeting > span:last-child,
+            body:not(.theme-dark) .dashboard-hero h2,
+            body:not(.theme-dark) .dashboard-hero .hero-title,
+            body:not(.theme-dark) .dashboard-hero .text-white,
+            body:not(.theme-dark) .dashboard-hero .text-white-50,
+            body:not(.theme-dark) .dashboard-hero label,
+            body:not(.theme-dark) .dashboard-hero label span,
+            body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white),
+            body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white) span,
+            body:not(.theme-dark) .dashboard-hero .hero-greeting > span:last-child {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+            }
+
+            .dashboard-hero .badge.bg-dark {
+                background: rgba(0, 0, 0, 0.35) !important;
+                background-color: rgba(0, 0, 0, 0.35) !important;
+                border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            }
+
+            .dashboard-hero .badge.bg-white,
+            body:not(.theme-dark) .dashboard-hero .badge.bg-white {
+                background-color: #ffffff !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
             }
         </style>
 

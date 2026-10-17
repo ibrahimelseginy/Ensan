@@ -1302,7 +1302,16 @@
           color: var(--ws-text-primary) !important;
       }
       body:not(.theme-dark) .premium-hero-sleek .text-white,
-      body:not(.theme-dark) .premium-hero-sleek .text-white-50 {
+      body:not(.theme-dark) .premium-hero-sleek .text-white-50,
+      body:not(.theme-dark) .dashboard-hero .text-white,
+      body:not(.theme-dark) .dashboard-hero .text-white-50,
+      body:not(.theme-dark) .dashboard-hero h1,
+      body:not(.theme-dark) .dashboard-hero h2,
+      body:not(.theme-dark) .dashboard-hero p,
+      body:not(.theme-dark) .dashboard-hero label,
+      body:not(.theme-dark) .dashboard-hero .hero-title,
+      body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white),
+      body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white) span {
           color: #fff !important;
       }
       body:not(.theme-dark) .role-pill-premium {
