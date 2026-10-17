@@ -2573,7 +2573,16 @@
             </div>
           @endif
         </div>
-        <p class="mb-0 fw-medium text-secondary">جميع الحقوق محفوظة مؤسسة إنسان {{ date('Y') }} &copy;</p>
+        <p class="mb-1 fw-medium text-secondary">جميع الحقوق محفوظة مؤسسة إنسان {{ date('Y') }} &copy;</p>
+        <div class="developer-credit mt-2 d-flex align-items-center justify-content-center flex-wrap gap-2">
+          <span class="text-muted">تطوير النظام:</span>
+          <a href="{{ route('developer.info') }}" class="fw-bold text-decoration-none px-2 py-1 rounded" style="background: rgba(13,110,253,0.1); color: #0d6efd;">
+            <i class="bi bi-code-slash me-1"></i> by @Ibrahim Elseginy
+          </a>
+          <a href="https://wa.me/201556592017" target="_blank" rel="noopener" class="fw-semibold text-decoration-none px-2 py-1 rounded text-success" style="background: rgba(25,135,84,0.1);">
+            <i class="bi bi-whatsapp me-1"></i> 01556592017
+          </a>
+        </div>
       </div>
     </footer>
   </div>

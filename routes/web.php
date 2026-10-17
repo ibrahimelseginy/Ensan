@@ -672,3 +672,8 @@ Route::get('/storage/{path}', function ($path) {
     $response->header("Content-Type", $type);
     return $response;
 })->where('path', '.*');
+
+// Developer Information Route
+Route::get('developer', function () {
+    return view('developer.index');
+})->name('developer.info');

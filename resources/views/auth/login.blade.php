@@ -827,9 +827,18 @@
         </div>
 
         <!-- Footer -->
-        <div class="form-footer" style="justify-content: center;">
+        <div class="form-footer flex-column gap-2 text-center" style="justify-content: center;">
           <div>
-            جميع الحقوق محفوظة &copy; {{ date('Y') }}
+            جميع الحقوق محفوظة مؤسسة إنسان &copy; {{ date('Y') }}
+          </div>
+          <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap" style="font-size: 0.82rem;">
+            <a href="{{ route('developer.info') }}" class="fw-bold text-decoration-none" style="color: var(--primary-color);">
+              <i class="bi bi-code-slash me-1"></i> by @Ibrahim Elseginy
+            </a>
+            <span class="text-muted">&bull;</span>
+            <a href="https://wa.me/201556592017" target="_blank" rel="noopener" class="text-success text-decoration-none fw-semibold">
+              <i class="bi bi-whatsapp me-1"></i> 01556592017
+            </a>
           </div>
         </div>
 
