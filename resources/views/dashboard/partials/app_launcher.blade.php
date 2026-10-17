@@ -80,20 +80,20 @@
 /* App Grid */
 .ensan-apps-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.9rem;
 }
 
 @media (max-width: 576px) {
     .ensan-apps-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.85rem;
+        gap: 0.75rem;
     }
 }
 
 @media (min-width: 1200px) {
     .ensan-apps-grid {
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     }
 }
 
@@ -102,8 +102,8 @@
     background: #ffffff !important;
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 20px;
-    padding: 1.4rem 1rem 1.2rem;
+    border-radius: 16px;
+    padding: 1.1rem 0.75rem 0.95rem;
     text-align: center;
     text-decoration: none !important;
     display: flex;
@@ -114,7 +114,7 @@
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
-    min-height: 165px;
+    min-height: 135px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
@@ -130,16 +130,16 @@
 }
 
 .ensan-app-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
     border-color: #10b981 !important;
-    box-shadow: 0 16px 32px rgba(16, 185, 129, 0.2) !important;
+    box-shadow: 0 14px 28px rgba(16, 185, 129, 0.2) !important;
 }
 
 .theme-dark .ensan-app-card:hover {
     background: #24344d !important;
     background-color: #24344d !important;
     border-color: #10b981 !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.6) !important;
 }
 
 .ensan-app-card:active {
@@ -148,15 +148,15 @@
 
 /* Icon Container */
 .ensan-app-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.85rem;
+    font-size: 1.45rem;
     color: #ffffff;
-    margin-bottom: 0.9rem;
+    margin-bottom: 0.65rem;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
     flex-shrink: 0;
     opacity: 1 !important;
@@ -168,10 +168,10 @@
 
 /* Typography */
 .ensan-app-title {
-    font-size: 1.02rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--text-main);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.25rem;
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 1;
@@ -180,9 +180,9 @@
 }
 
 .ensan-app-badge {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    padding: 0.2rem 0.65rem;
+    padding: 0.15rem 0.55rem;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;

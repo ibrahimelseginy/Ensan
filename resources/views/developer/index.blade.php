@@ -3,6 +3,63 @@
 @section('title', 'م/ إبراهيم السجيني — رائد أعمال ومؤسس فرصة Dev')
 
 @section('content')
+<style>
+.dev-quote-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.08));
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+}
+.theme-dark .dev-quote-box,
+[data-bs-theme="dark"] .dev-quote-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(30, 41, 59, 0.8));
+    border-color: rgba(16, 185, 129, 0.35);
+}
+.dev-point-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem 1.4rem;
+    transition: all 0.25s ease;
+}
+.theme-dark .dev-point-card,
+[data-bs-theme="dark"] .dev-point-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+.dev-point-card:hover {
+    transform: translateY(-2px);
+    border-color: #10b981;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+}
+.dev-avatar-img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    object-position: center 15%;
+    border-radius: 50%;
+    border: 4px solid #10b981;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+}
+.company-logo-badge {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.theme-dark .company-logo-badge,
+[data-bs-theme="dark"] .company-logo-badge {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+</style>
+
 <div class="container-fluid py-4 px-3 px-md-4">
     
     {{-- Page Header --}}
@@ -45,20 +102,26 @@
             <div class="card border rounded-4 shadow-sm h-100 text-center p-4">
                 <div class="card-body p-0 d-flex flex-column justify-content-between">
                     <div>
-                        {{-- Avatar --}}
+                        {{-- Avatar with Real Photo --}}
                         <div class="position-relative d-inline-block mb-3">
-                            <div class="rounded-circle shadow d-flex align-items-center justify-content-center mx-auto" 
-                                 style="width: 120px; height: 120px; background: linear-gradient(135deg, #1e40af, #3b82f6); color: #ffffff; font-size: 2.75rem; font-weight: 800; border: 4px solid var(--border);">
-                                <span>IE</span>
-                            </div>
-                            <span class="position-absolute bottom-0 start-0 translate-middle p-2 bg-success border border-white rounded-circle" 
-                                  title="متاح للمشاريع والاستشارات" style="width: 18px; height: 18px;">
+                            <img src="{{ asset('images/ibrahim_elseginy.jpg') }}" alt="م/ إبراهيم السجيني" class="dev-avatar-img">
+                            <span class="position-absolute bottom-0 start-0 translate-middle p-2 bg-success border border-white rounded-circle shadow-sm" 
+                                  title="متاح للمشاريع والاستشارات" style="width: 20px; height: 20px;">
                             </span>
                         </div>
 
                         {{-- Name & Title --}}
                         <h4 class="fw-bold mb-1 text-main">م/ إبراهيم السجيني</h4>
                         <div class="text-primary fw-bold mb-2">@Ibrahim Elseginy</div>
+
+                        {{-- Company Badge with Official Logo --}}
+                        <div class="mb-3">
+                            <div class="company-logo-badge">
+                                <img src="{{ asset('images/forsah_dev_logo.png') }}" alt="فرصة Dev" style="height: 24px; width: auto; object-fit: contain;">
+                                <span class="fw-bold small">شركة فرصة Dev</span>
+                            </div>
+                        </div>
+
                         <p class="text-muted small mb-3">
                             رائد أعمال &bull; صاحب ومؤسس شركة فرصة Dev
                             <br>
@@ -67,7 +130,7 @@
 
                         <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-success-subtle text-success small fw-semibold mb-4 border border-success-subtle">
                             <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 8px; height: 8px;"></span>
-                            صاحب ومؤسس شركة فرصة Dev
+                            مطور ومبرمج منظومة إنسان الخيرية
                         </div>
                     </div>
 
@@ -80,7 +143,7 @@
                         </a>
 
                         <!-- WhatsApp -->
-                        <a href="https://wa.me/201556592017?text={{ urlencode('مرحباً م. إبراهيم، بخصوص شركة فرصة Dev...') }}" 
+                        <a href="https://wa.me/201556592017?text={{ urlencode('مرحباً م. إبراهيم، بخصوص شركة فرصة Dev ومنظومة إنسان...') }}" 
                            target="_blank" rel="noopener" 
                            class="btn btn-success d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 fw-bold shadow-sm">
                             <i class="bi bi-whatsapp"></i>
@@ -96,7 +159,7 @@
                     </div>
 
                     <div class="text-muted small pt-3 mt-3 border-top">
-                        <i class="bi bi-geo-alt me-1 text-primary"></i> جمهورية مصر العربية | متاح للمشاريع السحابية
+                        <i class="bi bi-geo-alt me-1 text-primary"></i> جمهورية مصر العربية | متاح للمشاريع والحلول البرمجية
                     </div>
                 </div>
             </div>
@@ -105,40 +168,96 @@
         {{-- Story & Bio Card (Left Column) --}}
         <div class="col-lg-8 col-md-7">
             <div class="card border rounded-4 shadow-sm h-100">
-                <div class="card-header bg-transparent border-bottom py-3 px-4 d-flex align-items-center gap-3">
-                    <div class="p-2 rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                        <i class="bi bi-rocket-takeoff-fill fs-5"></i>
+                <div class="card-header bg-transparent border-bottom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-heart-pulse-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-main">كلمة ورسالة من القلب</h5>
+                            <small class="text-muted">م/ إبراهيم السجيني — بمناسبة اكتمال منظومة إنسان الخيرية</small>
+                        </div>
                     </div>
-                    <div>
-                        <h5 class="fw-bold mb-0 text-main">القصة والمسيرة الريادية</h5>
-                        <small class="text-muted">م/ إبراهيم السجيني — رائد أعمال وصاحب ومؤسس شركة فرصة Dev</small>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ asset('images/forsah_dev_logo.png') }}" alt="فرصة Dev" style="height: 28px; width: auto;">
+                        <span class="badge bg-success-subtle text-success fw-bold px-3 py-2 rounded-pill">
+                            <i class="bi bi-check2-circle me-1"></i> إنجاز نفتخر به
+                        </span>
                     </div>
                 </div>
 
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="p-4 rounded-4 mb-4 border" style="background: rgba(37, 99, 235, 0.04); border-color: rgba(37, 99, 235, 0.15) !important;">
-                            <h5 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
-                                <i class="bi bi-briefcase-fill"></i>
-                                <span>عن م/ إبراهيم السجيني وشركة فرصة Dev</span>
-                            </h5>
-                            <p class="text-secondary leading-relaxed mb-3" style="font-size: 1.05rem; line-height: 1.9;">
-                                رحلة شغف وابتكار تقني في عالم التكنولوجيا وريادة الأعمال. تأسست رؤية <strong>م/ إبراهيم السجيني</strong> على الإيمان العميق بأن الأنظمة والبرمجيات الذكية هي الأساس الحقيقي لتمكين المؤسسات والشركات من إطلاق كامل إمكاناتها وتحقيق أعلى معدلات النجاح والنمو المؤسسي.
-                            </p>
-                            <p class="text-secondary leading-relaxed mb-0" style="font-size: 1.02rem; line-height: 1.9;">
-                                ومن خلال تأسيس وقيادة <strong>شركة فرصة Dev</strong>، يعمل م/ إبراهيم على هندسة وتطوير حلول ومنصات سحابية نوعية تجمع بين المعمارية البرمجية الصلبة، والأمان العالي، وسهولة الاستخدام الفائقة، لتكون لكل فكرة ومؤسسة فرصة حقيقية للريادة والتميز الرقمي في سوق الأعمال.
+                    <div class="d-flex flex-column gap-3">
+                        
+                        {{-- Main Highlight Quote --}}
+                        <div class="dev-quote-box">
+                            <div class="d-flex align-items-center gap-2 mb-2 text-success fw-bold">
+                                <i class="bi bi-quote fs-3 lh-1"></i>
+                                <span class="fs-5">"الحمد لله حمداً كثيراً 💚"</span>
+                            </div>
+                            <p class="fs-6 fw-bold text-main mb-0" style="line-height: 1.8;">
+                                محدش متخيل الفرحة الكبيرة اللي حاسس بيها دلوقتي بانتهاء منظومة وتطبيق إنسان 💚، السيستم السحابي المتكامل، والويبسايت الرسمي.
                             </p>
                         </div>
+
+                        {{-- Point 1: الحمد والشكر --}}
+                        <div class="dev-point-card">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-stars fs-6"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-success mb-1">أولاً: شكر وحمد لله عز وجل</h6>
+                                    <p class="mb-0 text-secondary" style="font-size: 0.98rem; line-height: 1.8;">
+                                        أول حاجة بحمد ربنا سبحانه وتعالى من كل قلبي على العمل الخيري ده إنه اكتمل.. الحمد لله حمداً كثيراً مباركاً فيه 🥹💚
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Point 2: الفخر بالسعادة وتوظيف العلم في الخير --}}
+                        <div class="dev-point-card">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-mortarboard-fill fs-6"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-primary mb-1">ثانياً: فخر وسعادة بتوظيف العلم في خدمة الخير</h6>
+                                    <p class="mb-0 text-secondary" style="font-size: 0.98rem; line-height: 1.8;">
+                                        ثاني حاجة كنت مبسوط أوي أوي أوي في كل مرحلة وكل لحظة اشتغلت فيها على التطبيق والمنظومة، وفخور بيها جداً علشان وظّفت تعليمي ودراستي وخبرتي في عمل خيري وللمؤسسة بالأخص 💚💚💚
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Point 3: ترك البصمة والأثر الطيب --}}
+                        <div class="dev-point-card">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-award-fill fs-6"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-warning-emphasis mb-1">ثالثاً: بصمة وأثر طيب يدوم للمؤسسة</h6>
+                                    <p class="mb-0 text-secondary" style="font-size: 0.98rem; line-height: 1.8;">
+                                        ثالث حاجة حبيت أسيب بصمة ليا في المؤسسة تكون معلّمة ومحفورة مع كل اللي موجودين، علشان لو الدنيا لاهتني عن المؤسسة أكون الحمد لله عملت حاجة أكون فخور بيها في يوم من الأيام ومبسوط بيها 💚💚
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     {{-- Card Footer Contact CTA --}}
-                    <div class="border-top pt-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <span class="text-muted small">لأي استفسار أو شراكات عمل وتطوير أنظمة سحابية:</span>
+                    <div class="border-top pt-3 mt-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{ asset('images/forsah_dev_logo.png') }}" alt="فرصة Dev" style="height: 24px; width: auto;">
+                            <span class="text-muted small fw-semibold">شركة فرصة Dev — ريادة الأعمال والحلول الرقمية المتطورة</span>
+                        </div>
                         <div class="d-flex gap-2">
-                            <a href="https://wa.me/201556592017" target="_blank" rel="noopener" class="btn btn-sm btn-success fw-bold px-3 rounded-pill">
+                            <a href="https://wa.me/201556592017" target="_blank" rel="noopener" class="btn btn-sm btn-success fw-bold px-3 rounded-pill shadow-sm">
                                 <i class="bi bi-whatsapp me-1"></i> تواصل عبر واتساب
                             </a>
-                            <a href="tel:01069388721" class="btn btn-sm btn-primary fw-bold px-3 rounded-pill">
+                            <a href="tel:01069388721" class="btn btn-sm btn-primary fw-bold px-3 rounded-pill shadow-sm">
                                 <i class="bi bi-telephone me-1"></i> اتصال مباشر
                             </a>
                         </div>
