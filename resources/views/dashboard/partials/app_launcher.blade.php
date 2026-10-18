@@ -284,15 +284,15 @@ html.theme-dark .ensan-sub-modal .modal-content,
 body.theme-dark .ensan-sub-modal .modal-content,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-content {
     border-radius: 24px !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    background-color: #0b1220 !important;
-    background: #0b1220 !important;
-    box-shadow: 0 35px 95px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    box-shadow: 0 35px 95px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
     overflow: hidden !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    color: #ffffff !important;
+    color: #0f172a !important;
 }
 
 .ensan-sub-modal .modal-header,
@@ -301,9 +301,9 @@ body .ensan-sub-modal .modal-header,
 html.theme-dark .ensan-sub-modal .modal-header,
 body.theme-dark .ensan-sub-modal .modal-header,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-header {
-    background-color: #0f172a !important;
-    background: #0f172a !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+    background-color: #059669 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
     padding: 1.25rem 1.5rem !important;
     display: flex !important;
     align-items: center !important;
@@ -333,7 +333,7 @@ body .ensan-sub-modal .modal-header .text-muted,
 html.theme-dark .ensan-sub-modal .modal-header .text-muted,
 body.theme-dark .ensan-sub-modal .modal-header .text-muted,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-header .text-muted {
-    color: #94a3b8 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 500 !important;
 }
 
@@ -343,8 +343,8 @@ body .ensan-sub-modal .btn-close,
 html.theme-dark .ensan-sub-modal .btn-close,
 body.theme-dark .ensan-sub-modal .btn-close,
 [data-bs-theme="dark"] .ensan-sub-modal .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%) !important;
-    opacity: 0.85 !important;
+    filter: brightness(0) invert(1) !important;
+    opacity: 0.9 !important;
 }
 
 .ensan-sub-modal .btn-close:hover {
@@ -357,8 +357,8 @@ body .ensan-sub-modal .modal-body,
 html.theme-dark .ensan-sub-modal .modal-body,
 body.theme-dark .ensan-sub-modal .modal-body,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
-    background-color: #0b1220 !important;
-    background: #0b1220 !important;
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -378,7 +378,7 @@ body.theme-dark .ensan-sub-modal .modal-body,
     }
 }
 
-/* Sub-Service Tiles - 100% Solid Dark Gradient, Zero Transparency */
+/* Sub-Service Tiles - Solid White Background with High-Contrast Dark Text */
 .ensan-sub-tile,
 html .ensan-sub-tile,
 body .ensan-sub-tile,
@@ -389,18 +389,18 @@ body.theme-dark .ensan-sub-tile,
     align-items: center !important;
     gap: 0.9rem !important;
     padding: 1rem 1.2rem !important;
-    background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
-    background-color: #0b1220 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 16px !important;
     text-decoration: none !important;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
     opacity: 1 !important;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    color: #ffffff !important;
+    color: #0f172a !important;
 }
 
 .ensan-sub-tile:hover,
@@ -410,10 +410,10 @@ html.theme-dark .ensan-sub-tile:hover,
 body.theme-dark .ensan-sub-tile:hover,
 [data-bs-theme="dark"] .ensan-sub-tile:hover {
     transform: translateY(-3px) !important;
-    background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
-    background-color: #0e1728 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     border-color: #10b981 !important;
-    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28) !important;
+    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.22) !important;
 }
 
 .ensan-sub-tile-title,
@@ -423,7 +423,7 @@ body .ensan-sub-tile-title,
 html.theme-dark .ensan-sub-tile-title,
 body.theme-dark .ensan-sub-tile-title,
 [data-bs-theme="dark"] .ensan-sub-tile-title {
-    color: #ffffff !important;
+    color: #0f172a !important;
     font-weight: 800 !important;
     font-size: 0.95rem !important;
     margin-bottom: 2px !important;
@@ -437,8 +437,8 @@ body .ensan-sub-tile small,
 html.theme-dark .ensan-sub-tile small,
 body.theme-dark .ensan-sub-tile small,
 [data-bs-theme="dark"] .ensan-sub-tile small {
-    color: #cbd5e1 !important;
-    font-weight: 500 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
     font-size: 0.82rem !important;
     line-height: 1.35 !important;
 }
@@ -449,7 +449,7 @@ body .ensan-sub-tile-arrow,
 html.theme-dark .ensan-sub-tile-arrow,
 body.theme-dark .ensan-sub-tile-arrow,
 [data-bs-theme="dark"] .ensan-sub-tile-arrow {
-    color: #94a3b8 !important;
+    color: #64748b !important;
     font-size: 0.95rem !important;
     transition: transform 0.2s ease, color 0.2s ease !important;
 }
