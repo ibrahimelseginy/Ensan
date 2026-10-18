@@ -145,6 +145,36 @@
             <div class="col-12"><label class="form-label">تفاصيل الحالة والتقارير والورق</label><textarea name="notes_cases" class="form-control" rows="3" placeholder="التشخيص، العملية المطلوبة، التقارير الطبية والمستندات...">{{ old('notes_cases') }}</textarea></div>
           </div>
         </div>
+
+        <div id="midrarProjectFields" class="project-special-box mt-4" style="display:none">
+          <h6 class="fw-bold text-info-emphasis mb-3"><i class="bi bi-droplet-half me-1"></i> بيانات مشروع مدرار (وصلات مياه - أسقف - صدقات جارية)</h6>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">نوع الاحتياج</label>
+              <select name="need_type" class="form-select">
+                <option value="وصله مياه" @selected(old('need_type') == 'وصله مياه')>وصلة مياه</option>
+                <option value="سقف" @selected(old('need_type') == 'سقف')>سقف</option>
+                <option value="اخري" @selected(old('need_type') == 'اخري')>أخرى</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">عدد أفراد الأسرة</label>
+              <input name="family_members_count" type="number" min="1" max="30" value="{{ old('family_members_count') }}" class="form-control" placeholder="إجمالي المقيمين">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">اسم الدليل</label>
+              <input name="guide_name" value="{{ old('guide_name') }}" class="form-control" placeholder="اسم الدليل بالقرية">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">رقم تليفون الدليل</label>
+              <input name="guide_phone" value="{{ old('guide_phone') }}" class="form-control" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="col-12">
+              <label class="form-label">وصف الحالة الاجتماعية والسكن</label>
+              <textarea name="social_status_description" class="form-control" rows="2" placeholder="وصف حالة الأسرة والسكن والاحتياج...">{{ old('social_status_description') }}</textarea>
+            </div>
+          </div>
+        </div>
       </div>
 
       @include('beneficiaries._family_members_fields')
@@ -173,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const projectSelect = document.getElementById('projectSelect');
   const statusSelect = document.getElementById('statusSelect');
   function toggleMonthlyFields() { const monthly = assistanceType?.value === 'monthly'; document.querySelectorAll('.monthly-fields').forEach(el => el.style.display = monthly ? '' : 'none'); }
-  function toggleProjectFields() { const option = projectSelect?.options[projectSelect.selectedIndex]; const name = option?.dataset.name || option?.text || ''; const zadBox=document.getElementById('zadProjectFields'),bathaBox=document.getElementById('bathaFields'),isZad=name.includes('زاد'),isBatha=name.includes('بعثاء')||name.includes('علاج'); zadBox.style.display=isZad?'':'none'; bathaBox.style.display=isBatha?'':'none'; zadBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isZad); bathaBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isBatha); }
+  function toggleProjectFields() { const option = projectSelect?.options[projectSelect.selectedIndex]; const name = option?.dataset.name || option?.text || ''; const zadBox=document.getElementById('zadProjectFields'),bathaBox=document.getElementById('bathaFields'),midrarBox=document.getElementById('midrarProjectFields'),isZad=name.includes('زاد'),isBatha=name.includes('بعثاء')||name.includes('علاج'),isMidrar=name.includes('مدرار')||name.includes('مياه')||name.includes('سقف'); zadBox.style.display=isZad?'':'none'; bathaBox.style.display=isBatha?'':'none'; midrarBox.style.display=isMidrar?'':'none'; zadBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isZad); bathaBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isBatha); midrarBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isMidrar); }
   function toggleStatusReason() { const status = statusSelect?.value; const rejectionBox = document.getElementById('rejectionReasonBox'); const archiveBox = document.getElementById('archiveReasonBox'); rejectionBox.style.display = status === 'rejected' ? '' : 'none'; archiveBox.style.display = ['archived_improved','archived_deceased'].includes(status) ? '' : 'none'; rejectionBox.querySelector('textarea').required = status === 'rejected'; archiveBox.querySelector('textarea').required = ['archived_improved','archived_deceased'].includes(status); }
   assistanceType?.addEventListener('change', toggleMonthlyFields); projectSelect?.addEventListener('change', toggleProjectFields); statusSelect?.addEventListener('change', toggleStatusReason); toggleMonthlyFields(); toggleProjectFields(); toggleStatusReason();
 });

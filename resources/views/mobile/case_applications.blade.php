@@ -37,8 +37,16 @@
         </div>
         
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <a href="{{ route('cases.apply-zad') }}" target="_blank" class="btn btn-outline-success rounded-pill px-3 py-2.5 fw-bold">
-                <i class="bi bi-basket2-fill me-1"></i> استمارة زاد 2026 (الويب)
+            <a href="{{ route('cases.apply-zad') }}" target="_blank" class="btn btn-outline-success rounded-pill px-3 py-2 fw-bold small">
+                <i class="bi bi-basket2-fill me-1"></i> استمارة زاد (الأيتام)
+            </a>
+
+            <a href="{{ route('cases.apply-midrar') }}" target="_blank" class="btn btn-outline-info rounded-pill px-3 py-2 fw-bold small">
+                <i class="bi bi-droplet-half me-1"></i> استمارة مدرار (مياه وأسقف)
+            </a>
+
+            <a href="{{ route('cases.apply-hope') }}" target="_blank" class="btn rounded-pill px-3 py-2 fw-bold small" style="color: #7c3aed; border: 1px solid #7c3aed;">
+                <i class="bi bi-activity me-1"></i> استمارة بعثاء الأمل (أورام)
             </a>
 
             <button type="button" class="btn btn-primary rounded-pill px-4 py-2.5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createCaseModal">
@@ -79,10 +87,10 @@
     <div class="card border-0 shadow-xs rounded-4 p-3 mb-4 bg-stats-card-main">
         <div class="row g-3 align-items-center">
             <!-- Status Tabs -->
-            <div class="col-xl-7 col-lg-12">
+            <div class="col-xl-8 col-lg-12">
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('status', 'page'), [])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ !request('status') ? 'btn-primary' : 'btn-outline-secondary' }}">
+                       class="btn btn-sm rounded-pill px-3 fw-bold {{ !request('status') && !request('type') ? 'btn-primary' : 'btn-outline-secondary' }}">
                         الكل ({{ \App\Models\MobileCaseApplication::count() }})
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'pending'])) }}" 
@@ -101,9 +109,17 @@
                        class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'rejected' ? 'btn-danger text-white' : 'btn-outline-danger' }}">
                         <i class="bi bi-x-circle me-1"></i> مرفوض ({{ \App\Models\MobileCaseApplication::where('status', 'rejected')->count() }})
                     </a>
-                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['type' => 'zad'])) }}" 
+                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'zad'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold {{ request('type') == 'zad' ? 'btn-success text-white' : 'btn-outline-success' }}">
-                        <i class="bi bi-basket2-fill me-1"></i> مشروع زاد ({{ \App\Models\MobileCaseApplication::where('case_type', 'zad')->count() }})
+                        <i class="bi bi-basket2-fill me-1"></i> زاد ({{ \App\Models\MobileCaseApplication::where('case_type', 'zad')->count() }})
+                    </a>
+                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'midrar'])) }}" 
+                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('type') == 'midrar' ? 'btn-info text-white' : 'btn-outline-info' }}">
+                        <i class="bi bi-droplet-half me-1"></i> مدرار ({{ \App\Models\MobileCaseApplication::where('case_type', 'midrar')->count() }})
+                    </a>
+                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'hope'])) }}" 
+                       class="btn btn-sm rounded-pill px-3 fw-bold" style="{{ request('type') == 'hope' ? 'background: #7c3aed; color: #fff;' : 'border: 1px solid #7c3aed; color: #7c3aed;' }}">
+                        <i class="bi bi-activity me-1"></i> بعثاء الأمل ({{ \App\Models\MobileCaseApplication::where('case_type', 'hope')->count() }})
                     </a>
                 </div>
             </div>
@@ -313,6 +329,61 @@
                                     </div>
                                 </div>
                             @endif
+
+                            @if($app->case_type === 'midrar' || $app->need_type || $app->midrar_details)
+                                <div class="col-12 p-3 rounded-3 border border-info bg-info bg-opacity-10 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-info border-opacity-25 pb-2">
+                                        <h6 class="fw-bold text-info-emphasis mb-0"><i class="bi bi-droplet-half me-1"></i> بيانات استمارة مشروع مدرار (وصلات مياه وأسقف):</h6>
+                                        @if($app->need_type)
+                                            <span class="badge bg-primary text-white fs-7">{{ $app->need_type }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="row g-2 small">
+                                        <div class="col-md-6"><strong>اسم المسجل للحالة:</strong> {{ $app->submitter_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>رقم تليفون المسجل:</strong> {{ $app->submitter_phone ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>اسم الحالة رباعي:</strong> {{ $app->applicant_name }}</div>
+                                        <div class="col-md-6"><strong>رقم تليفون الحالة:</strong> {{ $app->applicant_phone }}</div>
+                                        <div class="col-md-6"><strong>المركز:</strong> {{ $app->city ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>عدد أفراد الأسرة:</strong> <span class="badge bg-secondary">{{ $app->family_members_count ?? $app->children_count ?? '-' }}</span></div>
+                                        <div class="col-12"><strong>العنوان بالتفصيل:</strong> {{ $app->address }}</div>
+                                        @if($app->social_status_description)
+                                            <div class="col-12"><strong>وصف الحالة الاجتماعية:</strong> {{ $app->social_status_description }}</div>
+                                        @endif
+                                        @if($app->guide_name || $app->guide_phone)
+                                            <div class="col-12"><strong>بيانات الدليل:</strong> {{ $app->guide_name ?? '-' }} (هاتف: {{ $app->guide_phone ?? '-' }})</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($app->case_type === 'hope' || $app->tumor_location || $app->hospital_name || $app->tumor_details)
+                                <div class="col-12 p-3 rounded-3 border mb-3" style="background: rgba(124, 58, 237, 0.08); border-color: rgba(124, 58, 237, 0.3);">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2" style="border-color: rgba(124, 58, 237, 0.2);">
+                                        <h6 class="fw-bold mb-0" style="color: #6d28d9;"><i class="bi bi-activity me-1"></i> بيانات استمارة بعثاء الأمل (رعاية مرضى الأورام):</h6>
+                                        @if($app->tumor_location)
+                                            <span class="badge text-white" style="background: #7c3aed;">{{ $app->tumor_location }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="row g-2 small">
+                                        <div class="col-md-6"><strong>اسم المريض:</strong> {{ $app->applicant_name }}</div>
+                                        <div class="col-md-6"><strong>المستشفى المتابع بها:</strong> {{ $app->hospital_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>مكان / نوع الورم:</strong> {{ $app->tumor_location ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>المرافق / ولي الأمر:</strong> {{ $app->submitter_name ?? '-' }} ({{ $app->submitter_relation ?? 'مرافق' }})</div>
+                                        @if($app->treatment_protocol)
+                                            <div class="col-12"><strong>البروتوكول وخطة العلاج:</strong> {{ $app->treatment_protocol }}</div>
+                                        @endif
+                                        @if($app->transit_details)
+                                            <div class="col-12"><strong>المواصلات والموقف:</strong> {{ $app->transit_details }}</div>
+                                        @endif
+                                        @if(!empty($app->tumor_details['chemo_sessions_taken']) || !empty($app->tumor_details['chemo_sessions_remaining']))
+                                            <div class="col-md-6"><strong>جلسات الكيماوي:</strong> أخذ {{ $app->tumor_details['chemo_sessions_taken'] ?? 0 }} / متبقي {{ $app->tumor_details['chemo_sessions_remaining'] ?? 0 }}</div>
+                                        @endif
+                                        @if(!empty($app->tumor_details['radiation_sessions_taken']) || !empty($app->tumor_details['radiation_sessions_remaining']))
+                                            <div class="col-md-6"><strong>جلسات الإشعاعي:</strong> أخذ {{ $app->tumor_details['radiation_sessions_taken'] ?? 0 }} / متبقي {{ $app->tumor_details['radiation_sessions_remaining'] ?? 0 }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Decision Panel -->
@@ -461,9 +532,10 @@
                             <input type="tel" name="backup_phone" class="form-control" placeholder="رقم هاتف إضافي">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">نوع المساعدة</label>
-                            <select name="case_type" id="newCaseType" class="form-select" onchange="toggleZadCreateFields(this.value)">
+                            <label class="form-label small fw-bold">نوع المساعدة / المشروع</label>
+                            <select name="case_type" id="newCaseType" class="form-select" onchange="toggleCaseCreateFields(this.value)">
                                 <option value="zad" selected>كفالة أيتام (مشروع زاد)</option>
+                                <option value="midrar">مشروع مدرار (وصلات مياه / أسقف)</option>
                                 <option value="hope">مرضى أورام وعلاج (بعثاء الأمل)</option>
                                 <option value="roof">سقف وترميم منازل</option>
                                 <option value="financial">مساعدة مالية</option>
@@ -522,6 +594,56 @@
                                 <div class="col-12">
                                     <label class="form-label small fw-bold">الحالة الاجتماعية للأم والمصاريف (كهرباء، غاز، مياه، إيجار، ديون، العجز)</label>
                                     <textarea name="expenses_debts_details" class="form-control form-control-sm" rows="2" placeholder="الحالة الاجتماعية والمرافق والإيجار والديون..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- حقول استمارة مشروع مدرار التخصصية -->
+                        <div id="newMidrarFields" class="col-12 p-3 rounded-3 border border-info bg-info bg-opacity-10 d-none">
+                            <h6 class="fw-bold text-info-emphasis mb-2"><i class="bi bi-droplet-half me-1"></i> حقول استمارة مشروع مدرار (وصلات مياه وأسقف):</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">تحديد الاحتياج المطلوب للحالة <span class="text-danger">*</span></label>
+                                    <select name="need_type" class="form-select form-select-sm">
+                                        <option value="وصله مياه">وصله مياه (توصيل مياه شرب نقية)</option>
+                                        <option value="سقف">سقف (تسقيف منزل لحماية الأسرة)</option>
+                                        <option value="اخري">اخري (صدقات جارية ووقف خيري)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">عدد أفراد الأسرة المقيمين بالمنزل</label>
+                                    <input type="number" name="family_members_count" class="form-control form-control-sm" min="1" max="30" placeholder="مثال: 5">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">اسم الدليل (شخص يدِل على المنزل بالقرية)</label>
+                                    <input type="text" name="guide_name" class="form-control form-control-sm" placeholder="اسم الدليل">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">رقم تليفون الدليل</label>
+                                    <input type="tel" name="guide_phone" class="form-control form-control-sm" placeholder="01xxxxxxxxx">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">وصف الحالة الاجتماعية والوضع المعيشي وحالة المسكن</label>
+                                    <textarea name="social_status_description" class="form-control form-control-sm" rows="2" placeholder="وصف الحالة الاجتماعية بالتفصيل..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- حقول استمارة بعثاء الأمل (الأورام) -->
+                        <div id="newHopeFields" class="col-12 p-3 rounded-3 border d-none" style="background: rgba(124, 58, 237, 0.08); border-color: rgba(124, 58, 237, 0.3);">
+                            <h6 class="fw-bold mb-2" style="color: #6d28d9;"><i class="bi bi-activity me-1"></i> حقول مشروع بعثاء الأمل (رعاية مرضى الأورام):</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">المستشفى المتابع بها <span class="text-danger">*</span></label>
+                                    <input type="text" name="hospital_name" class="form-control form-control-sm" placeholder="مثال: معهد أورام طنطا، 57357...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">مكان ونوع الورم بالجسم <span class="text-danger">*</span></label>
+                                    <input type="text" name="tumor_location" class="form-control form-control-sm" placeholder="مثال: ثدي، رئة، لوكيميا...">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">البروتوكول العلاجي الحالي وخطة العلاج</label>
+                                    <textarea name="treatment_protocol" class="form-control form-control-sm" rows="2" placeholder="الجرعات وجداول العلاج الكيماوي / الإشعاعي..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -597,15 +719,18 @@ function toggleNewSubmitter() {
     }
 }
 
-function toggleZadCreateFields(val) {
+function toggleCaseCreateFields(val) {
     const zadBox = document.getElementById('newZadFields');
-    if (zadBox) {
-        if (val === 'zad') {
-            zadBox.classList.remove('d-none');
-        } else {
-            zadBox.classList.add('d-none');
-        }
-    }
+    const midrarBox = document.getElementById('newMidrarFields');
+    const hopeBox = document.getElementById('newHopeFields');
+
+    if (zadBox) zadBox.classList.toggle('d-none', val !== 'zad');
+    if (midrarBox) midrarBox.classList.toggle('d-none', val !== 'midrar');
+    if (hopeBox) hopeBox.classList.toggle('d-none', val !== 'hope');
+}
+
+function toggleZadCreateFields(val) {
+    toggleCaseCreateFields(val);
 }
 
 function toggleAllCheckboxes(master) {

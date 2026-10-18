@@ -73,6 +73,14 @@ Route::post('apply-case', [MobileContentController::class, 'publicApplyStore'])-
 Route::get('apply-zad', [MobileContentController::class, 'applyZadShow'])->name('cases.apply-zad');
 Route::post('apply-zad', [MobileContentController::class, 'applyZadStore'])->middleware('throttle:heavy-ops')->name('cases.apply-zad.store');
 
+// إستمارة تقديم مشروع مدرار (وصلات مياه - أسقف - صدقات جارية) - صفحة عامة متطابقة مع نموذج جوجل
+Route::get('apply-midrar', [MobileContentController::class, 'applyMidrarShow'])->name('cases.apply-midrar');
+Route::post('apply-midrar', [MobileContentController::class, 'applyMidrarStore'])->middleware('throttle:heavy-ops')->name('cases.apply-midrar.store');
+
+// إستمارة تقديم مشروع بعثاء الأمل (رعاية مرضى الأورام) - صفحة عامة متطابقة مع نموذج جوجل
+Route::get('apply-hope', [MobileContentController::class, 'applyHopeShow'])->name('cases.apply-hope');
+Route::post('apply-hope', [MobileContentController::class, 'applyHopeStore'])->middleware('throttle:heavy-ops')->name('cases.apply-hope.store');
+
 // مسار أمان احتياطي لتغذية ملفات التخزين والمرفقات في حال تمت معالجتها عبر لارافيل
 Route::get('storage/{path}', function (string $path) {
     $path = str_replace(["\0", '..'], '', $path);

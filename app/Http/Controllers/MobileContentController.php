@@ -493,6 +493,25 @@ final class MobileContentController extends Controller
             'status' => 'nullable|string|in:pending,under_research,approved,completed,rejected',
             'admin_notes' => 'nullable|string|max:1000',
             'rejection_reason' => 'nullable|string|max:1000',
+            'source_name' => 'nullable|string|max:255',
+            'reference_number' => 'nullable|string|max:100',
+            'mother_name' => 'nullable|string|max:255',
+            'deceased_husband_name' => 'nullable|string|max:255',
+            'submitter_relation_to_mother' => 'nullable|string|max:255',
+            'transit_details' => 'nullable|string|max:1000',
+            'death_details' => 'nullable|string|max:1000',
+            'children_count' => 'nullable|string|max:50',
+            'children_details' => 'nullable|string|max:3000',
+            'income_aid_sources' => 'nullable|string|max:2000',
+            'expenses_debts_details' => 'nullable|string|max:3000',
+            'need_type' => 'nullable|string|max:100',
+            'family_members_count' => 'nullable|string|max:50',
+            'social_status_description' => 'nullable|string|max:3000',
+            'guide_name' => 'nullable|string|max:255',
+            'guide_phone' => 'nullable|string|max:50',
+            'hospital_name' => 'nullable|string|max:255',
+            'tumor_location' => 'nullable|string|max:255',
+            'treatment_protocol' => 'nullable|string|max:2000',
         ]);
 
         if (empty($validated['applicant_id_number']) && !empty($validated['national_id'])) {
@@ -655,6 +674,175 @@ final class MobileContentController extends Controller
         ]);
 
         return back()->with('success', 'تم تسجيل إستمارة تقديم زاد (الأيتام) بنجاح برقم قيد مبدئي #' . $app->id . '. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة البيانات والتواصل معكم لترتيب البحث الميداني.');
+    }
+
+    public function applyMidrarShow()
+    {
+        return view('public.apply_midrar');
+    }
+
+    public function applyMidrarStore(Request $request)
+    {
+        $validated = $request->validate([
+            'submitter_name' => 'required|string|max:255',
+            'submitter_phone' => 'required|string|max:30',
+            'applicant_name' => 'required|string|max:255',
+            'applicant_phone' => 'required|string|max:30',
+            'backup_phone' => 'nullable|string|max:30',
+            'city' => 'required|string|max:255',
+            'address' => 'required|string|max:1000',
+            'family_members_count' => 'required|string|max:50',
+            'social_status_description' => 'required|string|max:3000',
+            'need_type' => 'required|string|max:100',
+            'guide_name' => 'nullable|string|max:255',
+            'guide_phone' => 'nullable|string|max:30',
+            'notes' => 'nullable|string|max:3000',
+        ], [
+            'submitter_name.required' => 'اسم المسجل للحالة مطلوب.',
+            'submitter_phone.required' => 'رقم تليفون المسجل مطلوب.',
+            'applicant_name.required' => 'اسم الحالة رباعي مطلوب.',
+            'applicant_phone.required' => 'رقم تليفون الحالة مطلوب.',
+            'city.required' => 'يرجى تحديد المركز التابع له.',
+            'address.required' => 'العنوان بالتفصيل مطلوب.',
+            'family_members_count.required' => 'يرجى إدخال عدد أفراد الأسرة.',
+            'social_status_description.required' => 'يرجى كتابة وصف الحالة الاجتماعية بالتفصيل.',
+            'need_type.required' => 'يرجى تحديد نوع الاحتياج (وصلة مياه، سقف، أخرى).',
+        ]);
+
+        $app = \App\Models\MobileCaseApplication::create([
+            'applicant_name' => $validated['applicant_name'],
+            'submitter_type' => 'other',
+            'submitter_name' => $validated['submitter_name'],
+            'submitter_phone' => $validated['submitter_phone'],
+            'applicant_phone' => $validated['applicant_phone'],
+            'backup_phone' => $validated['backup_phone'] ?? null,
+            'city' => $validated['city'],
+            'address' => $validated['address'],
+            'family_members_count' => $validated['family_members_count'],
+            'children_count' => $validated['family_members_count'],
+            'social_status_description' => $validated['social_status_description'],
+            'need_type' => $validated['need_type'],
+            'guide_name' => $validated['guide_name'] ?? null,
+            'guide_phone' => $validated['guide_phone'] ?? null,
+            'admin_notes' => $validated['notes'] ?? null,
+            'case_type' => 'midrar',
+            'status' => 'pending',
+            'source' => 'website_midrar',
+            'midrar_details' => [
+                'registrar_name' => $validated['submitter_name'],
+                'registrar_phone' => $validated['submitter_phone'],
+                'applicant_name' => $validated['applicant_name'],
+                'applicant_phone' => $validated['applicant_phone'],
+                'backup_phone' => $validated['backup_phone'] ?? null,
+                'center' => $validated['city'],
+                'address' => $validated['address'],
+                'family_count' => $validated['family_members_count'],
+                'social_status' => $validated['social_status_description'],
+                'need_type' => $validated['need_type'],
+                'guide_name' => $validated['guide_name'] ?? null,
+                'guide_phone' => $validated['guide_phone'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ],
+            'description' => "إستمارة تقديم مشروع مدرار (الصدقات الجارية والوقف الخيري):\n" .
+                "• المسجل للحالة: {$validated['submitter_name']} (هاتف: {$validated['submitter_phone']})\n" .
+                "• اسم الحالة: {$validated['applicant_name']} (هاتف: {$validated['applicant_phone']})\n" .
+                "• نوع الاحتياج: {$validated['need_type']}\n" .
+                "• عدد أفراد الأسرة: {$validated['family_members_count']}\n" .
+                "• المركز والعنوان: {$validated['city']} - {$validated['address']}\n" .
+                "• الحالة الاجتماعية: {$validated['social_status_description']}\n" .
+                "• الدليل: " . ($validated['guide_name'] ? "{$validated['guide_name']} ({$validated['guide_phone']})" : 'لا يوجد') . "\n" .
+                ($validated['notes'] ? "• ملاحظات: {$validated['notes']}" : ''),
+        ]);
+
+        return back()->with('success', 'تم تسجيل إستمارة تقديم مشروع مدرار بنجاح برقم قيد مبدئي #' . $app->id . '. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة البيانات والتواصل للترتيب للبحث الميداني.');
+    }
+
+    public function applyHopeShow()
+    {
+        return view('public.apply_hope');
+    }
+
+    public function applyHopeStore(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_name' => 'required|string|max:255',
+            'guardian_name' => 'nullable|string|max:255',
+            'national_id' => 'nullable|string|max:20',
+            'phone_1' => 'required|string|max:30',
+            'phone_2' => 'nullable|string|max:30',
+            'city' => 'required|string|max:255',
+            'transit_details' => 'nullable|string|max:1000',
+            'address' => 'required|string|max:1000',
+            'hospital_name' => 'required|string|max:255',
+            'tumor_location' => 'required|string|max:255',
+            'treatment_protocol' => 'nullable|string|max:2000',
+            'chemo_sessions_taken' => 'nullable|string|max:100',
+            'chemo_sessions_remaining' => 'nullable|string|max:100',
+            'radiation_sessions_taken' => 'nullable|string|max:100',
+            'radiation_sessions_remaining' => 'nullable|string|max:100',
+            'medical_report' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'id_image' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'notes' => 'nullable|string|max:3000',
+        ], [
+            'patient_name.required' => 'اسم مريض الأورام رباعياً مطلوب.',
+            'phone_1.required' => 'رقم الهاتف الأساسي للتواصل مطلوب.',
+            'city.required' => 'يرجى تحديد المحافظة أو المركز.',
+            'address.required' => 'العنوان بالتفصيل مطلوب.',
+            'hospital_name.required' => 'اسم المستشفى المتابع بها مطلوب.',
+            'tumor_location.required' => 'مكان ونوع الورم مطلوب.',
+        ]);
+
+        $appData = [
+            'applicant_name' => $validated['patient_name'],
+            'applicant_id_number' => $validated['national_id'] ?? null,
+            'submitter_name' => $validated['guardian_name'] ?: $validated['patient_name'],
+            'submitter_relation' => $validated['guardian_name'] ? 'مرافق / ولي أمر' : 'المريض نفسه',
+            'applicant_phone' => $validated['phone_1'],
+            'backup_phone' => $validated['phone_2'] ?? null,
+            'city' => $validated['city'],
+            'address' => $validated['address'],
+            'transit_details' => $validated['transit_details'] ?? null,
+            'hospital_name' => $validated['hospital_name'],
+            'tumor_location' => $validated['tumor_location'],
+            'treatment_protocol' => $validated['treatment_protocol'] ?? null,
+            'case_type' => 'hope',
+            'status' => 'pending',
+            'source' => 'website_hope',
+            'admin_notes' => $validated['notes'] ?? null,
+            'tumor_details' => [
+                'hospital_name' => $validated['hospital_name'],
+                'tumor_location' => $validated['tumor_location'],
+                'treatment_protocol' => $validated['treatment_protocol'] ?? null,
+                'chemo_sessions_taken' => $validated['chemo_sessions_taken'] ?? null,
+                'chemo_sessions_remaining' => $validated['chemo_sessions_remaining'] ?? null,
+                'radiation_sessions_taken' => $validated['radiation_sessions_taken'] ?? null,
+                'radiation_sessions_remaining' => $validated['radiation_sessions_remaining'] ?? null,
+            ],
+            'description' => "إستمارة تقديم مشروع بعثاء الأمل (رعاية مرضى الأورام):\n" .
+                "• اسم المريض: {$validated['patient_name']}\n" .
+                ($validated['guardian_name'] ? "• المرافق / ولي الأمر: {$validated['guardian_name']}\n" : '') .
+                "• المستشفى المتابع بها: {$validated['hospital_name']}\n" .
+                "• مكان ونوع الورم: {$validated['tumor_location']}\n" .
+                ($validated['treatment_protocol'] ? "• بروتوكول العلاج: {$validated['treatment_protocol']}\n" : '') .
+                ($validated['chemo_sessions_taken'] || $validated['chemo_sessions_remaining'] ? "• جلسات الكيماوي: (أخذ {$validated['chemo_sessions_taken']} - متبقي {$validated['chemo_sessions_remaining']})\n" : '') .
+                ($validated['radiation_sessions_taken'] || $validated['radiation_sessions_remaining'] ? "• جلسات الإشعاعي: (أخذ {$validated['radiation_sessions_taken']} - متبقي {$validated['radiation_sessions_remaining']})\n" : '') .
+                "• العنوان: {$validated['city']} - {$validated['address']}\n" .
+                "• أرقام التواصل: {$validated['phone_1']}" . ($validated['phone_2'] ? " / {$validated['phone_2']}" : ''),
+        ];
+
+        $app = \App\Models\MobileCaseApplication::create($appData);
+
+        if ($request->hasFile('medical_report')) {
+            $path = $request->file('medical_report')->store('case_applications/medical', 'public');
+            $app->update(['medical_report_path' => $path]);
+        }
+
+        if ($request->hasFile('id_image')) {
+            $path = $request->file('id_image')->store('case_applications/ids', 'public');
+            $app->update(['id_image_path' => $path]);
+        }
+
+        return back()->with('success', 'تم تسجيل إستمارة تقديم مشروع بعثاء الأمل (رعاية مرضى الأورام) بنجاح برقم قيد مبدئي #' . $app->id . '. سيقوم فريق الرعاية الطبية بمراجعة التقرير والتواصل معكم.');
     }
 
     // --- Mobile Donations Management ---

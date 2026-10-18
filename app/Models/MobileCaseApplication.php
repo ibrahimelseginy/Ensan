@@ -59,6 +59,16 @@ final class MobileCaseApplication extends Model
         'income_aid_sources',
         'expenses_debts_details',
         'zad_details',
+        'need_type',
+        'family_members_count',
+        'social_status_description',
+        'guide_name',
+        'guide_phone',
+        'midrar_details',
+        'hospital_name',
+        'tumor_location',
+        'treatment_protocol',
+        'tumor_details',
         'user_id',
         'guest_house_id',
         'beneficiary_id',
@@ -67,6 +77,8 @@ final class MobileCaseApplication extends Model
 
     protected $casts = [
         'zad_details' => 'array',
+        'midrar_details' => 'array',
+        'tumor_details' => 'array',
     ];
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
@@ -111,6 +123,7 @@ final class MobileCaseApplication extends Model
     {
         return match($this->case_type) {
             'zad', 'أيتام' => 'كفالة أيتام (مشروع زاد)',
+            'midrar', 'water', 'وصلة مياه' => 'مشروع مدرار (وصلات مياه / أسقف)',
             'hope', 'أورام', 'medical' => 'مرضى أورام وعلاج (بعثاء الأمل)',
             'roof', 'ترميم' => 'سقف وترميم منازل',
             'financial' => 'مساعدة مالية / كفالة',

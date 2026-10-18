@@ -81,19 +81,40 @@ final class VisitWebController extends Controller
                         ->first();
 
                     if (!$matchedBen) {
-                        $zadProject = \App\Models\Project::where('name', 'like', '%زاد%')->first();
+                        $targetProjectId = null;
+                        if ($caseApplication->case_type === 'zad') {
+                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%زاد%')->first())->id;
+                        } elseif ($caseApplication->case_type === 'midrar') {
+                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%مدرار%')->first())->id;
+                        } elseif ($caseApplication->case_type === 'hope') {
+                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%أورام%')->first())->id;
+                        }
+
                         $matchedBen = Beneficiary::create([
                             'full_name' => $caseApplication->applicant_name,
+                            'patient_name' => $caseApplication->applicant_name,
                             'mother_name' => $caseApplication->mother_name ?: $caseApplication->applicant_name,
+                            'guardian_name' => $caseApplication->submitter_name,
                             'deceased_husband_name' => $caseApplication->deceased_husband_name,
                             'source_name' => $caseApplication->source_name,
                             'reference_number' => $caseApplication->reference_number,
                             'children_count' => $caseApplication->children_count,
+                            'family_members_count' => $caseApplication->family_members_count,
                             'transit_details' => $caseApplication->transit_details,
                             'death_details' => $caseApplication->death_details,
                             'income_aid_sources' => $caseApplication->income_aid_sources,
                             'expenses_debts_details' => $caseApplication->expenses_debts_details,
-                            'project_id' => $caseApplication->case_type === 'zad' ? optional($zadProject)->id : null,
+                            'zad_details' => $caseApplication->zad_details,
+                            'need_type' => $caseApplication->need_type,
+                            'guide_name' => $caseApplication->guide_name,
+                            'guide_phone' => $caseApplication->guide_phone,
+                            'social_status_description' => $caseApplication->social_status_description,
+                            'midrar_details' => $caseApplication->midrar_details,
+                            'hospital_name' => $caseApplication->hospital_name,
+                            'tumor_location' => $caseApplication->tumor_location,
+                            'treatment_protocol' => $caseApplication->treatment_protocol,
+                            'tumor_details' => $caseApplication->tumor_details,
+                            'project_id' => $targetProjectId,
                             'national_id' => $caseApplication->applicant_id_number,
                             'phone' => $caseApplication->applicant_phone,
                             'backup_phone' => $caseApplication->backup_phone,

@@ -24,12 +24,16 @@ final class Beneficiary extends Model
         'adult_children_count', 'adult_children_ages', 'study_grade', 'poultry_type', 'notes_cases',
         'meat', 'allocation_type', 'child_sponsorship_type', 'sponsorship_scope_type',
         'source_name', 'reference_number', 'deceased_husband_name', 'transit_details', 'death_details',
-        'income_aid_sources', 'expenses_debts_details', 'zad_details'
+        'income_aid_sources', 'expenses_debts_details', 'zad_details',
+        'need_type', 'family_members_count', 'social_status_description', 'guide_name', 'guide_phone',
+        'midrar_details', 'hospital_name', 'tumor_location', 'treatment_protocol', 'tumor_details'
     ];
 
     protected $casts = [
         'family_members_data' => 'array',
         'zad_details' => 'array',
+        'midrar_details' => 'array',
+        'tumor_details' => 'array',
         'monthly_sponsorship_amount' => 'decimal:2',
     ];
 
