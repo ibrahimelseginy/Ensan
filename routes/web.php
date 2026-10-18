@@ -652,9 +652,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Reception & Visits (Shared/General)
-    Route::middleware('permission:visits.view')
-        ->resource('visits', \App\Http\Controllers\VisitWebController::class)
-        ->only(['index', 'store']);
+    Route::middleware('permission:visits.view')->group(function () {
+        Route::get('visits/{visit}/print', [\App\Http\Controllers\VisitWebController::class, 'print'])->name('visits.print');
+        Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
+    });
     Route::middleware('permission:reception.view')
         ->resource('reception', \App\Http\Controllers\ReceptionWebController::class)
         ->only(['index', 'store']);

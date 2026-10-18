@@ -55,6 +55,9 @@
           <i class="bi bi-pencil me-1"></i> طلب تعديل
         </a>
       @endif
+      <a class="btn btn-outline-success" href="{{ route('visits.create', ['beneficiary_id' => $beneficiary->id]) }}" title="تسجيل استمارة بحث ميداني واجتماعي لهذه الحالة">
+        <i class="bi bi-file-earmark-medical me-1"></i> استمارة بحث ميداني
+      </a>
       <a href="{{ route('beneficiaries.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-right me-1"></i> رجوع
       </a>
