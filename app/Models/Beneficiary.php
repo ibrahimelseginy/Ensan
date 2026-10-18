@@ -22,11 +22,14 @@ final class Beneficiary extends Model
         'notes', 'rejection_reason', 'archived_reason', 'mother_name', 'children_names', 'family_members_data',
         'children_count', 'sponsored_children_count', 'monthly_sponsorship_amount', 'brothers_count',
         'adult_children_count', 'adult_children_ages', 'study_grade', 'poultry_type', 'notes_cases',
-        'meat', 'allocation_type', 'child_sponsorship_type', 'sponsorship_scope_type'
+        'meat', 'allocation_type', 'child_sponsorship_type', 'sponsorship_scope_type',
+        'source_name', 'reference_number', 'deceased_husband_name', 'transit_details', 'death_details',
+        'income_aid_sources', 'expenses_debts_details', 'zad_details'
     ];
 
     protected $casts = [
         'family_members_data' => 'array',
+        'zad_details' => 'array',
         'monthly_sponsorship_amount' => 'decimal:2',
     ];
 

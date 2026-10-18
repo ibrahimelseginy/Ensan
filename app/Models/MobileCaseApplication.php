@@ -47,10 +47,26 @@ final class MobileCaseApplication extends Model
         'assigned_researcher_id',
         'field_visit_id',
         'source',
+        'source_name',
+        'reference_number',
+        'mother_name',
+        'deceased_husband_name',
+        'submitter_relation_to_mother',
+        'transit_details',
+        'death_details',
+        'children_count',
+        'children_details',
+        'income_aid_sources',
+        'expenses_debts_details',
+        'zad_details',
         'user_id',
         'guest_house_id',
         'beneficiary_id',
         'guest_house_stay_id'
+    ];
+
+    protected $casts = [
+        'zad_details' => 'array',
     ];
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }

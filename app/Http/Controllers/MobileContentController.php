@@ -586,6 +586,77 @@ final class MobileContentController extends Controller
         return back()->with('success', 'تم إرسال طلب البحث المبدئي بنجاح. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة الطلب والتواصل معكم.');
     }
 
+    // --- إستمارة تقديم مشروع زاد (الأيتام) 2026 ---
+    public function applyZadShow()
+    {
+        return view('public.apply_zad');
+    }
+
+    public function applyZadStore(Request $request)
+    {
+        $validated = $request->validate([
+            'source_name' => 'nullable|string|max:255',
+            'reference_number' => 'nullable|string|max:100',
+            'mother_name' => 'required|string|max:255',
+            'deceased_husband_name' => 'required|string|max:255',
+            'submitter_relation_to_mother' => 'required|string|max:150',
+            'phone_1' => 'required|string|max:30',
+            'phone_2' => 'nullable|string|max:30',
+            'transit_details' => 'required|string|max:1000',
+            'death_details' => 'required|string|max:1000',
+            'children_count' => 'required|string|max:50',
+            'children_details' => 'required|string|max:3000',
+            'income_aid_sources' => 'required|string|max:2000',
+            'notes_expenses_debts' => 'required|string|max:3000',
+        ], [
+            'mother_name.required' => 'اسم الأم مطلوب.',
+            'deceased_husband_name.required' => 'اسم الزوج المتوفي مطلوب.',
+            'submitter_relation_to_mother.required' => 'يرجى تحديد صفة مقدم الطلب للأم.',
+            'phone_1.required' => 'رقم الهاتف الأساسي مطلوب.',
+            'transit_details.required' => 'يرجى توضيح العنوان والموقف والمواصلة للوصول.',
+            'death_details.required' => 'يرجى توضيح تاريخ وسبب الوفاة وعمل الزوج رحمة الله عليه.',
+            'children_count.required' => 'يرجى اختيار عدد الأولاد (ممنوع التقديم لطفل واحد).',
+            'children_details.required' => 'يرجى توضيح أسماء الأطفال وسنهم ومصاريفهم وحالتهم الصحية.',
+            'income_aid_sources.required' => 'يرجى توضيح مصادر الدخل والمعاشات والمساعدات.',
+            'notes_expenses_debts.required' => 'يرجى كتابة الملاحظات ومصاريف المرافق والإيجار والديون إن وجدت.',
+        ]);
+
+        $app = \App\Models\MobileCaseApplication::create([
+            'applicant_name' => $validated['mother_name'],
+            'mother_name' => $validated['mother_name'],
+            'deceased_husband_name' => $validated['deceased_husband_name'],
+            'submitter_type' => 'other',
+            'submitter_name' => $validated['source_name'] ?: $validated['submitter_relation_to_mother'],
+            'submitter_relation' => $validated['submitter_relation_to_mother'],
+            'submitter_relation_to_mother' => $validated['submitter_relation_to_mother'],
+            'source_name' => $validated['source_name'],
+            'reference_number' => $validated['reference_number'],
+            'applicant_phone' => $validated['phone_1'],
+            'backup_phone' => $validated['phone_2'],
+            'address' => $validated['transit_details'],
+            'transit_details' => $validated['transit_details'],
+            'death_details' => $validated['death_details'],
+            'children_count' => $validated['children_count'],
+            'children_details' => $validated['children_details'],
+            'income_aid_sources' => $validated['income_aid_sources'],
+            'expenses_debts_details' => $validated['notes_expenses_debts'],
+            'case_type' => 'zad',
+            'status' => 'pending',
+            'source' => 'website_zad',
+            'description' => "إستمارة تقديم زاد (الأيتام) 2026:\n" .
+                "• اسم الأم: {$validated['mother_name']}\n" .
+                "• الزوج المتوفي: {$validated['deceased_husband_name']}\n" .
+                "• تفاصيل الوفاة والعمل: {$validated['death_details']}\n" .
+                "• عدد الأولاد: {$validated['children_count']}\n" .
+                "• الأطفال والدروس والأمراض: {$validated['children_details']}\n" .
+                "• المعاش والمساعدات: {$validated['income_aid_sources']}\n" .
+                "• المصاريف والإيجار والديون: {$validated['notes_expenses_debts']}\n" .
+                "• المواصلات والعنوان: {$validated['transit_details']}",
+        ]);
+
+        return back()->with('success', 'تم تسجيل إستمارة تقديم زاد (الأيتام) بنجاح برقم قيد مبدئي #' . $app->id . '. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة البيانات والتواصل معكم لترتيب البحث الميداني.');
+    }
+
     // --- Mobile Donations Management ---
     public function donationsIndex()
     {

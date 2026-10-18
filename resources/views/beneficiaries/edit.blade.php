@@ -45,7 +45,50 @@
         <div class="col-12" id="archiveReasonBox" style="display:none"><label class="form-label">سبب الأرشفة</label><textarea name="archived_reason" class="form-control" rows="2">{{ old('archived_reason',$beneficiary->archived_reason) }}</textarea></div>
       </div>
 
-      <div id="zadProjectFields" class="project-special-box mt-4" style="display:none"><h6 class="fw-bold text-success mb-3"><i class="bi bi-basket2 me-1"></i> بيانات مشروع زاد</h6><div class="row g-3"><div class="col-md-4"><label class="form-label">عدد الإخوة</label><input name="brothers_count" type="number" min="0" value="{{ old('brothers_count',$beneficiary->brothers_count) }}" class="form-control"></div><div class="col-md-8 d-flex align-items-end"><div class="form-text">بيانات الأطفال موجودة في ملفات أفراد الأسرة.</div></div></div></div>
+      <div id="zadProjectFields" class="project-special-box mt-4" style="display:none">
+        <h6 class="fw-bold text-success mb-3"><i class="bi bi-basket2 me-1"></i> استمارة بيانات مشروع زاد (الأيتام)</h6>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">اسم المصدر</label>
+            <input name="source_name" value="{{ old('source_name', $beneficiary->source_name) }}" class="form-control" placeholder="اسم المصدر / الجمعية / الدال">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">رقم المسجل / رقم الدليل</label>
+            <input name="reference_number" value="{{ old('reference_number', $beneficiary->reference_number) }}" class="form-control" placeholder="رقم القيد أو الدليل">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">اسم الزوج المتوفي</label>
+            <input name="deceased_husband_name" value="{{ old('deceased_husband_name', $beneficiary->deceased_husband_name) }}" class="form-control" placeholder="اسم الزوج المتوفي رباعياً">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">عدد الأولاد (ممنوع لطفل واحد)</label>
+            <select name="children_count" class="form-select">
+              <option value="">— اختر عدد الأولاد —</option>
+              <option value="2" @selected(old('children_count', $beneficiary->children_count) == '2')>2 أولاد</option>
+              <option value="3" @selected(old('children_count', $beneficiary->children_count) == '3')>3 أولاد</option>
+              <option value="4" @selected(old('children_count', $beneficiary->children_count) == '4')>4 أولاد</option>
+              <option value="5" @selected(old('children_count', $beneficiary->children_count) == '5')>5 أولاد</option>
+              <option value="غير ذلك" @selected(old('children_count', $beneficiary->children_count) == 'غير ذلك')>غير ذلك (أكثر من 5)</option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">العنوان والمواصلات ( البلد / موقف إيه / بيتركب ليها إيه )</label>
+            <input name="transit_details" value="{{ old('transit_details', $beneficiary->transit_details) }}" class="form-control" placeholder="الموقف والمواصلات للوصول للقرية أو المنزل بالتفصيل">
+          </div>
+          <div class="col-12">
+            <label class="form-label">متوفى من امتى / كان شغال إيه / سبب الوفاة</label>
+            <textarea name="death_details" class="form-control" rows="2" placeholder="تاريخ أو مدة الوفاة، مهنة الزوج قبل الوفاة، سبب الوفاة...">{{ old('death_details', $beneficiary->death_details) }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">الدخل والمعاشات (تكافل / تأمين / مساعدات جمعيات / أهلها / أهل زوجها / جيران / مساجد)</label>
+            <textarea name="income_aid_sources" class="form-control" rows="2" placeholder="تفاصيل المعاشات والمساعدات المالية ومصادر الدخل...">{{ old('income_aid_sources', $beneficiary->income_aid_sources) }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">الحالة الاجتماعية للأم والمصاريف (كهرباء، غاز، مياه، إيجار، ديون، العجز)</label>
+            <textarea name="expenses_debts_details" class="form-control" rows="2" placeholder="الحالة الاجتماعية، فواتير الخدمات، قيمة الإيجار، الديون، وأوجه العجز...">{{ old('expenses_debts_details', $beneficiary->expenses_debts_details) }}</textarea>
+          </div>
+        </div>
+      </div>
 
       <div id="bathaFields" class="project-special-box mt-4" style="display:none">
         <h6 class="fw-bold text-primary mb-3"><i class="bi bi-hospital me-1"></i> ملف المريض — مشروع بعثاء الأمل</h6>

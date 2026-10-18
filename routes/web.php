@@ -69,6 +69,10 @@ Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingControlle
 Route::get('apply-case', [MobileContentController::class, 'publicApplyShow'])->name('cases.public-apply');
 Route::post('apply-case', [MobileContentController::class, 'publicApplyStore'])->middleware('throttle:heavy-ops')->name('cases.public-apply.store');
 
+// إستمارة تقديم مشروع زاد (الأيتام) 2026 - صفحة عامة متطابقة مع نموذج جوجل
+Route::get('apply-zad', [MobileContentController::class, 'applyZadShow'])->name('cases.apply-zad');
+Route::post('apply-zad', [MobileContentController::class, 'applyZadStore'])->middleware('throttle:heavy-ops')->name('cases.apply-zad.store');
+
 // مسار أمان احتياطي لتغذية ملفات التخزين والمرفقات في حال تمت معالجتها عبر لارافيل
 Route::get('storage/{path}', function (string $path) {
     $path = str_replace(["\0", '..'], '', $path);
