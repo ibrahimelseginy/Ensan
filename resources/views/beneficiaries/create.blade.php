@@ -23,6 +23,21 @@
   </div>
 @endif
 
+<div class="alert alert-warning border border-warning border-opacity-50 d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 shadow-xs">
+  <div class="d-flex align-items-center gap-3">
+    <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; min-width: 44px;">
+      <i class="bi bi-file-earmark-check fs-4"></i>
+    </div>
+    <div>
+      <h6 class="fw-bold mb-1 text-dark">مرحلة البحث المبدئي للحالات الجديدة</h6>
+      <p class="mb-0 text-muted small">إذا كانت الحالة جديدة وتحتاج تقييماً وفلترة مبدئية، يمكنك تسجيلها في <strong>البحث المبدئي</strong> أولاً (في انتظار البحث - تحت البحث - تم البحث - مرفوض)، أو المتابعة هنا لتسجيل مستفيد كامل مباشرة.</p>
+    </div>
+  </div>
+  <a href="{{ route('mobile.case-applications.index') }}" class="btn btn-warning text-dark fw-bold px-3 py-2 text-nowrap shadow-xs">
+    <i class="bi bi-search me-1"></i> فتح البحث المبدئي
+  </a>
+</div>
+
 <div class="card">
   <div class="card-body">
     <form method="POST" action="{{ route('beneficiaries.store') }}">

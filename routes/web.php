@@ -65,6 +65,10 @@ Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
 Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->middleware('throttle:heavy-ops')->name('complaint.track');
 Route::post('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'search'])->middleware('throttle:heavy-ops')->name('complaint.track.search');
 
+// تقديم طلب مساعدة / بحث مبدئي - صفحة عامة للمواطنين
+Route::get('apply-case', [MobileContentController::class, 'publicApplyShow'])->name('cases.public-apply');
+Route::post('apply-case', [MobileContentController::class, 'publicApplyStore'])->middleware('throttle:heavy-ops')->name('cases.public-apply.store');
+
 // مسار أمان احتياطي لتغذية ملفات التخزين والمرفقات في حال تمت معالجتها عبر لارافيل
 Route::get('storage/{path}', function (string $path) {
     $path = str_replace(["\0", '..'], '', $path);
@@ -521,6 +525,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::middleware('permission:mobile.case_applications.view')->group(function () {
                 Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
+                Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
                 Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
                 Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
                 Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');

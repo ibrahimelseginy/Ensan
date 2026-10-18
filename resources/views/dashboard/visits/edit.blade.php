@@ -34,22 +34,39 @@
   .research-card-body {
     padding: 1.25rem;
   }
-  .official-notice-yellow {
+  .official-notice-yellow,
+  span.official-notice-yellow,
+  label span.official-notice-yellow,
+  .form-label span.official-notice-yellow,
+  .theme-dark .official-notice-yellow,
+  .theme-dark span.official-notice-yellow,
+  .theme-dark label span.official-notice-yellow,
+  html.theme-dark .official-notice-yellow,
+  body.theme-dark .official-notice-yellow,
+  [data-bs-theme="dark"] .official-notice-yellow {
     background-color: #fef08a !important;
-    color: #854d0e !important;
-    font-weight: 700;
-    padding: 0.45rem 0.85rem;
-    border-radius: 8px;
-    display: inline-block;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    font-weight: 800 !important;
+    padding: 0.45rem 0.95rem !important;
+    border-radius: 8px !important;
+    display: inline-block !important;
+    border: 1px solid #fde047 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
   }
-  .official-notice-green {
-    background-color: #22c55e !important;
+  .official-notice-green,
+  div.official-notice-green,
+  .theme-dark .official-notice-green,
+  html.theme-dark .official-notice-green,
+  body.theme-dark .official-notice-green {
+    background-color: #15803d !important;
     color: #ffffff !important;
-    font-weight: 800;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 0.95rem;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 800 !important;
+    padding: 0.65rem 1rem !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    font-size: 0.95rem !important;
   }
   .cancer-toggle-card {
     border: 2px dashed #0ea5e9;

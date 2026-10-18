@@ -443,30 +443,147 @@ final class MobileContentController extends Controller
         return back()->with('success', 'Message deleted');
     }
 
-    // --- Mobile Case Applications ---
+    // --- Mobile Case Applications & Initial Research (البحث المبدئي) ---
     public function caseApplicationsIndex(Request $request)
     {
         $query = \App\Models\MobileCaseApplication::query();
         $type = $request->get('type');
+        $status = $request->get('status');
+        $search = $request->get('q');
 
         if ($type) {
             $query->where('case_type', $type);
         }
 
-        $applications = $query->orderByDesc('created_at')->get();
-        return view('mobile.case_applications', compact('applications', 'type'));
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('applicant_name', 'like', "%{$search}%")
+                  ->orWhere('applicant_phone', 'like', "%{$search}%")
+                  ->orWhere('applicant_id_number', 'like', "%{$search}%")
+                  ->orWhere('submitter_name', 'like', "%{$search}%")
+                  ->orWhere('submitter_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $applications = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        return view('mobile.case_applications', compact('applications', 'type', 'status', 'search'));
+    }
+
+    public function storeCaseApplication(Request $request)
+    {
+        $validated = $request->validate([
+            'submitter_type' => 'nullable|string|in:self,other',
+            'submitter_name' => 'nullable|string|max:255',
+            'submitter_phone' => 'nullable|string|max:30',
+            'submitter_relation' => 'nullable|string|max:100',
+            'applicant_name' => 'required|string|max:255',
+            'applicant_phone' => 'required|string|max:30',
+            'backup_phone' => 'nullable|string|max:30',
+            'applicant_id_number' => 'nullable|string|max:20',
+            'national_id' => 'nullable|string|max:20',
+            'case_type' => 'nullable|string|max:100',
+            'governorate' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
+            'description' => 'required|string|max:3000',
+            'status' => 'nullable|string|in:pending,under_research,approved,completed,rejected',
+            'admin_notes' => 'nullable|string|max:1000',
+            'rejection_reason' => 'nullable|string|max:1000',
+        ]);
+
+        if (empty($validated['applicant_id_number']) && !empty($validated['national_id'])) {
+            $validated['applicant_id_number'] = $validated['national_id'];
+        }
+        unset($validated['national_id']);
+
+        $validated['source'] = 'system';
+        $validated['status'] = $validated['status'] ?? 'pending';
+
+        $app = \App\Models\MobileCaseApplication::create($validated);
+
+        if (in_array($app->status, ['approved', 'completed'], true) && $request->filled('start_visit')) {
+            return redirect()->route('visits.create', ['application_id' => $app->id])
+                ->with('success', 'تم حفظ طلب البحث المبدئي وتحويل الحالة فوراً إلى استمارة البحث الاجتماعي الميداني');
+        }
+
+        return back()->with('success', 'تم تسجيل طلب البحث المبدئي بنجاح (' . $app->status_label . ')');
     }
 
     public function updateCaseApplicationStatus(Request $request, \App\Models\MobileCaseApplication $application)
     {
-        $application->update($request->only(['status', 'admin_notes']));
-        return back()->with('success', 'Application updated');
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending,under_research,approved,completed,rejected',
+            'rejection_reason' => 'nullable|required_if:status,rejected|string|max:1000',
+            'admin_notes' => 'nullable|string|max:1000',
+        ], [
+            'rejection_reason.required_if' => 'يرجى كتابة سبب الرفض لتوضيح أسباب عدم القبول في البحث المبدئي.',
+        ]);
+
+        $updateData = [
+            'status' => $validated['status'],
+            'admin_notes' => $validated['admin_notes'] ?? $application->admin_notes,
+        ];
+
+        if ($validated['status'] === 'rejected') {
+            $updateData['rejection_reason'] = $validated['rejection_reason'];
+        }
+
+        $application->update($updateData);
+
+        // إذا تم اختيار "تم البحث" وطلب التحويل المباشر للاستمارة الميدانية
+        if (in_array($validated['status'], ['approved', 'completed'], true) && ($request->filled('start_visit') || $request->input('action') === 'start_visit')) {
+            return redirect()->route('visits.create', ['application_id' => $application->id])
+                ->with('success', 'تم اعتماد نتيجة البحث المبدئي (تم البحث) وتحويل الحالة إلى استمارة البحث الاجتماعي الميداني');
+        }
+
+        return back()->with('success', 'تم تحديث حالة البحث المبدئي بنجاح إلى: ' . $application->status_label);
     }
 
     public function destroyCaseApplication(\App\Models\MobileCaseApplication $application)
     {
         $application->delete();
-        return back()->with('success', 'Application deleted');
+        return back()->with('success', 'تم حذف طلب البحث المبدئي بنجاح');
+    }
+
+    // --- صفحة تقديم الحالات العامة على الويب ---
+    public function publicApplyShow()
+    {
+        return view('public.apply_case');
+    }
+
+    public function publicApplyStore(Request $request)
+    {
+        $validated = $request->validate([
+            'submitter_type' => 'required|string|in:self,other',
+            'submitter_name' => 'nullable|required_if:submitter_type,other|string|max:255',
+            'submitter_phone' => 'nullable|required_if:submitter_type,other|string|max:30',
+            'submitter_relation' => 'nullable|string|max:100',
+            'applicant_name' => 'required|string|max:255',
+            'applicant_phone' => 'required|string|max:30',
+            'backup_phone' => 'nullable|string|max:30',
+            'applicant_id_number' => 'nullable|string|max:20',
+            'case_type' => 'required|string|max:100',
+            'governorate' => 'required|string|max:100',
+            'city' => 'required|string|max:100',
+            'address' => 'required|string|max:500',
+            'description' => 'required|string|max:3000',
+        ], [
+            'applicant_name.required' => 'اسم المستفيد أو صاحب الحالة مطلوب.',
+            'applicant_phone.required' => 'رقم هاتف المستفيد مطلوب للتواصل.',
+            'case_type.required' => 'يرجى اختيار نوع المساعدة أو المشروع.',
+            'description.required' => 'يرجى وصف الحالة والظروف الاجتماعية باختصار.',
+        ]);
+
+        $validated['source'] = 'website';
+        $validated['status'] = 'pending';
+
+        \App\Models\MobileCaseApplication::create($validated);
+
+        return back()->with('success', 'تم إرسال طلب البحث المبدئي بنجاح. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة الطلب والتواصل معكم.');
     }
 
     // --- Mobile Donations Management ---

@@ -158,25 +158,25 @@
         <div class="row align-items-center g-3 position-relative" style="z-index: 2;">
             <div class="col-lg-7 col-md-12">
                 <div class="hero-greeting d-inline-flex align-items-center gap-2 mb-2">
-                    <span class="badge bg-white text-dark rounded-pill px-3 py-1 fw-bold shadow-xs">{{ $greeting }} 👋</span>
-                    <span class="text-white fw-bold small opacity-90">مؤسسة إنسان الخيرية</span>
+                    <span class="badge bg-white text-dark rounded-pill px-3.5 py-1.5 fw-bold shadow-xs" style="font-size: 0.95rem;">{{ $greeting }} 👋</span>
+                    <span class="text-white fw-bold opacity-95" style="font-size: 1.05rem;">مؤسسة إنسان الخيرية</span>
                 </div>
-                <h2 class="hero-title fw-black text-white mb-2">
+                <h2 class="hero-title fw-black text-white mb-2" style="font-size: 2rem; letter-spacing: -0.5px;">
                     مرحباً بك {{ $currentUser->name ?? 'في منظومة إنسان' }}
                 </h2>
 
                 {{-- Live Hijri, Gregorian & Clock Badges --}}
                 <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-1">
-                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3 py-2 fs-7 d-inline-flex align-items-center gap-2 border border-white border-opacity-10 shadow-xs" title="التاريخ الهجري">
-                        <i class="bi bi-moon-stars-fill text-warning"></i>
+                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3.5 py-2 d-inline-flex align-items-center gap-2 border border-white border-opacity-15 shadow-xs" style="font-size: 0.95rem;" title="التاريخ الهجري">
+                        <i class="bi bi-moon-stars-fill text-warning fs-6"></i>
                         <span id="liveHijriDate" class="fw-bold">{{ $hijriDate }}</span>
                     </span>
-                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3 py-2 fs-7 d-inline-flex align-items-center gap-2 border border-white border-opacity-10 shadow-xs" title="التاريخ الميلادي">
-                        <i class="bi bi-calendar3 text-info"></i>
+                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3.5 py-2 d-inline-flex align-items-center gap-2 border border-white border-opacity-15 shadow-xs" style="font-size: 0.95rem;" title="التاريخ الميلادي">
+                        <i class="bi bi-calendar3 text-info fs-6"></i>
                         <span id="liveGregorianDate" class="fw-bold">{{ $gregDate }}</span>
                     </span>
-                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3 py-2 fs-7 d-inline-flex align-items-center gap-2 border border-white border-opacity-10 shadow-xs" title="الساعة الحالية لحظياً">
-                        <i class="bi bi-clock-history text-success"></i>
+                    <span class="badge bg-dark bg-opacity-25 text-white rounded-pill px-3.5 py-2 d-inline-flex align-items-center gap-2 border border-white border-opacity-15 shadow-xs" style="font-size: 0.95rem;" title="الساعة الحالية لحظياً">
+                        <i class="bi bi-clock-history text-success fs-6"></i>
                         <span id="liveClockTime" class="font-monospace fw-bold" dir="ltr">{{ $currentTime }}</span>
                     </span>
                 </div>

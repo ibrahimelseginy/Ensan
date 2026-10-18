@@ -68,7 +68,36 @@ final class VisitWebController extends Controller
             $selectedBeneficiary = Beneficiary::with('familyMembers')->find($request->beneficiary_id);
         }
 
-        return view('dashboard.visits.create', compact('beneficiaries', 'researchers', 'selectedBeneficiary'));
+        $caseApplication = null;
+        if ($request->filled('application_id')) {
+            $caseApplication = \App\Models\MobileCaseApplication::find($request->application_id);
+            if ($caseApplication && !$selectedBeneficiary) {
+                if ($caseApplication->beneficiary_id) {
+                    $selectedBeneficiary = Beneficiary::with('familyMembers')->find($caseApplication->beneficiary_id);
+                } else {
+                    // Create or find matching beneficiary automatically to link cleanly
+                    $matchedBen = Beneficiary::where('national_id', $caseApplication->applicant_id_number)
+                        ->orWhere('phone', $caseApplication->applicant_phone)
+                        ->first();
+
+                    if (!$matchedBen) {
+                        $matchedBen = Beneficiary::create([
+                            'full_name' => $caseApplication->applicant_name,
+                            'national_id' => $caseApplication->applicant_id_number,
+                            'phone' => $caseApplication->applicant_phone,
+                            'backup_phone' => $caseApplication->backup_phone,
+                            'address' => trim(($caseApplication->governorate ? $caseApplication->governorate . ' - ' : '') . ($caseApplication->city ? $caseApplication->city . ' - ' : '') . $caseApplication->address),
+                            'status' => 'under_review',
+                        ]);
+                    }
+                    $selectedBeneficiary = $matchedBen;
+                    $caseApplication->update(['beneficiary_id' => $matchedBen->id]);
+                    $beneficiaries = Beneficiary::orderBy('full_name')->get();
+                }
+            }
+        }
+
+        return view('dashboard.visits.create', compact('beneficiaries', 'researchers', 'selectedBeneficiary', 'caseApplication'));
     }
 
     public function store(Request $request)
@@ -103,7 +132,19 @@ final class VisitWebController extends Controller
             Beneficiary::where('id', $validated['beneficiary_id'])->update(['status' => 'under_review']);
         }
 
-        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح.');
+        // Link with Case Application if provided
+        if ($request->filled('application_id')) {
+            $caseApp = \App\Models\MobileCaseApplication::find($request->application_id);
+            if ($caseApp) {
+                $caseApp->update([
+                    'status' => 'completed',
+                    'field_visit_id' => $visit->id,
+                    'beneficiary_id' => $visit->beneficiary_id,
+                ]);
+            }
+        }
+
+        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح وتحويل حالة البحث إلى (تم البحث).');
     }
 
     public function show(FieldVisit $visit)

@@ -34,22 +34,39 @@
   .research-card-body {
     padding: 1.25rem;
   }
-  .official-notice-yellow {
+  .official-notice-yellow,
+  span.official-notice-yellow,
+  label span.official-notice-yellow,
+  .form-label span.official-notice-yellow,
+  .theme-dark .official-notice-yellow,
+  .theme-dark span.official-notice-yellow,
+  .theme-dark label span.official-notice-yellow,
+  html.theme-dark .official-notice-yellow,
+  body.theme-dark .official-notice-yellow,
+  [data-bs-theme="dark"] .official-notice-yellow {
     background-color: #fef08a !important;
-    color: #854d0e !important;
-    font-weight: 700;
-    padding: 0.45rem 0.85rem;
-    border-radius: 8px;
-    display: inline-block;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    font-weight: 800 !important;
+    padding: 0.45rem 0.95rem !important;
+    border-radius: 8px !important;
+    display: inline-block !important;
+    border: 1px solid #fde047 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
   }
-  .official-notice-green {
-    background-color: #22c55e !important;
+  .official-notice-green,
+  div.official-notice-green,
+  .theme-dark .official-notice-green,
+  html.theme-dark .official-notice-green,
+  body.theme-dark .official-notice-green {
+    background-color: #15803d !important;
     color: #ffffff !important;
-    font-weight: 800;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 0.95rem;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 800 !important;
+    padding: 0.65rem 1rem !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    font-size: 0.95rem !important;
   }
   .cancer-toggle-card {
     border: 2px dashed #0ea5e9;
@@ -144,8 +161,32 @@
     </div>
   @endif
 
+  @php
+    $defaultPatientName = old('patient_name', $caseApplication?->applicant_name ?? $selectedBeneficiary?->full_name);
+    $defaultGuardianName = old('guardian_name', $caseApplication?->applicant_name ?? $selectedBeneficiary?->full_name);
+    $defaultNationalId = old('national_id', $caseApplication?->applicant_id_number ?? $selectedBeneficiary?->national_id);
+    $defaultPhone = old('phone', $caseApplication?->applicant_phone ?? $selectedBeneficiary?->phone);
+    $defaultAddress = old('address', $caseApplication ? trim(($caseApplication->governorate ? $caseApplication->governorate . ' - ' : '') . ($caseApplication->city ? $caseApplication->city . ' - ' : '') . $caseApplication->address) : $selectedBeneficiary?->address);
+    $defaultNeeds = old('case_needs', $caseApplication ? ($caseApplication->case_type_label . ' — ' . $caseApplication->description) : '');
+    $defaultGuide = old('case_guide', $caseApplication ? (($caseApplication->submitter_type === 'other') ? ('مقدم من: ' . $caseApplication->submitter_name . ' (' . $caseApplication->submitter_relation . ') - ' . $caseApplication->submitter_phone) : 'تقديم مباشر من الحالة عبر ' . $caseApplication->source) : '');
+    $defaultIsCancer = old('has_cancer_patient', $caseApplication ? in_array($caseApplication->case_type, ['hope', 'medical', 'أورام']) : false);
+  @endphp
+
+  @if(!empty($caseApplication))
+    <input type="hidden" name="application_id" value="{{ $caseApplication->id }}">
+    <div class="alert alert-info shadow-sm border-0 mb-4 d-flex align-items-center gap-2">
+      <i class="bi bi-link-45deg fs-4 text-info"></i>
+      <div>
+        <strong>تم استيراد بيانات الحالة من طلب البحث المبدئي رقم #{{ $caseApplication->id }}</strong>: {{ $caseApplication->applicant_name }} ({{ $caseApplication->case_type_label }}). تم نقل البيانات تلقائياً لإكمال الاستمارة الميدانية.
+      </div>
+    </div>
+  @endif
+
   <form id="researchForm" method="POST" action="{{ route('visits.store') }}">
     @csrf
+    @if(!empty($caseApplication))
+      <input type="hidden" name="application_id" value="{{ $caseApplication->id }}">
+    @endif
 
     <!-- الأساسيات: المستفيد والباحث وتاريخ البحث -->
     <div class="research-card">
@@ -179,7 +220,7 @@
               @foreach($researchers as $res)
                 <option value="{{ $res->id }}"
                   data-phone="{{ $res->phone ?? '' }}"
-                  @selected((string)old('researcher_id', auth()->id()) === (string)$res->id)>
+                  @selected((string)old('researcher_id', $caseApplication?->assigned_researcher_id ?? auth()->id()) === (string)$res->id)>
                   {{ $res->name }}
                 </option>
               @endforeach
@@ -202,22 +243,22 @@
 
           <div class="col-md-4">
             <label class="form-label">اسم المريض / الحالة كاملاً</label>
-            <input type="text" name="patient_name" id="patientNameInput" value="{{ old('patient_name', $selectedBeneficiary?->full_name) }}" class="form-control" placeholder="اسم الحالة محل البحث">
+            <input type="text" name="patient_name" id="patientNameInput" value="{{ $defaultPatientName }}" class="form-control" placeholder="اسم الحالة محل البحث">
           </div>
 
           <div class="col-md-4">
             <label class="form-label">اسم ولي الأمر / المعيل</label>
-            <input type="text" name="guardian_name" id="guardianNameInput" value="{{ old('guardian_name', $selectedBeneficiary?->full_name) }}" class="form-control" placeholder="ولي الأمر أو رب الأسرة">
+            <input type="text" name="guardian_name" id="guardianNameInput" value="{{ $defaultGuardianName }}" class="form-control" placeholder="ولي الأمر أو رب الأسرة">
           </div>
 
           <div class="col-md-4">
             <label class="form-label">الرقم القومي (14 رقم)</label>
-            <input type="text" name="national_id" id="nationalIdInput" value="{{ old('national_id', $selectedBeneficiary?->national_id) }}" maxlength="14" class="form-control" placeholder="الرقم القومي">
+            <input type="text" name="national_id" id="nationalIdInput" value="{{ $defaultNationalId }}" maxlength="14" class="form-control" placeholder="الرقم القومي">
           </div>
 
           <div class="col-md-3">
             <label class="form-label">رقم الهاتف</label>
-            <input type="text" name="phone" id="phoneInput" value="{{ old('phone', $selectedBeneficiary?->phone) }}" class="form-control" placeholder="رقم هاتف الحالة">
+            <input type="text" name="phone" id="phoneInput" value="{{ $defaultPhone }}" class="form-control" placeholder="رقم هاتف الحالة">
           </div>
 
           <div class="col-md-3">
@@ -246,7 +287,7 @@
 
           <div class="col-12">
             <label class="form-label">العنوان بالتفصيل</label>
-            <input type="text" name="address" id="addressInput" value="{{ old('address', $selectedBeneficiary?->address) }}" class="form-control" placeholder="المحافظة - المركز / المدينة - القرية / الشارع التفصيلي">
+            <input type="text" name="address" id="addressInput" value="{{ $defaultAddress }}" class="form-control" placeholder="المحافظة - المركز / المدينة - القرية / الشارع التفصيلي">
           </div>
 
           <div class="col-12">
@@ -420,12 +461,12 @@
 
           <div class="col-md-6">
             <label class="form-label">دليل الحالة للمؤسسة (كيف عرفت الحالة بالمؤسسة؟)</label>
-            <input type="text" name="case_guide" value="{{ old('case_guide') }}" class="form-control" placeholder="جار، متطوع، صفحة الفيس، مسجد...">
+            <input type="text" name="case_guide" value="{{ $defaultGuide }}" class="form-control" placeholder="جار، متطوع، صفحة الفيس، مسجد...">
           </div>
 
           <div class="col-md-6">
             <label class="form-label">احتياج الحالة من التقديم</label>
-            <input type="text" name="case_needs" value="{{ old('case_needs') }}" class="form-control" placeholder="سلة غذائية، مساعدة مالية، علاج، سقف، ترميم...">
+            <input type="text" name="case_needs" value="{{ $defaultNeeds }}" class="form-control" placeholder="سلة غذائية، مساعدة مالية، علاج، سقف، ترميم...">
           </div>
 
           <div class="col-12">
@@ -450,20 +491,20 @@
       </p>
 
       <div class="d-inline-flex gap-3 my-2">
-        <label class="cancer-radio-btn {{ old('has_cancer_patient') ? '' : 'active-no' }}" id="radioBtnNo">
-          <input type="radio" name="has_cancer_patient" value="0" class="d-none" @checked(!old('has_cancer_patient'))>
+        <label class="cancer-radio-btn {{ $defaultIsCancer ? '' : 'active-no' }}" id="radioBtnNo">
+          <input type="radio" name="has_cancer_patient" value="0" class="d-none" @checked(!$defaultIsCancer)>
           <i class="bi bi-x-circle-fill"></i>
           <span>لا (بحث اجتماعي عادي)</span>
         </label>
 
-        <label class="cancer-radio-btn {{ old('has_cancer_patient') ? 'active-yes' : '' }}" id="radioBtnYes">
-          <input type="radio" name="has_cancer_patient" value="1" class="d-none" @checked(old('has_cancer_patient'))>
+        <label class="cancer-radio-btn {{ $defaultIsCancer ? 'active-yes' : '' }}" id="radioBtnYes">
+          <input type="radio" name="has_cancer_patient" value="1" class="d-none" @checked($defaultIsCancer)>
           <i class="bi bi-check-circle-fill"></i>
           <span>نعم (يوجد مريض أورام)</span>
         </label>
       </div>
 
-      <div id="normalResearchNotice" class="mt-3 text-muted small" style="{{ old('has_cancer_patient') ? 'display: none;' : '' }}">
+      <div id="normalResearchNotice" class="mt-3 text-muted small" style="{{ $defaultIsCancer ? 'display: none;' : '' }}">
         <i class="bi bi-info-circle text-primary me-1"></i> تم تحديد: <strong>بحث اجتماعي عادي</strong>. يمكنك مراجعة البيانات والضغط على حفظ بالأسفل لإنهاء البحث والطباعة.
       </div>
     </div>
@@ -471,7 +512,7 @@
     <!-- ============================================================== -->
     <!-- القسم الخاص بمرضى الأورام (يفتح فقط إذا تم اختيار "نعم") -->
     <!-- ============================================================== -->
-    <div id="cancerSection" class="research-card border-danger shadow-sm" style="{{ old('has_cancer_patient') ? '' : 'display: none;' }}">
+    <div id="cancerSection" class="research-card border-danger shadow-sm" style="{{ $defaultIsCancer ? '' : 'display: none;' }}">
       <div class="research-card-header bg-danger text-white">
         <i class="bi bi-hospital-fill"></i>
         <span>استمارة بيانات مريض أورام — تفاصيل العلاج والبروتوكول الطبي</span>

@@ -6650,7 +6650,51 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover .ensan-sub-tile-arrow,
   padding: 0.25rem 0.75rem !important;
 }
 
+/* ==========================================================================
+   High-Contrast Notice Badges for Light & Dark Modes
+   ========================================================================== */
+.official-notice-yellow,
+span.official-notice-yellow,
+label span.official-notice-yellow,
+.form-label span.official-notice-yellow,
+.theme-dark .official-notice-yellow,
+.theme-dark span.official-notice-yellow,
+.theme-dark label span.official-notice-yellow,
+.theme-dark .form-label span.official-notice-yellow,
+html.theme-dark .official-notice-yellow,
+html.theme-dark span.official-notice-yellow,
+body.theme-dark .official-notice-yellow,
+body.theme-dark span.official-notice-yellow,
+[data-bs-theme="dark"] .official-notice-yellow,
+[data-bs-theme="dark"] span.official-notice-yellow {
+  background-color: #fef08a !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 800 !important;
+  padding: 0.45rem 0.95rem !important;
+  border-radius: 8px !important;
+  display: inline-block !important;
+  border: 1px solid #fde047 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  text-shadow: none !important;
+}
 
-
-
-
+.official-notice-green,
+div.official-notice-green,
+span.official-notice-green,
+.theme-dark .official-notice-green,
+.theme-dark div.official-notice-green,
+.theme-dark span.official-notice-green,
+html.theme-dark .official-notice-green,
+body.theme-dark .official-notice-green,
+[data-bs-theme="dark"] .official-notice-green {
+  background-color: #15803d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 800 !important;
+  padding: 0.65rem 1rem !important;
+  border-radius: 8px !important;
+  text-align: center !important;
+  font-size: 0.95rem !important;
+  text-shadow: none !important;
+}
