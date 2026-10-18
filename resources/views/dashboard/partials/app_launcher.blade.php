@@ -31,12 +31,30 @@
     -webkit-backdrop-filter: none !important;
 }
 
-.theme-dark .launcher-header-bar {
-    background: #1e293b !important;
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+.theme-dark .launcher-header-bar,
+html.theme-dark .launcher-header-bar,
+html[data-bs-theme="dark"] .launcher-header-bar,
+body.theme-dark .launcher-header-bar,
+[data-bs-theme="dark"] .launcher-header-bar {
+    background: linear-gradient(145deg, #131d31 0%, #0e1728 100%) !important;
+    background-color: #0e1728 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45) !important;
     opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.theme-dark .launcher-header-bar h4,
+html.theme-dark .launcher-header-bar h4,
+[data-bs-theme="dark"] .launcher-header-bar h4 {
+    color: #ffffff !important;
+}
+
+.theme-dark .launcher-header-bar p,
+html.theme-dark .launcher-header-bar p,
+[data-bs-theme="dark"] .launcher-header-bar p {
+    color: #94a3b8 !important;
 }
 
 .launcher-search-box {
@@ -452,20 +470,36 @@ body[data-bs-theme="dark"] .ensan-sub-tile:hover,
     border-color: #10b981 !important;
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
 }
-.theme-dark .launcher-cat-btn {
-    background: #1e293b !important;
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f8fafc;
+.theme-dark .launcher-cat-btn,
+html.theme-dark .launcher-cat-btn,
+html[data-bs-theme="dark"] .launcher-cat-btn,
+body.theme-dark .launcher-cat-btn,
+[data-bs-theme="dark"] .launcher-cat-btn {
+    background: #182337 !important;
+    background-color: #182337 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+    opacity: 1 !important;
 }
-.theme-dark .launcher-cat-btn:hover {
-    background: #27374f !important;
+.theme-dark .launcher-cat-btn:hover,
+html.theme-dark .launcher-cat-btn:hover,
+html[data-bs-theme="dark"] .launcher-cat-btn:hover,
+body.theme-dark .launcher-cat-btn:hover,
+[data-bs-theme="dark"] .launcher-cat-btn:hover {
+    background: #24354f !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
 }
-.theme-dark .launcher-cat-btn.active {
+.theme-dark .launcher-cat-btn.active,
+html.theme-dark .launcher-cat-btn.active,
+html[data-bs-theme="dark"] .launcher-cat-btn.active,
+body.theme-dark .launcher-cat-btn.active,
+[data-bs-theme="dark"] .launcher-cat-btn.active {
     background: #10b981 !important;
     background-color: #10b981 !important;
     color: #ffffff !important;
     border-color: #10b981 !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
 }
 
 </style>

@@ -3465,25 +3465,168 @@
   <script src="{{ asset('js/print-preview.js') }}?v={{ file_exists(public_path('js/print-preview.js')) ? filemtime(public_path('js/print-preview.js')) : time() }}"></script>
 
   @if(!request()->routeIs('dashboard.index') && auth()->check())
+  <style>
+  /* ==============================================================
+   * Global App Launcher Modal - 100% Solid & Opaque (معتمة تماماً بدون شفافية)
+   * ============================================================== */
+  #globalAppLauncherModal .modal-content,
+  #globalAppLauncherModal.modal .modal-content,
+  .global-launcher-modal .modal-content {
+      background: #0b1220 !important;
+      background-color: #0b1220 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  #globalAppLauncherModal .modal-header,
+  .global-launcher-modal .modal-header {
+      background: #0f172a !important;
+      background-color: #0f172a !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  #globalAppLauncherModal .launcher-header-icon-box {
+      width: 42px;
+      height: 42px;
+      background: rgba(16, 185, 129, 0.15) !important;
+      color: #10b981 !important;
+      border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  }
+
+  #globalAppLauncherModal .launcher-modal-title {
+      color: #ffffff !important;
+      font-size: 1.15rem;
+  }
+
+  #globalAppLauncherModal .launcher-modal-subtitle {
+      color: #94a3b8 !important;
+      font-size: 0.85rem;
+  }
+
+  #globalAppLauncherModal .launcher-btn-fullpage {
+      background: #1e293b !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: #e2e8f0 !important;
+      font-size: 0.82rem;
+      transition: all 0.2s ease;
+  }
+  #globalAppLauncherModal .launcher-btn-fullpage:hover {
+      background: #334155 !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  #globalAppLauncherModal .modal-body,
+  .global-launcher-modal .modal-body {
+      background: #0b1220 !important;
+      background-color: #0b1220 !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  /* Inner Search & Section Card: أقسام وتطبيقات المنظومة */
+  #globalAppLauncherModal .launcher-header-bar {
+      background: linear-gradient(145deg, #131d31 0%, #0e1728 100%) !important;
+      background-color: #0e1728 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45) !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  #globalAppLauncherModal .launcher-header-bar h4 {
+      color: #ffffff !important;
+  }
+
+  #globalAppLauncherModal .launcher-header-bar p {
+      color: #94a3b8 !important;
+  }
+
+  #globalAppLauncherModal .launcher-search-input {
+      background: #080d18 !important;
+      background-color: #080d18 !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  #globalAppLauncherModal .launcher-search-input::placeholder {
+      color: #64748b !important;
+  }
+
+  #globalAppLauncherModal .launcher-cat-btn {
+      background: #131d31 !important;
+      background-color: #131d31 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #cbd5e1 !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  #globalAppLauncherModal .launcher-cat-btn:hover {
+      background: #1e293b !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  #globalAppLauncherModal .launcher-cat-btn.active {
+      background: #10b981 !important;
+      background-color: #10b981 !important;
+      color: #ffffff !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+  }
+
+  #globalAppLauncherModal .ensan-app-card {
+      background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+      background-color: #0b1220 !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+  }
+
+  #globalAppLauncherModal .ensan-app-card:hover {
+      background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+      background-color: #0e1728 !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 18px 36px rgba(16, 185, 129, 0.28) !important;
+  }
+
+  #globalAppLauncherModal .ensan-app-title {
+      color: #ffffff !important;
+  }
+  </style>
+
   {{-- Global In-Page App Launcher Modal --}}
-  <div class="modal fade" id="globalAppLauncherModal" tabindex="-1" aria-labelledby="globalAppLauncherModalLabel" aria-hidden="true" style="z-index: 1055;">
+  <div class="modal fade global-launcher-modal" id="globalAppLauncherModal" tabindex="-1" aria-labelledby="globalAppLauncherModalLabel" aria-hidden="true" style="z-index: 1055;">
       <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered modal-dialog-scrollable">
-          <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden" style="background-color: var(--bs-body-bg, #0f172a);">
-              <div class="modal-header border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+          <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+              <div class="modal-header py-3 px-4 d-flex align-items-center justify-content-between">
                   <div class="d-flex align-items-center gap-3">
-                      <div class="p-2 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                      <div class="launcher-header-icon-box p-2 rounded-circle d-flex align-items-center justify-content-center">
                           <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
                       </div>
                       <div>
-                          <h5 class="modal-title fw-bold mb-0 text-main" id="globalAppLauncherModalLabel">بوابة التطبيقات والخدمات</h5>
-                          <small class="text-muted">انتقل لأي قسم مباشرة أو استعرض خدماته الفرعية دون مغادرة صفحتك الحالية</small>
+                          <h5 class="modal-title fw-bold mb-0 launcher-modal-title" id="globalAppLauncherModalLabel">بوابة التطبيقات والخدمات</h5>
+                          <small class="launcher-modal-subtitle">انتقل لأي قسم مباشرة أو استعرض خدماته الفرعية دون مغادرة صفحتك الحالية</small>
                       </div>
                   </div>
                   <div class="d-flex align-items-center gap-2">
-                      <a href="{{ route('dashboard.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold">
+                      <a href="{{ route('dashboard.index') }}" class="btn btn-sm launcher-btn-fullpage rounded-pill px-3 fw-semibold">
                           <i class="bi bi-box-arrow-up-right me-1"></i> فتح كصفحة كاملة
                       </a>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
               </div>
               <div class="modal-body p-3 p-md-4">
