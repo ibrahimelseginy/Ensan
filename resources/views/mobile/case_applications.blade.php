@@ -37,6 +37,10 @@
         </div>
         
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ route('cases.apply-zad') }}" target="_blank" class="btn btn-outline-success rounded-pill px-3 py-2.5 fw-bold">
+                <i class="bi bi-basket2-fill me-1"></i> استمارة زاد 2026 (الويب)
+            </a>
+
             <button type="button" class="btn btn-primary rounded-pill px-4 py-2.5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#createCaseModal">
                 <i class="bi bi-plus-circle me-1"></i> تسجيل طلب بحث مبدئي جديد
             </button>
@@ -96,6 +100,10 @@
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'rejected'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'rejected' ? 'btn-danger text-white' : 'btn-outline-danger' }}">
                         <i class="bi bi-x-circle me-1"></i> مرفوض ({{ \App\Models\MobileCaseApplication::where('status', 'rejected')->count() }})
+                    </a>
+                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['type' => 'zad'])) }}" 
+                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('type') == 'zad' ? 'btn-success text-white' : 'btn-outline-success' }}">
+                        <i class="bi bi-basket2-fill me-1"></i> مشروع زاد ({{ \App\Models\MobileCaseApplication::where('case_type', 'zad')->count() }})
                     </a>
                 </div>
             </div>
@@ -272,6 +280,39 @@
                                     {{ $app->description }}
                                 </div>
                             </div>
+
+                            @if($app->case_type === 'zad' || $app->deceased_husband_name || $app->death_details)
+                                <div class="col-12 p-3 rounded-3 border border-success bg-success bg-opacity-10 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-success border-opacity-25 pb-2">
+                                        <h6 class="fw-bold text-success mb-0"><i class="bi bi-basket2-fill me-1"></i> بيانات استمارة زاد (الأيتام) 2026:</h6>
+                                        @if($app->reference_number)
+                                            <span class="badge bg-success text-white">رقم الدليل: {{ $app->reference_number }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="row g-2 small">
+                                        <div class="col-md-6"><strong>اسم المصدر:</strong> {{ $app->source_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>اسم الأم:</strong> {{ $app->mother_name ?? $app->applicant_name }}</div>
+                                        <div class="col-md-6"><strong>اسم الزوج المتوفي:</strong> {{ $app->deceased_husband_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>مين مقدم للأم (صفته):</strong> {{ $app->submitter_relation_to_mother ?? $app->submitter_relation ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>عدد الأولاد:</strong> <span class="badge bg-danger">{{ $app->children_count ?? '-' }}</span></div>
+                                        @if($app->death_details)
+                                            <div class="col-12"><strong>تفاصيل الوفاة والعمل:</strong> {{ $app->death_details }}</div>
+                                        @endif
+                                        @if($app->transit_details)
+                                            <div class="col-12"><strong>العنوان والمواصلات (الموقف):</strong> {{ $app->transit_details }}</div>
+                                        @endif
+                                        @if($app->children_details)
+                                            <div class="col-12"><strong>أسماء الأطفال وسنهم ومصاريفهم وأمراضهم:</strong> {{ $app->children_details }}</div>
+                                        @endif
+                                        @if($app->income_aid_sources)
+                                            <div class="col-12"><strong>المعاشات والمساعدات:</strong> {{ $app->income_aid_sources }}</div>
+                                        @endif
+                                        @if($app->expenses_debts_details)
+                                            <div class="col-12"><strong>المصاريف والإيجار والديون:</strong> {{ $app->expenses_debts_details }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Decision Panel -->
@@ -421,8 +462,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">نوع المساعدة</label>
-                            <select name="case_type" class="form-select">
-                                <option value="zad">كفالة أيتام (مشروع زاد)</option>
+                            <select name="case_type" id="newCaseType" class="form-select" onchange="toggleZadCreateFields(this.value)">
+                                <option value="zad" selected>كفالة أيتام (مشروع زاد)</option>
                                 <option value="hope">مرضى أورام وعلاج (بعثاء الأمل)</option>
                                 <option value="roof">سقف وترميم منازل</option>
                                 <option value="financial">مساعدة مالية</option>
@@ -431,6 +472,60 @@
                                 <option value="other">أخرى</option>
                             </select>
                         </div>
+
+                        <!-- حقول استمارة زاد التخصصية -->
+                        <div id="newZadFields" class="col-12 p-3 rounded-3 border border-success bg-success bg-opacity-10">
+                            <h6 class="fw-bold text-success mb-2"><i class="bi bi-basket2-fill me-1"></i> حقول استمارة زاد (الأيتام) 2026:</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">اسم المصدر</label>
+                                    <input type="text" name="source_name" class="form-control form-control-sm" placeholder="اسم المصدر / الدال على الحالة">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">رقم المسجل / رقم الدليل</label>
+                                    <input type="text" name="reference_number" class="form-control form-control-sm" placeholder="رقم القيد أو الدليل">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">اسم الزوج المتوفي</label>
+                                    <input type="text" name="deceased_husband_name" class="form-control form-control-sm" placeholder="اسم الزوج المتوفي رباعياً">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">مين مقدم للأم (صفته)</label>
+                                    <input type="text" name="submitter_relation_to_mother" class="form-control form-control-sm" placeholder="صلة مقدم الطلب بالأم">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">عدد الأولاد (ممنوع لطفل واحد)</label>
+                                    <select name="children_count" class="form-select form-select-sm">
+                                        <option value="2">2 أولاد</option>
+                                        <option value="3">3 أولاد</option>
+                                        <option value="4">4 أولاد</option>
+                                        <option value="5">5 أولاد</option>
+                                        <option value="غير ذلك">غير ذلك (أكثر من 5)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">العنوان والمواصلات (البلد / موقف إيه / بيتركب ليها إيه)</label>
+                                    <input type="text" name="transit_details" class="form-control form-control-sm" placeholder="الموقف والمواصلات بالتفصيل">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">متوفى من إمتى / كان شغال إيه / سبب الوفاة</label>
+                                    <textarea name="death_details" class="form-control form-control-sm" rows="2" placeholder="تاريخ وسبب الوفاة وعمل الزوج..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">أسماء الأطفال وسنهم ومصاريف دروسهم والأمراض المزمنة</label>
+                                    <textarea name="children_details" class="form-control form-control-sm" rows="2" placeholder="أسماء الأطفال وأعمارهم ومصاريفهم وأمراضهم..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">الدخل والمعاشات (تكافل / تأمين / مساعدات جمعيات / أهلها / أهل زوجها / جيران / مساجد)</label>
+                                    <textarea name="income_aid_sources" class="form-control form-control-sm" rows="2" placeholder="تفاصيل المعاشات والمساعدات ومصادر الدخل..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">الحالة الاجتماعية للأم والمصاريف (كهرباء، غاز، مياه، إيجار، ديون، العجز)</label>
+                                    <textarea name="expenses_debts_details" class="form-control form-control-sm" rows="2" placeholder="الحالة الاجتماعية والمرافق والإيجار والديون..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">المحافظة</label>
                             <input type="text" name="governorate" class="form-control" placeholder="القاهرة / الجيزة...">
@@ -499,6 +594,17 @@ function toggleNewSubmitter() {
         box.classList.remove('d-none');
     } else {
         box.classList.add('d-none');
+    }
+}
+
+function toggleZadCreateFields(val) {
+    const zadBox = document.getElementById('newZadFields');
+    if (zadBox) {
+        if (val === 'zad') {
+            zadBox.classList.remove('d-none');
+        } else {
+            zadBox.classList.add('d-none');
+        }
     }
 }
 

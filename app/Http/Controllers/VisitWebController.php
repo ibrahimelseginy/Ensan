@@ -81,8 +81,19 @@ final class VisitWebController extends Controller
                         ->first();
 
                     if (!$matchedBen) {
+                        $zadProject = \App\Models\Project::where('name', 'like', '%زاد%')->first();
                         $matchedBen = Beneficiary::create([
                             'full_name' => $caseApplication->applicant_name,
+                            'mother_name' => $caseApplication->mother_name ?: $caseApplication->applicant_name,
+                            'deceased_husband_name' => $caseApplication->deceased_husband_name,
+                            'source_name' => $caseApplication->source_name,
+                            'reference_number' => $caseApplication->reference_number,
+                            'children_count' => $caseApplication->children_count,
+                            'transit_details' => $caseApplication->transit_details,
+                            'death_details' => $caseApplication->death_details,
+                            'income_aid_sources' => $caseApplication->income_aid_sources,
+                            'expenses_debts_details' => $caseApplication->expenses_debts_details,
+                            'project_id' => $caseApplication->case_type === 'zad' ? optional($zadProject)->id : null,
                             'national_id' => $caseApplication->applicant_id_number,
                             'phone' => $caseApplication->applicant_phone,
                             'backup_phone' => $caseApplication->backup_phone,
