@@ -6148,26 +6148,26 @@ body.theme-dark #universalPrintPaper table tbody tr:nth-child(even) {
 }
 
 /* Dark mode solid modals */
-html.theme-dark .modal-content,
-body.theme-dark .modal-content,
-.theme-dark .modal-content,
-[data-bs-theme="dark"] .modal-content,
-[data-theme="dark"] .modal-content,
-html.theme-dark .modal-header,
-body.theme-dark .modal-header,
-.theme-dark .modal-header,
-[data-bs-theme="dark"] .modal-header,
-[data-theme="dark"] .modal-header,
-html.theme-dark .modal-body,
-body.theme-dark .modal-body,
-.theme-dark .modal-body,
-[data-bs-theme="dark"] .modal-body,
-[data-theme="dark"] .modal-body,
-html.theme-dark .modal-footer,
-body.theme-dark .modal-footer,
-.theme-dark .modal-footer,
-[data-bs-theme="dark"] .modal-footer,
-[data-theme="dark"] .modal-footer,
+html.theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+body.theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+.theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+[data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-content,
+[data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-content,
+html.theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+body.theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+.theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+[data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-header,
+[data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-header,
+html.theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+body.theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+.theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+[data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-body,
+[data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-body,
+html.theme-dark .modal:not(.ensan-sub-modal) .modal-footer,
+body.theme-dark .modal:not(.ensan-sub-modal) .modal-footer,
+.theme-dark .modal:not(.ensan-sub-modal) .modal-footer,
+[data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-footer,
+[data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-footer,
 html.theme-dark .service-modal .modal-content,
 body.theme-dark .service-modal .modal-content,
 .theme-dark .service-modal .modal-content,
@@ -6547,6 +6547,50 @@ body.theme-dark .ensan-sub-tile:hover .ensan-sub-tile-arrow,
 [data-bs-theme="dark"] .ensan-sub-tile:hover .ensan-sub-tile-arrow {
   color: #10b981 !important;
   transform: translateX(-4px) !important;
+}
+
+/* Ensure pastel icon badges look identical in light and dark mode */
+.ensan-sub-modal .bg-warning-subtle,
+html.theme-dark .ensan-sub-modal .bg-warning-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-warning-subtle {
+  background-color: #fef3c7 !important;
+  color: #d97706 !important;
+}
+.ensan-sub-modal .bg-success-subtle,
+html.theme-dark .ensan-sub-modal .bg-success-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-success-subtle {
+  background-color: #dcfce7 !important;
+  color: #16a34a !important;
+}
+.ensan-sub-modal .bg-info-subtle,
+html.theme-dark .ensan-sub-modal .bg-info-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-info-subtle {
+  background-color: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+.ensan-sub-modal .bg-danger-subtle,
+html.theme-dark .ensan-sub-modal .bg-danger-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-danger-subtle {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+.ensan-sub-modal .bg-primary-subtle,
+html.theme-dark .ensan-sub-modal .bg-primary-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-primary-subtle {
+  background-color: #e0e7ff !important;
+  color: #4f46e5 !important;
+}
+.ensan-sub-modal .bg-secondary-subtle,
+html.theme-dark .ensan-sub-modal .bg-secondary-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-secondary-subtle {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+.ensan-sub-modal .bg-dark-subtle,
+html.theme-dark .ensan-sub-modal .bg-dark-subtle,
+[data-bs-theme="dark"] .ensan-sub-modal .bg-dark-subtle {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
 }
 
 /* Dark Theme Solid: 100% Opaque */

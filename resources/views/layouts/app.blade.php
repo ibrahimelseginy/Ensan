@@ -1088,6 +1088,50 @@
             transform: translateX(-4px) !important;
         }
 
+        /* Ensure pastel icon badges look identical in light and dark mode */
+        .ensan-sub-modal .bg-warning-subtle,
+        html.theme-dark .ensan-sub-modal .bg-warning-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-warning-subtle {
+            background-color: #fef3c7 !important;
+            color: #d97706 !important;
+        }
+        .ensan-sub-modal .bg-success-subtle,
+        html.theme-dark .ensan-sub-modal .bg-success-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-success-subtle {
+            background-color: #dcfce7 !important;
+            color: #16a34a !important;
+        }
+        .ensan-sub-modal .bg-info-subtle,
+        html.theme-dark .ensan-sub-modal .bg-info-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-info-subtle {
+            background-color: #e0f2fe !important;
+            color: #0284c7 !important;
+        }
+        .ensan-sub-modal .bg-danger-subtle,
+        html.theme-dark .ensan-sub-modal .bg-danger-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-danger-subtle {
+            background-color: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+        .ensan-sub-modal .bg-primary-subtle,
+        html.theme-dark .ensan-sub-modal .bg-primary-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-primary-subtle {
+            background-color: #e0e7ff !important;
+            color: #4f46e5 !important;
+        }
+        .ensan-sub-modal .bg-secondary-subtle,
+        html.theme-dark .ensan-sub-modal .bg-secondary-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-secondary-subtle {
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+        .ensan-sub-modal .bg-dark-subtle,
+        html.theme-dark .ensan-sub-modal .bg-dark-subtle,
+        [data-bs-theme="dark"] .ensan-sub-modal .bg-dark-subtle {
+            background-color: #e2e8f0 !important;
+            color: #1e293b !important;
+        }
+
         html.theme-dark .modal-footer,
         body.theme-dark .modal-footer,
         .theme-dark .modal-footer,
