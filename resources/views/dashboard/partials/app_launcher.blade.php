@@ -907,13 +907,13 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('change_requests.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل settings admin">
+        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('change_requests.view') || $u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin finance" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
             <div class="ensan-app-title">الإعدادات والنظام</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 4 خدمات <i class="bi bi-chevron-down"></i></span>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 5 خدمات <i class="bi bi-chevron-down"></i></span>
         </div>
         @endif
 
@@ -924,17 +924,6 @@ body.theme-dark .launcher-cat-btn.active,
                 <i class="bi bi-chat-dots-fill"></i>
             </div>
             <div class="ensan-app-title">الشكاوى والمقترحات</div>
-            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
-        </a>
-        @endif
-
-        {{-- 17. التقارير الشاملة --}}
-        @if($u && ($u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
-        <a href="{{ route('reports.index') }}" class="ensan-app-card" data-category="finance digital admin" data-title="التقارير الشاملة" data-keywords="تقارير مالية إحصاءات طباعة تصدير reports">
-            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #059669, #34d399); box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.45);">
-                <i class="bi bi-bar-chart-fill"></i>
-            </div>
-            <div class="ensan-app-title">التقارير الشاملة</div>
             <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
         </a>
         @endif
@@ -1862,13 +1851,26 @@ body.theme-dark .launcher-cat-btn.active,
                     </div>
                     <div>
                         <h5 class="modal-title fw-bold mb-0">إعدادات النظام والتحكم</h5>
-                        <p class="text-muted small mb-0">المستخدمون، الصلاحيات والأدوار، سجل التدقيق، وطلبات التعديل</p>
+                        <p class="text-muted small mb-0">المستخدمون، الصلاحيات والأدوار، التقارير الشاملة، سجل التدقيق، وطلبات التعديل</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
+                    @if($u && ($u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    <a href="{{ route('reports.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                            <i class="bi bi-bar-chart-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">التقارير الشاملة</div>
+                            <small class="text-muted">التقارير المالية، الإحصاءات العامة، والطباعة</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
                     @if($u && $u->hasPermission('users.view'))
                     <a href="{{ route('users.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
