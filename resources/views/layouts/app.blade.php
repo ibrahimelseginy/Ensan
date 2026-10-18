@@ -816,9 +816,7 @@
         .modal .modal-content,
         .modal form.modal-content,
         .modal .card,
-        .service-modal .modal-content,
-        .ensan-sub-modal .modal-content,
-        .ensan-sub-tile {
+        .service-modal .modal-content {
             background-color: #ffffff !important;
             background: #ffffff !important;
             opacity: 1 !important;
@@ -830,9 +828,7 @@
         .modal-footer,
         .service-modal .modal-header,
         .service-modal .modal-body,
-        .service-modal .modal-footer,
-        .ensan-sub-modal .modal-header,
-        .ensan-sub-modal .modal-body {
+        .service-modal .modal-footer {
             background-color: #ffffff !important;
             background: #ffffff !important;
             opacity: 1 !important;
@@ -858,19 +854,7 @@
         body.theme-dark .service-modal .modal-content,
         .theme-dark .service-modal .modal-content,
         [data-bs-theme="dark"] .service-modal .modal-content,
-        [data-theme="dark"] .service-modal .modal-content,
-        html.theme-dark .ensan-sub-modal .modal-content,
-        html[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
-        body.theme-dark .ensan-sub-modal .modal-content,
-        body[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
-        .theme-dark .ensan-sub-modal .modal-content,
-        [data-bs-theme="dark"] .ensan-sub-modal .modal-content,
-        html.theme-dark .ensan-sub-tile,
-        html[data-bs-theme="dark"] .ensan-sub-tile,
-        body.theme-dark .ensan-sub-tile,
-        body[data-bs-theme="dark"] .ensan-sub-tile,
-        .theme-dark .ensan-sub-tile,
-        [data-bs-theme="dark"] .ensan-sub-tile {
+        [data-theme="dark"] .service-modal .modal-content {
             background-color: #0f172a !important;
             background: #0f172a !important;
             color: #e2e8f0 !important;
@@ -888,13 +872,7 @@
         body.theme-dark .service-modal .modal-body,
         .theme-dark .service-modal .modal-body,
         [data-bs-theme="dark"] .service-modal .modal-body,
-        [data-theme="dark"] .service-modal .modal-body,
-        html.theme-dark .ensan-sub-modal .modal-body,
-        html[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
-        body.theme-dark .ensan-sub-modal .modal-body,
-        body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
-        .theme-dark .ensan-sub-modal .modal-body,
-        [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
+        [data-theme="dark"] .service-modal .modal-body {
             background-color: #0f172a !important;
             background: #0f172a !important;
             color: #e2e8f0 !important;
@@ -910,17 +888,127 @@
         body.theme-dark .service-modal .modal-header,
         .theme-dark .service-modal .modal-header,
         [data-bs-theme="dark"] .service-modal .modal-header,
-        [data-theme="dark"] .service-modal .modal-header,
-        html.theme-dark .ensan-sub-modal .modal-header,
-        html[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
-        body.theme-dark .ensan-sub-modal .modal-header,
-        body[data-bs-theme="dark"] .ensan-sub-modal .modal-header,
-        .theme-dark .ensan-sub-modal .modal-header,
-        [data-bs-theme="dark"] .ensan-sub-modal .modal-header {
+        [data-theme="dark"] .service-modal .modal-header {
             background-color: #1e293b !important;
             background: #1e293b !important;
             color: #f8fafc !important;
             opacity: 1 !important;
+        }
+
+        /* ==============================================================
+         * Ensan Sub-Modals & Sub-Tiles: 100% Solid Dark & Opaque (معتمة تماماً)
+         * ============================================================== */
+        .ensan-sub-modal .modal-content,
+        .ensan-sub-modal.modal .modal-content,
+        .ensan-sub-modal .modal-dialog .modal-content,
+        html .ensan-sub-modal .modal-content,
+        body .ensan-sub-modal .modal-content {
+            border-radius: 24px !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background-color: #0b1220 !important;
+            background: #0b1220 !important;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+            overflow: hidden !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #ffffff !important;
+        }
+
+        .ensan-sub-modal .modal-header,
+        html .ensan-sub-modal .modal-header,
+        body .ensan-sub-modal .modal-header {
+            background-color: #0f172a !important;
+            background: #0f172a !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            padding: 1.25rem 1.5rem !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #ffffff !important;
+        }
+
+        .ensan-sub-modal .modal-header .modal-title,
+        .ensan-sub-modal .modal-header h5 {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        .ensan-sub-modal .modal-header .text-muted,
+        .ensan-sub-modal .modal-header p {
+            color: #94a3b8 !important;
+        }
+
+        .ensan-sub-modal .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%) !important;
+            opacity: 0.8 !important;
+        }
+
+        .ensan-sub-modal .modal-body,
+        html .ensan-sub-modal .modal-body,
+        body .ensan-sub-modal .modal-body {
+            background-color: #0b1220 !important;
+            background: #0b1220 !important;
+            opacity: 1 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            padding: 0.5rem 0.25rem 1.25rem !important;
+        }
+
+        /* Sub-Service Tiles - 100% Solid Dark Gradient (معتمة تماماً) */
+        .ensan-sub-tile,
+        html .ensan-sub-tile,
+        body .ensan-sub-tile,
+        .theme-dark .ensan-sub-tile,
+        [data-bs-theme="dark"] .ensan-sub-tile {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.9rem !important;
+            padding: 1rem 1.2rem !important;
+            background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+            background-color: #0b1220 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 16px !important;
+            text-decoration: none !important;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #ffffff !important;
+        }
+
+        .ensan-sub-tile:hover,
+        html .ensan-sub-tile:hover,
+        body .ensan-sub-tile:hover,
+        .theme-dark .ensan-sub-tile:hover,
+        [data-bs-theme="dark"] .ensan-sub-tile:hover {
+            transform: translateY(-3px) !important;
+            background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+            background-color: #0e1728 !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 10px 28px rgba(16, 185, 129, 0.28) !important;
+        }
+
+        .ensan-sub-tile-title {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        .ensan-sub-tile small,
+        .ensan-sub-tile .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        .ensan-sub-tile-arrow {
+            color: #64748b !important;
+            transition: transform 0.2s ease, color 0.2s ease !important;
+        }
+
+        .ensan-sub-tile:hover .ensan-sub-tile-arrow {
+            color: #10b981 !important;
+            transform: translateX(-4px) !important;
         }
 
         html.theme-dark .modal-footer,
