@@ -686,6 +686,17 @@ body.theme-dark .launcher-cat-btn.active,
         </a>
         @endif
 
+        {{-- 3.5 التقديمات (Applications & Preliminary Research) --}}
+        @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSubmissions" data-category="operations digital" data-title="التقديمات" data-keywords="تقديمات طلبات حالات بحث مبدئي زاد مدرار أورام استمارات submissions applications">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0284c7, #06b6d4); box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.45);">
+                <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <div class="ensan-app-title">التقديمات</div>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 5 خدمات <i class="bi bi-chevron-down"></i></span>
+        </div>
+        @endif
+
         {{-- 4. اللوجيستك (Popup) --}}
         @if($u && ($u->hasPermission('manage_logistics') || $u->hasPermission('delegates.view') || $u->hasPermission('travel_routes.view') || $u->hasPermission('trips.view') || $u->hasPermission('kafr_el_sheikh_deliveries.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppLogistics" data-category="operations" data-title="اللوجيستك" data-keywords="مناديب خطوط سير رحلات كفر الشيخ طنطا logistics">
@@ -878,6 +889,89 @@ body.theme-dark .launcher-cat-btn.active,
 {{-- ==============================================================
      MODALS FOR SUB-PAGES
      ============================================================== --}}
+
+{{-- 0. Modal: التقديمات والبحث المبدئي --}}
+<div class="modal fade ensan-sub-modal" id="modalAppSubmissions" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0284c7, #06b6d4);">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">قطاع التقديمات والبحث المبدئي</h5>
+                        <p class="text-muted small mb-0">إدارة طلبات المساعدة، نماذج التقديم الإلكترونية، وفلترة الحالات الجديدة</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="ensan-sub-grid">
+                    {{-- 1. لوحة إدارة طلبات التقديم --}}
+                    <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-inbox-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">سجل طلبات التقديم</div>
+                            <small class="text-muted">متابعة وفحص الطلبات وتحديد حالة البحث</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    {{-- 2. استمارة مشروع زاد (الأيتام) --}}
+                    <a href="{{ route('cases.apply-zad') }}" target="_blank" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-heart-pulse-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">استمارة مشروع زاد (الأيتام)</div>
+                            <small class="text-muted">نموذج التقديم الإلكتروني لكفالات الأيتام</small>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    {{-- 3. استمارة مشروع مدرار --}}
+                    <a href="{{ route('cases.apply-midrar') }}" target="_blank" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
+                            <i class="bi bi-droplet-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">استمارة مشروع مدرار</div>
+                            <small class="text-muted">سقيا ماء، وصلات مياه، أسقف، وصدقات جارية</small>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    {{-- 4. استمارة مشروع بعثاء الأمل (الأورام) --}}
+                    <a href="{{ route('cases.apply-hope') }}" target="_blank" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
+                            <i class="bi bi-hospital-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">استمارة بعثاء الأمل (الأورام)</div>
+                            <small class="text-muted">نموذج تقديم رعاية مرضى الأورام الطبي</small>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    {{-- 5. استمارة طلب مساعدة عامة --}}
+                    <a href="{{ route('cases.public-apply') }}" target="_blank" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                            <i class="bi bi-file-earmark-person-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">استمارة طلب مساعدة عامة</div>
+                            <small class="text-muted">نموذج البحث المبدئي للحالات الإنسانية العامة</small>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- 1. Modal: اللوجيستك --}}
 <div class="modal fade ensan-sub-modal" id="modalAppLogistics" tabindex="-1" aria-hidden="true">
