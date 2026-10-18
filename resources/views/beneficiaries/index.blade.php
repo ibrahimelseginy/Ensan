@@ -214,9 +214,12 @@
         <div class="hero-greeting">خدمات المستفيدين 👨‍👩‍👧‍👦</div>
         <h1 class="hero-title">إدارة المستفيدين</h1>
         <p class="hero-subtitle">إدارة ملفات الأسر والأفراد المستفيدين من المساعدات</p>
-        <div class="hero-actions d-flex gap-2">
+        <div class="hero-actions d-flex flex-wrap gap-2">
             <a href="{{ route('beneficiaries.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> إضافة مستفيد
+            </a>
+            <a href="{{ route('mobile.case-applications.index') }}" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-person-fill me-1"></i> طلبات التقديم والبحث المبدئي
             </a>
         </div>
     </div>

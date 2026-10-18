@@ -1548,6 +1548,19 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-clipboard2-check-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">استمارات التقديم والبحث المبدئي</div>
+                            <small class="text-muted">نماذج التقديم الإلكترونية (زاد، مدرار، الأورام، والبحث المبدئي)</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
                     @if($u && $u->hasPermission('website.donation_page.view_edit'))
                     <a href="{{ route('website.donation-page.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
@@ -1667,6 +1680,19 @@ body.theme-dark .launcher-cat-btn.active,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
+                    @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-file-earmark-person-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">طلبات الحالات والبحث المبدئي</div>
+                            <small class="text-muted">استمارات التقديم (زاد، مدرار، الأورام، والبحث المبدئي)</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
                     @if($u && $u->hasPermission('mobile.home_content.view_edit'))
                     <a href="{{ route('mobile.home_content.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
