@@ -81,27 +81,12 @@ Route::post('apply-midrar', [MobileContentController::class, 'applyMidrarStore']
 Route::get('apply-hope', [MobileContentController::class, 'applyHopeShow'])->name('cases.apply-hope');
 Route::post('apply-hope', [MobileContentController::class, 'applyHopeStore'])->middleware('throttle:heavy-ops')->name('cases.apply-hope.store');
 
-// مسار أمان احتياطي لتغذية ملفات التخزين والمرفقات في حال تمت معالجتها عبر لارافيل
-Route::get('storage/{path}', function (string $path) {
-    $path = str_replace(["\0", '..'], '', $path);
-    $path = ltrim($path, '/');
+// Public files only. Private documents must never use this fallback.
+Route::get('storage/{path}', [\App\Http\Controllers\PublicStorageController::class, 'show'])
+    ->where('path', '.*')->name('storage.fallback');
 
-    $candidates = [
-        storage_path('app/public/' . $path),
-        public_path('storage/' . $path),
-        public_path('uploads/' . $path),
-        storage_path('app/' . $path),
-    ];
-
-    foreach ($candidates as $file) {
-        if (is_file($file) && is_readable($file)) {
-            return response()->file($file);
-        }
-    }
-
-    abort(404);
-})->where('path', '.*')->name('storage.fallback');
-
+Route::get('documents/{path}', [\App\Http\Controllers\PrivateDocumentController::class, 'download'])
+    ->where('path', '.*')->middleware('signed')->name('documents.download');
 
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {
@@ -679,17 +664,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskWebController::class);
 
 });
-
-// Storage Link Fallback (Clear fix for 404 images on Windows)
-Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/' . $path);
-    if (!File::exists($fullPath)) abort(404);
-    $file = File::get($fullPath);
-    $type = File::mimeType($fullPath);
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-    return $response;
-})->where('path', '.*');
 
 // Developer Information Route
 Route::get('developer', function () {

@@ -244,7 +244,7 @@ final class MobileApiController extends Controller
      */
     public function getVolunteerRequests()
     {
-        $requests = \App\Models\MobileVolunteerRequest::orderByDesc('created_at')->get();
+        $requests = \App\Models\MobileVolunteerRequest::orderByDesc('created_at')->paginate(20);
         return response()->json([
             'status' => 'success',
             'data' => $requests
@@ -713,8 +713,12 @@ final class MobileApiController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
         }
 
-        $currentPassword = trim($request->current_password);
-        $newPassword = trim($request->new_password);
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:12|max:255',
+        ]);
+        $currentPassword = $data['current_password'];
+        $newPassword = $data['new_password'];
 
         if (!\Hash::check($currentPassword, $user->password)) {
             \Log::warning('Mobile API: Password check failed for user', [
@@ -727,8 +731,12 @@ final class MobileApiController extends Controller
             ], 422);
         }
 
-        $user->password = \Hash::make($newPassword);
-        $user->save();
+        \DB::transaction(function () use ($user, $newPassword) {
+            $user->password = \Hash::make($newPassword);
+            $user->save();
+            \App\Models\Token::where('user_id', $user->id)->delete();
+            $user->tokens()->delete();
+        });
 
         \Log::info('Mobile API: Password changed for user', ['id' => $user->id]);
 
@@ -754,6 +762,7 @@ final class MobileApiController extends Controller
 
             // Revoke all tokens
             $user->tokens()->delete();
+            \App\Models\Token::where('user_id', $user->id)->delete();
 
             // Hard delete the user to allow re-registration and complete removal from login system
             $user->forceDelete();

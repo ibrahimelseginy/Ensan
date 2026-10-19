@@ -12,7 +12,12 @@ final class JournalEntry extends Model
 
     protected $fillable = ['date','branch','gate','entry_type','locked','description'];
 
-    protected $casts = ['date' => 'date','locked' => 'boolean'];
+    protected $casts = ['date' => 'date','locked' => 'boolean', 'period_locked' => 'boolean'];
+
+    public function getLockedAttribute($value): bool
+    {
+        return (bool) $value || (bool) ($this->attributes['period_locked'] ?? false);
+    }
 
     public function lines(): HasMany { return $this->hasMany(JournalEntryLine::class); }
 }

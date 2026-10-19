@@ -36,7 +36,11 @@ final class JournalEntryController extends Controller
     public function update(UpdateJournalEntryRequest $request, JournalEntry $journalEntry): JournalEntry|JsonResponse
     {
         try {
-            return $this->journalEntryService->updateEntry($journalEntry, $request->validated());
+            $result = $this->journalEntryService->updateEntry($journalEntry, $request->validated());
+            if ($result instanceof \App\Models\ChangeRequest) {
+                return response()->json(['message' => 'تم إرسال طلب تعديل القيد للمراجعة', 'change_request_id' => $result->id], 202);
+            }
+            return $result;
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], (int)$e->getCode() ?: 400);
         }

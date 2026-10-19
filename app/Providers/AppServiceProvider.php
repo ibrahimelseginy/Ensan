@@ -10,6 +10,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Laravel merges framework defaults; retain only the supported SQL engine.
+        config(['database.connections' => ['mysql' => config('database.connections.mysql')]]);
         $this->app->bind(
             \App\Features\WebsiteDonations\Interfaces\WebsiteDonationProcessorInterface::class,
             \App\Features\WebsiteDonations\Services\WebsiteDonationService::class
@@ -37,12 +39,12 @@ class AppServiceProvider extends ServiceProvider
             }
             $allowedMimes = [
                 'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-                'image/webp', 'image/bmp', 'image/svg+xml', 'image/tiff',
+                'image/webp', 'image/bmp', 'image/tiff',
                 'image/heic', 'image/heif', 'image/avif', 'image/x-icon',
                 'image/vnd.microsoft.icon',
             ];
             return in_array($value->getMimeType(), $allowedMimes, true);
-        }, 'يجب أن يكون الملف صورة صالحة (JPEG, PNG, GIF, WebP, BMP, SVG, TIFF, HEIC, AVIF).');
+        }, 'يجب أن يكون الملف صورة صالحة (JPEG, PNG, GIF, WebP, BMP, TIFF, HEIC, AVIF).');
 
 
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
@@ -57,14 +59,6 @@ class AppServiceProvider extends ServiceProvider
             }
             return null; // Fall through to other checks
         });
-
-        if (\DB::connection()->getDriverName() === 'sqlite') {
-            $pdo = \DB::connection()->getPdo();
-            $pdo->sqliteCreateFunction('REGEXP', function ($pattern, $value) {
-                if (is_null($value)) return false;
-                return (bool) preg_match('/' . str_replace('/', '\/', $pattern) . '/i', $value);
-            });
-        }
 
         $this->configureRateLimiting();
     }

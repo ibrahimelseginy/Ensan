@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'auth' => \App\Http\Middleware\WebAuth::class,
+            'api_permission' => \App\Http\Middleware\ApiPermission::class,
             'permission' => \App\Http\Middleware\SecurePermissionMiddleware::class,
             'own_user_or_permission' => \App\Http\Middleware\OwnUserOrPermission::class,
         ]);

@@ -29,7 +29,7 @@ class User extends Authenticatable
             'name' => $name,
             'token' => hash('sha256', $plainTextToken),
             'abilities' => ['*'],
-            'expires_at' => null,
+            'expires_at' => now()->addDays(30),
             'tokenable_type' => static::class,
         ]);
 
@@ -61,6 +61,7 @@ class User extends Authenticatable
         'active' => 'boolean',
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
+        'phone_verified_at' => 'datetime',
         'otp_expires_at' => 'datetime'
     ];
 

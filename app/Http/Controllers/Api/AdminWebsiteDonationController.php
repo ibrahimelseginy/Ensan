@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Donation;
+use App\Models\WebDonation;
 use App\Models\Donor;
 use Illuminate\Http\Request;
 
@@ -23,14 +23,10 @@ final class AdminWebsiteDonationController extends Controller
      */
     public function index()
     {
-        $donors = Donor::whereHas('donations', function ($query) {
-            $query->where('source', 'website');
-        })
-        ->withCount(['donations' => function ($query) {
-            $query->where('source', 'website');
-        }])
-        ->withSum(['donations' => function ($query) {
-            $query->where('source', 'website')->where('status', 'verified');
+        $donors = Donor::whereHas('webDonations')
+        ->withCount(['webDonations as donations_count'])
+        ->withSum(['webDonations as donations_sum_amount' => function ($query) {
+            $query->where('status', 'verified');
         }], 'amount')
         ->latest()
         ->paginate(20);
@@ -64,7 +60,7 @@ final class AdminWebsiteDonationController extends Controller
                 'name' => $donor->name,
                 'phone' => $donor->phone,
                 'email' => $donor->email,
-                'donations_count' => $result['donor']->donations_count
+                'donations_count' => count($result['history'])
             ],
             'history' => $history
         ]);
@@ -91,7 +87,7 @@ final class AdminWebsiteDonationController extends Controller
     /**
      * Verify a specific donation
      */
-    public function verifyDonation(Request $request, Donation $donation)
+    public function verifyDonation(Request $request, WebDonation $donation)
     {
         if ($this->processor->verifyDonation($donation)) {
             return response()->json(['message' => 'Donation verified successfully']);
@@ -103,7 +99,7 @@ final class AdminWebsiteDonationController extends Controller
     /**
      * Reject a specific donation
      */
-    public function rejectDonation(Request $request, Donation $donation)
+    public function rejectDonation(Request $request, WebDonation $donation)
     {
         if ($this->processor->rejectDonation($donation)) {
             return response()->json(['message' => 'Donation rejected successfully']);
@@ -117,7 +113,7 @@ final class AdminWebsiteDonationController extends Controller
      */
     public function allDonations()
     {
-        $donations = Donation::where('source', 'website')
+        $donations = WebDonation::query()
             ->with(['donor', 'donationable', 'proof'])
             ->latest()
             ->paginate(20);

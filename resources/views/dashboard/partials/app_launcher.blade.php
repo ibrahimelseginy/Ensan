@@ -357,19 +357,27 @@ body .ensan-sub-modal .modal-body,
 html.theme-dark .ensan-sub-modal .modal-body,
 body.theme-dark .ensan-sub-modal .modal-body,
 [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
-    background-color: #f8fafc !important;
-    background: #f8fafc !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
     opacity: 1 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     padding: 0.5rem 0.25rem 1.25rem !important;
 }
 
-.ensan-sub-grid {
+.ensan-sub-grid,
+.ensan-sub-modal .ensan-sub-grid,
+html .ensan-sub-modal .ensan-sub-grid,
+body .ensan-sub-modal .ensan-sub-grid,
+html.theme-dark .ensan-sub-modal .ensan-sub-grid,
+body.theme-dark .ensan-sub-modal .ensan-sub-grid,
+[data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1rem;
     padding: 1.25rem;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
 @media (max-width: 576px) {
@@ -841,7 +849,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('change_requests.view') || $u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('manage_change_requests') || $u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin finance" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
@@ -893,79 +901,79 @@ body.theme-dark .launcher-cat-btn.active,
 {{-- 0. Modal: التقديمات والبحث المبدئي --}}
 <div class="modal fade ensan-sub-modal" id="modalAppSubmissions" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="background-color: #ffffff !important; background: #ffffff !important; border-radius: 24px !important; border: 1px solid #e2e8f0 !important; overflow: hidden !important; box-shadow: 0 35px 95px rgba(0,0,0,0.45) !important;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important; background-color: #059669 !important; border-bottom: 1px solid rgba(255,255,255,0.15) !important; padding: 1.25rem 1.5rem !important;">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0284c7, #06b6d4);">
+                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0284c7, #06b6d4); color: #ffffff !important;">
                         <i class="bi bi-file-earmark-text-fill"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0">قطاع التقديمات والبحث المبدئي</h5>
-                        <p class="text-muted small mb-0">إدارة طلبات المساعدة، نماذج التقديم الإلكترونية، وفلترة الحالات الجديدة</p>
+                        <h5 class="modal-title fw-bold mb-0" style="color: #ffffff !important; font-weight: 800 !important; font-size: 1.2rem !important;">قطاع التقديمات والبحث المبدئي</h5>
+                        <p class="small mb-0" style="color: rgba(255,255,255,0.92) !important; font-weight: 500 !important;">إدارة طلبات المساعدة، نماذج التقديم الإلكترونية، وفلترة الحالات الجديدة</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1) !important; opacity: 0.9 !important;"></button>
             </div>
-            <div class="modal-body p-0">
-                <div class="ensan-sub-grid">
+            <div class="modal-body p-0" style="background-color: #ffffff !important; background: #ffffff !important;">
+                <div class="ensan-sub-grid" style="background-color: #ffffff !important; background: #ffffff !important; padding: 1.25rem !important;">
                     {{-- 1. لوحة إدارة طلبات التقديم --}}
-                    <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
+                    <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile" style="background-color: #ffffff !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important;">
+                        <div class="ensan-sub-tile-icon bg-primary-subtle text-primary" style="background-color: #e0f2fe !important; color: #0284c7 !important;">
                             <i class="bi bi-inbox-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">سجل طلبات التقديم</div>
-                            <small class="text-muted">متابعة وفحص الطلبات وتحديد حالة البحث</small>
+                            <div class="ensan-sub-tile-title" style="color: #0f172a !important; font-weight: 800 !important;">سجل طلبات التقديم</div>
+                            <small style="color: #475569 !important; font-weight: 600 !important; display: block;">متابعة وفحص الطلبات وتحديد حالة البحث</small>
                         </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow" style="color: #64748b !important;"></i>
                     </a>
 
                     {{-- 2. استمارة مشروع زاد (الأيتام) --}}
-                    <a href="{{ route('cases.apply-zad') }}" target="_blank" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
+                    <a href="{{ route('cases.apply-zad') }}" target="_blank" class="ensan-sub-tile" style="background-color: #ffffff !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important;">
+                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning" style="background-color: #fef3c7 !important; color: #d97706 !important;">
                             <i class="bi bi-heart-pulse-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">استمارة مشروع زاد (الأيتام)</div>
-                            <small class="text-muted">نموذج التقديم الإلكتروني لكفالات الأيتام</small>
+                            <div class="ensan-sub-tile-title" style="color: #0f172a !important; font-weight: 800 !important;">استمارة مشروع زاد (الأيتام)</div>
+                            <small style="color: #475569 !important; font-weight: 600 !important; display: block;">نموذج التقديم الإلكتروني لكفالات الأيتام</small>
                         </div>
-                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow" style="color: #64748b !important;"></i>
                     </a>
 
                     {{-- 3. استمارة مشروع مدرار --}}
-                    <a href="{{ route('cases.apply-midrar') }}" target="_blank" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
+                    <a href="{{ route('cases.apply-midrar') }}" target="_blank" class="ensan-sub-tile" style="background-color: #ffffff !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important;">
+                        <div class="ensan-sub-tile-icon bg-info-subtle text-info" style="background-color: #e0f2fe !important; color: #0284c7 !important;">
                             <i class="bi bi-droplet-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">استمارة مشروع مدرار</div>
-                            <small class="text-muted">سقيا ماء، وصلات مياه، أسقف، وصدقات جارية</small>
+                            <div class="ensan-sub-tile-title" style="color: #0f172a !important; font-weight: 800 !important;">استمارة مشروع مدرار</div>
+                            <small style="color: #475569 !important; font-weight: 600 !important; display: block;">سقيا ماء، وصلات مياه، أسقف، وصدقات جارية</small>
                         </div>
-                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow" style="color: #64748b !important;"></i>
                     </a>
 
                     {{-- 4. استمارة مشروع بعثاء الأمل (الأورام) --}}
-                    <a href="{{ route('cases.apply-hope') }}" target="_blank" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
+                    <a href="{{ route('cases.apply-hope') }}" target="_blank" class="ensan-sub-tile" style="background-color: #ffffff !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important;">
+                        <div class="ensan-sub-tile-icon bg-danger-subtle text-danger" style="background-color: #fee2e2 !important; color: #dc2626 !important;">
                             <i class="bi bi-hospital-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">استمارة بعثاء الأمل (الأورام)</div>
-                            <small class="text-muted">نموذج تقديم رعاية مرضى الأورام الطبي</small>
+                            <div class="ensan-sub-tile-title" style="color: #0f172a !important; font-weight: 800 !important;">استمارة بعثاء الأمل (الأورام)</div>
+                            <small style="color: #475569 !important; font-weight: 600 !important; display: block;">نموذج تقديم رعاية مرضى الأورام الطبي</small>
                         </div>
-                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow" style="color: #64748b !important;"></i>
                     </a>
 
                     {{-- 5. استمارة طلب مساعدة عامة --}}
-                    <a href="{{ route('cases.public-apply') }}" target="_blank" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                    <a href="{{ route('cases.public-apply') }}" target="_blank" class="ensan-sub-tile" style="background-color: #ffffff !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important;">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success" style="background-color: #dcfce7 !important; color: #16a34a !important;">
                             <i class="bi bi-file-earmark-person-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">استمارة طلب مساعدة عامة</div>
-                            <small class="text-muted">نموذج البحث المبدئي للحالات الإنسانية العامة</small>
+                            <div class="ensan-sub-tile-title" style="color: #0f172a !important; font-weight: 800 !important;">استمارة طلب مساعدة عامة</div>
+                            <small style="color: #475569 !important; font-weight: 600 !important; display: block;">نموذج البحث المبدئي للحالات الإنسانية العامة</small>
                         </div>
-                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow"></i>
+                        <i class="bi bi-box-arrow-up-right ensan-sub-tile-arrow" style="color: #64748b !important;"></i>
                     </a>
                 </div>
             </div>
@@ -1953,7 +1961,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission('change_requests.view'))
+                    @if($u && $u->hasPermission('manage_change_requests'))
                     <a href="{{ route('change-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-arrow-repeat"></i>

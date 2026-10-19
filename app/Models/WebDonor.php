@@ -70,7 +70,7 @@ final class WebDonor extends Authenticatable
             'name' => $name,
             'token' => hash('sha256', $plainTextToken),
             'abilities' => ['*'],
-            'expires_at' => null,
+            'expires_at' => now()->addDays(30),
             'tokenable_type' => static::class,
         ]);
 

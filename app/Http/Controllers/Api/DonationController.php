@@ -97,7 +97,7 @@ final class DonationController extends Controller
             'proof' => 'required|any_image|max:5120', // 5MB
         ]);
 
-        $path = $request->file('proof')->store('donation_proofs', 'public');
+        $path = app(\App\Services\PrivateDocumentService::class)->store($request->file('proof'), 'donation_proofs');
 
         // Assuming a DonationProof relationship or table exists
         \DB::table('donation_proofs')->insert([

@@ -6,18 +6,13 @@ use App\Models\Campaign;
 use App\Models\User;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Tests\DatabaseTestCase;
 
-class CampaignVolunteerTest extends TestCase
+class CampaignVolunteerTest extends DatabaseTestCase
 {
-    // We don't use RefreshDatabase here because we want to test against the actual dev DB structure 
-    // but we will wrap in transaction if possible, or just cleanup.
-    // Actually, using RefreshDatabase is safer but might wipe data if not configured to use sqlite in memory.
-    // Let's assume we can just create and delete.
-
     public function test_campaign_relationships()
     {
-        $user = User::factory()->create();
+        $user = User::create(['name' => 'Test User', 'email' => \Illuminate\Support\Str::uuid().'@example.test', 'password' => bcrypt('test-password')]);
         $project = Project::create(['name' => 'Test Project', 'status' => 'active']);
         $campaign = Campaign::create([
             'name' => 'Test Campaign',
@@ -31,7 +26,7 @@ class CampaignVolunteerTest extends TestCase
         $this->assertEquals($user->id, $campaign->manager->id);
 
         // Test volunteer relationship
-        $volunteer = User::factory()->create();
+        $volunteer = User::create(['name' => 'Test User', 'email' => \Illuminate\Support\Str::uuid().'@example.test', 'password' => bcrypt('test-password')]);
         $campaign->volunteers()->attach($volunteer, ['role' => 'helper', 'hours' => 10]);
 
         $this->assertTrue($campaign->volunteers->contains($volunteer));

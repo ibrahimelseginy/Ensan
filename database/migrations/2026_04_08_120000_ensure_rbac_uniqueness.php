@@ -19,7 +19,10 @@ return new class extends Migration
             // --- Merge Role: مدير دار ضيافة كفر الشيخ (24 -> 17) ---
             $this->mergeRoles(24, 17);
 
-            // --- Apply UNIQUE constraints ---
+        });
+
+        // MySQL DDL commits implicitly: keep schema changes outside the data transaction.
+        // --- Apply UNIQUE constraints ---
             Schema::table('roles', function (Blueprint $table) {
                 // Ensure no duplicate names exist before applying
                 // (Already handled by merge logic for known duplicates)
@@ -29,7 +32,6 @@ return new class extends Migration
             Schema::table('permissions', function (Blueprint $table) {
                 $table->string('name')->unique()->change();
             });
-        });
     }
 
     /**
@@ -52,6 +54,9 @@ return new class extends Migration
     private function mergeRoles(int $sourceId, int $targetId): void
     {
         if ($sourceId === $targetId) return;
+        $source = DB::table('roles')->find($sourceId);
+        $target = DB::table('roles')->find($targetId);
+        if (!$source || !$target || $source->name !== $target->name) return;
 
         // 1. Move Users (ensure no duplicate role_user entries)
         $usersToMove = DB::table('role_user')->where('role_id', $sourceId)->get();

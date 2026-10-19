@@ -52,15 +52,21 @@ trait UploadsImages
     ): void {
         $column = $column ?? $this->getImageColumn();
 
-        // حذف الصورة القديمة
-        $this->deleteImage($column, false);
+        $oldPath = $this->{$column};
 
         // رفع وضغط وتحويل
         $path = app(\App\Services\ImageUploadService::class)->upload($file, $directory);
 
         if ($path) {
             $this->{$column} = $path;
-            $this->save();
+            try {
+                $this->save();
+            } catch (\Throwable $e) {
+                app(\App\Services\ImageUploadService::class)->delete($path);
+                $this->{$column} = $oldPath;
+                throw $e;
+            }
+            if ($oldPath && $oldPath !== $path) app(\App\Services\ImageUploadService::class)->delete($oldPath);
         }
     }
 

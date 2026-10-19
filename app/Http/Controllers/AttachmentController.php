@@ -24,7 +24,7 @@ final class AttachmentController extends Controller
 
         try {
             // Store the file
-            $path = $request->file('file')->store('attachments', 'public');
+            $path = app(\App\Services\PrivateDocumentService::class)->store($request->file('file'), 'attachments');
             
             // Get file info
             $originalName = $request->file('file')->getClientOriginalName();
@@ -53,9 +53,7 @@ final class AttachmentController extends Controller
     }
     public function destroy(Attachment $attachment)
     {
-        if (!empty($attachment->path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($attachment->path)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->path);
-        }
+        app(\App\Services\ImageUploadService::class)->delete($attachment->path);
         $attachment->delete();
         return response()->noContent();
     }

@@ -7,17 +7,90 @@
   <div class="row justify-content-center">
     <div class="col-lg-9 col-md-11">
 
+      <style>
+        /* Header Card Typography & Contrast */
+        body:not(.theme-dark) .apply-header-card,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-card {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        body:not(.theme-dark) .apply-header-badge,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-badge {
+            background-color: #f1f5f9 !important;
+            background: #f1f5f9 !important;
+            color: #000000 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-title,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-title {
+            color: #000000 !important;
+            font-weight: 900 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-subtitle,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle {
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-subtitle strong,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle strong {
+            color: #000000 !important;
+            font-weight: 800 !important;
+        }
+
+        /* Dark Mode */
+        html.theme-dark .apply-header-card,
+        body.theme-dark .apply-header-card,
+        [data-bs-theme="dark"] .apply-header-card {
+            background-color: #0f172a !important;
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+        }
+
+        html.theme-dark .apply-header-badge,
+        body.theme-dark .apply-header-badge,
+        [data-bs-theme="dark"] .apply-header-badge {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+        }
+
+        html.theme-dark .apply-header-title,
+        body.theme-dark .apply-header-title,
+        [data-bs-theme="dark"] .apply-header-title {
+            color: #ffffff !important;
+            font-weight: 900 !important;
+        }
+
+        html.theme-dark .apply-header-subtitle,
+        body.theme-dark .apply-header-subtitle,
+        [data-bs-theme="dark"] .apply-header-subtitle {
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .apply-header-subtitle strong,
+        body.theme-dark .apply-header-subtitle strong {
+            color: #ffffff !important;
+        }
+      </style>
+
       <!-- Header Card -->
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff;">
+      <div class="card shadow-sm rounded-4 overflow-hidden mb-4 apply-header-card">
         <div class="p-4 p-md-5 text-center position-relative">
-          <div class="badge bg-white text-dark rounded-pill px-3.5 py-1.5 fw-bold mb-3 shadow-xs">
+          <div class="badge apply-header-badge rounded-pill px-3.5 py-1.5 fw-bold mb-3 shadow-xs">
             مؤسسة إنسان الخيرية | مشهرة برقم 63 لسنة 2017
           </div>
-          <h1 class="fw-black mb-2" style="font-size: 2rem;">إستمارة تقديم طلب مساعدة في مشروع مدرار</h1>
-          <p class="mb-2 opacity-95 mx-auto fw-bold" style="max-width: 650px; font-size: 1.15rem; line-height: 1.7;">
+          <h1 class="fw-black mb-2 apply-header-title" style="font-size: 2rem;">إستمارة تقديم طلب مساعدة في مشروع مدرار</h1>
+          <p class="mb-2 mx-auto fw-bold apply-header-subtitle" style="max-width: 650px; font-size: 1.15rem; line-height: 1.7;">
             مشروع مدرار أحد مشاريع مؤسسة إنسان الخيرية مهتم بالصدقات الجارية والوقف الخيري (وصلات مياه - أسقف)
           </p>
-          <p class="mb-0 opacity-80 mx-auto small">
+          <p class="mb-0 mx-auto small apply-header-subtitle">
             <strong>رؤيتنا :</strong> تقديم عمل خيري تطوعي بإحترافية مع الحفاظ علي كرامة الإنسان
           </p>
         </div>

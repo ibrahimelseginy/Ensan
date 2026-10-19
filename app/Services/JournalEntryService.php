@@ -29,24 +29,7 @@ final readonly class JournalEntryService
 
     public function createEntry(array $data): mixed
     {
-        $executor = function() use ($data) {
-            return DB::transaction(function() use ($data) {
-                $lines = $data['lines'];
-                unset($data['lines']);
-
-                $entry = $this->journalEntryRepository->create($data);
-
-                foreach ($lines as $line) {
-                    $this->journalEntryRepository->createLine([
-                        'journal_entry_id' => $entry->id,
-                        'account_id'       => $line['account_id'],
-                        'debit'            => $line['debit'] ?? 0,
-                        'credit'           => $line['credit'] ?? 0,
-                    ]);
-                }
-                return $entry;
-            });
-        };
+        $executor = fn () => app(JournalEntryWriter::class)->execute('create', $data);
 
         return ChangeRequestService::handleRequest(
             JournalEntry::class,
@@ -64,26 +47,7 @@ final readonly class JournalEntryService
             throw new \Exception('هذا القيد مرحل ولا يمكن تعديله');
         }
 
-        $executor = function () use ($entry, $data) {
-            return DB::transaction(function() use ($entry, $data) {
-                $lines = $data['lines'];
-                unset($data['lines']);
-
-                $this->journalEntryRepository->update($entry, $data);
-                $this->journalEntryRepository->deleteLines($entry);
-
-                foreach ($lines as $line) {
-                    $this->journalEntryRepository->createLine([
-                        'journal_entry_id' => $entry->id,
-                        'account_id'       => $line['account_id'],
-                        'debit'            => $line['debit'] ?? 0,
-                        'credit'           => $line['credit'] ?? 0,
-                    ]);
-                }
-
-                return $entry;
-            });
-        };
+        $executor = fn () => app(JournalEntryWriter::class)->execute('update', $data, $entry->id);
 
         return ChangeRequestService::handleRequest(
             JournalEntry::class,
@@ -101,9 +65,7 @@ final readonly class JournalEntryService
             throw new \Exception('هذا القيد مرحل ولا يمكن حذفه');
         }
 
-        $executor = function () use ($entry) {
-            return $this->journalEntryRepository->delete($entry);
-        };
+        $executor = fn () => app(JournalEntryWriter::class)->execute('delete', [], $entry->id);
 
         return ChangeRequestService::handleRequest(
             JournalEntry::class,

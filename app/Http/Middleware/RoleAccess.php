@@ -14,18 +14,23 @@ class RoleAccess
         }
 
         // Admin bypass - استخدام query مباشرة لضمان عدم الاعتماد على علاقة غير محملة
-        if ($user->roles()->whereIn('key', ['admin', 'manager'])->exists()) {
+        if ($user->hasRole('admin') || $user->hasRole('manager')) {
             return $next($request);
         }
 
         $routeName = $request->route() ? $request->route()->getName() : null;
         if (!$routeName) {
+            abort(403);
+        }
+
+        if (in_array($routeName, ['users.attachRole', 'users.detachRole'], true)) {
+            abort_unless($user->hasPermission('roles.edit'), 403);
             return $next($request);
         }
 
         $parts = explode('.', $routeName);
         if (count($parts) < 2) {
-            return $next($request);
+            abort(403);
         }
 
         $resourceRaw = $parts[0];
@@ -84,9 +89,13 @@ class RoleAccess
             'reorder' => 'edit',
             'read' => 'view',
             'markRead' => 'edit',
+            'approve' => 'edit',
+            'verify' => 'edit',
+            'reject' => 'edit',
+            'uploadProof' => 'edit',
         ];
 
-        $suffix = $map[$action] ?? null;
+        $suffix = $resource === 'reports' ? 'view' : ($map[$action] ?? null);
 
         // Specific overrides for guest_houses
         if ($resource === 'guest_houses') {
@@ -100,7 +109,7 @@ class RoleAccess
         }
 
         if (!$suffix) {
-            return $next($request);
+            abort(403);
         }
 
         $permissionKey = "$resource.$suffix";
@@ -167,7 +176,7 @@ class RoleAccess
         ];
 
         if (!in_array($resource, $enforcedResources)) {
-            return $next($request);
+            abort(403);
         }
 
         // Payroll manage check

@@ -15,14 +15,14 @@ class TokenAuth
             \Log::warning('Mobile API: Missing bearer token', ['url' => $request->fullUrl()]);
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        $token = Token::where('token', $bearer)->first();
+        $token = Token::where('hashed', true)->where('token', hash('sha256', $bearer))->first();
         if (!$token) {
-            \Log::error('Mobile API: Invalid token', ['token' => substr($bearer, 0, 10) . '...', 'url' => $request->fullUrl()]);
+            \Log::error('Mobile API: Invalid token', ['url' => $request->fullUrl()]);
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         // Check if token has expired
-        if ($token->expires_at && $token->expires_at->isPast()) {
+        if (!$token->expires_at || $token->expires_at->isPast()) {
             \Log::warning('Mobile API: Expired token used', ['user_id' => $token->user_id]);
             return response()->json(['message' => 'Token has expired. Please log in again.'], 401);
         }

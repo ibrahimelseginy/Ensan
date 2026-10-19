@@ -837,19 +837,19 @@
         /* ======================================================
          * Modal & Add Cards: Dark Mode - Non-Transparent Background
          * ====================================================== */
-        html.theme-dark .modal-content,
-        body.theme-dark .modal-content,
-        .theme-dark .modal-content,
-        [data-bs-theme="dark"] .modal-content,
-        [data-theme="dark"] .modal-content,
-        html.theme-dark .modal-dialog .modal-content,
-        body.theme-dark .modal-dialog .modal-content,
-        .theme-dark .modal-dialog .modal-content,
-        [data-bs-theme="dark"] .modal-dialog .modal-content,
-        [data-theme="dark"] .modal-dialog .modal-content,
-        html.theme-dark .modal .card,
-        body.theme-dark .modal .card,
-        .theme-dark .modal .card,
+        html.theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+        body.theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+        .theme-dark .modal:not(.ensan-sub-modal) .modal-content,
+        [data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-content,
+        [data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-content,
+        html.theme-dark .modal:not(.ensan-sub-modal) .modal-dialog .modal-content,
+        body.theme-dark .modal:not(.ensan-sub-modal) .modal-dialog .modal-content,
+        .theme-dark .modal:not(.ensan-sub-modal) .modal-dialog .modal-content,
+        [data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-dialog .modal-content,
+        [data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-dialog .modal-content,
+        html.theme-dark .modal:not(.ensan-sub-modal) .card,
+        body.theme-dark .modal:not(.ensan-sub-modal) .card,
+        .theme-dark .modal:not(.ensan-sub-modal) .card,
         html.theme-dark .service-modal .modal-content,
         body.theme-dark .service-modal .modal-content,
         .theme-dark .service-modal .modal-content,
@@ -863,11 +863,11 @@
             -webkit-backdrop-filter: none !important;
         }
 
-        html.theme-dark .modal-body,
-        body.theme-dark .modal-body,
-        .theme-dark .modal-body,
-        [data-bs-theme="dark"] .modal-body,
-        [data-theme="dark"] .modal-body,
+        html.theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+        body.theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+        .theme-dark .modal:not(.ensan-sub-modal) .modal-body,
+        [data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-body,
+        [data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-body,
         html.theme-dark .service-modal .modal-body,
         body.theme-dark .service-modal .modal-body,
         .theme-dark .service-modal .modal-body,
@@ -879,11 +879,11 @@
             opacity: 1 !important;
         }
 
-        html.theme-dark .modal-header,
-        body.theme-dark .modal-header,
-        .theme-dark .modal-header,
-        [data-bs-theme="dark"] .modal-header,
-        [data-theme="dark"] .modal-header,
+        html.theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+        body.theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+        .theme-dark .modal:not(.ensan-sub-modal) .modal-header,
+        [data-bs-theme="dark"] .modal:not(.ensan-sub-modal) .modal-header,
+        [data-theme="dark"] .modal:not(.ensan-sub-modal) .modal-header,
         html.theme-dark .service-modal .modal-header,
         body.theme-dark .service-modal .modal-header,
         .theme-dark .service-modal .modal-header,
@@ -994,12 +994,22 @@
         html.theme-dark .ensan-sub-modal .modal-body,
         body.theme-dark .ensan-sub-modal .modal-body,
         [data-bs-theme="dark"] .ensan-sub-modal .modal-body {
-            background-color: #f8fafc !important;
-            background: #f8fafc !important;
+            background-color: #ffffff !important;
+            background: #ffffff !important;
             opacity: 1 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             padding: 0.5rem 0.25rem 1.25rem !important;
+        }
+
+        .ensan-sub-modal .ensan-sub-grid,
+        html .ensan-sub-modal .ensan-sub-grid,
+        body .ensan-sub-modal .ensan-sub-grid,
+        html.theme-dark .ensan-sub-modal .ensan-sub-grid,
+        body.theme-dark .ensan-sub-modal .ensan-sub-grid,
+        [data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
         }
 
         /* Sub-Service Tiles - Solid White Background with High-Contrast Dark Text */
@@ -1130,6 +1140,78 @@
         [data-bs-theme="dark"] .ensan-sub-modal .bg-dark-subtle {
             background-color: #e2e8f0 !important;
             color: #1e293b !important;
+        }
+
+        /* ==============================================================
+         * Public Application Forms: Header Card & Typography
+         * ============================================================== */
+        body:not(.theme-dark) .apply-header-card,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-card {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        body:not(.theme-dark) .apply-header-badge,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-badge {
+            background-color: #f1f5f9 !important;
+            background: #f1f5f9 !important;
+            color: #000000 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-title,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-title {
+            color: #000000 !important;
+            font-weight: 900 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-subtitle,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle {
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+
+        body:not(.theme-dark) .apply-header-subtitle strong,
+        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle strong {
+            color: #000000 !important;
+            font-weight: 800 !important;
+        }
+
+        html.theme-dark .apply-header-card,
+        body.theme-dark .apply-header-card,
+        [data-bs-theme="dark"] .apply-header-card {
+            background-color: #0f172a !important;
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+        }
+
+        html.theme-dark .apply-header-badge,
+        body.theme-dark .apply-header-badge,
+        [data-bs-theme="dark"] .apply-header-badge {
+            background-color: #1e293b !important;
+            background: #1e293b !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+        }
+
+        html.theme-dark .apply-header-title,
+        body.theme-dark .apply-header-title,
+        [data-bs-theme="dark"] .apply-header-title {
+            color: #ffffff !important;
+            font-weight: 900 !important;
+        }
+
+        html.theme-dark .apply-header-subtitle,
+        body.theme-dark .apply-header-subtitle,
+        [data-bs-theme="dark"] .apply-header-subtitle {
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .apply-header-subtitle strong,
+        body.theme-dark .apply-header-subtitle strong {
+            color: #ffffff !important;
         }
 
         html.theme-dark .modal-footer,

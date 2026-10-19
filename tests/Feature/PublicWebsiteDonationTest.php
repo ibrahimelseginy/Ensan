@@ -7,13 +7,13 @@ use App\Models\DonationProof;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
+use Tests\DatabaseTestCase;
 
-class PublicWebsiteDonationTest extends TestCase
+class PublicWebsiteDonationTest extends DatabaseTestCase
 {
     public function test_public_website_donation_proof_is_linked_to_web_donation(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         DB::beginTransaction();
 
@@ -25,7 +25,7 @@ class PublicWebsiteDonationTest extends TestCase
                 'donor_name' => 'Website Donor',
                 'donor_phone' => $phone,
                 'amount' => 150,
-                'type' => 'general',
+                'category_id' => \App\Models\DonationCategory::create(['name' => 'General', 'slug' => 'general', 'is_active' => true])->id,
                 'payment_method' => 'instapay',
                 'notes' => 'Test website donation proof flow',
                 'proof_file' => UploadedFile::fake()->image('proof.jpg'),
@@ -36,7 +36,7 @@ class PublicWebsiteDonationTest extends TestCase
             $this->assertNotNull($proof);
             $this->assertNull($proof->donation_id);
             $this->assertSame($donation->id, $proof->web_donation_id);
-            Storage::disk('public')->assertExists($proof->image_path);
+            Storage::disk('local')->assertExists($proof->image_path);
         } finally {
             DB::rollBack();
         }

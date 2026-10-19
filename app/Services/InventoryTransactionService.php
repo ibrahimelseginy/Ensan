@@ -22,11 +22,12 @@ final readonly class InventoryTransactionService
     {
         $transactions = $this->transactionRepository->paginateFiltered($filters, $perPage);
 
-        $transactions->each(function(InventoryTransaction $transaction) {
-            $transaction->pendingRequest = ChangeRequest::where('model_type', InventoryTransaction::class)
-                ->where('model_id', $transaction->id)
-                ->where('status', 'pending')
-                ->first();
+        $pending = ChangeRequest::where('model_type', InventoryTransaction::class)
+            ->whereIn('model_id', $transactions->pluck('id'))
+            ->where('status', 'pending')
+            ->orderBy('id')->get()->groupBy('model_id');
+        $transactions->each(function (InventoryTransaction $transaction) use ($pending) {
+            $transaction->pendingRequest = $pending->get($transaction->id)?->first();
         });
 
         return $transactions;
@@ -98,7 +99,7 @@ final readonly class InventoryTransactionService
             ]);
 
             // Update OUT to link to IN
-            $this->transactionRepository->update($out, ['related_transaction_id' => $in->id]);
+            $out->update(['related_transaction_id' => $in->id]);
         });
 
         return true;

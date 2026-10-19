@@ -73,7 +73,20 @@ final class ChangeRequestWebController extends Controller
                 $executionData = $payload['data'] ?? [];
             }
 
-            if ($changeRequest->action === 'create') {
+            if ($modelClass === \App\Models\FinancialClosure::class && in_array($changeRequest->action, ['create', 'update', 'delete'], true)) {
+                if ($changeRequest->action === 'create') $executionData = array_merge($executionData, ['approved' => true, 'approved_by' => auth()->id()]);
+                $result = app(\App\Services\FinancialPeriodWriter::class)->execute($changeRequest->action, $executionData, $changeRequest->model_id, auth()->id());
+                if ($result instanceof \App\Models\FinancialClosure) $changeRequest->model_id = $result->id;
+            } elseif ($modelClass === \App\Models\JournalEntry::class && in_array($changeRequest->action, ['create', 'update', 'delete'], true)) {
+                $result = app(\App\Services\JournalEntryWriter::class)->execute($changeRequest->action, $executionData, $changeRequest->model_id);
+                if ($result instanceof \App\Models\JournalEntry) $changeRequest->model_id = $result->id;
+            } elseif ($modelClass === \App\Models\InventoryTransaction::class && in_array($changeRequest->action, ['create', 'update', 'delete'], true)) {
+                $repository = app(\App\Repositories\InventoryTransactionRepository::class);
+                $instance = $changeRequest->model_id ? \App\Models\InventoryTransaction::findOrFail($changeRequest->model_id) : null;
+                if ($changeRequest->action === 'create') $changeRequest->model_id = $repository->create($executionData)->id;
+                elseif ($changeRequest->action === 'update') $repository->update($instance, $executionData);
+                else $repository->delete($instance);
+            } elseif ($changeRequest->action === 'create') {
                 $instance = $modelClass::create($executionData);
                 // Save the newly created model ID
                 $changeRequest->model_id = $instance->id;
@@ -96,7 +109,7 @@ final class ChangeRequestWebController extends Controller
                         try {
                             $logisticsService = new \App\Services\LogisticsAccountingService();
                             $logisticsService->createJournalEntry($instance);
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) { throw $e; }
                     }
                 } elseif ($modelClass === 'App\Models\Payroll') {
                     $instance->calculateNetAmount();
@@ -105,13 +118,13 @@ final class ChangeRequestWebController extends Controller
                         try {
                             $ps = app(\App\Services\PayrollAccountingService::class);
                             $ps->createJournalEntry($instance);
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) { throw $e; }
                     }
                     if (isset($executionData['treasury_id']) && $executionData['treasury_id']) {
                         try {
                             $ts = new \App\Services\TreasuryIntegrationService();
                             $ts->processPayrollFromTreasury($instance, $executionData['treasury_id']);
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) { throw $e; }
                     }
                 } elseif ($modelClass === 'App\Models\FinancialClosure') {
                     $instance->update(['approved' => true, 'approved_by' => auth()->id()]);
@@ -251,7 +264,7 @@ final class ChangeRequestWebController extends Controller
                             try {
                                 $logisticsService = new \App\Services\LogisticsAccountingService();
                                 $logisticsService->markAsPaid($instance);
-                            } catch (\Exception $e) {}
+                            } catch (\Exception $e) { throw $e; }
                         }
                     }
 
@@ -272,20 +285,20 @@ final class ChangeRequestWebController extends Controller
                          try {
                              $ls = new \App\Services\LogisticsAccountingService();
                              $ls->reverseJournalEntry($instance);
-                         } catch (\Exception $e) {}
+                         } catch (\Exception $e) { throw $e; }
                     }
                     
                     if ($modelClass === 'App\Models\Payroll') {
                         try {
                             $ts = new \App\Services\TreasuryIntegrationService();
                             $ts->cancelPayrollTransaction($instance, 'حذف طلب مراجعة');
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) { throw $e; }
 
                         if ($instance->journal_entry_id) {
                             try {
                                 $ps = app(\App\Services\PayrollAccountingService::class);
                                 $ps->reverseJournalEntry($instance);
-                            } catch (\Exception $e) {}
+                            } catch (\Exception $e) { throw $e; }
                         }
                     }
 
@@ -340,7 +353,7 @@ final class ChangeRequestWebController extends Controller
                             try {
                                 $ps = app(\App\Services\PayrollAccountingService::class);
                                 $ps->reverseJournalEntry($instance);
-                            } catch (\Exception $e) {}
+                            } catch (\Exception $e) { throw $e; }
                         }
                     } else {
                         if (method_exists($instance, 'cancel')) {

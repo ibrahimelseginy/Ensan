@@ -163,7 +163,7 @@ final class DonationController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('anasen/donations/proofs', 'public');
+                $path = app(\App\Services\PrivateDocumentService::class)->store($request->file('image'), 'anasen/donations/proofs');
                 
                 DonationProof::create([
                     'donation_id' => $donation->id,

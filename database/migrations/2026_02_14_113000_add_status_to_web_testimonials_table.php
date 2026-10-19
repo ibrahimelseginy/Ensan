@@ -26,8 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('web_testimonials', function (Blueprint $table) {
-            $table->dropColumn('status');
-        });
+        if (Schema::hasTable('web_testimonials') && Schema::hasColumn('web_testimonials', 'status')) {
+            Schema::table('web_testimonials', function (Blueprint $table) {
+                $table->dropColumn('status');
+            });
+        }
     }
 };

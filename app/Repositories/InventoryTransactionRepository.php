@@ -33,17 +33,40 @@ final readonly class InventoryTransactionRepository
 
     public function create(array $data): InventoryTransaction
     {
-        return InventoryTransaction::create($data);
+        return DB::transaction(function () use ($data) {
+            $this->lockItem((int) $data['item_id']);
+            $this->assertStock($data, 0);
+            return InventoryTransaction::create($data);
+        }, 3);
     }
 
     public function update(InventoryTransaction $transaction, array $data): bool
     {
-        return $transaction->update($data);
+        return DB::transaction(function () use ($transaction, $data) {
+            $this->lockItem((int) $transaction->item_id);
+            $transaction = InventoryTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+            if ($transaction->related_transaction_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['transaction' => 'لا يمكن تعديل طرف تحويل منفرداً. يجب عكس التحويل بالكامل.']);
+            }
+            $merged = array_merge($transaction->getAttributes(), $data);
+            $this->assertStock($merged, $this->signedQuantity($transaction->getAttributes()));
+            return $transaction->update($data);
+        }, 3);
     }
 
     public function delete(InventoryTransaction $transaction): bool
     {
-        return $transaction->delete();
+        return DB::transaction(function () use ($transaction) {
+            $this->lockItem((int) $transaction->item_id);
+            $transaction = InventoryTransaction::query()->lockForUpdate()->findOrFail($transaction->id);
+            if ($transaction->related_transaction_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['transaction' => 'لا يمكن حذف طرف تحويل منفرداً. يجب عكس التحويل بالكامل.']);
+            }
+            $data = $transaction->getAttributes();
+            $data['quantity'] = 0;
+            $this->assertStock($data, $this->signedQuantity($transaction->getAttributes()));
+            return $transaction->delete();
+        }, 3);
     }
 
     public function getCurrentStock(int $itemId, int $warehouseId): float
@@ -55,5 +78,26 @@ final readonly class InventoryTransactionRepository
                 WHEN type IN ('out', 'transfer', 'transfer_out', 'stock_count_shortage') THEN -quantity 
                 ELSE 0 END) as stock")
             ->value('stock') ?? 0.0;
+    }
+    private function lockItem(int $id): void
+    {
+        \App\Models\Item::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
+    private function signedQuantity(array $data): float
+    {
+        return match ($data['type']) {
+            'in', 'stock_count_increase', 'transfer_in' => (float) $data['quantity'],
+            'out', 'transfer', 'transfer_out', 'stock_count_shortage' => -(float) $data['quantity'],
+            default => 0,
+        };
+    }
+
+    private function assertStock(array $data, float $previous): void
+    {
+        $stock = $this->getCurrentStock((int) $data['item_id'], (int) $data['warehouse_id']);
+        if ($stock - $previous + $this->signedQuantity($data) < -0.00001) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['quantity' => 'العملية ستجعل رصيد المخزون سالباً. يرجى مراجعة الكمية الحالية.']);
+        }
     }
 }

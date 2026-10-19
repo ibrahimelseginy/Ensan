@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use Tests\DatabaseTestCase;
 use App\Models\User;
 use App\Models\Campaign;
 use App\Models\Project;
@@ -13,7 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-class AnasenApiTest extends TestCase
+class EnsanApiTest extends DatabaseTestCase
 {
     // Note: RefreshDatabase might be destructive if not configured correctly for local dev.
     // Using simple tests without refresh for now to avoid wiping the user's data.

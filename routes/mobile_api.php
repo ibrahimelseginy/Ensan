@@ -92,7 +92,7 @@ Route::middleware([\App\Http\Middleware\TokenAuth::class])->group(function () {
         Route::get('leaves', [MobileApiController::class, 'getEmployeeLeaves']);
         Route::post('leaves', [MobileApiController::class, 'requestEmployeeLeave']);
         Route::get('payrolls', [MobileApiController::class, 'getEmployeePayrolls']);
-        Route::get('volunteer-requests', [MobileApiController::class, 'getVolunteerRequests']);
-        Route::post('news', [MobileApiController::class, 'storeNews']);
+        Route::get('volunteer-requests', [MobileApiController::class, 'getVolunteerRequests'])->middleware('api_permission:mobile.volunteer_requests.view');
+        Route::post('news', [MobileApiController::class, 'storeNews'])->middleware('api_permission:mobile.news.create');
     });
 });

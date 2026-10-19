@@ -31,13 +31,7 @@ final readonly class FinancialClosureService
                 $data['approved_by'] = $userId;
             }
 
-            $closure = $this->financialClosureRepository->create($data);
-
-            if ($closure->approved) {
-                $this->lockJournalEntries($closure->date->toDateString(), $closure->branch);
-            }
-
-            return $closure;
+            return app(FinancialPeriodWriter::class)->execute('create', $data, null, $userId);
         };
 
         return ChangeRequestService::handleRequest(
@@ -52,22 +46,13 @@ final readonly class FinancialClosureService
 
     public function approveClosure(FinancialClosure $closure, int $userId): void
     {
-        $newState = !$closure->approved;
-        $this->financialClosureRepository->update($closure, [
-            'approved'    => $newState,
-            'approved_by' => $newState ? $userId : null
-        ]);
-
-        if ($newState) {
-            $this->lockJournalEntries($closure->date->toDateString(), $closure->branch);
-        }
+        app(FinancialPeriodWriter::class)->execute('toggle', [], $closure->id, $userId);
     }
 
     public function updateClosure(FinancialClosure $closure, array $data): mixed
     {
         $executor = function () use ($closure, $data) {
-            $this->financialClosureRepository->update($closure, $data);
-            return $closure;
+            return app(FinancialPeriodWriter::class)->execute('update', $data, $closure->id, request()->user()?->id);
         };
 
         return ChangeRequestService::handleRequest(
@@ -83,7 +68,7 @@ final readonly class FinancialClosureService
     public function deleteClosure(FinancialClosure $closure): mixed
     {
         $executor = function () use ($closure) {
-            return $this->financialClosureRepository->delete($closure);
+            return app(FinancialPeriodWriter::class)->execute('delete', [], $closure->id, request()->user()?->id);
         };
 
         return ChangeRequestService::handleRequest(
@@ -96,12 +81,4 @@ final readonly class FinancialClosureService
         );
     }
 
-    private function lockJournalEntries(string $date, ?string $branch): void
-    {
-        JournalEntry::where('date', '<=', $date)
-            ->when($branch, function ($q, $b) {
-                $q->where('branch', $b);
-            })
-            ->update(['locked' => true]);
-    }
 }

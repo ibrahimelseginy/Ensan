@@ -43,7 +43,7 @@ final class MobileNews extends Model
         $urls = [];
         $images = $this->additional_images ?? [];
 
-        $productionUrl = env('PRODUCTION_ASSET_URL');
+        $productionUrl = config('filesystems.production_asset_url');
         $baseUrl = $productionUrl ? rtrim($productionUrl, '/') : url('');
 
         foreach ($images as $img) {

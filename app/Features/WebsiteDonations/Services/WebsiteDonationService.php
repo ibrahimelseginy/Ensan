@@ -43,7 +43,7 @@ class WebsiteDonationService implements WebsiteDonationProcessorInterface
             }
             
             // Resolve category from ID
-            $categoryRecord = \App\Models\DonationCategory::find($data['category_id']);
+            $categoryRecord = \App\Models\DonationCategory::findOrFail($data['category_id']);
             $type = $categoryRecord->slug;
             
             $donation->category = $type;
@@ -55,7 +55,7 @@ class WebsiteDonationService implements WebsiteDonationProcessorInterface
 
             // 3. Handle Proof of Payment
             if (isset($data['proof_file'])) {
-                $path = $data['proof_file']->store('website/donations/proofs', 'public');
+                $path = app(\App\Services\PrivateDocumentService::class)->store($data['proof_file'], 'website/donations/proofs');
                 DonationProof::create([
                     'donation_id' => null,
                     'web_donation_id' => $donation->id,
@@ -91,32 +91,33 @@ class WebsiteDonationService implements WebsiteDonationProcessorInterface
      */
     public function verifyDonation(\App\Models\WebDonation $donation): bool
     {
-        if ($donation->status !== 'pending') {
-            return false;
-        }
-
-        $donation->status = 'verified';
-        $donation->save();
-
-        // Update target amount if applicable
-        if ($donation->donationable_type && $donation->donationable_id && $donation->donationable) {
-            $target = $donation->donationable;
-            if (isset($target->current_amount)) {
-                $target->current_amount += $donation->amount;
-                $target->save();
+        return DB::transaction(function () use ($donation) {
+            $locked = \App\Models\WebDonation::query()->lockForUpdate()->findOrFail($donation->id);
+            if ($locked->status !== 'pending') {
+                return false;
             }
-        }
-
-        return true;
+            $target = $locked->donationable;
+            if ($target && array_key_exists('current_amount', $target->getAttributes())) {
+                $target->increment('current_amount', $locked->amount);
+            }
+            $locked->update(['status' => 'verified']);
+            $donation->setRawAttributes($locked->getAttributes(), true);
+            return true;
+        });
     }
 
-    /**
-     * Reject a donation
-     */
+    /** Rejection is only valid before approval; approved funds need a reversal. */
     public function rejectDonation(\App\Models\WebDonation $donation): bool
     {
-        $donation->status = 'rejected';
-        return $donation->save();
+        return DB::transaction(function () use ($donation) {
+            $locked = \App\Models\WebDonation::query()->lockForUpdate()->findOrFail($donation->id);
+            if ($locked->status !== 'pending') {
+                return false;
+            }
+            $locked->update(['status' => 'rejected']);
+            $donation->setRawAttributes($locked->getAttributes(), true);
+            return true;
+        });
     }
 
     /**

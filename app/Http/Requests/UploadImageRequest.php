@@ -29,7 +29,7 @@ final class UploadImageRequest extends FormRequest
                 'file',
                 'image',
                 'max:10240',
-                'mimes:jpeg,jpg,png,gif,webp,bmp,svg,heic,heif,avif',
+                'mimes:jpeg,jpg,png,gif,webp,bmp,heic,heif,avif',
             ],
             'directory' => [
                 'nullable',
@@ -52,7 +52,7 @@ final class UploadImageRequest extends FormRequest
             'image.file'     => 'يجب أن يكون الملف المرفوع ملف صالح.',
             'image.image'    => 'يجب أن يكون الملف المرفوع صورة.',
             'image.max'      => 'حجم الصورة يجب ألا يتجاوز 10 ميجابايت.',
-            'image.mimes'    => 'صيغة الصورة غير مدعومة. الصيغ المسموحة: jpeg, jpg, png, gif, webp, bmp, svg, heic, heif, avif.',
+            'image.mimes'    => 'صيغة الصورة غير مدعومة. الصيغ المسموحة: jpeg, jpg, png, gif, webp, bmp, heic, heif, avif.',
             'directory.regex'=> 'مسار المجلد غير صالح. يُسمح فقط بالأحرف والأرقام والشرطات والمائلة.',
         ];
     }

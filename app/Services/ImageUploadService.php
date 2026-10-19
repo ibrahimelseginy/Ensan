@@ -32,7 +32,7 @@ final class ImageUploadService
     /** أنواع الصور المسموح بها */
     public const ALLOWED_MIMES = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-        'image/webp', 'image/bmp', 'image/svg+xml',
+        'image/webp', 'image/bmp',
         'image/heic', 'image/heif', 'image/avif',
     ];
 
@@ -59,61 +59,29 @@ final class ImageUploadService
         ?int $maxHeight = null,
         ?int $quality = null,
     ): ?string {
-        // حذف الصورة القديمة إن وُجدت
-        if ($oldPath) {
-            $this->delete($oldPath);
-        }
-
         try {
-            @ini_set('memory_limit', '512M');
-            @set_time_limit(120);
-
-            $disk = env('IMAGE_UPLOAD_DISK', 'uploads');
-
-            // Ensure directory exists
-            try {
-                if (!Storage::disk($disk)->exists($directory)) {
-                    Storage::disk($disk)->makeDirectory($directory);
-                }
-            } catch (\Exception $e) {
-                // Ignore if it fails to make dir
+            if (!in_array($file->getMimeType(), self::ALLOWED_MIMES, true) || $file->getSize() > self::MAX_SIZE_KB * 1024) {
+                return null;
             }
-
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic', 'heif', 'avif'];
-            $extension = strtolower((string) $file->getClientOriginalExtension());
-            if (!in_array($extension, $allowedExtensions, true)) {
-                try {
-                    $guessed = $file->guessExtension();
-                    $extension = ($guessed && in_array(strtolower($guessed), $allowedExtensions, true))
-                        ? strtolower($guessed)
-                        : 'jpg';
-                } catch (\Throwable $e) {
-                    $extension = 'jpg';
-                }
+            if (!preg_match('~^[a-zA-Z0-9_/-]+$~', $directory)) return null;
+            if (app(PrivateDocumentService::class)->isDocumentDirectory($directory)) {
+                $path = app(PrivateDocumentService::class)->store($file, $directory);
+                if ($oldPath) $this->delete($oldPath);
+                return $path;
             }
-            $filename  = Str::uuid() . '.' . $extension;
-            $savedPath = trim($directory, '/') . '/' . $filename;
-
-            Storage::disk($disk)->putFileAs(
-                trim($directory, '/'),
-                $file,
-                $filename,
-            );
-
-            if (!$savedPath) {
-                Log::warning('[ImageUploadService] optimize() returned null.', [
-                    'directory' => $directory,
-                    'original'  => $file->getClientOriginalName(),
-                ]);
-            }
-
+            $dimensions = @getimagesize($file->getRealPath());
+            if (!$dimensions || $dimensions[0] * $dimensions[1] > 25000000) return null;
+            $manager = new \Intervention\Image\ImageManager(\Intervention\Image\Drivers\Gd\Driver::class);
+            $encoded = $manager->decodePath($file->getRealPath())
+                ->scaleDown(width: $maxWidth ?? 2048, height: $maxHeight ?? 2048)
+                ->encode(new \Intervention\Image\Encoders\WebpEncoder(quality: $quality ?? 82, strip: true));
+            $disk = config('filesystems.image_upload_disk', 'uploads');
+            $savedPath = trim($directory, '/').'/'.Str::uuid().'.webp';
+            if (!Storage::disk($disk)->put($savedPath, (string) $encoded)) return null;
+            if ($oldPath) $this->delete($oldPath);
             return $savedPath;
         } catch (\Throwable $e) {
-            Log::error('[ImageUploadService] Upload failed.', [
-                'directory' => $directory,
-                'error'     => $e->getMessage(),
-            ]);
-
+            Log::error('[ImageUploadService] Upload failed.', ['directory' => $directory, 'exception' => get_class($e)]);
             return null;
         }
     }
@@ -167,12 +135,16 @@ final class ImageUploadService
             return;
         }
 
+        if (str_starts_with($path, 'private/')) {
+            Storage::disk('local')->delete($path);
+            return;
+        }
         $cleaned = $this->normalizePath($path);
         if (!$cleaned) {
             return;
         }
 
-        $disk = env('IMAGE_UPLOAD_DISK', 'uploads');
+        $disk = config('filesystems.image_upload_disk', 'uploads');
         if (Storage::disk($disk)->exists($cleaned)) {
             Storage::disk($disk)->delete($cleaned);
             return;
@@ -214,6 +186,8 @@ final class ImageUploadService
             return null;
         }
 
+        if (str_starts_with($path, 'private/')) return app(PrivateDocumentService::class)->url($path);
+
         // Return full external URLs as-is
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
@@ -249,7 +223,7 @@ final class ImageUploadService
         }
 
         // 4. Check via Storage disks
-        $disk     = env('IMAGE_UPLOAD_DISK', 'uploads');
+        $disk     = config('filesystems.image_upload_disk', 'uploads');
         $fallback = ($disk === 'uploads') ? 'public' : 'uploads';
 
         if (Storage::disk($disk)->exists($cleaned)) {
@@ -328,6 +302,8 @@ final class ImageUploadService
             return false;
         }
 
+        if (str_starts_with($path, 'private/')) return Storage::disk('local')->exists($path);
+
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return true;
         }
@@ -343,7 +319,7 @@ final class ImageUploadService
             return true;
         }
 
-        $disk     = env('IMAGE_UPLOAD_DISK', 'uploads');
+        $disk     = config('filesystems.image_upload_disk', 'uploads');
         $fallback = ($disk === 'uploads') ? 'public' : 'uploads';
 
         return Storage::disk($disk)->exists($cleaned)

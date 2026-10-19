@@ -13,6 +13,9 @@ return [
     |
     */
 
+    'image_upload_disk' => env('IMAGE_UPLOAD_DISK', 'uploads'),
+    'production_asset_url' => env('PRODUCTION_ASSET_URL'),
+
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
@@ -33,7 +36,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

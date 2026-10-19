@@ -10,6 +10,11 @@ final class Attachment extends Model
 {
     protected $fillable = ['entity_type','entity_id','path','mime','original_name'];
 
+    public function getImageUrlAttribute(): ?string
+    {
+        return app(\App\Services\ImageUploadService::class)->url($this->path);
+    }
+
     public function attachable(): MorphTo
     {
         return $this->morphTo(null, 'entity_type', 'entity_id');

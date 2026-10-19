@@ -2755,7 +2755,11 @@ final class WebsiteApiController extends Controller
             ], 401);
         }
 
-        // User is authenticated, direct token
+        abort_unless($user->active, 401);
+        if (!$user->otp_verified) {
+            return response()->json(['success' => false, 'requires_otp' => true, 'message' => 'يرجى طلب رمز التحقق وتفعيل الهاتف أولاً'], 403);
+        }
+        // User is authenticated and phone ownership has been verified.
         $token = $user->createToken('EnsanWeb')->plainTextToken;
 
         return response()->json([
@@ -2789,25 +2793,10 @@ final class WebsiteApiController extends Controller
             'otp.max' => 'رمز التحقق غير صالح.',
         ]);
 
-        $user = \App\Models\WebDonor::where('phone', $request->phone)->first();
-
+        $user = app(\App\Services\OtpService::class)->consume(\App\Models\WebDonor::class, $request->phone, $request->otp);
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'رقم الهاتف غير موجود.'], 404);
+            return response()->json(['success' => false, 'message' => 'رمز التحقق غير صحيح أو منتهي الصلاحية'], 422);
         }
-
-        if (!$user->otp_code || $user->otp_code !== $request->otp) {
-            return response()->json(['success' => false, 'message' => 'رمز التحقق غير صحيح.'], 422);
-        }
-
-        if ($user->otp_expires_at && now()->isAfter($user->otp_expires_at)) {
-            return response()->json(['success' => false, 'message' => 'رمز التحقق منتهي الصلاحية. الرجاء طلب رمز جديد.'], 422);
-        }
-
-        // Mark account as verified, clear OTP
-        $user->otp_verified  = true;
-        $user->otp_code      = null;
-        $user->otp_expires_at = null;
-        $user->save();
 
         $token = $user->createToken('EnsanWeb')->plainTextToken;
 
@@ -2848,16 +2837,14 @@ final class WebsiteApiController extends Controller
         }
 
         $otp = $this->sendOtpViaBeon($user->phone);
-        $user->otp_code       = $otp ?? (string) rand(1000, 9999);
+        $user->otp_code       = $otp;
         $user->otp_expires_at = now()->addMinutes(15);
         $user->save();
 
-        \Illuminate\Support\Facades\Log::info("Resent OTP for {$user->phone}: {$user->otp_code}");
 
         return response()->json([
             'success' => true,
             'message' => 'تم إعادة إرسال رمز التحقق.',
-            'otp_dev' => app()->isLocal() ? $otp : null,
         ]);
     }
 
@@ -3122,46 +3109,9 @@ final class WebsiteApiController extends Controller
         ]);
     }
 
-    private function sendOtpViaBeon(string $phone): ?string
+    private function sendOtpViaBeon(string $phone): string
     {
-        try {
-            $token = config('services.beon.token');
-            if (!$token) {
-                \Illuminate\Support\Facades\Log::warning('Beon OTP is not configured.');
-                return null;
-            }
-
-            $formattedPhone = preg_replace('/\D/', '', $phone);
-            if (str_starts_with($formattedPhone, '01') && strlen($formattedPhone) == 11) {
-                $formattedPhone = '2' . $formattedPhone;
-            }
-
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                'beon-token' => $token,
-                'Content-Type' => 'application/json',
-            ])->post('https://v3.api.beon.chat/api/v3/messages/otp', [
-                'recipient' => $formattedPhone,
-                'phoneNumber' => $formattedPhone,
-                'phone' => $formattedPhone,
-                'name' => 'Ensan',
-                'channel' => 'sms',
-                'type' => 'sms',
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                \Illuminate\Support\Facades\Log::info("Beon OTP response: " . json_encode($data));
-                if (isset($data['data']['otp'])) {
-                    return (string) $data['data']['otp'];
-                }
-            } else {
-                \Illuminate\Support\Facades\Log::error("Beon OTP error: " . $response->body());
-            }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Exception in sendOtpViaBeon: " . $e->getMessage());
-        }
-
-        return null;
+        return app(\App\Services\OtpService::class)->send($phone);
     }
 
     // ─── Complaints — Public ───────────────────────────────────────────────────

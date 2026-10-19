@@ -14,9 +14,9 @@ final class AttachmentWebController extends Controller
         $data = $request->validate([
             'entity_type' => 'required|string',
             'entity_id' => 'required|integer',
-            'file' => 'required|file'
+            'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:10240'
         ]);
-        $path = $request->file('file')->store('attachments','public');
+        $path = app(\App\Services\PrivateDocumentService::class)->store($request->file('file'), 'attachments');
         $att = Attachment::create([
             'entity_type' => $data['entity_type'],
             'entity_id' => $data['entity_id'],
@@ -27,6 +27,7 @@ final class AttachmentWebController extends Controller
     }
     public function destroy(Attachment $attachment)
     {
+        app(\App\Services\ImageUploadService::class)->delete($attachment->path);
         $attachment->delete();
         return back();
     }

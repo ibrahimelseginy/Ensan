@@ -40,8 +40,9 @@ final class ImageUploadController extends Controller
      */
     public function upload(UploadImageRequest $request): JsonResponse
     {
-        $directory = $request->input('directory', 'uploads');
+        $directory = $this->uploadDirectory($request);
         $oldPath   = $request->input('old_path');
+        if ($oldPath) $this->authorizePath($request, $oldPath);
 
         $path = $this->imageUploadService->upload(
             file: $request->file('image'),
@@ -81,11 +82,11 @@ final class ImageUploadController extends Controller
     {
         $request->validate([
             'images'    => 'required|array|min:1|max:20',
-            'images.*'  => 'required|file|image|max:10240|mimes:jpeg,jpg,png,gif,webp,bmp,svg',
+            'images.*'  => 'required|file|image|max:10240|mimes:jpeg,jpg,png,gif,webp,bmp',
             'directory' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_\/\-]+$/',
         ]);
 
-        $directory = $request->input('directory', 'uploads');
+        $directory = $this->uploadDirectory($request);
 
         $paths = $this->imageUploadService->uploadMultiple(
             files: $request->file('images'),
@@ -126,6 +127,7 @@ final class ImageUploadController extends Controller
         ]);
 
         $path = $request->input('path');
+        $this->authorizePath($request, $path);
 
         if (!$this->imageUploadService->exists($path)) {
             return response()->json([
@@ -140,5 +142,24 @@ final class ImageUploadController extends Controller
             'success' => true,
             'message' => 'تم حذف الصورة بنجاح.',
         ]);
+    }
+    private function uploadDirectory(Request $request): string
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+        $directory = trim($request->input('directory', 'uploads'), '/');
+        return ($user->hasRole('admin') || $user->hasRole('manager'))
+            ? $directory : 'api-users/'.$user->id.'/'.$directory;
+    }
+
+    private function authorizePath(Request $request, string $path): void
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+        $cleaned = $this->imageUploadService->normalizePath($path);
+        abort_unless($cleaned && !str_contains($path, '..') && (
+            $user->hasRole('admin') || $user->hasRole('manager') ||
+            str_starts_with($cleaned, 'api-users/'.$user->id.'/')
+        ), 403);
     }
 }

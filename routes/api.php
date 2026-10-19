@@ -111,7 +111,7 @@ Route::prefix('v1')->group(function () {
 
 
         // Admin Website Management
-        Route::prefix('admin/website')->group(function () {
+        Route::prefix('admin/website')->middleware([\App\Http\Middleware\TokenAuth::class, \App\Http\Middleware\WebsiteAdminAccess::class, \App\Http\Middleware\AuditLogger::class])->withoutMiddleware(\App\Http\Middleware\RoleAccess::class)->group(function () {
             // Complaints Admin
             Route::get('complaints', [WebsiteApiController::class, 'adminListComplaints']);
             Route::patch('complaints/{complaint}', [WebsiteApiController::class, 'adminUpdateComplaint']);
@@ -129,13 +129,13 @@ Route::prefix('v1')->group(function () {
 
             // v1 Admin Actions (Anasen)
             Route::prefix('admin')->group(function () {
-                Route::post('donations/verify', [ApiAdminDonationController::class, 'verify']);
-                Route::post('donations/reject', [ApiAdminDonationController::class, 'reject']);
-                Route::get('donations', [ApiAdminDonationController::class, 'index']); // Review pending donations
+                Route::post('donations/verify', [ApiAdminDonationController::class, 'verify'])->name('donations.verify');
+                Route::post('donations/reject', [ApiAdminDonationController::class, 'reject'])->name('donations.reject');
+                Route::get('donations', [ApiAdminDonationController::class, 'index'])->name('donations.admin.index'); // Review pending donations
             });
 
             Route::apiResource('donors', DonorController::class);
-            Route::post('donations/upload-proof', [ApiDonationController::class, 'uploadProof']);
+            Route::post('donations/upload-proof', [ApiDonationController::class, 'uploadProof'])->name('donations.uploadProof');
             Route::apiResource('donations', DonationController::class);
             Route::apiResource('beneficiaries', BeneficiaryController::class);
             Route::apiResource('projects', ProjectController::class);
@@ -148,16 +148,16 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('journal-entries', JournalEntryController::class);
             Route::apiResource('complaints', ComplaintController::class);
             Route::apiResource('roles', RoleController::class);
-            Route::get('users/mobile-donors', [UserController::class, 'mobileDonors']);
+            Route::get('users/mobile-donors', [UserController::class, 'mobileDonors'])->name('users.mobile.index');
             Route::apiResource('users', UserController::class);
             Route::apiResource('delegates', DelegateController::class);
             Route::apiResource('travel-routes', TravelRouteController::class);
             Route::apiResource('expenses', ExpenseController::class);
             Route::apiResource('volunteer-hours', VolunteerHourController::class);
             Route::apiResource('payrolls', PayrollController::class);
-            Route::get('finance/closures', [FinancialClosureController::class , 'index']);
-            Route::post('finance/close', [FinancialClosureController::class , 'store']);
-            Route::post('finance/closures/{closure}/approve', [FinancialClosureController::class , 'approve']);
+            Route::get('finance/closures', [FinancialClosureController::class , 'index'])->name('financial_closures.index');
+            Route::post('finance/close', [FinancialClosureController::class , 'store'])->name('financial_closures.store');
+            Route::post('finance/closures/{closure}/approve', [FinancialClosureController::class , 'approve'])->name('financial_closures.approve');
             Route::post('users/{user}/roles/{role}', [UserController::class , 'attachRole'])->name('users.attachRole');
             Route::delete('users/{user}/roles/{role}', [UserController::class , 'detachRole'])->name('users.detachRole');
             Route::get('reports/donors', [\App\Http\Controllers\ReportsController::class , 'donors'])->name('reports.donors');
@@ -165,11 +165,11 @@ Route::prefix('v1')->group(function () {
             Route::get('reports/inventory', [\App\Http\Controllers\ReportsController::class , 'inventory'])->name('reports.inventory');
             Route::get('reports/beneficiaries', [\App\Http\Controllers\ReportsController::class , 'beneficiaries'])->name('reports.beneficiaries');
             Route::get('reports/finance', [\App\Http\Controllers\ReportsController::class , 'finance'])->name('reports.finance');
-            Route::post('attachments', [AttachmentController::class , 'store']);
-            Route::delete('attachments/{attachment}', [AttachmentController::class , 'destroy']);
+            Route::post('attachments', [AttachmentController::class , 'store'])->name('attachments.store');
+            Route::delete('attachments/{attachment}', [AttachmentController::class , 'destroy'])->name('attachments.destroy');
 
             // --- Website Management (Admin) ---
-            Route::prefix('admin/website')->group(function () {
+            Route::prefix('admin/website')->middleware([\App\Http\Middleware\TokenAuth::class, \App\Http\Middleware\WebsiteAdminAccess::class, \App\Http\Middleware\AuditLogger::class])->withoutMiddleware(\App\Http\Middleware\RoleAccess::class)->group(function () {
                     Route::get('/settings', [WebsiteApiController::class , 'getSettings']);
                     Route::post('/settings', [WebsiteApiController::class , 'updateSettings']);
                     Route::post('/donation-page', [WebsiteApiController::class, 'updateDonationPageSettings']);
