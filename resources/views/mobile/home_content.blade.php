@@ -147,11 +147,11 @@
 </style>
 @endsection
 @section('content')
-<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, var(--ws-border) 0%, var(--ws-bg-card-header) 100%); border-bottom: 1px solid var(--ws-border);">
+<div class="dashboard-hero animate-slide-up shadow-sm mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%); padding: 2.5rem 2rem; border-radius: 0 0 36px 36px;">
     <div class="hero-content">
-        <div class="hero-greeting text-stats-main-50">إدارة تطبيق الموبايل API Unit 📱</div>
-        <h1 class="hero-title">محتوى الصفحة الرئيسية</h1>
-        <p class="hero-subtitle">تخصيص الأقسام والكروت التي تظهر في شاشة التطبيق الرئيسية</p>
+        <div class="hero-greeting text-white mb-2 opacity-75 fw-bold">إدارة تطبيق الموبايل API Unit 📱</div>
+        <h1 class="hero-title fw-bold text-white mb-2" style="color: #ffffff !important;">محتوى الصفحة الرئيسية</h1>
+        <p class="hero-subtitle text-white opacity-85 mb-0" style="color: #ffffff !important;">تخصيص الأقسام والكروت التي تظهر في شاشة التطبيق الرئيسية</p>
     </div>
 </div>
 
