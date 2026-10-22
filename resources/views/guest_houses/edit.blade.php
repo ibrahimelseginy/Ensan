@@ -36,8 +36,8 @@
             <a href="{{ route('guest-houses.show', $guest_house) }}" class="btn btn-sm rounded-pill px-4 btn-light fw-bold hover-lift shadow-sm">
                 <i class="bi bi-door-open-fill me-1"></i> تشغيل الدار
             </a>
-            <a href="{{ route('guest-houses.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift" style="border-width: 2px;">
-                <i class="bi bi-arrow-right me-1"></i> العودة للقائمة
+            <a href="{{ route('guest-houses.index') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light text-white fw-bold hover-lift shadow-sm" style="border-width: 2px; color: #ffffff !important;">
+                <i class="bi bi-arrow-right me-1 text-white" style="color: #ffffff !important;"></i> العودة للقائمة
             </a>
         </div>
     </div>

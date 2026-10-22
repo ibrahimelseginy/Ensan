@@ -1629,6 +1629,31 @@
       body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white) span {
           color: #fff !important;
       }
+      .dashboard-hero .btn-outline-light,
+      .dashboard-hero .btn-outline-light:visited,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light:visited {
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.8) !important;
+      }
+      .dashboard-hero .btn-outline-light i,
+      .dashboard-hero .btn-outline-light span,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light i,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light span {
+          color: #ffffff !important;
+      }
+      .dashboard-hero .btn-outline-light:hover,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light:hover {
+          color: var(--primary, #059669) !important;
+          background-color: #ffffff !important;
+          border-color: #ffffff !important;
+      }
+      .dashboard-hero .btn-outline-light:hover i,
+      .dashboard-hero .btn-outline-light:hover span,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light:hover i,
+      body:not(.theme-dark) .dashboard-hero .btn-outline-light:hover span {
+          color: var(--primary, #059669) !important;
+      }
       body:not(.theme-dark) .role-pill-premium {
           color: var(--blue-dark);
           background: rgba(59,130,246,0.15);
