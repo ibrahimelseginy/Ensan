@@ -32,32 +32,81 @@ final class ChangeRequestWebController extends Controller
         $sponsorsMap = \App\Models\Donor::pluck('name', 'id')->toArray();
         $currentStatus = $request->status ?? 'all';
 
-        $beneficiaryIds = $requests->getCollection()
-            ->filter(fn($r) => $r->model_type === \App\Models\Beneficiary::class)
-            ->pluck('model_id')
-            ->unique();
-        $visitsByBeneficiary = \App\Models\FieldVisit::whereIn('beneficiary_id', $beneficiaryIds)
-            ->latest('visit_date')
-            ->get()
-            ->keyBy('beneficiary_id');
+        $projectsMap = \App\Models\Project::pluck('name', 'id')->toArray();
 
-        $nationalIds = $requests->getCollection()
-            ->map(function($r) {
-                return $r->subject?->national_id ?? ($r->payload['national_id'] ?? null);
-            })->filter()->unique();
-        $visitsByNationalId = \App\Models\FieldVisit::whereIn('national_id', $nationalIds)
+        $beneficiaryRequests = $requests->getCollection()
+            ->filter(fn($r) => $r->model_type === \App\Models\Beneficiary::class);
+
+        $beneficiaryIds = $beneficiaryRequests->pluck('model_id')->filter()->unique()->values()->all();
+
+        $cleanNatIds = $beneficiaryRequests->map(function($r) {
+            $p = is_array($r->payload) ? ($r->payload['data'] ?? $r->payload) : [];
+            $raw = $r->subject?->national_id ?? ($p['national_id'] ?? null);
+            return $raw ? preg_replace('/[^0-9]/', '', (string)$raw) : null;
+        })->filter()->unique()->values()->all();
+
+        $names = $beneficiaryRequests->map(function($r) {
+            $p = is_array($r->payload) ? ($r->payload['data'] ?? $r->payload) : [];
+            return trim((string)($r->subject?->full_name ?? ($p['full_name'] ?? ($p['name'] ?? ''))));
+        })->filter()->unique()->values()->all();
+
+        $phones = $beneficiaryRequests->map(function($r) {
+            $p = is_array($r->payload) ? ($r->payload['data'] ?? $r->payload) : [];
+            $raw = $r->subject?->phone ?? ($p['phone'] ?? null);
+            return $raw ? preg_replace('/[^0-9]/', '', (string)$raw) : null;
+        })->filter()->unique()->values()->all();
+
+        $fieldVisits = \App\Models\FieldVisit::with(['researcher', 'beneficiary'])
+            ->where(function($q) use ($beneficiaryIds, $cleanNatIds, $names, $phones) {
+                $hasCond = false;
+                if (!empty($beneficiaryIds)) {
+                    $q->whereIn('beneficiary_id', $beneficiaryIds);
+                    $hasCond = true;
+                }
+                if (!empty($cleanNatIds)) {
+                    if ($hasCond) {
+                        $q->orWhereIn('national_id', $cleanNatIds);
+                    } else {
+                        $q->whereIn('national_id', $cleanNatIds);
+                        $hasCond = true;
+                    }
+                }
+                if (!empty($names)) {
+                    if ($hasCond) {
+                        $q->orWhereIn('patient_name', $names);
+                    } else {
+                        $q->whereIn('patient_name', $names);
+                        $hasCond = true;
+                    }
+                }
+                if (!empty($phones)) {
+                    if ($hasCond) {
+                        $q->orWhereIn('phone', $phones);
+                    } else {
+                        $q->whereIn('phone', $phones);
+                        $hasCond = true;
+                    }
+                }
+            })
             ->latest('visit_date')
-            ->get()
-            ->keyBy('national_id');
+            ->get();
+
+        $visitsByBeneficiary = $fieldVisits->whereNotNull('beneficiary_id')->keyBy('beneficiary_id');
+        $visitsByNationalId = $fieldVisits->whereNotNull('national_id')->keyBy(fn($v) => preg_replace('/[^0-9]/', '', (string)$v->national_id));
+        $visitsByName = $fieldVisits->keyBy('patient_name');
+        $visitsByPhone = $fieldVisits->whereNotNull('phone')->keyBy(fn($v) => preg_replace('/[^0-9]/', '', (string)$v->phone));
 
         return view('change_requests.index', compact(
             'requests',
             'permissionsMap',
             'beneficiariesMap',
             'sponsorsMap',
+            'projectsMap',
             'currentStatus',
             'visitsByBeneficiary',
-            'visitsByNationalId'
+            'visitsByNationalId',
+            'visitsByName',
+            'visitsByPhone'
         ));
     }
 

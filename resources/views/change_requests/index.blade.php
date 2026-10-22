@@ -199,16 +199,60 @@
                                             'FinancialClosure' => ['label' => 'إغلاق مالي', 'icon' => 'file-lock2-fill', 'color' => 'success'],
                                         ];
                                         $tInfo = $typeLabels[$modelBasename] ?? ['label' => $modelBasename, 'icon' => 'box', 'color' => 'secondary'];
-                                        $isDeleted = !$req->subject;
+                                        $isCreate = strtolower((string)$req->action) === 'create' || empty($req->model_id);
+                                        $isDeleted = !$isCreate && !$req->subject;
+
+                                        $pData = is_array($req->payload) ? ($req->payload['data'] ?? $req->payload) : [];
+                                        $beneficiaryCleanNat = preg_replace('/[^0-9]/', '', (string)($req->subject->national_id ?? ($pData['national_id'] ?? '')));
+                                        $beneficiaryName = trim((string)($req->subject->full_name ?? ($pData['full_name'] ?? ($pData['name'] ?? ''))));
+                                        $beneficiaryPhone = trim((string)($req->subject->phone ?? ($pData['phone'] ?? '')));
+
+                                        $vItem = null;
+                                        if ($modelBasename === 'Beneficiary') {
+                                            if (!empty($req->model_id) && isset($visitsByBeneficiary[$req->model_id])) {
+                                                $vItem = $visitsByBeneficiary[$req->model_id];
+                                            } elseif (!empty($beneficiaryCleanNat) && isset($visitsByNationalId[$beneficiaryCleanNat])) {
+                                                $vItem = $visitsByNationalId[$beneficiaryCleanNat];
+                                            } elseif (!empty($beneficiaryName) && isset($visitsByName[$beneficiaryName])) {
+                                                $vItem = $visitsByName[$beneficiaryName];
+                                            } elseif (!empty($beneficiaryPhone) && isset($visitsByPhone[$beneficiaryPhone])) {
+                                                $vItem = $visitsByPhone[$beneficiaryPhone];
+                                            }
+                                        }
                                     @endphp
 
                                     <div class="mb-4 change-request-target-card p-3 rounded-4 border shadow-sm">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="fw-bold mb-0 small text-uppercase text-muted opacity-75">
-                                                <i class="bi bi-bullseye me-1"></i> العنصر المستهدف:
-                                                @if($isDeleted) <span class="badge bg-danger bg-opacity-10 text-danger ms-2" style="font-size: 8px;">محذوف من النظام</span> @endif
-                                            </h6>
-                                            @if(!$isDeleted)
+                                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <h6 class="fw-bold mb-0 small text-uppercase text-muted opacity-75 d-inline-flex align-items-center">
+                                                    <i class="bi bi-bullseye me-1"></i> العنصر المستهدف:
+                                                </h6>
+                                                @if($isCreate)
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 10px;">
+                                                        <i class="bi bi-plus-circle me-1"></i> طلب جديد (قيد الإنشاء)
+                                                    </span>
+                                                @elseif($isDeleted)
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger ms-1" style="font-size: 8px;">محذوف من النظام</span>
+                                                @endif
+
+                                                @if($modelBasename === 'Beneficiary')
+                                                    <button type="button" 
+                                                        class="btn btn-sm btn-info text-white rounded-pill px-3 py-1 shadow-sm d-inline-flex align-items-center gap-2 border-0"
+                                                        style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); font-size: 11px; font-weight: 600;"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#caseResearchModal_{{ $req->id }}">
+                                                        <i class="bi bi-clipboard2-pulse-fill"></i>
+                                                        <span>البحث الميداني المرتبط بالحالة</span>
+                                                        @if($vItem)
+                                                            <span class="badge bg-white text-primary rounded-pill px-2 py-0" style="font-size: 9px;">زيارة معتمدة #{{ $vItem->id }}</span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark rounded-pill px-2 py-0" style="font-size: 9px;">استمارة ودراسة الأسرة</span>
+                                                        @endif
+                                                    </button>
+                                                @endif
+                                            </div>
+
+                                            @if(!$isDeleted && !$isCreate)
                                                 @php
                                                     $modelUrl = '#';
                                                     try {
@@ -247,23 +291,13 @@
                                             <div class="flex-grow-1">
                                                 <div class="d-flex align-items-center gap-2 mb-1">
                                                     <span class="badge bg-{{ $tInfo['color'] }} text-white shadow-sm" style="font-size: 10px;">{{ $tInfo['label'] }}</span>
-                                                    <span class="text-muted small font-monospace">#{{ $req->model_id }}</span>
+                                                    <span class="text-muted small font-monospace">#{{ $req->model_id ?: 'جديد' }}</span>
                                                 </div>
                                                 
-                                                @if(!$isDeleted)
+                                                @if(!$isDeleted && $req->subject)
                                                     <div class="fw-bold fs-6">
                                                         @if($modelBasename === 'Beneficiary')
                                                             {{ $req->subject->full_name }}
-                                                            @php
-                                                                $vItem = $visitsByBeneficiary[$req->model_id] ?? ($visitsByNationalId[$req->subject->national_id ?? ''] ?? null);
-                                                            @endphp
-                                                            @if($vItem)
-                                                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 ms-2 shadow-xs d-inline-flex align-items-center gap-1"
-                                                                    style="font-size: 12px; font-weight: 700; border-width: 1.5px; vertical-align: middle;"
-                                                                    onclick="openQuickVisitModal('{{ route('visits.show', $vItem->id) }}', '{{ e($vItem->patient_name ?: $req->subject->full_name) }}')">
-                                                                    <i class="bi bi-file-earmark-medical"></i> استمارة البحث
-                                                                </button>
-                                                            @endif
                                                         @elseif($modelBasename === 'Donation' || $modelBasename === 'Expense') {{ number_format($req->subject->amount) }} <small class="fw-normal">ج.م</small>
                                                         @elseif($modelBasename === 'Task') {{ $req->subject->title }}
                                                         @elseif($modelBasename === 'Leave') {{ $req->subject->user->name ?? 'موظف' }}
@@ -286,33 +320,23 @@
                                                         @endif
                                                     </div>
                                                 @else
-                                                    <div class="fw-bold fs-6 text-muted font-italic">
+                                                    <div class="fw-bold fs-6 {{ $isDeleted ? 'text-muted font-italic' : 'text-dark' }}">
                                                         @php
-                                                            $p = is_array($req->payload) ? ($req->payload['data'] ?? $req->payload) : [];
-                                                            $displayName = $p['full_name'] ?? ($p['name'] ?? ($p['title'] ?? ($p['delegate_name'] ?? ($p['volunteer_name'] ?? ($p['employee_name'] ?? ($p['user_name'] ?? '—'))))));
-                                                            $vItemDeleted = null;
-                                                            if ($modelBasename === 'Beneficiary') {
-                                                                $vItemDeleted = $visitsByBeneficiary[$req->model_id] ?? ($visitsByNationalId[$p['national_id'] ?? ''] ?? null);
-                                                            }
+                                                            $displayName = $pData['full_name'] ?? ($pData['name'] ?? ($pData['title'] ?? ($pData['delegate_name'] ?? ($pData['volunteer_name'] ?? ($pData['employee_name'] ?? ($pData['user_name'] ?? '—'))))));
                                                         @endphp
                                                         {{ $displayName ?: "ID: ".$req->model_id }}
-                                                        @if($vItemDeleted)
-                                                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 ms-2 shadow-xs d-inline-flex align-items-center gap-1"
-                                                                style="font-size: 12px; font-weight: 700; border-width: 1.5px; vertical-align: middle;"
-                                                                onclick="openQuickVisitModal('{{ route('visits.show', $vItemDeleted->id) }}', '{{ e($vItemDeleted->patient_name ?: $displayName) }}')">
-                                                                <i class="bi bi-file-earmark-medical"></i> استمارة البحث
-                                                            </button>
-                                                        @endif
                                                     </div>
                                                     <div class="text-muted small opacity-75">
-                                                        @if($modelBasename === 'Donation' || $modelBasename === 'Expense') مبلغ: {{ number_format($p['amount'] ?? 0) }} ج.م
-                                                        @elseif($modelBasename === 'Task') @if(isset($p['assigned_to'])) مسؤول: {{ $p['assignee_name'] ?? $p['assigned_to'] }} @endif
-                                                        @elseif($modelBasename === 'User') {{ $p['job_title'] ?? 'مستخدم' }}
-                                                        @elseif($modelBasename === 'Account') كود: {{ $p['code'] ?? '—' }}
-                                                        @elseif($modelBasename === 'DelegateTrip') {{ $p['delegate_name'] ?? '—' }} ({{ $p['trip_date'] ?? '—' }})
-                                                        @elseif($modelBasename === 'Leave') النوع: {{ $p['type'] ?? '—' }} • التاريخ: {{ $p['start_date'] ?? '—' }}
-                                                        @elseif($modelBasename === 'JournalEntry') النوع: {{ $p['entry_type'] ?? '—' }} • الوصف: {{ $p['description'] ?? '—' }}
-                                                        @elseif($modelBasename === 'FinancialClosure') فرع: {{ $p['branch'] ?? '—' }} • تاريخ: {{ $p['date'] ?? '—' }}
+                                                        @if($modelBasename === 'Beneficiary')
+                                                            الرقم القومي: {{ $pData['national_id'] ?? '—' }} • الهاتف: {{ $pData['phone'] ?? '—' }}
+                                                        @elseif($modelBasename === 'Donation' || $modelBasename === 'Expense') مبلغ: {{ number_format($pData['amount'] ?? 0) }} ج.م
+                                                        @elseif($modelBasename === 'Task') @if(isset($pData['assigned_to'])) مسؤول: {{ $pData['assignee_name'] ?? $pData['assigned_to'] }} @endif
+                                                        @elseif($modelBasename === 'User') {{ $pData['job_title'] ?? 'مستخدم' }}
+                                                        @elseif($modelBasename === 'Account') كود: {{ $pData['code'] ?? '—' }}
+                                                        @elseif($modelBasename === 'DelegateTrip') {{ $pData['delegate_name'] ?? '—' }} ({{ $pData['trip_date'] ?? '—' }})
+                                                        @elseif($modelBasename === 'Leave') النوع: {{ $pData['type'] ?? '—' }} • التاريخ: {{ $pData['start_date'] ?? '—' }}
+                                                        @elseif($modelBasename === 'JournalEntry') النوع: {{ $pData['entry_type'] ?? '—' }} • الوصف: {{ $pData['description'] ?? '—' }}
+                                                        @elseif($modelBasename === 'FinancialClosure') فرع: {{ $pData['branch'] ?? '—' }} • تاريخ: {{ $pData['date'] ?? '—' }}
                                                         @endif
                                                     </div>
                                                 @endif
@@ -635,6 +659,143 @@
         @endif
     </div>
 </div>
+
+{{-- Case Research & Field Visits Modals for Beneficiaries --}}
+@foreach($requests as $req)
+    @php
+        $modelBasename = class_basename($req->model_type);
+    @endphp
+    @if($modelBasename === 'Beneficiary')
+        @php
+            $pData = is_array($req->payload) ? ($req->payload['data'] ?? $req->payload) : [];
+            $bCleanNat = preg_replace('/[^0-9]/', '', (string)($req->subject->national_id ?? ($pData['national_id'] ?? '')));
+            $bName = trim((string)($req->subject->full_name ?? ($pData['full_name'] ?? ($pData['name'] ?? ''))));
+            $bPhone = trim((string)($req->subject->phone ?? ($pData['phone'] ?? '')));
+
+            $modalVItem = null;
+            if (!empty($req->model_id) && isset($visitsByBeneficiary[$req->model_id])) {
+                $modalVItem = $visitsByBeneficiary[$req->model_id];
+            } elseif (!empty($bCleanNat) && isset($visitsByNationalId[$bCleanNat])) {
+                $modalVItem = $visitsByNationalId[$bCleanNat];
+            } elseif (!empty($bName) && isset($visitsByName[$bName])) {
+                $modalVItem = $visitsByName[$bName];
+            } elseif (!empty($bPhone) && isset($visitsByPhone[$bPhone])) {
+                $modalVItem = $visitsByPhone[$bPhone];
+            }
+
+            $caseDisplayName = $bName ?: 'حالة مستفيد';
+        @endphp
+
+        <div class="modal fade" id="caseResearchModal_{{ $req->id }}" tabindex="-1" aria-labelledby="caseResearchModalLabel_{{ $req->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 90vw;">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header bg-light py-3 border-bottom d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-clipboard2-pulse-fill fs-5"></i>
+                            </span>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-0 fs-6" id="caseResearchModalLabel_{{ $req->id }}">
+                                    البحث الميداني ودراسة الحالة: <span class="text-primary">{{ $caseDisplayName }}</span>
+                                </h5>
+                                <div class="text-muted x-small">
+                                    طلب تغيير رقم #{{ $req->id }} • {{ $bCleanNat ? 'الرقم القومي: ' . $bCleanNat : '' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            @if($modalVItem)
+                                <a href="{{ route('visits.show', $modalVItem->id) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size: 11px;">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> فتح استمارة الزيارة
+                                </a>
+                            @endif
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                        </div>
+                    </div>
+
+                    @if($modalVItem)
+                        <div class="bg-white border-bottom px-4 pt-2">
+                            <ul class="nav nav-tabs border-0" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-bold small text-dark border-0 border-bottom border-primary border-3 py-2 px-3" 
+                                            id="visitTabBtn_{{ $req->id }}" 
+                                            data-bs-toggle="tab" 
+                                            data-bs-target="#visitTabPane_{{ $req->id }}" 
+                                            type="button" 
+                                            role="tab">
+                                        <i class="bi bi-file-earmark-medical me-1 text-primary"></i> استمارة الزيارة الميدانية المعتمدة #{{ $modalVItem->id }}
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold small text-muted border-0 py-2 px-3" 
+                                            id="dossierTabBtn_{{ $req->id }}" 
+                                            data-bs-toggle="tab" 
+                                            data-bs-target="#dossierTabPane_{{ $req->id }}" 
+                                            type="button" 
+                                            role="tab">
+                                        <i class="bi bi-person-vcard me-1 text-info"></i> بيانات طلب الحالة والأسرة
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    @endif
+
+                    <div class="modal-body p-3 p-md-4" style="background-color: #f8fafc; max-height: calc(85vh - 120px); overflow-y: auto;">
+                        @if($modalVItem)
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="visitTabPane_{{ $req->id }}" role="tabpanel">
+                                    <div class="card border rounded-3 overflow-hidden shadow-xs">
+                                        <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                                            <span class="small text-muted">
+                                                <i class="bi bi-info-circle me-1"></i> استمارة البحث الميداني للباحث: <strong>{{ $modalVItem->researcher_name ?? '—' }}</strong> (تاريخ الزيارة: {{ $modalVItem->visit_date ? \Carbon\Carbon::parse($modalVItem->visit_date)->format('Y-m-d') : '—' }})
+                                            </span>
+                                            <span class="badge bg-success bg-opacity-10 text-success">زيارة معتمدة</span>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <iframe src="{{ route('visits.show', $modalVItem->id) }}" style="width: 100%; height: 70vh; border: none;" loading="lazy"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="dossierTabPane_{{ $req->id }}" role="tabpanel">
+                                    @include('change_requests.partials.case_dossier_content', [
+                                        'req' => $req,
+                                        'displayName' => $caseDisplayName,
+                                        'cleanNat' => $bCleanNat,
+                                        'rawPhone' => $bPhone,
+                                        'projectsMap' => $projectsMap ?? []
+                                    ])
+                                </div>
+                            </div>
+                        @else
+                            <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                                <i class="bi bi-info-circle-fill fs-5 text-info"></i>
+                                <div>
+                                    <strong>ملف البحث الميداني ودراسة الحالة:</strong>
+                                    يمكنك الاطلاع والتمرير (Scroll) لمراجعة كافة بيانات الحالة وتفاصيل أفراد الأسرة المقيدين بالطلب ومبالغ الكفالة دون مغادرة الصفحة.
+                                </div>
+                            </div>
+
+                            @include('change_requests.partials.case_dossier_content', [
+                                'req' => $req,
+                                'displayName' => $caseDisplayName,
+                                'cleanNat' => $bCleanNat,
+                                'rawPhone' => $bPhone,
+                                'projectsMap' => $projectsMap ?? []
+                            ])
+                        @endif
+                    </div>
+
+                    <div class="modal-footer bg-light py-2 px-3 border-top d-flex justify-content-between align-items-center">
+                        <span class="text-muted x-small">
+                            يمكنك اتخاذ قرار الموافقة أو الرفض مباشرة من الجدول في الصفحة.
+                        </span>
+                        <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
 
 {{-- Reject Modal --}}
 <div class="modal fade" id="rejectModal" tabindex="-1">
