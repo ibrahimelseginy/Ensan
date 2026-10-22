@@ -95,7 +95,10 @@ final class GuestHouseWebController extends Controller
         $volunteers           = User::where('is_volunteer', true)->orderBy('name')->get();
         $guestHouseVolunteers = $guest_house->volunteers()->orderBy('name')->get();
         $monthlyVolunteers    = $guest_house->monthlyVolunteers()->with('user')->get();
-        $beneficiaryOptions   = Beneficiary::orderBy('full_name')->get(['id', 'code', 'full_name', 'national_id', 'phone', 'address']);
+        $oldBenId             = (int) old('existing_beneficiary_id');
+        $beneficiaryOptions   = $oldBenId > 0
+            ? Beneficiary::where('id', $oldBenId)->get(['id', 'code', 'full_name', 'national_id', 'phone', 'address'])
+            : collect();
         $sponsors             = Donor::where('active', true)->orderBy('name')->get(['id', 'name', 'phone']);
         $guestHouseDonors     = Donor::where('active', true)->orderBy('name')->get(['id', 'name', 'phone']);
         $guestHouseBeneficiaries = Beneficiary::where('guest_house_id', $guest_house->id)
@@ -364,7 +367,9 @@ final class GuestHouseWebController extends Controller
 
     public function storeWing(Request $request, GuestHouse $guest_house): RedirectResponse
     {
-        $this->ensureAdmin('إضافة الأجنحة والأسِرّة متاح للإدارة فقط.');
+        $user = request()->user();
+        $canManageWings = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدير دار الضيافة']) || ((int)$guest_house->manager_id === (int)$user->id));
+        abort_unless($canManageWings, 403, 'إضافة الأجنحة والأسِرّة متاح للإدارة ومدير الدار فقط.');
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'beds_count' => 'required|integer|min:1|max:100',

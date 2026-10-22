@@ -553,6 +553,10 @@ final class MobileContentController extends Controller
 
         $application->update($updateData);
 
+        if (in_array($validated['status'], ['approved', 'completed'], true)) {
+            $this->notifyProjectManager($application);
+        }
+
         // إذا تم اختيار "تم البحث" وطلب التحويل المباشر للاستمارة الميدانية
         if (in_array($validated['status'], ['approved', 'completed'], true) && ($request->filled('start_visit') || $request->input('action') === 'start_visit')) {
             return redirect()->route('visits.create', ['application_id' => $application->id])
@@ -600,7 +604,20 @@ final class MobileContentController extends Controller
         $validated['source'] = 'website';
         $validated['status'] = 'pending';
 
-        \App\Models\MobileCaseApplication::create($validated);
+        if (!empty($validated['applicant_id_number'])) {
+            $nid = trim((string) $validated['applicant_id_number']);
+            $alreadyExists = \App\Models\Beneficiary::where('national_id', $nid)->exists()
+                || \App\Models\MobileCaseApplication::where('applicant_id_number', $nid)->exists()
+                || \App\Models\BeneficiaryFamilyMember::where('national_id', $nid)->exists();
+            if ($alreadyExists) {
+                return back()->withInput()->withErrors([
+                    'applicant_id_number' => 'تم التقديم مسبقاً، والرجاء الرجوع لإدارة مؤسسة إنسان على الرقم: 01006090616',
+                ]);
+            }
+        }
+
+        $app = \App\Models\MobileCaseApplication::create($validated);
+        $this->notifySocialResearchers($app);
 
         return back()->with('success', 'تم إرسال طلب البحث المبدئي بنجاح. سيقوم فريق مؤسسة إنسان الخيرية بمراجعة الطلب والتواصل معكم.');
     }
@@ -843,6 +860,80 @@ final class MobileContentController extends Controller
         }
 
         return back()->with('success', 'تم تسجيل إستمارة تقديم مشروع بعثاء الأمل (رعاية مرضى الأورام) بنجاح برقم قيد مبدئي #' . $app->id . '. سيقوم فريق الرعاية الطبية بمراجعة التقرير والتواصل معكم.');
+    }
+
+    public function checkNationalId(Request $request)
+    {
+        $nid = trim((string) $request->input('national_id'));
+        $ignoreId = $request->input('ignore_id');
+
+        if (strlen($nid) < 14) {
+            return response()->json(['exists' => false]);
+        }
+
+        $existsInBeneficiaries = \App\Models\Beneficiary::where('national_id', $nid)
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->first();
+
+        $existsInCases = \App\Models\MobileCaseApplication::where('applicant_id_number', $nid)->first();
+        $existsInFamily = \App\Models\BeneficiaryFamilyMember::where('national_id', $nid)->first();
+
+        if ($existsInBeneficiaries || $existsInCases || $existsInFamily) {
+            return response()->json([
+                'exists' => true,
+                'message' => 'تم التقديم مسبقاً، والرجاء الرجوع لإدارة مؤسسة إنسان على الرقم: 01006090616',
+                'contact_phone' => '01006090616',
+            ]);
+        }
+
+        return response()->json(['exists' => false]);
+    }
+
+    protected function notifySocialResearchers(\App\Models\MobileCaseApplication $app): void
+    {
+        try {
+            $researchers = \App\Models\User::where('is_employee', true)
+                ->where(function($q) {
+                    $q->where('role', 'volunteer')
+                      ->orWhere('role', 'researcher')
+                      ->orWhere('job_title', 'like', '%باحث%')
+                      ->orWhereHas('roles', fn($rq) => $rq->where('name', 'like', '%باحث%'));
+                })->get();
+
+            foreach ($researchers as $researcher) {
+                \App\Models\Notification::create([
+                    'user_id' => $researcher->id,
+                    'title' => 'طلب مساعدة جديد بحاجة لبحث اجتماعي',
+                    'message' => "تم تقديم طلب جديد للحالة: {$app->applicant_name} ({$app->case_type_label}) برقم قيد #{$app->id}",
+                    'type' => 'case_application',
+                    'data' => ['application_id' => $app->id],
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error notifying social researchers: ' . $e->getMessage());
+        }
+    }
+
+    protected function notifyProjectManager(\App\Models\MobileCaseApplication $app, ?int $projectId = null): void
+    {
+        try {
+            $targetProjectId = $projectId ?? $app->project_id;
+            $project = $targetProjectId ? \App\Models\Project::find($targetProjectId) : null;
+            $managerId = $project?->manager_id;
+            if ($managerId) {
+                \App\Models\Notification::create([
+                    'user_id' => $managerId,
+                    'title' => 'اعتماد حالة جديدة في المشروع',
+                    'message' => "تم الاعتماد النهائي للحالة: {$app->applicant_name} ضمن مشروع {$project->name}. يرجى الدخول لإضافتها كمستفيد.",
+                    'type' => 'project_case_approved',
+                    'data' => ['application_id' => $app->id, 'project_id' => $project->id],
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error notifying project manager: ' . $e->getMessage());
+        }
     }
 
     // --- Mobile Donations Management ---

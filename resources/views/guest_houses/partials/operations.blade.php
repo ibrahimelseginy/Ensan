@@ -24,7 +24,7 @@
             <span class="text-muted small">{{ $guest_house->governorate ?: 'المحافظة غير محددة' }} · {{ $residentStays->count() }} مقيم · {{ $availableBeds->count() }} سرير متاح</span>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            @if(!empty($isAdmin))
+            @if(!empty($isAdmin) || !empty($isAssigned) || auth()->user()?->hasRole(['manager', 'مدير دار الضيافة']))
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#guestHouseWingModal"><i class="bi bi-grid-3x3-gap me-1"></i> إضافة جناح وأسِرّة</button>
             @endif
             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#guestHouseCustodyModal"><i class="bi bi-safe me-1"></i> إضافة عهدة</button>
@@ -648,8 +648,8 @@
     }
 </script>
 
-{{-- Modal: إضافة جناح وأسِرّة (للإدارة فقط) --}}
-@if(!empty($isAdmin))
+{{-- Modal: إضافة جناح وأسِرّة (للإدارة ومدير الدار) --}}
+@if(!empty($isAdmin) || !empty($isAssigned) || auth()->user()?->hasRole(['manager', 'مدير دار الضيافة']))
 <div class="modal fade" id="guestHouseWingModal" tabindex="-1">
     <div class="modal-dialog">
         <form class="modal-content" method="POST" action="{{ route('guest-houses.wings.store', $guest_house) }}">

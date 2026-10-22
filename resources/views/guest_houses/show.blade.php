@@ -81,17 +81,48 @@
                         dir: 'rtl',
                         width: '100%',
                         allowClear: true,
-                        minimumResultsForSearch: 0,
-                        matcher: matchByWords,
+                        minimumInputLength: 2,
                         dropdownParent: $('#guestHouseBeneficiaryModal'),
-                        placeholder: '— ابحث باسم النزيل أو الرقم القومي أو الكود أو الهاتف —',
+                        placeholder: '— اكتب حرفين على الأقل للبحث (اسم / قومي / كود / هاتف) —',
+                        ajax: {
+                            url: '{{ route("api.search.beneficiaries") }}',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return { q: params.term };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: data.map(function (item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.text,
+                                            itemData: item
+                                        };
+                                    })
+                                };
+                            },
+                            cache: true
+                        },
                         language: {
+                            inputTooShort: function () {
+                                return 'يرجى كتابة حرفين على الأقل للبحث (حفاظاً على الخصوصية)';
+                            },
                             noResults: function () {
                                 return 'لا توجد حالة مسجلة بهذا الاسم أو الرقم القومي';
                             },
                             searching: function () {
                                 return 'جاري البحث في الحالات المسجلة...';
                             }
+                        }
+                    }).on('select2:select', function (e) {
+                        const item = e.params.data.itemData;
+                        if (item) {
+                            if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = item.code || '';
+                            if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = item.full_name || '';
+                            if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = item.national_id || '';
+                            if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = item.phone || '';
+                            if (document.getElementById('gh_patient_address')) document.getElementById('gh_patient_address').value = item.address || '';
                         }
                     }).on('change', function () {
                         handleGuestHouseSelectExisting(this);
@@ -220,6 +251,20 @@
             donationType?.addEventListener('change', updateDonationType);
             addToInventory?.addEventListener('change', updateInventoryChoice);
             updateDonationType();
+
+            const donationChannel = document.getElementById('guest-house-donation-channel');
+            const digitalFields = document.querySelectorAll('.guest-house-digital-field');
+            function updateDonationChannel() {
+                const isDigital = donationChannel && ['instapay', 'vodafone_cash', 'bank_transfer'].includes(donationChannel.value);
+                const isCash = donationType?.value === 'cash';
+                digitalFields.forEach(el => {
+                    el.classList.toggle('d-none', !(isCash && isDigital));
+                    el.querySelectorAll('input').forEach(inp => inp.disabled = !(isCash && isDigital));
+                });
+            }
+            donationChannel?.addEventListener('change', updateDonationChannel);
+            donationType?.addEventListener('change', updateDonationChannel);
+            updateDonationChannel();
 
             const previousFormContext = @json(old('form_context'));
             const modalId = previousFormContext === 'guest_house_beneficiary' ? 'guestHouseBeneficiaryModal'
@@ -529,23 +574,26 @@
                     class="badge {{ $guest_house->status === 'active' ? 'bg-success' : 'bg-secondary' }}">{{ $guest_house->status === 'active' ? 'نشط' : 'مؤرشف' }}</span>
             </div>
         </div>
+        @php
+            $isGhManager = auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير دار الضيافة', 'مدير المؤسسة بالكامل', 'إدارة']) || ((int)$guest_house->manager_id === (int)auth()->id());
+        @endphp
         <div class="d-flex flex-wrap gap-2">
-            @if(request()->user()?->hasPermission('beneficiaries.view'))
+            @if(request()->user()?->hasPermission('beneficiaries.view') || request()->user()?->hasPermission('beneficiaries.create') || $isGhManager)
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#guestHouseBeneficiaryModal">
                     <i class="bi bi-person-plus me-1"></i> إضافة مستفيد
                 </button>
             @endif
-            @if(request()->user()?->hasPermission('donations.view'))
+            @if(request()->user()?->hasPermission('donations.view') || request()->user()?->hasPermission('donations.create') || $isGhManager)
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#guestHouseDonationModal">
                     <i class="bi bi-cash-coin me-1"></i> إضافة تبرع
                 </button>
             @endif
-            @if(request()->user()?->hasPermission('manage_finance') && request()->user()?->hasPermission('expenses.view'))
+            @if((request()->user()?->hasPermission('manage_finance') && request()->user()?->hasPermission('expenses.view')) || $isGhManager)
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#guestHouseExpenseModal">
                     <i class="bi bi-receipt me-1"></i> إضافة مصروف
                 </button>
             @endif
-            @if(auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']))
+            @if($isGhManager)
                 <a href="{{ route('guest-houses.edit', $guest_house) }}" class="btn btn-outline-primary"><i
                         class="bi bi-pencil me-1"></i> تعديل</a>
             @endif

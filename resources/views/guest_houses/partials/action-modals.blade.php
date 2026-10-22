@@ -298,10 +298,14 @@
     </div>
 @endif
 
-@if(request()->user()?->hasPermission('donations.view'))
+@php
+    $canAccessGhDonation = request()->user()?->hasPermission('donations.view') || request()->user()?->hasPermission('donations.create') || auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير دار الضيافة', 'مدير المؤسسة بالكامل', 'إدارة']) || ((int)$guest_house->manager_id === (int)auth()->id());
+@endphp
+
+@if($canAccessGhDonation)
     <div class="modal fade" id="guestHouseDonationModal" tabindex="-1" aria-labelledby="guestHouseDonationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <form class="modal-content" method="POST" action="{{ route('guest-houses.storeDonation', $guest_house) }}">
+            <form class="modal-content" method="POST" action="{{ route('guest-houses.storeDonation', $guest_house) }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="form_context" value="guest_house_donation">
                 <div class="modal-header">
@@ -392,12 +396,26 @@
                             </div>
                             <div class="col-md-6 guest-house-donation-cash-field">
                                 <label class="form-label form-label-required">طريقة التحصيل</label>
-                                <select id="guest-house-donation-channel" name="cash_channel" class="form-select"><option value="cash">نقدي</option><option value="instapay">إنستاباي</option><option value="vodafone_cash">فودافون كاش</option><option value="delegate">مندوب</option></select>
+                                <select id="guest-house-donation-channel" name="cash_channel" class="form-select">
+                                    <option value="cash">نقدي</option>
+                                    <option value="instapay">إنستاباي</option>
+                                    <option value="vodafone_cash">فودافون كاش</option>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                    <option value="delegate">مندوب</option>
+                                </select>
                             </div>
                             <div class="col-md-6 guest-house-donation-cash-field">
                                 <label class="form-label form-label-required">رقم الإيصال</label>
                                 <input id="guest-house-donation-receipt" name="receipt_number" class="form-control @error('receipt_number') is-invalid @enderror" value="{{ old('receipt_number') }}">
                                 @error('receipt_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6 guest-house-donation-cash-field guest-house-digital-field d-none">
+                                <label class="form-label">رقم العملية / المرجع</label>
+                                <input name="operation_number" class="form-control" value="{{ old('operation_number') }}" placeholder="رقم المعاملة أو التحويل">
+                            </div>
+                            <div class="col-md-6 guest-house-donation-cash-field guest-house-digital-field d-none">
+                                <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>
+                                <input type="file" name="transfer_receipt" class="form-control" accept="image/*,.pdf">
                             </div>
                             <div class="col-md-6 guest-house-donation-cash-field">
                                 <label class="form-label form-label-required">الخزينة المستلمة</label>

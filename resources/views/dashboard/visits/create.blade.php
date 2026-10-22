@@ -144,8 +144,8 @@
       <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg me-1"></i> إلغاء
       </a>
-      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-success fw-bold px-4">
-        <i class="bi bi-check2-circle me-1"></i> حفظ الاستمارة
+      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-success fw-bold px-4 shadow-sm">
+        <i class="bi bi-shield-check me-1"></i> تم الاعتماد من الباحث
       </button>
     </div>
   </div>
@@ -273,6 +273,7 @@
               <option value="إيجار" @selected(old('home_ownership') === 'إيجار')>إيجار</option>
               <option value="ورثة" @selected(old('home_ownership') === 'ورثة')>ورثة</option>
               <option value="استضافة" @selected(old('home_ownership') === 'استضافة')>استضافة</option>
+              <option value="شركة بيت عيلة" @selected(old('home_ownership') === 'شركة بيت عيلة')>شركة بيت عيلة</option>
               <option value="شركة" @selected(old('home_ownership') === 'شركة')>شركة</option>
               <option value="بيت عيلة" @selected(old('home_ownership') === 'بيت عيلة')>بيت عيلة</option>
             </select>
@@ -633,8 +634,8 @@
         <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary px-3">
           إلغاء
         </a>
-        <button type="submit" class="btn btn-primary px-4 fw-bold">
-          <i class="bi bi-save me-1"></i> حفظ استمارة البحث
+        <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+          <i class="bi bi-shield-check me-1"></i> تم الاعتماد من الباحث
         </button>
       </div>
     </div>

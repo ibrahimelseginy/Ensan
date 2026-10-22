@@ -63,6 +63,11 @@ final readonly class DonationService
             unset($data['add_to_inventory']);
         }
 
+        if (isset($data['transfer_receipt']) && $data['transfer_receipt'] instanceof \Illuminate\Http\UploadedFile) {
+            $data['transfer_receipt_path'] = $data['transfer_receipt']->store('donation_receipts', 'public');
+            unset($data['transfer_receipt']);
+        }
+
         // 2. Handle Allocation Note Magic Strings
         $this->processAllocationNotes($data);
 

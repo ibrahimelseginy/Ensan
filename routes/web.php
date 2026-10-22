@@ -80,6 +80,8 @@ Route::post('apply-midrar', [MobileContentController::class, 'applyMidrarStore']
 // إستمارة تقديم مشروع بعثاء الأمل (رعاية مرضى الأورام) - صفحة عامة متطابقة مع نموذج جوجل
 Route::get('apply-hope', [MobileContentController::class, 'applyHopeShow'])->name('cases.apply-hope');
 Route::post('apply-hope', [MobileContentController::class, 'applyHopeStore'])->middleware('throttle:heavy-ops')->name('cases.apply-hope.store');
+// التحقق الفوري من تكرار الرقم القومي
+Route::get('check-national-id', [MobileContentController::class, 'checkNationalId'])->name('check-national-id');
 
 // Public files only. Private documents must never use this fallback.
 Route::get('storage/{path}', [\App\Http\Controllers\PublicStorageController::class, 'show'])
@@ -90,6 +92,62 @@ Route::get('documents/{path}', [\App\Http\Controllers\PrivateDocumentController:
 
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {
+
+    // --- Privacy-Preserving Remote Search APIs (Min 2 chars required, no preloading) ---
+    Route::get('api/search/beneficiaries', function (\Illuminate\Http\Request $request) {
+        $q = trim((string) $request->input('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $results = \App\Models\Beneficiary::query()
+            ->where(function ($query) use ($q) {
+                $query->where('full_name', 'like', "%{$q}%")
+                    ->orWhere('code', 'like', "%{$q}%")
+                    ->orWhere('national_id', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%");
+            })
+            ->limit(25)
+            ->get(['id', 'full_name', 'code', 'national_id', 'phone', 'address'])
+            ->map(function ($b) {
+                return [
+                    'id'          => $b->id,
+                    'text'        => $b->full_name . ' (' . ($b->code ?: 'ID: '.$b->id) . ($b->national_id ? ' | قومي: '.$b->national_id : '') . ($b->phone ? ' | هاتف: '.$b->phone : '') . ')',
+                    'full_name'   => $b->full_name,
+                    'code'        => $b->code,
+                    'national_id' => $b->national_id,
+                    'phone'       => $b->phone,
+                    'address'     => $b->address,
+                ];
+            });
+        return response()->json($results);
+    })->name('api.search.beneficiaries');
+
+    Route::get('api/search/donors', function (\Illuminate\Http\Request $request) {
+        $q = trim((string) $request->input('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $results = \App\Models\Donor::query()
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('code', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%")
+                    ->orWhere('national_id', 'like', "%{$q}%");
+            })
+            ->limit(25)
+            ->get(['id', 'name', 'code', 'phone', 'national_id'])
+            ->map(function ($d) {
+                return [
+                    'id'          => $d->id,
+                    'text'        => $d->name . ' — ' . $d->code . ($d->phone ? ' — ' . $d->phone : '') . ($d->national_id ? ' — قومي: ' . $d->national_id : ''),
+                    'name'        => $d->name,
+                    'code'        => $d->code,
+                    'phone'       => $d->phone,
+                    'national_id' => $d->national_id,
+                ];
+            });
+        return response()->json($results);
+    })->name('api.search.donors');
 
     // --- Image Upload (AJAX / Fetch from Web Dashboard) ---
     Route::prefix('upload')->middleware('throttle:heavy-ops')->group(function () {
@@ -670,6 +728,7 @@ Route::middleware(['auth'])->group(function () {
     // Reception & Visits (Shared/General)
     Route::middleware('permission:visits.view')->group(function () {
         Route::get('visits/{visit}/print', [\App\Http\Controllers\VisitWebController::class, 'print'])->name('visits.print');
+        Route::post('visits/{visit}/final-approval', [\App\Http\Controllers\VisitWebController::class, 'finalApproval'])->name('visits.final-approval');
         Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
     });
     Route::middleware('permission:reception.view')

@@ -21,6 +21,11 @@
       </p>
     </div>
     <div class="d-flex gap-2">
+      @if(!empty($authorizedForFinalApproval))
+        <button type="button" class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#finalApprovalModal">
+          <i class="bi bi-patch-check-fill me-1"></i> الاعتماد النهائي للحالة
+        </button>
+      @endif
       <a href="{{ route('visits.print', $visit) }}" target="_blank" class="btn btn-outline-primary fw-bold">
         <i class="bi bi-printer me-1"></i> طباعة الاستمارة الرسمية
       </a>
@@ -314,4 +319,175 @@
     @endif
   </div>
 </div>
+
+@if(!empty($authorizedForFinalApproval))
+<div class="modal fade" id="finalApprovalModal" tabindex="-1" aria-labelledby="finalApprovalModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <form class="modal-content border-0 shadow-lg" method="POST" action="{{ route('visits.final-approval', $visit) }}">
+      @csrf
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="finalApprovalModalLabel">
+          <i class="bi bi-shield-lock-fill me-1"></i> قرار الاعتماد النهائي للحالة بعد البحث الميداني
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="alert alert-info py-2 mb-3">
+          <i class="bi bi-info-circle-fill me-1"></i> الحالة: <strong>{{ $visit->patient_name ?: ($visit->beneficiary?->full_name ?: 'بدون اسم') }}</strong> (رقم قومي: {{ $visit->national_id ?: 'غير مسجل' }})
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold fs-6">نوع القرار النهائي <span class="text-danger">*</span></label>
+          <div class="d-flex gap-3">
+            <div class="form-check form-check-inline p-3 border rounded-3 flex-grow-1 bg-light">
+              <input class="form-check-input ms-2" type="radio" name="decision" id="decisionAccept" value="accepted" checked onchange="toggleFinalDecision(this.value)">
+              <label class="form-check-label fw-bold text-success fs-6" for="decisionAccept">
+                <i class="bi bi-check-circle-fill me-1"></i> قبول الحالة وإلحاقها بمشروع
+              </label>
+            </div>
+            <div class="form-check form-check-inline p-3 border rounded-3 flex-grow-1 bg-light">
+              <input class="form-check-input ms-2" type="radio" name="decision" id="decisionReject" value="rejected" onchange="toggleFinalDecision(this.value)">
+              <label class="form-check-label fw-bold text-danger fs-6" for="decisionReject">
+                <i class="bi bi-x-circle-fill me-1"></i> رفض الحالة
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {{-- صندوق الرفض --}}
+        <div id="rejectionSection" class="p-3 border border-danger rounded-3 bg-danger bg-opacity-10 mb-3" style="display:none">
+          <label class="form-label fw-bold text-danger">سبب الرفض <span class="text-danger">* (إلزامي في حال الرفض)</span></label>
+          <textarea name="rejection_reason" id="finalRejectionReason" class="form-control" rows="3" placeholder="اكتب أسباب عدم قبول الحالة تفصيلاً..."></textarea>
+        </div>
+
+        {{-- صندوق القبول --}}
+        <div id="acceptanceSection">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">تحديد المشروع <span class="text-danger">*</span></label>
+              <select name="project_id" id="finalProjectSelect" class="form-select" onchange="handleFinalProjectChange(this)">
+                <option value="">— اختر المشروع —</option>
+                @foreach($projects as $proj)
+                  <option value="{{ $proj->id }}" data-name="{{ $proj->name }}" @selected($visit->beneficiary?->project_id == $proj->id)>{{ $proj->name }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold">مبلغ الكفالة الشهرية (إن وجد)</label>
+              <div class="input-group">
+                <input type="number" step="0.01" min="0" name="monthly_sponsorship_amount" class="form-control" value="{{ $visit->beneficiary?->monthly_sponsorship_amount }}" placeholder="0.00">
+                <span class="input-group-text">ج.م</span>
+              </div>
+            </div>
+
+            {{-- حقول خاصة بمشروع زاد (الأيتام) --}}
+            <div class="col-12 project-conditional-box" id="zadApprovalFields" style="display:none">
+              <div class="p-3 bg-success bg-opacity-10 border border-success rounded-3">
+                <h6 class="fw-bold text-success mb-2"><i class="bi bi-people-fill me-1"></i> تفاصيل كفالة مشروع زاد (الأيتام)</h6>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">عدد الأطفال المكفولين</label>
+                    <input type="number" min="1" max="10" name="zad_children_count" class="form-control" placeholder="عدد الأطفال">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">كفالة كل طفل</label>
+                    <input type="number" step="0.01" min="0" name="zad_child_sponsorship" class="form-control" placeholder="مبلغ كفالة الطفل">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {{-- حقول خاصة بمرضى الأورام (مشروع بعثاء الأمل) --}}
+            <div class="col-12 project-conditional-box" id="bathaApprovalFields" style="display:none">
+              <div class="p-3 bg-danger bg-opacity-10 border border-danger rounded-3">
+                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-hospital me-1"></i> تفاصيل رعاية مريض الأورام وصرف العلاج الثابت</h6>
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">اسم العلاج الثابت</label>
+                    <input type="text" name="fixed_medicine_name" class="form-control" placeholder="اسم الدواء / العلاج">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">مدة الصرف (بالشهور)</label>
+                    <input type="number" min="1" max="60" name="fixed_medicine_duration_months" id="medMonths" class="form-control" placeholder="مثال: 6" oninput="calcMedEndDate(this.value)">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">تاريخ انتهاء الصرف</label>
+                    <input type="date" name="fixed_medicine_end_date" id="medEndDate" class="form-control">
+                    <div class="form-text text-muted small"><i class="bi bi-bell me-1"></i> إشعار تجديد تلقائي قبل الانتهاء بـ 15 يوم</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {{-- خيار صرف مساعدة عينية --}}
+            <div class="col-12">
+              <label class="form-label fw-bold"><i class="bi bi-box-seam text-secondary me-1"></i> صرف مساعدة عينية (اختياري)</label>
+              <input type="text" name="in_kind_notes" class="form-control" placeholder="مثال: كرتونة مواد غذائية شهرية، أجهزة تعويضية، بطاطين...">
+            </div>
+
+            {{-- ملاحظات الاعتماد --}}
+            <div class="col-12">
+              <label class="form-label fw-bold">ملاحظات وقرار الاعتماد</label>
+              <textarea name="approval_notes" class="form-control" rows="2" placeholder="أي توجيهات أو ملاحظات إضافية بخصوص اعتماد الحالة..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-success fw-bold px-4">
+          <i class="bi bi-check2-circle me-1"></i> تأكيد وحفظ القرار
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleFinalDecision(val) {
+  const rej = document.getElementById('rejectionSection');
+  const acc = document.getElementById('acceptanceSection');
+  const rejInput = document.getElementById('finalRejectionReason');
+  if (val === 'rejected') {
+    rej.style.display = '';
+    acc.style.display = 'none';
+    rejInput.required = true;
+  } else {
+    rej.style.display = 'none';
+    acc.style.display = '';
+    rejInput.required = false;
+  }
+}
+
+function handleFinalProjectChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const name = opt?.dataset.name || opt?.text || '';
+  const isZad = name.includes('زاد');
+  const isBatha = name.includes('بعثاء') || name.includes('علاج') || name.includes('أورام');
+  const zadBox = document.getElementById('zadApprovalFields');
+  const bathaBox = document.getElementById('bathaApprovalFields');
+  if (zadBox) zadBox.style.display = isZad ? '' : 'none';
+  if (bathaBox) bathaBox.style.display = isBatha ? '' : 'none';
+}
+
+function calcMedEndDate(months) {
+  const m = parseInt(months, 10);
+  if (!m || m < 1) return;
+  const d = new Date();
+  d.setMonth(d.getMonth() + m);
+  const target = document.getElementById('medEndDate');
+  if (target) {
+    target.value = d.toISOString().split('T')[0];
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const pSelect = document.getElementById('finalProjectSelect');
+  if (pSelect) handleFinalProjectChange(pSelect);
+});
+</script>
+@endif
 @endsection

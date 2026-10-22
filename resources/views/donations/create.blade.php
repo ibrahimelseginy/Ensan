@@ -28,7 +28,7 @@
 
 <div class="card">
   <div class="card-body">
-    <form method="POST" action="{{ route('donations.store') }}" id="donationForm">
+    <form method="POST" action="{{ route('donations.store') }}" id="donationForm" enctype="multipart/form-data">
       @csrf
 
       <div class="form-section">
@@ -41,14 +41,21 @@
         </div>
 
         <div id="registeredDonorSection">
-          <label class="form-label form-label-required">ابحث عن المتبرع</label>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label form-label-required mb-0">ابحث عن المتبرع</label>
+            <span class="text-muted small"><i class="bi bi-shield-lock me-1"></i> اكتب حرفين على الأقل للبحث (حفاظاً على الخصوصية)</span>
+          </div>
           <select id="donorSelect" name="donor_id" class="form-select @error('donor_id') is-invalid @enderror">
             <option value=""></option>
-            @foreach($donors as $donor)
-              <option value="{{ $donor->id }}" @selected((string)old('donor_id', request('donor_id')) === (string)$donor->id)>
-                {{ $donor->name }} — {{ $donor->code }}{{ $donor->phone ? ' — '.$donor->phone : '' }}{{ $donor->national_id ? ' — قومي: '.$donor->national_id : '' }}
+            @php
+              $selectedDonorId = old('donor_id', request('donor_id'));
+              $selectedDonor = $selectedDonorId ? $donors->firstWhere('id', $selectedDonorId) : null;
+            @endphp
+            @if($selectedDonor)
+              <option value="{{ $selectedDonor->id }}" selected>
+                {{ $selectedDonor->name }} — {{ $selectedDonor->code }}{{ $selectedDonor->phone ? ' — '.$selectedDonor->phone : '' }}{{ $selectedDonor->national_id ? ' — قومي: '.$selectedDonor->national_id : '' }}
               </option>
-            @endforeach
+            @endif
           </select>
           @error('donor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
@@ -78,8 +85,25 @@
             <label class="form-label form-label-required">المبلغ</label>
             <div class="input-group"><input name="amount" type="number" step="0.01" min="0.01" value="{{ old('amount') }}" class="form-control" placeholder="0.00"><select name="currency" class="form-select" style="max-width:95px"><option value="EGP">EGP</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="SAR">SAR</option></select></div>
           </div>
-          <div class="col-md-3 cash-only"><label class="form-label form-label-required">طريقة الدفع</label><select name="cash_channel" class="form-select"><option value="cash" @selected(old('cash_channel')==='cash')>نقدي</option><option value="instapay" @selected(old('cash_channel')==='instapay')>انستا باي</option><option value="vodafone_cash" @selected(old('cash_channel')==='vodafone_cash')>فودافون كاش</option><option value="delegate" @selected(old('cash_channel')==='delegate')>مندوب</option></select></div>
+          <div class="col-md-3 cash-only">
+            <label class="form-label form-label-required">طريقة الدفع</label>
+            <select name="cash_channel" id="cashChannelSelect" class="form-select">
+              <option value="cash" @selected(old('cash_channel')==='cash')>نقدي</option>
+              <option value="instapay" @selected(old('cash_channel')==='instapay')>انستا باي (InstaPay)</option>
+              <option value="vodafone_cash" @selected(old('cash_channel')==='vodafone_cash')>فودافون كاش</option>
+              <option value="bank_transfer" @selected(old('cash_channel')==='bank_transfer')>تحويل بنكي</option>
+              <option value="delegate" @selected(old('cash_channel')==='delegate')>مندوب</option>
+            </select>
+          </div>
           <div class="col-md-3 cash-only"><label class="form-label form-label-required">رقم الإيصال</label><input name="receipt_number" value="{{ old('receipt_number') }}" class="form-control" required placeholder="مثال: 06501"></div>
+          <div class="col-md-3 cash-only digital-pay-fields" style="display:none">
+            <label class="form-label">رقم العملية / المرجع</label>
+            <input name="operation_number" id="operationNumberInput" value="{{ old('operation_number') }}" class="form-control" placeholder="رقم المعاملة أو التحويل">
+          </div>
+          <div class="col-md-3 cash-only digital-pay-fields" style="display:none">
+            <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>
+            <input type="file" name="transfer_receipt" class="form-control" accept="image/*,.pdf">
+          </div>
           <div class="col-md-6 cash-only">
             <label class="form-label form-label-required"><i class="bi bi-safe text-primary me-1"></i> الخزينة</label>
             <select name="treasury_id" class="form-select">
@@ -188,7 +212,40 @@ $(function () {
   const allMembersList = @json($allMembersData);
   const oldMemberIds = @json(array_map('strval', (array)old('family_member_ids', [])));
 
-  $('#donorSelect,#donationProject').select2({theme:'bootstrap-5',dir:'rtl',width:'100%',allowClear:true,placeholder:'ابحث بالتحديد...'});
+  $('#donationProject').select2({theme:'bootstrap-5',dir:'rtl',width:'100%',allowClear:true,placeholder:'ابحث بالتحديد...'});
+  $('#donorSelect').select2({
+    theme: 'bootstrap-5',
+    dir: 'rtl',
+    width: '100%',
+    allowClear: true,
+    minimumInputLength: 2,
+    placeholder: '— اكتب حرفين على الأقل للبحث (اسم / كود / هاتف / قومي) —',
+    ajax: {
+      url: '{{ route("api.search.donors") }}',
+      dataType: 'json',
+      delay: 250,
+      data: function (params) {
+        return { q: params.term };
+      },
+      processResults: function (data) {
+        return {
+          results: data
+        };
+      },
+      cache: true
+    },
+    language: {
+      inputTooShort: function () {
+        return 'يرجى كتابة حرفين على الأقل للبحث (حفاظاً على الخصوصية)';
+      },
+      noResults: function () {
+        return 'لا يوجد متبرع مطابق للبحث';
+      },
+      searching: function () {
+        return 'جاري البحث...';
+      }
+    }
+  });
   $('#sponsoredMembersSelect').select2({theme:'bootstrap-5',dir:'rtl',width:'100%',placeholder:'اختر واحدًا أو أكثر...'});
 
   function toggleDonorMode() {
@@ -246,11 +303,19 @@ $(function () {
     }
   }
 
+  function toggleCashChannel() {
+    const ch = $('#cashChannelSelect').val();
+    const isDigital = ['instapay', 'vodafone_cash', 'bank_transfer'].includes(ch);
+    $('.digital-pay-fields').toggle(isDigital);
+  }
+
   $('input[name="donor_type_toggle"]').on('change', toggleDonorMode);
   $('#donorSelect,#donationPurpose').on('change', updateSponsoredMembers);
   $('#donationType').on('change', toggleDonationType);
+  $('#cashChannelSelect').on('change', toggleCashChannel);
   toggleDonorMode();
   toggleDonationType();
+  toggleCashChannel();
 });
 </script>
 @endsection

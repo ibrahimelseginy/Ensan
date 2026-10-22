@@ -222,7 +222,130 @@ final class VisitWebController extends Controller
     public function show(FieldVisit $visit)
     {
         $visit->load(['beneficiary', 'researcher']);
-        return view('dashboard.visits.show', compact('visit'));
+        $projects = \App\Models\Project::orderBy('name')->get();
+        $user = auth()->user();
+        $authorizedForFinalApproval = $user && ($user->hasRole(['admin', 'super_admin', 'manager']) || (int)$user->id === 2 || str_contains(strtolower((string)$user->name), 'salma') || str_contains((string)$user->email, 'ghanemsalma'));
+        return view('dashboard.visits.show', compact('visit', 'projects', 'authorizedForFinalApproval'));
+    }
+
+    public function finalApproval(Request $request, FieldVisit $visit)
+    {
+        $user = auth()->user();
+        $isAuthorized = $user && ($user->hasRole(['admin', 'super_admin', 'manager']) || (int)$user->id === 2 || str_contains(strtolower((string)$user->name), 'salma') || str_contains((string)$user->email, 'ghanemsalma'));
+        abort_unless($isAuthorized, 403, 'غير مصرح لك بالاعتماد النهائي للحالات بعد البحث الميداني.');
+
+        $decision = $request->input('decision');
+        if ($decision === 'rejected') {
+            $request->validate([
+                'rejection_reason' => 'required|string|max:1000',
+            ], [
+                'rejection_reason.required' => 'يرجى كتابة سبب الرفض إجبارياً.',
+            ]);
+
+            $reason = $request->input('rejection_reason');
+            $visit->update([
+                'recommendation' => 'rejected',
+                'recommendation_notes' => ($visit->recommendation_notes ? $visit->recommendation_notes . "\n" : '') . "تم الرفض النهائي من الإدارة: {$reason}",
+            ]);
+
+            if ($visit->beneficiary) {
+                $visit->beneficiary->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => $reason,
+                ]);
+            }
+
+            $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
+                ->orWhere('applicant_id_number', $visit->national_id)
+                ->first();
+            if ($caseApp) {
+                $caseApp->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => $reason,
+                ]);
+            }
+
+            return back()->with('success', 'تم تسجيل قرار الرفض النهائي للحالة بنجاح.');
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'monthly_sponsorship_amount' => 'nullable|numeric|min:0',
+            'approval_notes' => 'nullable|string',
+            'in_kind_notes' => 'nullable|string',
+            'fixed_medicine_name' => 'nullable|string|max:255',
+            'fixed_medicine_duration_months' => 'nullable|integer|min:1',
+            'fixed_medicine_end_date' => 'nullable|date',
+        ]);
+
+        $project = \App\Models\Project::findOrFail($request->project_id);
+        $medicineDetails = '';
+        if ($request->filled('fixed_medicine_name')) {
+            $endDate = $request->filled('fixed_medicine_end_date')
+                ? $request->input('fixed_medicine_end_date')
+                : ($request->filled('fixed_medicine_duration_months') ? now()->addMonths((int)$request->input('fixed_medicine_duration_months'))->toDateString() : null);
+
+            $medicineDetails = "\n[صرف علاج ثابت]: {$request->input('fixed_medicine_name')}"
+                . ($request->filled('fixed_medicine_duration_months') ? " | المدة: {$request->input('fixed_medicine_duration_months')} شهور" : "")
+                . ($endDate ? " | تاريخ الانتهاء: {$endDate} (تنبيه تجديد قبل 15 يوماً)" : "");
+        }
+
+        $inKindDetails = $request->filled('in_kind_notes') ? "\n[مساعدة عينية]: {$request->input('in_kind_notes')}" : '';
+        $approvalNotes = $request->filled('approval_notes') ? "\n[ملاحظات الاعتماد]: {$request->input('approval_notes')}" : '';
+
+        $fullNotes = trim(($visit->notes ?? '') . $medicineDetails . $inKindDetails . $approvalNotes);
+
+        $beneficiary = $visit->beneficiary;
+        if (!$beneficiary) {
+            $beneficiary = Beneficiary::create([
+                'full_name' => $visit->guardian_name ?: ($visit->patient_name ?: 'حالة معتمدة'),
+                'patient_name' => $visit->patient_name,
+                'national_id' => $visit->national_id,
+                'phone' => $visit->phone,
+                'address' => $visit->address,
+                'project_id' => $project->id,
+                'status' => 'accepted',
+                'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: null,
+                'notes_cases' => $fullNotes,
+            ]);
+            $visit->update(['beneficiary_id' => $beneficiary->id]);
+        } else {
+            $beneficiary->update([
+                'project_id' => $project->id,
+                'status' => 'accepted',
+                'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: $beneficiary->monthly_sponsorship_amount,
+                'notes_cases' => trim(($beneficiary->notes_cases ?? '') . "\n" . $medicineDetails . $inKindDetails . $approvalNotes),
+            ]);
+        }
+
+        $visit->update([
+            'recommendation' => 'approved',
+            'status' => 'completed',
+            'recommendation_notes' => "تم الاعتماد النهائي للحالة بمشروع ({$project->name}) بواسطة " . ($user->name ?? 'الإدارة'),
+        ]);
+
+        $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
+            ->orWhere('applicant_id_number', $visit->national_id)
+            ->first();
+        if ($caseApp) {
+            $caseApp->update([
+                'status' => 'approved',
+                'beneficiary_id' => $beneficiary->id,
+            ]);
+        }
+
+        if ($project->manager_id) {
+            \App\Models\Notification::create([
+                'user_id' => $project->manager_id,
+                'title' => 'اعتماد حالة جديدة في المشروع',
+                'message' => "تم الاعتماد النهائي للحالة: {$beneficiary->full_name} في مشروع ({$project->name}) بعد انتهاء البحث الميداني.",
+                'type' => 'project_case_approved',
+                'data' => ['beneficiary_id' => $beneficiary->id, 'project_id' => $project->id, 'visit_id' => $visit->id],
+                'is_read' => false,
+            ]);
+        }
+
+        return back()->with('success', "تم الاعتماد النهائي للحالة بنجاح وإلحاقها بمشروع ({$project->name}).");
     }
 
     public function edit(FieldVisit $visit)
