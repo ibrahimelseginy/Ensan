@@ -153,15 +153,20 @@
                     $wOccupied = $wingBeds->filter(fn($b) => $b->activeStay)->count();
                     $wAvail = $wingBeds->where('status', 'available')->filter(fn($b) => !$b->activeStay)->count();
                     $wMaint = $wingBeds->where('status', 'maintenance')->count();
+                    $wStandard = $wingBeds->filter(fn($b) => !$b->isMattress())->count();
+                    $wMattress = $wingBeds->filter(fn($b) => $b->isMattress())->count();
                 @endphp
                 <div class="card border rounded-3 mb-4 shadow-none bg-white">
                     <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center py-3 px-3 gap-2">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
                             <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
                                 <i class="bi bi-grid me-1"></i> {{ $wing->name }}
                             </span>
                             <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1">
                                 {{ $wTotal }} سرير
+                                @if($wMattress > 0)
+                                    <span class="text-primary fw-bold">({{ $wStandard }} أساسي + {{ $wMattress }} مرتبة إضافية)</span>
+                                @endif
                             </span>
                             @if(!$wing->is_active)
                                 <span class="badge bg-warning text-dark">معطل</span>
@@ -181,7 +186,7 @@
 
                             {{-- Add Single Bed to Wing Button --}}
                             <button type="button" class="btn btn-sm btn-outline-success fw-bold" data-bs-toggle="modal" data-bs-target="#addBedModal_{{ $wing->id }}">
-                                <i class="bi bi-plus-lg me-1"></i> إضافة سرير للجناح
+                                <i class="bi bi-plus-lg me-1"></i> إضافة سرير / مرتبة
                             </button>
 
                             {{-- Delete Wing Button (if no active stays) --}}
@@ -202,9 +207,13 @@
                     </div>
 
                     <div class="card-body p-3">
-                        <div class="small text-muted mb-2 d-flex justify-content-between">
-                            <span>الأسِرّة المتاحة: <strong class="text-success">{{ $wAvail }}</strong> · المشغولة: <strong class="text-danger">{{ $wOccupied }}</strong> · الصيانة: <strong class="text-secondary">{{ $wMaint }}</strong></span>
-                            <span class="text-muted">اضغط على أي سرير لتعديل رقمه أو حالته أو حذفه</span>
+                        <div class="small text-muted mb-2 d-flex flex-wrap justify-content-between gap-2">
+                            <span>الأسِرّة المتاحة: <strong class="text-success">{{ $wAvail }}</strong> · المشغولة: <strong class="text-danger">{{ $wOccupied }}</strong> · الصيانة: <strong class="text-secondary">{{ $wMaint }}</strong>
+                            @if($wMattress > 0)
+                                · المراتب الإضافية: <strong class="text-warning-emphasis">{{ $wMattress }}</strong>
+                            @endif
+                            </span>
+                            <span class="text-muted">اضغط على أي سرير لتعديل رقمه، نوعه، ملاحظاته، أو حذفه</span>
                         </div>
 
                         <div class="row g-2">
@@ -212,13 +221,21 @@
                                 @php
                                     $isOcc = (bool) $bed->activeStay;
                                     $isMaint = $bed->status === 'maintenance';
+                                    $isMattress = $bed->isMattress();
                                     $patient = $bed->activeStay?->beneficiary;
                                 @endphp
                                 <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-                                    <div class="p-2 rounded-3 border text-center position-relative h-100 d-flex flex-column justify-content-between {{ $isOcc ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : ($isMaint ? 'bg-secondary bg-opacity-10 border-secondary border-opacity-25' : 'bg-success bg-opacity-10 border-success border-opacity-25') }}">
+                                    <div class="p-2 rounded-3 border text-center position-relative h-100 d-flex flex-column justify-content-between {{ $isMattress ? 'border-warning border-2' : '' }} {{ $isOcc ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : ($isMaint ? 'bg-secondary bg-opacity-10 border-secondary border-opacity-25' : ($isMattress ? 'bg-warning bg-opacity-10' : 'bg-success bg-opacity-10 border-success border-opacity-25')) }}">
                                         <div>
-                                            <div class="fw-bold mb-1 d-flex align-items-center justify-content-center gap-1 {{ $isOcc ? 'text-danger' : ($isMaint ? 'text-secondary' : 'text-success') }}">
-                                                <i class="bi bi-hospital-bed"></i> سرير {{ $bed->number }}
+                                            @if($isMattress)
+                                                <div class="mb-1">
+                                                    <span class="badge bg-warning text-dark border border-warning" style="font-size: 0.65rem; font-weight: 700;">
+                                                        <i class="bi bi-layers-fill me-1"></i> مرتبة إضافية
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            <div class="fw-bold mb-1 d-flex align-items-center justify-content-center gap-1 {{ $isOcc ? 'text-danger' : ($isMaint ? 'text-secondary' : ($isMattress ? 'text-dark' : 'text-success')) }}">
+                                                <i class="bi {{ $isMattress ? 'bi-layers-fill text-warning' : 'bi-hospital-bed' }}"></i> {{ $isMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }}
                                             </div>
                                             <div class="small mb-1">
                                                 @if($isOcc)
@@ -231,20 +248,25 @@
                                                     <span class="badge bg-success py-1 px-2" style="font-size: 0.72rem;">فارغ (متاح)</span>
                                                 @endif
                                             </div>
+                                            @if($bed->notes)
+                                                <div class="text-muted text-truncate x-small px-1 mb-1" style="font-size: 0.68rem;" title="{{ $bed->notes }}">
+                                                    <i class="bi bi-info-circle me-1"></i>{{ $bed->notes }}
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <div class="d-flex justify-content-center gap-1 mt-2 pt-1 border-top border-light">
                                             {{-- Edit Bed Button --}}
-                                            <button type="button" class="btn btn-xs btn-outline-dark py-0 px-2" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#editBedModal_{{ $bed->id }}" title="تعديل السرير">
+                                            <button type="button" class="btn btn-xs btn-outline-dark py-0 px-2" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#editBedModal_{{ $bed->id }}" title="تعديل السرير والملاحظات">
                                                 <i class="bi bi-pencil"></i> تعديل
                                             </button>
 
                                             {{-- Delete Bed Button --}}
                                             @if(!$isOcc)
-                                                <form method="POST" action="{{ route('guest-houses.beds.destroy', [$guest_house, $bed]) }}" class="d-inline" onsubmit="return confirm('تأكيد حذف السرير ({{ $bed->number }})؟');">
+                                                <form method="POST" action="{{ route('guest-houses.beds.destroy', [$guest_house, $bed]) }}" class="d-inline" onsubmit="return confirm('تأكيد حذف {{ $isMattress ? 'المرتبة' : 'السرير' }} ({{ $bed->number }})؟');">
                                                     @csrf 
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1" style="font-size: 0.75rem;" title="حذف السرير">
+                                                    <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1" style="font-size: 0.75rem;" title="حذف">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
@@ -261,13 +283,21 @@
                                             @method('PUT')
                                             <div class="modal-header bg-primary text-white py-2">
                                                 <h6 class="modal-title fw-bold">
-                                                    <i class="bi bi-pencil-square me-1"></i> تعديل سرير {{ $bed->number }} ({{ $wing->name }})
+                                                    <i class="bi bi-pencil-square me-1"></i> تعديل {{ $isMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }} ({{ $wing->name }})
                                                 </h6>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body p-3">
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-bold small">رقم السرير <span class="text-danger">*</span></label>
+                                                    <label class="form-label fw-bold small">نوع السرير / المرفق <span class="text-danger">*</span></label>
+                                                    <select name="type" class="form-select">
+                                                        <option value="standard" @selected(!$bed->isMattress())>🛏️ سرير أساسي</option>
+                                                        <option value="mattress" @selected($bed->isMattress())>🛏️ مرتبة إضافية (طوارئ ضغط مرضى)</option>
+                                                    </select>
+                                                    <div class="form-text small">تظهر المراتب الإضافية ببادج وعلامة مميزة في مخطط الحجز.</div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold small">رقم أو تسمية السرير <span class="text-danger">*</span></label>
                                                     <input name="number" class="form-control" value="{{ old('number', $bed->number) }}" required>
                                                 </div>
                                                 <div class="mb-3">
@@ -283,7 +313,7 @@
                                                 </div>
                                                 <div class="mb-2">
                                                     <label class="form-label fw-bold small">ملاحظات على السرير</label>
-                                                    <textarea name="notes" class="form-control" rows="2" placeholder="أي ملاحظات خاصة بهذا السرير">{{ old('notes', $bed->notes) }}</textarea>
+                                                    <textarea name="notes" class="form-control" rows="2" placeholder="مثال: مرتبة إضافية أرضية بسبب ضغط الحالات">{{ old('notes', $bed->notes) }}</textarea>
                                                 </div>
                                             </div>
                                             <div class="modal-footer py-2 d-flex justify-content-between">
@@ -354,13 +384,21 @@
                             @csrf
                             <div class="modal-header bg-success text-white py-2">
                                 <h6 class="modal-title fw-bold">
-                                    <i class="bi bi-plus-circle me-1"></i> إضافة سرير إلى: {{ $wing->name }}
+                                    <i class="bi bi-plus-circle me-1"></i> إضافة سرير / مرتبة إلى: {{ $wing->name }}
                                 </h6>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body p-3">
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold small">رقم السرير</label>
+                                    <label class="form-label fw-bold small">نوع السرير / المرفق <span class="text-danger">*</span></label>
+                                    <select name="type" class="form-select">
+                                        <option value="standard">🛏️ سرير أساسي</option>
+                                        <option value="mattress">🛏️ مرتبة إضافية (أرضية / طوارئ ضغط مرضى)</option>
+                                    </select>
+                                    <div class="form-text small">اختر "مرتبة إضافية" لتمييزها بعلامة خاصة عند زيادة طاقة الجناح.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">رقم أو اسم السرير</label>
                                     <input name="number" class="form-control" placeholder="اختياري (يُترك فارغاً للتوليد التلقائي)">
                                     <div class="form-text small">إذا تركته فارغاً سيتم تحديد الرقم التالي تلقائياً.</div>
                                 </div>
@@ -372,13 +410,13 @@
                                     </select>
                                 </div>
                                 <div class="mb-2">
-                                    <label class="form-label fw-bold small">ملاحظات</label>
-                                    <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات اختيارية"></textarea>
+                                    <label class="form-label fw-bold small">ملاحظات على السرير</label>
+                                    <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات اختيارية (مثال: مرتبة إضافية أرضية لضغط الحالات)"></textarea>
                                 </div>
                             </div>
                             <div class="modal-footer py-2 d-flex justify-content-between">
                                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
-                                <button type="submit" class="btn btn-success btn-sm fw-bold px-3">إضافة السرير</button>
+                                <button type="submit" class="btn btn-success btn-sm fw-bold px-3">إضافة</button>
                             </div>
                         </form>
                     </div>

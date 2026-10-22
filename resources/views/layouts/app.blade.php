@@ -4028,6 +4028,16 @@
   })();
   </script>
 
+  <script>
+  // Ensure all Bootstrap modals are appended directly to document.body when opening
+  // to prevent CSS stacking context issues (e.g., animations/transforms causing dark backdrop over modal)
+  document.addEventListener('show.bs.modal', function (e) {
+      if (e.target && e.target.parentElement !== document.body) {
+          document.body.appendChild(e.target);
+      }
+  });
+  </script>
+
   @yield('scripts')
 </body>
 

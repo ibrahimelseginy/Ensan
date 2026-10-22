@@ -514,6 +514,7 @@ final class GuestHouseWebController extends Controller
 
         $data = $request->validate([
             'number' => 'nullable|string|max:50',
+            'type' => 'nullable|in:standard,mattress',
             'status' => 'nullable|in:available,maintenance',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -537,13 +538,20 @@ final class GuestHouseWebController extends Controller
             }
         }
 
+        $type = $data['type'] ?? 'standard';
+        if ($type === 'standard' && (str_contains((string)($data['notes'] ?? ''), 'مرتبة') || str_contains((string)($data['notes'] ?? ''), 'مرتبه') || str_contains((string)$number, 'مرتبة') || str_contains((string)$number, 'مرتبه'))) {
+            $type = 'mattress';
+        }
+
         $bed = $wing->beds()->create([
             'number' => $number,
+            'type' => $type,
             'status' => $data['status'] ?? 'available',
             'notes' => $data['notes'] ?? null,
         ]);
 
-        return back()->with('success', "تمت إضافة السرير (رقم {$bed->number}) بنجاح إلى جناح {$wing->name}.");
+        $typeLabel = $bed->isMattress() ? 'المرتبة الإضافية' : 'السرير';
+        return back()->with('success', "تمت إضافة {$typeLabel} (رقم {$bed->number}) بنجاح إلى جناح {$wing->name}.");
     }
 
     public function updateBed(Request $request, GuestHouse $guest_house, GuestHouseBed $bed): RedirectResponse
@@ -558,11 +566,16 @@ final class GuestHouseWebController extends Controller
                     ->where('guest_house_wing_id', $bed->guest_house_wing_id)
                     ->ignore($bed->id),
             ],
+            'type' => 'nullable|in:standard,mattress',
             'status' => 'required|in:available,maintenance',
             'notes' => 'nullable|string|max:500',
         ], [
             'number.unique' => 'رقم السرير مسجل مسبقاً بهذا الجناح، اختر رقماً آخر.',
         ]);
+
+        if (!isset($data['type'])) {
+            $data['type'] = $bed->type ?? 'standard';
+        }
 
         if ($data['status'] === 'maintenance' && $bed->activeStay()->exists()) {
             return back()->with('error', 'لا يمكن تحويل سرير مشغول بنزيل مقيم إلى وضع الصيانة.');
@@ -570,7 +583,8 @@ final class GuestHouseWebController extends Controller
 
         $bed->update($data);
 
-        return back()->with('success', "تم تحديث بيانات السرير (رقم {$bed->number}) بنجاح.");
+        $typeLabel = $bed->isMattress() ? 'المرتبة' : 'السرير';
+        return back()->with('success', "تم تحديث بيانات {$typeLabel} (رقم {$bed->number}) بنجاح.");
     }
 
     public function destroyBed(GuestHouse $guest_house, GuestHouseBed $bed): RedirectResponse
