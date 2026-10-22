@@ -365,25 +365,228 @@ final class GuestHouseWebController extends Controller
         }
     }
 
-    public function storeWing(Request $request, GuestHouse $guest_house): RedirectResponse
+    private function canManageWings(GuestHouse $guest_house): bool
     {
         $user = request()->user();
-        $canManageWings = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدير دار الضيافة']) || ((int)$guest_house->manager_id === (int)$user->id));
-        abort_unless($canManageWings, 403, 'إضافة الأجنحة والأسِرّة متاح للإدارة ومدير الدار فقط.');
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدير دار الضيافة'])
+            || ((int) ($guest_house->manager_user_id ?? 0) === (int) $user->id)
+            || ((int) ($guest_house->manager_id ?? 0) === (int) $user->id);
+    }
+
+    public function storeWing(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'إضافة الأجنحة والأسِرّة متاح للإدارة ومدير الدار فقط.');
+
         $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'beds_count' => 'required|integer|min:1|max:100',
+            'name' => [
+                'required', 'string', 'max:100',
+                \Illuminate\Validation\Rule::unique('guest_house_wings')->where('guest_house_id', $guest_house->id),
+            ],
+            'beds_count' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'name.unique' => 'اسم الجناح مستخدم بالفعل في هذه الدار، اختر اسماً آخر.',
+            'beds_count.required' => 'يرجى تحديد عدد الأسِرّة في الجناح.',
         ]);
 
         DB::transaction(function () use ($guest_house, $data): void {
-            $wing = $guest_house->wings()->create(['name' => $data['name'], 'notes' => $data['notes'] ?? null]);
-            for ($number = 1; $number <= (int) $data['beds_count']; $number++) {
-                $wing->beds()->create(['number' => (string) $number]);
+            $wing = $guest_house->wings()->create([
+                'name' => $data['name'],
+                'is_active' => true,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            $bedsCount = (int) $data['beds_count'];
+            for ($number = 1; $number <= $bedsCount; $number++) {
+                $wing->beds()->create([
+                    'number' => (string) $number,
+                    'status' => 'available',
+                ]);
             }
         });
 
-        return back()->with('success', 'تمت إضافة الجناح والأسِرّة بنجاح.');
+        return back()->with('success', 'تمت إضافة الجناح وتوليد الأسِرّة بنجاح.');
+    }
+
+    public function updateWing(Request $request, GuestHouse $guest_house, GuestHouseWing $wing): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'تعديل الأجنحة متاح للإدارة ومدير الدار فقط.');
+        abort_unless((int) $wing->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'name' => [
+                'required', 'string', 'max:100',
+                \Illuminate\Validation\Rule::unique('guest_house_wings')
+                    ->where('guest_house_id', $guest_house->id)
+                    ->ignore($wing->id),
+            ],
+            'is_active' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:1000',
+            'beds_count' => 'nullable|integer|min:0|max:200',
+        ], [
+            'name.unique' => 'اسم الجناح مستخدم بالفعل في هذه الدار، اختر اسماً آخر.',
+        ]);
+
+        $message = 'تم تحديث بيانات الجناح بنجاح.';
+
+        DB::transaction(function () use ($request, $wing, $data, &$message): void {
+            $wing->update([
+                'name' => $data['name'],
+                'is_active' => $request->has('is_active') ? (bool) $request->input('is_active') : $wing->is_active,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            if (isset($data['beds_count'])) {
+                $targetCount = (int) $data['beds_count'];
+                $currentBeds = $wing->beds()->with('activeStay')->orderBy('id')->get();
+                $currentCount = $currentBeds->count();
+
+                if ($targetCount > $currentCount) {
+                    $maxNum = 0;
+                    foreach ($currentBeds as $b) {
+                        if (is_numeric($b->number) && (int) $b->number > $maxNum) {
+                            $maxNum = (int) $b->number;
+                        }
+                    }
+                    $needed = $targetCount - $currentCount;
+                    for ($i = 1; $i <= $needed; $i++) {
+                        $maxNum++;
+                        while ($wing->beds()->where('number', (string) $maxNum)->exists()) {
+                            $maxNum++;
+                        }
+                        $wing->beds()->create([
+                            'number' => (string) $maxNum,
+                            'status' => 'available',
+                        ]);
+                    }
+                    $message = "تم تحديث الجناح وزيادة عدد الأسِرّة إلى {$targetCount} سرير.";
+                } elseif ($targetCount < $currentCount) {
+                    $toRemoveCount = $currentCount - $targetCount;
+                    $candidates = $currentBeds->filter(fn ($b) => ! $b->activeStay)->reverse();
+                    $removed = 0;
+                    foreach ($candidates as $cand) {
+                        if ($removed >= $toRemoveCount) {
+                            break;
+                        }
+                        $cand->delete();
+                        $removed++;
+                    }
+
+                    if ($removed < $toRemoveCount) {
+                        $actualNewCount = $currentCount - $removed;
+                        $message = "تم تحديث الجناح وتقليص الأسِرّة المتاحة إلى {$actualNewCount}. تعذر حذف باقي الأسِرّة لوجود نزلاء مقيمين بها حالياً.";
+                    } else {
+                        $message = "تم تحديث الجناح وتقليص عدد الأسِرّة إلى {$targetCount} سرير بنجاح.";
+                    }
+                }
+            }
+        });
+
+        return back()->with('success', $message);
+    }
+
+    public function destroyWing(GuestHouse $guest_house, GuestHouseWing $wing): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'حذف الأجنحة متاح للإدارة ومدير الدار فقط.');
+        abort_unless((int) $wing->guest_house_id === (int) $guest_house->id, 404);
+
+        $hasActiveStays = $wing->beds()->whereHas('activeStay')->exists();
+        if ($hasActiveStays) {
+            return back()->with('error', 'لا يمكن حذف هذا الجناح لوجود نزلاء مقيمين في بعض أسِرّته حالياً.');
+        }
+
+        DB::transaction(function () use ($wing): void {
+            $wing->beds()->delete();
+            $wing->delete();
+        });
+
+        return back()->with('success', 'تم حذف الجناح وكافة أسِرّته بنجاح.');
+    }
+
+    public function storeBed(Request $request, GuestHouse $guest_house, GuestHouseWing $wing): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'إضافة الأسِرّة متاح للإدارة ومدير الدار فقط.');
+        abort_unless((int) $wing->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'number' => 'nullable|string|max:50',
+            'status' => 'nullable|in:available,maintenance',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $number = trim((string) ($data['number'] ?? ''));
+        if ($number === '') {
+            $maxNum = 0;
+            foreach ($wing->beds as $b) {
+                if (is_numeric($b->number) && (int) $b->number > $maxNum) {
+                    $maxNum = (int) $b->number;
+                }
+            }
+            $next = $maxNum + 1;
+            while ($wing->beds()->where('number', (string) $next)->exists()) {
+                $next++;
+            }
+            $number = (string) $next;
+        } else {
+            if ($wing->beds()->where('number', $number)->exists()) {
+                return back()->withInput()->with('error', "رقم السرير ({$number}) مسجل مسبقاً في هذا الجناح.");
+            }
+        }
+
+        $bed = $wing->beds()->create([
+            'number' => $number,
+            'status' => $data['status'] ?? 'available',
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        return back()->with('success', "تمت إضافة السرير (رقم {$bed->number}) بنجاح إلى جناح {$wing->name}.");
+    }
+
+    public function updateBed(Request $request, GuestHouse $guest_house, GuestHouseBed $bed): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'تعديل السرير متاح للإدارة ومدير الدار فقط.');
+        abort_unless((int) $bed->wing->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'number' => [
+                'required', 'string', 'max:50',
+                \Illuminate\Validation\Rule::unique('guest_house_beds')
+                    ->where('guest_house_wing_id', $bed->guest_house_wing_id)
+                    ->ignore($bed->id),
+            ],
+            'status' => 'required|in:available,maintenance',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'number.unique' => 'رقم السرير مسجل مسبقاً بهذا الجناح، اختر رقماً آخر.',
+        ]);
+
+        if ($data['status'] === 'maintenance' && $bed->activeStay()->exists()) {
+            return back()->with('error', 'لا يمكن تحويل سرير مشغول بنزيل مقيم إلى وضع الصيانة.');
+        }
+
+        $bed->update($data);
+
+        return back()->with('success', "تم تحديث بيانات السرير (رقم {$bed->number}) بنجاح.");
+    }
+
+    public function destroyBed(GuestHouse $guest_house, GuestHouseBed $bed): RedirectResponse
+    {
+        abort_unless($this->canManageWings($guest_house), 403, 'حذف السرير متاح للإدارة ومدير الدار فقط.');
+        abort_unless((int) $bed->wing->guest_house_id === (int) $guest_house->id, 404);
+
+        if ($bed->activeStay()->exists()) {
+            return back()->with('error', 'لا يمكن حذف سرير به نزيل مقيم حالياً.');
+        }
+
+        $number = $bed->number;
+        $wingName = $bed->wing?->name;
+        $bed->delete();
+
+        return back()->with('success', "تم حذف السرير (رقم {$number}) من {$wingName} بنجاح.");
     }
 
     public function updateBedStatus(Request $request, GuestHouse $guest_house, GuestHouseBed $bed): RedirectResponse
@@ -780,18 +983,23 @@ final class GuestHouseWebController extends Controller
 
     public function edit(GuestHouse $guest_house): View|RedirectResponse
     {
-        $this->ensureAdmin('تعديل بيانات الدار متاح للإدارة فقط.');
+        $user = request()->user();
+        $canEdit = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدير دار الضيافة']) || ((int) ($guest_house->manager_user_id ?? 0) === (int) $user->id));
+        abort_unless($canEdit, 403, 'تعديل بيانات الدار متاح للإدارة ومدير الدار فقط.');
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }
 
         $users = User::orderBy('name')->get();
-        return view('guest_houses.edit', compact('guest_house', 'users'));
+        $guestHouseWings = $guest_house->wings()->with(['beds.activeStay.beneficiary'])->orderBy('name')->get();
+        return view('guest_houses.edit', compact('guest_house', 'users', 'guestHouseWings'));
     }
 
     public function update(UpdateGuestHouseRequest $request, GuestHouse $guest_house): RedirectResponse
     {
-        $this->ensureAdmin('تعديل بيانات الدار متاح للإدارة فقط.');
+        $user = request()->user();
+        $canEdit = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدير دار الضيافة']) || ((int) ($guest_house->manager_user_id ?? 0) === (int) $user->id));
+        abort_unless($canEdit, 403, 'تعديل بيانات الدار متاح للإدارة ومدير الدار فقط.');
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }

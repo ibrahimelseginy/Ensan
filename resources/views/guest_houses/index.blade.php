@@ -258,7 +258,10 @@
                                 <a class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-bold btn-details-mobile" href="{{ route('guest-houses.show', $h) }}">
                                     <i class="bi bi-door-open-fill me-1"></i> دخول للدار
                                 </a>
-                                @if($isAdmin && !(isset($h->pendingRequest) && $h->pendingRequest))
+                                @php
+                                    $canEdit = $isAdmin || (auth()->check() && (auth()->user()->hasRole(['manager', 'مدير دار الضيافة']) || (int) auth()->id() === (int) $h->manager_user_id));
+                                @endphp
+                                @if($canEdit && !(isset($h->pendingRequest) && $h->pendingRequest))
                                 <a class="btn btn-sm btn-light rounded-pill px-3 py-2 fw-bold" href="{{ route('guest-houses.edit', $h) }}">
                                     <i class="bi bi-pencil me-1"></i> تعديل
                                 </a>

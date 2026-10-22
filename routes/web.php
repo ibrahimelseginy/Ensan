@@ -704,6 +704,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('guest-houses.storeExpense');
     Route::middleware('permission:guest_houses.view')->group(function () {
         Route::post('guest-houses/{guest_house}/wings', [GuestHouseWebController::class, 'storeWing'])->name('guest-houses.wings.store');
+        Route::put('guest-houses/{guest_house}/wings/{wing}', [GuestHouseWebController::class, 'updateWing'])->name('guest-houses.wings.update');
+        Route::delete('guest-houses/{guest_house}/wings/{wing}', [GuestHouseWebController::class, 'destroyWing'])->name('guest-houses.wings.destroy');
+        Route::post('guest-houses/{guest_house}/wings/{wing}/beds', [GuestHouseWebController::class, 'storeBed'])->name('guest-houses.wings.beds.store');
+        Route::put('guest-houses/{guest_house}/beds/{bed}', [GuestHouseWebController::class, 'updateBed'])->name('guest-houses.beds.update');
+        Route::delete('guest-houses/{guest_house}/beds/{bed}', [GuestHouseWebController::class, 'destroyBed'])->name('guest-houses.beds.destroy');
         Route::patch('guest-houses/{guest_house}/beds/{bed}/status', [GuestHouseWebController::class, 'updateBedStatus'])->name('guest-houses.beds.status');
         Route::post('guest-houses/{guest_house}/custodies', [GuestHouseWebController::class, 'storeCustody'])->name('guest-houses.custodies.store');
         Route::post('guest-houses/{guest_house}/inventory/issues', [GuestHouseWebController::class, 'issueInventory'])->name('guest-houses.inventory.issue');

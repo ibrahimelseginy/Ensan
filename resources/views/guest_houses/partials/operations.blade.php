@@ -51,8 +51,33 @@
             </div>
             @forelse($guestHouseWings as $wing)
                 <div class="border rounded-3 p-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <strong>{{ $wing->name }}</strong><span class="text-muted small">{{ $wing->beds->count() }} سرير</span>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <strong class="fs-6">{{ $wing->name }}</strong>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $wing->beds->count() }} سرير</span>
+                            @if(!$wing->is_active)
+                                <span class="badge bg-warning text-dark">معطل</span>
+                            @endif
+                        </div>
+                        @if(!empty($isAdmin) || !empty($isAssigned) || auth()->user()?->hasRole(['manager', 'مدير دار الضيافة']))
+                            <div class="d-flex flex-wrap gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#opsEditWingModal_{{ $wing->id }}">
+                                    <i class="bi bi-pencil-square me-1"></i> تعديل الجناح والأسرة
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#opsAddBedModal_{{ $wing->id }}">
+                                    <i class="bi bi-plus-lg me-1"></i> إضافة سرير
+                                </button>
+                                @if($wing->beds->filter(fn($b) => $b->activeStay)->count() === 0)
+                                    <form method="POST" action="{{ route('guest-houses.wings.destroy', [$guest_house, $wing]) }}" class="d-inline" onsubmit="return confirm('تأكيد حذف الجناح ({{ $wing->name }}) وكافة أسِرّته نهائياً؟');">
+                                        @csrf 
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف الجناح">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         @foreach($wing->beds as $bed)
@@ -196,23 +221,58 @@
                                     </div>
                                 </div>
                             @elseif($bed->status === 'maintenance')
-                                {{-- سرير في الصيانة: الضغط عليه يعيده للعمل كسرير متاح --}}
-                                <form method="POST" action="{{ route('guest-houses.beds.status', [$guest_house, $bed]) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="available">
-                                    <button class="gh-bed gh-bed-maintenance" type="submit" onclick="return confirm('إعادة تشغيل السرير وجعله متاحاً للحجز؟');" title="سرير تحت الصيانة: اضغط لإعادته متاحاً">
-                                        <i class="bi bi-tools fs-5"></i>
-                                        <span>سرير {{ $bed->number }}</span>
-                                        <small>صيانة (اضغط للتفعيل)</small>
-                                    </button>
-                                </form>
+                                {{-- سرير في الصيانة: الضغط عليه يعرض خيارات إعادة التفعيل أو التعديل أو الحذف --}}
+                                <button type="button" 
+                                        class="gh-bed gh-bed-maintenance" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#bedMaintenanceModal_{{ $bed->id }}" 
+                                        title="سرير تحت الصيانة: اضغط للخيارات">
+                                    <i class="bi bi-tools fs-5"></i>
+                                    <span>سرير {{ $bed->number }}</span>
+                                    <small>صيانة (اضغط للخيارات)</small>
+                                </button>
+
+                                {{-- مودال سرير الصيانة --}}
+                                <div class="modal fade" id="bedMaintenanceModal_{{ $bed->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                                        <div class="modal-content shadow border-0 text-center">
+                                            <div class="modal-header bg-secondary text-white py-2 justify-content-center position-relative">
+                                                <h6 class="modal-title fw-bold">
+                                                    <i class="bi bi-tools me-1"></i> {{ $wing->name }} — سرير {{ $bed->number }}
+                                                </h6>
+                                                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-2" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-3">
+                                                <p class="text-muted small mb-3">السرير حالياً في وضع الصيانة. اختر الإجراء:</p>
+                                                <div class="d-grid gap-2">
+                                                    <form method="POST" action="{{ route('guest-houses.beds.status', [$guest_house, $bed]) }}">
+                                                        @csrf @method('PATCH')
+                                                        <input type="hidden" name="status" value="available">
+                                                        <button type="submit" class="btn btn-success fw-bold w-100 py-2">
+                                                            <i class="bi bi-check2-circle me-1"></i> إعادة تفعيل السرير (متاح)
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-outline-primary w-100 py-2" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#opsEditBedModal_{{ $bed->id }}">
+                                                        <i class="bi bi-pencil me-1"></i> تعديل رقم السرير وملاحظاته
+                                                    </button>
+                                                    <form method="POST" action="{{ route('guest-houses.beds.destroy', [$guest_house, $bed]) }}" onsubmit="return confirm('تأكيد حذف السرير ({{ $bed->number }}) نهائياً؟');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger w-100 py-2">
+                                                            <i class="bi bi-trash me-1"></i> حذف السرير
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @else
-                                {{-- سرير متاح: الضغط عليه يعرض خيارات التسكين أو الصيانة --}}
+                                {{-- سرير متاح: الضغط عليه يعرض خيارات التسكين أو الصيانة أو التعديل أو الحذف --}}
                                 <button type="button" 
                                         class="gh-bed gh-bed-available" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#bedOptionsModal_{{ $bed->id }}" 
-                                        title="سرير متاح: اضغط لاختيار التسكين أو الصيانة">
+                                        title="سرير متاح: اضغط لاختيار التسكين أو الصيانة أو التعديل">
                                     <i class="bi bi-hospital-bed fs-5"></i>
                                     <span>سرير {{ $bed->number }}</span>
                                     <small>فارغ (متاح)</small>
@@ -241,12 +301,147 @@
                                                             <i class="bi bi-tools me-1"></i> تحويل لوضع الصيانة
                                                         </button>
                                                     </form>
+                                                    <button type="button" class="btn btn-outline-primary w-100 py-2" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#opsEditBedModal_{{ $bed->id }}">
+                                                        <i class="bi bi-pencil me-1"></i> تعديل رقم السرير وملاحظاته
+                                                    </button>
+                                                    <form method="POST" action="{{ route('guest-houses.beds.destroy', [$guest_house, $bed]) }}" onsubmit="return confirm('تأكيد حذف السرير ({{ $bed->number }}) نهائياً؟');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger w-100 py-2">
+                                                            <i class="bi bi-trash me-1"></i> حذف السرير
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             @endif
+
+                            {{-- Modal: Edit Single Bed (Operations) --}}
+                            <div class="modal fade" id="opsEditBedModal_{{ $bed->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-sm">
+                                    <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.beds.update', [$guest_house, $bed]) }}">
+                                        @csrf 
+                                        @method('PUT')
+                                        <div class="modal-header bg-primary text-white py-2">
+                                            <h6 class="modal-title fw-bold">
+                                                <i class="bi bi-pencil-square me-1"></i> تعديل سرير {{ $bed->number }}
+                                            </h6>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-3 text-start">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">رقم السرير <span class="text-danger">*</span></label>
+                                                <input name="number" class="form-control" value="{{ $bed->number }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">حالة السرير</label>
+                                                <select name="status" class="form-select" @if($occupied) disabled @endif>
+                                                    <option value="available" @selected($bed->status === 'available')>فارغ ومتاح للحجز</option>
+                                                    <option value="maintenance" @selected($bed->status === 'maintenance')>تحت الصيانة</option>
+                                                </select>
+                                                @if($occupied)
+                                                    <input type="hidden" name="status" value="{{ $bed->status }}">
+                                                    <div class="form-text text-danger small">السرير مشغول بنزيل مقيم حالياً.</div>
+                                                @endif
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label fw-bold small">ملاحظات</label>
+                                                <textarea name="notes" class="form-control" rows="2">{{ $bed->notes }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer py-2 d-flex justify-content-between">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                            <button type="submit" class="btn btn-primary btn-sm fw-bold">حفظ التعديل</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Modal: Edit Wing & Adjust Beds Count (Operations) --}}
+                <div class="modal fade" id="opsEditWingModal_{{ $wing->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.wings.update', [$guest_house, $wing]) }}">
+                            @csrf 
+                            @method('PUT')
+                            <div class="modal-header bg-primary text-white py-2">
+                                <h6 class="modal-title fw-bold">
+                                    <i class="bi bi-pencil-square me-1"></i> تعديل جناح: {{ $wing->name }}
+                                </h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">اسم الجناح <span class="text-danger">*</span></label>
+                                    <input name="name" class="form-control" value="{{ $wing->name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">إجمالي عدد الأسِرّة في الجناح <span class="text-danger">*</span></label>
+                                    <input type="number" name="beds_count" min="0" max="200" value="{{ $wing->beds->count() }}" class="form-control" required>
+                                    <div class="form-text small">
+                                        • زيادة العدد يضيف أسِرّة جديدة تلقائياً.<br>
+                                        • إنقاص العدد يحذف الأسِرّة الفارغة فقط ولن يتأثر أي سرير به نزيل مقيم.
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">حالة الجناح</label>
+                                    <select name="is_active" class="form-select">
+                                        <option value="1" @selected($wing->is_active)>نشط وجاهز للتشغيل</option>
+                                        <option value="0" @selected(!$wing->is_active)>معطل مؤقتاً</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold">ملاحظات الجناح</label>
+                                    <textarea name="notes" class="form-control" rows="2">{{ $wing->notes }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer py-2 d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">حفظ تعديلات الجناح</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Modal: Add Single Bed to Wing (Operations) --}}
+                <div class="modal fade" id="opsAddBedModal_{{ $wing->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.wings.beds.store', [$guest_house, $wing]) }}">
+                            @csrf
+                            <div class="modal-header bg-success text-white py-2">
+                                <h6 class="modal-title fw-bold">
+                                    <i class="bi bi-plus-circle me-1"></i> إضافة سرير إلى {{ $wing->name }}
+                                </h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">رقم السرير</label>
+                                    <input name="number" class="form-control" placeholder="اختياري (اتركه فارغاً للتوليد التلقائي)">
+                                    <div class="form-text small">إذا تركته فارغاً سيتم تحديد الرقم التالي تلقائياً.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">الحالة</label>
+                                    <select name="status" class="form-select">
+                                        <option value="available">فارغ ومتاح للحجز</option>
+                                        <option value="maintenance">تحت الصيانة</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold small">ملاحظات</label>
+                                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer py-2 d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                <button type="submit" class="btn btn-success btn-sm fw-bold px-3">إضافة السرير</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                         @endforeach
                     </div>
                 </div>
