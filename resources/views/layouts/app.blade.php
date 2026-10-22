@@ -816,14 +816,24 @@
             filter: none !important;
             perspective: none !important;
         }
-        .modal {
+        .modal,
+        .modal.fade,
+        .modal.show,
+        div.modal {
             z-index: 1060 !important;
         }
-        .modal-backdrop {
+        .modal-backdrop,
+        .modal-backdrop.fade,
+        .modal-backdrop.show,
+        div.modal-backdrop {
             z-index: 1050 !important;
         }
         .modal.show {
             display: block !important;
+        }
+        .modal-dialog {
+            position: relative !important;
+            z-index: 1065 !important;
         }
         .modal-content,
         .modal-dialog .modal-content,
@@ -2490,6 +2500,7 @@
 </style>
 
   @yield('styles')
+  @stack('styles')
 </head>
 
 <body class="{{ (isset($_COOKIE['ui_theme']) && $_COOKIE['ui_theme'] === 'dark') ? 'theme-dark' : '' }}">
@@ -4047,7 +4058,7 @@
   </script>
 
   <script>
-  // Ensure all modals across all views are mounted directly under document.body on page load
+  // Ensure all modals across all views are mounted directly under document.body
   // to prevent any parent container (e.g. cards, wrappers, transforms) from trapping them under backdrops
   (function() {
       function mountModalsToBody() {
@@ -4062,6 +4073,22 @@
       } else {
           mountModalsToBody();
       }
+      // Safety net: when any modal is shown, ensure it and its backdrop have correct z-index
+      document.addEventListener('show.bs.modal', function(e) {
+          var modal = e.target;
+          if (modal && modal.parentElement !== document.body) {
+              document.body.appendChild(modal);
+          }
+          setTimeout(function() {
+              document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+                  b.style.setProperty('z-index', '1050', 'important');
+              });
+              if (modal) {
+                  modal.style.setProperty('z-index', '1060', 'important');
+                  modal.style.setProperty('display', 'block', 'important');
+              }
+          }, 10);
+      });
   })();
   </script>
 

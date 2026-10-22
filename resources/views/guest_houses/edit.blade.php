@@ -1,4 +1,29 @@
 @extends('layouts.app')
+
+@push('styles')
+<style>
+    .modal-backdrop,
+    .modal-backdrop.fade,
+    .modal-backdrop.show,
+    div.modal-backdrop {
+        z-index: 1050 !important;
+    }
+    .modal,
+    .modal.fade,
+    .modal.show,
+    div.modal {
+        z-index: 1060 !important;
+    }
+    .modal-dialog {
+        position: relative !important;
+        z-index: 1065 !important;
+    }
+    .modal.show {
+        display: block !important;
+    }
+</style>
+@endpush
+
 @section('content')
     {{-- Premium Dashboard Hero --}}
     <div class="dashboard-hero animate-slide-up bg-primary shadow-sm mb-4" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 2.5rem 2rem; border-radius: 0 0 40px 40px;">
@@ -302,11 +327,11 @@
         <div class="modal-dialog modal-dialog-centered">
             <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.wings.store', $guest_house) }}">
                 @csrf
-                <div class="modal-header bg-primary text-white py-2">
-                    <h6 class="modal-title fw-bold">
-                        <i class="bi bi-grid-3x3-gap-fill me-1"></i> إضافة جناح جديد وتوليد الأسِرّة
+                <div class="modal-header border-bottom py-3">
+                    <h6 class="modal-title fw-bold text-dark">
+                        <i class="bi bi-grid-3x3-gap-fill text-primary me-1"></i> إضافة جناح جديد وتوليد الأسِرّة
                     </h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-3">
                     <div class="mb-3">
@@ -342,11 +367,11 @@
                 <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.wings.update', [$guest_house, $wing]) }}">
                     @csrf 
                     @method('PUT')
-                    <div class="modal-header bg-primary text-white py-2">
-                        <h6 class="modal-title fw-bold">
-                            <i class="bi bi-pencil-square me-1"></i> تعديل بيانات الجناح: {{ $wing->name }}
+                    <div class="modal-header border-bottom py-3">
+                        <h6 class="modal-title fw-bold text-dark">
+                            <i class="bi bi-pencil-square text-primary me-1"></i> تعديل بيانات الجناح: {{ $wing->name }}
                         </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3">
                         <div class="mb-3">
@@ -386,11 +411,11 @@
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.wings.beds.store', [$guest_house, $wing]) }}">
                     @csrf
-                    <div class="modal-header bg-success text-white py-2">
-                        <h6 class="modal-title fw-bold">
-                            <i class="bi bi-plus-circle me-1"></i> إضافة سرير / مرتبة إلى: {{ $wing->name }}
+                    <div class="modal-header border-bottom py-3">
+                        <h6 class="modal-title fw-bold text-dark">
+                            <i class="bi bi-plus-circle text-success me-1"></i> إضافة سرير / مرتبة إلى: {{ $wing->name }}
                         </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3">
                         <div class="mb-3">
@@ -437,11 +462,11 @@
                     <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.beds.update', [$guest_house, $bed]) }}">
                         @csrf 
                         @method('PUT')
-                        <div class="modal-header bg-primary text-white py-2">
-                            <h6 class="modal-title fw-bold">
-                                <i class="bi bi-pencil-square me-1"></i> تعديل {{ $isBedMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }} ({{ $wing->name }})
+                        <div class="modal-header border-bottom py-3">
+                            <h6 class="modal-title fw-bold text-dark">
+                                <i class="bi bi-pencil-square text-primary me-1"></i> تعديل {{ $isBedMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }} ({{ $wing->name }})
                             </h6>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body p-3">
                             <div class="mb-3">

@@ -1874,17 +1874,19 @@ body.theme-dark,
   padding: 1.5rem;
 }
 
+.modal-backdrop,
 .modal-backdrop.show {
   opacity: 1 !important;
-  background-color: rgba(15, 23, 42, 0.7) !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
   /* Slate semi-transparent */
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 1990 !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1050 !important;
 }
 
-.modal {
-  z-index: 2000 !important;
+.modal,
+.modal.show {
+  z-index: 1060 !important;
 }
 
 /* SweetAlert Overrides */
