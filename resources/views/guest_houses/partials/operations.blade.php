@@ -925,6 +925,7 @@
     </div>
 </div>
 
+@push('modals')
 {{-- ======================================================
      Operations Wing & Bed Management Modals (Root Level)
      ====================================================== --}}
@@ -1074,3 +1075,4 @@
         </div>
     @endforeach
 @endforeach
+@endpush

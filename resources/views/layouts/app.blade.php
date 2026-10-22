@@ -811,11 +811,19 @@
         /* ======================================================
          * Modal & Add Cards: Global Solid Non-Transparent Background (Light Mode)
          * ====================================================== */
+        .content-wrapper {
+            transform: none !important;
+            filter: none !important;
+            perspective: none !important;
+        }
         .modal {
             z-index: 1060 !important;
         }
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+        .modal.show {
+            display: block !important;
         }
         .modal-content,
         .modal-dialog .modal-content,
@@ -2926,7 +2934,7 @@
 
 {{-- Sidebar removed in favor of central App Launcher Hub --}}
 
-  <div class="content-wrapper fade-in">
+  <div class="content-wrapper">
     @if(!isset($hideGlobalAlerts) || !$hideGlobalAlerts)
 
     @endif
@@ -2954,6 +2962,10 @@
       </div>
     </footer>
   </div>
+
+  {{-- Page Modals Root Mount Point (Outside content-wrapper to prevent stacking context traps) --}}
+  @yield('modals')
+  @stack('modals')
   @if(session('show_admin_notifications') && $navUser?->hasRole('admin'))
     @include('partials.admin_login_notifications_modal')
   @endif
@@ -4031,6 +4043,25 @@
               }, 10);
           }
       }, true);
+  })();
+  </script>
+
+  <script>
+  // Ensure all modals across all views are mounted directly under document.body on page load
+  // to prevent any parent container (e.g. cards, wrappers, transforms) from trapping them under backdrops
+  (function() {
+      function mountModalsToBody() {
+          document.querySelectorAll('.modal').forEach(function(modal) {
+              if (modal.parentElement && modal.parentElement !== document.body) {
+                  document.body.appendChild(modal);
+              }
+          });
+      }
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', mountModalsToBody);
+      } else {
+          mountModalsToBody();
+      }
   })();
   </script>
 

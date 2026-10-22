@@ -294,7 +294,9 @@
             @endforelse
         </div>
     </div>
+@endsection
 
+@section('modals')
     {{-- Global Modal: Create New Wing --}}
     <div class="modal fade" id="createWingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
