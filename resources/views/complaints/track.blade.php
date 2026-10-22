@@ -372,6 +372,66 @@
         .pulse-dot.primary { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
         .pulse-dot.success { background: #10b981; box-shadow: 0 0 10px #10b981; }
 
+        /* High-contrast text colors for Dark Theme readability */
+        .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        .code-format-hint {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .code-format-hint .code-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Quick Staff Portal Pill Button */
+        .staff-portal-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #cbd5e1 !important;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 7px 18px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .staff-portal-link i {
+            color: #34d399;
+            font-size: 0.95rem;
+            transition: transform 0.2s ease;
+        }
+
+        .staff-portal-link:hover {
+            color: #ffffff !important;
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(52, 211, 153, 0.4);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .staff-portal-link:hover i {
+            transform: scale(1.15);
+        }
+
         /* Print Styling */
         @media print {
             body { background: #ffffff !important; color: #000000 !important; }
@@ -415,7 +475,9 @@
                 <span class="fw-bold text-light fs-6">
                     <i class="bi bi-upc-scan text-success me-1"></i> أدخل كود التتبع المعتمد:
                 </span>
-                <span class="text-muted small">صيغة الكود: ENS-XXXXXX</span>
+                <span class="code-format-hint">
+                    صيغة الكود: <span class="code-badge">ENS-XXXXXX</span>
+                </span>
             </label>
 
             <div class="search-box-wrap">
@@ -691,8 +753,8 @@
 
     <!-- Quick Staff Portal Link -->
     <div class="text-center mt-3 no-print">
-        <a href="{{ route('login') }}" class="text-muted text-decoration-none small hover-light">
-            <i class="bi bi-lock me-1"></i> بوابة دخول موظفي وكادر المؤسسة
+        <a href="{{ route('login') }}" class="staff-portal-link">
+            <i class="bi bi-lock-fill"></i> بوابة دخول موظفي وكادر المؤسسة
         </a>
     </div>
 
