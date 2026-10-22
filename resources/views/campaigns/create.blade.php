@@ -46,6 +46,26 @@
           </div>
         </div>
 
+        {{-- Targets Section --}}
+        <div class="form-section">
+          <div class="form-section-title">
+            <i class="bi bi-bullseye"></i>
+            <span>المستهدف المالي والأسر المستهدفة</span>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">المبلغ المستهدف للحملة (ج.م)</label>
+              <input name="target_amount" type="number" step="0.01" min="0" value="{{ old('target_amount') }}" class="form-control" placeholder="مثال: 100000 أو تكلفة العملية">
+              <div class="form-help-text">المبلغ الإجمالي المراد جمعه للحملة (يظهر في مؤشرات ورادار الحملات)</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">عدد الأسر المستهدفة</label>
+              <input name="target_families" type="number" min="1" value="{{ old('target_families', 1) }}" class="form-control" placeholder="1 أو عدد الأسر">
+              <div class="form-help-text">يمكن تحديد أسرة واحدة لحالة تحتاج عملية بمبلغ كبير، أو عدد أسر كبير للحملات العامة</div>
+            </div>
+          </div>
+        </div>
+
         {{-- Dates Section --}}
         <div class="form-section">
           <div class="form-section-title">

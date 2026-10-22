@@ -26,6 +26,7 @@ final class FieldVisit extends Model
         'phone',
         'researcher_phone',
         'home_ownership',
+        'house_photo_path',
         'address',
         'researcher_opinion',
         'family_members',
@@ -53,6 +54,7 @@ final class FieldVisit extends Model
         'case_guide',
         'case_needs',
         'home_and_social_condition',
+        'condition_photos',
         // Oncology conditional fields
         'has_cancer_patient',
         'hospital_name',
@@ -76,6 +78,7 @@ final class FieldVisit extends Model
         'visit_date' => 'date',
         'has_cancer_patient' => 'boolean',
         'family_members' => 'array',
+        'condition_photos' => 'array',
         'income_job' => 'decimal:2',
         'income_daily_work' => 'decimal:2',
         'income_pension' => 'decimal:2',
@@ -106,6 +109,32 @@ final class FieldVisit extends Model
     public function researcher()
     {
         return $this->belongsTo(User::class, 'researcher_id');
+    }
+
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'attachable', 'entity_type', 'entity_id');
+    }
+
+    public function getHousePhotoUrlAttribute(): ?string
+    {
+        if (empty($this->house_photo_path)) {
+            return null;
+        }
+        return app(\App\Services\ImageUploadService::class)->url($this->house_photo_path);
+    }
+
+    public function getConditionPhotoUrlsAttribute(): array
+    {
+        $urls = [];
+        $paths = is_array($this->condition_photos) ? $this->condition_photos : [];
+        $service = app(\App\Services\ImageUploadService::class);
+        foreach ($paths as $p) {
+            if (!empty($p)) {
+                $urls[] = $service->url($p);
+            }
+        }
+        return $urls;
     }
 
     public function getStatusLabelAttribute()

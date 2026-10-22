@@ -56,12 +56,14 @@ final class GuestHouseWebController extends Controller
 
     public function create(): View
     {
+        $this->ensureAdmin('إضافة دار جديدة مفتوحة للإدارة فقط.');
         $users = User::orderBy('name')->get();
         return view('guest_houses.create', compact('users'));
     }
 
     public function store(StoreGuestHouseRequest $request): RedirectResponse
     {
+        $this->ensureAdmin('إضافة دار جديدة مفتوحة للإدارة فقط.');
         $result = $this->guestHouseService->createHouse($request->validated());
 
         if ($result instanceof ChangeRequest) {
@@ -73,6 +75,18 @@ final class GuestHouseWebController extends Controller
 
     public function show(GuestHouse $guest_house): View|RedirectResponse
     {
+        $user = request()->user();
+        $isAdmin = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $user->hasPermission('guest_houses.view_all'));
+        $isAssigned = $user && (
+            $guest_house->manager_user_id === $user->id ||
+            $user->guest_house_id === $guest_house->id ||
+            $guest_house->volunteers()->where('users.id', $user->id)->exists()
+        );
+
+        if (!$isAdmin && !$isAssigned) {
+            abort(403, 'غير مصرح لك بالدخول إلى هذه الدار.');
+        }
+
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }
@@ -81,7 +95,7 @@ final class GuestHouseWebController extends Controller
         $volunteers           = User::where('is_volunteer', true)->orderBy('name')->get();
         $guestHouseVolunteers = $guest_house->volunteers()->orderBy('name')->get();
         $monthlyVolunteers    = $guest_house->monthlyVolunteers()->with('user')->get();
-        $beneficiaryOptions   = Beneficiary::orderBy('full_name')->get(['id', 'code', 'full_name']);
+        $beneficiaryOptions   = Beneficiary::orderBy('full_name')->get(['id', 'code', 'full_name', 'national_id', 'phone', 'address']);
         $sponsors             = Donor::where('active', true)->orderBy('name')->get(['id', 'name', 'phone']);
         $guestHouseDonors     = Donor::where('active', true)->orderBy('name')->get(['id', 'name', 'phone']);
         $guestHouseBeneficiaries = Beneficiary::where('guest_house_id', $guest_house->id)
@@ -166,51 +180,90 @@ final class GuestHouseWebController extends Controller
     public function storeBeneficiary(StoreBeneficiaryRequest $request, GuestHouse $guest_house): RedirectResponse
     {
         $data = $request->validated();
+        $existingBeneficiaryId = $data['existing_beneficiary_id'] ?? null;
         $allocatedBeneficiaryIds = $data['allocated_beneficiary_ids'] ?? [];
         $sponsorIds = $data['sponsor_ids'] ?? [];
         $bedId = isset($data['guest_house_bed_id']) ? (int) $data['guest_house_bed_id'] : null;
+
         $profileData = collect($data)->only([
-            'treatment_type', 'medical_center', 'sessions_count', 'medical_notes',
+            'treatment_type', 'medical_center', 'sessions_count', 'gender', 'medical_notes',
+            'companion_name', 'companion_relation', 'companion_national_id',
+            'companion_phone', 'companion_address', 'manager_notes',
         ])->filter(fn ($value) => $value !== null && $value !== '')->all();
+
         $arrivalDate = $data['arrival_date'] ?? now()->toDateString();
         $expectedDays = $data['expected_days'] ?? null;
 
         unset(
+            $data['existing_beneficiary_id'],
             $data['allocated_beneficiary_ids'],
             $data['sponsor_ids'],
             $data['project_id'],
             $data['campaign_id'],
             $data['guest_house_id'],
             $data['status'],
-            $data['rejection_reason']
-            ,$data['treatment_type']
-            ,$data['medical_center']
-            ,$data['sessions_count']
-            ,$data['medical_notes']
-            ,$data['patient_id_front']
-            ,$data['patient_id_back']
-            ,$data['followup_card']
-            ,$data['referral_letter']
-            ,$data['guest_house_bed_id']
-            ,$data['arrival_date']
-            ,$data['expected_days']
+            $data['rejection_reason'],
+            $data['treatment_type'],
+            $data['medical_center'],
+            $data['sessions_count'],
+            $data['gender'],
+            $data['medical_notes'],
+            $data['companion_name'],
+            $data['companion_relation'],
+            $data['companion_national_id'],
+            $data['companion_phone'],
+            $data['companion_address'],
+            $data['manager_notes'],
+            $data['patient_id_front'],
+            $data['patient_id_back'],
+            $data['companion_id_front'],
+            $data['companion_id_back'],
+            $data['followup_card'],
+            $data['referral_letter'],
+            $data['guest_house_bed_id'],
+            $data['arrival_date'],
+            $data['expected_days']
         );
+
+        if (empty($data['assistance_type'])) {
+            $data['assistance_type'] = 'service';
+        }
 
         $data['status'] = 'new';
         if (empty($data['code'])) {
             $data['code'] = 'BEN-' . strtoupper(Str::random(6));
         }
 
-        DB::transaction(function () use ($request, $guest_house, $data, $allocatedBeneficiaryIds, $sponsorIds, $bedId, $profileData, $arrivalDate, $expectedDays): void {
+        DB::transaction(function () use ($request, $guest_house, $data, $existingBeneficiaryId, $allocatedBeneficiaryIds, $sponsorIds, $bedId, $profileData, $arrivalDate, $expectedDays): void {
             $bed = $bedId ? $this->lockAvailableBed($guest_house, $bedId) : null;
-            $beneficiary = $guest_house->beneficiaries()->create($data);
-            $beneficiary->allocatedBeneficiaries()->sync($allocatedBeneficiaryIds);
-            $beneficiary->sponsors()->sync($sponsorIds);
 
-            $profile = $beneficiary->patientProfile()->create(array_merge($profileData, ['guest_house_id' => $guest_house->id]));
+            if ($existingBeneficiaryId && $existing = Beneficiary::find($existingBeneficiaryId)) {
+                $beneficiary = $existing;
+                $beneficiary->update(['guest_house_id' => $guest_house->id]);
+                if (!empty($allocatedBeneficiaryIds)) {
+                    $beneficiary->allocatedBeneficiaries()->syncWithoutDetaching($allocatedBeneficiaryIds);
+                }
+                if (!empty($sponsorIds)) {
+                    $beneficiary->sponsors()->syncWithoutDetaching($sponsorIds);
+                }
+                $profile = $beneficiary->patientProfile;
+                if (!$profile) {
+                    $profile = $beneficiary->patientProfile()->create(array_merge($profileData, ['guest_house_id' => $guest_house->id]));
+                } else {
+                    $profile->update(array_merge($profileData, ['guest_house_id' => $guest_house->id]));
+                }
+            } else {
+                $beneficiary = $guest_house->beneficiaries()->create($data);
+                $beneficiary->allocatedBeneficiaries()->sync($allocatedBeneficiaryIds);
+                $beneficiary->sponsors()->sync($sponsorIds);
+                $profile = $beneficiary->patientProfile()->create(array_merge($profileData, ['guest_house_id' => $guest_house->id]));
+            }
+
             foreach ([
                 'patient_id_front' => 'patient_id_front_path',
                 'patient_id_back' => 'patient_id_back_path',
+                'companion_id_front' => 'companion_id_front_path',
+                'companion_id_back' => 'companion_id_back_path',
                 'followup_card' => 'followup_card_path',
                 'referral_letter' => 'referral_letter_path',
             ] as $input => $column) {
@@ -233,7 +286,28 @@ final class GuestHouseWebController extends Controller
             }
         });
 
-        return back()->with('success', 'تم إضافة المستفيد لدار الضيافة بنجاح.');
+        return back()->with('success', 'تم تسجيل النزيل بدار الضيافة بنجاح وحفظ كافة بيانات الإقامة والمرفقات.');
+    }
+
+    public function saveManagerNotes(Request $request, GuestHouse $guest_house, Beneficiary $beneficiary): RedirectResponse
+    {
+        $request->validate([
+            'manager_notes' => 'nullable|string|max:4000',
+        ]);
+
+        $profile = $beneficiary->patientProfile;
+        if (!$profile) {
+            $beneficiary->patientProfile()->create([
+                'guest_house_id' => $guest_house->id,
+                'manager_notes' => $request->input('manager_notes'),
+            ]);
+        } else {
+            $profile->update([
+                'manager_notes' => $request->input('manager_notes'),
+            ]);
+        }
+
+        return back()->with('success', 'تم حفظ وتحديث ملاحظات مدير الدار (المشاكل والسلبيات) في ملف الحالة بنجاح.');
     }
 
     public function storeDonation(StoreDonationRequest $request, GuestHouse $guest_house): RedirectResponse
@@ -290,6 +364,7 @@ final class GuestHouseWebController extends Controller
 
     public function storeWing(Request $request, GuestHouse $guest_house): RedirectResponse
     {
+        $this->ensureAdmin('إضافة الأجنحة والأسِرّة متاح للإدارة فقط.');
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'beds_count' => 'required|integer|min:1|max:100',
@@ -322,11 +397,18 @@ final class GuestHouseWebController extends Controller
     public function storeCustody(Request $request, GuestHouse $guest_house): RedirectResponse
     {
         $data = $request->validate([
-            'name' => 'required|string|max:150',
+            'name' => [
+                'required', 'string', 'max:150',
+                \Illuminate\Validation\Rule::unique('guest_house_custodies')->where('guest_house_id', $guest_house->id)
+            ],
             'type' => 'required|in:financial,in_kind',
             'treasury_id' => 'nullable|exists:treasuries,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
+            'initial_item_id' => 'nullable|exists:items,id',
+            'initial_quantity' => 'nullable|numeric|min:0.001',
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'name.unique' => 'يوجد عهدة مسجلة بهذا الاسم مسبقاً في هذه الدار، يمكنك استخدامها أو اختيار اسم آخر.',
         ]);
 
         if ($data['type'] === 'in_kind' && empty($data['warehouse_id'])) {
@@ -351,9 +433,58 @@ final class GuestHouseWebController extends Controller
                 'warehouse_id' => $data['type'] === 'in_kind' ? $data['warehouse_id'] : null,
                 'notes' => $data['notes'] ?? null,
             ]);
+
+            if ($data['type'] === 'in_kind' && !empty($data['initial_item_id']) && !empty($data['initial_quantity'])) {
+                InventoryTransaction::create([
+                    'item_id' => $data['initial_item_id'],
+                    'warehouse_id' => $data['warehouse_id'],
+                    'guest_house_id' => $guest_house->id,
+                    'type' => 'in',
+                    'quantity' => $data['initial_quantity'],
+                    'reference' => 'GH-INIT-' . now()->format('YmdHis'),
+                    'notes' => 'رصيد افتتاحي للعهدة: ' . $data['name'],
+                    'transaction_date' => now()->toDateString(),
+                    'status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                    'user_id' => auth()->id(),
+                ]);
+            }
         });
 
-        return back()->with('success', 'تم ربط العهدة بالدار بنجاح.');
+        return back()->with('success', 'تم حفظ العهدة بالدار بنجاح.');
+    }
+
+    public function supplyInventory(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $data = $request->validate([
+            'custody_id' => 'required|exists:guest_house_custodies,id',
+            'item_id' => 'required|exists:items,id',
+            'quantity' => 'required|numeric|min:0.001',
+            'notes' => 'nullable|string|max:1000',
+            'transaction_date' => 'nullable|date',
+        ]);
+
+        $custody = GuestHouseCustody::whereKey($data['custody_id'])
+            ->where('guest_house_id', $guest_house->id)->where('type', 'in_kind')
+            ->where('is_active', true)->firstOrFail();
+
+        InventoryTransaction::create([
+            'item_id' => $data['item_id'],
+            'warehouse_id' => $custody->warehouse_id,
+            'guest_house_id' => $guest_house->id,
+            'type' => 'in',
+            'quantity' => $data['quantity'],
+            'reference' => 'GH-IN-' . now()->format('YmdHis'),
+            'notes' => $data['notes'] ?: 'توريد مخزون لعهدة: ' . $custody->name,
+            'transaction_date' => $data['transaction_date'] ?? now()->toDateString(),
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'تم توريد الصنف للمخزون بنجاح وزيادة الرصيد المتاح.');
     }
 
     public function issueInventory(Request $request, GuestHouse $guest_house): RedirectResponse
@@ -403,8 +534,36 @@ final class GuestHouseWebController extends Controller
         if ($stay->status !== 'resident') {
             return back()->with('error', 'هذه الحالة غير مقيمة حاليًا.');
         }
-        $stay->update(['status' => 'departed', 'departed_at' => now(), 'departure_notes' => 'مغادرة الحالة']);
-        return back()->with('success', 'تم تسجيل مغادرة الحالة وأصبح السرير متاحًا.');
+        $stay->update([
+            'status' => 'departed',
+            'is_temporary_out' => false,
+            'departed_at' => now(),
+            'departure_notes' => 'مغادرة الحالة وإخلاء السرير',
+        ]);
+        return back()->with('success', 'تم تسجيل مغادرة الحالة وإخلاء السرير بنجاح.');
+    }
+
+    public function temporaryDepartStay(GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse
+    {
+        abort_unless((int) $stay->guest_house_id === (int) $guest_house->id, 404);
+        if ($stay->status !== 'resident') {
+            return back()->with('error', 'هذه الحالة غير مقيمة حاليًا.');
+        }
+        $stay->update([
+            'is_temporary_out' => true,
+            'temporary_out_at' => now(),
+        ]);
+        return back()->with('success', 'تم تسجيل خروج الحالة مؤقتًا لتلقي العلاج مع الاحتفاظ بالسرير محجوزًا باسمها.');
+    }
+
+    public function returnFromTemporaryDepart(GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse
+    {
+        abort_unless((int) $stay->guest_house_id === (int) $guest_house->id, 404);
+        $stay->update([
+            'is_temporary_out' => false,
+            'temporary_out_at' => null,
+        ]);
+        return back()->with('success', 'تم تسجيل عودة الحالة وتواجدها بالسرير بنجاح.');
     }
 
     public function departAllStays(Request $request, GuestHouse $guest_house): RedirectResponse
@@ -616,6 +775,7 @@ final class GuestHouseWebController extends Controller
 
     public function edit(GuestHouse $guest_house): View|RedirectResponse
     {
+        $this->ensureAdmin('تعديل بيانات الدار متاح للإدارة فقط.');
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }
@@ -626,6 +786,7 @@ final class GuestHouseWebController extends Controller
 
     public function update(UpdateGuestHouseRequest $request, GuestHouse $guest_house): RedirectResponse
     {
+        $this->ensureAdmin('تعديل بيانات الدار متاح للإدارة فقط.');
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }
@@ -641,6 +802,7 @@ final class GuestHouseWebController extends Controller
 
     public function destroy(GuestHouse $guest_house): RedirectResponse
     {
+        $this->ensureAdmin('حذف دار الضيافة متاح للإدارة فقط.');
         if ($this->hasPendingRequest($guest_house)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الدار لديها طلب مراجعة حالياً');
         }
@@ -652,6 +814,14 @@ final class GuestHouseWebController extends Controller
         }
 
         return redirect()->route('guest-houses.index');
+    }
+
+    private function ensureAdmin(string $message = 'هذا الإجراء متاح للإدارة فقط.'): void
+    {
+        $user = request()->user();
+        if (!$user || (!$user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']))) {
+            abort(403, $message);
+        }
     }
 
     private function lockAvailableBed(GuestHouse $guestHouse, int $bedId): GuestHouseBed

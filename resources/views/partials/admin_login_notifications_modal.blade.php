@@ -88,13 +88,30 @@
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.2rem 0.65rem;
+        padding: 0.25rem 0.75rem;
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: #94a3b8 !important;
-        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #e2e8f0 !important;
+        font-size: 0.825rem;
         font-weight: 600;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .admin-login-notifications-modal .modal-header .modal-title,
+    .admin-login-notifications-modal .modal-header h5,
+    .admin-login-notifications-modal #adminLoginNotificationsModalLabel,
+    .admin-notif-title,
+    html .admin-login-notifications-modal .modal-title,
+    body .admin-login-notifications-modal .modal-title,
+    html:not(.theme-dark) .admin-login-notifications-modal .modal-title,
+    body:not(.theme-dark) .admin-login-notifications-modal .modal-title {
+        color: #ffffff !important;
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+        line-height: 1.4 !important;
+        letter-spacing: -0.01em !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        margin: 0 !important;
     }
 
     .admin-notif-count {
@@ -407,7 +424,7 @@
                         <div class="admin-notif-user-pill">
                             <i class="bi bi-person-fill"></i> مرحبًا {{ $navUser->name }}
                         </div>
-                        <h5 class="modal-title fw-bold mb-0 text-white" id="adminLoginNotificationsModalLabel">
+                        <h5 class="modal-title fw-bold mb-0 text-white admin-notif-title" id="adminLoginNotificationsModalLabel" style="color: #ffffff !important; font-size: 1.25rem !important; font-weight: 800 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.6); -webkit-font-smoothing: antialiased;">
                             إشعارات الإدارة والإجراءات المطلوبة
                         </h5>
                     </div>

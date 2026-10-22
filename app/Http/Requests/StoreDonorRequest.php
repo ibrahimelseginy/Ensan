@@ -33,6 +33,7 @@ final class StoreDonorRequest extends FormRequest
             ],
             'type'                       => 'required|in:individual,organization',
             'phone'                      => 'nullable|string|max:20',
+            'national_id'                => 'nullable|string|max:20',
             'email'                      => 'nullable|email',
             'address'                    => 'nullable|string|max:500',
             'classification'             => 'required|in:one_time,recurring',

@@ -12,4 +12,6 @@ final class GuestHouseCustody extends Model
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
     public function treasury() { return $this->belongsTo(Treasury::class); }
     public function warehouse() { return $this->belongsTo(Warehouse::class); }
+    public function item() { return $this->belongsTo(Item::class); }
+    public function user() { return $this->belongsTo(User::class); }
 }

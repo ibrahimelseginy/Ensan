@@ -6376,11 +6376,8 @@ body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-app-card {
 .ensan-sub-modal .modal-content,
 .ensan-sub-modal.modal .modal-content,
 .ensan-sub-modal .modal-dialog .modal-content,
-html .ensan-sub-modal .modal-content,
-body .ensan-sub-modal .modal-content,
-html.theme-dark .ensan-sub-modal .modal-content,
-body.theme-dark .ensan-sub-modal .modal-content,
-[data-bs-theme="dark"] .ensan-sub-modal .modal-content {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .modal-content,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .modal-content {
   border-radius: 24px !important;
   border: 1px solid #e2e8f0 !important;
   background-color: #ffffff !important;
@@ -6391,6 +6388,24 @@ body.theme-dark .ensan-sub-modal .modal-content,
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #0f172a !important;
+}
+
+html.theme-dark .ensan-sub-modal .modal-content,
+html[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+body.theme-dark .ensan-sub-modal .modal-content,
+body[data-bs-theme="dark"] .ensan-sub-modal .modal-content,
+.theme-dark .ensan-sub-modal .modal-content,
+[data-bs-theme="dark"] .ensan-sub-modal .modal-content {
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #0f172a !important;
+  background-color: #0f172a !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7) !important;
+  overflow: hidden !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #f8fafc !important;
 }
 
 .ensan-sub-modal .modal-header,
@@ -6450,11 +6465,8 @@ body.theme-dark .ensan-sub-modal .btn-close,
 }
 
 .ensan-sub-modal .modal-body,
-html .ensan-sub-modal .modal-body,
-body .ensan-sub-modal .modal-body,
-html.theme-dark .ensan-sub-modal .modal-body,
-body.theme-dark .ensan-sub-modal .modal-body,
-[data-bs-theme="dark"] .ensan-sub-modal .modal-body {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .modal-body,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .modal-body {
   background-color: #ffffff !important;
   background: #ffffff !important;
   opacity: 1 !important;
@@ -6463,23 +6475,41 @@ body.theme-dark .ensan-sub-modal .modal-body,
   padding: 0.5rem 0.25rem 1.25rem !important;
 }
 
+html.theme-dark .ensan-sub-modal .modal-body,
+html[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+body.theme-dark .ensan-sub-modal .modal-body,
+body[data-bs-theme="dark"] .ensan-sub-modal .modal-body,
+.theme-dark .ensan-sub-modal .modal-body,
+[data-bs-theme="dark"] .ensan-sub-modal .modal-body {
+  background-color: #0b1220 !important;
+  background: #0b1220 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0.5rem 0.25rem 1.25rem !important;
+}
+
 .ensan-sub-modal .ensan-sub-grid,
-html .ensan-sub-modal .ensan-sub-grid,
-body .ensan-sub-modal .ensan-sub-grid,
-html.theme-dark .ensan-sub-modal .ensan-sub-grid,
-body.theme-dark .ensan-sub-modal .ensan-sub-grid,
-[data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .ensan-sub-grid,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-modal .ensan-sub-grid {
   background-color: #ffffff !important;
   background: #ffffff !important;
 }
 
-/* Sub-Service Tiles - Solid White Background with High-Contrast Dark Text */
+html.theme-dark .ensan-sub-modal .ensan-sub-grid,
+html[data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid,
+body.theme-dark .ensan-sub-modal .ensan-sub-grid,
+body[data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid,
+.theme-dark .ensan-sub-modal .ensan-sub-grid,
+[data-bs-theme="dark"] .ensan-sub-modal .ensan-sub-grid {
+  background-color: #0b1220 !important;
+  background: #0b1220 !important;
+}
+
+/* Sub-Service Tiles - Solid Background */
 .ensan-sub-tile,
-html .ensan-sub-tile,
-body .ensan-sub-tile,
-html.theme-dark .ensan-sub-tile,
-body.theme-dark .ensan-sub-tile,
-[data-bs-theme="dark"] .ensan-sub-tile {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile {
   display: flex !important;
   align-items: center !important;
   gap: 0.9rem !important;
@@ -6499,11 +6529,8 @@ body.theme-dark .ensan-sub-tile,
 }
 
 .ensan-sub-tile:hover,
-html .ensan-sub-tile:hover,
-body .ensan-sub-tile:hover,
-html.theme-dark .ensan-sub-tile:hover,
-body.theme-dark .ensan-sub-tile:hover,
-[data-bs-theme="dark"] .ensan-sub-tile:hover {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile:hover,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile:hover {
   transform: translateY(-3px) !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
@@ -6511,14 +6538,61 @@ body.theme-dark .ensan-sub-tile:hover,
   box-shadow: 0 10px 28px rgba(16, 185, 129, 0.22) !important;
 }
 
+html.theme-dark .ensan-sub-tile,
+html[data-bs-theme="dark"] .ensan-sub-tile,
+body.theme-dark .ensan-sub-tile,
+body[data-bs-theme="dark"] .ensan-sub-tile,
+.theme-dark .ensan-sub-tile,
+[data-bs-theme="dark"] .ensan-sub-tile {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.9rem !important;
+  padding: 1rem 1.2rem !important;
+  background: linear-gradient(145deg, #131d31 0%, #0b1220 100%) !important;
+  background-color: #0b1220 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  text-decoration: none !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #f8fafc !important;
+}
+
+html.theme-dark .ensan-sub-tile:hover,
+html[data-bs-theme="dark"] .ensan-sub-tile:hover,
+body.theme-dark .ensan-sub-tile:hover,
+body[data-bs-theme="dark"] .ensan-sub-tile:hover,
+.theme-dark .ensan-sub-tile:hover,
+[data-bs-theme="dark"] .ensan-sub-tile:hover {
+  transform: translateY(-3px) !important;
+  background: linear-gradient(145deg, #18253d 0%, #0e1728 100%) !important;
+  background-color: #0e1728 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 16px 36px rgba(16, 185, 129, 0.25) !important;
+}
+
 .ensan-sub-tile-title,
 .ensan-sub-tile .ensan-sub-tile-title,
-html .ensan-sub-tile-title,
-body .ensan-sub-tile-title,
-html.theme-dark .ensan-sub-tile-title,
-body.theme-dark .ensan-sub-tile-title,
-[data-bs-theme="dark"] .ensan-sub-tile-title {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile-title,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile-title {
   color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 2px !important;
+  line-height: 1.35 !important;
+}
+
+html.theme-dark .ensan-sub-tile-title,
+html[data-bs-theme="dark"] .ensan-sub-tile-title,
+body.theme-dark .ensan-sub-tile-title,
+body[data-bs-theme="dark"] .ensan-sub-tile-title,
+.theme-dark .ensan-sub-tile-title,
+[data-bs-theme="dark"] .ensan-sub-tile-title {
+  color: #f8fafc !important;
   font-weight: 800 !important;
   font-size: 0.95rem !important;
   margin-bottom: 2px !important;
@@ -6527,11 +6601,8 @@ body.theme-dark .ensan-sub-tile-title,
 
 .ensan-sub-tile small,
 .ensan-sub-tile .text-muted,
-html .ensan-sub-tile small,
-body .ensan-sub-tile small,
-html.theme-dark .ensan-sub-tile small,
-body.theme-dark .ensan-sub-tile small,
-[data-bs-theme="dark"] .ensan-sub-tile small {
+html:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile small,
+body:not(.theme-dark):not([data-bs-theme="dark"]) .ensan-sub-tile small {
   color: #475569 !important;
   font-weight: 600 !important;
   font-size: 0.82rem !important;

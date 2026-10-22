@@ -46,6 +46,7 @@ final readonly class DonationService
                 'name'            => $data['new_donor_name'],
                 'type'            => 'individual',
                 'phone'           => $data['new_donor_phone'] ?? null,
+                'national_id'     => $data['new_donor_national_id'] ?? null,
                 'address'         => $data['new_donor_address'] ?? null,
                 'classification'  => $data['new_donor_classification'] ?? 'one_time',
                 'recurring_cycle' => $data['new_donor_cycle'] ?? null,
@@ -55,7 +56,7 @@ final readonly class DonationService
         }
 
         // Cleanup temporary donor fields
-        unset($data['new_donor_code'], $data['new_donor_name'], $data['new_donor_phone'], $data['new_donor_address'], $data['new_donor_classification'], $data['new_donor_cycle']);
+        unset($data['new_donor_code'], $data['new_donor_name'], $data['new_donor_phone'], $data['new_donor_national_id'], $data['new_donor_address'], $data['new_donor_classification'], $data['new_donor_cycle']);
 
         if (array_key_exists('add_to_inventory', $data)) {
             $data['auto_added_to_inventory'] = (bool) $data['add_to_inventory'];
@@ -81,6 +82,14 @@ final readonly class DonationService
             }
 
             $this->linkDonationToFamilyMembers($donation, $familyMemberIds);
+
+            if (!empty($donation->campaign_id)) {
+                $campaign = \App\Models\Campaign::find($donation->campaign_id);
+                if ($campaign) {
+                    $val = $donation->type === 'cash' ? (float)$donation->amount : (float)$donation->estimated_value;
+                    $campaign->increment('current_amount', $val);
+                }
+            }
             
             return $donation;
         };
@@ -127,6 +136,14 @@ final readonly class DonationService
 
             if ($donation->type === 'cash' && $donation->treasury_id) {
                 $this->treasuryIntegrationService->cancelDonationTransaction($donation, $reason);
+            }
+
+            if (!empty($donation->campaign_id)) {
+                $campaign = \App\Models\Campaign::find($donation->campaign_id);
+                if ($campaign) {
+                    $val = $donation->type === 'cash' ? (float)$donation->amount : (float)$donation->estimated_value;
+                    $campaign->decrement('current_amount', min((float)$campaign->current_amount, $val));
+                }
             }
 
             return true;

@@ -18,106 +18,148 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                 </div>
                 <div class="modal-body">
+                    {{-- Selected Bed Notice at Top --}}
+                    <div id="modalBedNoticeTop" class="alert alert-success py-2 px-3 mb-3 d-flex justify-content-between align-items-center {{ old('guest_house_bed_id') ? '' : 'd-none' }}">
+                        <div>
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                            <span>السرير المختار للحجز:</span>
+                            <strong id="modalBedNoticeTopLabel" class="ms-1">{{ old('guest_house_bed_id') ? 'سرير مسجل مسبقاً' : '' }}</strong>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="clearModalBedSelection()">إلغاء حجز السرير</button>
+                    </div>
+                    {{-- 1. اختيار نزيل مسجل مسبقاً (لحالات التردد والعودة) --}}
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-primary fs-6 mb-0">
+                                <i class="bi bi-clock-history me-1"></i> هل النزيل مسجل مسبقاً؟ (اختيار حالة مسجلة مسبقاً)
+                            </label>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                <i class="bi bi-search me-1"></i> بحث فوري
+                            </span>
+                        </div>
+                        <select name="existing_beneficiary_id" id="existingGuestSelect" class="form-select" onchange="handleGuestHouseSelectExisting(this)">
+                            <option value="">— نزيل جديد (تسجيل حالة جديدة لأول مرة) —</option>
+                            @foreach($beneficiaryOptions as $opt)
+                                <option value="{{ $opt->id }}" 
+                                    data-name="{{ $opt->full_name }}" 
+                                    data-code="{{ $opt->code }}" 
+                                    data-nid="{{ $opt->national_id }}" 
+                                    data-phone="{{ $opt->phone }}" 
+                                    data-address="{{ $opt->address }}">
+                                    {{ $opt->full_name }} (كود: {{ $opt->code ?: '—' }} | قومي: {{ $opt->national_id ?: '—' }}@if($opt->phone) | هاتف: {{ $opt->phone }}@endif)
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text small text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i> يمكنك البحث بالاسم أو الرقم القومي أو الكود أو رقم الهاتف. عند اختيار مريض يتم استرجاع بياناته تلقائياً.
+                        </div>
+                    </div>
+
+                    {{-- 2. البيانات الشخصية للمريض --}}
                     <div class="form-section mb-4">
-                        <div class="form-section-title"><i class="bi bi-person-lines-fill"></i> <span>البيانات الشخصية</span></div>
+                        <div class="form-section-title"><i class="bi bi-person-lines-fill"></i> <span>بيانات المريض (الحالة)</span></div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">كود المستفيد</label>
-                                <input name="code" class="form-control @error('code') is-invalid @enderror"
+                                <input name="code" id="gh_patient_code" class="form-control @error('code') is-invalid @enderror"
                                     value="{{ old('code') }}" placeholder="يُنشأ تلقائيًا عند تركه فارغًا">
                                 @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label form-label-required">الاسم الكامل</label>
-                                <input name="full_name" class="form-control @error('full_name') is-invalid @enderror"
-                                    value="{{ old('full_name') }}" required placeholder="اسم المستفيد">
+                                <label class="form-label form-label-required">اسم المريض رباعي</label>
+                                <input name="full_name" id="gh_patient_name" class="form-control @error('full_name') is-invalid @enderror"
+                                    value="{{ old('full_name') }}" placeholder="اسم المريض كاملاً">
                                 @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">الرقم القومي</label>
-                                <input name="national_id" class="form-control @error('national_id') is-invalid @enderror"
-                                    value="{{ old('national_id') }}" placeholder="14 رقم">
+                            <div class="col-md-4">
+                                <label class="form-label form-label-required">النوع</label>
+                                <select name="gender" id="gh_patient_gender" class="form-select @error('gender') is-invalid @enderror">
+                                    <option value="">— اختر النوع —</option>
+                                    <option value="male" @selected(old('gender') === 'male')>ذكر</option>
+                                    <option value="female" @selected(old('gender') === 'female')>أنثى</option>
+                                </select>
+                                @error('gender')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">الرقم القومي للمريض</label>
+                                <input name="national_id" id="gh_patient_nid" class="form-control @error('national_id') is-invalid @enderror"
+                                    value="{{ old('national_id') }}" maxlength="14" placeholder="14 رقم">
                                 @error('national_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">رقم الهاتف</label>
-                                <input name="phone" class="form-control @error('phone') is-invalid @enderror"
+                            <div class="col-md-4">
+                                <label class="form-label">رقم الهاتف / الموبايل</label>
+                                <input name="phone" id="gh_patient_phone" class="form-control @error('phone') is-invalid @enderror"
                                     value="{{ old('phone') }}" placeholder="01xxxxxxxxx">
                                 @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير بطاقة المريض (وجه)</label>
+                                <input type="file" name="patient_id_front" accept="image/*" capture="environment" class="form-control">
+                                <div class="form-text small">التقاط بالكاميرا أو رفع صورة وجه بطاقة الرقم القومي للمريض.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير بطاقة المريض (ظهر)</label>
+                                <input type="file" name="patient_id_back" accept="image/*" capture="environment" class="form-control">
+                                <div class="form-text small">التقاط بالكاميرا أو رفع صورة ظهر بطاقة الرقم القومي للمريض.</div>
+                            </div>
                             <div class="col-12">
-                                <label class="form-label">العنوان</label>
-                                <input name="address" class="form-control @error('address') is-invalid @enderror"
-                                    value="{{ old('address') }}" placeholder="العنوان بالتفصيل">
+                                <label class="form-label">محل إقامة المريض والعنوان بالتفصيل</label>
+                                <input name="address" id="gh_patient_address" class="form-control @error('address') is-invalid @enderror"
+                                    value="{{ old('address') }}" placeholder="المحافظة - المركز / المدينة - القرية">
                                 @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="bi bi-hand-thumbs-up"></i> <span>المساعدة والتخصيص</span></div>
+                    {{-- 3. بيانات المرافق (استمارة الدخول الرسمية) --}}
+                    <div class="form-section mb-4">
+                        <div class="form-section-title"><i class="bi bi-person-badge"></i> <span>بيانات المرافق</span></div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label form-label-required">نوع المساعدة</label>
-                                <select name="assistance_type" class="form-select @error('assistance_type') is-invalid @enderror" required>
-                                    <option value="financial" @selected(old('assistance_type', 'financial') === 'financial')>مالية</option>
-                                    <option value="in_kind" @selected(old('assistance_type') === 'in_kind')>عينية</option>
-                                    <option value="service" @selected(old('assistance_type') === 'service')>خدمة</option>
-                                </select>
-                                @error('assistance_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <label class="form-label">اسم المرافق رباعي</label>
+                                <input name="companion_name" value="{{ old('companion_name') }}" class="form-control" placeholder="اسم المرافق كاملاً">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">نوع التخصيص</label>
-                                <select id="guest-house-allocation-type" name="allocation_type" class="form-select">
-                                    <option value="">— بدون تخصيص —</option>
-                                    <option value="شخص واحد" @selected(old('allocation_type') === 'شخص واحد')>فردي — شخص واحد</option>
-                                    <option value="أكثر من مستفيد" @selected(old('allocation_type') === 'أكثر من مستفيد')>جماعي — أكثر من مستفيد</option>
-                                </select>
-                            </div>
-                            <div id="guest-house-allocated-field" class="col-md-6 {{ old('allocation_type') ? '' : 'd-none' }}">
-                                <label id="guest-house-allocated-label" class="form-label">اسم المستفيد</label>
-                                <select id="guest-house-allocated-list" name="allocated_beneficiary_ids[]"
-                                    class="form-select @error('allocated_beneficiary_ids') is-invalid @enderror">
-                                    <option value="" data-placeholder>— ابحث بالاسم أو الكود —</option>
-                                    @foreach($beneficiaryOptions as $option)
-                                        <option value="{{ $option->id }}" @selected(in_array((int) $option->id, $selectedAllocatedBeneficiaries, true))>
-                                            {{ $option->full_name }}{{ $option->code ? ' — '.$option->code : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <div id="guest-house-allocated-help" class="form-help-text"></div>
-                                @error('allocated_beneficiary_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <label class="form-label">صلة القرابة</label>
+                                <input name="companion_relation" value="{{ old('companion_relation') }}" class="form-control" placeholder="مثال: زوج / زوجة / ابن / والد / أخ...">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">عدد الكفلاء</label>
-                                <select id="guest-house-sponsorship-type" name="child_sponsorship_type" class="form-select">
-                                    <option value="">— بدون كافل —</option>
-                                    <option value="كافل واحد" @selected(old('child_sponsorship_type') === 'كافل واحد')>كافل واحد</option>
-                                    <option value="أكثر من كافل" @selected(old('child_sponsorship_type') === 'أكثر من كافل')>أكثر من كافل</option>
-                                </select>
+                                <label class="form-label">الرقم القومي للمرافق</label>
+                                <input name="companion_national_id" value="{{ old('companion_national_id') }}" maxlength="14" class="form-control" placeholder="14 رقم">
                             </div>
-                            <div id="guest-house-sponsors-field" class="col-md-6 {{ old('child_sponsorship_type') ? '' : 'd-none' }}">
-                                <label id="guest-house-sponsors-label" class="form-label">اسم الكافل</label>
-                                <select id="guest-house-sponsors-list" name="sponsor_ids[]"
-                                    class="form-select @error('sponsor_ids') is-invalid @enderror">
-                                    <option value="" data-placeholder>— ابحث بالاسم أو الهاتف —</option>
-                                    @foreach($sponsors as $sponsor)
-                                        <option value="{{ $sponsor->id }}" @selected(in_array((int) $sponsor->id, $selectedSponsors, true))>
-                                            {{ $sponsor->name }}{{ $sponsor->phone ? ' — '.$sponsor->phone : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <div id="guest-house-sponsors-help" class="form-help-text"></div>
-                                @error('sponsor_ids')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="col-md-6">
+                                <label class="form-label">موبايل المرافق</label>
+                                <input name="companion_phone" value="{{ old('companion_phone') }}" class="form-control" placeholder="01xxxxxxxxx">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير بطاقة المرافق (وجه)</label>
+                                <input type="file" name="companion_id_front" accept="image/*" capture="environment" class="form-control">
+                                <div class="form-text small">التقاط بالكاميرا أو رفع صورة وجه بطاقة الرقم القومي للمرافق.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير بطاقة المرافق (ظهر)</label>
+                                <input type="file" name="companion_id_back" accept="image/*" capture="environment" class="form-control">
+                                <div class="form-text small">التقاط بالكاميرا أو رفع صورة ظهر بطاقة الرقم القومي للمرافق.</div>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">ملاحظات</label>
-                                <textarea name="notes" class="form-control @error('notes') is-invalid @enderror" rows="3">{{ old('notes') }}</textarea>
-                                @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <label class="form-label">محل إقامة المرافق</label>
+                                <input name="companion_address" value="{{ old('companion_address') }}" class="form-control" placeholder="المحافظة - المركز - العنوان">
                             </div>
                         </div>
                     </div>
-                    <div class="form-section mt-4">
+
+                    {{-- 4. ملاحظات مدير الدار (مشاكل وسلبيات الحالة) --}}
+                    <div class="form-section mb-4">
+                        <div class="form-section-title text-warning"><i class="bi bi-exclamation-triangle-fill"></i> <span>ملاحظات مدير الدار (مشاكل أو سلبيات)</span></div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">أي مشاكل أو سلبيات أو تنبيهات تدون بمعرفة مدير الدار في ملف الحالة:</label>
+                                <textarea name="manager_notes" class="form-control" rows="2" placeholder="تدوين المشاكل أو السلبيات الخاصة بالحالة أثناء ترددها أو إقامتها بالدار...">{{ old('manager_notes') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 5. الملف الطبي والمرفقات --}}
                     <div class="form-section mt-4">
                         <div class="form-section-title"><i class="bi bi-heart-pulse"></i> <span>الملف الطبي والمرفقات</span></div>
                         <div class="row g-3">
@@ -137,16 +179,6 @@
                             <div class="col-md-3" id="sessions-count-container">
                                 <label class="form-label">عدد الجلسات المقررة</label>
                                 <input type="number" min="1" name="sessions_count" value="{{ old('sessions_count') }}" class="form-control" placeholder="عدد الجلسات">
-                            </div>
-
-                            {{-- National ID Images --}}
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="bi bi-card-image text-primary me-1"></i> صورة وجه البطاقة الشخصية</label>
-                                <input type="file" name="patient_id_front" accept="image/*" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="bi bi-card-image text-primary me-1"></i> صورة ظهر البطاقة الشخصية</label>
-                                <input type="file" name="patient_id_back" accept="image/*" class="form-control">
                             </div>
 
                             {{-- Treatment Specific Documents --}}
@@ -255,7 +287,6 @@
                                 <i class="bi bi-info-circle me-1"></i> لم يتم إضافة أجنحة أو أسِرّة لهذه الدار بعد. يمكنك حفظ الملف دون حجز سرير.
                             </div>
                         @endforelse
-                    </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -155,10 +155,50 @@ final class VisitWebController extends Controller
 
         // Process family members
         $validated['family_members'] = $this->formatFamilyMembers($request->input('family_members', []));
-
         $validated['has_cancer_patient'] = $request->boolean('has_cancer_patient');
 
+        // House photo upload
+        if ($request->hasFile('house_photo')) {
+            $file = $request->file('house_photo');
+            if ($file->isValid()) {
+                $upload = app(\App\Services\ImageUploadService::class)->upload($file, 'visits/house');
+                $validated['house_photo_path'] = $upload['path'];
+            }
+        }
+
+        // Condition photos upload (checks, house, deterioration proofs)
+        if ($request->hasFile('condition_photos')) {
+            $conditionPaths = [];
+            foreach ($request->file('condition_photos') as $cFile) {
+                if ($cFile && $cFile->isValid()) {
+                    $upload = app(\App\Services\ImageUploadService::class)->upload($cFile, 'visits/conditions');
+                    $conditionPaths[] = $upload['path'];
+                }
+            }
+            if (!empty($conditionPaths)) {
+                $validated['condition_photos'] = $conditionPaths;
+            }
+        }
+
         $visit = FieldVisit::create($validated);
+
+        // Record attachments
+        if (!empty($validated['house_photo_path'])) {
+            $visit->attachments()->create([
+                'path' => $validated['house_photo_path'],
+                'mime' => 'image/jpeg',
+                'original_name' => 'صورة_المنزل',
+            ]);
+        }
+        if (!empty($validated['condition_photos'])) {
+            foreach ($validated['condition_photos'] as $idx => $cPath) {
+                $visit->attachments()->create([
+                    'path' => $cPath,
+                    'mime' => 'image/jpeg',
+                    'original_name' => 'مستند_حالة_' . ($idx + 1),
+                ]);
+            }
+        }
 
         if (!empty($validated['beneficiary_id'])) {
             Beneficiary::where('id', $validated['beneficiary_id'])->update(['status' => 'under_review']);
@@ -216,6 +256,37 @@ final class VisitWebController extends Controller
         $validated['family_members'] = $this->formatFamilyMembers($request->input('family_members', []));
         $validated['has_cancer_patient'] = $request->boolean('has_cancer_patient');
 
+        // House photo upload
+        if ($request->hasFile('house_photo')) {
+            $file = $request->file('house_photo');
+            if ($file->isValid()) {
+                $upload = app(\App\Services\ImageUploadService::class)->upload($file, 'visits/house');
+                $validated['house_photo_path'] = $upload['path'];
+                $visit->attachments()->create([
+                    'path' => $upload['path'],
+                    'mime' => 'image/jpeg',
+                    'original_name' => 'صورة_المنزل',
+                ]);
+            }
+        }
+
+        // Condition photos upload
+        if ($request->hasFile('condition_photos')) {
+            $existing = is_array($visit->condition_photos) ? $visit->condition_photos : [];
+            foreach ($request->file('condition_photos') as $cFile) {
+                if ($cFile && $cFile->isValid()) {
+                    $upload = app(\App\Services\ImageUploadService::class)->upload($cFile, 'visits/conditions');
+                    $existing[] = $upload['path'];
+                    $visit->attachments()->create([
+                        'path' => $upload['path'],
+                        'mime' => 'image/jpeg',
+                        'original_name' => 'مستند_حالة_' . count($existing),
+                    ]);
+                }
+            }
+            $validated['condition_photos'] = $existing;
+        }
+
         $visit->update($validated);
 
         return redirect()->route('visits.show', $visit)->with('success', 'تم تحديث استمارة البحث بنجاح.');
@@ -250,6 +321,9 @@ final class VisitWebController extends Controller
             'phone' => 'nullable|string|max:25',
             'researcher_phone' => 'nullable|string|max:25',
             'home_ownership' => 'nullable|string|max:50',
+            'house_photo' => 'nullable|file|mimes:jpeg,jpg,png,webp,pdf|max:15360',
+            'condition_photos' => 'nullable|array',
+            'condition_photos.*' => 'nullable|file|mimes:jpeg,jpg,png,webp,pdf|max:15360',
             'address' => 'nullable|string',
             'researcher_opinion' => 'nullable|string',
 

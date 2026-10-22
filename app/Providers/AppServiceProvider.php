@@ -48,8 +48,8 @@ class AppServiceProvider extends ServiceProvider
 
 
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            // First, allow admins to bypass everything
-            if (method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            // First, allow admins and general managers to bypass everything (Arabic and English)
+            if (method_exists($user, 'hasRole') && $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
                 return true;
             }
 
@@ -58,6 +58,19 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
             return null; // Fall through to other checks
+        });
+
+        // منظومة البحث المبدئي واستقبال الحالات: إتاحة الوصول لمدراء المشاريع والباحثين الميدانيين ومسؤولي المستفيدين
+        \Illuminate\Support\Facades\Gate::define('mobile.case_applications.view', function ($user) {
+            if ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدراء المشاريع', 'باحث ميداني', 'الاستقبال', 'مدير مشروع زاد', 'مدير مشروع مدرار', 'مدير مشروع بعثاء الأمل', 'مدير مشروع كسوة'])) {
+                return true;
+            }
+            return $user->hasPermission('mobile.case_applications.view')
+                || $user->hasPermission('mobile.view')
+                || $user->hasPermission('beneficiaries.view')
+                || $user->hasPermission('beneficiaries.create')
+                || $user->hasPermission('visits.view')
+                || $user->hasPermission('visits.create');
         });
 
         $this->configureRateLimiting();

@@ -163,7 +163,7 @@
     </div>
   @endif
 
-  <form id="researchEditForm" method="POST" action="{{ route('visits.update', $visit) }}">
+  <form id="researchEditForm" method="POST" action="{{ route('visits.update', $visit) }}" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -252,7 +252,21 @@
               <option value="إيجار" @selected(old('home_ownership', $visit->home_ownership) === 'إيجار')>إيجار</option>
               <option value="ورثة" @selected(old('home_ownership', $visit->home_ownership) === 'ورثة')>ورثة</option>
               <option value="استضافة" @selected(old('home_ownership', $visit->home_ownership) === 'استضافة')>استضافة</option>
+              <option value="شركة" @selected(old('home_ownership', $visit->home_ownership) === 'شركة')>شركة</option>
+              <option value="بيت عيلة" @selected(old('home_ownership', $visit->home_ownership) === 'بيت عيلة')>بيت عيلة</option>
             </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير أو رفع صورة المنزل</label>
+            <input type="file" name="house_photo" class="form-control" accept="image/*" capture="environment">
+            @if($visit->house_photo_url)
+              <div class="mt-1 d-flex align-items-center gap-2">
+                <a href="{{ $visit->house_photo_url }}" target="_blank" class="text-decoration-none small text-success fw-bold">
+                  <i class="bi bi-image me-1"></i> عرض صورة المنزل الحالية
+                </a>
+              </div>
+            @endif
           </div>
 
           <div class="col-md-3">
@@ -452,6 +466,29 @@
               <span class="official-notice-yellow">وصف الحالة الاجتماعية للأسرة ، وظروف الأسرة ، ووضع البيت ( محتاج سقف / ترميم / بنى ) :</span>
             </label>
             <textarea name="home_and_social_condition" class="form-control" rows="3">{{ old('home_and_social_condition', $visit->home_and_social_condition) }}</textarea>
+          </div>
+
+          <div class="col-12 mt-3 pt-3 border-top">
+            <label class="form-label fw-bold">
+              <span class="official-notice-green d-inline-block px-3 py-1">
+                <i class="bi bi-images me-1"></i> رفع عدة صور (صور شيكات، وصولات أمانة، صور البيت، أو أي مستندات تدل على تدهور الحالة) :
+              </span>
+            </label>
+            <input type="file" name="condition_photos[]" class="form-control" accept="image/*" multiple capture="environment">
+            <div class="form-text text-muted">يمكنك التقاط أو اختيار عدة صور للشيكات والمنزل وأوجه تدهور الحالة دفعة واحدة وتخزينها في ملف الحالة.</div>
+
+            @if(!empty($visit->condition_photo_urls))
+              <div class="mt-3">
+                <div class="fw-bold small text-muted mb-2">الصور المرفوعة مسبقاً ({{ count($visit->condition_photo_urls) }} صورة):</div>
+                <div class="d-flex flex-wrap gap-2">
+                  @foreach($visit->condition_photo_urls as $cUrl)
+                    <a href="{{ $cUrl }}" target="_blank" class="border rounded p-1 d-inline-block shadow-sm bg-white" title="تكبير الصورة">
+                      <img src="{{ $cUrl }}" alt="مستند تدهور الحالة" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px;">
+                    </a>
+                  @endforeach
+                </div>
+              </div>
+            @endif
           </div>
         </div>
       </div>

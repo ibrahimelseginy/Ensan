@@ -58,6 +58,15 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
+          <div class="col-md-6">
+            <label class="form-label">الرقم القومي (اختياري)</label>
+            <input type="text" maxlength="14" pattern="^[0-9]{14}$" title="الرقم القومي 14 رقم"
+              inputmode="numeric" name="national_id" class="form-control font-monospace @error('national_id') is-invalid @enderror"
+              value="{{ old('national_id', $donor->national_id) }}" placeholder="14 رقم">
+            @error('national_id')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+          </div>
 
           <div class="col-12">
             <label class="form-label">العنوان</label>

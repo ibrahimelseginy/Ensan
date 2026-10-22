@@ -114,22 +114,40 @@ class User extends Authenticatable
 
     public function hasRole($key): bool
     {
+        if (empty($key)) {
+            return false;
+        }
+
         // تحميل الأدوار إذا لم تكن محملة بعد
         if (!$this->relationLoaded('roles')) {
             $this->load('roles');
         }
 
-        return $this->roles->contains(function ($role) use ($key) {
-            return strtolower($role->key) === strtolower($key);
+        if (is_iterable($key)) {
+            $keys = array_map(fn($k) => strtolower(trim((string) $k)), is_array($key) ? $key : iterator_to_array($key));
+            return $this->roles->contains(function ($role) use ($keys) {
+                return in_array(strtolower((string) $role->key), $keys, true)
+                    || in_array(strtolower((string) $role->name), $keys, true);
+            });
+        }
+
+        $needle = strtolower(trim((string) $key));
+        return $this->roles->contains(function ($role) use ($needle) {
+            return strtolower((string) $role->key) === $needle
+                || strtolower((string) $role->name) === $needle;
         });
     }
 
 
     public function hasPermission($key): bool
     {
-        // Bypass for admin and manager
-        if ($this->hasRole('admin') || $this->hasRole('manager')) {
+        // Bypass for admin, super_admin, and general managers (in Arabic and English)
+        if ($this->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
             return true;
+        }
+
+        if (empty($key)) {
+            return false;
         }
 
         // Load roles and permissions once and cache them on the model instance
@@ -140,10 +158,19 @@ class User extends Authenticatable
             }
             $this->cachedPermissions = $this->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('key');
-            })->unique();
+            })->unique()->map(fn($k) => strtolower((string) $k));
         }
 
-        return $this->cachedPermissions->contains($key);
+        if (is_iterable($key)) {
+            foreach ($key as $k) {
+                if ($this->cachedPermissions->contains(strtolower((string) $k))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return $this->cachedPermissions->contains(strtolower((string) $key));
     }
     public function adjustLeaveBalance($days)
     {

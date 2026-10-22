@@ -234,7 +234,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label fw-bold small text-uppercase text-muted">
-                    <i class="bi bi-search text-primary me-1"></i> بحث (متبرع / كود / غرض)
+                    <i class="bi bi-search text-primary me-1"></i> بحث (متبرع / كود / غرض / رقم قومي)
                 </label>
                 <select name="q" id="quickInKindDonationSearch" class="form-select" style="height: 44px; border-radius: 10px;">
                     <option value="" @selected(empty($q))>الكل (عرض جميع العمليات)</option>
@@ -246,10 +246,11 @@
                             @php
                                 $codeDisplay = $dItem->code ? (' [' . $dItem->code . ']') : (' [DON-' . $dItem->id . ']');
                                 $phoneDisplay = $dItem->phone ? (' - ' . $dItem->phone) : '';
-                                $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone;
+                                $nidDisplay = $dItem->national_id ? (' - قومي: ' . $dItem->national_id) : '';
+                                $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone || ($q ?? '') == $dItem->national_id;
                             @endphp
                             <option value="{{ $dItem->name }}" @selected($isSelected)>
-                                {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}
+                                {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}{{ $nidDisplay }}
                             </option>
                         @endforeach
                     </optgroup>
@@ -321,11 +322,11 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <div class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill fs-6 font-monospace">
-                <i class="bi bi-box-seam me-1"></i>
-                <span>{{ number_format($inKindDonations->sum('estimated_value'), 0) }} ج.م</span>
-                <span class="opacity-50 mx-1">|</span>
-                <span>{{ $inKindDonations->total() }} عملية</span>
+            <div class="px-3 py-2 rounded-pill fs-6 font-monospace d-inline-flex align-items-center" style="background-color: #d97706 !important; color: #ffffff !important; font-weight: 800; border: 1px solid #b45309; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                <i class="bi bi-box-seam me-1" style="color: #ffffff !important;"></i>
+                <span style="color: #ffffff !important;">{{ number_format($inKindDonations->sum('estimated_value'), 0) }} ج.م</span>
+                <span class="opacity-75 mx-1" style="color: #ffffff !important;">|</span>
+                <span style="color: #ffffff !important;">{{ $inKindDonations->total() }} عملية</span>
             </div>
         </div>
     </div>
@@ -347,6 +348,9 @@
                                     {{ $d->donor->name }}
                                 </a>
                                 <span class="badge-receipt-mini text-warning">{{ $d->donor->code ?? ('DON-'.$d->donor->id) }}</span>
+                                @if($d->donor->national_id)
+                                    <span class="badge-receipt-mini text-secondary font-monospace" title="الرقم القومي للمتبرع"><i class="bi bi-card-heading me-1"></i>{{ $d->donor->national_id }}</span>
+                                @endif
                             @else
                                 <span class="donor-name-title text-truncate">متبرع مجهول</span>
                             @endif

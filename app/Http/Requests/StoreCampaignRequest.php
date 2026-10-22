@@ -18,12 +18,16 @@ final class StoreCampaignRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => ['bail', 'required', 'string', 'max:255', Rule::unique(Campaign::class, 'name')],
-            'season_year' => 'required|integer|min:2000|max:2100',
-            'start_date'  => 'nullable|date',
-            'end_date'    => 'nullable|date|after_or_equal:start_date',
-            'status'      => 'required|in:active,archived',
-            'project_id'  => 'nullable|exists:projects,id',
+            'name'            => ['bail', 'required', 'string', 'max:255', Rule::unique(Campaign::class, 'name')],
+            'season_year'     => 'required|integer|min:2000|max:2100',
+            'start_date'      => 'nullable|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'status'          => 'required|in:active,archived',
+            'project_id'      => 'nullable|exists:projects,id',
+            'target_amount'   => 'nullable|numeric|min:0',
+            'target_families' => 'nullable|integer|min:1',
+            'goal_amount'     => 'nullable|numeric|min:0',
+            'beneficiaries_count' => 'nullable|integer|min:0',
         ];
     }
 

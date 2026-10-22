@@ -48,21 +48,36 @@ final readonly class DonationRepository
                 $numbers = $parsed['numbers'];
 
                 $qr->where(function ($w) use ($variants, $codes, $numbers, $q) {
-                    $w->whereHas('donor', function ($d) use ($variants, $codes, $numbers) {
-                        $d->where(function ($sub) use ($variants, $codes, $numbers) {
+                    $w->whereHas('donor', function ($d) use ($variants, $codes, $numbers, $q) {
+                        $d->where(function ($sub) use ($variants, $codes, $numbers, $q) {
                             foreach ($variants as $var) {
                                 $sub->orWhere('name', 'like', "%{$var}%")
                                     ->orWhere('code', 'like', "%{$var}%")
-                                    ->orWhere('phone', 'like', "%{$var}%");
+                                    ->orWhere('phone', 'like', "%{$var}%")
+                                    ->orWhere('national_id', 'like', "%{$var}%");
                             }
                             foreach ($codes as $c) {
                                 $sub->orWhere('code', 'like', "%{$c}%");
                             }
                             foreach ($numbers as $num) {
                                 $sub->orWhere('phone', 'like', "%{$num}%")
+                                    ->orWhere('national_id', 'like', "%{$num}%")
                                     ->orWhere('id', (int)$num);
                             }
+                            $sub->orWhere('national_id', 'like', "%{$q}%");
                         });
+                    })
+                    ->orWhereHas('familyMembers', function ($fm) use ($numbers, $q) {
+                        foreach ($numbers as $num) {
+                            $fm->orWhere('national_id', 'like', "%{$num}%");
+                        }
+                        $fm->orWhere('national_id', 'like', "%{$q}%");
+                    })
+                    ->orWhereHas('donor.sponsoredBeneficiaries', function ($sb) use ($numbers, $q) {
+                        foreach ($numbers as $num) {
+                            $sb->orWhere('national_id', 'like', "%{$num}%");
+                        }
+                        $sb->orWhere('national_id', 'like', "%{$q}%");
                     })
                     ->orWhere('receipt_number', 'like', "%{$q}%");
 

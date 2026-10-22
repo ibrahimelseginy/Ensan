@@ -40,7 +40,8 @@ final readonly class DonorService
                     foreach ($variants as $var) {
                         $w->orWhere('name', 'like', "%{$var}%")
                           ->orWhere('code', 'like', "%{$var}%")
-                          ->orWhere('phone', 'like', "%{$var}%");
+                          ->orWhere('phone', 'like', "%{$var}%")
+                          ->orWhere('national_id', 'like', "%{$var}%");
                     }
                     foreach ($codes as $c) {
                         $w->orWhere('code', 'like', "%{$c}%");
@@ -48,8 +49,10 @@ final readonly class DonorService
                     foreach ($numbers as $num) {
                         $w->orWhere('id', (int)$num)
                           ->orWhere('phone', 'like', "%{$num}%")
-                          ->orWhere('code', 'like', "%{$num}%");
+                          ->orWhere('code', 'like', "%{$num}%")
+                          ->orWhere('national_id', 'like', "%{$num}%");
                     }
+                    $w->orWhere('national_id', 'like', "%{$q}%");
                 });
             })
             ->when($type, fn($query, $t) => $query->where('type', $t))

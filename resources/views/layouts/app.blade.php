@@ -3949,27 +3949,84 @@
           });
       }
 
-      // Handle sub-modals opened from within global launcher modal seamlessly
-      if (launcherModalEl) {
-          document.querySelectorAll('.ensan-sub-modal').forEach(function(subModal) {
-              subModal.addEventListener('show.bs.modal', function() {
-                  const globalInstance = bootstrap.Modal.getInstance(launcherModalEl);
-                  if (globalInstance && launcherModalEl.classList.contains('show')) {
-                      globalInstance.hide();
-                      const returnHandler = function() {
-                          subModal.removeEventListener('hidden.bs.modal', returnHandler);
-                          setTimeout(function() {
-                              bootstrap.Modal.getOrCreateInstance(launcherModalEl).show();
-                          }, 150);
-                      };
-                      subModal.addEventListener('hidden.bs.modal', returnHandler);
+      // Move all ensan-sub-modals to document.body to avoid being trapped inside #globalAppLauncherModal
+      document.querySelectorAll('.ensan-sub-modal').forEach(function(subModal) {
+          if (subModal.parentElement !== document.body) {
+              document.body.appendChild(subModal);
+          }
+
+          subModal.addEventListener('show.bs.modal', function() {
+              subModal.style.zIndex = '1070';
+              setTimeout(function() {
+                  const backdrops = document.querySelectorAll('.modal-backdrop');
+                  if (backdrops.length > 1) {
+                      backdrops[backdrops.length - 1].style.zIndex = '1065';
                   }
-              });
+              }, 10);
           });
-      }
+
+          subModal.addEventListener('hidden.bs.modal', function() {
+              // Ensure body maintains modal-open if global launcher is still open
+              const launcherModal = document.getElementById('globalAppLauncherModal');
+              if (launcherModal && launcherModal.classList.contains('show')) {
+                  document.body.classList.add('modal-open');
+              }
+          });
+      });
   });
   </script>
   @endif
+
+  <script>
+  // Universal Arabic/Persian Numerals to English Numerals Normalizer
+  (function() {
+      const arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+      
+      function convertDigits(val) {
+          if (!val || typeof val !== 'string') return val;
+          let res = val;
+          for (let i = 0; i < 10; i++) {
+              if (res.includes(arabicDigits[i])) {
+                  res = res.split(arabicDigits[i]).join(i.toString());
+              }
+              if (res.includes(persianDigits[i])) {
+                  res = res.split(persianDigits[i]).join(i.toString());
+              }
+          }
+          return res;
+      }
+
+      document.addEventListener('input', function(e) {
+          const t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+              if (t.type === 'file' || t.type === 'password') return;
+              const original = t.value;
+              const converted = convertDigits(original);
+              if (original !== converted) {
+                  const start = t.selectionStart;
+                  const end = t.selectionEnd;
+                  t.value = converted;
+                  if (start !== null && end !== null && t.type !== 'number') {
+                      t.setSelectionRange(start, end);
+                  }
+              }
+          }
+      }, true);
+
+      document.addEventListener('paste', function(e) {
+          const t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.type !== 'file' && t.type !== 'password') {
+              setTimeout(function() {
+                  const converted = convertDigits(t.value);
+                  if (t.value !== converted) {
+                      t.value = converted;
+                  }
+              }, 10);
+          }
+      }, true);
+  })();
+  </script>
 
   @yield('scripts')
 </body>

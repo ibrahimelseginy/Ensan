@@ -243,11 +243,12 @@ final class DonationWebController extends Controller
         $receiptTreasuries = Schema::hasTable('treasuries')
             ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
             : collect();
+        $receiptCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
 
         return view('donations.cash', compact(
             'cashDonations', 'totalAmount', 'totalCount', 'channelMetrics', 'todayByChannel',
             'q', 'month', 'year', 'channel', 'projectId', 'campaignId',
-            'allDonors', 'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries'
+            'allDonors', 'receiptDonors', 'receiptProjects', 'receiptCampaigns', 'allFamilyMembers', 'receiptTreasuries'
         ));
     }
 
@@ -369,8 +370,9 @@ final class DonationWebController extends Controller
             $treasuries = \App\Models\Treasury::when(Schema::hasColumn('treasuries', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         }
         $items         = \App\Models\Item::when(Schema::hasColumn('items', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
+        $activeCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
         return view('donations.create', compact(
-            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items'
+            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items', 'activeCampaigns'
         ));
     }
 

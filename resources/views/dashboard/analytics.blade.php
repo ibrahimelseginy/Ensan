@@ -749,6 +749,54 @@
         </div>
     </div>
 
+    {{-- Combined Treasuries Administrative Highlight Card (بطاقة الإدارة: رصيد جميع خزائن المؤسسة مجمعة) --}}
+    @if(auth()->user()?->hasRole(['admin', 'super_admin']) || auth()->user()?->hasPermission('treasuries.view') || auth()->user()?->hasPermission('finance.view') || ($isAdmin ?? false) || ($isFinance ?? false))
+    <div class="row g-3 mb-4 animate-slide-up">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%); color: #ffffff;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-4 p-3 bg-white bg-opacity-10 border border-white border-opacity-15 shadow-sm">
+                                    <i class="bi bi-safe2-fill fs-1 text-warning"></i>
+                                </div>
+                                <div>
+                                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold fs-8 mb-1">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> خاص بالإدارة المالية والمؤسسية
+                                    </span>
+                                    <h4 class="fw-black mb-1 text-white">المبلغ الإجمالي داخل المؤسسة (كافة الخزائن)</h4>
+                                    <p class="mb-0 text-white-50 small">إجمالي الأرصدة الحالية في جميع الخزائن النقدية الرئيسية والفرعية وعهدة المندوبين وخزنة البنك مجمعة</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 text-lg-center">
+                            <div class="p-3 rounded-4 bg-black bg-opacity-25 border border-white border-opacity-10 d-inline-block w-100">
+                                <div class="text-white-50 small fw-bold mb-1">الرصيد المجمع الفعلي داخل المؤسسة والبنك</div>
+                                <div class="fs-2 fw-black font-monospace text-warning">
+                                    {{ number_format($totalTreasuriesBalance ?? 0, 2) }} <span class="fs-5 text-white">ج.م</span>
+                                </div>
+                                <div class="d-flex justify-content-center gap-3 mt-2 text-white-50 fs-8">
+                                    <span><i class="bi bi-cash me-1 text-success"></i> خزائن نقدية: <strong class="text-white font-monospace">{{ number_format($cashTreasuriesBalance ?? 0, 0) }}</strong></span>
+                                    <span>|</span>
+                                    <span><i class="bi bi-bank me-1 text-info"></i> خزنة البنك: <strong class="text-white font-monospace">{{ number_format($bankTreasuriesBalance ?? 0, 0) }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 text-lg-end text-center">
+                            @if(Route::has('treasuries.index'))
+                                <a href="{{ route('treasuries.index') }}" class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow-sm hover-lift">
+                                    <i class="bi bi-wallet2 me-1"></i> إدارة الخزائن
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Financial Stats Row --}}
     <div class="row g-3 mb-4">
         <div class="col-md-3 animate-slide-up animate-delay-1">

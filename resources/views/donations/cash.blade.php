@@ -253,7 +253,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label fw-bold small text-uppercase text-muted">
-                    <i class="bi bi-search text-primary me-1"></i> بحث سريع (متبرع / مشروع / كود)
+                    <i class="bi bi-search text-primary me-1"></i> بحث سريع (متبرع / مشروع / كود / رقم قومي)
                 </label>
                 <select name="q" id="quickCashDonationSearch" class="form-select" style="height: 44px; border-radius: 10px;">
                     <option value="" @selected(empty($q))>الكل (عرض جميع العمليات)</option>
@@ -265,10 +265,11 @@
                             @php
                                 $codeDisplay = $dItem->code ? (' [' . $dItem->code . ']') : (' [DON-' . $dItem->id . ']');
                                 $phoneDisplay = $dItem->phone ? (' - ' . $dItem->phone) : '';
-                                $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone;
+                                $nidDisplay = $dItem->national_id ? (' - قومي: ' . $dItem->national_id) : '';
+                                $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone || ($q ?? '') == $dItem->national_id;
                             @endphp
                             <option value="{{ $dItem->name }}" @selected($isSelected)>
-                                {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}
+                                {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}{{ $nidDisplay }}
                             </option>
                         @endforeach
                     </optgroup>
@@ -341,11 +342,11 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <div class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fs-6 font-monospace">
-                <i class="bi bi-wallet2 me-1"></i>
-                <span>{{ number_format($cashDonations->sum('amount'), 0) }} ج.م</span>
-                <span class="opacity-50 mx-1">|</span>
-                <span>{{ $cashDonations->total() }} عملية</span>
+            <div class="px-3 py-2 rounded-pill fs-6 font-monospace d-inline-flex align-items-center" style="background-color: #047857 !important; color: #ffffff !important; font-weight: 800; border: 1px solid #065f46; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                <i class="bi bi-wallet2 me-1" style="color: #ffffff !important;"></i>
+                <span style="color: #ffffff !important;">{{ number_format($cashDonations->sum('amount'), 0) }} ج.م</span>
+                <span class="opacity-75 mx-1" style="color: #ffffff !important;">|</span>
+                <span style="color: #ffffff !important;">{{ $cashDonations->total() }} عملية</span>
             </div>
         </div>
     </div>
@@ -381,6 +382,9 @@
                                     {{ $d->donor->name }}
                                 </a>
                                 <span class="badge-receipt-mini text-primary">{{ $d->donor->code ?? ('DON-'.$d->donor->id) }}</span>
+                                @if($d->donor->national_id)
+                                    <span class="badge-receipt-mini text-secondary font-monospace" title="الرقم القومي للمتبرع"><i class="bi bi-card-heading me-1"></i>{{ $d->donor->national_id }}</span>
+                                @endif
                             @else
                                 <span class="donor-name-title text-truncate">فاعل خير</span>
                             @endif
@@ -553,6 +557,16 @@
                             <option value="">— اختر مشروع (اختياري) —</option>
                             @foreach($receiptProjects as $projectItem)
                                 <option value="{{ $projectItem->id }}">{{ $projectItem->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-primary"><i class="bi bi-megaphone-fill me-1"></i> التبرع للحملات النشطة</label>
+                        <select name="campaign_id" class="form-select border-primary">
+                            <option value="">— اختر حملة نشطة للتبرع لها —</option>
+                            @foreach(($receiptCampaigns ?? []) as $campItem)
+                                <option value="{{ $campItem->id }}">{{ $campItem->name }} (المستهدف: {{ number_format($campItem->target_amount ?: $campItem->goal_amount, 0) }} ج.م)</option>
                             @endforeach
                         </select>
                     </div>

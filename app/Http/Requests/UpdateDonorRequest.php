@@ -38,6 +38,7 @@ final class UpdateDonorRequest extends FormRequest
             ],
             'type'                       => 'sometimes|in:individual,organization',
             'phone'                      => 'nullable|string|max:20',
+            'national_id'                => 'nullable|string|max:20',
             'email'                      => 'nullable|email',
             'address'                    => 'nullable|string|max:500',
             'classification'             => 'sometimes|in:one_time,recurring',

@@ -17,9 +17,15 @@ final class StoreBeneficiaryRequest extends FormRequest
 
     public function rules(): array
     {
+        $hasExisting = $this->filled('existing_beneficiary_id');
+        $isGuestHouse = $this->input('form_context') === 'guest_house_beneficiary' || $this->has('treatment_type') || $hasExisting;
+
         return [
+            'existing_beneficiary_id'   => 'nullable|exists:beneficiaries,id',
             'code'                      => 'nullable|string|max:50|unique:beneficiaries,code',
-            'full_name'                 => ['required', 'string', 'max:255', new UniqueBeneficiaryName()],
+            'full_name'                 => $hasExisting 
+                                            ? 'nullable|string|max:255' 
+                                            : ['required', 'string', 'max:255', new UniqueBeneficiaryName()],
             'guardian_name'            => 'nullable|string|max:255',
             'patient_name'             => 'nullable|string|max:255',
             'patient_age'              => 'nullable|integer|min:0|max:120',
@@ -33,7 +39,9 @@ final class StoreBeneficiaryRequest extends FormRequest
             'phone'                     => 'nullable|string|max:20',
             'backup_phone'              => 'nullable|string|max:20',
             'address'                   => 'nullable|string|max:500',
-            'assistance_type'           => 'required|string|in:monthly,one_time,in_kind,service,financial',
+            'assistance_type'           => $isGuestHouse 
+                                            ? 'nullable|string|in:monthly,one_time,in_kind,service,financial' 
+                                            : 'required|string|in:monthly,one_time,in_kind,service,financial',
             'collection_day'            => 'nullable|integer|min:1|max:31',
             'collection_method'         => 'nullable|string|max:191',
             'status'                    => 'nullable|string|in:pending,new,under_review,accepted,rejected,archived_improved,archived_deceased',
@@ -85,7 +93,16 @@ final class StoreBeneficiaryRequest extends FormRequest
             'treatment_type'        => 'nullable|in:chemotherapy,radiation,other',
             'medical_center'        => 'nullable|string|max:255',
             'sessions_count'        => 'nullable|integer|min:1|max:1000',
+            'gender'                => 'nullable|string|max:50',
             'medical_notes'         => 'nullable|string|max:2000',
+            'companion_name'        => 'nullable|string|max:255',
+            'companion_relation'    => 'nullable|string|max:100',
+            'companion_national_id' => 'nullable|string|max:20',
+            'companion_phone'       => 'nullable|string|max:25',
+            'companion_address'     => 'nullable|string|max:500',
+            'companion_id_front'    => 'nullable|any_image|max:10240',
+            'companion_id_back'     => 'nullable|any_image|max:10240',
+            'manager_notes'         => 'nullable|string|max:4000',
             'patient_id_front'      => 'nullable|any_image|max:10240',
             'patient_id_back'       => 'nullable|any_image|max:10240',
             'followup_card'         => 'nullable|file|max:15360',

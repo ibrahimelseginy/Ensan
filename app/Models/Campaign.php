@@ -48,6 +48,8 @@ final class Campaign extends Model
         'image_path',
         'category',
         'website_content',
+        'target_amount',
+        'target_families',
         'goal_amount',
         'goal_unit',
         'current_amount',

@@ -291,7 +291,7 @@ final class ReportsWebController extends Controller
             ->limit(15)
             ->get();
 
-        $recentCustodies = GuestHouseCustody::with(['guestHouse', 'item', 'user'])
+        $recentCustodies = GuestHouseCustody::with(['guestHouse', 'warehouse', 'treasury'])
             ->orderByDesc('id')
             ->limit(15)
             ->get();

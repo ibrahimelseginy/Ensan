@@ -46,7 +46,7 @@
             <option value=""></option>
             @foreach($donors as $donor)
               <option value="{{ $donor->id }}" @selected((string)old('donor_id', request('donor_id')) === (string)$donor->id)>
-                {{ $donor->name }} — {{ $donor->code }}{{ $donor->phone ? ' — '.$donor->phone : '' }}
+                {{ $donor->name }} — {{ $donor->code }}{{ $donor->phone ? ' — '.$donor->phone : '' }}{{ $donor->national_id ? ' — قومي: '.$donor->national_id : '' }}
               </option>
             @endforeach
           </select>
@@ -55,9 +55,10 @@
 
         <div id="newDonorSection" class="d-none">
           <div class="row g-3">
-            <div class="col-md-4"><label class="form-label">كود المتبرع <span class="badge bg-primary-subtle text-primary">ثابت</span></label><input name="new_donor_code" id="newDonorCode" value="{{ old('new_donor_code') }}" class="form-control font-monospace" dir="ltr" placeholder="تلقائي أو DON-10025"></div>
-            <div class="col-md-4"><label class="form-label form-label-required">اسم المتبرع</label><input name="new_donor_name" id="newDonorName" value="{{ old('new_donor_name') }}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label form-label-required">رقم الهاتف</label><input name="new_donor_phone" id="newDonorPhone" value="{{ old('new_donor_phone') }}" class="form-control" placeholder="01xxxxxxxxx"></div>
+            <div class="col-md-3"><label class="form-label">كود المتبرع <span class="badge bg-primary-subtle text-primary">ثابت</span></label><input name="new_donor_code" id="newDonorCode" value="{{ old('new_donor_code') }}" class="form-control font-monospace" dir="ltr" placeholder="تلقائي أو DON-10025"></div>
+            <div class="col-md-3"><label class="form-label form-label-required">اسم المتبرع</label><input name="new_donor_name" id="newDonorName" value="{{ old('new_donor_name') }}" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label form-label-required">رقم الهاتف</label><input name="new_donor_phone" id="newDonorPhone" value="{{ old('new_donor_phone') }}" class="form-control" placeholder="01xxxxxxxxx"></div>
+            <div class="col-md-3"><label class="form-label">الرقم القومي (اختياري)</label><input name="new_donor_national_id" id="newDonorNationalId" value="{{ old('new_donor_national_id') }}" class="form-control font-monospace" maxlength="14" placeholder="14 رقم"></div>
             <div class="col-12"><label class="form-label">العنوان</label><input name="new_donor_address" value="{{ old('new_donor_address') }}" class="form-control"></div>
           </div>
         </div>
@@ -99,7 +100,7 @@
       <div class="receipt-purpose-box">
         <div class="purpose-title mb-3"><i class="bi bi-check2-circle me-1"></i> وذلك قيمة والمشروع</div>
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">المشروع</label>
             <select name="project_id" id="donationProject" class="form-select">
               <option value="">— اختر مشروع (اختياري) —</option>
@@ -108,7 +109,21 @@
               @endforeach
             </select>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-primary">
+              <i class="bi bi-megaphone-fill me-1"></i> التبرع للحملات (الحملات النشطة)
+            </label>
+            <select name="campaign_id" id="donationCampaign" class="form-select border-primary">
+              <option value="">— اختر حملة نشطة —</option>
+              @foreach(($activeCampaigns ?? []) as $camp)
+                <option value="{{ $camp->id }}" @selected((string)old('campaign_id', request('campaign_id'))===(string)$camp->id)>
+                  {{ $camp->name }} (المستهدف: {{ number_format($camp->target_amount ?: $camp->goal_amount, 0) }} ج.م)
+                </option>
+              @endforeach
+            </select>
+            <div class="form-text small text-muted">التبرع للحملة يسمع مباشرةً في المبلغ المستهدف للحملة ونسبة الإنجاز.</div>
+          </div>
+          <div class="col-md-4">
             <label class="form-label form-label-required">بند الإيصال</label>
             <select name="purpose" id="donationPurpose" class="form-select" required>
               <option value="">— اختر —</option>

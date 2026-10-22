@@ -520,14 +520,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.cv');
             });
 
-            Route::middleware('permission:mobile.case_applications.view')->group(function () {
-                Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
-                Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
-                Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
-                Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
-                Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
-            });
-
             Route::middleware('permission:mobile.donations.view')->group(function () {
                 Route::get('/donations', [MobileContentController::class, 'donationsIndex'])->name('donations.index');
                 Route::match(['post', 'patch'], '/donations/{donation}/status', [MobileContentController::class, 'updateDonationStatus'])->name('donations.update');
@@ -561,6 +553,23 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoUpdate'])->name('contact_info.update');
             Route::delete('/contact-info/{contactInfo}', [MobileContentController::class, 'contactInfoDestroy'])->name('contact_info.destroy');
         });
+    });
+
+    // --- Initial Research & Case Applications (منظومة البحث المبدئي واستقبال الحالات) ---
+    Route::group(['prefix' => 'admin/mobile', 'as' => 'mobile.'], function () {
+        Route::middleware('permission:mobile.case_applications.view')->group(function () {
+            Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
+            Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
+            Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
+            Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
+            Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
+        });
+    });
+
+    // Direct and Legacy Route Aliases for Case Applications
+    Route::middleware('permission:mobile.case_applications.view')->group(function () {
+        Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
+        Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
     });
 
     Route::middleware('permission:manage_change_requests')->group(function () {
@@ -626,6 +635,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('guest-houses/{guest_house}/beneficiaries', [GuestHouseWebController::class, 'storeBeneficiary'])
         ->middleware(['permission:guest_houses.view', 'permission:beneficiaries.view'])
         ->name('guest-houses.storeBeneficiary');
+    Route::post('guest-houses/{guest_house}/beneficiaries/{beneficiary}/manager-notes', [GuestHouseWebController::class, 'saveManagerNotes'])
+        ->middleware(['permission:guest_houses.view'])
+        ->name('guest-houses.beneficiaries.saveNotes');
     Route::post('guest-houses/{guest_house}/donations', [GuestHouseWebController::class, 'storeDonation'])
         ->middleware(['permission:guest_houses.view', 'permission:donations.view'])
         ->name('guest-houses.storeDonation');
@@ -637,9 +649,11 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('guest-houses/{guest_house}/beds/{bed}/status', [GuestHouseWebController::class, 'updateBedStatus'])->name('guest-houses.beds.status');
         Route::post('guest-houses/{guest_house}/custodies', [GuestHouseWebController::class, 'storeCustody'])->name('guest-houses.custodies.store');
         Route::post('guest-houses/{guest_house}/inventory/issues', [GuestHouseWebController::class, 'issueInventory'])->name('guest-houses.inventory.issue');
+        Route::post('guest-houses/{guest_house}/inventory/supply', [GuestHouseWebController::class, 'supplyInventory'])->name('guest-houses.inventory.supply');
         Route::post('guest-houses/{guest_house}/meals', [GuestHouseWebController::class, 'storeMeal'])->name('guest-houses.meals.store');
         Route::post('guest-houses/{guest_house}/stays/{stay}/depart', [GuestHouseWebController::class, 'departStay'])->name('guest-houses.stays.depart');
-        Route::post('guest-houses/{guest_house}/stays/depart-all', [GuestHouseWebController::class, 'departAllStays'])->name('guest-houses.stays.departAll');
+        Route::post('guest-houses/{guest_house}/stays/{stay}/temporary-depart', [GuestHouseWebController::class, 'temporaryDepartStay'])->name('guest-houses.stays.temporaryDepart');
+        Route::post('guest-houses/{guest_house}/stays/{stay}/return-temporary', [GuestHouseWebController::class, 'returnFromTemporaryDepart'])->name('guest-houses.stays.returnTemporary');
         Route::post('guest-houses/{guest_house}/stays/{stay}/return', [GuestHouseWebController::class, 'returnStay'])->name('guest-houses.stays.return');
         Route::post('guest-houses/{guest_house}/bookings/{booking}/decision', [GuestHouseWebController::class, 'decideBooking'])->name('guest-houses.bookings.decision');
         Route::post('guest-houses/{guest_house}/mobile-cases/{application}/decision', [GuestHouseWebController::class, 'decideMobileCase'])->name('guest-houses.mobile-cases.decision');

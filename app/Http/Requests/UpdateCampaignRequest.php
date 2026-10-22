@@ -27,11 +27,15 @@ final class UpdateCampaignRequest extends FormRequest
                 'max:255',
                 Rule::unique(Campaign::class, 'name')->ignore($campaign?->getKey()),
             ],
-            'season_year' => 'sometimes|integer|min:2000|max:2100',
-            'start_date'  => 'nullable|date',
-            'end_date'    => 'nullable|date|after_or_equal:start_date',
-            'status'      => 'sometimes|in:active,archived',
-            'project_id'  => 'nullable|exists:projects,id',
+            'season_year'     => 'sometimes|integer|min:2000|max:2100',
+            'start_date'      => 'nullable|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'status'          => 'sometimes|in:active,archived',
+            'project_id'      => 'nullable|exists:projects,id',
+            'target_amount'   => 'nullable|numeric|min:0',
+            'target_families' => 'nullable|integer|min:1',
+            'goal_amount'     => 'nullable|numeric|min:0',
+            'beneficiaries_count' => 'nullable|integer|min:0',
         ];
     }
 

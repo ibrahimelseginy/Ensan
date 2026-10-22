@@ -476,7 +476,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <form method="POST" action="{{ route('case-applications.store') }}">
+                <form method="POST" action="{{ route('mobile.case-applications.store') }}">
                     @csrf
 
                     <!-- صفة مقدم الطلب -->

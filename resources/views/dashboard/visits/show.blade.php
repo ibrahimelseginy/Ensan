@@ -146,6 +146,48 @@
       </div>
     </div>
 
+    @if($visit->house_photo_url || !empty($visit->condition_photo_urls))
+      <!-- صور المنزل ومستندات تدهور الحالة -->
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-primary">
+              <i class="bi bi-images me-2"></i>صور المعاينة وتدهور الحالة ومستندات الشيكات
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              @if($visit->house_photo_url)
+                <div class="col-md-4">
+                  <div class="border rounded-3 p-2 bg-light text-center h-100">
+                    <div class="fw-bold small text-muted mb-2"><i class="bi bi-house me-1"></i> صورة المنزل</div>
+                    <a href="{{ $visit->house_photo_url }}" target="_blank">
+                      <img src="{{ $visit->house_photo_url }}" alt="صورة المنزل" class="img-fluid rounded shadow-sm" style="max-height: 220px; object-fit: cover; width: 100%;">
+                    </a>
+                  </div>
+                </div>
+              @endif
+
+              @if(!empty($visit->condition_photo_urls))
+                <div class="{{ $visit->house_photo_url ? 'col-md-8' : 'col-12' }}">
+                  <div class="border rounded-3 p-3 bg-light h-100">
+                    <div class="fw-bold small text-muted mb-2"><i class="bi bi-file-earmark-image me-1"></i> صور الشيكات والوصولات وتدهور الحالة ({{ count($visit->condition_photo_urls) }} صورة)</div>
+                    <div class="d-flex flex-wrap gap-2">
+                      @foreach($visit->condition_photo_urls as $cPhotoUrl)
+                        <a href="{{ $cPhotoUrl }}" target="_blank" class="border rounded p-1 bg-white shadow-sm" title="عرض بالحجم الكامل">
+                          <img src="{{ $cPhotoUrl }}" alt="مستند" style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px;">
+                        </a>
+                      @endforeach
+                    </div>
+                  </div>
+                </div>
+              @endif
+            </div>
+          </div>
+        </div>
+      </div>
+    @endif
+
     <!-- أفراد الأسرة -->
     <div class="col-12">
       <div class="card border-0 shadow-sm rounded-4">

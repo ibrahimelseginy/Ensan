@@ -252,7 +252,18 @@
                                                 
                                                 @if(!$isDeleted)
                                                     <div class="fw-bold fs-6">
-                                                        @if($modelBasename === 'Beneficiary') {{ $req->subject->full_name }}
+                                                        @if($modelBasename === 'Beneficiary')
+                                                            {{ $req->subject->full_name }}
+                                                            @php
+                                                                $vItem = $visitsByBeneficiary[$req->model_id] ?? ($visitsByNationalId[$req->subject->national_id ?? ''] ?? null);
+                                                            @endphp
+                                                            @if($vItem)
+                                                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 ms-2 shadow-xs d-inline-flex align-items-center gap-1"
+                                                                    style="font-size: 12px; font-weight: 700; border-width: 1.5px; vertical-align: middle;"
+                                                                    onclick="openQuickVisitModal('{{ route('visits.show', $vItem->id) }}', '{{ e($vItem->patient_name ?: $req->subject->full_name) }}')">
+                                                                    <i class="bi bi-file-earmark-medical"></i> استمارة البحث
+                                                                </button>
+                                                            @endif
                                                         @elseif($modelBasename === 'Donation' || $modelBasename === 'Expense') {{ number_format($req->subject->amount) }} <small class="fw-normal">ج.م</small>
                                                         @elseif($modelBasename === 'Task') {{ $req->subject->title }}
                                                         @elseif($modelBasename === 'Leave') {{ $req->subject->user->name ?? 'موظف' }}
@@ -279,8 +290,19 @@
                                                         @php
                                                             $p = is_array($req->payload) ? ($req->payload['data'] ?? $req->payload) : [];
                                                             $displayName = $p['full_name'] ?? ($p['name'] ?? ($p['title'] ?? ($p['delegate_name'] ?? ($p['volunteer_name'] ?? ($p['employee_name'] ?? ($p['user_name'] ?? '—'))))));
+                                                            $vItemDeleted = null;
+                                                            if ($modelBasename === 'Beneficiary') {
+                                                                $vItemDeleted = $visitsByBeneficiary[$req->model_id] ?? ($visitsByNationalId[$p['national_id'] ?? ''] ?? null);
+                                                            }
                                                         @endphp
                                                         {{ $displayName ?: "ID: ".$req->model_id }}
+                                                        @if($vItemDeleted)
+                                                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 ms-2 shadow-xs d-inline-flex align-items-center gap-1"
+                                                                style="font-size: 12px; font-weight: 700; border-width: 1.5px; vertical-align: middle;"
+                                                                onclick="openQuickVisitModal('{{ route('visits.show', $vItemDeleted->id) }}', '{{ e($vItemDeleted->patient_name ?: $displayName) }}')">
+                                                                <i class="bi bi-file-earmark-medical"></i> استمارة البحث
+                                                            </button>
+                                                        @endif
                                                     </div>
                                                     <div class="text-muted small opacity-75">
                                                         @if($modelBasename === 'Donation' || $modelBasename === 'Expense') مبلغ: {{ number_format($p['amount'] ?? 0) }} ج.م
@@ -321,6 +343,7 @@
 
                                             $labels = [
                                                 'name' => 'الاسم',
+                                                'full_name' => 'الاسم بالكامل',
                                                 'title' => 'العنوان',
                                                 'amount' => 'المبلغ',
                                                 'type' => 'النوع',
@@ -331,6 +354,8 @@
                                                 'receipt_number' => 'رقم الإيصال',
                                                 'project_id' => 'المشروع',
                                                 'campaign_id' => 'الحملة',
+                                                'target_amount' => 'المبلغ المستهدف',
+                                                'target_families' => 'عدد الأسر المستهدفة',
                                                 'donor_id' => 'المتبرع',
                                                 'delegate_id' => 'المندوب',
                                                 'warehouse_id' => 'المخزن',
@@ -342,9 +367,60 @@
                                                 'allocated_beneficiary_ids' => 'المستفيدون المختارون',
                                                 'child_sponsorship_type' => 'نوع كفالة الطفل',
                                                 'sponsor_ids' => 'الكفلاء المختارون',
-                                                'status' => 'الحالة',
-                                                'name' => 'الاسم الكامل',
+                                                'notes_cases' => 'تشخيص الحالة والتقرير الطبي',
+                                                'patient_code' => 'كود المريض',
+                                                'patient_name' => 'اسم المريض بالكامل',
+                                                'patient_age' => 'سن المريض',
+                                                'patient_birth_date' => 'تاريخ ميلاد المريض',
+                                                'patient_phone' => 'هاتف المريض',
+                                                'patient_backup_phone' => 'هاتف إضافي للمريض',
+                                                'patient_relationship' => 'صلة قرابة المريض',
+                                                'adult_children_count' => 'عدد الأبناء البالغين',
+                                                'adult_children_ages' => 'أعمار الأبناء البالغين',
+                                                'monthly_sponsorship_amount' => 'مبلغ الكفالة الشهري',
+                                                'sponsorship_scope_type' => 'نوع الكفالة',
+                                                'visa_card_number' => 'رقم كارت الفيزا',
                                                 'phone' => 'رقم الهاتف',
+                                                'applicant_phone' => 'هاتف الحالة الأساسي',
+                                                'backup_phone' => 'هاتف بديل',
+                                                'national_id' => 'الرقم القومي',
+                                                'birth_date' => 'تاريخ الميلاد',
+                                                'gender' => 'النوع / الجنس',
+                                                'marital_status' => 'الحالة الاجتماعية',
+                                                'health_status' => 'الحالة الصحية',
+                                                'education_level' => 'المستوى التعليمي',
+                                                'housing_type' => 'نوع المسكن',
+                                                'home_ownership' => 'ملكية السكن',
+                                                'house_photo' => 'صورة المنزل',
+                                                'condition_photos' => 'صور شروخ وتلفيات السكن',
+                                                'collection_method' => 'طريقة استلام الكفالة',
+                                                'income_source' => 'مصدر الدخل',
+                                                'monthly_income' => 'الدخل الشهري',
+                                                'assistance_type' => 'نوع المساعدة',
+                                                'assistance_amount' => 'مبلغ المساعدة',
+                                                'family_members_count' => 'عدد أفراد الأسرة',
+                                                'social_status_description' => 'الوصف الاجتماعي للحالة',
+                                                'need_type' => 'نوع الاحتياج',
+                                                'guide_name' => 'اسم الدليل',
+                                                'guide_phone' => 'رقم هاتف الدليل',
+                                                'patient_id_front_path' => 'صورة بطاقة المريض (وجه)',
+                                                'patient_id_back_path' => 'صورة بطاقة المريض (ظهر)',
+                                                'companion_name' => 'اسم المرافق',
+                                                'companion_relation' => 'صلة قرابة المرافق',
+                                                'companion_national_id' => 'الرقم القومي للمرافق',
+                                                'companion_phone' => 'هاتف المرافق',
+                                                'companion_address' => 'عنوان المرافق',
+                                                'companion_id_front_path' => 'صورة بطاقة المرافق (وجه)',
+                                                'companion_id_back_path' => 'صورة بطاقة المرافق (ظهر)',
+                                                'treatment_type' => 'نوع العلاج',
+                                                'medical_center' => 'المركز الطبي / المستشفى',
+                                                'sessions_count' => 'عدد الجلسات',
+                                                'medical_notes' => 'الملاحظات الطبية',
+                                                'manager_notes' => 'ملاحظات وسلبيات مدير الدار',
+                                                'departure_notes' => 'ملاحظات المغادرة',
+                                                'arrival_date' => 'تاريخ الوصول',
+                                                'expected_days' => 'مدة الإقامة المتوقعة',
+                                                'guest_house_bed_id' => 'رقم السرير / الجناح',
                                                 'email' => 'البريد الإلكتروني',
                                                 'address' => 'العنوان السكني',
                                                 'category' => 'التصنيف',
@@ -399,8 +475,39 @@
                                                 'active' => 'نشط ✅',
                                                 'inactive' => 'غير نشط ❌',
                                                 'approved' => 'مقبول ✅',
+                                                'accepted' => 'مقبول ✅',
                                                 'rejected' => 'مرفوض ❌',
+                                                'monthly' => 'شهري',
+                                                'kafala' => 'كفالة',
+                                                'patient' => 'المستفيد نفسه',
+                                                'child' => 'ابن / ابنة',
+                                                'husband' => 'الزوج',
+                                                'wife' => 'الزوجة',
+                                                'other' => 'فرد آخر',
                                                 'pending' => 'تحت المراجعة ⏳',
+                                                'under_research' => 'قيد البحث الميداني 🔍',
+                                                'completed' => 'مكتمل ✅',
+                                                'canceled' => 'ملغي ❌',
+                                                'resident' => 'مقيم حالياً بالدار',
+                                                'departed' => 'غادر الدار',
+                                                'male' => 'ذكر',
+                                                'female' => 'أنثى',
+                                                'single' => 'أعزب',
+                                                'married' => 'متزوج',
+                                                'widowed' => 'أرمل / أرملة',
+                                                'divorced' => 'مطلق / مطلقة',
+                                                'visa' => 'فيزا',
+                                                'doorstep' => 'باب البيت',
+                                                'office' => 'مقر المؤسسة',
+                                                'in_kind_shipping' => 'شحن عيني',
+                                                'company' => 'شركة',
+                                                'family_house' => 'بيت عيلة',
+                                                'owned' => 'ملك',
+                                                'rent' => 'إيجار',
+                                                'service' => 'خدمي / عيني',
+                                                'financial' => 'مالي',
+                                                'water' => 'وصلة مياه',
+                                                'roof' => 'سقف منزل',
                                                 'asset' => 'أصول (Assets)',
                                                 'liability' => 'خصوم (Liabilities)',
                                                 'equity' => 'حقوق ملكية (Equity)',
@@ -431,6 +538,14 @@
                                                         $html .= '</div>';
                                                         return $html;
                                                     }
+                                                    if (in_array($k, ['condition_photos'])) {
+                                                        $html = '<div class="d-flex flex-wrap gap-1 mt-1">';
+                                                        foreach ($v as $img) {
+                                                            $html .= '<span class="badge bg-secondary-subtle text-secondary border p-1 px-2"><i class="bi bi-image me-1"></i> صورة مرفقة</span>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
                                                     return '<pre class="small mb-0 mt-1 bg-white p-2 rounded border" style="font-size: 10px;">' . json_encode($v, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '</pre>';
                                                 }
                                                 
@@ -441,12 +556,12 @@
 
                                                 if (isset($valueMaps[$v])) return $valueMaps[$v];
                                                 if (str_contains($k, 'id') && is_numeric($v)) return '#' . $v;
-                                                if (in_array($k, ['amount','estimated_value','cost','salary'])) return '<strong>' . number_format((float)$v, 2) . '</strong> <small>ج.م</small>';
-                                                if ($k === 'quantity') return '<strong>' . number_format((float)$v, 0) . '</strong>';
+                                                if (in_array($k, ['amount','target_amount','estimated_value','cost','salary','monthly_income','assistance_amount'])) return '<strong>' . number_format((float)$v, 2) . '</strong> <small>ج.م</small>';
+                                                if (in_array($k, ['quantity', 'target_families', 'family_members_count', 'sessions_count', 'expected_days'])) return '<strong>' . number_format((float)$v, 0) . '</strong>';
                                                 
                                                 if (is_bool($v)) return $v ? '<span class="badge bg-success-subtle text-success">نعم</span>' : '<span class="badge bg-danger-subtle text-danger">لا</span>';
                                                 
-                                                if (in_array($k, ['received_at', 'date', 'created_at', 'updated_at']) && $v) {
+                                                if (in_array($k, ['received_at', 'date', 'created_at', 'updated_at', 'arrival_date', 'birth_date']) && $v) {
                                                     try { return \Illuminate\Support\Carbon::parse($v)->format('Y-m-d'); } catch(\Exception $e) { return $v; }
                                                 }
                                                 
@@ -457,7 +572,7 @@
                                         <div class="row g-2">
                                             @if($diffData && $req->action === 'update')
                                                 @foreach($diffData as $key => $dVals)
-                                                    @continue($key === 'password')
+                                                    @continue(in_array($key, ['password', 'family_members', 'family_members_data']))
                                                     <div class="col-12 col-md-6 col-lg-4">
                                                         <div class="p-3 rounded-4 border-start border-primary border-4 shadow-sm h-100" style="background: rgba(255,255,255,0.03);">
                                                             <div class="small fw-bold text-primary mb-2">{{ $labels[$key] ?? $key }}</div>
@@ -471,7 +586,7 @@
                                                 @endforeach
                                             @else
                                                 @foreach($payloadData as $key => $val)
-                                                    @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id']))
+                                                    @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members', 'family_members_data']))
                                                     @continue(is_null($val) || $val === '')
                                                     @continue(is_array($val) && empty($val))
                                                     
@@ -642,6 +757,42 @@
 
         form.submit();
     }
+</script>
+
+<!-- Modal Quick View Field Visit -->
+<div class="modal fade" id="visitQuickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-light py-3 border-bottom d-flex align-items-center justify-content-between">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2 mb-0">
+                    <i class="bi bi-file-earmark-medical-fill text-primary"></i>
+                    <span>استمارة البحث الميداني: <span id="quickViewCaseName" class="text-primary"></span></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body p-0" style="min-height: 550px; background-color: #f8fafc;">
+                <div id="quickViewLoader" class="d-flex align-items-center justify-content-center p-5 text-muted">
+                    <div class="spinner-border text-primary me-2" role="status"></div>
+                    <span>جارٍ تحميل استمارة البحث...</span>
+                </div>
+                <iframe id="quickViewFrame" src="" style="width: 100%; height: 75vh; border: none; display: none;" onload="document.getElementById('quickViewLoader').style.display='none'; this.style.display='block';"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openQuickVisitModal(url, name) {
+    document.getElementById('quickViewCaseName').innerText = name || '';
+    const frame = document.getElementById('quickViewFrame');
+    const loader = document.getElementById('quickViewLoader');
+    frame.style.display = 'none';
+    loader.style.display = 'flex';
+    frame.src = url;
+    const modalEl = document.getElementById('visitQuickViewModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
 </script>
 
 <form id="bulk-destroy-form" action="{{ route('change-requests.bulk-destroy') }}" method="POST" style="display:none">

@@ -129,6 +129,38 @@
         border: 1.5px solid rgba(245, 158, 11, 0.3);
     }
 
+    .portal-counter-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 5px 14px !important;
+        border-radius: 9999px !important;
+        font-size: 0.85rem !important;
+        font-weight: 800 !important;
+        line-height: 1.3 !important;
+        letter-spacing: -0.01em !important;
+        white-space: nowrap !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    }
+    .portal-counter-cash {
+        background-color: #047857 !important;
+        color: #ffffff !important;
+        border: 1px solid #065f46 !important;
+    }
+    .portal-counter-cash i,
+    .portal-counter-cash span {
+        color: #ffffff !important;
+    }
+    .portal-counter-inkind {
+        background-color: #d97706 !important;
+        color: #ffffff !important;
+        border: 1px solid #b45309 !important;
+    }
+    .portal-counter-inkind i,
+    .portal-counter-inkind span {
+        color: #ffffff !important;
+    }
+
     .portal-features-list {
         list-style: none;
         padding: 0;
@@ -271,8 +303,8 @@
                         </div>
                     </div>
                     <div class="text-start">
-                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill small font-monospace">
-                            <i class="bi bi-receipt me-1"></i> {{ $cashCount }} عملية مسجلة
+                        <span class="portal-counter-badge portal-counter-cash" style="background-color: #047857 !important; color: #ffffff !important; font-weight: 800 !important; font-size: 0.85rem !important;">
+                            <i class="bi bi-receipt me-1" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">{{ $cashCount }} عملية مسجلة</span>
                         </span>
                     </div>
                 </div>
@@ -332,8 +364,8 @@
                         </div>
                     </div>
                     <div class="text-start">
-                        <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill small font-monospace">
-                            <i class="bi bi-box-seam me-1"></i> {{ $inKindCount }} عملية مسجلة
+                        <span class="portal-counter-badge portal-counter-inkind" style="background-color: #d97706 !important; color: #ffffff !important; font-weight: 800 !important; font-size: 0.85rem !important;">
+                            <i class="bi bi-box-seam me-1" style="color: #ffffff !important;"></i> <span style="color: #ffffff !important;">{{ $inKindCount }} عملية مسجلة</span>
                         </span>
                     </div>
                 </div>

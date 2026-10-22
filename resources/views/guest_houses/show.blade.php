@@ -5,7 +5,41 @@
     <style>
         #guestHouseBeneficiaryModal .select2-container { width: 100% !important; direction: rtl; }
         #guestHouseBeneficiaryModal .select2-selection--multiple { min-height: 42px; }
+        #guestHouseBeneficiaryModal .select2-selection--single {
+            height: 42px !important;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            display: flex;
+            align-items: center;
+        }
+        #guestHouseBeneficiaryModal .select2-selection--single .select2-selection__rendered {
+            line-height: 28px !important;
+            padding-right: 0 !important;
+            padding-left: 24px !important;
+            font-size: 0.95rem;
+            color: #212529;
+            width: 100%;
+        }
+        #guestHouseBeneficiaryModal .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+            left: 10px !important;
+            right: auto !important;
+        }
+        #guestHouseBeneficiaryModal .select2-selection--single .select2-selection__clear {
+            float: left;
+            margin-left: 20px;
+            font-size: 1.2rem;
+            color: #dc3545;
+            font-weight: bold;
+        }
         #guestHouseBeneficiaryModal .select2-search__field { direction: rtl; text-align: right; }
+        #guestHouseBeneficiaryModal .select2-dropdown {
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid #ced4da;
+            z-index: 1060 !important;
+        }
     </style>
 @endsection
 
@@ -40,6 +74,29 @@
                     minimumResultsForSearch: 0, dropdownParent: $('#guestHouseBeneficiaryModal'),
                     placeholder: 'ابحث واختر النوع...'
                 });
+
+                if (document.getElementById('existingGuestSelect')) {
+                    $('#existingGuestSelect').select2({
+                        theme: 'bootstrap-5',
+                        dir: 'rtl',
+                        width: '100%',
+                        allowClear: true,
+                        minimumResultsForSearch: 0,
+                        matcher: matchByWords,
+                        dropdownParent: $('#guestHouseBeneficiaryModal'),
+                        placeholder: '— ابحث باسم النزيل أو الرقم القومي أو الكود أو الهاتف —',
+                        language: {
+                            noResults: function () {
+                                return 'لا توجد حالة مسجلة بهذا الاسم أو الرقم القومي';
+                            },
+                            searching: function () {
+                                return 'جاري البحث في الحالات المسجلة...';
+                            }
+                        }
+                    }).on('change', function () {
+                        handleGuestHouseSelectExisting(this);
+                    });
+                }
             }
 
             function configurePeopleList(config) {
@@ -178,12 +235,18 @@
             const bedId = btn.getAttribute('data-bed-id');
             const bedLabel = btn.getAttribute('data-bed-label');
             const input = document.getElementById('modalBedInput');
-            const notice = document.getElementById('modalBedNotice');
-            const noticeLabel = document.getElementById('modalBedNoticeLabel');
 
             if (input) input.value = bedId;
-            if (noticeLabel) noticeLabel.textContent = bedLabel;
-            if (notice) notice.classList.remove('d-none');
+
+            ['modalBedNotice', 'modalBedNoticeTop'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('d-none');
+            });
+
+            ['modalBedNoticeLabel', 'modalBedNoticeTopLabel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = bedLabel;
+            });
 
             document.querySelectorAll('.modal-bed-square').forEach(b => {
                 b.classList.remove('border', 'border-3', 'border-warning', 'shadow-lg');
@@ -195,13 +258,42 @@
 
         function clearModalBedSelection() {
             const input = document.getElementById('modalBedInput');
-            const notice = document.getElementById('modalBedNotice');
             if (input) input.value = '';
-            if (notice) notice.classList.add('d-none');
+
+            ['modalBedNotice', 'modalBedNoticeTop'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('d-none');
+            });
+
             document.querySelectorAll('.modal-bed-square').forEach(b => {
                 b.classList.remove('border', 'border-3', 'border-warning', 'shadow-lg');
                 b.style.transform = 'scale(1)';
             });
+        }
+
+        function openBeneficiaryModalWithBed(bedId, bedLabel) {
+            const modalEl = document.getElementById('guestHouseBeneficiaryModal');
+            if (!modalEl) return;
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            setTimeout(() => {
+                const bedBtn = modalEl.querySelector(`.modal-bed-square[data-bed-id="${bedId}"]`);
+                if (bedBtn) {
+                    selectModalBed(bedBtn);
+                } else {
+                    const input = document.getElementById('modalBedInput');
+                    if (input) input.value = bedId;
+                    ['modalBedNotice', 'modalBedNoticeTop'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.remove('d-none');
+                    });
+                    ['modalBedNoticeLabel', 'modalBedNoticeTopLabel'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = bedLabel;
+                    });
+                }
+            }, 250);
         }
 
         function toggleTreatmentDocs(type) {
@@ -215,6 +307,45 @@
             if (radiationContainer) {
                 radiationContainer.classList.toggle('border-warning', type === 'radiation');
             }
+        }
+
+        function handleGuestHouseSelectExisting(select) {
+            const $sel = window.jQuery ? window.jQuery(select) : null;
+            const val = $sel ? $sel.val() : select.value;
+            const nameEl = document.getElementById('gh_patient_name');
+            const codeEl = document.getElementById('gh_patient_code');
+            const nidEl = document.getElementById('gh_patient_nid');
+            const phoneEl = document.getElementById('gh_patient_phone');
+            const addressEl = document.getElementById('gh_patient_address');
+
+            if (!val) {
+                if (nameEl) nameEl.value = '';
+                if (codeEl) codeEl.value = '';
+                if (nidEl) nidEl.value = '';
+                if (phoneEl) phoneEl.value = '';
+                if (addressEl) addressEl.value = '';
+                return;
+            }
+
+            let opt = null;
+            if (select.selectedIndex >= 0 && select.options && select.options[select.selectedIndex]) {
+                opt = select.options[select.selectedIndex];
+            } else if ($sel) {
+                opt = $sel.find('option:selected')[0];
+            }
+            if (!opt) return;
+
+            const name = opt.getAttribute('data-name');
+            const code = opt.getAttribute('data-code');
+            const nid = opt.getAttribute('data-nid');
+            const phone = opt.getAttribute('data-phone');
+            const address = opt.getAttribute('data-address');
+
+            if (name && nameEl) nameEl.value = name;
+            if (code && codeEl) codeEl.value = code;
+            if (nid && nidEl) nidEl.value = nid;
+            if (phone && phoneEl) phoneEl.value = phone;
+            if (address && addressEl) addressEl.value = address;
         }
     </script>
 @endsection
@@ -414,8 +545,10 @@
                     <i class="bi bi-receipt me-1"></i> إضافة مصروف
                 </button>
             @endif
-            <a href="{{ route('guest-houses.edit', $guest_house) }}" class="btn btn-outline-primary"><i
-                    class="bi bi-pencil me-1"></i> تعديل</a>
+            @if(auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']))
+                <a href="{{ route('guest-houses.edit', $guest_house) }}" class="btn btn-outline-primary"><i
+                        class="bi bi-pencil me-1"></i> تعديل</a>
+            @endif
             <a href="{{ route('guest-houses.index') }}" class="btn btn-outline-secondary"><i
                     class="bi bi-arrow-right me-1"></i> عودة</a>
         </div>

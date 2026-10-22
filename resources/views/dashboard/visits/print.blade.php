@@ -302,7 +302,7 @@
           </tr>
           <tr>
             <td>
-              <strong>ملكية البيت ( ملك / إيجار ) :</strong> {{ $visit->home_ownership ?: '—' }}
+              <strong>ملكية البيت :</strong> {{ $visit->home_ownership ?: '—' }}
             </td>
           </tr>
           <tr>

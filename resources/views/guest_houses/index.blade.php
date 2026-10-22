@@ -93,9 +93,9 @@
             <p class="hero-subtitle text-white opacity-75 mb-4" style="color: #ffffff !important;">إدارة مرافق الإقامة والضيافة التابعة للمؤسسة لضمان أفضل خدمة للمستفيدين.</p>
             <div class="hero-actions d-flex gap-2">
                 @php
-                    $isManager = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || auth()->user()->is_admin);
+                    $isAdmin = auth()->check() && (auth()->user()->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']));
                 @endphp
-                @if($isManager)
+                @if($isAdmin)
                     <a href="{{ route('guest-houses.create') }}" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;">
                         <i class="bi bi-plus-lg me-1"></i> إضافة دار جديدة
                     </a>
@@ -255,10 +255,10 @@
 
                         <div class="card-footer-mobile d-flex gap-2 justify-content-between align-items-center pt-3 border-top">
                             <div class="d-flex gap-2 flex-grow-1">
-                                <a class="btn btn-sm btn-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 py-2 fw-bold btn-details-mobile" href="{{ route('guest-houses.show', $h) }}">
-                                    <i class="bi bi-eye me-1"></i> عرض التفاصيل
+                                <a class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-bold btn-details-mobile" href="{{ route('guest-houses.show', $h) }}">
+                                    <i class="bi bi-door-open-fill me-1"></i> دخول للدار
                                 </a>
-                                @if(!(isset($h->pendingRequest) && $h->pendingRequest))
+                                @if($isAdmin && !(isset($h->pendingRequest) && $h->pendingRequest))
                                 <a class="btn btn-sm btn-light rounded-pill px-3 py-2 fw-bold" href="{{ route('guest-houses.edit', $h) }}">
                                     <i class="bi bi-pencil me-1"></i> تعديل
                                 </a>

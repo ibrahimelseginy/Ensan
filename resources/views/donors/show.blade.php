@@ -72,6 +72,12 @@
                             <label class="text-muted small mb-1">الهاتف</label>
                             <div class="fw-medium">{{ $donor->phone ?? '—' }}</div>
                         </div>
+                        @if($donor->national_id)
+                        <div class="col-md-6">
+                            <label class="text-muted small mb-1">الرقم القومي</label>
+                            <div class="fw-bold font-monospace text-dark">{{ $donor->national_id }}</div>
+                        </div>
+                        @endif
                         <div class="col-md-6">
                             <label class="text-muted small mb-1">العنوان</label>
                             <div class="fw-medium">{{ $donor->address ?? '—' }}</div>

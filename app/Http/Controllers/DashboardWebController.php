@@ -112,26 +112,23 @@ final class DashboardWebController extends Controller
             ];
         }
 
-        // Get "مشروع كسوة" ID
-        $kiswaProject = \App\Models\Project::where('name', 'مشروع كسوة')->first();
+        // Get all Kiswa projects & activities
+        $kiswaProjectIds = \App\Models\Project::where('name', 'like', '%كسوة%')->pluck('id');
 
         // Calculate revenues for this month
-        $kiswaActivitiesRevenue = 0;
-        if ($kiswaProject) {
-            $kiswaActivitiesRevenue = \App\Models\ProjectActivity::where('project_id', $kiswaProject->id)
-                ->whereBetween('activity_date', [now()->startOfMonth(), now()])
-                ->sum('revenue');
-        }
+        $kiswaActivitiesRevenue = (float) \App\Models\ProjectActivity::whereIn('project_id', $kiswaProjectIds)
+            ->whereBetween('activity_date', [now()->startOfMonth(), now()])
+            ->sum('revenue');
 
         // Workspace rentals revenue for this month (confirmed + completed only)
-        $workspaceRentalsRevenue = \App\Models\WorkspaceRental::whereIn('status', ['confirmed', 'completed'])
+        $workspaceRentalsRevenue = (float) \App\Models\WorkspaceRental::whereIn('status', ['confirmed', 'completed'])
             ->whereBetween('start_time', [now()->startOfMonth(), now()])
             ->sum('total_price');
 
         // Total activities revenue = Kiswa project activities + Workspace rentals
         $projectActivitiesRevenue = $kiswaActivitiesRevenue + $workspaceRentalsRevenue;
 
-        $projectActivitiesExpenses = \App\Models\ProjectActivity::whereBetween('activity_date', [now()->startOfMonth(), now()])->sum('expenses');
+        $projectActivitiesExpenses = (float) \App\Models\ProjectActivity::whereBetween('activity_date', [now()->startOfMonth(), now()])->sum('expenses');
 
         $cashMonth = (float) Donation::where('type', 'cash')->where('status', '!=', 'cancelled')->whereBetween('created_at', [now()->startOfMonth(), now()])->sum('amount');
         $inKindMonth = (float) Donation::where('type', 'in_kind')->where('status', '!=', 'cancelled')->whereBetween('created_at', [now()->startOfMonth(), now()])->sum('estimated_value');
@@ -142,6 +139,21 @@ final class DashboardWebController extends Controller
         $expensesMonth = (float) Expense::where('status', '!=', 'cancelled')->whereBetween('created_at', [now()->startOfMonth(), now()])->sum('amount') + $projectActivitiesExpenses;
         $netFlowMonth = $monthDonationsTotal - $expensesMonth;
 
+        // Combined Total Across ALL Treasuries (Including Bank Safe)
+        $totalTreasuriesBalance = 0;
+        $bankTreasuriesBalance = 0;
+        $cashTreasuriesBalance = 0;
+        if (\Illuminate\Support\Facades\Schema::hasTable('treasuries')) {
+            $totalTreasuriesBalance = (float) \App\Models\Treasury::where('is_active', true)->sum('current_balance');
+            $bankTreasuriesBalance = (float) \App\Models\Treasury::where('is_active', true)
+                ->where(function($q) {
+                    $q->where('name', 'like', '%بنك%')
+                      ->orWhere('name', 'like', '%bank%')
+                      ->orWhere('description', 'like', '%بنك%');
+                })->sum('current_balance');
+            $cashTreasuriesBalance = $totalTreasuriesBalance - $bankTreasuriesBalance;
+        }
+
         $latestExpenses = Expense::with('creator')->orderByDesc('id')->limit(5)->get();
         $expenseByCat = Expense::select('category', DB::raw('SUM(amount) as total'))
             ->whereBetween('created_at', [now()->startOfMonth(), now()])
@@ -149,27 +161,36 @@ final class DashboardWebController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // Active Campaigns Financials
+        // Active Campaigns Financials & Targets
         $activeCampaigns = \App\Models\Campaign::where('status', 'active')
             ->withCount('donations')
             ->limit(5)
             ->get();
 
         foreach ($activeCampaigns as $ac) {
-            $directDonations = $ac->donations()->where('type', 'cash')->where('status', '!=', 'cancelled')->sum('amount') +
-                $ac->donations()->where('type', 'in_kind')->where('status', '!=', 'cancelled')->sum('estimated_value');
-            $ac->total_donations = $directDonations > 0 ? $directDonations : (float) $ac->current_amount;
-            $ac->total_expenses = \App\Models\Expense::where('campaign_id', $ac->id)->where('status', '!=', 'cancelled')->sum('amount');
+            $directDonations = (float) \App\Models\Donation::where('campaign_id', $ac->id)
+                ->where('status', '!=', 'cancelled')
+                ->sum(DB::raw("CASE WHEN type = 'cash' THEN amount ELSE COALESCE(estimated_value, 0) END"));
+            $ac->total_donations = max((float) $ac->current_amount, $directDonations);
+            $ac->total_expenses = (float) \App\Models\Expense::where('campaign_id', $ac->id)->where('status', '!=', 'cancelled')->sum('amount');
             $ac->net_balance = $ac->total_donations - $ac->total_expenses;
 
-            $goal = (float) ($ac->goal_amount > 0 ? $ac->goal_amount : ($ac->target_amount ?: 100000));
+            $goal = (float) ($ac->target_amount > 0 ? $ac->target_amount : ($ac->goal_amount > 0 ? $ac->goal_amount : 100000));
             $ac->target_goal = $goal;
             $ac->calc_progress_pct = $goal > 0 ? min(100, round(($ac->total_donations / $goal) * 100, 1)) : 0;
             $ac->remaining_amount = max(0, $goal - $ac->total_donations);
 
-            $targetBen = $ac->ui_beneficiaries_override ? (int) $ac->ui_beneficiaries_override : max((int) $ac->beneficiaries_count, (int) round($goal / 350));
-            $ac->target_beneficiaries = max($targetBen, 50);
-            $ac->reached_beneficiaries = (int) $ac->beneficiaries_count;
+            // Target Families: Allow 1 family for surgeries or specific numbers
+            if ($ac->target_families !== null && $ac->target_families > 0) {
+                $ac->target_beneficiaries = (int) $ac->target_families;
+            } elseif ($ac->beneficiaries_count > 0) {
+                $ac->target_beneficiaries = (int) $ac->beneficiaries_count;
+            } elseif ($ac->ui_beneficiaries_override) {
+                $ac->target_beneficiaries = max(1, (int) preg_replace('/[^0-9]/', '', (string)$ac->ui_beneficiaries_override));
+            } else {
+                $ac->target_beneficiaries = 1;
+            }
+            $ac->reached_beneficiaries = (int) ($ac->beneficiaries_count ?: \App\Models\Beneficiary::where('campaign_id', $ac->id)->count());
             $ac->beneficiaries_pct = $ac->target_beneficiaries > 0 ? min(100, round(($ac->reached_beneficiaries / $ac->target_beneficiaries) * 100)) : 0;
         }
 
@@ -1716,6 +1737,9 @@ final class DashboardWebController extends Controller
             'inKindMonthPct',
             'expensesMonth',
             'netFlowMonth',
+            'totalTreasuriesBalance',
+            'bankTreasuriesBalance',
+            'cashTreasuriesBalance',
             'topDonors',
             'pendingLeaves',
             'currentlyOnLeave'

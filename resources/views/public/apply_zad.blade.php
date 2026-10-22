@@ -8,53 +8,46 @@
     <div class="col-lg-9 col-md-11">
 
       <style>
-        /* Header Card Typography & Contrast */
-        body:not(.theme-dark) .apply-header-card,
-        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-card {
+        /* Default / Light Mode Typography & Contrast */
+        .apply-header-card {
             background-color: #ffffff !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
         }
 
-        body:not(.theme-dark) .apply-header-badge,
-        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-badge {
+        .apply-header-badge {
             background-color: #f1f5f9 !important;
             background: #f1f5f9 !important;
             color: #000000 !important;
             border: 1px solid #cbd5e1 !important;
         }
 
-        body:not(.theme-dark) .apply-header-title,
-        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-title {
+        .apply-header-title {
             color: #000000 !important;
             font-weight: 900 !important;
         }
 
-        body:not(.theme-dark) .apply-header-subtitle,
-        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle {
+        .apply-header-subtitle {
             color: #000000 !important;
             font-weight: 600 !important;
         }
 
-        body:not(.theme-dark) .apply-header-subtitle strong,
-        html:not(.theme-dark):not([data-bs-theme="dark"]) .apply-header-subtitle strong {
+        .apply-header-subtitle strong {
             color: #000000 !important;
             font-weight: 800 !important;
         }
 
         /* Dark Mode */
         html.theme-dark .apply-header-card,
-        body.theme-dark .apply-header-card,
-        [data-bs-theme="dark"] .apply-header-card {
+        html[data-bs-theme="dark"] .apply-header-card {
             background-color: #0f172a !important;
             background: #0f172a !important;
             border: 1px solid #334155 !important;
         }
 
         html.theme-dark .apply-header-badge,
-        body.theme-dark .apply-header-badge,
-        [data-bs-theme="dark"] .apply-header-badge {
+        html[data-bs-theme="dark"] .apply-header-badge {
             background-color: #1e293b !important;
             background: #1e293b !important;
             color: #f8fafc !important;
@@ -62,20 +55,18 @@
         }
 
         html.theme-dark .apply-header-title,
-        body.theme-dark .apply-header-title,
-        [data-bs-theme="dark"] .apply-header-title {
+        html[data-bs-theme="dark"] .apply-header-title {
             color: #ffffff !important;
             font-weight: 900 !important;
         }
 
         html.theme-dark .apply-header-subtitle,
-        body.theme-dark .apply-header-subtitle,
-        [data-bs-theme="dark"] .apply-header-subtitle {
+        html[data-bs-theme="dark"] .apply-header-subtitle {
             color: #cbd5e1 !important;
         }
 
         html.theme-dark .apply-header-subtitle strong,
-        body.theme-dark .apply-header-subtitle strong {
+        html[data-bs-theme="dark"] .apply-header-subtitle strong {
             color: #ffffff !important;
         }
       </style>

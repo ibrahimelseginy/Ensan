@@ -11,7 +11,7 @@ final class Donor extends Model
     use \App\Traits\HashedRouteKey;
 
     protected $fillable = [
-        'code', 'name', 'type', 'phone', 'email', 'address', 'classification', 'recurring_cycle',
+        'code', 'name', 'type', 'phone', 'national_id', 'email', 'address', 'classification', 'recurring_cycle',
         'monthly_donation_day', 'active',
         'sponsorship_type', 'sponsored_beneficiary_id', 'sponsorship_project_id', 'sponsorship_monthly_amount',
         'allocation_type', 'monthly_allocation_target', 'campaign_id', 'guest_house_id'

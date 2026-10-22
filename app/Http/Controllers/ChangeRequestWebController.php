@@ -32,12 +32,32 @@ final class ChangeRequestWebController extends Controller
         $sponsorsMap = \App\Models\Donor::pluck('name', 'id')->toArray();
         $currentStatus = $request->status ?? 'all';
 
+        $beneficiaryIds = $requests->getCollection()
+            ->filter(fn($r) => $r->model_type === \App\Models\Beneficiary::class)
+            ->pluck('model_id')
+            ->unique();
+        $visitsByBeneficiary = \App\Models\FieldVisit::whereIn('beneficiary_id', $beneficiaryIds)
+            ->latest('visit_date')
+            ->get()
+            ->keyBy('beneficiary_id');
+
+        $nationalIds = $requests->getCollection()
+            ->map(function($r) {
+                return $r->subject?->national_id ?? ($r->payload['national_id'] ?? null);
+            })->filter()->unique();
+        $visitsByNationalId = \App\Models\FieldVisit::whereIn('national_id', $nationalIds)
+            ->latest('visit_date')
+            ->get()
+            ->keyBy('national_id');
+
         return view('change_requests.index', compact(
             'requests',
             'permissionsMap',
             'beneficiariesMap',
             'sponsorsMap',
-            'currentStatus'
+            'currentStatus',
+            'visitsByBeneficiary',
+            'visitsByNationalId'
         ));
     }
 

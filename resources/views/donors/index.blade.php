@@ -367,96 +367,112 @@
 
 {{-- Filter Section --}}
 <div class="chart-container mb-4 animate-slide-up animate-delay-5">
-    <div class="chart-header">
-        <h5 class="chart-title"><i class="bi bi-funnel-fill"></i> تصفية والبحث</h5>
-    </div>
-    <form method="GET" class="row g-3 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label fw-bold small text-uppercase text-muted">
-                <i class="bi bi-search text-primary me-1"></i> بحث سريع
-            </label>
-            <select name="q" id="quickDonorSearch" class="form-select">
-                <option value="">جميع المتبرعين (اختر أو ابحث...)</option>
-                @if(!empty($q) && !$allDonors->contains(fn($item) => $item->name === $q || $item->code === $q || $item->phone === $q))
-                    <option value="{{ $q }}" selected>{{ $q }} (بحث مخصص)</option>
-                @endif
-                @foreach($allDonors as $dItem)
-                    @php
-                        $codeDisplay = $dItem->code ? (' [' . $dItem->code . ']') : (' [DON-' . $dItem->id . ']');
-                        $phoneDisplay = $dItem->phone ? (' - ' . $dItem->phone) : '';
-                        $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone;
-                    @endphp
-                    <option value="{{ $dItem->name }}" @selected($isSelected)>
-                        {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}
-                    </option>
-                @endforeach
-            </select>
+    <div class="chart-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h5 class="chart-title mb-0"><i class="bi bi-funnel-fill text-primary me-1"></i> تصفية والبحث</h5>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-info fw-bold btn-sm rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1.5" onclick="previewFilteredDonors()" title="معاينة كشف المتبرعين قبل الطباعة">
+                <i class="bi bi-eye"></i>
+                <span>معاينة (عرض)</span>
+            </button>
+            <button type="button" class="btn btn-outline-success fw-bold btn-sm rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1.5" onclick="directPrintFilteredDonors()" title="طباعة كشف المتبرعين بالتصفية الحالية">
+                <i class="bi bi-printer"></i>
+                <span>طباعة الكشف</span>
+            </button>
         </div>
-        
-        <div class="col-lg-2 col-md-6">
-            <label class="form-label fw-bold small text-uppercase text-muted">نوع الجهة</label>
-            <div class="segmented-type-card" role="group">
-                <input type="radio" class="btn-check" name="type" id="typeAll" value="" {{ ($type ?? '') == '' ? 'checked' : '' }} onchange="this.form.submit()">
-                <label class="segmented-type-item" for="typeAll">
-                    <span>الكل</span>
+    </div>
+    <form method="GET">
+        <div class="row g-3">
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">
+                    <i class="bi bi-search text-primary me-1"></i> بحث سريع
                 </label>
+                <select name="q" id="quickDonorSearch" class="form-select">
+                    <option value="">جميع المتبرعين (اختر أو ابحث...)</option>
+                    @if(!empty($q) && !$allDonors->contains(fn($item) => $item->name === $q || $item->code === $q || $item->phone === $q || $item->national_id === $q))
+                        <option value="{{ $q }}" selected>{{ $q }} (بحث مخصص)</option>
+                    @endif
+                    @foreach($allDonors as $dItem)
+                        @php
+                            $codeDisplay = $dItem->code ? (' [' . $dItem->code . ']') : (' [DON-' . $dItem->id . ']');
+                            $phoneDisplay = $dItem->phone ? (' - ' . $dItem->phone) : '';
+                            $nidDisplay = $dItem->national_id ? (' - قومي: ' . $dItem->national_id) : '';
+                            $isSelected = ($q ?? '') == $dItem->name || ($q ?? '') == $dItem->code || ($q ?? '') == $dItem->phone || ($q ?? '') == $dItem->national_id;
+                        @endphp
+                        <option value="{{ $dItem->name }}" @selected($isSelected)>
+                            {{ $dItem->name }}{{ $codeDisplay }}{{ $phoneDisplay }}{{ $nidDisplay }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">نوع الجهة</label>
+                <div class="segmented-type-card" role="group">
+                    <input type="radio" class="btn-check" name="type" id="typeAll" value="" {{ ($type ?? '') == '' ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="segmented-type-item" for="typeAll">
+                        <span>الكل</span>
+                    </label>
 
-                <div class="segmented-divider"></div>
+                    <div class="segmented-divider"></div>
 
-                <input type="radio" class="btn-check" name="type" id="typeInd" value="individual" {{ ($type ?? '') == 'individual' ? 'checked' : '' }} onchange="this.form.submit()">
-                <label class="segmented-type-item" for="typeInd">
-                    <i class="bi bi-person"></i>
-                    <span>فرد</span>
-                </label>
+                    <input type="radio" class="btn-check" name="type" id="typeInd" value="individual" {{ ($type ?? '') == 'individual' ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="segmented-type-item" for="typeInd">
+                        <i class="bi bi-person"></i>
+                        <span>فرد</span>
+                    </label>
 
-                <div class="segmented-divider"></div>
+                    <div class="segmented-divider"></div>
 
-                <input type="radio" class="btn-check" name="type" id="typeOrg" value="organization" {{ ($type ?? '') == 'organization' ? 'checked' : '' }} onchange="this.form.submit()">
-                <label class="segmented-type-item" for="typeOrg">
-                    <i class="bi bi-building"></i>
-                    <span>منظمة</span>
-                </label>
+                    <input type="radio" class="btn-check" name="type" id="typeOrg" value="organization" {{ ($type ?? '') == 'organization' ? 'checked' : '' }} onchange="this.form.submit()">
+                    <label class="segmented-type-item" for="typeOrg">
+                        <i class="bi bi-building"></i>
+                        <span>منظمة</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">تصنيف التبرع</label>
+                <select name="classification" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
+                    <option value="">الكل</option>
+                    <option value="one_time" @selected(($classification ?? '')==='one_time')>مرة واحدة</option>
+                    <option value="recurring" @selected(($classification ?? '')==='recurring')>متكرر</option>
+                </select>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">الحالة</label>
+                <select name="active" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
+                    <option value="">الكل</option>
+                    <option value="1" @selected(($active ?? '')==='1')>نشط</option>
+                    <option value="0" @selected(($active ?? '')==='0')>غير نشط</option>
+                </select>
             </div>
         </div>
 
-        <div class="col-lg-2 col-md-6">
-            <label class="form-label fw-bold small text-uppercase text-muted">تصنيف التبرع</label>
-            <select name="classification" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
-                <option value="">الكل</option>
-                <option value="one_time" @selected(($classification ?? '')==='one_time')>مرة واحدة</option>
-                <option value="recurring" @selected(($classification ?? '')==='recurring')>متكرر</option>
-            </select>
-        </div>
-        <div class="col-lg-2 col-md-6">
-            <label class="form-label fw-bold small text-uppercase text-muted">الحالة</label>
-            <select name="active" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
-                <option value="">الكل</option>
-                <option value="1" @selected(($active ?? '')==='1')>نشط</option>
-                <option value="0" @selected(($active ?? '')==='0')>غير نشط</option>
-            </select>
-        </div>
-        <div class="col-lg-3 col-md-12">
-            <div class="d-flex flex-wrap gap-2 align-items-center w-100" style="height: 44px;">
-                <button type="submit" class="btn btn-primary fw-bold px-2.5 flex-grow-1" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" title="تطبيق التصفية">
+        {{-- Action Toolbar --}}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
+            <div class="d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-primary fw-bold px-3 py-2" style="height: 42px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;" title="تطبيق التصفية">
                     <i class="bi bi-funnel"></i>
-                    <span>تصفية</span>
+                    <span>تطبيق التصفية</span>
                 </button>
-                <a class="btn btn-outline-secondary btn-icon-square" href="{{ route('donors.index') }}" title="مسح التصفية" style="width: 44px; min-width: 44px; height: 44px; padding: 0; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
+                <a class="btn btn-outline-secondary px-3 py-2" href="{{ route('donors.index') }}" title="مسح التصفية" style="height: 42px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="bi bi-x-lg"></i>
+                    <span>مسح التصفية</span>
                 </a>
-                
-                {{-- زرار عرض (معاينة قبل الطباعة) --}}
-                <button type="button" class="btn btn-outline-info fw-bold px-2.5 flex-grow-1" onclick="previewFilteredDonors()" title="معاينة كشف المتبرعين قبل الطباعة" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-info fw-bold px-3 py-2" onclick="previewFilteredDonors()" title="معاينة كشف المتبرعين قبل الطباعة" style="height: 42px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="bi bi-eye"></i>
-                    <span>عرض</span>
+                    <span>معاينة (عرض)</span>
                 </button>
 
-                {{-- زرار الطباعة --}}
-                <button type="button" class="btn btn-outline-success fw-bold px-2.5 flex-grow-1" onclick="directPrintFilteredDonors()" title="طباعة كشف المتبرعين بالتصفية الحالية" style="height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                <button type="button" class="btn btn-outline-success fw-bold px-3 py-2" onclick="directPrintFilteredDonors()" title="طباعة كشف المتبرعين بالتصفية الحالية" style="height: 42px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="bi bi-printer"></i>
                     <span>طباعة</span>
                 </button>
-
             </div>
         </div>
     </form>
@@ -475,6 +491,7 @@
                     data-name="{{ $donor->name }}"
                     data-type="{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}"
                     data-phone="{{ $donor->phone ?? '—' }}"
+                    data-national-id="{{ $donor->national_id ?? '—' }}"
                     data-classification="{{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}"
                     data-total="{{ $st ? $st->total : 0 }}"
                     data-total-formatted="{{ $st ? number_format($st->total, 0) : '0' }}"
@@ -563,6 +580,9 @@
       <div class="d-flex align-items-center justify-content-between pt-2 border-top">
            <div class="text-muted small">
               <i class="bi bi-telephone me-1"></i> <span dir="ltr">{{ $donor->phone ?? '—' }}</span>
+              @if($donor->national_id)
+                <span class="mx-1">•</span> <i class="bi bi-card-heading me-1 text-primary"></i> <span dir="ltr" class="font-monospace">{{ $donor->national_id }}</span>
+              @endif
            </div>
            <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3" style="position: relative; z-index: 1;">
               <i class="bi bi-plus-lg me-1"></i> تبرع
@@ -667,7 +687,7 @@
                 theme: 'bootstrap-5',
                 dir: 'rtl',
                 allowClear: true,
-                placeholder: 'اختر متبرع أو اكتب للبحث (اسم / كود / هاتف)...',
+                placeholder: 'اختر متبرع أو اكتب للبحث (اسم / كود / هاتف / رقم قومي)...',
                 tags: true,
                 width: '100%',
                 language: {

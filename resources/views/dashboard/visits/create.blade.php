@@ -182,7 +182,7 @@
     </div>
   @endif
 
-  <form id="researchForm" method="POST" action="{{ route('visits.store') }}">
+  <form id="researchForm" method="POST" action="{{ route('visits.store') }}" enctype="multipart/form-data">
     @csrf
     @if(!empty($caseApplication))
       <input type="hidden" name="application_id" value="{{ $caseApplication->id }}">
@@ -273,7 +273,14 @@
               <option value="إيجار" @selected(old('home_ownership') === 'إيجار')>إيجار</option>
               <option value="ورثة" @selected(old('home_ownership') === 'ورثة')>ورثة</option>
               <option value="استضافة" @selected(old('home_ownership') === 'استضافة')>استضافة</option>
+              <option value="شركة" @selected(old('home_ownership') === 'شركة')>شركة</option>
+              <option value="بيت عيلة" @selected(old('home_ownership') === 'بيت عيلة')>بيت عيلة</option>
             </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-camera-fill text-primary me-1"></i> تصوير أو رفع صورة المنزل</label>
+            <input type="file" name="house_photo" class="form-control" accept="image/*" capture="environment">
           </div>
 
           <div class="col-md-3">
@@ -474,6 +481,16 @@
               <span class="official-notice-yellow">وصف الحالة الاجتماعية للأسرة ، وظروف الأسرة ، ووضع البيت ( محتاج سقف / ترميم / بنى ) :</span>
             </label>
             <textarea name="home_and_social_condition" class="form-control" rows="3" placeholder="وصف كامل لحالة السكن والأسقف، الجدران، الفرش، مستوى المعيشة...">{{ old('home_and_social_condition') }}</textarea>
+          </div>
+
+          <div class="col-12 mt-3 pt-3 border-top">
+            <label class="form-label fw-bold">
+              <span class="official-notice-green d-inline-block px-3 py-1">
+                <i class="bi bi-images me-1"></i> رفع عدة صور (صور شيكات، وصولات أمانة، صور البيت، أو أي مستندات تدل على تدهور الحالة) :
+              </span>
+            </label>
+            <input type="file" name="condition_photos[]" class="form-control" accept="image/*" multiple capture="environment">
+            <div class="form-text text-muted">يمكنك التقاط أو اختيار عدة صور للشيكات والمنزل وأوجه تدهور الحالة دفعة واحدة وتخزينها في ملف الحالة.</div>
           </div>
         </div>
       </div>
