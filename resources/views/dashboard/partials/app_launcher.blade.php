@@ -570,6 +570,29 @@ html.theme-dark .ensan-sub-modal .bg-dark-subtle,
     border-color: #10b981 !important;
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
 }
+.cat-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.08);
+    color: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 999px;
+    margin-right: 2px;
+}
+.launcher-cat-btn.active .cat-count-badge {
+    background: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+}
+.theme-dark .cat-count-badge,
+html.theme-dark .cat-count-badge,
+body.theme-dark .cat-count-badge {
+    background: rgba(255, 255, 255, 0.12);
+}
 .theme-dark .launcher-cat-btn,
 html.theme-dark .launcher-cat-btn,
 html[data-bs-theme="dark"] .launcher-cat-btn,
@@ -628,22 +651,22 @@ body.theme-dark .launcher-cat-btn.active,
     {{-- Categories / Domain Tabs --}}
     <div class="launcher-categories-bar mb-4">
         <button type="button" class="launcher-cat-btn active" data-category="all">
-            <i class="bi bi-grid-fill"></i> جميع الأقسام
+            <i class="bi bi-grid-fill"></i> جميع الأقسام <span class="cat-count-badge" id="catCountAll"></span>
         </button>
         <button type="button" class="launcher-cat-btn" data-category="finance">
-            <i class="bi bi-cash-stack"></i> التبرعات والمالية
+            <i class="bi bi-cash-stack"></i> التبرعات والمالية <span class="cat-count-badge" id="catCountFinance"></span>
         </button>
         <button type="button" class="launcher-cat-btn" data-category="operations">
-            <i class="bi bi-truck"></i> العمليات واللوجيستك
+            <i class="bi bi-truck"></i> العمليات واللوجيستك <span class="cat-count-badge" id="catCountOperations"></span>
         </button>
         <button type="button" class="launcher-cat-btn" data-category="hr">
-            <i class="bi bi-people-fill"></i> الموارد البشرية
+            <i class="bi bi-people-fill"></i> الموارد البشرية <span class="cat-count-badge" id="catCountHr"></span>
         </button>
         <button type="button" class="launcher-cat-btn" data-category="digital">
-            <i class="bi bi-globe2"></i> الرقمية والموقع
+            <i class="bi bi-globe2"></i> الرقمية والموقع <span class="cat-count-badge" id="catCountDigital"></span>
         </button>
         <button type="button" class="launcher-cat-btn" data-category="admin">
-            <i class="bi bi-shield-check"></i> الإدارة والنظام
+            <i class="bi bi-shield-check"></i> الإدارة والنظام <span class="cat-count-badge" id="catCountAdmin"></span>
         </button>
     </div>
 
@@ -652,7 +675,7 @@ body.theme-dark .launcher-cat-btn.active,
 
         {{-- 0. المؤشرات والتحليلات (Dashboard Analytics & KPIs) --}}
         @if($u && $u->hasPermission('dashboard.view'))
-        <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-category="finance digital" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
+        <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-category="finance" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.45);">
                 <i class="bi bi-speedometer2"></i>
             </div>
@@ -685,7 +708,7 @@ body.theme-dark .launcher-cat-btn.active,
 
         {{-- 3. المستفيدون --}}
         @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('beneficiaries.view'))
-        <a href="{{ route('beneficiaries.index') }}" class="ensan-app-card" data-category="operations finance" data-title="المستفيدون" data-keywords="مستفيد حالات أسر أيتام beneficiaries">
+        <a href="{{ route('beneficiaries.index') }}" class="ensan-app-card" data-category="operations" data-title="المستفيدون" data-keywords="مستفيد حالات أسر أيتام beneficiaries">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #e11d48, #f43f5e); box-shadow: 0 10px 20px -5px rgba(225, 29, 72, 0.45);">
                 <i class="bi bi-person-heart"></i>
             </div>
@@ -762,7 +785,7 @@ body.theme-dark .launcher-cat-btn.active,
 
         {{-- 9. حملات موسمية (Popup) --}}
         @if($u && ($u->hasPermission('campaigns.view') || $u->hasPermission('ramadan_bags.view') || $u->hasPermission('ramadan_iftars.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCampaigns" data-category="operations finance" data-title="حملات موسمية" data-keywords="حملات رمضان شنط إفطار أضاحي شتاء campaigns">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCampaigns" data-category="operations" data-title="حملات موسمية" data-keywords="حملات رمضان شنط إفطار أضاحي شتاء campaigns">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.45);">
                 <i class="bi bi-megaphone-fill"></i>
             </div>
@@ -850,7 +873,7 @@ body.theme-dark .launcher-cat-btn.active,
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
         @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('manage_change_requests') || $u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin finance" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
@@ -861,7 +884,7 @@ body.theme-dark .launcher-cat-btn.active,
 
         {{-- 16. الشكاوى والمقترحات --}}
         @if($u && ($u->hasPermission('complaints.view') || $u->hasPermission('complaints.create') || $u->roles->contains('key', 'finance')))
-        <a href="{{ route('complaints.index') }}" class="ensan-app-card" data-category="admin" data-title="الشكاوى والمقترحات" data-keywords="شكاوى مقترحات تتبع complaints">
+        <a href="{{ route('complaints.index') }}" class="ensan-app-card" data-category="admin digital" data-title="الشكاوى والمقترحات" data-keywords="شكاوى مقترحات تتبع complaints">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.45);">
                 <i class="bi bi-chat-dots-fill"></i>
             </div>
@@ -2039,6 +2062,24 @@ document.addEventListener('DOMContentLoaded', function() {
             applyFilter();
         });
     }
+
+    function updateCategoryCounts() {
+        const categories = ['finance', 'operations', 'hr', 'digital', 'admin'];
+        const allBadge = document.getElementById('catCountAll');
+        if (allBadge) allBadge.textContent = cards.length;
+
+        categories.forEach(cat => {
+            let count = 0;
+            cards.forEach(card => {
+                const cats = (card.getAttribute('data-category') || '').split(' ');
+                if (cats.includes(cat)) count++;
+            });
+            const badge = document.getElementById('catCount' + cat.charAt(0).toUpperCase() + cat.slice(1));
+            if (badge) badge.textContent = count;
+        });
+    }
+
+    updateCategoryCounts();
 
     // Keyboard shortcut: Press / to search anywhere
     document.addEventListener('keydown', function(e) {
