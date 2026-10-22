@@ -442,9 +442,6 @@
                         </form>
                     </div>
                 </div>
-                        @endforeach
-                    </div>
-                </div>
             @empty
                 <div class="text-center text-muted py-4">أضف أول جناح وحدد عدد الأسِرّة ليظهر مخطط الحجز.</div>
             @endforelse
