@@ -27,6 +27,8 @@ final class Donation extends Model
         'cash_channel',
         'currency',
         'receipt_number',
+        'operation_number',
+        'transfer_receipt_path',
         'purpose',
         'estimated_value',
         'project_id',

@@ -6,8 +6,9 @@
     <div class="col-lg-9 col-md-11">
       
       <div class="text-center mb-4">
-        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1.5 fw-bold mb-2">
-          مؤسسة إنسان الخيرية
+        <span class="badge rounded-pill px-3.5 py-2 fw-bold mb-2 shadow-xs d-inline-flex align-items-center gap-1" style="background-color: #047857 !important; color: #ffffff !important; font-size: 0.95rem; font-weight: 800; border: 1px solid #065f46 !important;">
+          <i class="bi bi-shield-heart"></i>
+          <span>مؤسسة إنسان الخيرية</span>
         </span>
         <h2 class="fw-black text-dark mb-2">استمارة التقديم على مساعدة (البحث المبدئي)</h2>
         <p class="text-muted">نسعد باستقبال طلباتكم ليتم دراستها مبدئياً ومتابعتها من قِبل فريق البحث الاجتماعي بالمؤسسة</p>

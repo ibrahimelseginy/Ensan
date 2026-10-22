@@ -25,8 +25,9 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 animate-reveal-down px-2 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1.5 rounded-pill fw-bold fs-7">
-                    مؤسسة إنسان الخيرية
+                <span class="badge rounded-pill px-3 py-1.5 fw-bold fs-7 shadow-xs d-inline-flex align-items-center gap-1" style="background-color: #047857 !important; color: #ffffff !important; font-weight: 800; border: 1px solid #065f46 !important;">
+                    <i class="bi bi-shield-heart"></i>
+                    <span>مؤسسة إنسان الخيرية</span>
                 </span>
                 <span class="badge bg-warning bg-opacity-25 text-warning-emphasis px-2.5 py-1 rounded-pill fw-bold fs-7">
                     المرحلة الأولى

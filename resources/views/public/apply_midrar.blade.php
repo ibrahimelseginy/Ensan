@@ -17,10 +17,11 @@
         }
 
         .apply-header-badge {
-            background-color: #f1f5f9 !important;
-            background: #f1f5f9 !important;
-            color: #000000 !important;
-            border: 1px solid #cbd5e1 !important;
+            background-color: #047857 !important;
+            background: #047857 !important;
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            border: 1px solid #065f46 !important;
         }
 
         .apply-header-title {

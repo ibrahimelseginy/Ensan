@@ -12,17 +12,27 @@ use Illuminate\Support\Str;
 final class BeneficiaryFamilyMember extends Model
 {
     protected $fillable = [
-        'beneficiary_id', 'relationship', 'full_name', 'birth_date', 'age', 'code',
+        'beneficiary_id', 'relationship', 'full_name', 'birth_date', 'death_date', 'age', 'code',
         'national_id', 'phone', 'backup_phone', 'sponsorship_amount', 'education_level',
         'case_details', 'is_patient', 'active', 'sort_order',
     ];
 
     protected $casts = [
         'birth_date' => 'date',
+        'death_date' => 'date',
         'sponsorship_amount' => 'decimal:2',
         'is_patient' => 'boolean',
         'active' => 'boolean',
     ];
+
+    public function getAgeAttribute($value): ?int
+    {
+        if ($this->birth_date) {
+            $end = $this->death_date ?? now();
+            return (int) \Carbon\Carbon::parse($this->birth_date)->diffInYears($end);
+        }
+        return $value;
+    }
 
     protected static function booted(): void
     {
