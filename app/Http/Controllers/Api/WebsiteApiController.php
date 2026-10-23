@@ -3216,5 +3216,339 @@ final class WebsiteApiController extends Controller
             'resolution'    => $complaint->resolution,
         ]);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Case Applications & Initial Research (التقديمات والبحث المبدئي) — Public & Admin
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Submit public case application from website (General, Zad, Midrar, Hope, etc.)
+     */
+    public function submitCaseApplication(Request $request)
+    {
+        $validated = $request->validate([
+            'case_type'                  => 'required|string|max:100',
+            'applicant_name'             => 'required|string|max:255',
+            'applicant_phone'            => 'required|string|max:30',
+            'backup_phone'               => 'nullable|string|max:30',
+            'applicant_id_number'        => 'nullable|string|max:20',
+            'national_id'                => 'nullable|string|max:20',
+            'submitter_type'             => 'nullable|string|in:self,other',
+            'submitter_name'             => 'nullable|string|max:255',
+            'submitter_phone'            => 'nullable|string|max:30',
+            'submitter_relation'         => 'nullable|string|max:100',
+            'governorate'                => 'nullable|string|max:100',
+            'city'                       => 'nullable|string|max:100',
+            'address'                    => 'nullable|string|max:1000',
+            'description'                => 'nullable|string|max:5000',
+
+            // Zad (Orphans) Fields
+            'mother_name'                => 'nullable|string|max:255',
+            'deceased_husband_name'      => 'nullable|string|max:255',
+            'submitter_relation_to_mother' => 'nullable|string|max:150',
+            'transit_details'            => 'nullable|string|max:1000',
+            'death_details'              => 'nullable|string|max:1000',
+            'children_count'             => 'nullable|string|max:50',
+            'children_details'           => 'nullable|string|max:3000',
+            'income_aid_sources'         => 'nullable|string|max:2000',
+            'expenses_debts_details'     => 'nullable|string|max:3000',
+            'source_name'                => 'nullable|string|max:255',
+            'reference_number'           => 'nullable|string|max:100',
+
+            // Midrar (Water & Roofs) Fields
+            'family_members_count'       => 'nullable|string|max:50',
+            'social_status_description'  => 'nullable|string|max:3000',
+            'need_type'                  => 'nullable|string|max:100',
+            'guide_name'                 => 'nullable|string|max:255',
+            'guide_phone'                => 'nullable|string|max:30',
+
+            // Hope (Cancer & Medical) Fields
+            'hospital_name'              => 'nullable|string|max:255',
+            'tumor_location'             => 'nullable|string|max:255',
+            'treatment_protocol'         => 'nullable|string|max:2000',
+
+            // Attachments
+            'id_image'                   => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'medical_report'             => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:15360',
+        ], [
+            'applicant_name.required'    => 'اسم صاحب الحالة أو المستفيد مطلوب.',
+            'applicant_phone.required'   => 'رقم الهاتف للتواصل مطلوب.',
+            'case_type.required'         => 'يرجى تحديد نوع المساعدة المطلوبة.',
+        ]);
+
+        if (empty($validated['applicant_id_number']) && !empty($validated['national_id'])) {
+            $validated['applicant_id_number'] = $validated['national_id'];
+        }
+        unset($validated['national_id']);
+
+        // Check for national ID duplication
+        if (!empty($validated['applicant_id_number'])) {
+            $nid = trim((string) $validated['applicant_id_number']);
+            $alreadyExists = \App\Models\Beneficiary::where('national_id', $nid)->exists()
+                || \App\Models\MobileCaseApplication::where('applicant_id_number', $nid)->exists()
+                || \App\Models\BeneficiaryFamilyMember::where('national_id', $nid)->exists();
+            if ($alreadyExists) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'تم التقديم مسبقاً بهذا الرقم القومي. يرجى التواصل مع إدارة مؤسسة إنسان على الرقم 01006090616 أو مراجعة فرع المؤسسة.',
+                    'errors'  => ['applicant_id_number' => ['تم التقديم مسبقاً بهذا الرقم القومي.']]
+                ], 422);
+            }
+        }
+
+        $validated['source'] = 'website';
+        $validated['status'] = 'pending';
+
+        // Compose detailed description if not provided
+        if (empty($validated['description'])) {
+            $parts = [];
+            if (!empty($validated['mother_name'])) $parts[] = "اسم الأم: {$validated['mother_name']}";
+            if (!empty($validated['deceased_husband_name'])) $parts[] = "اسم الزوج المتوفي: {$validated['deceased_husband_name']}";
+            if (!empty($validated['children_count'])) $parts[] = "عدد الأبناء: {$validated['children_count']}";
+            if (!empty($validated['need_type'])) $parts[] = "نوع الاحتياج: {$validated['need_type']}";
+            if (!empty($validated['tumor_location'])) $parts[] = "مكان الورم: {$validated['tumor_location']}";
+            if (!empty($validated['hospital_name'])) $parts[] = "المستشفى: {$validated['hospital_name']}";
+            $validated['description'] = implode(" | ", $parts) ?: "طلب تقديم عبر الموقع الإلكتروني لمؤسسة إنسان";
+        }
+
+        $files = $request->only(['id_image', 'medical_report']);
+        $data = collect($validated)->except(['id_image', 'medical_report'])->toArray();
+
+        $application = \App\Models\MobileCaseApplication::create($data);
+
+        if ($request->hasFile('id_image')) {
+            try {
+                $application->uploadImage($request->file('id_image'), 'mobile/cases/ids', 'id_image_path');
+            } catch (\Exception $e) {
+                \Log::error('ID Image upload error: ' . $e->getMessage());
+            }
+        }
+
+        if ($request->hasFile('medical_report')) {
+            try {
+                $application->uploadImage($request->file('medical_report'), 'mobile/cases/reports', 'medical_report_path');
+            } catch (\Exception $e) {
+                \Log::error('Medical Report upload error: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'status'       => 'success',
+            'message'      => 'تم تسجيل طلب البحث المبدئي بنجاح برقم قيد #' . $application->id . '. سيقوم فريق البحث الاجتماعي بمؤسسة إنسان بمراجعة الطلب والتواصل معكم.',
+            'tracking_id'  => $application->id,
+            'data'         => $application->fresh()
+        ], 201);
+    }
+
+    /**
+     * Track case application status publicly by ID or National ID or Phone
+     */
+    public function trackCaseApplication(string $query)
+    {
+        $q = trim($query);
+        $app = \App\Models\MobileCaseApplication::where('id', $q)
+            ->orWhere('applicant_id_number', $q)
+            ->orWhere('applicant_phone', $q)
+            ->latest('id')
+            ->first();
+
+        if (!$app) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'لم يتم العثور على طلب مساعدة مسجل برقم القيد أو الرقم القومي المدخل.'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'id'                  => $app->id,
+                'applicant_name'      => $app->applicant_name,
+                'case_type'           => $app->case_type,
+                'case_type_label'     => $app->case_type_label,
+                'status'              => $app->status,
+                'status_label'        => $app->status_label,
+                'status_color'        => $app->status_color,
+                'governorate'         => $app->governorate,
+                'city'                => $app->city,
+                'created_at'          => $app->created_at?->format('Y-m-d H:i'),
+                'rejection_reason'    => $app->status === 'rejected' ? $app->rejection_reason : null,
+                'admin_notes'         => in_array($app->status, ['under_research', 'approved']) ? $app->admin_notes : null,
+            ]
+        ]);
+    }
+
+    // ─── Case Applications — Admin Management ────────────────────────────────
+
+    /**
+     * Admin: List case applications with search, type, and status filtering
+     */
+    public function adminListCaseApplications(Request $request)
+    {
+        $query = \App\Models\MobileCaseApplication::query();
+
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('case_type', $request->type);
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            if ($request->status === 'under_research') {
+                $query->whereIn('status', ['under_research', 'reviewed']);
+            } elseif ($request->status === 'approved') {
+                $query->whereIn('status', ['approved', 'completed', 'accepted']);
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        if ($request->filled('q')) {
+            $s = trim($request->q);
+            $query->where(function ($sub) use ($s) {
+                $sub->where('applicant_name', 'like', "%{$s}%")
+                    ->orWhere('applicant_phone', 'like', "%{$s}%")
+                    ->orWhere('applicant_id_number', 'like', "%{$s}%")
+                    ->orWhere('submitter_name', 'like', "%{$s}%")
+                    ->orWhere('city', 'like', "%{$s}%")
+                    ->orWhere('id', $s);
+            });
+        }
+
+        $perPage = min((int) ($request->get('per_page', 20)), 100);
+        $applications = $query->orderByDesc('id')->paginate($perPage);
+
+        return response()->json($applications);
+    }
+
+    /**
+     * Admin: Stats summary for case applications
+     */
+    public function adminCaseApplicationStats()
+    {
+        $base = \App\Models\MobileCaseApplication::query();
+
+        return response()->json([
+            'total'          => (clone $base)->count(),
+            'pending'        => (clone $base)->where('status', 'pending')->count(),
+            'under_research' => (clone $base)->whereIn('status', ['under_research', 'reviewed'])->count(),
+            'approved'       => (clone $base)->whereIn('status', ['approved', 'completed', 'accepted'])->count(),
+            'rejected'       => (clone $base)->where('status', 'rejected')->count(),
+            'zad'            => (clone $base)->where('case_type', 'zad')->count(),
+            'midrar'         => (clone $base)->where('case_type', 'midrar')->count(),
+            'hope'           => (clone $base)->where('case_type', 'hope')->count(),
+            'general'        => (clone $base)->whereNotIn('case_type', ['zad', 'midrar', 'hope'])->count(),
+        ]);
+    }
+
+    /**
+     * Admin: Get single case application
+     */
+    public function adminGetCaseApplication($id)
+    {
+        $app = \App\Models\MobileCaseApplication::with(['assignedResearcher', 'fieldVisit'])->findOrFail($id);
+        return response()->json(['status' => 'success', 'data' => $app]);
+    }
+
+    /**
+     * Admin: Create case application manually from dashboard
+     */
+    public function adminCreateCaseApplication(Request $request)
+    {
+        $validated = $request->validate([
+            'applicant_name'      => 'required|string|max:255',
+            'applicant_phone'     => 'required|string|max:30',
+            'backup_phone'        => 'nullable|string|max:30',
+            'applicant_id_number' => 'nullable|string|max:20',
+            'case_type'           => 'required|string|max:100',
+            'governorate'         => 'nullable|string|max:100',
+            'city'                => 'nullable|string|max:100',
+            'address'             => 'nullable|string|max:1000',
+            'description'         => 'nullable|string|max:5000',
+            'status'              => 'nullable|string|in:pending,under_research,approved,completed,rejected',
+            'admin_notes'         => 'nullable|string|max:1000',
+            'submitter_name'      => 'nullable|string|max:255',
+            'submitter_phone'     => 'nullable|string|max:30',
+            'submitter_relation'  => 'nullable|string|max:100',
+        ]);
+
+        $validated['source'] = 'admin_dashboard';
+        $validated['status'] = $validated['status'] ?? 'pending';
+        if (empty($validated['description'])) {
+            $validated['description'] = 'طلب مسجل عبر لوحة تحكم الموقع';
+        }
+
+        $app = \App\Models\MobileCaseApplication::create($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم إنشاء طلب البحث المبدئي بنجاح.',
+            'data'    => $app->fresh()
+        ], 201);
+    }
+
+    /**
+     * Admin: Update case application status and notes
+     */
+    public function adminUpdateCaseApplicationStatus(Request $request, $id)
+    {
+        $application = \App\Models\MobileCaseApplication::findOrFail($id);
+
+        $validated = $request->validate([
+            'status'           => 'required|string|in:pending,under_research,approved,completed,rejected',
+            'admin_notes'      => 'nullable|string|max:2000',
+            'rejection_reason' => 'nullable|required_if:status,rejected|string|max:2000',
+        ], [
+            'rejection_reason.required_if' => 'يرجى كتابة سبب الرفض لتوضيح أسباب عدم القبول.',
+        ]);
+
+        $updateData = [
+            'status'      => $validated['status'],
+            'admin_notes' => $validated['admin_notes'] ?? $application->admin_notes,
+        ];
+
+        if ($validated['status'] === 'rejected') {
+            $updateData['rejection_reason'] = $validated['rejection_reason'];
+        } else {
+            $updateData['rejection_reason'] = null;
+        }
+
+        $application->update($updateData);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم تحديث حالة الحالة إلى (' . $application->status_label . ') بنجاح.',
+            'data'    => $application->fresh()
+        ]);
+    }
+
+    /**
+     * Admin: Delete case application
+     */
+    public function adminDeleteCaseApplication($id)
+    {
+        $application = \App\Models\MobileCaseApplication::findOrFail($id);
+        $application->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم حذف طلب البحث المبدئي بنجاح.'
+        ]);
+    }
+
+    /**
+     * Admin: Bulk delete case applications
+     */
+    public function adminBulkDeleteCaseApplications(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!empty($ids) && is_array($ids)) {
+            \App\Models\MobileCaseApplication::whereIn('id', $ids)->delete();
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'تم حذف الطلبات المحددة بنجاح.'
+        ]);
+    }
 }
+
 

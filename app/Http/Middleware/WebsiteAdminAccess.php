@@ -13,6 +13,14 @@ final class WebsiteAdminAccess
         $user = $request->user();
         abort_unless($user instanceof \App\Models\User, 401);
         $section = $request->segment(5);
+        if ($section === 'case-applications') {
+            $hasAccess = $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])
+                || $user->hasPermission('mobile.case_applications.view')
+                || $user->hasPermission('beneficiaries.view')
+                || $user->hasPermission('website.settings.view_edit');
+            abort_unless($hasAccess, 403);
+            return $next($request);
+        }
         $resource = [
             'complaints' => 'complaints',
             'donation-accounts' => 'website.donation_accounts',

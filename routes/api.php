@@ -107,11 +107,21 @@ Route::prefix('v1')->group(function () {
         Route::post('website/login', [WebsiteApiController::class, 'publicLogin'])->middleware('throttle:auth-strict');
         Route::post('website/verify-otp', [WebsiteApiController::class, 'publicVerifyOtp'])->middleware('throttle:auth-strict');
         Route::post('website/resend-otp', [WebsiteApiController::class, 'publicResendOtp'])->middleware('throttle:auth-strict');
-        Route::post('website/check-phone', [WebsiteApiController::class, 'publicCheckPhone'])->middleware('throttle:auth-strict');
-
+        // Case Applications / Assistance Requests — Public (no auth)
+        Route::post('website/case-applications', [WebsiteApiController::class, 'submitCaseApplication'])->middleware('throttle:submissions');
+        Route::get('website/case-applications/track/{query}', [WebsiteApiController::class, 'trackCaseApplication'])->middleware('throttle:heavy-ops');
 
         // Admin Website Management
         Route::prefix('admin/website')->middleware([\App\Http\Middleware\TokenAuth::class, \App\Http\Middleware\WebsiteAdminAccess::class, \App\Http\Middleware\AuditLogger::class])->withoutMiddleware(\App\Http\Middleware\RoleAccess::class)->group(function () {
+            // Case Applications & Initial Research Admin
+            Route::get('case-applications', [WebsiteApiController::class, 'adminListCaseApplications']);
+            Route::get('case-applications/stats', [WebsiteApiController::class, 'adminCaseApplicationStats']);
+            Route::get('case-applications/{id}', [WebsiteApiController::class, 'adminGetCaseApplication']);
+            Route::post('case-applications', [WebsiteApiController::class, 'adminCreateCaseApplication']);
+            Route::patch('case-applications/{id}/status', [WebsiteApiController::class, 'adminUpdateCaseApplicationStatus']);
+            Route::delete('case-applications/{id}', [WebsiteApiController::class, 'adminDeleteCaseApplication']);
+            Route::post('case-applications/bulk-delete', [WebsiteApiController::class, 'adminBulkDeleteCaseApplications']);
+
             // Complaints Admin
             Route::get('complaints', [WebsiteApiController::class, 'adminListComplaints']);
             Route::patch('complaints/{complaint}', [WebsiteApiController::class, 'adminUpdateComplaint']);
