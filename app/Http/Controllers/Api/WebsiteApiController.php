@@ -1479,11 +1479,11 @@ final class WebsiteApiController extends Controller
             'treatment_type' => 'nullable|in:chemotherapy,radiation,other',
             'sessions_count' => 'nullable|integer|min:1|max:1000',
             // Files
-            'patient_id' => 'nullable|file|any_image|max:10240',
-            'companion_id' => 'nullable|file|any_image|max:10240',
-            'medical_transfer' => 'nullable|file|any_image|max:10240',
-            'followup_card' => 'nullable|file|any_image|max:10240',
-            'medical_report' => 'nullable|file|any_image|max:10240'
+            'patient_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'companion_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'medical_transfer' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:15360',
+            'followup_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'medical_report' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:15360'
         ]);
 
         $fileFields = [
@@ -2854,16 +2854,24 @@ final class WebsiteApiController extends Controller
     public function publicCheckPhone(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|digits:11',
-        ], [
-            'phone.digits' => 'يجب أن يتكون رقم الهاتف من 11 رقماً.',
+            'phone' => 'required|string',
         ]);
 
-        $exists = \App\Models\WebDonor::where('phone', $request->phone)->exists();
+        $phone = preg_replace('/[^0-9]/', '', $request->phone);
+        if (str_starts_with($phone, '20') && strlen($phone) === 12) {
+            $phone = substr($phone, 2);
+        }
+        if (strlen($phone) === 10 && str_starts_with($phone, '1')) {
+            $phone = '0' . $phone;
+        }
+
+        $exists = \App\Models\WebDonor::where('phone', $phone)
+            ->orWhere('phone', $request->phone)
+            ->exists();
 
         return response()->json([
             'success' => true,
-            'exists' => $exists,
+            'exists'  => $exists,
         ]);
     }
 
@@ -3118,11 +3126,15 @@ final class WebsiteApiController extends Controller
 
     public function submitWebsiteComplaint(Request $request)
     {
+        if (!$request->has('source_type') && $request->has('type')) {
+            $request->merge(['source_type' => $request->input('type')]);
+        }
+
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'phone'       => 'required|string|max:30',
             'email'       => 'nullable|email|max:255',
-            'source_type' => 'required|in:donor,beneficiary,employee',
+            'source_type' => 'required|string|in:donor,beneficiary,employee,volunteer,other',
             'subject'     => 'required|string|max:255',
             'message'     => 'required|string',
         ], [
@@ -3345,12 +3357,48 @@ final class WebsiteApiController extends Controller
      */
     public function trackCaseApplication(string $query)
     {
-        $q = trim($query);
-        $app = \App\Models\MobileCaseApplication::where('id', $q)
-            ->orWhere('applicant_id_number', $q)
-            ->orWhere('applicant_phone', $q)
-            ->latest('id')
-            ->first();
+        $q = trim(ltrim(trim($query), '#'));
+        if ($q === '') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'يرجى إدخال رقم القيد أو الرقم القومي أو الهاتف للاستعلام.'
+            ], 400);
+        }
+
+        $cacheKey = 'track_case_app_' . md5($q);
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($cached) {
+            return response()->json($cached);
+        }
+
+        $app = null;
+
+        // 1. If 14-digit Egyptian National ID -> search indexed applicant_id_number
+        if (preg_match('/^[23]\d{13}$/', $q)) {
+            $app = \App\Models\MobileCaseApplication::where('applicant_id_number', $q)->latest('id')->first();
+        }
+
+        // 2. If phone number (10-12 digits starting with 01 or 20) -> search indexed phone
+        if (!$app && preg_match('/^(01\d{9}|201\d{9})$/', $q)) {
+            $app = \App\Models\MobileCaseApplication::where('applicant_phone', $q)
+                ->orWhere('backup_phone', $q)
+                ->latest('id')
+                ->first();
+        }
+
+        // 3. If small numeric integer -> direct Primary Key lookup (super fast)
+        if (!$app && ctype_digit($q) && strlen($q) <= 8) {
+            $app = \App\Models\MobileCaseApplication::find((int) $q);
+        }
+
+        // 4. Fallback search by reference number or any field
+        if (!$app) {
+            $app = \App\Models\MobileCaseApplication::where('reference_number', $q)
+                ->orWhere('applicant_id_number', $q)
+                ->orWhere('applicant_phone', $q)
+                ->latest('id')
+                ->first();
+        }
 
         if (!$app) {
             return response()->json([
@@ -3359,11 +3407,14 @@ final class WebsiteApiController extends Controller
             ], 404);
         }
 
-        return response()->json([
+        $payload = [
             'status' => 'success',
             'data'   => [
                 'id'                  => $app->id,
                 'applicant_name'      => $app->applicant_name,
+                'applicant_id_number' => $app->applicant_id_number,
+                'applicant_phone'     => $app->applicant_phone,
+                'reference_number'    => $app->reference_number,
                 'case_type'           => $app->case_type,
                 'case_type_label'     => $app->case_type_label,
                 'status'              => $app->status,
@@ -3371,11 +3422,16 @@ final class WebsiteApiController extends Controller
                 'status_color'        => $app->status_color,
                 'governorate'         => $app->governorate,
                 'city'                => $app->city,
+                'address'             => $app->address,
                 'created_at'          => $app->created_at?->format('Y-m-d H:i'),
                 'rejection_reason'    => $app->status === 'rejected' ? $app->rejection_reason : null,
                 'admin_notes'         => in_array($app->status, ['under_research', 'approved']) ? $app->admin_notes : null,
             ]
-        ]);
+        ];
+
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, now()->addSeconds(60));
+
+        return response()->json($payload);
     }
 
     // ─── Case Applications — Admin Management ────────────────────────────────

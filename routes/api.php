@@ -103,6 +103,7 @@ Route::prefix('v1')->group(function () {
         // Complaints — Public (no auth)
         Route::post('website/complaints', [WebsiteApiController::class, 'submitWebsiteComplaint'])->middleware('throttle:submissions');
         Route::get('website/complaints/track/{code}', [WebsiteApiController::class, 'trackWebsiteComplaint'])->middleware('throttle:heavy-ops');
+        Route::post('website/check-phone', [WebsiteApiController::class, 'publicCheckPhone'])->middleware('throttle:auth-strict');
         Route::post('website/register', [WebsiteApiController::class, 'publicRegister'])->middleware('throttle:auth-strict');
         Route::post('website/login', [WebsiteApiController::class, 'publicLogin'])->middleware('throttle:auth-strict');
         Route::post('website/verify-otp', [WebsiteApiController::class, 'publicVerifyOtp'])->middleware('throttle:auth-strict');

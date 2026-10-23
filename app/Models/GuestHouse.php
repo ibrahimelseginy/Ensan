@@ -58,7 +58,7 @@ final class GuestHouse extends Model
     }
 
     public function wings() { return $this->hasMany(GuestHouseWing::class); }
-    public function beds() { return $this->hasManyThrough(GuestHouseBed::class, GuestHouseWing::class); }
+    public function beds() { return $this->hasManyThrough(GuestHouseBed::class, GuestHouseWing::class)->orderByRaw('CAST(guest_house_beds.number AS UNSIGNED) ASC, guest_house_beds.id ASC'); }
     public function stays() { return $this->hasMany(GuestHouseStay::class); }
     public function custodies() { return $this->hasMany(GuestHouseCustody::class); }
     public function meals() { return $this->hasMany(GuestHouseMeal::class); }

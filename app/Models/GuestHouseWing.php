@@ -10,5 +10,5 @@ final class GuestHouseWing extends Model
     protected $casts = ['is_active' => 'boolean'];
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
-    public function beds() { return $this->hasMany(GuestHouseBed::class); }
+    public function beds() { return $this->hasMany(GuestHouseBed::class)->orderByRaw('CAST(number AS UNSIGNED) ASC, id ASC'); }
 }

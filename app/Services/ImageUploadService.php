@@ -60,7 +60,21 @@ final class ImageUploadService
         ?int $quality = null,
     ): ?string {
         try {
-            if (!in_array($file->getMimeType(), self::ALLOWED_MIMES, true) || $file->getSize() > self::MAX_SIZE_KB * 1024) {
+            $mime = $file->getMimeType();
+            $maxBytes = self::MAX_SIZE_KB * 1024;
+
+            // Handle PDF and document uploads: store directly without image conversion
+            if ($mime === 'application/pdf') {
+                if ($file->getSize() > $maxBytes) return null;
+                if (!preg_match('~^[a-zA-Z0-9_/-]+$~', $directory)) return null;
+                $disk = config('filesystems.image_upload_disk', 'uploads');
+                $savedPath = trim($directory, '/').'/'.Str::uuid().'.pdf';
+                if (!Storage::disk($disk)->put($savedPath, file_get_contents($file->getRealPath()))) return null;
+                if ($oldPath) $this->delete($oldPath);
+                return $savedPath;
+            }
+
+            if (!in_array($mime, self::ALLOWED_MIMES, true) || $file->getSize() > $maxBytes) {
                 return null;
             }
             if (!preg_match('~^[a-zA-Z0-9_/-]+$~', $directory)) return null;
