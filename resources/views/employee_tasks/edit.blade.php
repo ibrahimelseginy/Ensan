@@ -77,14 +77,57 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-secondary">فريق العمل المشترك (المهام المشتركة)</label>
                                     @php $selectedShared = $task->assignees->pluck('id')->toArray(); @endphp
-                                    <select name="shared_with[]" multiple class="form-select form-select-lg fs-6" style="min-height: 80px;" title="اضغط Ctrl أو Cmd للاختيار المتعدد">
+                                    <label class="form-label fw-medium text-secondary d-flex justify-content-between align-items-center mb-1">
+                                        <span><i class="bi bi-people-fill text-success me-1"></i> فريق العمل المشترك (المهام المشتركة)</span>
+                                        <span class="badge bg-light text-muted border px-2 py-1" id="editSharedBadge">تم اختيار {{ count($selectedShared) }}</span>
+                                    </label>
+
+                                    <!-- Selected Chips Display Area -->
+                                    <div class="employee-chips-box p-2 rounded-3 border bg-light d-flex flex-wrap gap-2 align-items-center mb-2" id="editSharedChipsContainer" style="min-height: 48px;">
+                                        <span class="text-muted small empty-chips-placeholder {{ count($selectedShared) > 0 ? 'd-none' : '' }}" id="editSharedPlaceholder">
+                                            <i class="bi bi-person-plus me-1"></i> اختر من القائمة أدناه لإضافة أعضاء لفريق المهمة
+                                        </span>
+                                    </div>
+
+                                    <!-- Hidden Native Multiple Select -->
+                                    <select name="shared_with[]" id="editSharedSelect" multiple class="d-none">
                                         @foreach($users as $u)
                                             <option value="{{ $u->id }}" @selected(in_array($u->id, $selectedShared))>{{ $u->name }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted" style="font-size: 0.72rem;">الموظفون المشتركون تظهر لهم المهمة في لوحة كانبان الخاصة بهم.</small>
+
+                                    <!-- Employee Picker Box with Live Search -->
+                                    <div class="employee-picker-card rounded-3 border bg-white shadow-sm overflow-hidden">
+                                        <div class="p-2 border-bottom bg-light d-flex align-items-center gap-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                                                <input type="text" class="form-control border-0 bg-white" placeholder="بحث باسم الموظف..." oninput="filterEmployeePicker('editShared', this.value)">
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary text-nowrap rounded-pill px-2 py-1" style="font-size: 0.72rem;" onclick="clearAllEmployeePicker('editShared')">
+                                                إلغاء الكل
+                                            </button>
+                                        </div>
+                                        <div class="employee-picker-list p-2" id="editSharedList" style="max-height: 180px; overflow-y: auto;">
+                                            @foreach($users as $u)
+                                            @php $isSelected = in_array($u->id, $selectedShared); @endphp
+                                            <div class="employee-picker-item d-flex align-items-center justify-content-between p-2 rounded-2 mb-1 {{ $isSelected ? 'is-selected' : '' }}" 
+                                                 data-id="{{ $u->id }}" 
+                                                 data-name="{{ $u->name }}"
+                                                 onclick="toggleEmployeePicker('editShared', '{{ $u->id }}', '{{ addslashes($u->name) }}')">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="avatar-circle-sm bg-primary text-white">{{ mb_substr($u->name, 0, 1) }}</div>
+                                                    <span class="emp-name small fw-semibold text-dark">{{ $u->name }}</span>
+                                                </div>
+                                                <div class="check-box-indicator">
+                                                    <i class="bi bi-check-circle-fill text-success fs-5 check-icon {{ $isSelected ? '' : 'd-none' }}"></i>
+                                                    <i class="bi bi-circle text-muted fs-5 uncheck-icon {{ $isSelected ? 'd-none' : '' }}"></i>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">الموظفون المشتركون تظهر لهم المهمة في لوحة كانبان الخاصة بهم ويمكنك إضافتهم أو حذفهم بضغطة واحدة.</small>
                                 </div>
 
                                 <div class="col-md-12">
@@ -212,7 +255,222 @@
                 sel.addEventListener('change', toggle);
                 toggle();
             }
+
+            // Initialize Employee Multi-Picker for edit mode
+            initEmployeePicker('editShared');
         });
+
+        /* ============================================================== */
+        /* EMPLOYEE MULTI-PICKER CONTROLLER JAVASCRIPT                    */
+        /* ============================================================== */
+        window.employeePickers = window.employeePickers || {};
+
+        function initEmployeePicker(prefix) {
+            const select = document.getElementById(prefix + 'Select');
+            if (!select) return;
+
+            window.employeePickers[prefix] = new Map();
+
+            Array.from(select.options).forEach(opt => {
+                if (opt.selected) {
+                    window.employeePickers[prefix].set(String(opt.value), opt.text);
+                }
+            });
+
+            renderEmployeePicker(prefix);
+        }
+
+        function renderEmployeePicker(prefix) {
+            const map = window.employeePickers[prefix];
+            const container = document.getElementById(prefix + 'ChipsContainer');
+            const placeholder = document.getElementById(prefix + 'Placeholder');
+            const badge = document.getElementById(prefix + 'Badge');
+            const select = document.getElementById(prefix + 'Select');
+            const list = document.getElementById(prefix + 'List');
+
+            if (!container || !select) return;
+
+            container.querySelectorAll('.employee-chip').forEach(el => el.remove());
+
+            if (map.size === 0) {
+                if (placeholder) placeholder.classList.remove('d-none');
+                if (badge) badge.textContent = 'تم اختيار 0';
+            } else {
+                if (placeholder) placeholder.classList.add('d-none');
+                if (badge) badge.textContent = 'تم اختيار ' + map.size;
+            }
+
+            const selectedIds = new Set(Array.from(map.keys()));
+            Array.from(select.options).forEach(opt => {
+                opt.selected = selectedIds.has(String(opt.value));
+            });
+
+            map.forEach((name, id) => {
+                const chip = document.createElement('div');
+                chip.className = 'employee-chip';
+                chip.innerHTML = `
+                    <div class="chip-avatar">${name.trim().charAt(0)}</div>
+                    <span>${name}</span>
+                    <button type="button" class="btn-remove-chip" title="حذف" onclick="event.stopPropagation(); removeEmployeePicker('${prefix}', '${id}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                container.appendChild(chip);
+            });
+
+            if (list) {
+                list.querySelectorAll('.employee-picker-item').forEach(row => {
+                    const rowId = String(row.getAttribute('data-id'));
+                    const isSelected = selectedIds.has(rowId);
+                    const checkIcon = row.querySelector('.check-icon');
+                    const uncheckIcon = row.querySelector('.uncheck-icon');
+
+                    if (isSelected) {
+                        row.classList.add('is-selected');
+                        if (checkIcon) checkIcon.classList.remove('d-none');
+                        if (uncheckIcon) uncheckIcon.classList.add('d-none');
+                    } else {
+                        row.classList.remove('is-selected');
+                        if (checkIcon) checkIcon.classList.add('d-none');
+                        if (uncheckIcon) uncheckIcon.classList.remove('d-none');
+                    }
+                });
+            }
+        }
+
+        function toggleEmployeePicker(prefix, id, name) {
+            const map = window.employeePickers[prefix];
+            if (!map) return;
+
+            const key = String(id);
+            if (map.has(key)) {
+                map.delete(key);
+            } else {
+                map.set(key, name);
+            }
+            renderEmployeePicker(prefix);
+        }
+
+        function removeEmployeePicker(prefix, id) {
+            const map = window.employeePickers[prefix];
+            if (!map) return;
+
+            map.delete(String(id));
+            renderEmployeePicker(prefix);
+        }
+
+        function clearAllEmployeePicker(prefix) {
+            const map = window.employeePickers[prefix];
+            if (!map) return;
+            map.clear();
+            renderEmployeePicker(prefix);
+        }
+
+        function filterEmployeePicker(prefix, query) {
+            const list = document.getElementById(prefix + 'List');
+            if (!list) return;
+
+            const q = (query || '').toLowerCase().trim();
+            list.querySelectorAll('.employee-picker-item').forEach(row => {
+                const name = (row.getAttribute('data-name') || '').toLowerCase();
+                if (!q || name.includes(q)) {
+                    row.classList.remove('d-none');
+                } else {
+                    row.classList.add('d-none');
+                }
+            });
+        }
     </script>
+
+    <style>
+    .employee-chips-box {
+        background: #f8fafc;
+        border: 1.5px dashed #cbd5e1;
+        transition: all 0.2s ease;
+    }
+    .employee-chips-box:hover {
+        border-color: #10b981;
+    }
+    .employee-chip {
+        background: #ffffff;
+        border: 1px solid #10b981;
+        color: #065f46;
+        border-radius: 50px;
+        padding: 4px 10px 4px 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        animation: fadeInChip 0.2s ease;
+    }
+    @keyframes fadeInChip {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .employee-chip .chip-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.68rem;
+        font-weight: 800;
+    }
+    .employee-chip .btn-remove-chip {
+        background: rgba(239, 68, 68, 0.12);
+        color: #dc2626;
+        border: none;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0;
+        line-height: 1;
+    }
+    .employee-chip .btn-remove-chip:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: scale(1.15);
+    }
+    .employee-picker-card {
+        border: 1px solid #e2e8f0;
+    }
+    .employee-picker-item {
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid transparent;
+    }
+    .employee-picker-item:hover {
+        background: #f1f5f9;
+    }
+    .employee-picker-item.is-selected {
+        background: #ecfdf5 !important;
+        border-color: #a7f3d0;
+    }
+    .employee-picker-item.is-selected .emp-name {
+        color: #065f46 !important;
+        font-weight: 700 !important;
+    }
+    .avatar-circle-sm {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.72rem;
+    }
+    </style>
 @endsection
 
