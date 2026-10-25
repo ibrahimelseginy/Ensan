@@ -3284,27 +3284,61 @@
           }
         };
 
+        var swRegistration = null;
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function (reg) {
+              swRegistration = reg;
+            })
+            .catch(function (err) {
+              console.warn('Service Worker registration failed:', err);
+            });
+        }
+
         var showDesktopNotification = function (title, body, link, tag) {
           if (!('Notification' in window) || Notification.permission !== 'granted') return;
-          try {
-            var notif = new Notification(title || 'مؤسسة إنسان للأعمال الخيرية', {
-              body: body || 'لديك إشعار جديد في لوحة التحكم',
-              icon: '{{ asset('images/logo.png') }}',
-              badge: '{{ asset('images/logo.png') }}',
-              tag: tag || ('ensan_' + Date.now()),
-              lang: 'ar',
-              dir: 'rtl'
+
+          var notifOptions = {
+            body: body || 'لديك إشعار جديد في لوحة التحكم',
+            icon: '{{ asset('images/logo.png') }}',
+            badge: '{{ asset('images/logo.png') }}',
+            tag: tag || ('ensan_' + Date.now()),
+            lang: 'ar',
+            dir: 'rtl',
+            renotify: true,
+            data: {
+              link: link || '{{ route('notifications.index') }}'
+            }
+          };
+
+          if (swRegistration && swRegistration.showNotification) {
+            swRegistration.showNotification(title || 'مؤسسة إنسان للأعمال الخيرية', notifOptions)
+              .catch(function () {
+                fallbackNotification(title, notifOptions, link);
+              });
+          } else if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+            navigator.serviceWorker.ready.then(function (reg) {
+              swRegistration = reg;
+              reg.showNotification(title || 'مؤسسة إنسان للأعمال الخيرية', notifOptions);
+            }).catch(function () {
+              fallbackNotification(title, notifOptions, link);
             });
+          } else {
+            fallbackNotification(title, notifOptions, link);
+          }
+        };
+
+        var fallbackNotification = function (title, options, link) {
+          try {
+            var notif = new Notification(title || 'مؤسسة إنسان للأعمال الخيرية', options);
             notif.onclick = function (e) {
               e.preventDefault();
               window.focus();
-              if (link) {
-                window.location.href = link;
-              }
+              if (link) window.location.href = link;
               notif.close();
             };
-          } catch (err) {
-            console.warn('Desktop notification error:', err);
+          } catch (e) {
+            console.warn('Fallback desktop notification error:', e);
           }
         };
 
@@ -3540,7 +3574,27 @@
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
         load();
         document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
-        window.setInterval(load, 30000);
+
+        // Background Heartbeat Worker:
+        // Modern browsers throttle window.setInterval in background tabs.
+        // A dedicated Web Worker runs on an independent background thread and is NEVER throttled.
+        var startBackgroundHeartbeat = function () {
+          try {
+            var workerBlob = new Blob([
+              'var timer = setInterval(function() { postMessage("tick"); }, 25000);\n'
+            ], { type: 'application/javascript' });
+            var workerUrl = URL.createObjectURL(workerBlob);
+            var bgWorker = new Worker(workerUrl);
+            bgWorker.onmessage = function (e) {
+              if (e.data === 'tick') {
+                load();
+              }
+            };
+          } catch (e) {
+            window.setInterval(load, 25000);
+          }
+        };
+        startBackgroundHeartbeat();
       });
     </script>
   @endif
