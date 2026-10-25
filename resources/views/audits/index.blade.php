@@ -41,7 +41,15 @@
         'logout' => 'عملية خروج من النظام',
         'dashboard' => 'لوحة التحكم الرئيسية',
         'treasuries' => 'إدارة الخزائن المالية',
-        'accounts' => 'الدليل المحاسبي',
+        'case-applications' => 'طلبات واستمارات الحالات',
+        'cases' => 'إدارة الحالات والمساعدات',
+        'data-import' => 'استيراد البيانات الذكي',
+        'employee-tasks' => 'مهام الموظفين',
+        'guest-houses' => 'دار الضيافة لمرضى الأورام',
+        'audits' => 'سجل العمليات والأمان',
+        'notifications' => 'إشعارات وتنبيهات النظام',
+        'livewire' => 'تحديث مباشر للبيانات',
+        'reports' => 'التقارير والإحصائيات',
         'journal-entries' => 'القيود اليومية',
         'suppliers' => 'بيانات الموردين',
         'warehouses' => 'إدارة المستودعات',
@@ -50,7 +58,7 @@
     ];
 
     $getLabel = function($path) use ($routeMap) {
-        $cleanPath = ltrim(parse_url($path, PHP_URL_PATH), '/');
+        $cleanPath = ltrim(parse_url($path, PHP_URL_PATH) ?? '', '/');
         // Sort keys by length descending to match most specific first
         $keys = array_keys($routeMap);
         usort($keys, function($a, $b) { return strlen($b) - strlen($a); });
@@ -61,6 +69,18 @@
             }
         }
         return 'عملية فنية داخلية';
+    };
+
+    $formatDisplayPath = function($path) {
+        $clean = ltrim(parse_url($path, PHP_URL_PATH) ?? $path, '/');
+        $segments = explode('/', $clean);
+        $simplified = array_map(function($segment) {
+            if (strlen($segment) > 16 && preg_match('/^[a-zA-Z0-9_\-]+$/', $segment)) {
+                return substr($segment, 0, 8) . '…';
+            }
+            return $segment;
+        }, $segments);
+        return '/' . implode('/', $simplified);
     };
 
     $permissionsMap = $permissionsMap ?? [];
@@ -119,146 +139,171 @@
     <div class="row g-4">
         {{-- Stats Overview --}}
         <div class="col-xl-3">
-            <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-4">
-                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom border-light border-opacity-10">
-                    <h6 class="fw-bold mb-0 text-primary">
-                        <i class="bi bi-pie-chart-fill me-2"></i>ملخص العمليات
+            {{-- Operations Summary Card --}}
+            <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-3 p-xl-4 border border-light border-opacity-25 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light border-opacity-25">
+                    <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-pie-chart-fill"></i>ملخص العمليات
                     </h6>
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2.5 py-1 small fw-bold">
+                        {{ number_format($stats['total']) }} عملية
+                    </span>
                 </div>
                 
-                <div class="row g-3">
+                <div class="d-flex flex-column gap-2">
+                    @php
+                        $totalOps = max($stats['total'], 1);
+                        $currentMethod = request('method');
+                    @endphp
+
                     {{-- Total Stats --}}
-                    <div class="col-12">
-                        <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => ''])) }}" 
-                           class="d-block p-3 rounded-4 bg-primary bg-opacity-10 text-decoration-none hover-lift border border-primary border-opacity-10">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-layers-fill fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-primary fw-bold" style="font-size: 0.9rem;">إجمالي النشاط</div>
-                                        <div class="text-muted x-small">كافة العمليات</div>
-                                    </div>
-                                </div>
-                                <div class="h4 fw-bold mb-0 text-primary">{{ number_format($stats['total']) }}</div>
-                            </div>
-                        </a>
-                    </div>
+                    <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => ''])) }}" 
+                       class="stat-pill-card {{ empty($currentMethod) ? 'active' : '' }}">
+                        <div class="stat-pill-icon bg-primary text-white">
+                            <i class="bi bi-layers-fill"></i>
+                        </div>
+                        <div class="stat-pill-info">
+                            <div class="stat-pill-title text-main">إجمالي النشاط</div>
+                            <div class="stat-pill-sub text-muted">كافة العمليات</div>
+                        </div>
+                        <div class="stat-pill-val">
+                            <span class="stat-num text-primary">{{ number_format($stats['total']) }}</span>
+                            <span class="stat-percent bg-primary bg-opacity-10 text-primary">100%</span>
+                        </div>
+                    </a>
 
                     {{-- POST - Add --}}
-                    <div class="col-12">
-                        <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'POST'])) }}"
-                           class="d-block p-3 rounded-4 bg-success bg-opacity-10 text-decoration-none hover-lift border border-success border-opacity-10">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-success text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-plus-lg fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-success fw-bold" style="font-size: 0.9rem;">إضافة سجلات</div>
-                                        <div class="text-muted x-small">عمليات POST</div>
-                                    </div>
-                                </div>
-                                <div class="h4 fw-bold mb-0 text-success">{{ number_format($stats['POST']) }}</div>
-                            </div>
-                        </a>
-                    </div>
+                    @php $postPercent = round(($stats['POST'] / $totalOps) * 100); @endphp
+                    <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'POST'])) }}"
+                       class="stat-pill-card {{ $currentMethod === 'POST' ? 'active active-success' : '' }}">
+                        <div class="stat-pill-icon bg-success text-white">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <div class="stat-pill-info">
+                            <div class="stat-pill-title text-main">إضافة سجلات</div>
+                            <div class="stat-pill-sub text-muted">عمليات POST</div>
+                        </div>
+                        <div class="stat-pill-val">
+                            <span class="stat-num {{ $stats['POST'] > 0 ? 'text-success' : 'text-muted opacity-50' }}">
+                                {{ number_format($stats['POST']) }}
+                            </span>
+                            @if($stats['POST'] > 0)
+                                <span class="stat-percent bg-success bg-opacity-10 text-success">{{ $postPercent }}%</span>
+                            @endif
+                        </div>
+                    </a>
 
                     {{-- PUT/PATCH - Edit --}}
-                    <div class="col-12">
-                        <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'PUT'])) }}"
-                           class="d-block p-3 rounded-4 bg-info bg-opacity-10 text-decoration-none hover-lift border border-info border-opacity-10">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-info text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-pencil-fill fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-info fw-bold" style="font-size: 0.9rem;">تعديل بيانات</div>
-                                        <div class="text-muted x-small">عمليات Update</div>
-                                    </div>
-                                </div>
-                                <div class="h4 fw-bold mb-0 text-info">{{ number_format($stats['PUT'] + $stats['PATCH']) }}</div>
-                            </div>
-                        </a>
-                    </div>
+                    @php 
+                        $editCount = $stats['PUT'] + $stats['PATCH'];
+                        $editPercent = round(($editCount / $totalOps) * 100); 
+                    @endphp
+                    <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'PUT'])) }}"
+                       class="stat-pill-card {{ in_array($currentMethod, ['PUT', 'PATCH']) ? 'active active-info' : '' }}">
+                        <div class="stat-pill-icon bg-info text-white">
+                            <i class="bi bi-pencil-fill"></i>
+                        </div>
+                        <div class="stat-pill-info">
+                            <div class="stat-pill-title text-main">تعديل بيانات</div>
+                            <div class="stat-pill-sub text-muted">عمليات Update</div>
+                        </div>
+                        <div class="stat-pill-val">
+                            <span class="stat-num {{ $editCount > 0 ? 'text-info' : 'text-muted opacity-50' }}">
+                                {{ number_format($editCount) }}
+                            </span>
+                            @if($editCount > 0)
+                                <span class="stat-percent bg-info bg-opacity-10 text-info">{{ $editPercent }}%</span>
+                            @endif
+                        </div>
+                    </a>
 
                     {{-- DELETE --}}
-                    <div class="col-12">
-                        <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'DELETE'])) }}"
-                           class="d-block p-3 rounded-4 bg-danger bg-opacity-10 text-decoration-none hover-lift border border-danger border-opacity-10">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-danger text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-trash3-fill fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-danger fw-bold" style="font-size: 0.9rem;">حذف نهائي</div>
-                                        <div class="text-muted x-small">عمليات Delete</div>
-                                    </div>
-                                </div>
-                                <div class="h4 fw-bold mb-0 text-danger">{{ number_format($stats['DELETE']) }}</div>
-                            </div>
-                        </a>
-                    </div>
+                    @php $delPercent = round(($stats['DELETE'] / $totalOps) * 100); @endphp
+                    <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'DELETE'])) }}"
+                       class="stat-pill-card {{ $currentMethod === 'DELETE' ? 'active active-danger' : '' }}">
+                        <div class="stat-pill-icon bg-danger text-white">
+                            <i class="bi bi-trash3-fill"></i>
+                        </div>
+                        <div class="stat-pill-info">
+                            <div class="stat-pill-title text-main">حذف نهائي</div>
+                            <div class="stat-pill-sub text-muted">عمليات Delete</div>
+                        </div>
+                        <div class="stat-pill-val">
+                            <span class="stat-num {{ $stats['DELETE'] > 0 ? 'text-danger' : 'text-muted opacity-50' }}">
+                                {{ number_format($stats['DELETE']) }}
+                            </span>
+                            @if($stats['DELETE'] > 0)
+                                <span class="stat-percent bg-danger bg-opacity-10 text-danger">{{ $delPercent }}%</span>
+                            @endif
+                        </div>
+                    </a>
                 </div>
             </div>
 
-            <div class="glass-card animate-slide-up animate-delay-2 p-4">
-                <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom border-light border-opacity-10">
-                    <h6 class="fw-bold mb-0 text-primary">
-                        <i class="bi bi-graph-up-arrow me-2"></i>أكثر المسارات نشاطاً
+            {{-- Top Active Routes Card --}}
+            <div class="glass-card animate-slide-up animate-delay-2 p-3 p-xl-4 border border-light border-opacity-25 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light border-opacity-25">
+                    <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow"></i>أكثر المسارات نشاطاً
                     </h6>
-                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill small">تحديث اللحظي</span>
+                    <span class="live-pulse-badge">
+                        <span class="live-dot"></span>تحديث مباشر
+                    </span>
                 </div>
-                <div class="top-paths-list">
+                <div class="top-paths-list d-flex flex-column gap-2.5">
+                    @php $maxCount = max($topPaths->pluck('c')->all() ?: [1]); @endphp
                     @forelse($topPaths as $tp)
                         @php
                             $label = $getLabel($tp->path);
+                            $cleanPath = $formatDisplayPath($tp->path);
                             $icon = match(true) {
                                 str_contains($tp->path, 'donation') => 'bi-heart-fill',
                                 str_contains($tp->path, 'donor') => 'bi-person-heart',
                                 str_contains($tp->path, 'user') => 'bi-people-fill',
                                 str_contains($tp->path, 'task') => 'bi-check2-circle',
-                                str_contains($tp->path, 'finance') || str_contains($tp->path, 'expense') => 'bi-cash-coin',
+                                str_contains($tp->path, 'finance') || str_contains($tp->path, 'expense') || str_contains($tp->path, 'treasur') => 'bi-cash-coin',
                                 str_contains($tp->path, 'project') => 'bi-diagram-3-fill',
                                 str_contains($tp->path, 'login') => 'bi-door-open-fill',
+                                str_contains($tp->path, 'case') => 'bi-file-earmark-medical-fill',
                                 default => 'bi-activity'
                             };
+                            $ratio = round(($tp->c / $maxCount) * 100);
                         @endphp
-                        <div class="top-path-item-premium mb-4">
+                        <div class="top-path-item-modern p-2.5 rounded-3 border">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center gap-3 overflow-hidden">
-                                    <div class="path-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                                    <div class="path-icon-sq bg-primary bg-opacity-10 text-primary rounded-2 d-flex align-items-center justify-content-center">
                                         <i class="bi {{ $icon }} small"></i>
                                     </div>
                                     <div class="overflow-hidden">
                                         <a href="{{ url($tp->path) }}" target="_blank" class="fw-bold text-decoration-none text-main d-block text-truncate" style="font-size: 0.85rem;" title="{{ $label }}">
                                             {{ $label }}
                                         </a>
-                                        <div class="text-muted font-monospace x-small text-truncate" style="opacity: 0.6;">/{{ ltrim($tp->path, '/') }}</div>
+                                        <div class="text-muted font-monospace x-small text-truncate mt-0.5" dir="ltr" style="text-align: right; opacity: 0.7;" title="{{ $tp->path }}">
+                                            {{ $cleanPath }}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="text-end ms-2">
-                                    <span class="fw-bold text-primary">{{ number_format($tp->c) }}</span>
-                                    <div class="x-small text-muted opacity-50">عملية</div>
+                                <div class="text-end flex-shrink-0 ms-2">
+                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-15 fw-bold px-2 py-1">
+                                        {{ number_format($tp->c) }} <small class="fw-normal">عملية</small>
+                                    </span>
                                 </div>
                             </div>
-                            <div class="progress" style="height: 6px; border-radius: 10px; background: rgba(var(--primary-rgb), 0.05);">
-                                <div class="progress-bar bg-primary shadow-sm" 
+                            <div class="progress" style="height: 5px; border-radius: 9999px; background: rgba(var(--primary-rgb, 5, 150, 105), 0.08);">
+                                <div class="progress-bar rounded-pill" 
                                      role="progressbar" 
-                                     style="width: {{ ($tp->c / max($topPaths->pluck('c')->all() ?: [1])) * 100 }}%; border-radius: 10px; transition: width 1s ease-in-out;" 
+                                     style="width: {{ $ratio }}%; background: linear-gradient(90deg, var(--primary, #059669), #10b981); transition: width 0.8s ease;" 
                                      aria-valuenow="{{ $tp->c }}" 
                                      aria-valuemin="0" 
-                                     aria-valuemax="{{ max($topPaths->pluck('c')->all() ?: [1]) }}">
+                                     aria-valuemax="{{ $maxCount }}">
                                 </div>
                             </div>
                         </div>
                     @empty
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-2 opacity-25 d-block mb-2"></i>
-                            <p class="small mb-0">لا يوجد بيانات كافية حالياً</p>
+                            <p class="small mb-0">لا توجد بيانات مسجلة حالياً</p>
                         </div>
                     @endforelse
                 </div>
@@ -266,7 +311,7 @@
         </div>
 
         {{-- Main Feed --}}
-        <div class="col-xl-9">
+        <div class="col-xl-9" style="position: relative; overflow-x: clip;">
             {{-- Search & Filters --}}
             <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-0 overflow-hidden audits-filter-card">
                 <div class="p-3 border-bottom bg-light bg-opacity-25 filter-header">
@@ -392,40 +437,186 @@
 </div>
 
     <style>
-        .section-title-sm {
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary-light);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
+        /* Modern Stat Pill Cards */
+        .stat-pill-card {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, rgba(0,0,0,0.06));
+            text-decoration: none !important;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
         }
-        .section-title-sm::before {
-            content: '';
-            width: 4px;
-            height: 18px;
-            border-radius: 4px;
-            background: var(--primary);
+        .theme-dark .stat-pill-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+        .stat-pill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+            border-color: rgba(var(--primary-rgb, 5, 150, 105), 0.3);
+        }
+        .stat-pill-card.active {
+            border-color: var(--primary, #059669);
+            background: rgba(var(--primary-rgb, 5, 150, 105), 0.05);
+            box-shadow: 0 0 0 1px var(--primary, #059669);
+        }
+        .stat-pill-card.active-success {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+            box-shadow: 0 0 0 1px #10b981;
+        }
+        .stat-pill-card.active-info {
+            border-color: #0284c7;
+            background: rgba(2, 132, 199, 0.05);
+            box-shadow: 0 0 0 1px #0284c7;
+        }
+        .stat-pill-card.active-danger {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+            box-shadow: 0 0 0 1px #ef4444;
+        }
+
+        .stat-pill-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .stat-pill-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .stat-pill-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            line-height: 1.25;
+        }
+        .stat-pill-sub {
+            font-size: 0.72rem;
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+        .stat-pill-val {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
             flex-shrink: 0;
         }
-        .top-path-item {
-            background: var(--bg-card);
-            border: 1px solid var(--gray-200);
-            border-radius: 10px;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
+        .stat-num {
+            font-weight: 800;
+            font-size: 1.15rem;
+            line-height: 1;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .stat-percent {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 9999px;
+            line-height: 1.2;
+        }
+
+        /* Modern Top Path Items */
+        .top-path-item-modern {
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, rgba(0,0,0,0.06));
             transition: all 0.2s ease;
         }
-        .theme-dark .top-path-item {
-            background: rgba(255,255,255,0.03);
-            border-color: rgba(255,255,255,0.06);
+        .theme-dark .top-path-item-modern {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
         }
-        .top-path-item:hover {
-            border-color: var(--primary);
-            background: var(--primary-subtle);
+        .top-path-item-modern:hover {
+            border-color: rgba(var(--primary-rgb, 5, 150, 105), 0.3);
+            transform: translateX(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .path-icon-sq {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        /* Live Pulse Badge */
+        .live-pulse-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 9999px;
+            padding: 3px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .live-pulse-badge .live-dot {
+            width: 7px;
+            height: 7px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+            animation: livePulseDot 2s infinite ease-in-out;
+        }
+        @keyframes livePulseDot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.65; }
+        }
+
+        /* Timeline containment - prevent dots from leaking across columns */
+        .col-xl-9 {
+            position: relative;
+            overflow-x: clip;
+        }
+        .audit-timeline {
+            position: relative;
+            padding-right: 28px;
+            padding-left: 6px;
+        }
+        .audit-timeline::before {
+            content: '';
+            position: absolute;
+            right: 13px;
+            top: 15px;
+            bottom: 15px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary, #059669) 0%, rgba(var(--primary-rgb, 5, 150, 105), 0.12) 100%);
+            border-radius: 2px;
+        }
+        .audit-card {
+            position: relative;
+            border: 1px solid var(--border-color, rgba(0,0,0,0.06));
+            border-radius: 16px;
+            background: var(--bg-card, #ffffff);
+        }
+        .theme-dark .audit-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+        .audit-card::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 24px;
+            width: 10px;
+            height: 10px;
+            background: var(--primary, #059669);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card, #ffffff);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 5, 150, 105), 0.18);
+            z-index: 2;
         }
         
         .audits-filter .form-control, .audits-filter .form-select, .audits-filter .input-group-text {
