@@ -504,8 +504,22 @@ final class MobileContentController extends Controller
             })->count(),
         ];
 
-        $applications = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
-        return view('mobile.case_applications', compact('applications', 'type', 'status', 'source', 'search', 'sourceCounts'));
+        $statusCounts = [
+            'all' => $sourceCounts['all'],
+            'pending' => \App\Models\MobileCaseApplication::whereIn('status', ['pending', 'في انتظار البحث'])->count(),
+            'under_research' => \App\Models\MobileCaseApplication::whereIn('status', ['under_research', 'تحت البحث', 'reviewed'])->count(),
+            'approved' => \App\Models\MobileCaseApplication::whereIn('status', ['approved', 'completed', 'تم البحث', 'accepted'])->count(),
+            'rejected' => \App\Models\MobileCaseApplication::whereIn('status', ['rejected', 'مرفوض'])->count(),
+        ];
+
+        $typeCounts = [
+            'zad' => \App\Models\MobileCaseApplication::whereIn('case_type', ['zad', 'أيتام'])->count(),
+            'midrar' => \App\Models\MobileCaseApplication::whereIn('case_type', ['midrar', 'water', 'وصلة مياه'])->count(),
+            'hope' => \App\Models\MobileCaseApplication::whereIn('case_type', ['hope', 'أورام', 'medical'])->count(),
+        ];
+
+        $applications = $query->orderByDesc('created_at')->paginate(24)->withQueryString();
+        return view('mobile.case_applications', compact('applications', 'type', 'status', 'source', 'search', 'sourceCounts', 'statusCounts', 'typeCounts'));
     }
 
     public function storeCaseApplication(Request $request)
