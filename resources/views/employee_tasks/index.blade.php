@@ -2,65 +2,82 @@
 @section('content')
 
 {{-- Trello Kanban Board Hero Header --}}
-<div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);">
-    <div class="hero-content">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-primary bg-opacity-25 text-primary-emphasis border border-primary border-opacity-25 rounded-pill px-3 py-1">
-                <i class="bi bi-kanban-fill me-1"></i> لوحة كانبان التفاعلية (Trello Style)
+<div class="tasks-dashboard-hero animate-slide-up">
+    <div class="hero-bg-accent-1"></div>
+    <div class="hero-bg-accent-2"></div>
+    
+    <div class="hero-content position-relative z-1">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge hero-pill-trello">
+                <i class="bi bi-kanban-fill me-1 text-warning"></i> لوحة كانبان التفاعلية (Trello Style)
             </span>
-            <span class="badge bg-success bg-opacity-25 text-success-emphasis border border-success border-opacity-25 rounded-pill px-3 py-1">
-                <i class="bi bi-shield-lock-fill me-1"></i> سجلات مؤمّنة ضد الحذف
+            <span class="badge hero-pill-secure">
+                <i class="bi bi-shield-lock-fill me-1 text-success"></i> سجلات مؤمّنة ضد الحذف
             </span>
         </div>
-        <h1 class="hero-title text-white fw-bold mb-1">لوحة مهام فريق العمل</h1>
-        <p class="hero-subtitle text-light opacity-75 mb-3">متابعة دقيقة لكل مهمة من البداية حتى المراجعة والاعتماد النهائي مع توثيق زمني كامل.</p>
+        <h1 class="hero-title text-white fw-bold mb-2">لوحة مهام فريق العمل</h1>
+        <p class="hero-subtitle mb-4">متابعة دقيقة لكل مهمة من البداية حتى المراجعة والاعتماد النهائي مع توثيق زمني كامل.</p>
 
-        {{-- Top Summary Stats --}}
-        <div class="d-flex flex-wrap gap-3 mt-3">
-            <div class="bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3 px-3 py-2 text-white d-flex align-items-center gap-2">
-                <i class="bi bi-layers text-primary fs-5"></i>
+        {{-- Top Summary Stats (High Contrast Glass Cards) --}}
+        <div class="d-flex flex-wrap gap-3 mt-2">
+            <div class="hero-stat-card">
+                <div class="hero-stat-icon-wrap" style="background: rgba(255, 255, 255, 0.2); color: #ffffff;">
+                    <i class="bi bi-layers-fill"></i>
+                </div>
                 <div>
-                    <div class="small opacity-75" style="font-size: 0.72rem;">إجمالي المهام</div>
-                    <div class="fw-bold">{{ $stats['total'] }}</div>
+                    <div class="hero-stat-label">إجمالي المهام</div>
+                    <div class="hero-stat-value">{{ $stats['total'] }}</div>
                 </div>
             </div>
-            <div class="bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3 px-3 py-2 text-white d-flex align-items-center gap-2">
-                <i class="bi bi-clipboard2 text-secondary fs-5"></i>
+
+            <div class="hero-stat-card">
+                <div class="hero-stat-icon-wrap" style="background: rgba(148, 163, 184, 0.3); color: #f1f5f9;">
+                    <i class="bi bi-clipboard2-check-fill"></i>
+                </div>
                 <div>
-                    <div class="small opacity-75" style="font-size: 0.72rem;">قائمة المهام</div>
-                    <div class="fw-bold">{{ $stats['pending'] }}</div>
+                    <div class="hero-stat-label">قائمة المهام</div>
+                    <div class="hero-stat-value">{{ $stats['pending'] }}</div>
                 </div>
             </div>
-            <div class="bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3 px-3 py-2 text-white d-flex align-items-center gap-2">
-                <i class="bi bi-hourglass-split text-info fs-5"></i>
+
+            <div class="hero-stat-card">
+                <div class="hero-stat-icon-wrap" style="background: rgba(56, 189, 248, 0.3); color: #bae6fd;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
                 <div>
-                    <div class="small opacity-75" style="font-size: 0.72rem;">قيد التنفيذ</div>
-                    <div class="fw-bold">{{ $stats['in_progress'] }}</div>
+                    <div class="hero-stat-label">قيد التنفيذ</div>
+                    <div class="hero-stat-value">{{ $stats['in_progress'] }}</div>
                 </div>
             </div>
-            <div class="bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3 px-3 py-2 text-white d-flex align-items-center gap-2">
-                <i class="bi bi-search text-warning fs-5"></i>
+
+            <div class="hero-stat-card">
+                <div class="hero-stat-icon-wrap" style="background: rgba(251, 191, 36, 0.3); color: #fef08a;">
+                    <i class="bi bi-search"></i>
+                </div>
                 <div>
-                    <div class="small opacity-75" style="font-size: 0.72rem;">قيد المراجعة</div>
-                    <div class="fw-bold">{{ $stats['under_review'] }}</div>
+                    <div class="hero-stat-label">قيد المراجعة</div>
+                    <div class="hero-stat-value">{{ $stats['under_review'] }}</div>
                 </div>
             </div>
-            <div class="bg-white bg-opacity-10 border border-white border-opacity-10 rounded-3 px-3 py-2 text-white d-flex align-items-center gap-2">
-                <i class="bi bi-check2-circle text-success fs-5"></i>
+
+            <div class="hero-stat-card">
+                <div class="hero-stat-icon-wrap" style="background: rgba(52, 211, 153, 0.35); color: #a7f3d0;">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
                 <div>
-                    <div class="small opacity-75" style="font-size: 0.72rem;">مكتملة ومراجعة</div>
-                    <div class="fw-bold">{{ $stats['done'] }}</div>
+                    <div class="hero-stat-label">مكتملة ومعتمدة</div>
+                    <div class="hero-stat-value">{{ $stats['done'] }}</div>
                 </div>
             </div>
         </div>
     </div>
-    <i class="bi bi-kanban hero-icon d-none d-md-block opacity-25" style="font-size: 7rem;"></i>
+    <i class="bi bi-kanban hero-watermark-icon d-none d-lg-block"></i>
 </div>
 
 <div class="container-fluid py-4 animate-slide-up animate-delay-1">
 
     {{-- Filter & Actions Bar --}}
-    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white task-action-bar-card">
         <div class="card-body p-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
 
@@ -68,22 +85,22 @@
                 <form method="GET" action="{{ route('employee-tasks.index') }}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
                     <input type="hidden" name="view" value="{{ $viewMode }}">
 
-                    <div class="input-group input-group-sm" style="max-width: 250px;">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
-                        <input type="text" name="search" value="{{ $search }}" class="form-control bg-light border-0" placeholder="بحث في المهام...">
+                    <div class="input-group input-group-sm search-input-group" style="max-width: 260px;">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="{{ $search }}" class="form-control bg-light border-0 fw-semibold" placeholder="بحث في المهام...">
                     </div>
 
                     @if($isAdmin)
-                    <select name="assigned_to" class="form-select form-select-sm bg-light border-0" style="max-width: 200px;" onchange="this.form.submit()">
-                        <option value="">كل الموظفين</option>
+                    <select name="assigned_to" class="form-select form-select-sm bg-light border-0 fw-semibold" style="max-width: 200px;" onchange="this.form.submit()">
+                        <option value="">👤 كل الموظفين</option>
                         @foreach($employees as $emp)
                             <option value="{{ $emp->id }}" {{ $selectedEmployee == $emp->id ? 'selected' : '' }}>{{ $emp->name }}</option>
                         @endforeach
                     </select>
                     @endif
 
-                    <select name="priority" class="form-select form-select-sm bg-light border-0" style="max-width: 150px;" onchange="this.form.submit()">
-                        <option value="">كل الأولويات</option>
+                    <select name="priority" class="form-select form-select-sm bg-light border-0 fw-semibold" style="max-width: 155px;" onchange="this.form.submit()">
+                        <option value="">🎯 كل الأولويات</option>
                         <option value="urgent" {{ $selectedPriority === 'urgent' ? 'selected' : '' }}>🔥 عاجل جداً</option>
                         <option value="high" {{ $selectedPriority === 'high' ? 'selected' : '' }}>⚡ أولوية قصوى</option>
                         <option value="medium" {{ $selectedPriority === 'medium' ? 'selected' : '' }}>📌 عادية</option>
@@ -91,8 +108,8 @@
                     </select>
 
                     @if($search || $selectedEmployee || $selectedPriority || $selectedProject)
-                    <a href="{{ route('employee-tasks.index', ['view' => $viewMode]) }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-x-circle"></i> إلغاء الفلترة
+                    <a href="{{ route('employee-tasks.index', ['view' => $viewMode]) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold">
+                        <i class="bi bi-x-circle me-1"></i> إلغاء الفلترة
                     </a>
                     @endif
                 </form>
@@ -100,18 +117,18 @@
                 {{-- Right Actions: View switch & New Task --}}
                 <div class="d-flex align-items-center gap-2">
                     {{-- Toggle Views --}}
-                    <div class="btn-group btn-group-sm bg-light p-1 rounded-3">
-                        <a href="{{ request()->fullUrlWithQuery(['view' => 'board']) }}" class="btn btn-sm {{ $viewMode === 'board' ? 'btn-primary shadow-sm' : 'btn-light border-0 text-muted' }}" title="عرض اللوحة (Kanban)">
-                            <i class="bi bi-kanban"></i> لوحة
+                    <div class="btn-group btn-group-sm bg-light p-1 rounded-pill view-toggle-group">
+                        <a href="{{ request()->fullUrlWithQuery(['view' => 'board']) }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ $viewMode === 'board' ? 'btn-emerald-active' : 'text-muted' }}" title="عرض اللوحة (Kanban)">
+                            <i class="bi bi-kanban me-1"></i> لوحة
                         </a>
-                        <a href="{{ request()->fullUrlWithQuery(['view' => 'table']) }}" class="btn btn-sm {{ $viewMode === 'table' ? 'btn-primary shadow-sm' : 'btn-light border-0 text-muted' }}" title="عرض الجدول">
-                            <i class="bi bi-table"></i> جدول
+                        <a href="{{ request()->fullUrlWithQuery(['view' => 'table']) }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ $viewMode === 'table' ? 'btn-emerald-active' : 'text-muted' }}" title="عرض الجدول">
+                            <i class="bi bi-table me-1"></i> جدول
                         </a>
                     </div>
 
                     @if($isAdmin)
-                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createTaskModal">
-                        <i class="bi bi-plus-lg"></i>
+                    <button type="button" class="btn btn-sm btn-add-task rounded-pill px-3 shadow-sm d-flex align-items-center gap-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                        <i class="bi bi-plus-lg fs-6"></i>
                         <span>إضافة مهمة جديدة</span>
                     </button>
                     @endif
@@ -122,17 +139,19 @@
     </div>
 
     {{-- Alert indicating delete protection and privacy --}}
-    <div class="d-flex align-items-center justify-content-between p-3 rounded-4 mb-4 border" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2) !important;">
-        <div class="d-flex align-items-center gap-2 text-success">
-            <i class="bi bi-info-circle-fill fs-5"></i>
-            <span class="small fw-semibold">
+    <div class="task-info-notice-bar mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="notice-icon-circle">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="notice-text">
                 @if($isAdmin)
-                    أنت بصلاحية مسؤول: يمكنك متابعة كافة مهام الموظفين، تكليف مهام جديدة، واعتماد المراجعات النهائية.
+                    <strong class="text-emerald-dark">صلاحية مسؤول النظام:</strong> يمكنك متابعة كافة مهام الموظفين، تكليف مهام جديدة، واعتماد المراجعات النهائية.
                 @else
-                    تظهر لك هنا مهامك الفردية والمهام المشتركة معك فقط. يمكنك نقل المرحلة، رفع ملفات العمل، وتدوين الملاحظات.
+                    <strong class="text-emerald-dark">صلاحية موظف:</strong> تظهر لك هنا مهامك الفردية والمهام المشتركة معك فقط. يمكنك نقل المرحلة، رفع ملفات العمل، وتدوين الملاحظات.
                 @endif
-                (المهام غير قابلة للحذف نهائياً لحفظ الحقوق والسجلات).
-            </span>
+                <span class="text-muted ms-1">(المهام غير قابلة للحذف نهائياً لحفظ جهود فريق العمل والأرشيف الزمني).</span>
+            </div>
         </div>
     </div>
 
@@ -561,47 +580,284 @@
 {{-- KANBAN BOARD STYLES & INTERACTIVE SCRIPTS                     --}}
 {{-- ============================================================== --}}
 <style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+/* Main Page Font Enforcement */
+body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
+    font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Hero Header Styling */
+.tasks-dashboard-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 45%, #0f766e 100%) !important;
+    border-radius: 24px;
+    padding: 36px 36px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 36px -8px rgba(6, 78, 59, 0.35);
+}
+
+.hero-bg-accent-1 {
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-bg-accent-2 {
+    position: absolute;
+    bottom: -80px;
+    left: 20%;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-watermark-icon {
+    position: absolute;
+    left: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8.5rem;
+    color: rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    line-height: 1;
+}
+
+.hero-title {
+    font-size: 2.15rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ffffff !important;
+}
+
+.hero-subtitle {
+    font-size: 0.98rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9) !important;
+    line-height: 1.6;
+    max-width: 680px;
+}
+
+.hero-pill-trello {
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 50px;
+    padding: 6px 14px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.hero-pill-secure {
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: #a7f3d0 !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    border-radius: 50px;
+    padding: 6px 14px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Stat Glass Cards (High Contrast & Legibility) */
+.hero-stat-card {
+    background: rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    border-radius: 16px;
+    padding: 10px 18px;
+    color: #ffffff !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 145px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-stat-card:hover {
+    background: rgba(255, 255, 255, 0.24) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+.hero-stat-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.hero-stat-label {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.hero-stat-value {
+    font-family: 'Outfit', 'IBM Plex Sans Arabic', sans-serif !important;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff !important;
+    line-height: 1;
+}
+
+/* Action & Filter Bar */
+.task-action-bar-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.search-input-group .form-control,
+.task-action-bar-card select.form-select {
+    background: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    padding: 8px 14px !important;
+    transition: all 0.2s ease;
+}
+
+.search-input-group .form-control:focus,
+.task-action-bar-card select.form-select:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    background: #ffffff !important;
+}
+
+.view-toggle-group .btn-emerald-active {
+    background: #065f46 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(6, 95, 70, 0.25) !important;
+}
+
+.btn-add-task {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+    font-weight: 700 !important;
+    font-size: 0.92rem !important;
+    transition: all 0.25s ease;
+}
+
+.btn-add-task:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(16, 185, 129, 0.45) !important;
+    color: #ffffff !important;
+}
+
+/* Notice Bar */
+.task-info-notice-bar {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 16px;
+    padding: 13px 20px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
+}
+
+.notice-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notice-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #14532d;
+    line-height: 1.6;
+}
+
+.text-emerald-dark {
+    color: #065f46;
+    font-weight: 700;
+}
+
+/* Kanban Board Styling */
 .kanban-board-wrapper {
     overflow-x: auto;
-    padding-bottom: 20px;
+    padding-bottom: 24px;
 }
 
 .kanban-columns-container {
     display: grid;
-    grid-template-columns: repeat(4, minmax(300px, 1fr));
-    gap: 20px;
-    min-width: 1200px;
+    grid-template-columns: repeat(4, minmax(310px, 1fr));
+    gap: 24px;
+    min-width: 1280px;
     align-items: start;
 }
 
 .kanban-column {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 16px;
+    border-radius: 20px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    min-height: 600px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    min-height: 620px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
 .kanban-column-header {
-    padding-bottom: 12px;
+    padding-bottom: 14px;
     border-bottom: 2px solid #e2e8f0;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+}
+
+.kanban-column-header h6 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
 }
 
 .kanban-column-dot {
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     display: inline-block;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.count-badge {
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 3px 10px;
+    border-radius: 50px;
 }
 
 .kanban-cards-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     flex-grow: 1;
     min-height: 200px;
     padding: 4px;
@@ -609,26 +865,27 @@
 }
 
 .kanban-cards-list.drag-over {
-    background-color: rgba(59, 130, 246, 0.06);
-    border: 2px dashed #3b82f6;
-    border-radius: 12px;
+    background-color: rgba(16, 185, 129, 0.08);
+    border: 2px dashed #10b981;
+    border-radius: 16px;
 }
 
+/* Kanban Card */
 .kanban-card {
     background: #ffffff;
-    border: 1px solid #edf2f7;
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     cursor: grab;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     user-select: none;
 }
 
 .kanban-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.09);
     border-color: #cbd5e1;
 }
 
@@ -637,12 +894,31 @@
 }
 
 .kanban-card.is-dragging {
-    opacity: 0.4;
+    opacity: 0.35;
     transform: scale(0.97);
 }
 
+.kanban-card .card-title a {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #0f172a !important;
+    line-height: 1.5;
+    transition: color 0.2s ease;
+}
+
+.kanban-card .card-title a:hover {
+    color: #059669 !important;
+}
+
+.kanban-card .card-description {
+    font-size: 0.84rem;
+    color: #64748b;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
 .hover-primary:hover {
-    color: #3b82f6 !important;
+    color: #059669 !important;
 }
 
 /* Avatar Group styling */
@@ -652,16 +928,17 @@
 }
 
 .avatar-circle {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 0.72rem;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800;
+    font-size: 0.75rem;
     border: 2px solid #ffffff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .ms-n2 {
