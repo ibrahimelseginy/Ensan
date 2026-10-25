@@ -66,11 +66,7 @@ final class DataImportWebController extends Controller
         $tempDir = storage_path('app/imports');
 
         if ($token) {
-            // Re-preview existing file (e.g. user selected another sheet)
-            $request->validate([
-                'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
-            ]);
-
+            // Re-preview existing file (e.g. user selected another sheet or section)
             $filePath = null;
             $extension = 'xlsx';
             foreach (['xlsx', 'xls', 'csv', 'txt'] as $checkExt) {
@@ -91,12 +87,10 @@ final class DataImportWebController extends Controller
             // Fresh upload
             $request->validate([
                 'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480', // Up to 20MB
-                'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
             ], [
                 'file.required' => 'يرجى اختيار ملف الإكسيل أو الـ CSV المراد استيراده.',
                 'file.mimes' => 'صيغة الملف غير مدعومة. الصيغ المسموح بها هي: XLSX, XLS, CSV.',
                 'file.max' => 'الحد الأقصى لحجم الملف هو 20 ميجابايت.',
-                'section.required' => 'يرجى تحديد القسم المستهدف.',
             ]);
 
             $uploadedFile = $request->file('file');
@@ -111,10 +105,30 @@ final class DataImportWebController extends Controller
             $uploadedFile->move($tempDir, $token . '.' . $extension);
         }
 
-        // Get available sheets if xlsx
+        // 1. Run holistic multi-sheet analysis on the workbook
+        $workbookAnalysis = $this->importService->analyzeWorkbook($filePath, $extension);
+
+        // Get sheets list
         $sheets = [];
         if (in_array(strtolower($extension), ['xlsx', 'xls'], true)) {
             $sheets = $this->importService->getXlsxSheets($filePath);
+        }
+        if (empty($sheets)) {
+            $sheets = [['index' => 0, 'name' => 'الورقة الرئيسية']];
+        }
+
+        // Active sheet analysis
+        $activeSheetAnalysis = null;
+        foreach ($workbookAnalysis['sheets'] as $sa) {
+            if ($sa['sheet_index'] === $sheetIndex) {
+                $activeSheetAnalysis = $sa;
+                break;
+            }
+        }
+
+        // If no section provided or set to 'auto', use the detected section for this sheet
+        if (empty($section) || $section === 'auto' || !isset(DataImportService::SECTIONS[$section])) {
+            $section = $activeSheetAnalysis['detected_section'] ?? 'donations';
         }
 
         // Parse file rows for chosen sheet
@@ -127,6 +141,7 @@ final class DataImportWebController extends Controller
                 'sheets' => $sheets,
                 'active_sheet_index' => $sheetIndex,
                 'token' => $token,
+                'workbook_analysis' => $workbookAnalysis,
             ], 422);
         }
 
@@ -139,7 +154,7 @@ final class DataImportWebController extends Controller
             $headerTranslations[$colIdx] = $this->importService->translateHeaderToArabic((string) $hdr);
         }
 
-        // Auto map columns
+        // Auto map columns for the active section
         $suggestedMapping = $this->importService->autoMapColumns($headers, $section);
 
         // First 5 rows for live preview
@@ -148,8 +163,12 @@ final class DataImportWebController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token,
+            'is_multi_sheet' => count($workbookAnalysis['sheets']) > 1,
+            'workbook_analysis' => $workbookAnalysis,
             'section' => $section,
-            'section_name' => DataImportService::SECTIONS[$section]['name'],
+            'section_name' => DataImportService::SECTIONS[$section]['name'] ?? $section,
+            'section_color' => DataImportService::SECTIONS[$section]['color'] ?? '#10b981',
+            'section_icon' => DataImportService::SECTIONS[$section]['icon'] ?? 'bi-table',
             'sheets' => $sheets,
             'active_sheet_index' => $sheetIndex,
             'headers' => $headers,
@@ -157,12 +176,12 @@ final class DataImportWebController extends Controller
             'preview_rows' => $previewRows,
             'total_rows' => count($allRows),
             'suggested_mapping' => $suggestedMapping,
-            'target_fields' => DataImportService::SECTIONS[$section]['fields'],
+            'target_fields' => DataImportService::SECTIONS[$section]['fields'] ?? [],
         ]);
     }
 
     /**
-     * Step 2: Confirm Mapping & Execute Database Import
+     * Step 2: Confirm Mapping & Execute Database Import for a Single Sheet
      */
     public function process(Request $request): JsonResponse
     {
@@ -220,5 +239,106 @@ final class DataImportWebController extends Controller
         session()->forget('import_file_' . $token);
 
         return response()->json($result);
+    }
+
+    /**
+     * Step 3 (Advanced): Batch Import and Distribute Multiple Sheets Across Sections in One Click
+     */
+    public function batchProcess(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'sheets' => 'required|array|min:1',
+            'sheets.*.sheet_index' => 'required|integer',
+            'sheets.*.section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
+            'sheets.*.mapping' => 'required|array',
+        ]);
+
+        $token = $request->input('token');
+        $sheetsConfig = $request->input('sheets');
+        $tempDir = storage_path('app/imports');
+
+        $filePath = null;
+        $ext = 'xlsx';
+        foreach (['xlsx', 'xls', 'csv', 'txt'] as $checkExt) {
+            if (file_exists($tempDir . '/' . $token . '.' . $checkExt)) {
+                $filePath = $tempDir . '/' . $token . '.' . $checkExt;
+                $ext = $checkExt;
+                break;
+            }
+        }
+
+        if (!$filePath || !file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'انتهت صلاحية جلسة رفع الملف، يرجى إعادة اختيار الملف والمحاولة مرة أخرى.',
+            ], 419);
+        }
+
+        $userId = (int) auth()->id();
+        $totalImported = 0;
+        $totalDuplicates = 0;
+        $totalSkipped = 0;
+        $allErrors = [];
+        $sheetResults = [];
+
+        foreach ($sheetsConfig as $item) {
+            $sheetIdx = (int) $item['sheet_index'];
+            $section = $item['section'];
+            $mapping = $item['mapping'];
+            $sheetName = $item['sheet_name'] ?? ('ورقة #' . ($sheetIdx + 1));
+
+            $allRows = $this->importService->parseFile($filePath, $ext, $sheetIdx);
+            if (empty($allRows) || count($allRows) < 2) {
+                continue;
+            }
+
+            array_shift($allRows); // drop header
+
+            $res = $this->importService->executeImport($section, $allRows, $mapping, $userId);
+
+            $imported = $res['imported'] ?? 0;
+            $duplicates = $res['duplicates'] ?? 0;
+            $skipped = $res['skipped'] ?? 0;
+
+            $totalImported += $imported;
+            $totalDuplicates += $duplicates;
+            $totalSkipped += $skipped;
+
+            if (!empty($res['errors'])) {
+                foreach ($res['errors'] as $e) {
+                    $allErrors[] = "[$sheetName] $e";
+                }
+            }
+
+            $sheetResults[] = [
+                'sheet_index' => $sheetIdx,
+                'sheet_name' => $sheetName,
+                'section' => $section,
+                'section_name' => DataImportService::SECTIONS[$section]['name'] ?? $section,
+                'total_rows' => count($allRows),
+                'imported' => $imported,
+                'duplicates' => $duplicates,
+                'skipped' => $skipped,
+            ];
+        }
+
+        // Clean up temporary file
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+        session()->forget('import_file_' . $token);
+
+        return response()->json([
+            'success' => true,
+            'is_batch' => true,
+            'message' => "تم استيراد وتوزيع " . number_format($totalImported) . " سجلاً بنجاح عبر " . count($sheetResults) . " ورقة عمل في أقسام المنظومة.",
+            'total_imported' => $totalImported,
+            'total_duplicates' => $totalDuplicates,
+            'total_skipped' => $totalSkipped,
+            'total_rows' => $totalImported + $totalDuplicates + $totalSkipped,
+            'errors' => $allErrors,
+            'sheet_results' => $sheetResults,
+        ]);
     }
 }

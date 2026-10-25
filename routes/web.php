@@ -168,6 +168,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('template/{section}', [\App\Http\Controllers\DataImportWebController::class, 'downloadTemplate'])->name('template');
         Route::post('preview', [\App\Http\Controllers\DataImportWebController::class, 'preview'])->name('preview');
         Route::post('process', [\App\Http\Controllers\DataImportWebController::class, 'process'])->name('process');
+        Route::post('batch-process', [\App\Http\Controllers\DataImportWebController::class, 'batchProcess'])->name('batch-process');
     });
 
     Route::middleware('permission:notifications.view')

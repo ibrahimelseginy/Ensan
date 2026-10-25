@@ -49,9 +49,25 @@
             </div>
 
             <div class="import-section-grid" id="importSectionPills">
+                <button type="button" 
+                        class="import-sec-pill active" 
+                        data-section="auto"
+                        data-name="التوزيع التلقائي الذكي الشامل (AI)"
+                        style="--sec-color: #8b5cf6;">
+                    <div class="sec-pill-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6);">
+                        <i class="bi bi-magic fs-5"></i>
+                    </div>
+                    <div class="sec-pill-info">
+                        <div class="sec-pill-title">توزيع تلقائي شامل للأقسام (AI)</div>
+                        <div class="sec-pill-badge">اكتشاف أقسام الملف وتوزيعها آلياً</div>
+                    </div>
+                    <div class="sec-pill-check">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                </button>
                 @foreach($sections as $secKey => $secConfig)
                     <button type="button" 
-                            class="import-sec-pill {{ $secKey === $activeSection ? 'active' : '' }}" 
+                            class="import-sec-pill" 
                             data-section="{{ $secKey }}"
                             data-name="{{ $secConfig['name'] }}"
                             style="--sec-color: {{ $secConfig['color'] }};">
@@ -215,71 +231,144 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
+            {{-- Multi-Sheet Tabs --}}
+            <div class="px-4 pt-2 border-bottom bg-light-subtle d-none" id="modalMultiSheetNavTabs">
+                <ul class="nav nav-tabs border-0" id="modalTabsList">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-bold small border-0 py-2.5 px-3.5 d-inline-flex align-items-center gap-2" id="tabBtnBatchView" type="button">
+                            <i class="bi bi-diagram-3-fill text-primary"></i>
+                            <span>لوحة التوزيع الشامل لكافة الأوراق (AI)</span>
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 x-small" id="badgeModalTotalSheets">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold small border-0 py-2.5 px-3.5 d-inline-flex align-items-center gap-2" id="tabBtnDetailView" type="button">
+                            <i class="bi bi-sliders2-vertical text-success"></i>
+                            <span>المطابقة والمعاينة التفصيلية</span>
+                            <span class="badge bg-light text-muted border rounded-pill px-2 py-0.5 x-small" id="badgeCurrentSheetName">ورقة 1</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
             <div class="modal-body p-4">
-                {{-- Sheet Selector (if multi-sheet XLSX) --}}
-                <div id="modalSheetSelectorWrapper" class="d-none bg-emerald-50 border border-success-subtle rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="p-2 bg-success text-white rounded-2">
-                            <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                {{-- BATCH DISTRIBUTION VIEW (All Sheets Overview) --}}
+                <div id="batchDistributionView" class="d-none">
+                    <div class="alert alert-primary border-0 bg-primary-subtle text-primary-emphasis rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <i class="bi bi-magic fs-3 text-primary flex-shrink-0"></i>
+                            <div>
+                                <strong class="d-block">التوزيع والربط التلقائي الشامل لملف الإكسيل:</strong>
+                                <span class="small">اكتشف الذكاء الاصطناعي أقسام كل ورقة عمل ومطابقة أعمدتها بدقة. يمكنك استيراد كل الأوراق دفعة واحدة أو تعديل القسم لأي ورقة.</span>
+                            </div>
                         </div>
+                        <span class="badge bg-primary text-white px-3 py-2 rounded-pill small fw-bold" id="batchTotalRecordsBadge">0 سجل صالح</span>
+                    </div>
+
+                    <div class="card border rounded-3 overflow-hidden shadow-2xs mb-2">
+                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
+                            <span class="fw-bold small text-dark"><i class="bi bi-layers-fill me-1 text-primary"></i> أوراق العمل المكتشفة وتوزيعها على الأقسام</span>
+                            <span class="text-muted x-small">حدد الأوراق المراد استيرادها ثم اضغط زر التوزيع الجماعي</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small text-nowrap">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 35px;" class="text-center">
+                                            <input type="checkbox" id="checkAllBatchSheets" class="form-check-input" checked title="تحديد / إلغاء تحديد الكل">
+                                        </th>
+                                        <th>ورقة العمل</th>
+                                        <th>عدد الصفوف</th>
+                                        <th style="min-width: 220px;">القسم المستهدف (مكتشف آلياً)</th>
+                                        <th>الحقول المطابقة آلياً</th>
+                                        <th>الحالة</th>
+                                        <th class="text-center">إجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchSheetsTableBody">
+                                    {{-- Populated via JS --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SINGLE SHEET DETAILED MAPPING VIEW --}}
+                <div id="singleSheetMappingView">
+                    {{-- Sheet Selector (if multi-sheet XLSX) --}}
+                    <div id="modalSheetSelectorWrapper" class="d-none bg-emerald-50 border border-success-subtle rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 bg-success text-white rounded-2">
+                                <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <strong class="small text-dark d-block">ملف الإكسيل يحتوي على عدة أوراق عمل (Sheets):</strong>
+                                <span class="text-muted x-small">اختر ورقة العمل التي تريد استيرادها حالياً، ويمكنك التبديل بين الأوراق بسهولة</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small fw-bold text-dark text-nowrap"><i class="bi bi-layers-fill text-success me-1"></i>الورقة الحالية:</span>
+                            <select id="modalSheetSelect" class="form-select form-select-sm fw-bold border-success text-success bg-white shadow-2xs" style="min-width: 220px;">
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Info Alert --}}
+                    <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis rounded-3 p-3 mb-4 d-flex align-items-center gap-2.5 small">
+                        <i class="bi bi-magic fs-4 flex-shrink-0 text-info"></i>
                         <div>
-                            <strong class="small text-dark d-block">ملف الإكسيل يحتوي على عدة أوراق عمل (Sheets):</strong>
-                            <span class="text-muted x-small">اختر ورقة العمل التي تريد استيرادها حالياً، ويمكنك التبديل بين الأوراق بسهولة</span>
+                            <strong>المطابقة التلقائية:</strong> قمنا بمطابقة أعمدة ملفك آلياً بالذكاء الاصطناعي مع الحقول المناسبة. يمكنك مراجعة وتعديل أي حقل، أو اختيار <em>"تخطي هذا العمود"</em> للأعمدة الإضافية التي لا ترغب باستيرادها.
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="small fw-bold text-dark text-nowrap"><i class="bi bi-layers-fill text-success me-1"></i>الورقة الحالية:</span>
-                        <select id="modalSheetSelect" class="form-select form-select-sm fw-bold border-success text-success bg-white shadow-2xs" style="min-width: 220px;">
-                        </select>
-                    </div>
-                </div>
 
-                {{-- Info Alert --}}
-                <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis rounded-3 p-3 mb-4 d-flex align-items-center gap-2.5 small">
-                    <i class="bi bi-magic fs-4 flex-shrink-0 text-info"></i>
-                    <div>
-                        <strong>المطابقة التلقائية:</strong> قمنا بمطابقة أعمدة ملفك آلياً بالذكاء الاصطناعي مع الحقول المناسبة. يمكنك مراجعة وتعديل أي حقل، أو اختيار <em>"تخطي هذا العمود"</em> للأعمدة الإضافية التي لا ترغب باستيرادها.
-                    </div>
-                </div>
-
-                {{-- Column Mapping Grid --}}
-                <div class="card border rounded-3 mb-4 overflow-hidden shadow-2xs">
-                    <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
-                        <span class="fw-bold small text-dark"><i class="bi bi-shuffle me-1 text-primary"></i> ربط أعمدة الملف بحقول النظام (Column Mapping)</span>
-                        <span class="text-muted x-small">الحقول التي تحمل علامة (*) إلزامية لاستكمال الاستيراد</span>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="row g-3" id="mappingFieldsContainer">
-                            {{-- Populated dynamically via JS --}}
+                    {{-- Column Mapping Grid --}}
+                    <div class="card border rounded-3 mb-4 overflow-hidden shadow-2xs">
+                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
+                            <span class="fw-bold small text-dark"><i class="bi bi-shuffle me-1 text-primary"></i> ربط أعمدة الملف بحقول النظام (Column Mapping)</span>
+                            <span class="text-muted x-small">الحقول التي تحمل علامة (*) إلزامية لاستكمال الاستيراد</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3" id="mappingFieldsContainer">
+                                {{-- Populated dynamically via JS --}}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {{-- Live Data Preview (First 5 Rows) --}}
-                <div class="card border rounded-3 overflow-hidden shadow-2xs">
-                    <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
-                        <span class="fw-bold small text-dark"><i class="bi bi-eye-fill me-1 text-success"></i> معاينة أولية لبيانات الملف (أول 5 صفوف)</span>
-                        <span class="badge bg-light text-muted border small">تحقق من صحة ترتيب الأعمدة</span>
-                    </div>
-                    <div class="table-responsive" style="max-height: 240px;">
-                        <table class="table table-sm table-hover table-bordered mb-0 align-middle small text-nowrap" id="previewDataTable">
-                            <thead class="table-light sticky-top" id="previewTableHead">
-                                {{-- Populated via JS --}}
-                            </thead>
-                            <tbody id="previewTableBody">
-                                {{-- Populated via JS --}}
-                            </tbody>
-                        </table>
+                    {{-- Live Data Preview (First 5 Rows) --}}
+                    <div class="card border rounded-3 overflow-hidden shadow-2xs">
+                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
+                            <span class="fw-bold small text-dark"><i class="bi bi-eye-fill me-1 text-success"></i> معاينة أولية لبيانات الملف (أول 5 صفوف)</span>
+                            <span class="badge bg-light text-muted border small">تحقق من صحة ترتيب الأعمدة</span>
+                        </div>
+                        <div class="table-responsive" style="max-height: 240px;">
+                            <table class="table table-sm table-hover table-bordered mb-0 align-middle small text-nowrap" id="previewDataTable">
+                                <thead class="table-light sticky-top" id="previewTableHead">
+                                    {{-- Populated via JS --}}
+                                </thead>
+                                <tbody id="previewTableBody">
+                                    {{-- Populated via JS --}}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer border-top py-3 px-4 bg-light-subtle d-flex justify-content-between">
+            <div class="modal-footer border-top py-3 px-4 bg-light-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-success rounded-pill px-5 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center gap-2" id="btnExecuteFinalImport">
-                    <i class="bi bi-check2-circle fs-5"></i>
-                    <span>تأكيد واستيراد البيانات الآن</span>
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold d-none" id="btnBackToBatchView">
+                        <i class="bi bi-arrow-right me-1"></i> العودة للوحة التوزيع الشامل
+                    </button>
+                    <button type="button" class="btn btn-success rounded-pill px-5 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center gap-2" id="btnExecuteBatchImport">
+                        <i class="bi bi-check2-all fs-5"></i>
+                        <span>تأكيد وتوزيع كافة الأوراق المحددة في أقسامها الآن</span>
+                    </button>
+                    <button type="button" class="btn btn-success rounded-pill px-5 py-2.5 fw-bold shadow-sm d-inline-flex align-items-center gap-2 d-none" id="btnExecuteFinalImport">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span>تأكيد واستيراد هذه الورقة فقط</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -646,16 +735,19 @@
 {{-- Interactive JavaScript for Smart Import --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let currentSelectedSection = '{{ $activeSection }}';
+    let currentSelectedSection = 'auto';
     let currentUploadedFile = null;
     let currentImportToken = null;
+    let currentWorkbookAnalysis = null;
     let currentImportHeaders = [];
     let currentTargetFields = {};
     let currentSelectedSheetIndex = 0;
+    let currentActiveView = 'batch'; // 'batch' or 'detail'
 
     const templateBaseUrl = "{{ url('data-import/template') }}";
     const previewUrl = "{{ route('data-import.preview') }}";
     const processUrl = "{{ route('data-import.process') }}";
+    const batchProcessUrl = "{{ route('data-import.batch-process') }}";
     const csrfToken = "{{ csrf_token() }}";
 
     const targetSectionLinks = {
@@ -667,11 +759,21 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const sectionLabels = {
+        'auto': 'التوزيع التلقائي الذكي الشامل (AI)',
         'cases': 'الحالات وطلبات المساعدة',
         'donors': 'المتبرعين',
         'donations': 'التبرعات المالية',
         'beneficiaries': 'المستفيدين والبحث الميداني',
         'tasks': 'مهام فريق العمل'
+    };
+
+    const sectionColors = {
+        'auto': '#8b5cf6',
+        'cases': '#10b981',
+        'donors': '#f59e0b',
+        'donations': '#0ea5e9',
+        'beneficiaries': '#8b5cf6',
+        'tasks': '#ec4899'
     };
 
     const activeSectionLabelName = document.getElementById('activeSectionLabelName');
@@ -680,7 +782,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateActiveSectionLabels() {
         const name = sectionLabels[currentSelectedSection] || 'القسم';
         if (activeSectionLabelName) activeSectionLabelName.textContent = name;
-        if (btnDownloadTemplateText) btnDownloadTemplateText.textContent = 'تحميل نموذج ' + name + ' جاهز';
+        if (btnDownloadTemplateText) {
+            btnDownloadTemplateText.textContent = currentSelectedSection === 'auto'
+                ? 'تحميل نموذج Excel قياسي'
+                : 'تحميل نموذج ' + name + ' جاهز';
+        }
     }
     updateActiveSectionLabels();
 
@@ -699,7 +805,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnDownloadTemplate = document.getElementById('btnDownloadCurrentTemplate');
     if (btnDownloadTemplate) {
         btnDownloadTemplate.addEventListener('click', function() {
-            window.location.href = templateBaseUrl + '/' + currentSelectedSection;
+            const targetSec = currentSelectedSection === 'auto' ? 'donations' : currentSelectedSection;
+            window.location.href = templateBaseUrl + '/' + targetSec;
         });
     }
 
@@ -715,7 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const stepPill2 = document.getElementById('stepPill2');
 
     if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
                 handleFileSelected(this.files[0]);
             }
@@ -795,7 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('file', currentUploadedFile);
             formData.append('section', currentSelectedSection);
 
-            btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري فحص ومطابقة الملف...';
+            btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التحليل والتوزيع الذكي للأوراق...';
             btnStart.setAttribute('disabled', 'disabled');
 
             fetch(previewUrl, {
@@ -816,8 +923,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentImportToken = data.token;
                 currentImportHeaders = data.headers;
                 currentTargetFields = data.target_fields;
+                currentWorkbookAnalysis = data.workbook_analysis;
 
-                populateMappingModal(data);
+                renderImportModal(data);
                 const modal = new bootstrap.Modal(document.getElementById('importMappingModal'));
                 modal.show();
             })
@@ -892,12 +1000,221 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Populate Mapping UI and Preview Table inside Modal
-    function populateMappingModal(data) {
+    // Navigation and Tab Switching inside Modal
+    const modalNavTabs = document.getElementById('modalMultiSheetNavTabs');
+    const tabBtnBatchView = document.getElementById('tabBtnBatchView');
+    const tabBtnDetailView = document.getElementById('tabBtnDetailView');
+    const batchDistributionView = document.getElementById('batchDistributionView');
+    const singleSheetMappingView = document.getElementById('singleSheetMappingView');
+    const btnExecuteBatchImport = document.getElementById('btnExecuteBatchImport');
+    const btnExecuteFinalImport = document.getElementById('btnExecuteFinalImport');
+    const btnBackToBatchView = document.getElementById('btnBackToBatchView');
+
+    function switchModalView(view) {
+        currentActiveView = view;
+        if (view === 'batch') {
+            if (tabBtnBatchView) tabBtnBatchView.classList.add('active');
+            if (tabBtnDetailView) tabBtnDetailView.classList.remove('active');
+            batchDistributionView.classList.remove('d-none');
+            singleSheetMappingView.classList.add('d-none');
+            btnExecuteBatchImport.classList.remove('d-none');
+            btnExecuteFinalImport.classList.add('d-none');
+            btnBackToBatchView.classList.add('d-none');
+        } else {
+            if (tabBtnBatchView) tabBtnBatchView.classList.remove('active');
+            if (tabBtnDetailView) tabBtnDetailView.classList.add('active');
+            batchDistributionView.classList.add('d-none');
+            singleSheetMappingView.classList.remove('d-none');
+            btnExecuteBatchImport.classList.add('d-none');
+            btnExecuteFinalImport.classList.remove('d-none');
+            if (currentWorkbookAnalysis && currentWorkbookAnalysis.sheets.length > 1) {
+                btnBackToBatchView.classList.remove('d-none');
+            } else {
+                btnBackToBatchView.classList.add('d-none');
+            }
+        }
+    }
+
+    if (tabBtnBatchView) tabBtnBatchView.addEventListener('click', () => switchModalView('batch'));
+    if (tabBtnDetailView) tabBtnDetailView.addEventListener('click', () => switchModalView('detail'));
+    if (btnBackToBatchView) btnBackToBatchView.addEventListener('click', () => switchModalView('batch'));
+
+    // Master Render Entrypoint
+    function renderImportModal(data) {
         document.getElementById('modalTotalRowsCount').textContent = data.total_rows;
         document.getElementById('modalTargetSectionBadge').textContent = 'القسم: ' + data.section_name;
 
-        // Handle Multi-sheet Selector
+        const isMulti = data.workbook_analysis && data.workbook_analysis.sheets && data.workbook_analysis.sheets.length > 1;
+
+        if (isMulti) {
+            modalNavTabs.classList.remove('d-none');
+            document.getElementById('badgeModalTotalSheets').textContent = data.workbook_analysis.total_sheets;
+            document.getElementById('batchTotalRecordsBadge').textContent = (data.workbook_analysis.total_records || data.total_rows) + ' سجل صالح';
+            
+            renderBatchSheetsTable(data.workbook_analysis.sheets);
+            switchModalView('batch');
+        } else {
+            modalNavTabs.classList.add('d-none');
+            switchModalView('detail');
+        }
+
+        populateSingleSheetView(data);
+    }
+
+    // Render All Sheets Table in Batch Hub
+    function renderBatchSheetsTable(sheets) {
+        const tbody = document.getElementById('batchSheetsTableBody');
+        tbody.innerHTML = '';
+
+        sheets.forEach(s => {
+            const tr = document.createElement('tr');
+            if (s.is_empty) {
+                tr.className = 'opacity-50';
+            }
+
+            // Build sections dropdown
+            let secOptionsHtml = '';
+            for (const [sKey, sLabel] of Object.entries(sectionLabels)) {
+                if (sKey === 'auto') continue;
+                const isSel = (s.detected_section === sKey) ? 'selected' : '';
+                secOptionsHtml += `<option value="${sKey}" ${isSel}>${sLabel}</option>`;
+            }
+
+            // Mapped preview chips
+            let mappedChips = '';
+            if (s.mapping) {
+                const mappedCols = Object.entries(s.mapping).filter(([_, f]) => f !== null && f !== 'skip');
+                mappedCols.slice(0, 4).forEach(([cIdx, fKey]) => {
+                    const rawH = s.headers ? s.headers[cIdx] : '';
+                    mappedChips += `<span class="badge bg-light text-dark border me-1 x-small font-monospace mb-1">${rawH || fKey}</span>`;
+                });
+                if (mappedCols.length > 4) {
+                    mappedChips += `<span class="badge bg-light text-muted border x-small">+${mappedCols.length - 4} حقول</span>`;
+                }
+            }
+
+            // Status Badge
+            let statusBadge = '';
+            if (s.is_empty) {
+                statusBadge = '<span class="badge bg-secondary-subtle text-secondary rounded-pill x-small">ورقة فارغة</span>';
+            } else if (s.is_ready) {
+                statusBadge = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>جاهز 100%</span>`;
+            } else {
+                statusBadge = `<span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill x-small"><i class="bi bi-magic me-1"></i>مطابقة (${s.confidence || 70}%)</span>`;
+            }
+
+            tr.innerHTML = `
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input batch-sheet-check" data-idx="${s.sheet_index}" ${s.is_ready ? 'checked' : ''} ${s.is_empty ? 'disabled' : ''}>
+                </td>
+                <td>
+                    <div class="fw-bold text-dark d-flex align-items-center gap-1.5">
+                        <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+                        <span>${s.sheet_name}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-light text-muted border font-monospace">${s.rows_count} صف</span>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm batch-sheet-section-select fw-bold border-primary shadow-2xs" data-idx="${s.sheet_index}" ${s.is_empty ? 'disabled' : ''}>
+                        ${secOptionsHtml}
+                    </select>
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap align-items-center">${mappedChips || '<span class="text-muted x-small">--</span>'}</div>
+                </td>
+                <td>
+                    ${statusBadge}
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 x-small fw-bold btn-inspect-sheet" data-idx="${s.sheet_index}" ${s.is_empty ? 'disabled' : ''}>
+                        <i class="bi bi-sliders me-1"></i> تدقيق الأعمدة
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+
+        // Master check/uncheck
+        const checkAll = document.getElementById('checkAllBatchSheets');
+        if (checkAll) {
+            checkAll.onchange = function() {
+                const checks = document.querySelectorAll('.batch-sheet-check:not(:disabled)');
+                checks.forEach(c => c.checked = checkAll.checked);
+            };
+        }
+
+        // Sheet section select change
+        document.querySelectorAll('.batch-sheet-section-select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const idx = parseInt(this.getAttribute('data-idx'), 10);
+                const chosenSec = this.value;
+                const sh = currentWorkbookAnalysis.sheets.find(x => x.sheet_index === idx);
+                if (sh) {
+                    sh.detected_section = chosenSec;
+                }
+            });
+        });
+
+        // Inspect button click
+        document.querySelectorAll('.btn-inspect-sheet').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-idx'), 10);
+                loadSheetDetail(idx);
+            });
+        });
+    }
+
+    function loadSheetDetail(sheetIdx) {
+        currentSelectedSheetIndex = sheetIdx;
+        const container = document.getElementById('mappingFieldsContainer');
+        container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-success mb-2"></div><div class="small text-muted fw-bold">جاري تحميل بيانات الورقة ومطابقة أعمدتها...</div></div>';
+
+        // Check if user changed section on batch table
+        const secSel = document.querySelector(`.batch-sheet-section-select[data-idx="${sheetIdx}"]`);
+        const targetSec = secSel ? secSel.value : 'auto';
+
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        formData.append('token', currentImportToken);
+        formData.append('section', targetSec);
+        formData.append('sheet_index', sheetIdx);
+
+        fetch(previewUrl, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (!resData.success) {
+                alert(resData.message || 'تعذر قراءة الورقة المختارة.');
+                return;
+            }
+            currentImportHeaders = resData.headers;
+            currentTargetFields = resData.target_fields;
+            populateSingleSheetView(resData);
+            switchModalView('detail');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('حدث خطأ أثناء تحميل بيانات ورقة العمل.');
+        });
+    }
+
+    // Populate Detailed Mapping & Preview View for a Single Sheet
+    function populateSingleSheetView(data) {
+        document.getElementById('modalTotalRowsCount').textContent = data.total_rows;
+        document.getElementById('modalTargetSectionBadge').textContent = 'القسم: ' + data.section_name;
+        
+        const currentSheetObj = data.sheets ? data.sheets.find(x => x.index === (data.active_sheet_index || 0)) : null;
+        if (currentSheetObj && document.getElementById('badgeCurrentSheetName')) {
+            document.getElementById('badgeCurrentSheetName').textContent = currentSheetObj.name;
+        }
+
+        // Handle Sheet Selector in single view
         const sheetWrapper = document.getElementById('modalSheetSelectorWrapper');
         const sheetSelect = document.getElementById('modalSheetSelect');
 
@@ -915,39 +1232,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 sheetSelect.appendChild(opt);
             });
 
-            // On change sheet
             sheetSelect.onchange = function() {
-                const chosenSheet = parseInt(this.value, 10);
-                currentSelectedSheetIndex = chosenSheet;
-
-                const container = document.getElementById('mappingFieldsContainer');
-                container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-success mb-2"></div><div class="small text-muted fw-bold">جاري تحميل بيانات الورقة ومطابقة أعمدتها...</div></div>';
-
-                const formData = new FormData();
-                formData.append('_token', csrfToken);
-                formData.append('token', currentImportToken);
-                formData.append('section', currentSelectedSection);
-                formData.append('sheet_index', chosenSheet);
-
-                fetch(previewUrl, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json' },
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(resData => {
-                    if (!resData.success) {
-                        alert(resData.message || 'تعذر قراءة الورقة المختارة.');
-                        return;
-                    }
-                    currentImportHeaders = resData.headers;
-                    currentTargetFields = resData.target_fields;
-                    populateMappingModal(resData);
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('حدث خطأ أثناء تحميل بيانات ورقة العمل.');
-                });
+                loadSheetDetail(parseInt(this.value, 10));
             };
         } else {
             if (sheetWrapper) sheetWrapper.classList.add('d-none');
@@ -1018,11 +1304,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 5. Confirm and Execute Import (Step 2)
+    // 5. Confirm and Execute Import for Single Sheet
     const btnExecute = document.getElementById('btnExecuteFinalImport');
     if (btnExecute) {
         btnExecute.addEventListener('click', function() {
-            // Collect mapping
             const selects = document.querySelectorAll('.column-map-select');
             const mapping = {};
             selects.forEach(sel => {
@@ -1053,7 +1338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     token: currentImportToken,
-                    section: currentSelectedSection,
+                    section: currentSelectedSection === 'auto' ? (currentWorkbookAnalysis?.sheets[currentSelectedSheetIndex]?.detected_section || 'donations') : currentSelectedSection,
                     sheet_index: currentSelectedSheetIndex,
                     mapping: mapping
                 })
@@ -1063,10 +1348,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnExecute.innerHTML = '<i class="bi bi-check2-circle fs-5 me-1"></i> تأكيد واستيراد البيانات الآن';
                 btnExecute.removeAttribute('disabled');
 
-                // Hide mapping modal
                 bootstrap.Modal.getInstance(document.getElementById('importMappingModal')).hide();
-
-                // Show Result Modal
                 showImportResults(data);
             })
             .catch(err => {
@@ -1074,6 +1356,63 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnExecute.removeAttribute('disabled');
                 console.error(err);
                 alert('حدث خطأ غير متوقع أثناء معالجة البيانات.');
+            });
+        });
+    }
+
+    // 6. Batch Confirm and Execute All Sheets at Once (One-Click AI Distribution)
+    if (btnExecuteBatchImport) {
+        btnExecuteBatchImport.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.batch-sheet-check:checked');
+            if (checkedBoxes.length === 0) {
+                alert('يرجى تحديد ورقة عمل واحدة على الأقل للاستيراد.');
+                return;
+            }
+
+            const sheetsToImport = [];
+            checkedBoxes.forEach(chk => {
+                const idx = parseInt(chk.getAttribute('data-idx'), 10);
+                const sData = currentWorkbookAnalysis.sheets.find(x => x.sheet_index === idx);
+                if (sData && !sData.is_empty) {
+                    const secSel = document.querySelector(`.batch-sheet-section-select[data-idx="${idx}"]`);
+                    const chosenSec = secSel ? secSel.value : sData.detected_section;
+                    sheetsToImport.push({
+                        sheet_index: idx,
+                        sheet_name: sData.sheet_name,
+                        section: chosenSec,
+                        mapping: sData.mapping
+                    });
+                }
+            });
+
+            btnExecuteBatchImport.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التوزيع الذكي وحفظ كافة الأوراق...';
+            btnExecuteBatchImport.setAttribute('disabled', 'disabled');
+
+            fetch(batchProcessUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    token: currentImportToken,
+                    sheets: sheetsToImport
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnExecuteBatchImport.innerHTML = '<i class="bi bi-check2-all fs-5 me-1"></i> تأكيد وتوزيع كافة الأوراق المحددة في أقسامها الآن';
+                btnExecuteBatchImport.removeAttribute('disabled');
+
+                bootstrap.Modal.getInstance(document.getElementById('importMappingModal')).hide();
+                showImportResults(data);
+            })
+            .catch(err => {
+                btnExecuteBatchImport.innerHTML = '<i class="bi bi-check2-all fs-5 me-1"></i> تأكيد وتوزيع كافة الأوراق المحددة في أقسامها الآن';
+                btnExecuteBatchImport.removeAttribute('disabled');
+                console.error(err);
+                alert('حدث خطأ أثناء توزيع الأوراق في النظام.');
             });
         });
     }
@@ -1090,12 +1429,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const linkEl = document.getElementById('resultTargetLink');
 
         if (data.success) {
-            titleEl.textContent = 'اكتمل الاستيراد بنجاح! 🎉';
-            msgEl.textContent = data.message || 'تم توزيع البيانات وحفظها بنجاح في القسم المخصص.';
+            titleEl.textContent = 'اكتمل الاستيراد والتوزيع بنجاح! 🎉';
+            msgEl.textContent = data.message || 'تم توزيع البيانات وحفظها بنجاح في الأقسام المخصصة.';
             iconEl.innerHTML = '<div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-2"><i class="bi bi-check-circle-fill fs-1"></i></div>';
-            totalEl.textContent = data.total_rows || 0;
-            succEl.textContent = data.imported || 0;
-            dupEl.textContent = (data.duplicates || 0) + (data.skipped || 0);
+            totalEl.textContent = data.total_rows || data.total_imported || 0;
+            succEl.textContent = data.imported || data.total_imported || 0;
+            dupEl.textContent = (data.duplicates || data.total_duplicates || 0) + (data.skipped || data.total_skipped || 0);
 
             if (data.errors && data.errors.length > 0) {
                 errBox.classList.remove('d-none');
@@ -1109,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errBox.classList.add('d-none');
             }
 
-            linkEl.href = targetSectionLinks[currentSelectedSection] || '#';
+            linkEl.href = targetSectionLinks[currentSelectedSection] || "{{ route('dashboard.index') }}";
             linkEl.classList.remove('d-none');
         } else {
             titleEl.textContent = 'فشلت عملية الاستيراد';

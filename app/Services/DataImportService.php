@@ -628,6 +628,169 @@ final class DataImportService
     }
 
     /**
+     * Auto-detect the best fitting system section for a sheet based on sheet name and headers
+     */
+    public function detectBestSection(array $headers, string $sheetName = ''): array
+    {
+        $sheetNorm = $this->normalizeString($sheetName);
+        $sectionScores = [];
+
+        // Sheet name keyword indicators
+        $nameKeywords = [
+            'donations' => ['كفال', 'كافل', 'صدق', 'تبرع', 'ايراد', 'مالي', 'نقد', 'دار الضياف', 'مدرار', 'ايصال', 'حصيل', 'حساب', 'donation'],
+            'cases' => ['حال', 'طلب', 'مساعد', 'استغاث', 'ايتام', 'يتيم', 'علاج', 'عملي', 'بحث', 'case', 'application'],
+            'donors' => ['متبرع', 'كفلاء', 'داعم', 'ممول', 'donor', 'sponsor'],
+            'beneficiaries' => ['مستفيد', 'اسر', 'ميدان', 'تسكين', 'توزيع', 'beneficiary'],
+            'tasks' => ['مهم', 'تكليف', 'موظف', 'متابع', 'task', 'todo'],
+        ];
+
+        foreach (self::SECTIONS as $secKey => $secConfig) {
+            $score = 0;
+
+            // 1. Sheet name bonus
+            if ($sheetNorm !== '' && isset($nameKeywords[$secKey])) {
+                foreach ($nameKeywords[$secKey] as $kw) {
+                    if (str_contains($sheetNorm, $this->normalizeString($kw))) {
+                        $score += 45;
+                        break;
+                    }
+                }
+            }
+
+            // 2. Column mapping score
+            $mapping = $this->autoMapColumns($headers, $secKey);
+            $mappedFields = array_filter($mapping);
+            $requiredFields = array_keys(array_filter($secConfig['fields'], fn($f) => $f['required']));
+
+            $requiredMatchedCount = 0;
+            foreach ($requiredFields as $rf) {
+                if (in_array($rf, $mappedFields, true)) {
+                    $requiredMatchedCount++;
+                    $score += 35; // Heavy weight for matching mandatory fields
+                }
+            }
+
+            // Optional fields match score
+            $optionalMatchedCount = count($mappedFields) - $requiredMatchedCount;
+            $score += ($optionalMatchedCount * 10);
+
+            $sectionScores[$secKey] = [
+                'score' => $score,
+                'mapping' => $mapping,
+                'mapped_count' => count($mappedFields),
+                'required_matched' => $requiredMatchedCount,
+                'total_required' => count($requiredFields),
+            ];
+        }
+
+        // Sort by score descending
+        uasort($sectionScores, fn($a, $b) => $b['score'] <=> $a['score']);
+        $bestKey = array_key_first($sectionScores);
+        $best = $sectionScores[$bestKey];
+
+        $confidence = min(100, max(20, (int) round(($best['score'] / 115) * 100)));
+        $isInKindDonation = ($bestKey === 'donations' && (str_contains($sheetNorm, 'عيني') || str_contains($sheetNorm, 'عينية')) && in_array('purpose', $best['mapping'], true));
+        $isReady = ($best['required_matched'] === $best['total_required'] || $isInKindDonation) && $best['mapped_count'] >= 2;
+
+        return [
+            'section' => $bestKey,
+            'section_name' => self::SECTIONS[$bestKey]['name'],
+            'section_color' => self::SECTIONS[$bestKey]['color'],
+            'section_icon' => self::SECTIONS[$bestKey]['icon'],
+            'confidence' => $confidence,
+            'mapping' => $best['mapping'],
+            'is_ready' => $isReady,
+            'target_fields' => self::SECTIONS[$bestKey]['fields'],
+        ];
+    }
+
+    /**
+     * Analyze all sheets in a workbook, detecting sections and mapping for each sheet
+     */
+    public function analyzeWorkbook(string $filePath, string $extension): array
+    {
+        $ext = strtolower($extension);
+        $sheetsMeta = [];
+
+        if (in_array($ext, ['xlsx', 'xls'], true)) {
+            $sheetsMeta = $this->getXlsxSheets($filePath);
+        }
+
+        if (empty($sheetsMeta)) {
+            $sheetsMeta = [['index' => 0, 'name' => 'الورقة الرئيسية']];
+        }
+
+        $analysis = [];
+        $totalReadySheets = 0;
+        $totalRecords = 0;
+
+        foreach ($sheetsMeta as $meta) {
+            $idx = $meta['index'];
+            $name = $meta['name'];
+
+            $rows = $this->parseFile($filePath, $extension, $idx);
+            if (empty($rows) || count($rows) < 2) {
+                $analysis[] = [
+                    'sheet_index' => $idx,
+                    'sheet_name' => $name,
+                    'rows_count' => count($rows),
+                    'is_empty' => true,
+                    'is_ready' => false,
+                    'detected_section' => null,
+                    'detected_section_name' => null,
+                    'confidence' => 0,
+                    'headers' => [],
+                    'header_translations' => [],
+                    'mapping' => [],
+                    'preview_rows' => [],
+                ];
+                continue;
+            }
+
+            $headers = array_shift($rows);
+            $rowsCount = count($rows);
+            $totalRecords += $rowsCount;
+
+            $detection = $this->detectBestSection($headers, $name);
+
+            // Translated headers
+            $headerTranslations = [];
+            foreach ($headers as $cIdx => $hdr) {
+                $headerTranslations[$cIdx] = $this->translateHeaderToArabic((string) $hdr);
+            }
+
+            if ($detection['is_ready']) {
+                $totalReadySheets++;
+            }
+
+            $analysis[] = [
+                'sheet_index' => $idx,
+                'sheet_name' => $name,
+                'rows_count' => $rowsCount,
+                'is_empty' => false,
+                'is_ready' => $detection['is_ready'],
+                'detected_section' => $detection['section'],
+                'detected_section_name' => $detection['section_name'],
+                'detected_section_color' => $detection['section_color'],
+                'detected_section_icon' => $detection['section_icon'],
+                'confidence' => $detection['confidence'],
+                'headers' => $headers,
+                'header_translations' => $headerTranslations,
+                'mapping' => $detection['mapping'],
+                'target_fields' => $detection['target_fields'],
+                'preview_rows' => array_slice($rows, 0, 5),
+            ];
+        }
+
+        return [
+            'total_sheets' => count($sheetsMeta),
+            'ready_sheets_count' => $totalReadySheets,
+            'total_records' => $totalRecords,
+            'sheets' => $analysis,
+        ];
+    }
+
+    /**
      * Normalize Arabic & English text for fuzzy header matching
      */
     private function normalizeString(string $str): string
@@ -860,8 +1023,15 @@ final class DataImportService
     private function importDonationRow(array $data, int $userId, int $rowNumber): array
     {
         $amount = $this->cleanAmountValue($data['amount'] ?? 0);
+        $isInKind = in_array(strtolower((string)($data['type'] ?? '')), ['عيني', 'in_kind', 'تبرعات عيني', 'عينية']);
+        
         if ($amount <= 0) {
-            return ['status' => 'error', 'message' => 'مبلغ التبرع يجب أن يكون أكبر من صفر'];
+            if ($isInKind || !empty($data['purpose'])) {
+                $amount = 1.0; // In-kind symbolic amount
+                $data['type'] = 'in_kind';
+            } else {
+                return ['status' => 'error', 'message' => 'مبلغ التبرع يجب أن يكون أكبر من صفر'];
+            }
         }
 
         $donorPhone = $this->cleanPhoneValue($data['donor_phone'] ?? null);
