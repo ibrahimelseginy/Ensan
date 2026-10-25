@@ -18,10 +18,10 @@
         <h1 class="hero-title text-white fw-bold mb-2">لوحة مهام فريق العمل</h1>
         <p class="hero-subtitle mb-4">متابعة دقيقة لكل مهمة من البداية حتى المراجعة والاعتماد النهائي مع توثيق زمني كامل.</p>
 
-        {{-- Top Summary Stats (High Contrast Glass Cards) --}}
+        {{-- Top Summary Stats (High Contrast Stat Cards) --}}
         <div class="d-flex flex-wrap gap-3 mt-2">
-            <div class="hero-stat-card">
-                <div class="hero-stat-icon-wrap" style="background: rgba(255, 255, 255, 0.2); color: #ffffff;">
+            <div class="hero-stat-card hero-stat-total">
+                <div class="hero-stat-icon-wrap">
                     <i class="bi bi-layers-fill"></i>
                 </div>
                 <div>
@@ -30,8 +30,8 @@
                 </div>
             </div>
 
-            <div class="hero-stat-card">
-                <div class="hero-stat-icon-wrap" style="background: rgba(148, 163, 184, 0.3); color: #f1f5f9;">
+            <div class="hero-stat-card hero-stat-pending">
+                <div class="hero-stat-icon-wrap">
                     <i class="bi bi-clipboard2-check-fill"></i>
                 </div>
                 <div>
@@ -40,8 +40,8 @@
                 </div>
             </div>
 
-            <div class="hero-stat-card">
-                <div class="hero-stat-icon-wrap" style="background: rgba(56, 189, 248, 0.3); color: #bae6fd;">
+            <div class="hero-stat-card hero-stat-in-progress">
+                <div class="hero-stat-icon-wrap">
                     <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div>
@@ -50,8 +50,8 @@
                 </div>
             </div>
 
-            <div class="hero-stat-card">
-                <div class="hero-stat-icon-wrap" style="background: rgba(251, 191, 36, 0.3); color: #fef08a;">
+            <div class="hero-stat-card hero-stat-under-review">
+                <div class="hero-stat-icon-wrap">
                     <i class="bi bi-search"></i>
                 </div>
                 <div>
@@ -60,8 +60,8 @@
                 </div>
             </div>
 
-            <div class="hero-stat-card">
-                <div class="hero-stat-icon-wrap" style="background: rgba(52, 211, 153, 0.35); color: #a7f3d0;">
+            <div class="hero-stat-card hero-stat-done">
+                <div class="hero-stat-icon-wrap">
                     <i class="bi bi-check2-circle"></i>
                 </div>
                 <div>
@@ -712,53 +712,176 @@ body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
     -webkit-backdrop-filter: blur(8px);
 }
 
-/* Stat Glass Cards (High Contrast & Legibility) */
-.hero-stat-card {
-    background: rgba(255, 255, 255, 0.14) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.24) !important;
-    border-radius: 16px;
-    padding: 10px 18px;
-    color: #ffffff !important;
+/* ============================================================== */
+/* STAT CARDS - LIGHT MODE (Crisp White Background & Dark Fonts)   */
+/* ============================================================== */
+.hero-stat-card,
+body:not(.theme-dark) .hero-stat-card,
+html:not(.theme-dark) .hero-stat-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(226, 232, 240, 0.95) !important;
+    border-radius: 18px !important;
+    padding: 12px 18px !important;
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 145px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 14px;
+    min-width: 155px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hero-stat-card:hover {
-    background: rgba(255, 255, 255, 0.24) !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
+.hero-stat-card:hover,
+body:not(.theme-dark) .hero-stat-card:hover,
+html:not(.theme-dark) .hero-stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14) !important;
+    border-color: #cbd5e1 !important;
+}
+
+.hero-stat-card .hero-stat-label,
+body:not(.theme-dark) .hero-stat-card .hero-stat-label,
+html:not(.theme-dark) .hero-stat-card .hero-stat-label {
+    font-size: 0.8rem !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    margin-bottom: 2px !important;
+    letter-spacing: -0.2px;
+}
+
+.hero-stat-card .hero-stat-value,
+body:not(.theme-dark) .hero-stat-card .hero-stat-value,
+html:not(.theme-dark) .hero-stat-card .hero-stat-value {
+    font-family: 'Outfit', 'IBM Plex Sans Arabic', sans-serif !important;
+    font-size: 1.65rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    line-height: 1;
 }
 
 .hero-stat-icon-wrap {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     flex-shrink: 0;
+    transition: all 0.25s ease;
 }
 
-.hero-stat-label {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.88) !important;
-    font-weight: 600;
-    margin-bottom: 2px;
+/* Light Mode Card Icons */
+.hero-stat-total .hero-stat-icon-wrap,
+body:not(.theme-dark) .hero-stat-total .hero-stat-icon-wrap {
+    background: #eef2ff !important;
+    color: #4338ca !important;
+    border: 1px solid #e0e7ff !important;
 }
 
-.hero-stat-value {
-    font-family: 'Outfit', 'IBM Plex Sans Arabic', sans-serif !important;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #ffffff !important;
-    line-height: 1;
+.hero-stat-pending .hero-stat-icon-wrap,
+body:not(.theme-dark) .hero-stat-pending .hero-stat-icon-wrap {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.hero-stat-in-progress .hero-stat-icon-wrap,
+body:not(.theme-dark) .hero-stat-in-progress .hero-stat-icon-wrap {
+    background: #e0f2fe !important;
+    color: #0284c7 !important;
+    border: 1px solid #bae6fd !important;
+}
+
+.hero-stat-under-review .hero-stat-icon-wrap,
+body:not(.theme-dark) .hero-stat-under-review .hero-stat-icon-wrap {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
+}
+
+.hero-stat-done .hero-stat-icon-wrap,
+body:not(.theme-dark) .hero-stat-done .hero-stat-icon-wrap {
+    background: #d1fae5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+/* ============================================================== */
+/* STAT CARDS - DARK MODE                                         */
+/* ============================================================== */
+body.theme-dark .hero-stat-card,
+html.theme-dark .hero-stat-card,
+.theme-dark .hero-stat-card,
+[data-bs-theme="dark"] .hero-stat-card {
+    background: #1e293b !important;
+    border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.theme-dark .hero-stat-card:hover,
+html.theme-dark .hero-stat-card:hover,
+.theme-dark .hero-stat-card:hover,
+[data-bs-theme="dark"] .hero-stat-card:hover {
+    background: #27354a !important;
+    border-color: rgba(148, 163, 184, 0.38) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.theme-dark .hero-stat-card .hero-stat-label,
+html.theme-dark .hero-stat-card .hero-stat-label,
+.theme-dark .hero-stat-card .hero-stat-label,
+[data-bs-theme="dark"] .hero-stat-card .hero-stat-label {
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+}
+
+body.theme-dark .hero-stat-card .hero-stat-value,
+html.theme-dark .hero-stat-card .hero-stat-value,
+.theme-dark .hero-stat-card .hero-stat-value,
+[data-bs-theme="dark"] .hero-stat-card .hero-stat-value {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark Mode Card Icons */
+body.theme-dark .hero-stat-total .hero-stat-icon-wrap,
+html.theme-dark .hero-stat-total .hero-stat-icon-wrap,
+.theme-dark .hero-stat-total .hero-stat-icon-wrap {
+    background: rgba(99, 102, 241, 0.22) !important;
+    color: #a5b4fc !important;
+    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+}
+
+body.theme-dark .hero-stat-pending .hero-stat-icon-wrap,
+html.theme-dark .hero-stat-pending .hero-stat-icon-wrap,
+.theme-dark .hero-stat-pending .hero-stat-icon-wrap {
+    background: rgba(148, 163, 184, 0.2) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+}
+
+body.theme-dark .hero-stat-in-progress .hero-stat-icon-wrap,
+html.theme-dark .hero-stat-in-progress .hero-stat-icon-wrap,
+.theme-dark .hero-stat-in-progress .hero-stat-icon-wrap {
+    background: rgba(56, 189, 248, 0.2) !important;
+    color: #7dd3fc !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+
+body.theme-dark .hero-stat-under-review .hero-stat-icon-wrap,
+html.theme-dark .hero-stat-under-review .hero-stat-icon-wrap,
+.theme-dark .hero-stat-under-review .hero-stat-icon-wrap {
+    background: rgba(251, 191, 36, 0.2) !important;
+    color: #fde047 !important;
+    border: 1px solid rgba(251, 191, 36, 0.35) !important;
+}
+
+body.theme-dark .hero-stat-done .hero-stat-icon-wrap,
+html.theme-dark .hero-stat-done .hero-stat-icon-wrap,
+.theme-dark .hero-stat-done .hero-stat-icon-wrap {
+    background: rgba(16, 185, 129, 0.22) !important;
+    color: #6ee7b7 !important;
+    border: 1px solid rgba(16, 185, 129, 0.35) !important;
 }
 
 /* Action & Filter Bar */
@@ -1089,6 +1212,104 @@ body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
     justify-content: center;
     font-weight: 700;
     font-size: 0.72rem;
+}
+
+/* ============================================================== */
+/* DARK MODE OVERRIDES FOR KANBAN BOARD & ACTION BAR             */
+/* ============================================================== */
+body.theme-dark .tasks-dashboard-hero,
+html.theme-dark .tasks-dashboard-hero {
+    background: linear-gradient(135deg, #0b1322 0%, #152238 50%, #0d1b2a 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.theme-dark .task-action-bar-card,
+html.theme-dark .task-action-bar-card {
+    background: #1e293b !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+body.theme-dark .search-input-group .form-control,
+body.theme-dark .task-action-bar-card select.form-select,
+html.theme-dark .search-input-group .form-control,
+html.theme-dark .task-action-bar-card select.form-select {
+    background: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    color: #f8fafc !important;
+}
+
+body.theme-dark .task-info-notice-bar,
+html.theme-dark .task-info-notice-bar {
+    background: rgba(6, 78, 59, 0.35) !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+body.theme-dark .task-info-notice-bar .notice-text,
+html.theme-dark .task-info-notice-bar .notice-text {
+    color: #a7f3d0 !important;
+}
+
+body.theme-dark .kanban-column,
+html.theme-dark .kanban-column {
+    background: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.15) !important;
+}
+
+body.theme-dark .kanban-column-header,
+html.theme-dark .kanban-column-header {
+    border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+body.theme-dark .kanban-column-header h6,
+html.theme-dark .kanban-column-header h6 {
+    color: #f1f5f9 !important;
+}
+
+body.theme-dark .kanban-card,
+html.theme-dark .kanban-card {
+    background: #1e293b !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.theme-dark .kanban-card:hover,
+html.theme-dark .kanban-card:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55) !important;
+    background: #243247 !important;
+}
+
+body.theme-dark .kanban-card .card-title a,
+html.theme-dark .kanban-card .card-title a {
+    color: #f8fafc !important;
+}
+
+body.theme-dark .kanban-card .card-title a:hover,
+html.theme-dark .kanban-card .card-title a:hover {
+    color: #34d399 !important;
+}
+
+body.theme-dark .kanban-card .card-description,
+html.theme-dark .kanban-card .card-description {
+    color: #94a3b8 !important;
+}
+
+body.theme-dark .employee-chips-box,
+html.theme-dark .employee-chips-box {
+    background: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+body.theme-dark .employee-picker-card,
+html.theme-dark .employee-picker-card {
+    background: #1e293b !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+body.theme-dark .employee-picker-item:hover,
+html.theme-dark .employee-picker-item:hover {
+    background: #27354a !important;
 }
 </style>
 
