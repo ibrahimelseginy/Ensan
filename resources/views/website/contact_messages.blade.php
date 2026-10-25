@@ -62,11 +62,33 @@
                                             </div>
                                             <span class="x-small text-muted-theme"><i class="bi bi-clock me-1"></i> {{ $msg->created_at->translatedFormat('d M Y - h:i a') }}</span>
                                         </div>
-                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
                                             <span class="x-small text-muted-theme"><i class="bi bi-envelope me-1 text-primary"></i> {{ $msg->email }}</span>
                                             <span class="divider-v"></span>
+                                            @if($msg->phone)
+                                                <a href="tel:{{ $msg->phone }}" class="text-decoration-none x-small text-dark fw-bold">
+                                                    <i class="bi bi-telephone-fill me-1 text-success"></i> {{ $msg->phone }}
+                                                </a>
+                                                <a href="https://wa.me/2{{ preg_replace('/[^0-9]/', '', $msg->phone) }}" target="_blank" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 text-decoration-none x-small fw-bold" title="محادثة واتساب">
+                                                    <i class="bi bi-whatsapp me-1"></i> واتساب
+                                                </a>
+                                                <span class="divider-v"></span>
+                                            @endif
+                                            @php
+                                                $subjMap = [
+                                                    'general' => 'استفسار عام',
+                                                    'donation' => 'التبرع والزكاة',
+                                                    'volunteer' => 'التطوع',
+                                                    'partnership' => 'الشراكات',
+                                                    'complain' => 'شكوى أو اقتراح',
+                                                    'help' => 'طلب مساعدة',
+                                                    'General' => 'عام'
+                                                ];
+                                                $rawSubj = $msg->subject ?? '';
+                                                $subjLabel = $subjMap[$rawSubj] ?? ($rawSubj ?: 'بلا عنوان');
+                                            @endphp
                                             <span class="badge bg-primary-light text-primary rounded-pill px-3 x-small fw-bold">
-                                                @if(($msg->subject ?? '') == 'General') عام @else {{ $msg->subject ?? 'بلا عنوان' }} @endif
+                                                {{ $subjLabel }}
                                             </span>
                                         </div>
                                         <p class="x-small text-inbox-sub mb-0 text-truncate-2 lh-base">{{ $msg->message }}</p>
@@ -278,7 +300,7 @@
                             <div class="mb-4">
                                 <label class="x-small text-muted fw-bold d-block mb-1">موضوع الرسالة / القسم</label>
                                 <div class="p-2 px-3 bg-light rounded-3 text-dark fw-bold border">
-                                    @if(($msg->subject ?? '') == 'General') عام @else {{ $msg->subject ?? 'بلا عنوان' }} @endif
+                                    {{ $subjMap[$msg->subject ?? ''] ?? ($msg->subject ?? 'بلا عنوان') }}
                                 </div>
                             </div>
 
@@ -302,10 +324,18 @@
                 <div class="modal-footer border-top bg-light p-3 gap-2">
                     <form action="{{ route('website.contact-messages.destroy', $msg) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الرسالة؟')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-4">حذف الرسالة <i class="bi bi-trash ms-1"></i></button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">حذف الرسالة <i class="bi bi-trash ms-1"></i></button>
                     </form>
+                    @if($msg->phone)
+                        <a href="https://wa.me/2{{ preg_replace('/[^0-9]/', '', $msg->phone) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                            <i class="bi bi-whatsapp ms-1"></i> واتساب
+                        </a>
+                        <a href="tel:{{ $msg->phone }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                            <i class="bi bi-telephone ms-1"></i> اتصال
+                        </a>
+                    @endif
                     <a href="mailto:{{ $msg->email }}" class="btn btn-sm btn-primary flex-grow-1 py-2 rounded-pill fw-bold">الرد عبر البريد <i class="bi bi-reply-fill ms-1"></i></a>
-                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">إغلاق</button>
                 </div>
             </div>
         </div>

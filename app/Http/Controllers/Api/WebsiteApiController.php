@@ -1356,12 +1356,31 @@ final class WebsiteApiController extends Controller
             'image' => 'nullable|any_image|max:10240'
         ]);
 
+        $subjectMap = [
+            'general' => 'استفسار عام',
+            'donation' => 'التبرع والزكاة',
+            'volunteer' => 'التطوع',
+            'partnership' => 'الشراكات',
+            'complain' => 'شكوى أو اقتراح',
+            'help' => 'طلب مساعدة',
+            'General' => 'عام'
+        ];
+        if (!empty($data['subject']) && isset($subjectMap[$data['subject']])) {
+            $data['subject'] = $subjectMap[$data['subject']];
+        }
+
         if ($request->hasFile('image')) {
             $data['image_path'] = app(\App\Services\ImageUploadService::class)->upload($request->file('image'), 'website/contact');
         }
 
-        WebContactMessage::create($data);
-        return response()->json(['message' => 'تم إرسال رسالتك بنجاح']);
+        $contactMsg = WebContactMessage::create($data);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم استلام رسالتك بنجاح، وسنقوم بالرد عليك في أقرب وقت.',
+            'data' => [
+                'id' => $contactMsg->id
+            ]
+        ]);
     }
 
     /**

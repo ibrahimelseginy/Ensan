@@ -20,6 +20,7 @@ use App\Models\GuestHouse;
 use App\Models\User;
 use App\Models\InventoryTransaction;
 use App\Models\ChangeRequest;
+use App\Models\WebContactMessage;
 use App\Services\MonthlyDonationReminderService;
 
 final class NotificationWebController extends Controller
@@ -166,6 +167,20 @@ final class NotificationWebController extends Controller
         if ($canAccess('beneficiaries.view')) {
             $newBeneficiaries = (int) Beneficiary::where('status','new')->whereBetween('created_at',[now()->startOfMonth(), now()])->count();
             if ($newBeneficiaries > 0) { $items[] = ['category'=>'beneficiaries','type'=>'info','text'=>'مستفيدون جدد هذا الشهر: '.$newBeneficiaries,'link'=>route('beneficiaries.index')]; }
+        }
+
+        // 16. Unread Website Contact Messages
+        if ($canAccess('website.contact_messages.view', ['admin', 'super-admin'])) {
+            $unreadMessages = (int) WebContactMessage::where('read', false)->count();
+            if ($unreadMessages > 0) {
+                $items[] = [
+                    'category' => 'website',
+                    'type' => 'info',
+                    'text' => 'رسائل واردة جديدة من الموقع الإلكتروني: ' . $unreadMessages,
+                    'link' => route('website.contact-messages.index')
+                ];
+                $suggestions[] = ['text' => 'مراجعة رسائل واستفسارات الموقع', 'link' => route('website.contact-messages.index')];
+            }
         }
 
         if ($category) { $items = array_values(array_filter($items, fn($i)=>$i['category']===$category)); }
