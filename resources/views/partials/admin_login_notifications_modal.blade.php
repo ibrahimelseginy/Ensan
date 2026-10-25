@@ -493,6 +493,9 @@
         };
         const labelMap = { danger: 'هام', warning: 'تحذير', info: 'معلومة', success: 'مطمئن', secondary: 'عام' };
         const actionMap = {
+            cases: 'متابعة الحالات',
+            field_visits: 'الزيارات الميدانية',
+            hr: 'شؤون الموظفين',
             change_requests: 'مراجعة وتنفيذ',
             complaints: 'فتح الشكاوى',
             tasks: 'فتح المهام',
