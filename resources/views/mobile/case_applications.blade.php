@@ -230,105 +230,164 @@
 
     <div class="row g-4">
         @forelse($applications as $app)
-        <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.05 }}s">
-            <div class="premium-case-card bg-stats-card-main border-light-subtle position-relative d-flex flex-column h-100">
-                <div class="card-inner-top flex-grow-1">
-                    <div class="card-meta mb-3 d-flex justify-content-between align-items-center">
+        @php
+            $statusKey = match($app->status) {
+                'pending', 'في انتظار البحث' => 'pending',
+                'under_research', 'تحت البحث', 'reviewed' => 'research',
+                'approved', 'completed', 'تم البحث', 'accepted' => 'approved',
+                default => 'rejected'
+            };
+            $srcBadge = $app->source_badge;
+            $initial = mb_substr($app->applicant_name ?? 'ح', 0, 1);
+        @endphp
+        <div class="col-md-6 col-lg-4 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.04 }}s">
+            <div class="case-card-executive case-card-status-{{ $statusKey }} d-flex flex-column h-100">
+                <!-- Top Header: Status & Tags & Checkbox -->
+                <div class="case-card-header p-3 pb-2">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                         <!-- Status Badge -->
-                        @if(in_array($app->status, ['pending', 'في انتظار البحث']))
-                            <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold">
-                                <i class="bi bi-clock-history me-1"></i> في انتظار البحث
+                        @if($statusKey === 'pending')
+                            <span class="case-pill-badge badge-pending">
+                                <span class="case-dot-pulse dot-pending"></span> في انتظار البحث
                             </span>
-                        @elseif(in_array($app->status, ['under_research', 'تحت البحث', 'reviewed']))
-                            <span class="badge bg-info text-white px-3 py-1.5 rounded-pill fw-bold">
+                        @elseif($statusKey === 'research')
+                            <span class="case-pill-badge badge-research">
                                 <i class="bi bi-search me-1"></i> تحت البحث
                             </span>
-                        @elseif(in_array($app->status, ['approved', 'completed', 'تم البحث', 'accepted']))
-                            <span class="badge bg-success text-white px-3 py-1.5 rounded-pill fw-bold">
-                                <i class="bi bi-check-circle-fill me-1"></i> تم البحث
+                        @elseif($statusKey === 'approved')
+                            <span class="case-pill-badge badge-approved">
+                                <i class="bi bi-check2-circle me-1"></i> تم البحث والاعتماد
                             </span>
                         @else
-                            <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill fw-bold">
+                            <span class="case-pill-badge badge-rejected">
                                 <i class="bi bi-x-circle-fill me-1"></i> مرفوض
                             </span>
                         @endif
 
-                        <div class="d-flex align-items-center gap-2">
-                            @php $srcBadge = $app->source_badge; @endphp
-                            <span class="badge {{ $srcBadge['class'] }} rounded-pill px-2.5 py-1 x-small fw-bold" title="{{ $srcBadge['sub'] }}">
-                                <i class="bi {{ $srcBadge['icon'] }} me-1"></i> {{ $srcBadge['label'] }}
-                            </span>
-                            <span class="badge bg-light text-dark border x-small">
+                        <div class="d-flex align-items-center gap-1.5">
+                            <!-- Sector / Project Badge -->
+                            <span class="case-sector-badge" title="القطاع / نوع الحالة">
                                 {{ $app->case_type_label }}
                             </span>
-                            <input type="checkbox" class="case-checkbox form-check-input-elite m-0" value="{{ $app->id }}" onclick="updateBulkBar()">
+                            <div class="case-checkbox-wrapper ms-1">
+                                <input type="checkbox" class="case-checkbox form-check-input m-0 cursor-pointer" value="{{ $app->id }}" onclick="updateBulkBar()">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Submitter badge if submitted on behalf of someone -->
-                    @if($app->submitter_type === 'other' || !empty($app->submitter_name))
-                        <div class="mb-3 px-3 py-2 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 small">
-                            <span class="fw-bold text-primary"><i class="bi bi-person-fill-up me-1"></i> مقدم من قِبل:</span>
-                            <span class="text-dark fw-bold">{{ $app->submitter_name ?? 'فاعل خير' }}</span>
-                            @if($app->submitter_relation) <span class="text-muted">({{ $app->submitter_relation }})</span> @endif
-                            @if($app->submitter_phone) <div class="text-muted x-small font-monospace">{{ $app->submitter_phone }}</div> @endif
-                        </div>
-                    @endif
-                    
-                    <div class="card-user-info mb-3">
-                        <h4 class="user-name text-truncate text-stats-main fw-bold mb-1" title="{{ $app->applicant_name }}">{{ $app->applicant_name }}</h4>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="user-phone font-outfit text-primary fw-bold">{{ $app->applicant_phone }}</span>
-                            @if($app->backup_phone)
-                                <span class="text-muted x-small font-monospace">بديل: {{ $app->backup_phone }}</span>
+                    <!-- Source Tag & ID Bar -->
+                    <div class="d-flex align-items-center justify-content-between x-small text-muted pt-1.5 border-top border-light-subtle">
+                        <span class="case-source-tag">
+                            <i class="bi {{ $srcBadge['icon'] }} text-primary me-1"></i>
+                            <span class="fw-semibold text-dark">{{ $srcBadge['label'] }}</span>
+                            @if(!empty($srcBadge['sub']))
+                                <span class="text-muted opacity-75">({{ $srcBadge['sub'] }})</span>
                             @endif
+                        </span>
+                        <span class="font-monospace fw-bold text-muted opacity-75">#{{ $app->id }}</span>
+                    </div>
+                </div>
+
+                <!-- Submitter Alert Strip (If submitted on behalf of case) -->
+                @if($app->submitter_type === 'other' || !empty($app->submitter_name))
+                    <div class="case-submitter-strip px-3 py-1.5 mx-3 mb-2 rounded-2">
+                        <i class="bi bi-person-heart text-primary me-1"></i>
+                        <span class="text-muted x-small">مُقدم الطلب:</span>
+                        <strong class="text-dark x-small">{{ $app->submitter_name ?? 'فاعل خير' }}</strong>
+                        @if($app->submitter_relation) <span class="text-muted x-small">({{ $app->submitter_relation }})</span> @endif
+                        @if($app->submitter_phone) <span class="font-monospace text-muted x-small ms-1 font-bold">({{ $app->submitter_phone }})</span> @endif
+                    </div>
+                @endif
+
+                <!-- Card Body: Applicant Profile -->
+                <div class="case-card-body px-3 pb-3 flex-grow-1 d-flex flex-column">
+                    <div class="d-flex align-items-start gap-2.5 mb-2.5">
+                        <div class="case-applicant-avatar avatar-status-{{ $statusKey }}">
+                            {{ $initial }}
                         </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <h5 class="case-applicant-title mb-1 text-truncate" title="{{ $app->applicant_name }}">
+                                {{ $app->applicant_name }}
+                            </h5>
+                            <!-- Phone Numbers -->
+                            <div class="d-flex flex-wrap align-items-center gap-1.5">
+                                <a href="tel:{{ $app->applicant_phone }}" class="case-phone-link" title="اتصال بالهاتف">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <span>{{ $app->applicant_phone }}</span>
+                                </a>
+                                @if($app->backup_phone)
+                                    <span class="case-backup-phone" title="رقم بديل">
+                                        <i class="bi bi-phone"></i>
+                                        <span>{{ $app->backup_phone }}</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meta Tags (National ID & Address) -->
+                    <div class="case-meta-details mb-2.5">
                         @if($app->national_id)
-                            <div class="x-small text-muted mb-2">
-                                <i class="bi bi-credit-card-2-front me-1"></i> الرقم القومي: <span class="font-monospace fw-bold">{{ $app->national_id }}</span>
+                            <div class="case-meta-row mb-1">
+                                <i class="bi bi-credit-card-2-front text-muted"></i>
+                                <span class="text-muted x-small">الرقم القومي:</span>
+                                <span class="font-monospace fw-bold text-dark x-small">{{ $app->national_id }}</span>
                             </div>
                         @endif
-                        <div class="location-tag x-small text-muted-theme fw-bold">
-                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ $app->governorate ?? 'غير محدد' }} - {{ $app->city ?? 'غير محدد' }}
-                            @if($app->address) <div class="text-muted text-truncate mt-1">{{ $app->address }}</div> @endif
+
+                        <div class="case-meta-row">
+                            <i class="bi bi-geo-alt-fill text-danger flex-shrink-0"></i>
+                            <span class="fw-bold x-small text-dark flex-shrink-0">{{ $app->governorate ?? 'غير محدد' }} - {{ $app->city ?? 'غير محدد' }}</span>
+                            @if($app->address)
+                                <span class="case-address-sub text-muted text-truncate ms-1" title="{{ $app->address }}">— {{ $app->address }}</span>
+                            @endif
                         </div>
                     </div>
 
-                    <div class="description-box bg-stats-inner-item border border-light-subtle rounded-3 p-3 text-muted-theme x-small italic mb-3">
-                        <p class="mb-0">{{ Str::limit($app->description, 130) }}</p>
+                    <!-- Description Box -->
+                    <div class="case-description-box p-2.5 rounded-3 mb-3 flex-grow-1">
+                        <p class="mb-0 text-muted lh-base x-small">
+                            <i class="bi bi-chat-left-text me-1 text-primary opacity-50"></i>
+                            {{ Str::limit($app->description, 135) }}
+                        </p>
                     </div>
 
-                    <!-- Rejection Reason Box -->
+                    <!-- Rejection Alert -->
                     @if($app->status === 'rejected' && $app->rejection_reason)
-                        <div class="alert alert-danger p-2.5 rounded-3 mb-3 x-small">
-                            <strong class="d-block mb-1"><i class="bi bi-exclamation-octagon-fill me-1"></i> سبب الرفض:</strong>
-                            {{ $app->rejection_reason }}
+                        <div class="case-rejection-alert p-2.5 rounded-3 mb-3">
+                            <div class="d-flex align-items-center gap-1.5 fw-bold text-danger mb-1 x-small">
+                                <i class="bi bi-exclamation-octagon-fill"></i>
+                                <span>سبب الرفض المسجل:</span>
+                            </div>
+                            <div class="text-danger-emphasis x-small">{{ $app->rejection_reason }}</div>
                         </div>
                     @endif
 
-                    <!-- Direct Social Research Visit Link if Completed -->
+                    <!-- Direct Social Research Visit Link if Approved -->
                     @if(in_array($app->status, ['approved', 'completed', 'accepted']))
-                        <div class="mb-3">
-                            <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn btn-success btn-sm w-100 fw-bold py-2 shadow-xs">
+                        <div class="mb-2">
+                            <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn case-btn-visit w-100 fw-bold py-2 shadow-xs">
                                 <i class="bi bi-file-earmark-check-fill me-1"></i> استمارة البحث الاجتماعي الميداني
                             </a>
                         </div>
                     @endif
 
+                    <!-- Action Button: Open Modal -->
                     <div class="mt-auto">
-                        <button class="btn btn-details-glow w-100 fw-bold py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#modal{{ $app->id }}">
-                            <i class="bi bi-pencil-square me-2"></i> مراجعة وتحديث حالة البحث
+                        <button class="btn case-btn-review w-100 fw-bold py-2.5 shadow-sm" data-bs-toggle="modal" data-bs-target="#modal{{ $app->id }}">
+                            <i class="bi bi-pencil-square me-1.5"></i> مراجعة وتحديث حالة البحث
                         </button>
                     </div>
                 </div>
 
-                <div class="card-inner-bottom bg-stats-inner-item border-top border-light-subtle p-2">
-                    <div class="d-flex justify-content-between align-items-center x-small text-muted px-2">
-                        <span><i class="bi bi-calendar3 me-1"></i> {{ $app->created_at->format('Y-m-d') }}</span>
-                        <span class="badge {{ $srcBadge['class'] }} rounded-pill px-2 py-0.5">
-                            <i class="bi {{ $srcBadge['icon'] }} me-1"></i> {{ $srcBadge['label'] }} ({{ $srcBadge['sub'] }})
-                        </span>
-                    </div>
+                <!-- Footer -->
+                <div class="case-card-footer px-3 py-2 border-top border-light-subtle d-flex align-items-center justify-content-between x-small text-muted">
+                    <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-calendar3"></i> {{ $app->created_at->format('Y-m-d') }}
+                    </span>
+                    <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-clock"></i> {{ $app->created_at->diffForHumans() }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -867,4 +926,307 @@ function submitBulkDelete() {
     document.getElementById('bulk-delete-form').submit();
 }
 </script>
+
+<style>
+/* ========================================================
+   Executive Case Applications Cards UI System
+   ======================================================== */
+.case-card-executive {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+.theme-dark .case-card-executive {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+.case-card-executive:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+.theme-dark .case-card-executive:hover {
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Status Top Indicator Accent Lines */
+.case-card-executive::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    z-index: 2;
+}
+.case-card-status-pending::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.case-card-status-research::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.case-card-status-approved::before { background: linear-gradient(90deg, #059669, #10b981); }
+.case-card-status-rejected::before { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* Header & Status Badges */
+.case-card-header {
+    background: rgba(0, 0, 0, 0.015);
+}
+.theme-dark .case-card-header {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.case-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+}
+.badge-pending {
+    background: #fffbeb;
+    color: #b45309 !important;
+    border: 1px solid #fde68a;
+}
+.theme-dark .badge-pending {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.badge-research {
+    background: #f0f9ff;
+    color: #0369a1 !important;
+    border: 1px solid #bae6fd;
+}
+.theme-dark .badge-research {
+    background: rgba(2, 132, 199, 0.18);
+    color: #7dd3fc !important;
+    border-color: rgba(2, 132, 199, 0.35);
+}
+
+.badge-approved {
+    background: #ecfdf5;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0;
+}
+.theme-dark .badge-approved {
+    background: rgba(16, 185, 129, 0.18);
+    color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.badge-rejected {
+    background: #fef2f2;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca;
+}
+.theme-dark .badge-rejected {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Pulsing Dot */
+.case-dot-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-pending {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+    animation: livePulseAmber 2s infinite ease-in-out;
+}
+@keyframes livePulseAmber {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* Sector / Project Badge */
+.case-sector-badge {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-main, #334155);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.theme-dark .case-sector-badge {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Source Tag */
+.case-source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Submitter Alert Strip */
+.case-submitter-strip {
+    background: rgba(5, 150, 105, 0.07);
+    border: 1px solid rgba(5, 150, 105, 0.2);
+}
+.theme-dark .case-submitter-strip {
+    background: rgba(5, 150, 105, 0.12);
+    border-color: rgba(5, 150, 105, 0.25);
+}
+
+/* Avatar / Initial */
+.case-applicant-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.avatar-status-pending { background: #fef3c7; color: #b45309; border: 1.5px solid #fde68a; }
+.avatar-status-research { background: #e0f2fe; color: #0369a1; border: 1.5px solid #bae6fd; }
+.avatar-status-approved { background: #d1fae5; color: #047857; border: 1.5px solid #a7f3d0; }
+.avatar-status-rejected { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fecaca; }
+
+.theme-dark .avatar-status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); }
+.theme-dark .avatar-status-research { background: rgba(2, 132, 199, 0.2); color: #7dd3fc; border-color: rgba(2, 132, 199, 0.4); }
+.theme-dark .avatar-status-approved { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.4); }
+.theme-dark .avatar-status-rejected { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4); }
+
+/* Applicant Title */
+.case-applicant-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main, #0f172a);
+    line-height: 1.3;
+}
+.theme-dark .case-applicant-title {
+    color: #f8fafc;
+}
+
+/* Phone Pills */
+.case-phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #ecfdf5;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0;
+    padding: 2px 8px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.case-phone-link:hover {
+    background: #047857;
+    color: #ffffff !important;
+    transform: scale(1.02);
+}
+.theme-dark .case-phone-link {
+    background: rgba(16, 185, 129, 0.16);
+    color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+.theme-dark .case-phone-link:hover {
+    background: #10b981;
+    color: #064e3b !important;
+}
+
+.case-backup-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.74rem;
+    color: #64748b;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Meta Details */
+.case-meta-details {
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 9px;
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+}
+.theme-dark .case-meta-details {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.case-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+}
+
+/* Description Box */
+.case-description-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+.theme-dark .case-description-box {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Rejection Alert */
+.case-rejection-alert {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+.theme-dark .case-rejection-alert {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Action Buttons */
+.case-btn-review {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    transition: all 0.25s ease;
+}
+.case-btn-review:hover {
+    background: linear-gradient(135deg, #047857 0%, #064e3b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.35) !important;
+}
+
+.case-btn-visit {
+    background: #10b981;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+}
+.case-btn-visit:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+/* Card Footer */
+.case-card-footer {
+    background: rgba(0, 0, 0, 0.015);
+}
+.theme-dark .case-card-footer {
+    background: rgba(255, 255, 255, 0.015);
+}
+</style>
 @endsection
