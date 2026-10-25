@@ -28,15 +28,15 @@ final class DataImportService
             'model' => MobileCaseApplication::class,
             'description' => 'استيراد طلبات المساعدة والحالات الجديدة مباشرة مع بيانات العنوان ونوع الدعم',
             'fields' => [
-                'applicant_name' => ['label' => 'اسم صاحب الحالة', 'required' => true, 'synonyms' => ['الاسم', 'اسم الحالة', 'اسم المستفيد', 'صاحب الطلب', 'اسم مقدم الطلب', 'الاسم بالكامل', 'name', 'full_name', 'applicant_name']],
-                'applicant_phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'رقم الموبايل', 'التليفون', 'phone', 'mobile', 'applicant_phone']],
-                'applicant_id_number' => ['label' => 'الرقم القومي', 'required' => false, 'synonyms' => ['الرقم القومي', 'بطاقة الرقم القومي', 'رقم البطاقة', 'national_id', 'id_number']],
-                'case_type' => ['label' => 'نوع المساعدة', 'required' => false, 'synonyms' => ['نوع الحالة', 'نوع المساعدة', 'تصنيف الحالة', 'نوع الطلب', 'case_type', 'type']],
+                'applicant_name' => ['label' => 'اسم صاحب الحالة', 'required' => true, 'synonyms' => ['اسم صاحب الحالة', 'الاسم', 'اسم الحالة', 'اسم المستفيد', 'صاحب الطلب', 'اسم مقدم الطلب', 'الاسم بالكامل', 'اسم الطفل 1', 'اسم الطفل', 'صاحب الحالة', 'الإسم', 'name', 'full_name', 'applicant_name']],
+                'applicant_phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'رقم الموبايل', 'التليفون', 'التلفون', 'رقم التلفون', 'تليفون', 'phone', 'mobile', 'applicant_phone']],
+                'applicant_id_number' => ['label' => 'الرقم القومي', 'required' => false, 'synonyms' => ['الرقم القومي', 'بطاقة الرقم القومي', 'رقم البطاقة', 'كود الطفل 1', 'كود الطفل', 'رقم الهوية', 'national_id', 'id_number']],
+                'case_type' => ['label' => 'نوع المساعدة', 'required' => false, 'synonyms' => ['نوع الحالة', 'نوع المساعدة', 'المشروع', 'تصنيف الحالة', 'نوع الطلب', 'المصدر', 'اسم المصدر', 'case_type', 'type']],
                 'governorate' => ['label' => 'المحافظة', 'required' => false, 'synonyms' => ['المحافظة', 'governorate']],
                 'city' => ['label' => 'المركز / المدينة', 'required' => false, 'synonyms' => ['المدينة', 'المركز', 'القرية', 'city', 'center']],
                 'address' => ['label' => 'العنوان بالتفصيل', 'required' => false, 'synonyms' => ['العنوان', 'محل الإقامة', 'عنوان السكن', 'address']],
                 'family_members_count' => ['label' => 'عدد أفراد الأسرة', 'required' => false, 'synonyms' => ['عدد الأفراد', 'عدد أفراد الأسرة', 'عدد الأولاد', 'family_members_count', 'children_count']],
-                'description' => ['label' => 'تفاصيل ووصف الحالة', 'required' => false, 'synonyms' => ['الوصف', 'وصف الحالة', 'ملاحظات', 'تفاصيل الطلب', 'description', 'notes']],
+                'description' => ['label' => 'تفاصيل ووصف الحالة', 'required' => false, 'synonyms' => ['الوصف', 'وصف الحالة', 'ملاحظات', 'ملاحظه', 'تفاصيل الطلب', 'عايزه تحصل اي ؟', 'description', 'notes', 'note']],
             ],
             'sample_data' => [
                 ['محمد أحمد إبراهيم', '01012345678', '29001011234567', 'medical', 'الغربية', 'طنطا', 'شارع البحر، بجوار المحطة', '4', 'يحتاج مساعدة في إجراء جراحة وفحوصات'],
@@ -52,13 +52,13 @@ final class DataImportService
             'model' => Donor::class,
             'description' => 'استيراد المتبرعين الجدد مع أرقام التواصل والتصنيفات الدورية',
             'fields' => [
-                'name' => ['label' => 'اسم المتبرع', 'required' => true, 'synonyms' => ['الاسم', 'اسم المتبرع', 'المتبرع', 'name', 'donor_name']],
-                'phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'phone', 'mobile']],
+                'name' => ['label' => 'اسم المتبرع', 'required' => true, 'synonyms' => ['الاسم', 'الإسم', 'اسم المتبرع', 'المتبرع', 'اسم الكافل', 'الكافل', 'المصدر', 'اسم المصدر', 'كافل', 'تبرع بواسطة', 'donor_name', 'name']],
+                'phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'التليفون', 'التلفون', 'رقم التلفون', 'تليفون', 'موبايل', 'phone', 'mobile']],
                 'national_id' => ['label' => 'الرقم القومي', 'required' => false, 'synonyms' => ['الرقم القومي', 'بطاقة الرقم القومي', 'national_id']],
                 'email' => ['label' => 'البريد الإلكتروني', 'required' => false, 'synonyms' => ['البريد', 'الإيميل', 'البريد الإلكتروني', 'email']],
                 'type' => ['label' => 'نوع المتبرع (فرد/مؤسسة)', 'required' => false, 'synonyms' => ['النوع', 'نوع المتبرع', 'فرد/مؤسسة', 'type']],
-                'address' => ['label' => 'العنوان', 'required' => false, 'synonyms' => ['العنوان', 'address']],
-                'classification' => ['label' => 'التصنيف (A / B / C)', 'required' => false, 'synonyms' => ['التصنيف', 'الفئة', 'classification', 'category']],
+                'address' => ['label' => 'العنوان', 'required' => false, 'synonyms' => ['العنوان', 'محل الإقامة', 'عنوان المتبرع', 'address']],
+                'classification' => ['label' => 'التصنيف (A / B / C)', 'required' => false, 'synonyms' => ['التصنيف', 'الفئة', 'المشروع', 'كود الكافل', 'كود المتبرع', 'classification', 'category']],
             ],
             'sample_data' => [
                 ['الحاج محمود الشناوي', '01123456789', '28001011234567', 'mahmoud@example.com', 'فرد', 'طنطا - الغربية', 'A'],
@@ -74,14 +74,14 @@ final class DataImportService
             'model' => Donation::class,
             'description' => 'استيراد سجلات التبرعات النقدية والعينية وربطها بالمتبرعين تلقائياً',
             'fields' => [
-                'donor_name' => ['label' => 'اسم المتبرع', 'required' => true, 'synonyms' => ['المتبرع', 'اسم المتبرع', 'donor_name', 'donor']],
-                'donor_phone' => ['label' => 'هاتف المتبرع', 'required' => false, 'synonyms' => ['هاتف المتبرع', 'موبايل المتبرع', 'donor_phone']],
-                'amount' => ['label' => 'مبلغ التبرع', 'required' => true, 'synonyms' => ['المبلغ', 'القيمة', 'قيمة التبرع', 'amount', 'donation_amount']],
+                'donor_name' => ['label' => 'اسم المتبرع', 'required' => true, 'synonyms' => ['المتبرع', 'اسم المتبرع', 'اسم الكافل', 'الكافل', 'المصدر', 'اسم المصدر', 'الاسم', 'الإسم', 'donor_name', 'donor', 'name']],
+                'donor_phone' => ['label' => 'هاتف المتبرع', 'required' => false, 'synonyms' => ['هاتف المتبرع', 'موبايل المتبرع', 'التليفون', 'التلفون', 'رقم التلفون', 'الهاتف', 'الموبايل', 'phone', 'donor_phone']],
+                'amount' => ['label' => 'مبلغ التبرع', 'required' => true, 'synonyms' => ['المبلغ', 'القيمة', 'قيمة التبرع', 'المبلغ المدفوع', 'amount', 'donation_amount', 'value']],
                 'type' => ['label' => 'النوع (نقدي / عيني)', 'required' => false, 'synonyms' => ['نوع التبرع', 'النوع', 'نقدي/عيني', 'type']],
-                'payment_method' => ['label' => 'طريقة الدفع', 'required' => false, 'synonyms' => ['طريقة الدفع', 'وسيلة الدفع', 'payment_method']],
-                'purpose' => ['label' => 'الغرض / المشروع', 'required' => false, 'synonyms' => ['الغرض', 'الهدف', 'الباب', 'المشروع', 'الحملة', 'purpose']],
-                'received_at' => ['label' => 'تاريخ الاستلام', 'required' => false, 'synonyms' => ['تاريخ الاستلام', 'التاريخ', 'تاريخ التبرع', 'date', 'received_at']],
-                'allocation_note' => ['label' => 'ملاحظات وتفاصيل', 'required' => false, 'synonyms' => ['ملاحظات', 'ملاحظات التخصيص', 'notes']],
+                'payment_method' => ['label' => 'طريقة الدفع', 'required' => false, 'synonyms' => ['طريقة الدفع', 'طريقه الدفع', 'طريقة التحصيل', 'طريقه التحصيل', 'وسيلة الدفع', 'نوع الدفع', 'payment_method', 'method']],
+                'purpose' => ['label' => 'الغرض / المشروع', 'required' => false, 'synonyms' => ['الغرض', 'الهدف', 'الباب', 'المشروع', 'الحملة', 'اسم الصنف', 'اسم الطفل 1', 'عايزه تحصل اي ؟', 'purpose', 'project']],
+                'received_at' => ['label' => 'تاريخ الاستلام', 'required' => false, 'synonyms' => ['تاريخ الاستلام', 'التاريخ', 'تاريخ التبرع', 'تاريخ التوريد', 'date', 'received_at']],
+                'allocation_note' => ['label' => 'ملاحظات وتفاصيل', 'required' => false, 'synonyms' => ['ملاحظات', 'ملاحظه', 'ملاحظات التخصيص', 'الوصف', 'رقم الايصال', 'كود الكافل', 'notes', 'note']],
             ],
             'sample_data' => [
                 ['الحاج محمود الشناوي', '01123456789', '5000', 'cash', 'تحويل بنكي', 'كفالة أيتام', '2026-10-25', 'دفعة شهر أكتوبر'],
@@ -97,13 +97,13 @@ final class DataImportService
             'model' => Beneficiary::class,
             'description' => 'استيراد الأسر والمستفيدين المعتمدين مع الأرقام القومية وحالات الاستحقاق',
             'fields' => [
-                'full_name' => ['label' => 'الاسم بالكامل', 'required' => true, 'synonyms' => ['الاسم', 'اسم المستفيد', 'الاسم بالكامل', 'full_name', 'name']],
-                'national_id' => ['label' => 'الرقم القومي', 'required' => false, 'synonyms' => ['الرقم القومي', 'بطاقة الرقم القومي', 'رقم البطاقة', 'national_id']],
-                'phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'phone', 'mobile']],
+                'full_name' => ['label' => 'الاسم بالكامل', 'required' => true, 'synonyms' => ['الاسم', 'اسم المستفيد', 'الاسم بالكامل', 'اسم الطفل 1', 'اسم الطفل', 'الإسم', 'full_name', 'name']],
+                'national_id' => ['label' => 'الرقم القومي', 'required' => false, 'synonyms' => ['الرقم القومي', 'بطاقة الرقم القومي', 'رقم البطاقة', 'كود الطفل 1', 'كود الطفل', 'national_id']],
+                'phone' => ['label' => 'رقم الهاتف', 'required' => false, 'synonyms' => ['الهاتف', 'الموبايل', 'رقم الهاتف', 'التليفون', 'التلفون', 'رقم التلفون', 'phone', 'mobile']],
                 'birth_date' => ['label' => 'تاريخ الميلاد (YYYY-MM-DD)', 'required' => false, 'synonyms' => ['تاريخ الميلاد', 'birth_date', 'dob']],
                 'address' => ['label' => 'العنوان بالتفصيل', 'required' => false, 'synonyms' => ['العنوان', 'محل الإقامة', 'address']],
-                'assistance_type' => ['label' => 'نوع المساعدة المعتمدة', 'required' => false, 'synonyms' => ['نوع المساعدة', 'المساعدة', 'assistance_type']],
-                'notes' => ['label' => 'ملاحظات البحث الاجتماعي', 'required' => false, 'synonyms' => ['ملاحظات', 'notes']],
+                'assistance_type' => ['label' => 'نوع المساعدة المعتمدة', 'required' => false, 'synonyms' => ['نوع المساعدة', 'المساعدة', 'المشروع', 'assistance_type']],
+                'notes' => ['label' => 'ملاحظات البحث الاجتماعي', 'required' => false, 'synonyms' => ['ملاحظات', 'ملاحظه', 'notes']],
             ],
             'sample_data' => [
                 ['علي السيد مصطفى', '27503021234567', '01512345678', '1975-03-02', 'طنطا - سيجر', 'مساعدة علاجية شهرية', 'يعاني من مرض مزمن ويستحق الدعم'],
@@ -134,9 +134,124 @@ final class DataImportService
     ];
 
     /**
+     * Dictionary for translating English and technical column headers to Arabic
+     */
+    public const ENGLISH_HEADER_TRANSLATIONS = [
+        'id' => 'المعرّف / الرقم التسلسلي',
+        'created_at' => 'تاريخ ووقت الإنشاء',
+        'updated_at' => 'تاريخ آخر تحديث',
+        'deleted_at' => 'تاريخ الحذف',
+        'user_id' => 'معرّف المستخدم / الموظف',
+        'employee_id' => 'معرّف الموظف',
+        'donor_id' => 'معرّف المتبرع',
+        'beneficiary_id' => 'معرّف المستفيد',
+        'case_id' => 'معرّف الحالة',
+        'method' => 'طريقة الطلب (Method)',
+        'path' => 'مسار الرابط / الصفحة (Path)',
+        'url' => 'الرابط الإلكتروني',
+        'status_code' => 'رمز حالة الاستجابة',
+        'status' => 'الحالة',
+        'ip' => 'عنوان الآي بي (IP)',
+        'ip_address' => 'عنوان الآي بي',
+        'user_agent' => 'بيانات المتصفح ونظام التشغيل',
+        'payload' => 'بيانات ومدخلات الطلب (Payload)',
+        'action' => 'الإجراء / العملية',
+        'name' => 'الاسم',
+        'full_name' => 'الاسم بالكامل',
+        'first_name' => 'الاسم الأول',
+        'last_name' => 'اسم العائلة',
+        'applicant_name' => 'اسم صاحب الحالة',
+        'donor_name' => 'اسم المتبرع',
+        'title' => 'العنوان / المسمى',
+        'phone' => 'رقم الهاتف',
+        'mobile' => 'الموبايل',
+        'telephone' => 'التليفون',
+        'email' => 'البريد الإلكتروني',
+        'national_id' => 'الرقم القومي',
+        'id_number' => 'رقم الهوية',
+        'address' => 'العنوان السكني',
+        'governorate' => 'المحافظة',
+        'city' => 'المدينة / المركز',
+        'amount' => 'المبلغ المالي',
+        'value' => 'القيمة',
+        'total' => 'الإجمالي',
+        'price' => 'السعر',
+        'date' => 'التاريخ',
+        'time' => 'الوقت',
+        'due_date' => 'تاريخ الاستحقاق',
+        'received_at' => 'تاريخ الاستلام',
+        'notes' => 'الملاحظات',
+        'note' => 'ملاحظة',
+        'description' => 'الوصف والتفاصيل',
+        'details' => 'التفاصيل',
+        'type' => 'النوع / التصنيف',
+        'category' => 'التصنيف',
+        'purpose' => 'الغرض / المشروع',
+        'project' => 'المشروع',
+        'priority' => 'درجة الأولوية',
+        'gender' => 'النوع / الجنس',
+        'birth_date' => 'تاريخ الميلاد',
+        'payment_method' => 'طريقة الدفع',
+        'receipt_number' => 'رقم الإيصال',
+        'code' => 'الكود',
+        'family_members_count' => 'عدد أفراد الأسرة',
+        'count' => 'العدد / الكمية',
+        'quantity' => 'الكمية',
+    ];
+
+    /**
+     * Get all sheet names and targets from an XLSX file
+     */
+    public function getXlsxSheets(string $filePath): array
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            return [];
+        }
+
+        $wbXml = $zip->getFromName('xl/workbook.xml');
+        $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+
+        $rIdToTarget = [];
+        if ($relsXml) {
+            $rels = @simplexml_load_string($relsXml);
+            if ($rels) {
+                foreach ($rels->Relationship as $rel) {
+                    $rIdToTarget[(string) $rel['Id']] = (string) $rel['Target'];
+                }
+            }
+        }
+
+        $sheets = [];
+        if ($wbXml) {
+            $wb = @simplexml_load_string($wbXml);
+            if ($wb && isset($wb->sheets->sheet)) {
+                $idx = 0;
+                foreach ($wb->sheets->sheet as $s) {
+                    $name = trim((string) $s['name']);
+                    $rId = (string) $s->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
+                    $target = $rIdToTarget[$rId] ?? ('worksheets/sheet' . ($idx + 1) . '.xml');
+                    if (!str_starts_with($target, 'xl/')) {
+                        $target = 'xl/' . ltrim($target, '/');
+                    }
+                    $sheets[] = [
+                        'index' => $idx,
+                        'name' => $name,
+                        'target' => $target,
+                    ];
+                    $idx++;
+                }
+            }
+        }
+
+        $zip->close();
+        return $sheets;
+    }
+
+    /**
      * Parse any uploaded file (XLSX, XLS, CSV) into raw array of rows
      */
-    public function parseFile(string $filePath, string $extension): array
+    public function parseFile(string $filePath, string $extension, int $sheetIndex = 0): array
     {
         $ext = strtolower($extension);
 
@@ -145,7 +260,7 @@ final class DataImportService
         }
 
         if ($ext === 'xlsx') {
-            return $this->parseXlsx($filePath);
+            return $this->parseXlsx($filePath, $sheetIndex);
         }
 
         // Fallback for .xls or plain text attempt
@@ -155,7 +270,7 @@ final class DataImportService
     /**
      * Pure PHP High-Performance XLSX Parser using ZipArchive and SimpleXML
      */
-    private function parseXlsx(string $filePath): array
+    private function parseXlsx(string $filePath, int $sheetIndex = 0): array
     {
         $zip = new ZipArchive();
         if ($zip->open($filePath) !== true) {
@@ -167,7 +282,7 @@ final class DataImportService
         $sharedStrings = [];
         $sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml');
         if ($sharedStringsXml !== false) {
-            $xml = simplexml_load_string($sharedStringsXml);
+            $xml = @simplexml_load_string($sharedStringsXml);
             if ($xml !== false) {
                 foreach ($xml->si as $val) {
                     if (isset($val->t)) {
@@ -185,15 +300,29 @@ final class DataImportService
             }
         }
 
-        // 2. Read first worksheet
-        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        // 2. Discover sheets and choose target sheet XML
+        $sheets = $this->getXlsxSheets($filePath);
+        $targetSheetXml = 'xl/worksheets/sheet1.xml';
+
+        if (!empty($sheets)) {
+            if (isset($sheets[$sheetIndex])) {
+                $targetSheetXml = $sheets[$sheetIndex]['target'];
+            } else {
+                $targetSheetXml = $sheets[0]['target'];
+            }
+        }
+
+        $sheetXml = $zip->getFromName($targetSheetXml);
         if ($sheetXml === false) {
-            // Try looking for any sheet in xl/worksheets/
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $filename = $zip->getNameIndex($i);
-                if (str_starts_with($filename, 'xl/worksheets/sheet') && str_ends_with($filename, '.xml')) {
-                    $sheetXml = $zip->getFromName($filename);
-                    break;
+            // Try fallback to sheet1.xml or any existing sheet
+            $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+            if ($sheetXml === false) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $filename = $zip->getNameIndex($i);
+                    if (str_starts_with($filename, 'xl/worksheets/sheet') && str_ends_with($filename, '.xml')) {
+                        $sheetXml = $zip->getFromName($filename);
+                        break;
+                    }
                 }
             }
         }
@@ -203,7 +332,7 @@ final class DataImportService
             return [];
         }
 
-        $xml = simplexml_load_string($sheetXml);
+        $xml = @simplexml_load_string($sheetXml);
         if ($xml === false || !isset($xml->sheetData)) {
             return [];
         }
@@ -211,7 +340,6 @@ final class DataImportService
         $rows = [];
         foreach ($xml->sheetData->row as $rowNode) {
             $row = [];
-            $maxColIdx = 0;
 
             foreach ($rowNode->c as $cell) {
                 $cellRef = (string) $cell['r'];
@@ -243,12 +371,101 @@ final class DataImportService
                 array_pop($row);
             }
 
-            if (!empty($row) && array_filter($row, fn($c) => $c !== '') !== []) {
+            if (!empty($row) && array_filter($row, fn($c) => trim((string)$c) !== '') !== []) {
                 $rows[] = $row;
             }
         }
 
         return $rows;
+    }
+
+    /**
+     * Translate an English/technical header into clear Arabic
+     */
+    public function translateHeaderToArabic(string $header): array
+    {
+        $raw = trim($header);
+        if ($raw === '') {
+            return ['main' => 'عمود بدون عنوان', 'sub' => ''];
+        }
+
+        // If it already has Arabic letters, return as is
+        if (preg_match('/[\x{0600}-\x{06FF}]/u', $raw)) {
+            return ['main' => $raw, 'sub' => ''];
+        }
+
+        $key = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '', str_replace([' ', '-'], '_', $raw)));
+        $translations = self::ENGLISH_HEADER_TRANSLATIONS;
+
+        if (isset($translations[$key])) {
+            return ['main' => $translations[$key], 'sub' => $raw];
+        }
+
+        // Check if ends or starts with known keys
+        foreach ($translations as $eng => $ar) {
+            if (str_ends_with($key, '_' . $eng) || str_starts_with($key, $eng . '_')) {
+                return ['main' => $ar, 'sub' => $raw];
+            }
+        }
+
+        $formatted = ucwords(str_replace('_', ' ', $key));
+        return ['main' => $formatted, 'sub' => $raw];
+    }
+
+    /**
+     * Clean date values, converting Excel serial numbers (e.g. 46296.0) to standard Y-m-d
+     */
+    public function cleanDateValue(?string $val): ?string
+    {
+        if (!$val || trim($val) === '') return null;
+        $val = trim($val);
+        // Excel serial date number
+        if (is_numeric($val) && (float) $val > 10000 && (float) $val < 90000) {
+            $days = (int) $val;
+            $timestamp = ($days - 25569) * 86400;
+            return gmdate('Y-m-d', $timestamp);
+        }
+        $ts = strtotime($val);
+        if ($ts !== false && $ts > 0) {
+            return date('Y-m-d', $ts);
+        }
+        return null;
+    }
+
+    /**
+     * Clean and format phone numbers, converting scientific notation (1.018167843E9) to Egyptian standard 01018167843
+     */
+    public function cleanPhoneValue(?string $val): ?string
+    {
+        if (!$val || trim($val) === '') return null;
+        $val = trim($val);
+        if (stripos($val, 'E') !== false && is_numeric($val)) {
+            $val = sprintf('%.0f', (float) $val);
+        }
+        $arabicNumerals = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+        $englishNumerals = ['0','1','2','3','4','5','6','7','8','9'];
+        $val = str_replace($arabicNumerals, $englishNumerals, $val);
+        $val = preg_replace('/[^0-9]/', '', $val);
+        if (strlen($val) === 10 && in_array(substr($val, 0, 2), ['10', '11', '12', '15'], true)) {
+            $val = '0' . $val;
+        }
+        return $val ?: null;
+    }
+
+    /**
+     * Clean financial and numeric amount values
+     */
+    public function cleanAmountValue($val): float
+    {
+        if (is_numeric($val)) {
+            return abs((float) $val);
+        }
+        $str = trim((string) $val);
+        $arabicNumerals = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+        $englishNumerals = ['0','1','2','3','4','5','6','7','8','9'];
+        $str = str_replace($arabicNumerals, $englishNumerals, $str);
+        $str = preg_replace('/[^0-9\.]/', '', $str);
+        return (float) $str;
     }
 
     /**
@@ -325,43 +542,85 @@ final class DataImportService
         }
 
         $fields = $sectionConfig['fields'];
-        $mapping = [];
-        $usedFields = [];
+        $mapping = array_fill(0, count($headers), null);
+
+        // Technical names to ignore completely
+        $technicalIgnore = ['id', 'ip', 'status_code', 'method', 'path', 'user_agent', 'payload'];
+
+        $candidates = [];
 
         foreach ($headers as $colIdx => $header) {
-            $normalizedHeader = $this->normalizeString($header);
-            $bestMatchField = null;
+            $rawHeader = trim((string) $header);
+            $normalizedHeader = $this->normalizeString($rawHeader);
+
+            if ($normalizedHeader === '' || is_numeric($normalizedHeader) || is_numeric(str_replace('.', '', $normalizedHeader))) {
+                continue;
+            }
+
+            if (in_array(strtolower($rawHeader), $technicalIgnore, true)) {
+                continue;
+            }
 
             foreach ($fields as $fieldKey => $fieldMeta) {
-                if (in_array($fieldKey, $usedFields, true)) {
+                $normFieldKey = $this->normalizeString($fieldKey);
+                $normLabel = $this->normalizeString($fieldMeta['label']);
+
+                // Exact match on field key or label
+                if ($normFieldKey === $normalizedHeader || $normLabel === $normalizedHeader) {
+                    $candidates[] = [
+                        'score' => 100,
+                        'col' => $colIdx,
+                        'field' => $fieldKey,
+                    ];
                     continue;
                 }
 
-                // Check exact field key match
-                if ($this->normalizeString($fieldKey) === $normalizedHeader) {
-                    $bestMatchField = $fieldKey;
-                    break;
-                }
-
-                // Check label match
-                if ($this->normalizeString($fieldMeta['label']) === $normalizedHeader) {
-                    $bestMatchField = $fieldKey;
-                    break;
-                }
-
                 // Check synonyms
-                foreach ($fieldMeta['synonyms'] as $syn) {
+                $synonyms = $fieldMeta['synonyms'] ?? [];
+                foreach ($synonyms as $synIdx => $syn) {
                     $normSyn = $this->normalizeString($syn);
-                    if ($normSyn === $normalizedHeader || str_contains($normalizedHeader, $normSyn) || str_contains($normSyn, $normalizedHeader)) {
-                        $bestMatchField = $fieldKey;
-                        break 2;
+                    if ($normSyn === '') continue;
+
+                    if ($normSyn === $normalizedHeader) {
+                        // Higher score for primary synonyms earlier in the list
+                        $score = ($synIdx < 4) ? 90 : 70;
+                        $candidates[] = [
+                            'score' => $score,
+                            'col' => $colIdx,
+                            'field' => $fieldKey,
+                        ];
+                        break;
+                    }
+
+                    // Partial / substring match (ONLY if string is at least 3 chars long)
+                    if (mb_strlen($normalizedHeader) >= 3 && mb_strlen($normSyn) >= 3) {
+                        if (str_contains($normalizedHeader, $normSyn) || str_contains($normSyn, $normalizedHeader)) {
+                            $candidates[] = [
+                                'score' => 40,
+                                'col' => $colIdx,
+                                'field' => $fieldKey,
+                            ];
+                            break;
+                        }
                     }
                 }
             }
+        }
 
-            $mapping[$colIdx] = $bestMatchField;
-            if ($bestMatchField) {
-                $usedFields[] = $bestMatchField;
+        // Sort candidates by score descending
+        usort($candidates, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        $usedCols = [];
+        $usedFields = [];
+
+        foreach ($candidates as $cand) {
+            $c = $cand['col'];
+            $f = $cand['field'];
+
+            if (!isset($usedCols[$c]) && !isset($usedFields[$f])) {
+                $mapping[$c] = $f;
+                $usedCols[$c] = true;
+                $usedFields[$f] = true;
             }
         }
 
@@ -536,18 +795,21 @@ final class DataImportService
      */
     private function importCaseRow(array $data, int $userId, int $rowNumber): array
     {
+        $phone = $this->cleanPhoneValue($data['applicant_phone'] ?? null) ?? '';
+        $idNumber = !empty($data['applicant_id_number']) ? trim((string)$data['applicant_id_number']) : null;
+
         // Check duplicate by national ID or phone if provided
-        if (!empty($data['applicant_id_number'])) {
-            $exists = MobileCaseApplication::where('applicant_id_number', $data['applicant_id_number'])->first();
+        if (!empty($idNumber)) {
+            $exists = MobileCaseApplication::where('applicant_id_number', $idNumber)->first();
             if ($exists) {
-                return ['status' => 'duplicate', 'message' => "حالة مكررة بنفس الرقم القومي ({$data['applicant_id_number']})"];
+                return ['status' => 'duplicate', 'message' => "حالة مكررة بنفس الرقم القومي ({$idNumber})"];
             }
         }
 
         $app = new MobileCaseApplication();
         $app->applicant_name = $data['applicant_name'];
-        $app->applicant_phone = $data['applicant_phone'] ?? '';
-        $app->applicant_id_number = $data['applicant_id_number'] ?? null;
+        $app->applicant_phone = $phone;
+        $app->applicant_id_number = $idNumber;
         $app->case_type = $data['case_type'] ?? 'general';
         $app->governorate = $data['governorate'] ?? 'الغربية';
         $app->city = $data['city'] ?? null;
@@ -568,20 +830,22 @@ final class DataImportService
      */
     private function importDonorRow(array $data, int $userId, int $rowNumber): array
     {
+        $phone = $this->cleanPhoneValue($data['phone'] ?? null);
+
         // Check duplicate donor by phone or national id
-        if (!empty($data['phone'])) {
-            $exists = Donor::where('phone', $data['phone'])->first();
+        if (!empty($phone)) {
+            $exists = Donor::where('phone', $phone)->first();
             if ($exists) {
-                return ['status' => 'duplicate', 'message' => "متبرع مسجل مسبقاً بنفس رقم الهاتف ({$data['phone']})"];
+                return ['status' => 'duplicate', 'message' => "متبرع مسجل مسبقاً بنفس رقم الهاتف ({$phone})"];
             }
         }
 
         $donor = new Donor();
         $donor->name = $data['name'];
-        $donor->phone = $data['phone'] ?? null;
+        $donor->phone = $phone;
         $donor->national_id = $data['national_id'] ?? null;
         $donor->email = $data['email'] ?? null;
-        $donor->type = in_array(strtolower((string)$data['type']), ['مؤسسة', 'institution', 'company']) ? 'institution' : 'individual';
+        $donor->type = in_array(strtolower((string)($data['type'] ?? '')), ['مؤسسة', 'institution', 'company']) ? 'institution' : 'individual';
         $donor->address = $data['address'] ?? null;
         $donor->classification = $data['classification'] ?? 'B';
         $donor->active = true;
@@ -595,37 +859,42 @@ final class DataImportService
      */
     private function importDonationRow(array $data, int $userId, int $rowNumber): array
     {
-        $amount = (float) str_replace([',', ' '], '', (string) $data['amount']);
+        $amount = $this->cleanAmountValue($data['amount'] ?? 0);
         if ($amount <= 0) {
             return ['status' => 'error', 'message' => 'مبلغ التبرع يجب أن يكون أكبر من صفر'];
         }
 
+        $donorPhone = $this->cleanPhoneValue($data['donor_phone'] ?? null);
+        $donorName = trim((string)($data['donor_name'] ?? ''));
+
         // Find or create donor
         $donor = null;
-        if (!empty($data['donor_phone'])) {
-            $donor = Donor::where('phone', $data['donor_phone'])->first();
+        if (!empty($donorPhone)) {
+            $donor = Donor::where('phone', $donorPhone)->first();
         }
-        if (!$donor && !empty($data['donor_name'])) {
-            $donor = Donor::where('name', $data['donor_name'])->first();
+        if (!$donor && !empty($donorName)) {
+            $donor = Donor::where('name', $donorName)->first();
         }
         if (!$donor) {
             $donor = new Donor();
-            $donor->name = $data['donor_name'];
-            $donor->phone = $data['donor_phone'] ?? null;
+            $donor->name = $donorName ?: 'متبرع إكسيل';
+            $donor->phone = $donorPhone;
             $donor->type = 'individual';
             $donor->active = true;
             $donor->save();
         }
 
+        $receivedAt = $this->cleanDateValue($data['received_at'] ?? null) ?: now()->toDateString();
+
         $donation = new Donation();
         $donation->donor_id = $donor->id;
         $donation->amount = $amount;
-        $donation->type = in_array(strtolower((string)$data['type']), ['عيني', 'in_kind']) ? 'in_kind' : 'cash';
+        $donation->type = in_array(strtolower((string)($data['type'] ?? '')), ['عيني', 'in_kind']) ? 'in_kind' : 'cash';
         $donation->payment_method = $data['payment_method'] ?? 'cash';
         $donation->purpose = $data['purpose'] ?? 'عام';
         $donation->status = 'collected';
         $donation->source = 'excel_import';
-        $donation->received_at = !empty($data['received_at']) ? date('Y-m-d', strtotime($data['received_at'])) : now()->toDateString();
+        $donation->received_at = $receivedAt;
         $donation->allocation_note = $data['allocation_note'] ?? 'تم الاستيراد عبر ملف Excel';
         $donation->created_by = $userId;
         $donation->receipt_number = 'RCP-IMP-' . date('ymd') . '-' . mt_rand(1000, 9999);
@@ -639,18 +908,23 @@ final class DataImportService
      */
     private function importBeneficiaryRow(array $data, int $userId, int $rowNumber): array
     {
-        if (!empty($data['national_id'])) {
-            $exists = Beneficiary::where('national_id', $data['national_id'])->first();
+        $phone = $this->cleanPhoneValue($data['phone'] ?? null);
+        $nationalId = !empty($data['national_id']) ? trim((string)$data['national_id']) : null;
+
+        if (!empty($nationalId)) {
+            $exists = Beneficiary::where('national_id', $nationalId)->first();
             if ($exists) {
-                return ['status' => 'duplicate', 'message' => "مستفيد مسجل مسبقاً بنفس الرقم القومي ({$data['national_id']})"];
+                return ['status' => 'duplicate', 'message' => "مستفيد مسجل مسبقاً بنفس الرقم القومي ({$nationalId})"];
             }
         }
 
+        $birthDate = $this->cleanDateValue($data['birth_date'] ?? null);
+
         $b = new Beneficiary();
         $b->full_name = $data['full_name'];
-        $b->national_id = $data['national_id'] ?? null;
-        $b->phone = $data['phone'] ?? null;
-        $b->birth_date = !empty($data['birth_date']) ? date('Y-m-d', strtotime($data['birth_date'])) : null;
+        $b->national_id = $nationalId;
+        $b->phone = $phone;
+        $b->birth_date = $birthDate;
         $b->address = $data['address'] ?? null;
         $b->assistance_type = $data['assistance_type'] ?? 'مالية';
         $b->notes = $data['notes'] ?? 'تم الاستيراد عبر ملف Excel';
@@ -698,12 +972,14 @@ final class DataImportService
             }
         }
 
+        $dueDate = $this->cleanDateValue($data['due_date'] ?? null) ?: now()->addDays(3)->toDateString();
+
         $task = new Task();
         $task->title = $data['title'];
         $task->description = $data['description'] ?? 'تم الاستيراد من ملف Excel';
         $task->assigned_to = $assigneeId;
         $task->assigned_by = $userId;
-        $task->due_date = !empty($data['due_date']) ? date('Y-m-d', strtotime($data['due_date'])) : now()->addDays(3)->toDateString();
+        $task->due_date = $dueDate;
         $task->priority = $priority;
         $task->status = $status;
         $task->save();

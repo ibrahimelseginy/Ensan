@@ -216,6 +216,24 @@
             </div>
 
             <div class="modal-body p-4">
+                {{-- Sheet Selector (if multi-sheet XLSX) --}}
+                <div id="modalSheetSelectorWrapper" class="d-none bg-emerald-50 border border-success-subtle rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 bg-success text-white rounded-2">
+                            <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <strong class="small text-dark d-block">ملف الإكسيل يحتوي على عدة أوراق عمل (Sheets):</strong>
+                            <span class="text-muted x-small">اختر ورقة العمل التي تريد استيرادها حالياً، ويمكنك التبديل بين الأوراق بسهولة</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small fw-bold text-dark text-nowrap"><i class="bi bi-layers-fill text-success me-1"></i>الورقة الحالية:</span>
+                        <select id="modalSheetSelect" class="form-select form-select-sm fw-bold border-success text-success bg-white shadow-2xs" style="min-width: 220px;">
+                        </select>
+                    </div>
+                </div>
+
                 {{-- Info Alert --}}
                 <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis rounded-3 p-3 mb-4 d-flex align-items-center gap-2.5 small">
                     <i class="bi bi-magic fs-4 flex-shrink-0 text-info"></i>
@@ -633,6 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentImportToken = null;
     let currentImportHeaders = [];
     let currentTargetFields = {};
+    let currentSelectedSheetIndex = 0;
 
     const templateBaseUrl = "{{ url('data-import/template') }}";
     const previewUrl = "{{ route('data-import.preview') }}";
@@ -811,10 +830,128 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Client-side dictionary for technical / English headers fallback
+    const clientHeaderDict = {
+        'id': 'الكود التعريفي (ID)',
+        'created_at': 'تاريخ الإنشاء والوقت',
+        'updated_at': 'تاريخ آخر تحديث',
+        'user_id': 'معرف المستخدم (User ID)',
+        'method': 'نوع الطلب (HTTP Method)',
+        'path': 'رابط الصفحة / المسار (Path)',
+        'status_code': 'رمز الحالة (Status Code)',
+        'ip': 'عنوان IP للشبكة',
+        'user_agent': 'متصفح وجهاز المستخدم',
+        'payload': 'حمولة وبيانات الطلب (Payload)',
+        'phone': 'رقم الهاتف',
+        'mobile': 'رقم الموبايل',
+        'name': 'الاسم الكامل',
+        'national_id': 'الرقم القومي',
+        'amount': 'المبلغ المالي',
+        'date': 'التاريخ',
+        'status': 'الحالة',
+        'address': 'العنوان ومكان السكن',
+        'notes': 'الملاحظات',
+        'project': 'المشروع الخيري',
+        'collector': 'المحصل / المندوب',
+        'email': 'البريد الإلكتروني'
+    };
+
+    function getArabicHeaderLabel(rawHeader, colIdx, headerTranslations) {
+        let title = '';
+        let original = String(rawHeader || '').trim();
+
+        if (headerTranslations && headerTranslations[colIdx]) {
+            const tr = headerTranslations[colIdx];
+            if (typeof tr === 'object' && tr !== null) {
+                title = tr.main || tr.title || '';
+                if (tr.sub) original = tr.sub;
+            } else if (typeof tr === 'string') {
+                title = tr;
+            }
+        }
+
+        if (!title && original) {
+            const clean = original.toLowerCase();
+            if (clientHeaderDict[clean]) {
+                title = clientHeaderDict[clean];
+            } else {
+                title = original;
+            }
+        }
+
+        if (!title) {
+            title = 'عمود بدون عنوان #' + (colIdx + 1);
+        }
+
+        const isDifferent = original !== '' && title.trim().toLowerCase() !== original.toLowerCase();
+
+        return {
+            title: title,
+            original: original,
+            isDifferent: isDifferent
+        };
+    }
+
     // Populate Mapping UI and Preview Table inside Modal
     function populateMappingModal(data) {
         document.getElementById('modalTotalRowsCount').textContent = data.total_rows;
         document.getElementById('modalTargetSectionBadge').textContent = 'القسم: ' + data.section_name;
+
+        // Handle Multi-sheet Selector
+        const sheetWrapper = document.getElementById('modalSheetSelectorWrapper');
+        const sheetSelect = document.getElementById('modalSheetSelect');
+
+        if (data.sheets && data.sheets.length > 1) {
+            sheetWrapper.classList.remove('d-none');
+            sheetSelect.innerHTML = '';
+            data.sheets.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.index;
+                const rowsInfo = s.rows_count ? ` (${s.rows_count} صف)` : '';
+                opt.textContent = `${s.name}${rowsInfo}`;
+                if (s.index === (data.active_sheet_index || 0)) {
+                    opt.selected = true;
+                }
+                sheetSelect.appendChild(opt);
+            });
+
+            // On change sheet
+            sheetSelect.onchange = function() {
+                const chosenSheet = parseInt(this.value, 10);
+                currentSelectedSheetIndex = chosenSheet;
+
+                const container = document.getElementById('mappingFieldsContainer');
+                container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-success mb-2"></div><div class="small text-muted fw-bold">جاري تحميل بيانات الورقة ومطابقة أعمدتها...</div></div>';
+
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('token', currentImportToken);
+                formData.append('section', currentSelectedSection);
+                formData.append('sheet_index', chosenSheet);
+
+                fetch(previewUrl, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(resData => {
+                    if (!resData.success) {
+                        alert(resData.message || 'تعذر قراءة الورقة المختارة.');
+                        return;
+                    }
+                    currentImportHeaders = resData.headers;
+                    currentTargetFields = resData.target_fields;
+                    populateMappingModal(resData);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('حدث خطأ أثناء تحميل بيانات ورقة العمل.');
+                });
+            };
+        } else {
+            if (sheetWrapper) sheetWrapper.classList.add('d-none');
+        }
 
         // 1. Build mapping fields
         const container = document.getElementById('mappingFieldsContainer');
@@ -833,15 +970,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const isMatched = suggestedField !== '';
+            const hInfo = getArabicHeaderLabel(headerName, colIdx, data.header_translations);
+
             colDiv.innerHTML = `
-                <div class="p-3 rounded-3 border ${isMatched ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'bg-light'}">
+                <div class="p-3 rounded-3 border h-100 ${isMatched ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'bg-light'}">
                     <div class="d-flex align-items-center justify-content-between mb-1.5">
                         <span class="badge bg-secondary-subtle text-secondary x-small">عمود إكسيل #${colIdx + 1}</span>
                         ${isMatched ? '<span class="badge bg-success-subtle text-success x-small fw-bold"><i class="bi bi-magic me-1"></i>مطابقة مؤكدة</span>' : '<span class="badge bg-light text-muted border x-small">غير محدد</span>'}
                     </div>
-                    <div class="fw-bold small text-truncate mb-2 text-dark" title="${headerName}">
-                        ${headerName || ('عمود بدون عنوان #' + (colIdx + 1))}
+                    <div class="fw-bold small text-truncate mb-0.5 text-dark" title="${hInfo.title}">
+                        ${hInfo.title}
                     </div>
+                    ${hInfo.isDifferent ? `<div class="text-muted x-small font-monospace mb-2 text-truncate" title="${hInfo.original}"><i class="bi bi-file-earmark-code me-0.5"></i> ${hInfo.original}</div>` : '<div class="mb-2" style="height: 18px;"></div>'}
                     <select class="form-select form-select-sm column-map-select" data-col="${colIdx}">
                         ${optionsHtml}
                     </select>
@@ -857,8 +997,12 @@ document.addEventListener('DOMContentLoaded', function() {
         body.innerHTML = '';
 
         let headRow = '<tr><th>#</th>';
-        data.headers.forEach(h => {
-            headRow += `<th class="fw-bold">${h}</th>`;
+        data.headers.forEach((h, cIdx) => {
+            const hInfo = getArabicHeaderLabel(h, cIdx, data.header_translations);
+            headRow += `<th class="fw-bold text-center">
+                <div class="text-dark">${hInfo.title}</div>
+                ${hInfo.isDifferent ? `<div class="text-muted x-small font-monospace fw-normal">${hInfo.original}</div>` : ''}
+            </th>`;
         });
         headRow += '</tr>';
         head.innerHTML = headRow;
@@ -910,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     token: currentImportToken,
                     section: currentSelectedSection,
+                    sheet_index: currentSelectedSheetIndex,
                     mapping: mapping
                 })
             })

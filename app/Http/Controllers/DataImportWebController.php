@@ -60,55 +60,87 @@ final class DataImportWebController extends Controller
      */
     public function preview(Request $request): JsonResponse
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480', // Up to 20MB
-            'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
-        ], [
-            'file.required' => 'يرجى اختيار ملف الإكسيل أو الـ CSV المراد استيراده.',
-            'file.mimes' => 'صيغة الملف غير مدعومة. الصيغ المسموح بها هي: XLSX, XLS, CSV.',
-            'file.max' => 'الحد الأقصى لحجم الملف هو 20 ميجابايت.',
-            'section.required' => 'يرجى تحديد القسم المستهدف.',
-        ]);
-
-        $uploadedFile = $request->file('file');
+        $token = $request->input('token');
+        $sheetIndex = (int) $request->input('sheet_index', 0);
         $section = $request->input('section');
-        $extension = $uploadedFile->getClientOriginalExtension();
-
-        // Save file to temporary import cache
         $tempDir = storage_path('app/imports');
-        if (!File::isDirectory($tempDir)) {
-            File::makeDirectory($tempDir, 0755, true);
+
+        if ($token) {
+            // Re-preview existing file (e.g. user selected another sheet)
+            $request->validate([
+                'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
+            ]);
+
+            $filePath = null;
+            $extension = 'xlsx';
+            foreach (['xlsx', 'xls', 'csv', 'txt'] as $checkExt) {
+                if (file_exists($tempDir . '/' . $token . '.' . $checkExt)) {
+                    $filePath = $tempDir . '/' . $token . '.' . $checkExt;
+                    $extension = $checkExt;
+                    break;
+                }
+            }
+
+            if (!$filePath) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'انتهت صلاحية جلسة رفع الملف، يرجى إعادة اختيار الملف والمحاولة مرة أخرى.',
+                ], 419);
+            }
+        } else {
+            // Fresh upload
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:20480', // Up to 20MB
+                'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
+            ], [
+                'file.required' => 'يرجى اختيار ملف الإكسيل أو الـ CSV المراد استيراده.',
+                'file.mimes' => 'صيغة الملف غير مدعومة. الصيغ المسموح بها هي: XLSX, XLS, CSV.',
+                'file.max' => 'الحد الأقصى لحجم الملف هو 20 ميجابايت.',
+                'section.required' => 'يرجى تحديد القسم المستهدف.',
+            ]);
+
+            $uploadedFile = $request->file('file');
+            $extension = $uploadedFile->getClientOriginalExtension();
+
+            if (!File::isDirectory($tempDir)) {
+                File::makeDirectory($tempDir, 0755, true);
+            }
+
+            $token = 'imp_' . date('ymd_His') . '_' . Str::random(12);
+            $filePath = $tempDir . '/' . $token . '.' . $extension;
+            $uploadedFile->move($tempDir, $token . '.' . $extension);
         }
 
-        $token = 'imp_' . date('ymd_His') . '_' . Str::random(12);
-        $tempFilePath = $tempDir . '/' . $token . '.' . $extension;
-        $uploadedFile->move($tempDir, $token . '.' . $extension);
+        // Get available sheets if xlsx
+        $sheets = [];
+        if (in_array(strtolower($extension), ['xlsx', 'xls'], true)) {
+            $sheets = $this->importService->getXlsxSheets($filePath);
+        }
 
-        // Parse file rows
-        $allRows = $this->importService->parseFile($tempFilePath, $extension);
+        // Parse file rows for chosen sheet
+        $allRows = $this->importService->parseFile($filePath, $extension, $sheetIndex);
 
         if (empty($allRows) || count($allRows) < 2) {
-            if (file_exists($tempFilePath)) unlink($tempFilePath);
             return response()->json([
                 'success' => false,
-                'message' => 'الملف المرفوع فارغ أو لا يحتوي على صفوف بيانات بعد صف العناوين.',
+                'message' => 'الورقة المحددة فارغة أو لا تحتوي على صفوف بيانات بعد صف العناوين.',
+                'sheets' => $sheets,
+                'active_sheet_index' => $sheetIndex,
+                'token' => $token,
             ], 422);
         }
 
         // Header row
         $headers = array_shift($allRows);
 
+        // Translate headers to Arabic
+        $headerTranslations = [];
+        foreach ($headers as $colIdx => $hdr) {
+            $headerTranslations[$colIdx] = $this->importService->translateHeaderToArabic((string) $hdr);
+        }
+
         // Auto map columns
         $suggestedMapping = $this->importService->autoMapColumns($headers, $section);
-
-        // Store rows in session/cache for step 2 execution
-        session(['import_file_' . $token => [
-            'path' => $tempFilePath,
-            'extension' => $extension,
-            'headers' => $headers,
-            'rows_count' => count($allRows),
-            'section' => $section,
-        ]]);
 
         // First 5 rows for live preview
         $previewRows = array_slice($allRows, 0, 5);
@@ -118,7 +150,10 @@ final class DataImportWebController extends Controller
             'token' => $token,
             'section' => $section,
             'section_name' => DataImportService::SECTIONS[$section]['name'],
+            'sheets' => $sheets,
+            'active_sheet_index' => $sheetIndex,
             'headers' => $headers,
+            'header_translations' => $headerTranslations,
             'preview_rows' => $previewRows,
             'total_rows' => count($allRows),
             'suggested_mapping' => $suggestedMapping,
@@ -135,13 +170,14 @@ final class DataImportWebController extends Controller
             'token' => 'required|string',
             'section' => 'required|string|in:' . implode(',', array_keys(DataImportService::SECTIONS)),
             'mapping' => 'required|array',
+            'sheet_index' => 'nullable|integer',
         ]);
 
         $token = $request->input('token');
         $section = $request->input('section');
         $mapping = $request->input('mapping');
+        $sheetIndex = (int) $request->input('sheet_index', 0);
 
-        $sessionData = session('import_file_' . $token);
         $tempDir = storage_path('app/imports');
 
         // Look for file by token
@@ -162,12 +198,12 @@ final class DataImportWebController extends Controller
             ], 419);
         }
 
-        $allRows = $this->importService->parseFile($filePath, $ext);
+        $allRows = $this->importService->parseFile($filePath, $ext, $sheetIndex);
         if (empty($allRows) || count($allRows) < 2) {
             if (file_exists($filePath)) unlink($filePath);
             return response()->json([
                 'success' => false,
-                'message' => 'تعذر قراءة بيانات الملف.',
+                'message' => 'تعذر قراءة بيانات الملف أو الورقة المحددة.',
             ], 422);
         }
 
