@@ -83,20 +83,26 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4 templates-overview-card overflow-hidden">
         <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div>
-                <h5 class="fw-bold mb-1 text-main"><i class="bi bi-collection-fill text-success me-2"></i> نماذج وقوالب الأقسام المتاحة للاستيراد</h5>
-                <p class="text-muted small mb-0">يمكنك تحميل النموذج الفارغ لكل قسم لتعبئة البيانات بالأعمدة القياسية، أو رفع أي ملف واستخدام المطابقة الذكية</p>
+                <h5 class="fw-bold mb-1 text-main d-flex align-items-center gap-2">
+                    <span class="p-2 rounded-3 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center">
+                        <i class="bi bi-collection-fill fs-5"></i>
+                    </span>
+                    <span>نماذج وقوالب الأقسام المتاحة للاستيراد</span>
+                </h5>
+                <p class="text-muted small mb-0 mt-1">يمكنك تحميل النموذج الفارغ لكل قسم لتعبئة البيانات بالأعمدة القياسية، أو رفع أي ملف واستخدام المطابقة الذكية</p>
             </div>
-            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 fw-bold">
-                {{ count($sections) }} أقسام مدعومة
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-1.5">
+                <i class="bi bi-check2-all"></i>
+                <span>{{ count($sections) }} أقسام مدعومة</span>
             </span>
         </div>
         <div class="card-body p-4 pt-3">
-            <div class="row g-3">
+            <div class="row g-3 g-lg-4">
                 @foreach($sections as $secKey => $secConfig)
                     <div class="col-md-6 col-lg-4">
-                        <div class="template-box p-3.5 rounded-4 border h-100 d-flex flex-column justify-content-between">
+                        <div class="template-box p-3.5 p-md-4 rounded-4 border h-100 d-flex flex-column justify-content-between position-relative" style="--sec-accent: {{ $secConfig['color'] }};">
                             <div>
-                                <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-light border-opacity-50">
+                                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light-subtle">
                                     <div class="d-flex align-items-center gap-2.5">
                                         <div class="template-icon text-white shadow-xs" style="background-color: {{ $secConfig['color'] }};">
                                             <i class="bi {{ $secConfig['icon'] }}"></i>
@@ -106,30 +112,43 @@
                                             <span class="text-muted x-small">{{ $secConfig['badge'] }}</span>
                                         </div>
                                     </div>
-                                    <span class="badge bg-light text-dark border x-small">{{ count($secConfig['fields']) }} حقول</span>
+                                    <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill x-small fw-bold d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-columns-gap"></i>
+                                        <span>{{ count($secConfig['fields']) }} حقول</span>
+                                    </span>
                                 </div>
                                 
-                                <p class="text-muted small mb-3 lh-sm">{{ $secConfig['description'] }}</p>
+                                <p class="text-muted small mb-3 template-desc lh-base">{{ $secConfig['description'] }}</p>
 
                                 <div class="mb-3">
-                                    <span class="text-dark fw-bold x-small d-block mb-1.5">الأعمدة المتاحة:</span>
-                                    <div class="d-flex flex-wrap gap-1">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="text-dark fw-bold x-small d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-tags-fill text-muted"></i>
+                                            <span>الأعمدة والحقول:</span>
+                                        </span>
+                                        <span class="text-muted x-small opacity-75">(*) حقل مطلوب</span>
+                                    </div>
+                                    <div class="template-fields-wrap d-flex flex-wrap gap-1.5">
                                         @foreach($secConfig['fields'] as $fKey => $fMeta)
-                                            <span class="badge {{ $fMeta['required'] ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-light text-muted border' }} x-small" style="font-size: 0.72rem;">
-                                                {{ $fMeta['label'] }} {{ $fMeta['required'] ? '*' : '' }}
+                                            <span class="template-field-pill {{ $fMeta['required'] ? 'field-pill-req' : 'field-pill-opt' }}" title="{{ $fMeta['required'] ? 'حقل إلزامي للاستيراد' : 'حقل اختياري' }}">
+                                                @if($fMeta['required'])
+                                                    <span class="field-req-dot"></span>
+                                                @endif
+                                                <span>{{ $fMeta['label'] }}</span>
                                             </span>
                                         @endforeach
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="pt-2 border-top mt-2 d-flex flex-column gap-1.5">
-                                <a href="{{ route('data-import.template', $secKey) }}" class="btn btn-sm btn-outline-success rounded-pill w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-1.5">
+                            <div class="template-actions pt-3 border-top mt-auto d-flex align-items-center gap-2">
+                                <a href="{{ route('data-import.template', $secKey) }}" class="btn btn-sm btn-outline-success rounded-pill flex-grow-1 py-2 fw-bold d-inline-flex align-items-center justify-content-center gap-1.5 hover-lift" title="تحميل قالب Excel جاهز بالأعمدة القياسية">
                                     <i class="bi bi-file-earmark-arrow-down-fill"></i>
-                                    <span>تحميل نموذج {{ $secConfig['name'] }}</span>
+                                    <span>تحميل النموذج</span>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill w-100 text-muted x-small fw-bold btn-quick-select-section" data-section="{{ $secKey }}">
-                                    <i class="bi bi-arrow-up-circle me-1 text-primary"></i> اختيار هذا القسم للاستيراد
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-2 fw-bold text-dark d-inline-flex align-items-center gap-1 btn-quick-select-section hover-lift" data-section="{{ $secKey }}" title="تحديد هذا القسم للاستيراد الآن">
+                                    <i class="bi bi-arrow-up-circle-fill text-primary"></i>
+                                    <span>استيراد</span>
                                 </button>
                             </div>
                         </div>
@@ -140,7 +159,7 @@
     </div>
 
     {{-- Import Guidelines Card --}}
-    <div class="card border-0 shadow-sm rounded-4 mb-4 import-guidelines-card border border-success border-opacity-25">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 import-guidelines-card border border-success border-opacity-25 overflow-hidden">
         <div class="card-body p-4">
             <h5 class="fw-bold text-success mb-3 d-flex align-items-center gap-2">
                 <i class="bi bi-lightbulb-fill"></i>
@@ -148,8 +167,8 @@
             </h5>
             <div class="row g-3 small text-secondary">
                 <div class="col-md-4">
-                    <div class="guideline-item p-3 rounded-3 h-100 bg-white shadow-2xs border">
-                        <div class="d-flex align-items-start gap-2">
+                    <div class="guideline-item p-3.5 rounded-3 h-100 bg-white shadow-2xs border">
+                        <div class="d-flex align-items-start gap-2.5">
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
                                 <strong class="text-dark d-block mb-1">الصف الأول يحتوي العناوين:</strong>
@@ -159,8 +178,8 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="guideline-item p-3 rounded-3 h-100 bg-white shadow-2xs border">
-                        <div class="d-flex align-items-start gap-2">
+                    <div class="guideline-item p-3.5 rounded-3 h-100 bg-white shadow-2xs border">
+                        <div class="d-flex align-items-start gap-2.5">
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
                                 <strong class="text-dark d-block mb-1">أرقام الهواتف والأرقام القومية:</strong>
@@ -170,8 +189,8 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="guideline-item p-3 rounded-3 h-100 bg-white shadow-2xs border">
-                        <div class="d-flex align-items-start gap-2">
+                    <div class="guideline-item p-3.5 rounded-3 h-100 bg-white shadow-2xs border">
+                        <div class="d-flex align-items-start gap-2.5">
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
                                 <strong class="text-dark d-block mb-1">الحماية من التكرار المزدوج:</strong>
@@ -228,23 +247,64 @@
 }
 .template-box {
     background: var(--bg-card, #ffffff);
-    border-color: var(--border-color, rgba(0,0,0,0.08)) !important;
+    border-color: #e2e8f0 !important;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 .template-box:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-    border-color: rgba(16, 185, 129, 0.35) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+    border-color: var(--sec-accent, #10b981) !important;
 }
 .template-icon {
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.template-desc {
+    min-height: 38px;
+    font-size: 0.84rem;
+}
+.template-fields-wrap {
+    min-height: 72px;
+    align-content: flex-start;
+}
+.template-field-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    transition: all 0.15s ease;
+}
+.field-pill-opt {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+.field-pill-req {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+.field-req-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #dc2626;
+    display: inline-block;
+}
+.template-field-pill:hover {
+    transform: translateY(-1px);
 }
 .templates-overview-card, .import-guidelines-card {
     background: var(--bg-card, #ffffff);
@@ -258,6 +318,19 @@
 .theme-dark .guideline-item {
     background: #111d33 !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.theme-dark .template-desc {
+    color: #94a3b8 !important;
+}
+.theme-dark .field-pill-opt {
+    background: #1e293b;
+    color: #94a3b8;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.theme-dark .field-pill-req {
+    background: rgba(220, 38, 38, 0.15);
+    color: #f87171;
+    border-color: rgba(220, 38, 38, 0.3);
 }
 .theme-dark .stat-pill-float {
     background: #1e293b !important;

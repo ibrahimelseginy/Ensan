@@ -15,20 +15,20 @@
             <div class="row g-2 align-items-center text-center">
                 <div class="col-4">
                     <div class="step-pill step-active" id="stepPill1">
-                        <span class="step-num">1</span>
-                        <span class="step-label">تحديد القسم المستهدف</span>
+                        <span class="step-num"><i class="bi bi-diagram-3-fill"></i></span>
+                        <span class="step-label">1. تحديد القسم المستهدف</span>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="step-pill" id="stepPill2">
-                        <span class="step-num">2</span>
-                        <span class="step-label">رفع ملف الإكسيل</span>
+                        <span class="step-num"><i class="bi bi-cloud-arrow-up-fill"></i></span>
+                        <span class="step-label">2. رفع ملف البيانات</span>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="step-pill" id="stepPill3">
-                        <span class="step-num">3</span>
-                        <span class="step-label">المعاينة وتوزيع البيانات</span>
+                        <span class="step-num"><i class="bi bi-sliders"></i></span>
+                        <span class="step-label">3. المعاينة وتوزيع السجلات</span>
                     </div>
                 </div>
             </div>
@@ -36,29 +36,34 @@
 
         {{-- Step 1: Section Selector Tabs / Pills --}}
         <div class="import-sections-wrapper mb-4">
-            <div class="d-flex align-items-center justify-content-between mb-2.5">
+            <div class="d-flex align-items-center justify-content-between mb-3">
                 <label class="form-label small fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <span class="badge bg-primary rounded-circle p-1" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
-                    <span>حدد القسم المستهدف لحفظ وتوزيع السجلات:</span>
+                    <span class="badge bg-success rounded-circle p-1" style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
+                    <span class="fs-6">حدد القسم المستهدف لحفظ وتوزيع السجلات:</span>
                 </label>
-                <span class="badge bg-light text-muted border small d-none d-md-inline-block">
-                    القسم الحالي: <strong class="text-primary" id="activeSectionLabelName">الحالات وطلبات المساعدة</strong>
+                <span class="badge bg-light text-muted border px-3 py-1.5 rounded-pill small d-none d-md-inline-flex align-items-center gap-1.5">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span>القسم النشط:</span>
+                    <strong class="text-primary" id="activeSectionLabelName">الحالات وطلبات المساعدة</strong>
                 </span>
             </div>
 
-            <div class="d-flex flex-wrap gap-2.5" id="importSectionPills">
+            <div class="import-section-grid" id="importSectionPills">
                 @foreach($sections as $secKey => $secConfig)
                     <button type="button" 
-                            class="btn import-sec-pill {{ $secKey === $activeSection ? 'active' : '' }}" 
+                            class="import-sec-pill {{ $secKey === $activeSection ? 'active' : '' }}" 
                             data-section="{{ $secKey }}"
                             data-name="{{ $secConfig['name'] }}"
                             style="--sec-color: {{ $secConfig['color'] }};">
                         <div class="sec-pill-icon" style="background-color: {{ $secConfig['color'] }};">
                             <i class="bi {{ $secConfig['icon'] }}"></i>
                         </div>
-                        <div class="text-start">
+                        <div class="sec-pill-info">
                             <div class="sec-pill-title">{{ $secConfig['name'] }}</div>
                             <div class="sec-pill-badge">{{ $secConfig['badge'] }}</div>
+                        </div>
+                        <div class="sec-pill-check">
+                            <i class="bi bi-check-lg"></i>
                         </div>
                     </button>
                 @endforeach
@@ -69,29 +74,43 @@
         <div class="row g-3 align-items-stretch">
             {{-- Dropzone Area --}}
             <div class="col-lg-8 col-md-12">
-                <div class="import-dropzone p-4 rounded-4 text-center position-relative h-100 d-flex flex-column align-items-center justify-content-center" id="quickImportDropzone">
-                    <input type="file" id="quickImportFileInput" class="import-file-input" accept=".xlsx,.xls,.csv">
+                <div class="import-dropzone p-4 p-md-5 rounded-4 text-center position-relative h-100 d-flex flex-column align-items-center justify-content-center" id="quickImportDropzone" role="button" tabindex="0">
+                    <input type="file" id="quickImportFileInput" class="d-none" accept=".xlsx,.xls,.csv">
                     
                     {{-- Default State (No File) --}}
-                    <div class="dropzone-content" id="dropzoneDefaultState">
+                    <div class="dropzone-content py-2" id="dropzoneDefaultState">
                         <div class="dropzone-icon mb-3">
                             <div class="icon-circle shadow-sm">
                                 <i class="bi bi-cloud-arrow-up-fill text-success fs-1"></i>
                             </div>
                         </div>
-                        <h5 class="fw-bold mb-1 text-main-heading">اسحب وأفلت ملف الإكسيل هنا أو <span class="text-success text-decoration-underline" style="cursor: pointer;">تصفح جهازك</span></h5>
-                        <p class="text-muted small mb-3">يدعم ملفات Excel (.xlsx, .xls) وجداول CSV حتى 20 ميجابايت</p>
-                        <div class="d-inline-flex align-items-center gap-2 bg-light px-3 py-1.5 rounded-pill border small text-muted">
-                            <i class="bi bi-info-circle text-primary"></i>
-                            <span>سيتم فحص أعمدة الملف ومطابقتها آلياً فور اختياره</span>
+                        <h5 class="fw-bold mb-2 text-main-heading">
+                            اسحب وأفلت ملف الإكسيل هنا أو <span class="text-success text-decoration-underline" style="cursor: pointer;">تصفح جهازك</span>
+                        </h5>
+                        <p class="text-muted small mb-3">
+                            يدعم ملفات Excel (.xlsx, .xls) وجداول CSV حتى 20 ميجابايت
+                        </p>
+                        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                            <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-file-earmark-spreadsheet text-success me-1"></i> .XLSX
+                            </span>
+                            <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-file-earmark-excel text-success me-1"></i> .XLS
+                            </span>
+                            <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-filetype-csv text-primary me-1"></i> .CSV
+                            </span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-magic me-1"></i> مطابقة تلقائية بالذكاء الاصطناعي
+                            </span>
                         </div>
                     </div>
 
                     {{-- Selected File State (Visible once a file is picked) --}}
-                    <div class="selected-file-card p-3 rounded-4 border bg-white shadow-sm w-100 d-none text-start" id="dropzoneSelectedState">
+                    <div class="selected-file-card p-3.5 rounded-4 border bg-white shadow-sm w-100 d-none text-start" id="dropzoneSelectedState">
                         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="file-card-icon bg-success-subtle text-success rounded-3 p-2.5 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <div class="file-card-icon bg-success-subtle text-success rounded-3 p-2.5 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
                                     <i class="bi bi-file-earmark-excel-fill fs-2"></i>
                                 </div>
                                 <div>
@@ -99,7 +118,7 @@
                                         <span class="badge bg-success text-white rounded-pill px-2.5 py-1 x-small fw-bold d-inline-flex align-items-center gap-1">
                                             <span class="live-dot-mini"></span> جاهز للمعاينة والمطابقة
                                         </span>
-                                        <span class="badge bg-light text-muted border x-small" id="selectedFileSizeBadge">0 KB</span>
+                                        <span class="badge bg-light text-muted border x-small font-monospace" id="selectedFileSizeBadge">0 KB</span>
                                     </div>
                                     <h6 class="fw-bold mb-0 text-dark text-break" id="selectedFileNameText">filename.xlsx</h6>
                                 </div>
@@ -115,34 +134,55 @@
 
             {{-- Helper Sidebar & Actions --}}
             <div class="col-lg-4 col-md-12">
-                <div class="p-3.5 rounded-4 h-100 d-flex flex-column justify-content-between import-side-helper-card border">
+                <div class="p-3.5 p-md-4 rounded-4 h-100 d-flex flex-column justify-content-between import-side-helper-card border">
                     <div>
-                        <h6 class="fw-bold text-main-heading mb-3 d-flex align-items-center gap-2">
-                            <i class="bi bi-shield-check text-success fs-5"></i>
-                            <span>مميزات الاستيراد الذكي:</span>
-                        </h6>
-                        <ul class="list-unstyled small text-muted mb-3 space-y-2.5">
-                            <li class="d-flex align-items-start gap-2 mb-2">
-                                <i class="bi bi-check-circle-fill text-success fs-6 mt-0.5"></i>
-                                <span><strong>مطابقة ذكية:</strong> ربط الأعمدة آلياً حتى مع اختلاف المسميات.</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2 mb-2">
-                                <i class="bi bi-check-circle-fill text-success fs-6 mt-0.5"></i>
-                                <span><strong>معاينة حية:</strong> تدقيق وفحص البيانات قبل حفظها نهائياً.</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2 mb-2">
-                                <i class="bi bi-check-circle-fill text-success fs-6 mt-0.5"></i>
-                                <span><strong>فحص التكرار:</strong> تخطي السجلات المكررة بالرقم القومي أو الهاتف.</span>
-                            </li>
-                        </ul>
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light-subtle">
+                            <h6 class="fw-bold text-main-heading mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-shield-check text-success fs-5"></i>
+                                <span>مميزات الاستيراد الذكي</span>
+                            </h6>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 x-small fw-bold">آمن وسريع</span>
+                        </div>
+
+                        <div class="helper-features-list mb-3">
+                            <div class="helper-feature-item p-2.5 rounded-3 mb-2 d-flex align-items-start gap-2.5">
+                                <div class="feature-icon-badge text-success">
+                                    <i class="bi bi-magic fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small mb-0.5">مطابقة ذكية للأعمدة</div>
+                                    <div class="text-muted x-small">ربط حقول ملفك بحقول النظام تلقائياً حتى مع اختلاف المسميات.</div>
+                                </div>
+                            </div>
+
+                            <div class="helper-feature-item p-2.5 rounded-3 mb-2 d-flex align-items-start gap-2.5">
+                                <div class="feature-icon-badge text-info">
+                                    <i class="bi bi-eye-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small mb-0.5">معاينة حية وفورية</div>
+                                    <div class="text-muted x-small">تدقيق ومراجعة أول 5 صفوف وتعديل أي عمود قبل الحفظ النهائي.</div>
+                                </div>
+                            </div>
+
+                            <div class="helper-feature-item p-2.5 rounded-3 mb-2 d-flex align-items-start gap-2.5">
+                                <div class="feature-icon-badge text-warning">
+                                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small mb-0.5">فحص التكرار التلقائي</div>
+                                    <div class="text-muted x-small">تخطي السجلات المكررة بالرقم القومي أو الهاتف لمنع الازدواجية.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="pt-3 border-top d-flex flex-column gap-2">
-                        <button type="button" id="btnDownloadCurrentTemplate" class="btn btn-sm btn-outline-success rounded-pill w-100 py-2.5 fw-bold d-inline-flex align-items-center justify-content-center gap-2">
+                    <div class="pt-3 border-top d-flex flex-column gap-2 mt-auto">
+                        <button type="button" id="btnDownloadCurrentTemplate" class="btn btn-outline-success rounded-pill w-100 py-2.5 fw-bold d-inline-flex align-items-center justify-content-center gap-2 hover-lift">
                             <i class="bi bi-file-earmark-arrow-down-fill fs-6"></i>
                             <span id="btnDownloadTemplateText">تحميل نموذج Excel جاهز للقسم</span>
                         </button>
-                        <button type="button" id="btnStartQuickImport" class="btn btn-success rounded-pill w-100 py-2.5 fw-bold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm btn-start-import" disabled>
+                        <button type="button" id="btnStartQuickImport" class="btn btn-success rounded-pill w-100 py-2.5 fw-bold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm btn-start-import hover-lift" disabled>
                             <i class="bi bi-arrow-left-right fs-5"></i>
                             <span>بدء المعاينة ومطابقة الأعمدة</span>
                         </button>
@@ -283,38 +323,39 @@
 .data-import-hero-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* Step Indicator */
 .step-pill {
-    padding: 8px 12px;
-    border-radius: 9999px;
+    padding: 10px 14px;
+    border-radius: 14px;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border: 1.5px solid #e2e8f0;
     color: #64748b;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     transition: all 0.2s ease;
     width: 100%;
     justify-content: center;
 }
 .step-pill .step-num {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: #cbd5e1;
-    color: #ffffff;
+    background: #e2e8f0;
+    color: #64748b;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.72rem;
+    font-size: 0.82rem;
+    flex-shrink: 0;
 }
 .step-pill.step-active {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.08);
     border-color: #10b981;
     color: #047857;
 }
@@ -323,93 +364,167 @@
     color: #ffffff;
 }
 
-/* Section Pills */
+/* Section Pills Grid (Step 1) */
+.import-section-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+@media (max-width: 1200px) {
+    .import-section-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 768px) {
+    .import-section-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 500px) {
+    .import-section-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .import-sec-pill {
     background: #f8fafc;
     border: 1.5px solid #e2e8f0;
     border-radius: 16px;
-    padding: 9px 14px;
+    padding: 11px 13px;
     color: #334155;
-    font-size: 0.86rem;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 10px;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
+    text-align: right;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    min-height: 64px;
 }
 .sec-pill-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.25s ease;
+}
+.sec-pill-info {
+    flex-grow: 1;
+    min-width: 0;
 }
 .sec-pill-title {
-    font-weight: 800;
-    line-height: 1.2;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.25;
+    color: #1e293b;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .sec-pill-badge {
     font-size: 0.72rem;
     color: #64748b;
-    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sec-pill-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sec-color, #10b981);
+    color: #ffffff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
 }
 .import-sec-pill:hover {
     background: #ffffff;
     border-color: var(--sec-color, #10b981);
     transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+.import-sec-pill:hover .sec-pill-icon {
+    transform: scale(1.08);
 }
 .import-sec-pill.active {
     background: #ffffff !important;
     border-color: var(--sec-color, #10b981) !important;
-    box-shadow: 0 0 0 2px var(--sec-color, #10b981), 0 8px 20px rgba(0,0,0,0.06);
+    border-width: 2px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--sec-color, #10b981) !important;
 }
 .import-sec-pill.active .sec-pill-title {
     color: var(--sec-color, #10b981);
 }
-
-/* Dropzone */
-.import-dropzone {
-    background: #f8fafc;
-    border: 2.5px dashed #cbd5e1;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    min-height: 220px;
+.import-sec-pill.active .sec-pill-check {
+    display: flex;
 }
-.import-dropzone:hover, .import-dropzone.dragover {
+
+/* Dropzone (Step 2) */
+.import-dropzone {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px !important;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    min-height: 260px;
+    outline: none;
+}
+.import-dropzone:hover, .import-dropzone:focus, .import-dropzone.dragover {
     border-color: #10b981;
     background: #f0fdf4;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
 }
 .import-dropzone .icon-circle {
-    width: 68px;
-    height: 68px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.2);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .import-dropzone:hover .icon-circle {
-    transform: scale(1.1);
+    transform: scale(1.12);
+    background: rgba(16, 185, 129, 0.18);
 }
-.import-file-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 5;
-}
+
+/* Helper Sidebar */
 .import-side-helper-card {
     background: #f8fafc;
     border-color: #e2e8f0 !important;
+}
+.helper-feature-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+.helper-feature-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.feature-icon-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 /* Start Import Button Pulse */
@@ -447,16 +562,39 @@
     border-color: rgba(255, 255, 255, 0.08);
     color: #94a3b8;
 }
+.theme-dark .step-pill .step-num {
+    background: #1e293b;
+    color: #94a3b8;
+}
+.theme-dark .step-pill.step-active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #34d399;
+}
+.theme-dark .step-pill.step-active .step-num {
+    background: #10b981;
+    color: #ffffff;
+}
 .theme-dark .import-sec-pill {
     background: #0f172a;
     border-color: rgba(255, 255, 255, 0.1);
     color: #f8fafc;
 }
+.theme-dark .sec-pill-title {
+    color: #f8fafc;
+}
+.theme-dark .sec-pill-badge {
+    color: #94a3b8;
+}
+.theme-dark .import-sec-pill:hover {
+    background: #1e293b;
+}
 .theme-dark .import-sec-pill.active {
     background: #1e293b !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--sec-color, #10b981) !important;
 }
 .theme-dark .import-dropzone {
-    background: #0f172a;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
     border-color: rgba(255, 255, 255, 0.15);
 }
 .theme-dark .import-dropzone:hover,
@@ -467,6 +605,16 @@
 .theme-dark .import-side-helper-card {
     background: #0f172a;
     border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.theme-dark .helper-feature-item {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.theme-dark .helper-feature-item .text-dark {
+    color: #f8fafc !important;
+}
+.theme-dark .helper-feature-item .text-muted {
+    color: #94a3b8 !important;
 }
 .theme-dark .selected-file-card {
     background: #1e293b !important;
@@ -586,8 +734,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Drag and Drop Effects
-    if (dropzone) {
+    // Drag and Drop & Click Effects
+    if (dropzone && fileInput) {
+        dropzone.addEventListener('click', function(e) {
+            if (e.target.closest('#btnRemoveSelectedFile') || e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+            fileInput.click();
+        });
+        dropzone.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
         ['dragenter', 'dragover'].forEach(name => {
             dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
         });
