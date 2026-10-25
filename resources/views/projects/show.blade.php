@@ -421,218 +421,66 @@
 
 
 
-            @if($project->name === 'مشروع زاد')
-                <!-- Zad Families Section -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="gh-section-title">
-                            <span><i class="bi bi-people-fill text-primary me-2"></i> ملف أهالي زاد</span>
-                            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#zadFamilyForm">إضافة حالة</button>
-                        </div>
-                        
-                        <div class="collapse mb-4" id="zadFamilyForm">
-                            <form method="POST" action="{{ route('projects.storeZadFamily', $project) }}" class="bg-body-tertiary p-3 rounded shadow-sm">
-                                @csrf
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small">اسم الام</label>
-                                        <input type="text" name="mother_name" class="form-control form-control-sm" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small">رقم التلفون</label>
-                                        <input type="text" name="phone" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="form-label small">اسماء الاطفال</label>
-                                        <textarea name="children_names" class="form-control form-control-sm" rows="2"></textarea>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small">رقم احتياطي</label>
-                                        <input type="text" name="backup_phone" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label small">عدد الاطفال</label>
-                                        <input type="number" name="children_count" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label small">المكفولة</label>
-                                        <input type="number" name="sponsored_children_count" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small">الصف الدراسي</label>
-                                        <input type="text" name="study_grade" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label small">فرخة/بطة</label>
-                                        <input type="text" name="poultry_type" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label small">لحمة</label>
-                                        <input type="text" name="meat" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="form-label small">ملاحظات</label>
-                                        <textarea name="notes_cases" class="form-control form-control-sm" rows="2"></textarea>
-                                    </div>
-                                    <div class="col-12 text-end">
-                                        <button class="btn btn-primary btn-sm px-4">حفظ الحالة</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+            @php
+                $isZadProject = (trim($project->name) === 'مشروع زاد' || str_contains($project->name, 'زاد'));
+                $genericBeneficiaries = $project->beneficiaries()
+                    ->with(['allocatedBeneficiaries:id,full_name', 'sponsors:id,name'])
+                    ->orderByDesc('id')
+                    ->limit(200)
+                    ->get();
+                $zadFamilies = $isZadProject 
+                    ? $project->beneficiaries()->whereNotNull('mother_name')->orderByDesc('id')->limit(50)->get() 
+                    : collect();
+            @endphp
 
-                        <div class="table-responsive">
-                            @php $zadFamilies = $project->beneficiaries()->whereNotNull('mother_name')->orderByDesc('id')->limit(50)->get(); @endphp
-                            <table class="table table-sm table-hover align-middle small" style="min-width: 820px;">
-                                <thead class="bg-body-tertiary">
-                                    <tr>
-                                        <th>الام</th>
-                                        <th>اسماء الاطفال</th>
-                                        <th>الهاتف</th>
-                                        <th>عدد الاطفال</th>
-                                        <th>المكفولة</th>
-                                        <th>الدراسة</th>
-                                        <th>فرخة/بطة</th>
-                                        <th>لحمة</th>
-                                        <th>اجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($zadFamilies as $family)
-                                    <tr>
-                                        <td>{{ $family->mother_name }}</td>
-                                        <td><span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ $family->children_names }}">{{ $family->children_names }}</span></td>
-                                        <td>{{ $family->phone }}</td>
-                                        <td class="text-center">{{ $family->children_count }}</td>
-                                        <td class="text-center">{{ $family->sponsored_children_count }}</td>
-                                        <td>{{ $family->study_grade }}</td>
-                                        <td>{{ $family->poultry_type }}</td>
-                                        <td>{{ $family->meat }}</td>
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                <!-- Edit Button -->
-                                                <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal" data-bs-target="#editZadFamily{{ $family->id }}">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
+            @if($isZadProject)
+                {{-- Navigation Pills for Zad Project --}}
+                <ul class="nav nav-pills mb-3 gap-2 p-1.5 bg-body-tertiary rounded-3 border" id="zadProjectTabs" role="tablist" style="width: fit-content;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-2" id="project-beneficiaries-tab" data-bs-toggle="pill" data-bs-target="#project-beneficiaries-pane" type="button" role="tab">
+                            <i class="bi bi-people-fill text-primary"></i>
+                            <span>ملف المستفيدين</span>
+                            <span class="badge bg-primary text-white rounded-pill px-2">{{ $genericBeneficiaries->count() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-2" id="zad-families-tab" data-bs-toggle="pill" data-bs-target="#zad-families-pane" type="button" role="tab">
+                            <i class="bi bi-basket2-fill text-success"></i>
+                            <span>ملف أهالي زاد (الاستمارات المخصصة)</span>
+                            @if($zadFamilies->count() > 0)
+                                <span class="badge bg-success text-white rounded-pill px-2">{{ $zadFamilies->count() }}</span>
+                            @endif
+                        </button>
+                    </li>
+                </ul>
 
-                                                <!-- Delete Button -->
-                                                <form action="{{ route('projects.destroyZadFamily', [$project, $family]) }}" 
-                                                    method="POST" 
-                                                    class="d-inline"
-                                                    data-confirm-delete
-                                                    data-confirm-title="تأكيد حذف ملف الأسرة"
-                                                    data-name="{{ $family->family_name }}">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-link text-danger p-0" title="حذف الأسرة"><i class="bi bi-trash"></i></button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="9" class="text-center py-3 text-muted">لا توجد سجلات في ملف الأهالي</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="tab-content" id="zadProjectTabsContent">
+                    <div class="tab-pane fade show active" id="project-beneficiaries-pane" role="tabpanel">
+            @endif
 
-                        <!-- Edit Modals -->
-                        @foreach($zadFamilies ?? [] as $family)
-                        <div class="modal fade" id="editZadFamily{{ $family->id }}" tabindex="-1">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">تعديل حالة: {{ $family->mother_name }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <form method="POST" action="{{ route('projects.updateZadFamily', [$project, $family]) }}">
-                                        @csrf @method('PUT')
-                                        <div class="modal-body text-start">
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <label class="form-label small">اسم الام</label>
-                                                    <input type="text" name="mother_name" class="form-control" value="{{ $family->mother_name }}" required>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small">رقم التلفون</label>
-                                                    <input type="text" name="phone" class="form-control" value="{{ $family->phone }}">
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <label class="form-label small">اسماء الاطفال</label>
-                                                    <textarea name="children_names" class="form-control" rows="2">{{ $family->children_names }}</textarea>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">رقم احتياطي</label>
-                                                    <input type="text" name="backup_phone" class="form-control" value="{{ $family->backup_phone }}">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">عدد الاطفال</label>
-                                                    <input type="number" name="children_count" class="form-control" value="{{ $family->children_count }}">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small">المكفولة</label>
-                                                    <input type="number" name="sponsored_children_count" class="form-control" value="{{ $family->sponsored_children_count }}">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small">الصف الدراسي</label>
-                                                    <input type="text" name="study_grade" class="form-control" value="{{ $family->study_grade }}">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small">فرخة/بطة</label>
-                                                    <input type="text" name="poultry_type" class="form-control" value="{{ $family->poultry_type }}">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small">لحمة</label>
-                                                    <input type="text" name="meat" class="form-control" value="{{ $family->meat }}">
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <label class="form-label small">ملاحظات</label>
-                                                    <textarea name="notes_cases" class="form-control" rows="2">{{ $family->notes_cases }}</textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
-                                        </div>
-                                    </form>
-                                </div>
+            <!-- Generic Beneficiaries Section -->
+            <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
+                <div class="card-body p-3 p-md-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-people-fill fs-5"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">ملف المستفيدين</h5>
+                                <small class="text-muted">المستفيدين المسجلين تحت هذا المشروع</small>
                             </div>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 ms-2 fw-bold" style="font-size: 0.82rem;">
+                                {{ $genericBeneficiaries->count() }} مستفيد
+                            </span>
                         </div>
-                        @endforeach
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-primary btn-sm px-3 py-1.5 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-1.5" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">
+                                <i class="bi bi-person-plus-fill"></i>
+                                <span>إضافة مستفيد</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            @else
-                @php
-                    $genericBeneficiaries = $project->beneficiaries()
-                        ->whereNull('mother_name')
-                        ->with(['allocatedBeneficiaries:id,full_name', 'sponsors:id,name'])
-                        ->orderByDesc('id')
-                        ->limit(100)
-                        ->get();
-                @endphp
-                <!-- Generic Beneficiaries Section -->
-                <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
-                    <div class="card-body p-3 p-md-4">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width: 40px; height: 40px;">
-                                    <i class="bi bi-people-fill fs-5"></i>
-                                </span>
-                                <div>
-                                    <h5 class="fw-bold mb-0 text-dark">ملف المستفيدين</h5>
-                                    <small class="text-muted">المستفيدين المسجلين تحت هذا المشروع</small>
-                                </div>
-                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 ms-2 fw-bold" style="font-size: 0.82rem;">
-                                    {{ $genericBeneficiaries->count() }} مستفيد
-                                </span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-primary btn-sm px-3 py-1.5 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-1.5" type="button" data-bs-toggle="collapse" data-bs-target="#beneficiaryForm">
-                                    <i class="bi bi-person-plus-fill"></i>
-                                    <span>إضافة مستفيد</span>
-                                </button>
-                            </div>
-                        </div>
 
                         {{-- Search Filter Bar --}}
                         <div class="row g-2 mb-3 align-items-center">
@@ -964,6 +812,211 @@
                             </div>
                         </div>
                         @endforeach
+                    </div>
+                </div>
+            @if($isZadProject)
+                    </div>
+                    {{-- Zad Families Tab Pane --}}
+                    <div class="tab-pane fade" id="zad-families-pane" role="tabpanel">
+                        <!-- Zad Families Section -->
+                        <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
+                            <div class="card-body p-3 p-md-4">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-3" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-basket2-fill fs-5"></i>
+                                        </span>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">ملف أهالي زاد</h5>
+                                            <small class="text-muted">الاستمارات المخصصة للحالات وتوزيعات الدواجن واللحوم</small>
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 ms-2 fw-bold" style="font-size: 0.82rem;">
+                                            {{ $zadFamilies->count() }} أسرة
+                                        </span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button class="btn btn-outline-success btn-sm px-3 py-1.5 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-1.5" type="button" data-bs-toggle="collapse" data-bs-target="#zadFamilyForm">
+                                            <i class="bi bi-plus-circle-fill"></i>
+                                            <span>إضافة حالة بالملف الميداني</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="collapse mb-4" id="zadFamilyForm">
+                                    <form method="POST" action="{{ route('projects.storeZadFamily', $project) }}" class="bg-body-tertiary p-3 rounded-3 shadow-sm border">
+                                        @csrf
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">اسم الام <span class="text-danger">*</span></label>
+                                                <input type="text" name="mother_name" class="form-control form-control-sm" required placeholder="اسم الأم ثلاثي أو رباعي">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">رقم التلفون</label>
+                                                <input type="text" name="phone" class="form-control form-control-sm" placeholder="01xxxxxxxxx">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label small fw-bold">اسماء الاطفال</label>
+                                                <textarea name="children_names" class="form-control form-control-sm" rows="2" placeholder="اكتب أسماء الأطفال مفصولة بفواصل"></textarea>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold">رقم احتياطي</label>
+                                                <input type="text" name="backup_phone" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">عدد الاطفال</label>
+                                                <input type="number" name="children_count" class="form-control form-control-sm" min="0">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">المكفولة</label>
+                                                <input type="number" name="sponsored_children_count" class="form-control form-control-sm" min="0">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold">الصف الدراسي</label>
+                                                <input type="text" name="study_grade" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">فرخة/بطة</label>
+                                                <input type="text" name="poultry_type" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">لحمة</label>
+                                                <input type="text" name="meat" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label small fw-bold">ملاحظات</label>
+                                                <textarea name="notes_cases" class="form-control form-control-sm" rows="2"></textarea>
+                                            </div>
+                                            <div class="col-12 text-end">
+                                                <button class="btn btn-success btn-sm px-4 fw-bold">حفظ الحالة</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle small" style="min-width: 820px;">
+                                        <thead class="bg-body-tertiary">
+                                            <tr>
+                                                <th>الام</th>
+                                                <th>اسماء الاطفال</th>
+                                                <th>الهاتف</th>
+                                                <th>عدد الاطفال</th>
+                                                <th>المكفولة</th>
+                                                <th>الدراسة</th>
+                                                <th>فرخة/بطة</th>
+                                                <th>لحمة</th>
+                                                <th class="text-center">اجراء</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($zadFamilies as $family)
+                                            <tr>
+                                                <td class="fw-bold">{{ $family->mother_name ?? $family->full_name }}</td>
+                                                <td><span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ $family->children_names }}">{{ $family->children_names ?? '—' }}</span></td>
+                                                <td dir="ltr" class="text-end">{{ $family->phone ?? '—' }}</td>
+                                                <td class="text-center">{{ $family->children_count ?? '—' }}</td>
+                                                <td class="text-center">{{ $family->sponsored_children_count ?? '—' }}</td>
+                                                <td>{{ $family->study_grade ?? '—' }}</td>
+                                                <td>{{ $family->poultry_type ?? '—' }}</td>
+                                                <td>{{ $family->meat ?? '—' }}</td>
+                                                <td class="text-center">
+                                                    <div class="d-inline-flex gap-2">
+                                                        <!-- Edit Button -->
+                                                        <button class="btn btn-link text-primary p-0" type="button" data-bs-toggle="modal" data-bs-target="#editZadFamily{{ $family->id }}" title="تعديل">
+                                                            <i class="bi bi-pencil-fill"></i>
+                                                        </button>
+
+                                                        <!-- Delete Button -->
+                                                        <form action="{{ route('projects.destroyZadFamily', [$project, $family]) }}" 
+                                                            method="POST" 
+                                                            class="d-inline"
+                                                            data-confirm-delete
+                                                            data-confirm-title="تأكيد حذف ملف الأسرة"
+                                                            data-name="{{ $family->family_name ?? $family->full_name }}">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-link text-danger p-0" title="حذف الأسرة"><i class="bi bi-trash3-fill"></i></button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr>
+                                                <td colspan="9" class="text-center py-4 text-muted">
+                                                    <i class="bi bi-basket2 fs-2 d-block mb-1 opacity-50"></i>
+                                                    لا توجد سجلات مسجلة في ملف أهالي زاد الميداني حتى الآن (يمكنك استخدام الزر أعلاه لإضافة حالة)
+                                                </td>
+                                            </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Edit Modals for Zad Families -->
+                                @foreach($zadFamilies ?? [] as $family)
+                                <div class="modal fade" id="editZadFamily{{ $family->id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">تعديل حالة: {{ $family->mother_name ?? $family->full_name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ route('projects.updateZadFamily', [$project, $family]) }}">
+                                                @csrf @method('PUT')
+                                                <div class="modal-body text-start">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold">اسم الام</label>
+                                                            <input type="text" name="mother_name" class="form-control" value="{{ $family->mother_name }}" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold">رقم التلفون</label>
+                                                            <input type="text" name="phone" class="form-control" value="{{ $family->phone }}">
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label class="form-label small fw-bold">اسماء الاطفال</label>
+                                                            <textarea name="children_names" class="form-control" rows="2">{{ $family->children_names }}</textarea>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">رقم احتياطي</label>
+                                                            <input type="text" name="backup_phone" class="form-control" value="{{ $family->backup_phone }}">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">عدد الاطفال</label>
+                                                            <input type="number" name="children_count" class="form-control" value="{{ $family->children_count }}">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">المكفولة</label>
+                                                            <input type="number" name="sponsored_children_count" class="form-control" value="{{ $family->sponsored_children_count }}">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold">الصف الدراسي</label>
+                                                            <input type="text" name="study_grade" class="form-control" value="{{ $family->study_grade }}">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label small fw-bold">فرخة/بطة</label>
+                                                            <input type="text" name="poultry_type" class="form-control" value="{{ $family->poultry_type }}">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label class="form-label small fw-bold">لحمة</label>
+                                                            <input type="text" name="meat" class="form-control" value="{{ $family->meat }}">
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label class="form-label small fw-bold">ملاحظات</label>
+                                                            <textarea name="notes_cases" class="form-control" rows="2">{{ $family->notes_cases }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif
