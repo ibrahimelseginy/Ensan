@@ -179,7 +179,7 @@
                 {{-- Column Cards Container --}}
                 <div class="kanban-cards-list" id="column-{{ $stageKey }}" ondragover="allowDrop(event)" ondrop="dropTask(event, '{{ $stageKey }}')">
                     @forelse($stage['tasks'] as $task)
-                    <div class="kanban-card" id="task-card-{{ $task->id }}" draggable="true" ondragstart="dragTask(event, '{{ $task->id }}')">
+                    <div class="kanban-card" id="task-card-{{ $task->id }}" draggable="true" ondragstart="dragTask(event, '{{ $task->id }}')" onclick="openTaskDetails(event, '{{ route('employee-tasks.show', $task) }}')">
 
                         {{-- Card Header: Priority & Associated Project --}}
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -343,7 +343,7 @@
                 </thead>
                 <tbody>
                     @forelse($allTasks as $index => $t)
-                    <tr>
+                    <tr style="cursor: pointer;" onclick="openTaskDetails(event, '{{ route('employee-tasks.show', $t) }}')">
                         <td class="px-4 text-muted small">{{ $index + 1 }}</td>
                         <td class="px-4 fw-bold">
                             <a href="{{ route('employee-tasks.show', $t) }}" class="text-decoration-none text-dark hover-primary">
@@ -919,7 +919,7 @@ body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
     border-radius: 16px;
     padding: 18px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    cursor: grab;
+    cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     user-select: none;
@@ -928,7 +928,7 @@ body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
 .kanban-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.09);
-    border-color: #cbd5e1;
+    border-color: #10b981;
 }
 
 .kanban-card:active {
@@ -1094,8 +1094,10 @@ body, .tasks-dashboard-hero, .kanban-board-wrapper, .modal {
 
 <script>
 let draggedTaskId = null;
+let isDraggingCard = false;
 
 function dragTask(event, taskId) {
+    isDraggingCard = true;
     draggedTaskId = taskId;
     event.dataTransfer.setData('text/plain', taskId);
     event.target.classList.add('is-dragging');
@@ -1106,7 +1108,31 @@ document.addEventListener('dragend', function(event) {
         event.target.classList.remove('is-dragging');
     }
     document.querySelectorAll('.kanban-cards-list').forEach(col => col.classList.remove('drag-over'));
+    setTimeout(() => {
+        isDraggingCard = false;
+    }, 150);
 });
+
+function openTaskDetails(event, url) {
+    if (isDraggingCard) return;
+
+    // Prevent navigation if clicking interactive elements inside the card
+    if (event.target.closest('.dropdown') || 
+        event.target.closest('.dropdown-menu') ||
+        event.target.closest('button') || 
+        event.target.closest('.btn') || 
+        event.target.closest('form') ||
+        event.target.closest('input') ||
+        event.target.closest('select')) {
+        return;
+    }
+
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+        window.open(url, '_blank');
+    } else {
+        window.location.href = url;
+    }
+}
 
 function allowDrop(event) {
     event.preventDefault();
