@@ -554,7 +554,7 @@
 /* Section Pills Grid (Step 1) */
 .import-section-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
 }
 @media (max-width: 1400px) {
@@ -841,8 +841,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'cases': "{{ Route::has('case-applications.index') ? route('case-applications.index') : url('/case-applications') }}",
         'donors': "{{ Route::has('donors.index') ? route('donors.index') : url('/donors') }}",
         'donations': "{{ Route::has('donations.index') ? route('donations.index') : url('/donations') }}",
-        'beneficiaries': "{{ Route::has('beneficiaries.index') ? route('beneficiaries.index') : url('/beneficiaries') }}",
-        'tasks': "{{ Route::has('employee-tasks.index') ? route('employee-tasks.index') : url('/employee-tasks') }}"
+        'beneficiaries': "{{ Route::has('beneficiaries.index') ? route('beneficiaries.index') : url('/beneficiaries') }}"
     };
 
     const sectionLabels = {
@@ -850,8 +849,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'cases': 'الحالات وطلبات المساعدة',
         'donors': 'المتبرعين',
         'donations': 'التبرعات والمعاملات المالية',
-        'beneficiaries': 'المستفيدين والبحث الميداني',
-        'tasks': 'مهام فريق العمل'
+        'beneficiaries': 'المستفيدين والبحث الميداني'
     };
 
     const activeSectionLabelName = document.getElementById('activeSectionLabelName');

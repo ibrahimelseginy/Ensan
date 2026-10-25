@@ -110,27 +110,6 @@ final class DataImportService
                 ['زينب إبراهيم الشربيني', '28209151234568', '01198765432', '1982-09-15', 'المحلة الكبرى - الوراقة', 'كفالة أيتام', 'أم معيلة لثلاثة أطفال'],
             ],
         ],
-
-        'tasks' => [
-            'name' => 'مهام فريق العمل',
-            'icon' => 'bi-kanban-fill',
-            'badge' => 'إدارة الإنجاز والمتابعة',
-            'color' => '#ec4899',
-            'model' => Task::class,
-            'description' => 'استيراد وتوزيع المهام المجدولة على الموظفين مع تواريخ الاستحقاق والأولويات',
-            'fields' => [
-                'title' => ['label' => 'عنوان المهمة', 'required' => true, 'synonyms' => ['عنوان المهمة', 'المهمة', 'العنوان', 'title', 'task_title']],
-                'description' => ['label' => 'وصف وتفاصيل المهمة', 'required' => false, 'synonyms' => ['الوصف', 'تفاصيل المهمة', 'description']],
-                'assignee_name_or_email' => ['label' => 'الموظف المسؤول (اسم أو إيميل)', 'required' => false, 'synonyms' => ['الموظف المسؤول', 'المسؤول', 'المعين له', 'assigned_to', 'assignee', 'employee']],
-                'due_date' => ['label' => 'تاريخ الاستحقاق (YYYY-MM-DD)', 'required' => false, 'synonyms' => ['تاريخ الاستحقاق', 'التاريخ', 'آخر موعد', 'due_date']],
-                'priority' => ['label' => 'الأولوية (عالية/متوسطة/منخفضة)', 'required' => false, 'synonyms' => ['الأولوية', 'درجة الأهمية', 'priority']],
-                'status' => ['label' => 'الحالة (pending/in_progress/done)', 'required' => false, 'synonyms' => ['الحالة', 'status']],
-            ],
-            'sample_data' => [
-                ['بحث ميداني لأسرة قرية محلة مرحوم', 'زيارة ميدانية وتدقيق الأوراق والبحث الاجتماعي للأسرة', 'احمد حسن', '2026-10-30', 'high', 'pending'],
-                ['تجهيز تقرير قافلة مياه مدرار', 'حصر الوصلات المنفذة خلال الأسبوع الماضي وإرفاق الصور', 'سارة محمود', '2026-10-28', 'normal', 'in_progress'],
-            ],
-        ],
     ];
 
     /**
@@ -641,7 +620,6 @@ final class DataImportService
             'cases' => ['حال', 'طلب', 'مساعد', 'استغاث', 'ايتام', 'يتيم', 'علاج', 'عملي', 'بحث', 'case', 'application'],
             'donors' => ['متبرع', 'كفلاء', 'داعم', 'ممول', 'donor', 'sponsor'],
             'beneficiaries' => ['مستفيد', 'اسر', 'ميدان', 'تسكين', 'توزيع', 'beneficiary'],
-            'tasks' => ['مهم', 'تكليف', 'موظف', 'متابع', 'task', 'todo'],
         ];
 
         foreach (self::SECTIONS as $secKey => $secConfig) {
