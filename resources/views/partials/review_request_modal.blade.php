@@ -56,7 +56,7 @@
                         <i class="bi bi-clock-history"></i>
                         <span>
                             <small>وقت الطلب</small>
-                            <strong>{{ $reviewNoticeRequest->created_at?->format('Y-m-d H:i') }}</strong>
+                            <strong>{{ $reviewNoticeRequest->created_at?->timezone('Africa/Cairo')->format('Y-m-d h:i A') }}</strong>
                         </span>
                     </div>
                 </section>

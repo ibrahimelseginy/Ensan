@@ -139,8 +139,17 @@
                                 </button>
                             </td>
                             <td>
-                                <div class="small text-muted">{{ $req->created_at->format('Y-m-d') }}</div>
-                                <div class="small text-muted" style="font-size:0.75rem">{{ $req->created_at->format('H:i') }}</div>
+                                @if($req->created_at)
+                                    @php
+                                        $cairoTime = $req->created_at->copy()->timezone('Africa/Cairo');
+                                    @endphp
+                                    <div class="small fw-semibold text-dark">{{ $cairoTime->format('Y-m-d') }}</div>
+                                    <div class="small text-muted" style="font-size:0.78rem">
+                                        <i class="bi bi-clock me-1"></i>{{ $cairoTime->format('h:i A') }}
+                                    </div>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td class="text-end">
                                 @if($req->status === 'pending')

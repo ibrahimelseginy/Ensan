@@ -267,6 +267,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
         Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
+        Route::post('employee-tasks/{employee_task}/status', [EmployeeTaskWebController::class, 'updateStatus'])->name('employee-tasks.update-status');
+        Route::post('employee-tasks/{employee_task}/attachments', [EmployeeTaskWebController::class, 'uploadAttachment'])->name('employee-tasks.upload-attachment');
+        Route::get('employee-tasks/{employee_task}/attachments/{attachment}', [EmployeeTaskWebController::class, 'downloadAttachment'])->name('employee-tasks.download-attachment');
         Route::resource('employee-tasks', EmployeeTaskWebController::class);
         
         Route::post('leaves/bulk-destroy', [\App\Http\Controllers\LeaveWebController::class, 'bulkDestroy'])->name('leaves.bulk-destroy');

@@ -104,7 +104,7 @@ final class MobileCaseApplication extends Model
             'under_research', 'تحت البحث', 'reviewed' => 'تحت البحث',
             'rejected', 'مرفوض' => 'مرفوض',
             'completed', 'تم البحث', 'accepted', 'approved' => 'تم البحث',
-            default => $this->status,
+            default => (string)($this->status ?? 'غير محدد'),
         };
     }
 
@@ -129,7 +129,54 @@ final class MobileCaseApplication extends Model
             'financial' => 'مساعدة مالية / كفالة',
             'food', 'عينية' => 'سلة غذائية / مساعدة عينية',
             'education' => 'مساعدة تعليمية',
-            default => $this->case_type,
+            default => (string)($this->case_type ?? 'عام'),
+        };
+    }
+
+    public function getSourceCategoryAttribute(): string
+    {
+        $src = strtolower((string)($this->source ?? 'mobile'));
+        if (str_starts_with($src, 'web')) {
+            return 'website';
+        }
+        if (in_array($src, ['system', 'admin_dashboard', 'dashboard', 'manual'])) {
+            return 'system';
+        }
+        return 'mobile';
+    }
+
+    public function getSourceBadgeAttribute(): array
+    {
+        return match($this->source_category) {
+            'website' => [
+                'key' => 'website',
+                'label' => 'الويبسايت',
+                'sub' => match($this->source) {
+                    'website_zad' => 'استمارة زاد',
+                    'website_midrar' => 'استمارة مدرار',
+                    'website_hope' => 'بعثاء الأمل',
+                    default => 'الموقع الإلكتروني'
+                },
+                'class' => 'bg-info bg-opacity-10 text-info border border-info border-opacity-25',
+                'badge_color' => 'info',
+                'icon' => 'bi-globe2'
+            ],
+            'system' => [
+                'key' => 'system',
+                'label' => 'السيستم',
+                'sub' => 'لوحة التحكم',
+                'class' => 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25',
+                'badge_color' => 'primary',
+                'icon' => 'bi-laptop'
+            ],
+            default => [
+                'key' => 'mobile',
+                'label' => 'الموبايل',
+                'sub' => 'تطبيق إنسان',
+                'class' => 'bg-success bg-opacity-10 text-success border border-success border-opacity-25',
+                'badge_color' => 'success',
+                'icon' => 'bi-phone'
+            ],
         };
     }
 
@@ -143,5 +190,5 @@ final class MobileCaseApplication extends Model
         $this->attributes['applicant_id_number'] = $value;
     }
 
-    protected $appends = ['id_image_url', 'medical_report_url', 'status_label', 'status_color', 'case_type_label', 'national_id'];
+    protected $appends = ['id_image_url', 'medical_report_url', 'status_label', 'status_color', 'case_type_label', 'national_id', 'source_category', 'source_badge'];
 }

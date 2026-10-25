@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid p-0">
@@ -31,25 +31,35 @@
                                         value="{{ $task->title }}" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-medium text-secondary">حالة المهمة</label>
+                                    <label class="form-label fw-medium text-secondary">المرحلة / الحالة</label>
                                     <select name="status" class="form-select form-select-lg fs-6">
-                                        <option value="pending" @selected($task->status === 'pending')>قيد الانتظار</option>
-                                        <option value="in_progress" @selected($task->status === 'in_progress')>قيد التنفيذ
-                                        </option>
-                                        <option value="done" @selected($task->status === 'done')>منجزة</option>
+                                        <option value="pending" @selected($task->status === 'pending')>📋 قائمة المهام</option>
+                                        <option value="in_progress" @selected($task->status === 'in_progress')>⏳ قيد التنفيذ</option>
+                                        <option value="under_review" @selected($task->status === 'under_review')>🔍 قيد المراجعة</option>
+                                        <option value="done" @selected($task->status === 'done')>✅ مكتملة ومراجعة</option>
                                     </select>
                                 </div>
 
-                                <div class="col-12">
-                                    <label class="form-label fw-medium text-secondary">وصف المهمة</label>
-                                    <textarea name="description" class="form-control form-control-lg fs-6"
-                                        rows="4">{{ $task->description }}</textarea>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium text-secondary">الأولوية</label>
+                                    <select name="priority" class="form-select form-select-lg fs-6">
+                                        <option value="medium" @selected(($task->priority ?? 'medium') === 'medium')>📌 عادية</option>
+                                        <option value="high" @selected(($task->priority ?? '') === 'high')>⚡ أولوية قصوى</option>
+                                        <option value="urgent" @selected(($task->priority ?? '') === 'urgent')>🔥 عاجل جداً</option>
+                                        <option value="low" @selected(($task->priority ?? '') === 'low')>🌱 منخفضة</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-secondary">تاريخ الاستحقاق</label>
+                                    <label class="form-label fw-medium text-secondary">تاريخ الاستحقاق (Deadline)</label>
                                     <input type="date" name="due_date" class="form-control form-control-lg fs-6"
                                         value="{{ $task->due_date?->format('Y-m-d') }}">
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-medium text-secondary">وصف وتفاصيل المهمة</label>
+                                    <textarea name="description" class="form-control form-control-lg fs-6"
+                                        rows="4">{{ $task->description }}</textarea>
                                 </div>
 
                                 <div class="col-12">
@@ -57,24 +67,29 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-secondary">الموظف (المكلّف)</label>
+                                    <label class="form-label fw-medium text-secondary">الموظف (المكلّف الرئيسي)</label>
                                     <select name="assigned_to" class="form-select form-select-lg fs-6">
                                         <option value="">-- اختر الموظف --</option>
                                         @foreach($users as $u)
-                                            <option value="{{ $u->id }}" @selected($task->assigned_to == $u->id)>{{ $u->name }}
-                                            </option>
+                                            <option value="{{ $u->id }}" @selected($task->assigned_to == $u->id)>{{ $u->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium text-secondary">المكلِّف</label>
-                                    <select name="assigned_by" class="form-select form-select-lg fs-6">
-                                        <option value="">-- اختر الموظف --</option>
+                                    <label class="form-label fw-medium text-secondary">فريق العمل المشترك (المهام المشتركة)</label>
+                                    @php $selectedShared = $task->assignees->pluck('id')->toArray(); @endphp
+                                    <select name="shared_with[]" multiple class="form-select form-select-lg fs-6" style="min-height: 80px;" title="اضغط Ctrl أو Cmd للاختيار المتعدد">
                                         @foreach($users as $u)
-                                            <option value="{{ $u->id }}" @selected($task->assigned_by == $u->id)>{{ $u->name }}
-                                            </option>
+                                            <option value="{{ $u->id }}" @selected(in_array($u->id, $selectedShared))>{{ $u->name }}</option>
                                         @endforeach
                                     </select>
+                                    <small class="text-muted" style="font-size: 0.72rem;">الموظفون المشتركون تظهر لهم المهمة في لوحة كانبان الخاصة بهم.</small>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label fw-medium text-secondary">رفع مرفقات أو إثباتات إضافية</label>
+                                    <input type="file" name="attachments[]" multiple class="form-control form-control-lg fs-6">
                                 </div>
 
                                 <div class="col-12">

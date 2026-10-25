@@ -3280,12 +3280,18 @@ final class WebsiteApiController extends Controller
             'treatment_protocol'         => 'nullable|string|max:2000',
 
             // Attachments
-            'id_image'                   => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
-            'medical_report'             => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:15360',
+            'id_image'                   => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:25600',
+            'medical_report'             => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:25600',
         ], [
             'applicant_name.required'    => 'اسم صاحب الحالة أو المستفيد مطلوب.',
             'applicant_phone.required'   => 'رقم الهاتف للتواصل مطلوب.',
             'case_type.required'         => 'يرجى تحديد نوع المساعدة المطلوبة.',
+            'id_image.uploaded'          => 'تعذر رفع صورة البطاقة، يرجى التأكد من أن حجم الصورة مناسب والمحاولة مجدداً.',
+            'id_image.max'               => 'حجم صورة البطاقة لا يجب أن يتجاوز 25 ميجابايت.',
+            'id_image.mimes'             => 'صورة البطاقة يجب أن تكون بصيغة (JPG, PNG, WebP) أو مستند PDF.',
+            'medical_report.uploaded'    => 'تعذر رفع التقرير الطبي، يرجى التأكد من أن حجم الملف مناسب والمحاولة مجدداً.',
+            'medical_report.max'         => 'حجم التقرير الطبي لا يجب أن يتجاوز 25 ميجابايت.',
+            'medical_report.mimes'       => 'التقرير الطبي يجب أن يكون بصيغة (JPG, PNG, WebP) أو مستند PDF.',
         ]);
 
         if (empty($validated['applicant_id_number']) && !empty($validated['national_id'])) {
@@ -3429,7 +3435,19 @@ final class WebsiteApiController extends Controller
             ]
         ];
 
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, now()->addSeconds(60));
+        $cacheKeys = [
+            'track_case_app_' . md5($q),
+            'track_case_app_' . md5((string)$app->id),
+        ];
+        if (!empty($app->applicant_id_number)) {
+            $cacheKeys[] = 'track_case_app_' . md5((string)$app->applicant_id_number);
+        }
+        if (!empty($app->applicant_phone)) {
+            $cacheKeys[] = 'track_case_app_' . md5((string)$app->applicant_phone);
+        }
+        foreach ($cacheKeys as $ck) {
+            \Illuminate\Support\Facades\Cache::put($ck, $payload, now()->addMinutes(10));
+        }
 
         return response()->json($payload);
     }

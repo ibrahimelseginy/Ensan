@@ -595,6 +595,172 @@
         opacity: 0.15;
         pointer-events: none;
     }
+
+    /* ─────────────────────────────────────────────────────────────
+       Treasuries Administrative Highlight Card (Light & Dark Themes)
+       ───────────────────────────────────────────────────────────── */
+    /* Base Light Mode Styles (crisp emerald theme with high contrast) */
+    .treasuries-admin-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 45%, #ecfdf5 100%) !important;
+        border: 1px solid #a7f3d0 !important;
+        box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.08), 0 8px 10px -6px rgba(5, 150, 105, 0.03) !important;
+        transition: all 0.3s ease;
+    }
+    .treasuries-icon-box {
+        background: #ecfdf5 !important;
+        border: 1px solid #a7f3d0 !important;
+        color: #059669 !important;
+    }
+    .treasuries-admin-badge {
+        background: #fef3c7 !important;
+        color: #92400e !important;
+        border: 1px solid #fde68a !important;
+    }
+    .treasuries-card-title {
+        color: #0f172a !important;
+        font-weight: 800 !important;
+    }
+    .treasuries-card-desc {
+        color: #64748b !important;
+    }
+    .treasuries-balance-box {
+        background: #ffffff !important;
+        border: 2px solid #10b981 !important;
+        box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.16), 0 2px 6px -1px rgba(16, 185, 129, 0.08) !important;
+        border-radius: 20px !important;
+        padding: 18px 20px !important;
+    }
+    .treasuries-balance-label {
+        color: #475569 !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        letter-spacing: -0.2px;
+    }
+    .treasuries-balance-value {
+        color: #047857 !important; /* Rich authoritative emerald green */
+        font-weight: 900 !important;
+        letter-spacing: -0.5px;
+    }
+    .treasuries-currency {
+        color: #059669 !important;
+        font-weight: 700 !important;
+    }
+    .treasuries-sub-balances {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 9999px !important;
+        padding: 6px 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        color: #64748b !important;
+    }
+    .treasuries-sub-value {
+        color: #0f172a !important;
+        font-weight: 800 !important;
+    }
+    .treasuries-sub-divider {
+        color: #cbd5e1 !important;
+    }
+    .treasuries-action-btn {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+        transition: all 0.25s ease;
+    }
+    .treasuries-action-btn:hover {
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+    }
+
+    /* Dark Mode Overrides */
+    html.theme-dark .treasuries-admin-card,
+    body.theme-dark .treasuries-admin-card,
+    [data-bs-theme="dark"] .treasuries-admin-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+    }
+    html.theme-dark .treasuries-icon-box,
+    body.theme-dark .treasuries-icon-box,
+    [data-bs-theme="dark"] .treasuries-icon-box {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #fbbf24 !important;
+    }
+    html.theme-dark .treasuries-admin-badge,
+    body.theme-dark .treasuries-admin-badge,
+    [data-bs-theme="dark"] .treasuries-admin-badge {
+        background: #fbbf24 !important;
+        color: #0f172a !important;
+        border: none !important;
+    }
+    html.theme-dark .treasuries-card-title,
+    body.theme-dark .treasuries-card-title,
+    [data-bs-theme="dark"] .treasuries-card-title {
+        color: #ffffff !important;
+    }
+    html.theme-dark .treasuries-card-desc,
+    body.theme-dark .treasuries-card-desc,
+    [data-bs-theme="dark"] .treasuries-card-desc {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    html.theme-dark .treasuries-balance-box,
+    body.theme-dark .treasuries-balance-box,
+    [data-bs-theme="dark"] .treasuries-balance-box {
+        background: rgba(0, 0, 0, 0.35) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+    html.theme-dark .treasuries-balance-label,
+    body.theme-dark .treasuries-balance-label,
+    [data-bs-theme="dark"] .treasuries-balance-label {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    html.theme-dark .treasuries-balance-value,
+    body.theme-dark .treasuries-balance-value,
+    [data-bs-theme="dark"] .treasuries-balance-value {
+        color: #fbbf24 !important;
+    }
+    html.theme-dark .treasuries-currency,
+    body.theme-dark .treasuries-currency,
+    [data-bs-theme="dark"] .treasuries-currency {
+        color: #ffffff !important;
+    }
+    html.theme-dark .treasuries-sub-balances,
+    body.theme-dark .treasuries-sub-balances,
+    [data-bs-theme="dark"] .treasuries-sub-balances {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    html.theme-dark .treasuries-sub-value,
+    body.theme-dark .treasuries-sub-value,
+    [data-bs-theme="dark"] .treasuries-sub-value {
+        color: #ffffff !important;
+    }
+    html.theme-dark .treasuries-sub-divider,
+    body.theme-dark .treasuries-sub-divider,
+    [data-bs-theme="dark"] .treasuries-sub-divider {
+        color: rgba(255, 255, 255, 0.2) !important;
+    }
+    html.theme-dark .treasuries-action-btn,
+    body.theme-dark .treasuries-action-btn,
+    [data-bs-theme="dark"] .treasuries-action-btn {
+        background: #fbbf24 !important;
+        color: #0f172a !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(251, 191, 36, 0.3) !important;
+    }
+    html.theme-dark .treasuries-action-btn:hover,
+    body.theme-dark .treasuries-action-btn:hover,
+    [data-bs-theme="dark"] .treasuries-action-btn:hover {
+        background: #f59e0b !important;
+        color: #0f172a !important;
+    }
 </style>
 @endsection
 
@@ -753,39 +919,39 @@
     @if(auth()->user()?->hasRole(['admin', 'super_admin']) || auth()->user()?->hasPermission('treasuries.view') || auth()->user()?->hasPermission('finance.view') || ($isAdmin ?? false) || ($isFinance ?? false))
     <div class="row g-3 mb-4 animate-slide-up">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%); color: #ffffff;">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden treasuries-admin-card">
                 <div class="card-body p-4">
                     <div class="row align-items-center g-3">
                         <div class="col-lg-6">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-4 p-3 bg-white bg-opacity-10 border border-white border-opacity-15 shadow-sm">
-                                    <i class="bi bi-safe2-fill fs-1 text-warning"></i>
+                                <div class="rounded-4 p-3 treasuries-icon-box shadow-sm">
+                                    <i class="bi bi-safe2-fill fs-1"></i>
                                 </div>
                                 <div>
-                                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold fs-8 mb-1">
+                                    <span class="badge treasuries-admin-badge px-3 py-1 rounded-pill fw-bold fs-8 mb-1">
                                         <i class="bi bi-shield-lock-fill me-1"></i> خاص بالإدارة المالية والمؤسسية
                                     </span>
-                                    <h4 class="fw-black mb-1 text-white">المبلغ الإجمالي داخل المؤسسة (كافة الخزائن)</h4>
-                                    <p class="mb-0 text-white-50 small">إجمالي الأرصدة الحالية في جميع الخزائن النقدية الرئيسية والفرعية وعهدة المندوبين وخزنة البنك مجمعة</p>
+                                    <h4 class="fw-black mb-1 treasuries-card-title">المبلغ الإجمالي داخل المؤسسة (كافة الخزائن)</h4>
+                                    <p class="mb-0 treasuries-card-desc small">إجمالي الأرصدة الحالية في جميع الخزائن النقدية الرئيسية والفرعية وعهدة المندوبين وخزنة البنك مجمعة</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-4 text-lg-center">
-                            <div class="p-3 rounded-4 bg-black bg-opacity-25 border border-white border-opacity-10 d-inline-block w-100">
-                                <div class="text-white-50 small fw-bold mb-1">الرصيد المجمع الفعلي داخل المؤسسة والبنك</div>
-                                <div class="fs-2 fw-black font-monospace text-warning">
-                                    {{ number_format($totalTreasuriesBalance ?? 0, 2) }} <span class="fs-5 text-white">ج.م</span>
+                            <div class="p-3 rounded-4 treasuries-balance-box d-inline-block w-100">
+                                <div class="treasuries-balance-label small fw-bold mb-1">الرصيد المجمع الفعلي داخل المؤسسة والبنك</div>
+                                <div class="fs-2 fw-black font-monospace treasuries-balance-value">
+                                    {{ number_format($totalTreasuriesBalance ?? 0, 2) }} <span class="fs-5 treasuries-currency">ج.م</span>
                                 </div>
-                                <div class="d-flex justify-content-center gap-3 mt-2 text-white-50 fs-8">
-                                    <span><i class="bi bi-cash me-1 text-success"></i> خزائن نقدية: <strong class="text-white font-monospace">{{ number_format($cashTreasuriesBalance ?? 0, 0) }}</strong></span>
-                                    <span>|</span>
-                                    <span><i class="bi bi-bank me-1 text-info"></i> خزنة البنك: <strong class="text-white font-monospace">{{ number_format($bankTreasuriesBalance ?? 0, 0) }}</strong></span>
+                                <div class="d-flex justify-content-center gap-3 mt-2 treasuries-sub-balances fs-8">
+                                    <span><i class="bi bi-cash me-1 text-success"></i> خزائن نقدية: <strong class="treasuries-sub-value font-monospace">{{ number_format($cashTreasuriesBalance ?? 0, 0) }}</strong></span>
+                                    <span class="treasuries-sub-divider">|</span>
+                                    <span><i class="bi bi-bank me-1 text-info"></i> خزنة البنك: <strong class="treasuries-sub-value font-monospace">{{ number_format($bankTreasuriesBalance ?? 0, 0) }}</strong></span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-2 text-lg-end text-center">
                             @if(Route::has('treasuries.index'))
-                                <a href="{{ route('treasuries.index') }}" class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow-sm hover-lift">
+                                <a href="{{ route('treasuries.index') }}" class="btn treasuries-action-btn fw-bold px-4 py-2.5 rounded-pill shadow-sm hover-lift">
                                     <i class="bi bi-wallet2 me-1"></i> إدارة الخزائن
                                 </a>
                             @endif
@@ -1700,12 +1866,12 @@
                         </a>
                     </div>
 
-                    {{-- Pending Tasks Card --}}
+                    {{-- Kanban Tasks Card --}}
                     <div class="col-md-3 col-6">
-                        <a href="{{ route('employee-tasks.index') }}" class="p-3 rounded-4 text-center h-100 d-block text-decoration-none" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
-                            <i class="bi bi-list-task fs-4 mb-2" style="color: #ef4444;"></i>
-                            <div class="h4 fw-bold mb-0" style="color: #ef4444;">{{ $hrStats['tasks_pending'] ?? 0 }}</div>
-                            <div class="small" style="color: #6b7280;">مهام معلقة</div>
+                        <a href="{{ route('employee-tasks.index') }}" class="p-3 rounded-4 text-center h-100 d-block text-decoration-none" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25);">
+                            <i class="bi bi-kanban-fill fs-4 mb-2" style="color: #6366f1;"></i>
+                            <div class="h4 fw-bold mb-0" style="color: #6366f1;">{{ $hrStats['tasks_pending'] ?? 0 }}</div>
+                            <div class="small fw-semibold" style="color: #4b5563;">لوحة المهام (Kanban)</div>
                         </a>
                     </div>
                 </div>

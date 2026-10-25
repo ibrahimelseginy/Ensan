@@ -449,6 +449,7 @@ final class MobileContentController extends Controller
         $query = \App\Models\MobileCaseApplication::query();
         $type = $request->get('type');
         $status = $request->get('status');
+        $source = $request->get('source');
         $search = $request->get('q');
 
         if ($type) {
@@ -459,18 +460,52 @@ final class MobileContentController extends Controller
             $query->where('status', $status);
         }
 
+        if ($source) {
+            if ($source === 'website') {
+                $query->where(function ($q) {
+                    $q->where('source', 'like', 'website%')
+                      ->orWhere('source', 'web');
+                });
+            } elseif ($source === 'system') {
+                $query->whereIn('source', ['system', 'admin_dashboard', 'dashboard', 'manual']);
+            } elseif ($source === 'mobile') {
+                $query->where(function ($q) {
+                    $q->where('source', 'mobile')
+                      ->orWhereNull('source')
+                      ->orWhere('source', '');
+                });
+            } else {
+                $query->where('source', $source);
+            }
+        }
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('applicant_name', 'like', "%{$search}%")
                   ->orWhere('applicant_phone', 'like', "%{$search}%")
                   ->orWhere('applicant_id_number', 'like', "%{$search}%")
                   ->orWhere('submitter_name', 'like', "%{$search}%")
-                  ->orWhere('submitter_phone', 'like', "%{$search}%");
+                  ->orWhere('submitter_phone', 'like', "%{$search}%")
+                  ->orWhere('reference_number', 'like', "%{$search}%");
             });
         }
 
+        $sourceCounts = [
+            'all' => \App\Models\MobileCaseApplication::count(),
+            'website' => \App\Models\MobileCaseApplication::where(function ($q) {
+                $q->where('source', 'like', 'website%')
+                  ->orWhere('source', 'web');
+            })->count(),
+            'system' => \App\Models\MobileCaseApplication::whereIn('source', ['system', 'admin_dashboard', 'dashboard', 'manual'])->count(),
+            'mobile' => \App\Models\MobileCaseApplication::where(function ($q) {
+                $q->where('source', 'mobile')
+                  ->orWhereNull('source')
+                  ->orWhere('source', '');
+            })->count(),
+        ];
+
         $applications = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
-        return view('mobile.case_applications', compact('applications', 'type', 'status', 'search'));
+        return view('mobile.case_applications', compact('applications', 'type', 'status', 'source', 'search', 'sourceCounts'));
     }
 
     public function storeCaseApplication(Request $request)

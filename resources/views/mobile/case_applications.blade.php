@@ -86,41 +86,76 @@
 
     <!-- Filter & Search Toolbar -->
     <div class="card border-0 shadow-xs rounded-4 p-3 mb-4 bg-stats-card-main">
+        <!-- Top Row: Source Filters (الويبسايت / السيستم / الموبايل) -->
+        <div class="border-bottom border-light-subtle pb-3 mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-funnel-fill text-primary"></i>
+                    <span class="fw-bold small text-stats-title">فلترة حسب جهة التقديم (المصدر):</span>
+                </div>
+                @if(request('source'))
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1">
+                        فلتر نشط: 
+                        {{ request('source') == 'website' ? 'الموقع الإلكتروني (الويبسايت)' : (request('source') == 'system' ? 'السيستم الداخلي' : 'تطبيق الموبايل') }}
+                    </span>
+                @endif
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('source', 'page'), [])) }}" 
+                   class="btn btn-sm rounded-pill px-3 fw-bold {{ !request('source') ? 'btn-primary shadow-xs' : 'btn-outline-secondary' }}">
+                    <i class="bi bi-grid-fill me-1"></i> جميع المصادر ({{ $sourceCounts['all'] ?? \App\Models\MobileCaseApplication::count() }})
+                </a>
+                <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'website'])) }}" 
+                   class="btn btn-sm rounded-pill px-3 fw-bold {{ request('source') == 'website' ? 'btn-info text-white shadow-xs' : 'btn-outline-info' }}">
+                    <i class="bi bi-globe2 me-1"></i> الويبسايت ({{ $sourceCounts['website'] ?? 0 }})
+                </a>
+                <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'system'])) }}" 
+                   class="btn btn-sm rounded-pill px-3 fw-bold {{ request('source') == 'system' ? 'btn-success text-white shadow-xs' : 'btn-outline-success' }}">
+                    <i class="bi bi-laptop me-1"></i> السيستم ({{ $sourceCounts['system'] ?? 0 }})
+                </a>
+                <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'mobile'])) }}" 
+                   class="btn btn-sm rounded-pill px-3 fw-bold {{ request('source') == 'mobile' ? 'btn-warning text-dark shadow-xs' : 'btn-outline-warning text-warning-emphasis' }}">
+                    <i class="bi bi-phone-fill me-1"></i> الموبايل ({{ $sourceCounts['mobile'] ?? 0 }})
+                </a>
+            </div>
+        </div>
+
+        <!-- Second Row: Status, Type & Search -->
         <div class="row g-3 align-items-center">
-            <!-- Status Tabs -->
-            <div class="col-xl-8 col-lg-12">
+            <!-- Status & Type Tabs -->
+            <div class="col-xl-7 col-lg-12">
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('status', 'page'), [])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ !request('status') && !request('type') ? 'btn-primary' : 'btn-outline-secondary' }}">
-                        الكل ({{ \App\Models\MobileCaseApplication::count() }})
+                    <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('status', 'type', 'page'), [])) }}" 
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ !request('status') && !request('type') ? 'btn-secondary text-white' : 'btn-outline-secondary' }}">
+                        كل الحالات
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'pending'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'pending' ? 'btn-warning text-dark' : 'btn-outline-warning text-warning-emphasis' }}">
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('status') == 'pending' ? 'btn-warning text-dark' : 'btn-outline-warning text-warning-emphasis' }}">
                         <i class="bi bi-hourglass-split me-1"></i> في انتظار البحث ({{ \App\Models\MobileCaseApplication::where('status', 'pending')->count() }})
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'under_research'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'under_research' ? 'btn-info text-white' : 'btn-outline-info' }}">
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('status') == 'under_research' ? 'btn-info text-white' : 'btn-outline-info' }}">
                         <i class="bi bi-search me-1"></i> تحت البحث ({{ \App\Models\MobileCaseApplication::whereIn('status', ['under_research', 'reviewed'])->count() }})
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'approved'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'approved' ? 'btn-success text-white' : 'btn-outline-success' }}">
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('status') == 'approved' ? 'btn-success text-white' : 'btn-outline-success' }}">
                         <i class="bi bi-check2-circle me-1"></i> تم البحث ({{ \App\Models\MobileCaseApplication::whereIn('status', ['approved', 'completed', 'accepted'])->count() }})
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'rejected'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('status') == 'rejected' ? 'btn-danger text-white' : 'btn-outline-danger' }}">
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('status') == 'rejected' ? 'btn-danger text-white' : 'btn-outline-danger' }}">
                         <i class="bi bi-x-circle me-1"></i> مرفوض ({{ \App\Models\MobileCaseApplication::where('status', 'rejected')->count() }})
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'zad'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('type') == 'zad' ? 'btn-success text-white' : 'btn-outline-success' }}">
-                        <i class="bi bi-basket2-fill me-1"></i> زاد ({{ \App\Models\MobileCaseApplication::where('case_type', 'zad')->count() }})
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('type') == 'zad' ? 'btn-success text-white' : 'btn-outline-success' }}">
+                        <i class="bi bi-basket2-fill me-1"></i> زاد
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'midrar'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold {{ request('type') == 'midrar' ? 'btn-info text-white' : 'btn-outline-info' }}">
-                        <i class="bi bi-droplet-half me-1"></i> مدرار ({{ \App\Models\MobileCaseApplication::where('case_type', 'midrar')->count() }})
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold {{ request('type') == 'midrar' ? 'btn-info text-white' : 'btn-outline-info' }}">
+                        <i class="bi bi-droplet-half me-1"></i> مدرار
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page', 'status'), ['type' => 'hope'])) }}" 
-                       class="btn btn-sm rounded-pill px-3 fw-bold" style="{{ request('type') == 'hope' ? 'background: #7c3aed; color: #fff;' : 'border: 1px solid #7c3aed; color: #7c3aed;' }}">
-                        <i class="bi bi-activity me-1"></i> بعثاء الأمل ({{ \App\Models\MobileCaseApplication::where('case_type', 'hope')->count() }})
+                       class="btn btn-sm rounded-pill px-2.5 fw-bold" style="{{ request('type') == 'hope' ? 'background: #7c3aed; color: #fff;' : 'border: 1px solid #7c3aed; color: #7c3aed;' }}">
+                        <i class="bi bi-activity me-1"></i> بعثاء الأمل
                     </a>
                 </div>
             </div>
@@ -128,14 +163,15 @@
             <!-- Search box -->
             <div class="col-xl-5 col-lg-12">
                 <form method="GET" action="{{ route('mobile.case-applications.index') }}" class="d-flex gap-2">
+                    @if(request('source')) <input type="hidden" name="source" value="{{ request('source') }}"> @endif
                     @if(request('status')) <input type="hidden" name="status" value="{{ request('status') }}"> @endif
                     @if(request('type')) <input type="hidden" name="type" value="{{ request('type') }}"> @endif
                     <div class="input-group">
-                        <input type="text" name="q" value="{{ request('q') }}" class="form-control rounded-start-pill" placeholder="ابحث بالاسم، الهاتف، الرقم القومي...">
+                        <input type="text" name="q" value="{{ request('q') }}" class="form-control rounded-start-pill" placeholder="ابحث بالاسم، الهاتف، الرقم القومي، رقم الطلب...">
                         <button class="btn btn-primary rounded-end-pill px-3" type="submit"><i class="bi bi-search"></i></button>
                     </div>
-                    @if(request('q') || request('type') || request('status'))
-                        <a href="{{ route('mobile.case-applications.index') }}" class="btn btn-outline-secondary rounded-pill px-3 text-nowrap">إلغاء الفلتر</a>
+                    @if(request('q') || request('type') || request('status') || request('source'))
+                        <a href="{{ route('mobile.case-applications.index') }}" class="btn btn-outline-secondary rounded-pill px-3 text-nowrap">إلغاء الفلاتر</a>
                     @endif
                 </form>
             </div>
@@ -174,6 +210,10 @@
                         @endif
 
                         <div class="d-flex align-items-center gap-2">
+                            @php $srcBadge = $app->source_badge; @endphp
+                            <span class="badge {{ $srcBadge['class'] }} rounded-pill px-2.5 py-1 x-small fw-bold" title="{{ $srcBadge['sub'] }}">
+                                <i class="bi {{ $srcBadge['icon'] }} me-1"></i> {{ $srcBadge['label'] }}
+                            </span>
                             <span class="badge bg-light text-dark border x-small">
                                 {{ $app->case_type_label }}
                             </span>
@@ -241,7 +281,9 @@
                 <div class="card-inner-bottom bg-stats-inner-item border-top border-light-subtle p-2">
                     <div class="d-flex justify-content-between align-items-center x-small text-muted px-2">
                         <span><i class="bi bi-calendar3 me-1"></i> {{ $app->created_at->format('Y-m-d') }}</span>
-                        <span><i class="bi bi-device-hdd me-1"></i> {{ $app->source ?? 'mobile' }}</span>
+                        <span class="badge {{ $srcBadge['class'] }} rounded-pill px-2 py-0.5">
+                            <i class="bi {{ $srcBadge['icon'] }} me-1"></i> {{ $srcBadge['label'] }} ({{ $srcBadge['sub'] }})
+                        </span>
                     </div>
                 </div>
             </div>
@@ -275,15 +317,23 @@
                                 </div>
                             @endif
 
-                            <div class="col-md-4 info-group">
+                            <div class="col-md-3 info-group">
                                 <label class="text-muted small fw-bold mb-1 d-block">المشروع / نوع المساعدة</label>
                                 <div class="fw-bold">{{ $app->case_type_label }}</div>
                             </div>
-                            <div class="col-md-4 info-group">
+                            <div class="col-md-3 info-group">
+                                <label class="text-muted small fw-bold mb-1 d-block">جهة تقديم الطلب (المصدر)</label>
+                                <div>
+                                    <span class="badge {{ $app->source_badge['class'] }} rounded-pill px-2.5 py-1 fw-bold">
+                                        <i class="bi {{ $app->source_badge['icon'] }} me-1"></i> {{ $app->source_badge['label'] }} ({{ $app->source_badge['sub'] }})
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-3 info-group">
                                 <label class="text-muted small fw-bold mb-1 d-block">الرقم القومي</label>
                                 <div class="font-monospace fw-bold">{{ $app->national_id ?? '-' }}</div>
                             </div>
-                            <div class="col-md-4 info-group">
+                            <div class="col-md-3 info-group">
                                 <label class="text-muted small fw-bold mb-1 d-block">المحافظة والمركز</label>
                                 <div class="fw-bold">{{ $app->governorate ?? '-' }} - {{ $app->city ?? '-' }}</div>
                             </div>
