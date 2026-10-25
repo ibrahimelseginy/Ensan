@@ -162,6 +162,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dashboard/analytics', [DashboardWebController::class, 'analytics'])->name('dashboard.analytics');
     });
 
+    // --- Smart Data Import (Excel / CSV) ---
+    Route::prefix('data-import')->name('data-import.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\DataImportWebController::class, 'index'])->name('index');
+        Route::get('template/{section}', [\App\Http\Controllers\DataImportWebController::class, 'downloadTemplate'])->name('template');
+        Route::post('preview', [\App\Http\Controllers\DataImportWebController::class, 'preview'])->name('preview');
+        Route::post('process', [\App\Http\Controllers\DataImportWebController::class, 'process'])->name('process');
+    });
+
     Route::middleware('permission:notifications.view')
         ->get('notifications', [NotificationWebController::class, 'index'])
         ->name('notifications.index');

@@ -2825,6 +2825,13 @@
 
         {{-- Left Side: Actions --}}
         <div class="d-flex align-items-center gap-2">
+            @if($navUser)
+              <a href="{{ route('data-import.index') }}" class="btn btn-reports-elite d-none d-md-flex align-items-center gap-1.5" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important;" title="استيراد وتوزيع ملفات الإكسيل آلياً">
+                  <i class="bi bi-file-earmark-spreadsheet-fill text-success fs-6"></i>
+                  <span class="fw-bold">استيراد إكسيل</span>
+              </a>
+            @endif
+
             @if($navUser && $navUser->hasPermission('reports.view'))
               <a href="{{ route('reports.index') }}" class="btn btn-reports-elite d-none d-md-flex">
                   <i class="bi bi-graph-up"></i>

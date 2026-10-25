@@ -192,8 +192,10 @@
             </div>
         </div>
 
-        <i class="bi bi-grid-3x3-gap-fill hero-icon d-none d-md-block opacity-25 position-absolute" style="left: -20px; bottom: -30px; font-size: 160px; pointer-events: none; z-index: 1;"></i>
     </div>
+
+    {{-- Smart Data Import Section (Excel & CSV Distribution Hub) --}}
+    @include('dashboard.partials.data_import_section')
 
     {{-- Central App Launcher Hub (All System Sections as Interactive Icons) --}}
     @include('dashboard.partials.app_launcher', ['hideSearchHeader' => true])
