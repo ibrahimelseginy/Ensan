@@ -1308,20 +1308,172 @@
             display: none !important;
         }
 
-        /* Notifications Offcanvas Dark Mode Styling */
-        .theme-dark .offcanvas#notifOffcanvas {
-            background-color: #0f172a !important;
+        /* ============================================================== */
+        /* Notifications Offcanvas Styling (Light & Dark Modes)           */
+        /* ============================================================== */
+        .offcanvas#notifOffcanvas {
+            width: 440px !important;
+            max-width: 100vw !important;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        /* Light Mode */
+        body:not(.theme-dark) .offcanvas#notifOffcanvas {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-right: 1px solid #e2e8f0 !important;
+        }
+        body:not(.theme-dark) .offcanvas#notifOffcanvas .offcanvas-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        body:not(.theme-dark) .offcanvas#notifOffcanvas .offcanvas-body {
+            background-color: #f8fafc !important;
+        }
+        body:not(.theme-dark) .notif-toolbar-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+        }
+        body:not(.theme-dark) .notif-input-group .notif-addon {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #64748b;
+        }
+        body:not(.theme-dark) .notif-select {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        body:not(.theme-dark) .notif-action-btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.78rem;
+            padding: 6px 11px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        body:not(.theme-dark) .notif-action-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+        body:not(.theme-dark) .notif-btn-sound {
+            background: #eff6ff;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+            font-weight: 600;
+        }
+        body:not(.theme-dark) .notif-btn-sound:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+        body:not(.theme-dark) .notif-badge-active {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-weight: 700;
+        }
+
+        /* Dark Mode */
+        .theme-dark .offcanvas#notifOffcanvas,
+        html.theme-dark .offcanvas#notifOffcanvas,
+        body.theme-dark .offcanvas#notifOffcanvas {
+            background-color: #0b1322 !important;
             color: #f1f5f9 !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-right: 1px solid rgba(148, 163, 184, 0.15) !important;
         }
-        .theme-dark .offcanvas#notifOffcanvas .offcanvas-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .theme-dark .offcanvas#notifOffcanvas .offcanvas-header,
+        html.theme-dark .offcanvas#notifOffcanvas .offcanvas-header,
+        body.theme-dark .offcanvas#notifOffcanvas .offcanvas-header {
+            background: #141e30 !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
         }
-        .theme-dark .offcanvas#notifOffcanvas .btn-close {
+        .theme-dark .offcanvas#notifOffcanvas .btn-close,
+        html.theme-dark .offcanvas#notifOffcanvas .btn-close,
+        body.theme-dark .offcanvas#notifOffcanvas .btn-close {
             filter: invert(1) grayscale(100%) brightness(200%);
         }
-        .theme-dark .offcanvas#notifOffcanvas .offcanvas-body {
-            background-color: #0f172a !important;
+        .theme-dark .offcanvas#notifOffcanvas .offcanvas-body,
+        html.theme-dark .offcanvas#notifOffcanvas .offcanvas-body,
+        body.theme-dark .offcanvas#notifOffcanvas .offcanvas-body {
+            background-color: #0b1322 !important;
+        }
+        .theme-dark .notif-toolbar-card,
+        html.theme-dark .notif-toolbar-card,
+        body.theme-dark .notif-toolbar-card {
+            background: #152238 !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+        }
+        .theme-dark .notif-input-group .notif-addon,
+        html.theme-dark .notif-input-group .notif-addon,
+        body.theme-dark .notif-input-group .notif-addon {
+            background: #0b1322 !important;
+            border-color: rgba(148, 163, 184, 0.25) !important;
+            color: #94a3b8 !important;
+        }
+        .theme-dark .notif-select,
+        html.theme-dark .notif-select,
+        body.theme-dark .notif-select {
+            background-color: #0b1322 !important;
+            border-color: rgba(148, 163, 184, 0.25) !important;
+            color: #f8fafc !important;
+            font-weight: 600;
+        }
+        .theme-dark .notif-action-btn,
+        html.theme-dark .notif-action-btn,
+        body.theme-dark .notif-action-btn {
+            background: #1e293b !important;
+            border: 1px solid rgba(148, 163, 184, 0.25) !important;
+            color: #f1f5f9 !important;
+            font-weight: 600;
+            font-size: 0.78rem;
+            padding: 6px 11px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .theme-dark .notif-action-btn:hover,
+        html.theme-dark .notif-action-btn:hover,
+        body.theme-dark .notif-action-btn:hover {
+            background: #27354a !important;
+            color: #ffffff !important;
+            border-color: rgba(148, 163, 184, 0.4) !important;
+        }
+        .theme-dark .notif-btn-sound,
+        html.theme-dark .notif-btn-sound,
+        body.theme-dark .notif-btn-sound {
+            background: rgba(14, 165, 233, 0.16) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.35) !important;
+            font-weight: 600;
+        }
+        .theme-dark .notif-btn-sound:hover,
+        html.theme-dark .notif-btn-sound:hover,
+        body.theme-dark .notif-btn-sound:hover {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+        }
+        .theme-dark .notif-badge-active,
+        html.theme-dark .notif-badge-active,
+        body.theme-dark .notif-badge-active {
+            background: rgba(16, 185, 129, 0.2) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.35) !important;
+            font-weight: 700;
         }
 
         /* Ensure dropdown is completely solid, non-transparent and above all other elements */
@@ -3010,27 +3162,31 @@
 
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
-      <div class="offcanvas-header border-bottom py-3">
+      <div class="offcanvas-header border-bottom py-3 px-3">
         <div class="d-flex align-items-center gap-2">
-          <h5 id="notifOffcanvasLabel" class="mb-0 fw-bold">الإشعارات</h5>
-          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 d-none" style="font-size: 0.78rem;">0</span>
+          <div class="p-1.5 rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-bell-fill fs-6"></i>
+          </div>
+          <h5 id="notifOffcanvasLabel" class="mb-0 fw-bold fs-6">الإشعارات</h5>
+          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger text-white px-2 py-0.5 d-none" style="font-size: 0.72rem;">0</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <span id="desktopNotifStatusBadge" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 d-none" style="font-size: 0.75rem;" title="إشعارات سطح المكتب مفعّلة">
-            <i class="bi bi-bell-fill me-1"></i> مفعّلة
+        <div class="d-flex align-items-center gap-1.5">
+          <span id="desktopNotifStatusBadge" class="badge rounded-pill notif-badge-active px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.72rem;" title="إشعارات سطح المكتب مفعّلة">
+            <i class="bi bi-bell-fill"></i>
+            <span>مفعّلة</span>
           </span>
-          <button type="button" id="enableDesktopNotifBtn" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.78rem;" title="تفعيل إشعارات سطح المكتب">
+          <button type="button" id="enableDesktopNotifBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.74rem;" title="تفعيل إشعارات سطح المكتب">
             <i class="bi bi-bell"></i>
-            <span>تفعيل الإشعارات</span>
+            <span>تفعيل</span>
           </button>
-          <button type="button" id="testNotifSoundBtn" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.78rem;" title="تشغيل صوت التنبيه وتجربة الإشعار">
+          <button type="button" id="testNotifSoundBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.74rem;" title="تشغيل صوت التنبيه وتجربة الإشعار">
             <i class="bi bi-volume-up-fill"></i>
             <span>تجربة الصوت</span>
           </button>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          <button type="button" class="btn-close notif-btn-close ms-1" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
       </div>
-      <div class="offcanvas-body">
+      <div class="offcanvas-body p-3">
         {{-- تنبيه تفعيل إشعارات سطح المكتب المباشرة --}}
         <div id="desktopNotifBanner" class="alert alert-primary d-none p-3 mb-3 rounded-3 border-0 bg-primary-subtle text-primary shadow-sm" style="font-size: 0.84rem;">
           <div class="d-flex align-items-center justify-content-between gap-2">
@@ -3048,20 +3204,37 @@
             </button>
           </div>
         </div>
-        <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
-          <select id="notifSideFilter" class="form-select form-select-sm" style="width:auto">
-            <option value="">الكل</option>
-            <option value="success">نجاح</option>
-            <option value="info">معلومة</option>
-            <option value="warning">تحذير</option>
-            <option value="danger">هام</option>
-            <option value="secondary">عام</option>
-          </select>
-          <a href="{{ route('notifications.index') }}" class="btn btn-light btn-sm">عرض الكل</a>
-          <button type="button" id="markAllReadBtn" class="btn btn-outline-secondary btn-sm ms-auto" title="تحديد الكل كمقروء">
-            <i class="bi bi-check2-all"></i> تحديد كمقروء
-          </button>
+
+        {{-- شريط أدوات الفلترة والإجراءات السريعة (منسق بالكامل بدون نزول لأسفل) --}}
+        <div class="notif-toolbar-card mb-3 p-2 rounded-3">
+          <div class="d-flex align-items-center justify-content-between gap-2 flex-nowrap">
+            <div class="notif-filter-wrapper flex-grow-1" style="max-width: 140px; min-width: 110px;">
+              <div class="input-group input-group-sm notif-input-group">
+                <span class="input-group-text notif-addon"><i class="bi bi-funnel"></i></span>
+                <select id="notifSideFilter" class="form-select form-select-sm notif-select">
+                  <option value="">الكل</option>
+                  <option value="success">نجاح</option>
+                  <option value="info">معلومة</option>
+                  <option value="warning">تحذير</option>
+                  <option value="danger">هام</option>
+                  <option value="secondary">عام</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+              <button type="button" id="markAllReadBtn" class="btn btn-sm notif-action-btn" title="تحديد الكل كمقروء">
+                <i class="bi bi-check2-all text-primary"></i>
+                <span>تحديد كمقروء</span>
+              </button>
+              <a href="{{ route('notifications.index') }}" class="btn btn-sm notif-action-btn" title="عرض جميع الإشعارات">
+                <i class="bi bi-box-arrow-up-left"></i>
+                <span>عرض الكل</span>
+              </a>
+            </div>
+          </div>
         </div>
+
         <div id="notifSideList" class="d-flex flex-column gap-2"></div>
       </div>
     </div>
