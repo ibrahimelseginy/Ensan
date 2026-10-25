@@ -3016,7 +3016,14 @@
           <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 d-none" style="font-size: 0.78rem;">0</span>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <button type="button" id="testNotifSoundBtn" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.78rem;" title="تشغيل صوت التنبيه">
+          <span id="desktopNotifStatusBadge" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 d-none" style="font-size: 0.75rem;" title="إشعارات سطح المكتب مفعّلة">
+            <i class="bi bi-bell-fill me-1"></i> مفعّلة
+          </span>
+          <button type="button" id="enableDesktopNotifBtn" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.78rem;" title="تفعيل إشعارات سطح المكتب">
+            <i class="bi bi-bell"></i>
+            <span>تفعيل الإشعارات</span>
+          </button>
+          <button type="button" id="testNotifSoundBtn" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size: 0.78rem;" title="تشغيل صوت التنبيه وتجربة الإشعار">
             <i class="bi bi-volume-up-fill"></i>
             <span>تجربة الصوت</span>
           </button>
@@ -3024,6 +3031,23 @@
         </div>
       </div>
       <div class="offcanvas-body">
+        {{-- تنبيه تفعيل إشعارات سطح المكتب المباشرة --}}
+        <div id="desktopNotifBanner" class="alert alert-primary d-none p-3 mb-3 rounded-3 border-0 bg-primary-subtle text-primary shadow-sm" style="font-size: 0.84rem;">
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 34px; height: 34px; min-width: 34px;">
+                <i class="bi bi-bell-fill"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-dark">تفعيل إشعارات سطح المكتب</div>
+                <div class="text-secondary" style="font-size: 0.76rem;">استقبل تنبيهات المهام والطلبات فوراً على شاشتك حتى أثناء تصغير المتصفح</div>
+              </div>
+            </div>
+            <button type="button" id="bannerEnableDesktopNotifBtn" class="btn btn-sm btn-primary rounded-pill px-3 text-nowrap fw-bold shadow-sm" style="font-size: 0.78rem;">
+              <i class="bi bi-check-circle me-1"></i> تفعيل الآن
+            </button>
+          </div>
+        </div>
         <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
           <select id="notifSideFilter" class="form-select form-select-sm" style="width:auto">
             <option value="">الكل</option>
@@ -3049,10 +3073,15 @@
         var bellBadge = document.getElementById('notificationBellBadge');
         var bellBtn = document.getElementById('notificationBellBtn');
         var testSoundBtn = document.getElementById('testNotifSoundBtn');
+        var enableDesktopNotifBtn = document.getElementById('enableDesktopNotifBtn');
+        var bannerEnableDesktopNotifBtn = document.getElementById('bannerEnableDesktopNotifBtn');
+        var desktopNotifBanner = document.getElementById('desktopNotifBanner');
+        var desktopNotifStatusBadge = document.getElementById('desktopNotifStatusBadge');
         var offcanvasCount = document.getElementById('notifOffcanvasCount');
         var markAllBtn = document.getElementById('markAllReadBtn');
         var fKey = 'sidebar.notifications.filter';
         var seenKey = 'notifications.seen.v1.{{ $navUser->id }}';
+        var desktopNotifiedKey = 'notifications.desktop_notified.v1.{{ $navUser->id }}';
         var audioContext = null;
         var pendingSound = false;
         var lastItemCount = null;
@@ -3214,10 +3243,159 @@
           });
         }
 
+        /* ── Desktop Notifications Integration ── */
+        var updateDesktopNotifUI = function (permission) {
+          if (!('Notification' in window)) {
+            if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (enableDesktopNotifBtn) {
+              enableDesktopNotifBtn.classList.add('d-none');
+              enableDesktopNotifBtn.classList.remove('d-flex');
+            }
+            if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+            return;
+          }
+
+          var perm = permission || Notification.permission;
+          if (perm === 'granted') {
+            if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (enableDesktopNotifBtn) {
+              enableDesktopNotifBtn.classList.add('d-none');
+              enableDesktopNotifBtn.classList.remove('d-flex');
+            }
+            if (desktopNotifStatusBadge) {
+              desktopNotifStatusBadge.classList.remove('d-none');
+              desktopNotifStatusBadge.classList.add('d-inline-flex');
+            }
+          } else if (perm === 'default') {
+            if (desktopNotifBanner) desktopNotifBanner.classList.remove('d-none');
+            if (enableDesktopNotifBtn) {
+              enableDesktopNotifBtn.classList.remove('d-none');
+              enableDesktopNotifBtn.classList.add('d-flex');
+            }
+            if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+          } else {
+            // denied
+            if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (enableDesktopNotifBtn) {
+              enableDesktopNotifBtn.classList.add('d-none');
+              enableDesktopNotifBtn.classList.remove('d-flex');
+            }
+            if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+          }
+        };
+
+        var showDesktopNotification = function (title, body, link, tag) {
+          if (!('Notification' in window) || Notification.permission !== 'granted') return;
+          try {
+            var notif = new Notification(title || 'مؤسسة إنسان للأعمال الخيرية', {
+              body: body || 'لديك إشعار جديد في لوحة التحكم',
+              icon: '{{ asset('images/logo.png') }}',
+              badge: '{{ asset('images/logo.png') }}',
+              tag: tag || ('ensan_' + Date.now()),
+              lang: 'ar',
+              dir: 'rtl'
+            });
+            notif.onclick = function (e) {
+              e.preventDefault();
+              window.focus();
+              if (link) {
+                window.location.href = link;
+              }
+              notif.close();
+            };
+          } catch (err) {
+            console.warn('Desktop notification error:', err);
+          }
+        };
+
+        var requestDesktopPermission = function () {
+          if (!('Notification' in window)) {
+            alert('عذراً، متصفحك الحالي لا يدعم إشعارات سطح المكتب.');
+            return;
+          }
+          Notification.requestPermission().then(function (permission) {
+            updateDesktopNotifUI(permission);
+            if (permission === 'granted') {
+              showDesktopNotification(
+                'مؤسسة إنسان للأعمال الخيرية',
+                'تم تفعيل إشعارات سطح المكتب بنجاح! ستصلك التنبيهات والمهام فوراً على جهازك.',
+                '{{ route('notifications.index') }}',
+                'ensan_welcome'
+              );
+              playNotificationSound();
+            } else if (permission === 'denied') {
+              alert('تم رفض إذن الإشعارات بالمتصفح. لتفعيلها: انقر على أيقونة الأمان (القفل) بجوار عنوان الموقع ثم اختر "السماح بالإشعارات".');
+            }
+          });
+        };
+
+        if (enableDesktopNotifBtn) {
+          enableDesktopNotifBtn.addEventListener('click', requestDesktopPermission);
+        }
+        if (bannerEnableDesktopNotifBtn) {
+          bannerEnableDesktopNotifBtn.addEventListener('click', requestDesktopPermission);
+        }
+        updateDesktopNotifUI();
+
+        var triggerDesktopNotifications = function (items, isInitialLoad) {
+          if (!('Notification' in window) || Notification.permission !== 'granted') return;
+          var seen = readSeen();
+          var notified = {};
+          try { notified = JSON.parse(sessionStorage.getItem(desktopNotifiedKey) || '{}'); } catch (e) { notified = {}; }
+
+          var newUnreadItems = items.filter(function (item) {
+            var sig = notificationSignature(item);
+            return !seen[sig] && !notified[sig];
+          });
+
+          if (newUnreadItems.length === 0) return;
+
+          if (isInitialLoad) {
+            newUnreadItems.forEach(function (item) {
+              notified[notificationSignature(item)] = Date.now();
+            });
+            try { sessionStorage.setItem(desktopNotifiedKey, JSON.stringify(notified)); } catch (e) {}
+
+            if (newUnreadItems.length > 0) {
+              showDesktopNotification(
+                'مؤسسة إنسان للأعمال الخيرية',
+                'لديك ' + newUnreadItems.length + ' إشعار غير مقروء في لوحة التحكم.',
+                '{{ route('notifications.index') }}',
+                'ensan_initial_summary'
+              );
+            }
+          } else {
+            var countToShow = Math.min(newUnreadItems.length, 3);
+            for (var i = 0; i < countToShow; i++) {
+              var it = newUnreadItems[i];
+              var sig = notificationSignature(it);
+              notified[sig] = Date.now();
+              showDesktopNotification(
+                'مؤسسة إنسان - تنبيه جديد',
+                it.text,
+                it.link || '{{ route('notifications.index') }}',
+                sig
+              );
+            }
+            for (var j = countToShow; j < newUnreadItems.length; j++) {
+              notified[notificationSignature(newUnreadItems[j])] = Date.now();
+            }
+            try { sessionStorage.setItem(desktopNotifiedKey, JSON.stringify(notified)); } catch (e) {}
+          }
+        };
+
         if (testSoundBtn) {
           testSoundBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             playNotificationSound();
+            if ('Notification' in window && Notification.permission === 'granted') {
+              showDesktopNotification(
+                'مؤسسة إنسان - تجربة التنبيه',
+                'صوت وإشعار سطح المكتب يعملان بشكل مثالي! 🔔',
+                '',
+                'test_' + Date.now()
+              );
+            }
           });
         }
 
@@ -3330,16 +3508,18 @@
               render(currentItems);
               updateBellBadge(unreadCount);
 
-              // Sound triggering logic for unread items:
+              // Sound and Desktop notification triggering logic for unread items:
               if (lastItemCount === null) {
                 lastItemCount = unreadCount;
                 if (unreadCount > 0 && !sessionStorage.getItem('ensan_notif_sound_played')) {
                   sessionStorage.setItem('ensan_notif_sound_played', '1');
                   playNotificationSound();
                 }
+                triggerDesktopNotifications(currentItems, true);
               } else if (unreadCount > lastItemCount) {
                 lastItemCount = unreadCount;
                 playNotificationSound();
+                triggerDesktopNotifications(currentItems, false);
               } else {
                 lastItemCount = unreadCount;
               }
@@ -3360,7 +3540,7 @@
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
         load();
         document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
-        window.setInterval(load, 60000);
+        window.setInterval(load, 30000);
       });
     </script>
   @endif
