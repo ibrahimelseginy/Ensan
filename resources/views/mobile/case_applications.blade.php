@@ -94,10 +94,54 @@
                     <span class="fw-bold small text-stats-title">فلترة حسب جهة التقديم (المصدر):</span>
                 </div>
                 @if(request('source'))
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1">
-                        فلتر نشط: 
-                        {{ request('source') == 'website' ? 'الموقع الإلكتروني (الويبسايت)' : (request('source') == 'system' ? 'السيستم الداخلي' : 'تطبيق الموبايل') }}
-                    </span>
+                    @php
+                        $srcConfig = [
+                            'website' => [
+                                'label' => 'الموقع الإلكتروني (الويبسايت)',
+                                'icon' => 'bi-globe2',
+                                'bg' => '#e0f2fe',
+                                'text' => '#0369a1',
+                                'border' => '#7dd3fc',
+                                'iconColor' => '#0284c7',
+                            ],
+                            'system' => [
+                                'label' => 'السيستم الداخلي',
+                                'icon' => 'bi-laptop',
+                                'bg' => '#d1fae5',
+                                'text' => '#065f46',
+                                'border' => '#6ee7b7',
+                                'iconColor' => '#059669',
+                            ],
+                            'mobile' => [
+                                'label' => 'تطبيق الموبايل',
+                                'icon' => 'bi-phone-fill',
+                                'bg' => '#fef3c7',
+                                'text' => '#92400e',
+                                'border' => '#fcd34d',
+                                'iconColor' => '#d97706',
+                            ],
+                        ][request('source')] ?? [
+                            'label' => request('source'),
+                            'icon' => 'bi-funnel-fill',
+                            'bg' => '#f1f5f9',
+                            'text' => '#334155',
+                            'border' => '#cbd5e1',
+                            'iconColor' => '#64748b',
+                        ];
+                    @endphp
+                    <div class="active-source-badge d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill shadow-xs"
+                         style="background: {{ $srcConfig['bg'] }}; border: 1.5px solid {{ $srcConfig['border'] }}; color: {{ $srcConfig['text'] }} !important; font-size: 0.84rem; font-weight: 700;">
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ $srcConfig['iconColor'] }}; display: inline-block;"></span>
+                        <i class="bi {{ $srcConfig['icon'] }}" style="color: {{ $srcConfig['iconColor'] }}; font-size: 0.95rem;"></i>
+                        <span style="color: {{ $srcConfig['text'] }} !important; opacity: 0.85; font-weight: 600;">فلتر نشط:</span>
+                        <strong style="color: {{ $srcConfig['text'] }} !important; font-weight: 800;">{{ $srcConfig['label'] }}</strong>
+                        <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('source', 'page'), [])) }}" 
+                           class="btn-close-filter d-inline-flex align-items-center justify-content-center text-decoration-none ms-1" 
+                           title="إلغاء الفلتر"
+                           style="width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.1); color: {{ $srcConfig['text'] }}; font-size: 0.8rem; transition: all 0.2s;">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
                 @endif
             </div>
             <div class="d-flex flex-wrap gap-2">
