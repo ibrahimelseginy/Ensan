@@ -7,19 +7,30 @@
 
     {{-- Executive Hero Banner --}}
     <div class="excel-hub-hero p-4 p-md-5 rounded-4 mb-4 text-white shadow-sm position-relative overflow-hidden">
+        {{-- Background decorative shapes --}}
+        <div class="hero-bg-circle hero-bg-circle-1"></div>
+        <div class="hero-bg-circle hero-bg-circle-2"></div>
+        <div class="hero-grid-pattern"></div>
+
         <div class="position-relative" style="z-index: 2;">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 bg-white bg-opacity-15 rounded-pill px-3 py-1.5 small border border-white border-opacity-20">
+                    <ol class="breadcrumb mb-0 bg-white bg-opacity-15 rounded-pill px-3 py-1.5 small border border-white border-opacity-20 backdrop-blur">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}" class="text-white text-decoration-none opacity-90"><i class="bi bi-house-door-fill me-1"></i> الرئيسية</a></li>
-                        <li class="breadcrumb-item active text-white fw-bold" aria-current="page">مركز استيراد البيانات</li>
+                        <li class="breadcrumb-item active text-white fw-bold" aria-current="page">مركز استيراد وتوزيع البيانات</li>
                     </ol>
                 </nav>
 
-                <a href="{{ route('dashboard.index') }}" class="btn btn-sm btn-light rounded-pill px-3.5 py-2 fw-bold text-success d-inline-flex align-items-center gap-1.5 shadow-sm hover-lift">
-                    <i class="bi bi-arrow-right"></i>
-                    <span>العودة للرئيسية</span>
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-light bg-opacity-20 text-white border border-white border-opacity-25 rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm hover-lift backdrop-blur" id="btnScrollToTemplates">
+                        <i class="bi bi-collection-fill"></i>
+                        <span>نماذج وقوالب الأقسام</span>
+                    </button>
+                    <a href="{{ route('dashboard.index') }}" class="btn btn-sm btn-light rounded-pill px-3.5 py-2 fw-bold text-success d-inline-flex align-items-center gap-1.5 shadow-sm hover-lift">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>العودة للرئيسية</span>
+                    </a>
+                </div>
             </div>
 
             <div class="row align-items-center g-4">
@@ -29,43 +40,59 @@
                             <i class="bi bi-file-earmark-spreadsheet-fill fs-2"></i>
                         </div>
                         <div>
-                            <h2 class="fw-black mb-1 text-white" style="letter-spacing: -0.5px;">
-                                مركز الاستيراد والتوزيع الذكي للبيانات
-                            </h2>
-                            <p class="mb-0 text-white-50 small fs-6">
-                                معالجة وتوزيع ملفات Excel و CSV آلياً لحفظ آلاف السجلات دفعة واحدة في قطاعات الحالات، التبرعات، المتبرعين، المستفيدين، والمهام
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <h2 class="fw-black mb-0 text-white" style="letter-spacing: -0.5px;">
+                                    مركز الاستيراد والتوزيع الذكي للبيانات
+                                </h2>
+                                <span class="badge bg-white text-success rounded-pill px-2.5 py-1 x-small fw-bold shadow-xs">
+                                    <i class="bi bi-stars text-warning me-1"></i> الجيل الثاني 2.0
+                                </span>
+                            </div>
+                            <p class="mb-0 text-white text-opacity-85 small fs-6">
+                                منصة متطورة لمعالجة وتوزيع ملفات Excel و CSV آلياً لدمج آلاف السجلات دفعة واحدة في قطاعات الحالات، التبرعات، المتبرعين، المستفيدين، والمهام
                             </p>
                         </div>
                     </div>
 
                     {{-- Live Capability Badges --}}
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-1">
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small">
-                            <i class="bi bi-magic text-warning"></i>
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small backdrop-blur">
+                            <i class="bi bi-magic text-warning fs-6"></i>
                             <span>مطابقة ذكية للأعمدة بالذكاء الاصطناعي</span>
                         </span>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small">
-                            <i class="bi bi-shield-check text-info"></i>
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small backdrop-blur">
+                            <i class="bi bi-shield-check text-info fs-6"></i>
                             <span>فحص وتخطي التكرار تلقائياً</span>
                         </span>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small">
-                            <i class="bi bi-filetype-xlsx text-light"></i>
-                            <span>يدعم .xlsx و .xls و .csv</span>
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small backdrop-blur">
+                            <i class="bi bi-layers-fill text-light fs-6"></i>
+                            <span>توزيع شامل لملفات متعددة الأوراق (Multi-Sheet)</span>
                         </span>
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small">
-                            <i class="bi bi-eye-fill text-light"></i>
-                            <span>معاينة حية وتدقيق قبل الاعتماد</span>
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1.5 border border-white border-opacity-25 small backdrop-blur">
+                            <i class="bi bi-eye-fill text-light fs-6"></i>
+                            <span>معاينة حية وتدقيق قبل الحفظ</span>
                         </span>
                     </div>
                 </div>
 
                 <div class="col-lg-4 text-lg-end d-none d-lg-block">
                     <div class="excel-hero-illustration">
-                        <div class="stat-pill-float">
-                            <i class="bi bi-check2-circle text-success fs-4"></i>
+                        <div class="stat-pill-float shadow-lg mb-2">
+                            <div class="stat-pill-icon bg-success-subtle text-success">
+                                <i class="bi bi-check2-circle fs-4"></i>
+                            </div>
                             <div>
                                 <div class="fw-bold small text-dark">توزيع تلقائي 100%</div>
-                                <div class="text-muted x-small">مباشرة في قاعدة البيانات</div>
+                                <div class="text-muted x-small">مباشرة في قاعدة بيانات النظام</div>
+                            </div>
+                        </div>
+                        <div class="stat-pill-float shadow-lg">
+                            <div class="stat-pill-icon bg-primary-subtle text-primary">
+                                <i class="bi bi-shield-lock-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold small text-dark">حماية من التكرار المزدوج</div>
+                                <div class="text-muted x-small">بالرقم القومي ورقم الهاتف</div>
                             </div>
                         </div>
                     </div>
@@ -80,26 +107,36 @@
     </div>
 
     {{-- Section Templates & Reference Cards --}}
-    <div class="card border-0 shadow-sm rounded-4 mb-4 templates-overview-card overflow-hidden">
-        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div>
-                <h5 class="fw-bold mb-1 text-main d-flex align-items-center gap-2">
-                    <span class="p-2 rounded-3 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center">
-                        <i class="bi bi-collection-fill fs-5"></i>
+    <div class="card border-0 shadow-sm rounded-4 mb-4 templates-overview-card overflow-hidden" id="sectionTemplatesContainer">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+                <div>
+                    <h5 class="fw-bold mb-1 text-main d-flex align-items-center gap-2">
+                        <span class="p-2 rounded-3 bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center">
+                            <i class="bi bi-collection-fill fs-5"></i>
+                        </span>
+                        <span>نماذج وقوالب الأقسام المتاحة للاستيراد</span>
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">يمكنك تحميل النموذج القياسي الفارغ لكل قسم، أو رفع أي ملف واستخدام المطابقة الذكية بالذكاء الاصطناعي</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    {{-- Search Box for Templates --}}
+                    <div class="input-group input-group-sm template-search-box" style="width: 250px;">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="templateSearchInput" class="form-control border-start-0 bg-light" placeholder="ابحث في الأقسام أو الحقول...">
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-1.5">
+                        <i class="bi bi-check2-all"></i>
+                        <span>{{ count($sections) }} أقسام مدعومة</span>
                     </span>
-                    <span>نماذج وقوالب الأقسام المتاحة للاستيراد</span>
-                </h5>
-                <p class="text-muted small mb-0 mt-1">يمكنك تحميل النموذج الفارغ لكل قسم لتعبئة البيانات بالأعمدة القياسية، أو رفع أي ملف واستخدام المطابقة الذكية</p>
+                </div>
             </div>
-            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-1.5">
-                <i class="bi bi-check2-all"></i>
-                <span>{{ count($sections) }} أقسام مدعومة</span>
-            </span>
         </div>
         <div class="card-body p-4 pt-3">
-            <div class="row g-3 g-lg-4">
+            <div class="row g-3 g-lg-4" id="templateCardsRow">
                 @foreach($sections as $secKey => $secConfig)
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-md-6 col-lg-4 template-card-col" data-name="{{ $secConfig['name'] }}" data-desc="{{ $secConfig['description'] }}" data-fields="{{ implode(' ', array_column($secConfig['fields'], 'label')) }}">
                         <div class="template-box p-3.5 p-md-4 rounded-4 border h-100 d-flex flex-column justify-content-between position-relative" style="--sec-accent: {{ $secConfig['color'] }};">
                             <div>
                                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light-subtle">
@@ -155,6 +192,13 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- No templates search result --}}
+            <div id="noTemplatesFoundAlert" class="alert alert-light border text-center py-4 rounded-4 d-none">
+                <i class="bi bi-search fs-2 text-muted mb-2 d-block"></i>
+                <div class="fw-bold text-dark mb-1">لم يتم العثور على نتائج مطابقة للبحث</div>
+                <div class="text-muted small">يرجى تجربة كلمات بحث أخرى مثل "حالات"، "متبرع"، "هاتف"، أو "تبرعات"</div>
+            </div>
         </div>
     </div>
 
@@ -163,7 +207,7 @@
         <div class="card-body p-4">
             <h5 class="fw-bold text-success mb-3 d-flex align-items-center gap-2">
                 <i class="bi bi-lightbulb-fill"></i>
-                <span>إرشادات ونصائح للحصول على أفضل نتائج أثناء استيراد البيانات:</span>
+                <span>إرشادات ونصائح للحصول على أفضل نتائج أثناء استيراد وتوزيع البيانات:</span>
             </h5>
             <div class="row g-3 small text-secondary">
                 <div class="col-md-4">
@@ -171,8 +215,8 @@
                         <div class="d-flex align-items-start gap-2.5">
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
-                                <strong class="text-dark d-block mb-1">الصف الأول يحتوي العناوين:</strong>
-                                <div>تأكد من أن الصف الأول في الملف يحتوي على أسماء وعناوين الأعمدة بوضوح ليتعرف عليها محرك المطابقة الذكي تلقائياً.</div>
+                                <strong class="text-dark d-block mb-1">الصف الأول يحتوي عناوين الأعمدة:</strong>
+                                <div>تأكد من أن الصف الأول في الملف يحتوي على أسماء وعناوين الأعمدة بوضوح ليتعرف عليها محرك المطابقة الذكي تلقائياً حتى مع اختلاف صياغتها.</div>
                             </div>
                         </div>
                     </div>
@@ -182,8 +226,8 @@
                         <div class="d-flex align-items-start gap-2.5">
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
-                                <strong class="text-dark d-block mb-1">أرقام الهواتف والأرقام القومية:</strong>
-                                <div>تأكد من كتابة الأرقام بدون مسافات أو رموز خاصة لضمان حفظها ومطابقتها بشكل صحيح مع سجلات النظام.</div>
+                                <strong class="text-dark d-block mb-1">تنسيق أرقام الهواتف والأرقام القومية:</strong>
+                                <div>تأكد من كتابة الأرقام بدون مسافات أو فواصل أو رموز خاصة لضمان حفظها ومطابقتها وفحص تكرارها بشكل دقيق مع سجلات النظام.</div>
                             </div>
                         </div>
                     </div>
@@ -194,7 +238,7 @@
                             <i class="bi bi-check-circle-fill text-success fs-5 mt-0.5"></i>
                             <div>
                                 <strong class="text-dark d-block mb-1">الحماية من التكرار المزدوج:</strong>
-                                <div>يقوم النظام بفحص السجلات المكررة بالرقم القومي أو الهاتف وتخطيها تلقائياً لتفادي ازدواجية البيانات بقاعدة البيانات.</div>
+                                <div>يقوم النظام بفحص السجلات المكررة بالرقم القومي أو الهاتف وتخطيها تلقائياً لتفادي ازدواجية البيانات بقاعدة البيانات مع إظهار تقرير تفصيلي بالصفوف المستبعدة.</div>
                             </div>
                         </div>
                     </div>
@@ -212,23 +256,48 @@
     position: relative;
     box-shadow: 0 10px 30px rgba(4, 120, 87, 0.25) !important;
 }
-.excel-hub-hero::before {
-    content: '';
+.hero-bg-circle {
     position: absolute;
-    top: -50px;
-    left: -50px;
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
     border-radius: 50%;
     pointer-events: none;
+    z-index: 1;
+}
+.hero-bg-circle-1 {
+    top: -80px;
+    left: -80px;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
+}
+.hero-bg-circle-2 {
+    bottom: -100px;
+    right: 15%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, rgba(255,255,255,0) 70%);
+}
+.hero-grid-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+}
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 .hero-excel-icon {
-    width: 58px;
-    height: 58px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    width: 62px;
+    height: 62px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -244,6 +313,19 @@
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     text-align: right;
+    transition: transform 0.2s ease;
+}
+.stat-pill-float:hover {
+    transform: translateY(-2px);
+}
+.stat-pill-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 .template-box {
     background: var(--bg-card, #ffffff);
@@ -341,9 +423,10 @@
 }
 </style>
 
-{{-- Quick Select Section Script --}}
+{{-- Page Scripts --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Quick select section buttons
     const quickSelectBtns = document.querySelectorAll('.btn-quick-select-section');
     quickSelectBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -358,6 +441,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Scroll to templates
+    const btnScrollToTemplates = document.getElementById('btnScrollToTemplates');
+    if (btnScrollToTemplates) {
+        btnScrollToTemplates.addEventListener('click', function() {
+            const templatesCard = document.getElementById('sectionTemplatesContainer');
+            if (templatesCard) {
+                templatesCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // Live search for template cards
+    const templateSearchInput = document.getElementById('templateSearchInput');
+    const templateCols = document.querySelectorAll('.template-card-col');
+    const noTemplatesFoundAlert = document.getElementById('noTemplatesFoundAlert');
+
+    if (templateSearchInput) {
+        templateSearchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            templateCols.forEach(col => {
+                const name = (col.getAttribute('data-name') || '').toLowerCase();
+                const desc = (col.getAttribute('data-desc') || '').toLowerCase();
+                const fields = (col.getAttribute('data-fields') || '').toLowerCase();
+
+                if (!query || name.includes(query) || desc.includes(query) || fields.includes(query)) {
+                    col.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    col.classList.add('d-none');
+                }
+            });
+
+            if (noTemplatesFoundAlert) {
+                if (visibleCount === 0) {
+                    noTemplatesFoundAlert.classList.remove('d-none');
+                } else {
+                    noTemplatesFoundAlert.classList.add('d-none');
+                }
+            }
+        });
+    }
 });
 </script>
 @endsection

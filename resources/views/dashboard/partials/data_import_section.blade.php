@@ -1,5 +1,5 @@
 {{-- ============================================================== --}}
-{{-- SMART DATA IMPORT SECTION (EXCEL & CSV DISTRIBUTION HUB)       --}}
+{{-- SMART DATA IMPORT SECTION (EXCEL & CSV DISTRIBUTION HUB 2.0)   --}}
 {{-- ============================================================== --}}
 
 @php
@@ -11,24 +11,33 @@
     <div class="card-body p-3 p-md-4">
         
         {{-- Section Step Progress Indicator --}}
-        <div class="import-steps-indicator mb-4 pb-3 border-bottom border-light border-opacity-50">
+        <div class="import-steps-indicator mb-4 pb-3 border-bottom border-light-subtle">
             <div class="row g-2 align-items-center text-center">
                 <div class="col-4">
                     <div class="step-pill step-active" id="stepPill1">
                         <span class="step-num"><i class="bi bi-diagram-3-fill"></i></span>
-                        <span class="step-label">1. تحديد القسم المستهدف</span>
+                        <div class="step-text">
+                            <span class="step-label">1. تحديد القسم</span>
+                            <span class="step-desc d-none d-md-inline">المستهدف أو التوزيع الشامل</span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="step-pill" id="stepPill2">
                         <span class="step-num"><i class="bi bi-cloud-arrow-up-fill"></i></span>
-                        <span class="step-label">2. رفع ملف البيانات</span>
+                        <div class="step-text">
+                            <span class="step-label">2. رفع الملف</span>
+                            <span class="step-desc d-none d-md-inline">Excel أو جداول CSV</span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="step-pill" id="stepPill3">
                         <span class="step-num"><i class="bi bi-sliders"></i></span>
-                        <span class="step-label">3. المعاينة وتوزيع السجلات</span>
+                        <div class="step-text">
+                            <span class="step-label">3. المعاينة والتوزيع</span>
+                            <span class="step-desc d-none d-md-inline">المطابقة والاعتماد</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -36,16 +45,18 @@
 
         {{-- Step 1: Section Selector Tabs / Pills --}}
         <div class="import-sections-wrapper mb-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <label class="form-label small fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <span class="badge bg-success rounded-circle p-1" style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
-                    <span class="fs-6">حدد القسم المستهدف لحفظ وتوزيع السجلات:</span>
+                    <span class="badge bg-success rounded-circle p-1" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">1</span>
+                    <span class="fs-6 fw-bold">حدد القسم المستهدف لحفظ وتوزيع السجلات:</span>
                 </label>
-                <span class="badge bg-light text-muted border px-3 py-1.5 rounded-pill small d-none d-md-inline-flex align-items-center gap-1.5">
-                    <i class="bi bi-check-circle-fill text-success"></i>
-                    <span>القسم النشط:</span>
-                    <strong class="text-primary" id="activeSectionLabelName">الحالات وطلبات المساعدة</strong>
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-muted border px-3 py-1.5 rounded-pill small d-none d-md-inline-flex align-items-center gap-1.5">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>القسم النشط:</span>
+                        <strong class="text-primary" id="activeSectionLabelName">التوزيع التلقائي الذكي الشامل (AI)</strong>
+                    </span>
+                </div>
             </div>
 
             <div class="import-section-grid" id="importSectionPills">
@@ -58,8 +69,11 @@
                         <i class="bi bi-magic fs-5"></i>
                     </div>
                     <div class="sec-pill-info">
-                        <div class="sec-pill-title">توزيع تلقائي شامل للأقسام (AI)</div>
-                        <div class="sec-pill-badge">اكتشاف أقسام الملف وتوزيعها آلياً</div>
+                        <div class="sec-pill-title d-flex align-items-center gap-1.5">
+                            <span>توزيع تلقائي شامل (AI)</span>
+                            <span class="badge bg-purple-subtle text-purple x-small px-1.5 py-0.5 rounded-pill fw-bold">موصى به</span>
+                        </div>
+                        <div class="sec-pill-badge">اكتشاف أقسام كل ورقة وتوزيعها آلياً</div>
                     </div>
                     <div class="sec-pill-check">
                         <i class="bi bi-check-lg"></i>
@@ -104,9 +118,10 @@
                             اسحب وأفلت ملف الإكسيل هنا أو <span class="text-success text-decoration-underline" style="cursor: pointer;">تصفح جهازك</span>
                         </h5>
                         <p class="text-muted small mb-3">
-                            يدعم ملفات Excel (.xlsx, .xls) وجداول CSV حتى 20 ميجابايت
+                            يدعم ملفات Excel (.xlsx, .xls) وجداول CSV حتى 20 ميجابايت مع معالجة آلاف السجلات بلحظات
                         </p>
-                        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                        
+                        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
                             <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill small">
                                 <i class="bi bi-file-earmark-spreadsheet text-success me-1"></i> .XLSX
                             </span>
@@ -120,29 +135,41 @@
                                 <i class="bi bi-magic me-1"></i> مطابقة تلقائية بالذكاء الاصطناعي
                             </span>
                         </div>
+
+                        {{-- Instant Demo Sample Loader Button --}}
+                        <div class="pt-2">
+                            <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-1.5 text-secondary fw-bold d-inline-flex align-items-center gap-1.5 hover-lift shadow-xs" id="btnLoadDemoFile">
+                                <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                <span>تجربة فورية بملف نموذجي جاهز (1-Click Demo)</span>
+                            </button>
+                        </div>
                     </div>
 
                     {{-- Selected File State (Visible once a file is picked) --}}
                     <div class="selected-file-card p-3.5 rounded-4 border bg-white shadow-sm w-100 d-none text-start" id="dropzoneSelectedState">
                         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="file-card-icon bg-success-subtle text-success rounded-3 p-2.5 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                                <div class="file-card-icon bg-success-subtle text-success rounded-3 p-2.5 d-flex align-items-center justify-content-center" style="width: 58px; height: 58px;">
                                     <i class="bi bi-file-earmark-excel-fill fs-2"></i>
                                 </div>
                                 <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                                         <span class="badge bg-success text-white rounded-pill px-2.5 py-1 x-small fw-bold d-inline-flex align-items-center gap-1">
                                             <span class="live-dot-mini"></span> جاهز للمعاينة والمطابقة
                                         </span>
                                         <span class="badge bg-light text-muted border x-small font-monospace" id="selectedFileSizeBadge">0 KB</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle x-small" id="selectedFileTypeBadge">Excel</span>
                                     </div>
-                                    <h6 class="fw-bold mb-0 text-dark text-break" id="selectedFileNameText">filename.xlsx</h6>
+                                    <h6 class="fw-bold mb-0 text-dark text-break fs-6" id="selectedFileNameText">filename.xlsx</h6>
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold" id="btnRemoveSelectedFile" title="إزالة الملف واختيار غيره">
-                                <i class="bi bi-trash3 me-1"></i> تغيير الملف
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1" id="btnRemoveSelectedFile" title="إزالة الملف واختيار غيره">
+                                    <i class="bi bi-trash3"></i>
+                                    <span>تغيير الملف</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -167,7 +194,7 @@
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark small mb-0.5">مطابقة ذكية للأعمدة</div>
-                                    <div class="text-muted x-small">ربط حقول ملفك بحقول النظام تلقائياً حتى مع اختلاف المسميات.</div>
+                                    <div class="text-muted x-small">ربط حقول ملفك بحقول النظام تلقائياً حتى مع اختلاف المسميات أو التنسيق.</div>
                                 </div>
                             </div>
 
@@ -176,8 +203,8 @@
                                     <i class="bi bi-eye-fill fs-5"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark small mb-0.5">معاينة حية وفورية</div>
-                                    <div class="text-muted x-small">تدقيق ومراجعة أول 5 صفوف وتعديل أي عمود قبل الحفظ النهائي.</div>
+                                    <div class="fw-bold text-dark small mb-0.5">معاينة حية وتدقيق</div>
+                                    <div class="text-muted x-small">مراجعة وتدقيق عينة من السجلات وتعديل تخصيص أي عمود قبل الحفظ النهائي.</div>
                                 </div>
                             </div>
 
@@ -187,7 +214,7 @@
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark small mb-0.5">فحص التكرار التلقائي</div>
-                                    <div class="text-muted x-small">تخطي السجلات المكررة بالرقم القومي أو الهاتف لمنع الازدواجية.</div>
+                                    <div class="text-muted x-small">تخطي السجلات المكررة بالرقم القومي أو الهاتف لمنع الازدواجية تماماً.</div>
                                 </div>
                             </div>
                         </div>
@@ -221,7 +248,7 @@
                         <i class="bi bi-sliders2-vertical fs-4"></i>
                     </div>
                     <div>
-                        <div class="d-flex align-items-center gap-2 mb-0.5">
+                        <div class="d-flex align-items-center gap-2 mb-0.5 flex-wrap">
                             <h5 class="modal-title fw-bold mb-0 text-main-heading" id="importMappingModalLabel">مطابقة الأعمدة وتدقيق البيانات</h5>
                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 x-small fw-bold" id="modalTargetSectionBadge">القسم: الحالات</span>
                         </div>
@@ -313,19 +340,35 @@
                         </div>
                     </div>
 
-                    {{-- Info Alert --}}
-                    <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis rounded-3 p-3 mb-4 d-flex align-items-center gap-2.5 small">
-                        <i class="bi bi-magic fs-4 flex-shrink-0 text-info"></i>
-                        <div>
-                            <strong>المطابقة التلقائية:</strong> قمنا بمطابقة أعمدة ملفك آلياً بالذكاء الاصطناعي مع الحقول المناسبة. يمكنك مراجعة وتعديل أي حقل، أو اختيار <em>"تخطي هذا العمود"</em> للأعمدة الإضافية التي لا ترغب باستيرادها.
+                    {{-- Mapping Status Alert & Counters --}}
+                    <div class="alert alert-light border rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2.5 small">
+                            <i class="bi bi-magic fs-4 flex-shrink-0 text-success"></i>
+                            <div>
+                                <strong>المطابقة التلقائية الذكية:</strong> قمنا بمطابقة أعمدة ملفك آلياً مع حقول النظام. يمكنك مراجعة وتعديل أي حقل، أو اختيار <em>"تخطي هذا العمود"</em> للأعمدة غير المطلوبة.
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-bold small" id="mappedFieldsCountBadge">
+                                <i class="bi bi-check2-all me-1"></i>
+                                <span id="mappedCountNumber">0</span> حقول مطابقة
+                            </span>
                         </div>
                     </div>
 
                     {{-- Column Mapping Grid --}}
                     <div class="card border rounded-3 mb-4 overflow-hidden shadow-2xs">
-                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
-                            <span class="fw-bold small text-dark"><i class="bi bi-shuffle me-1 text-primary"></i> ربط أعمدة الملف بحقول النظام (Column Mapping)</span>
-                            <span class="text-muted x-small">الحقول التي تحمل علامة (*) إلزامية لاستكمال الاستيراد</span>
+                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold small text-dark"><i class="bi bi-shuffle me-1 text-primary"></i> ربط أعمدة الملف بحقول النظام (Column Mapping)</span>
+                                <span class="badge bg-light text-muted border x-small">الحقول التي تحمل علامة (*) إلزامية</span>
+                            </div>
+                            
+                            {{-- Search input inside mapping fields --}}
+                            <div class="input-group input-group-sm" style="width: 220px;">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" id="mappingSearchInput" class="form-control border-start-0" placeholder="تصفية الأعمدة...">
+                            </div>
                         </div>
                         <div class="card-body p-3">
                             <div class="row g-3" id="mappingFieldsContainer">
@@ -336,11 +379,18 @@
 
                     {{-- Live Data Preview (First 5 Rows) --}}
                     <div class="card border rounded-3 overflow-hidden shadow-2xs">
-                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between">
-                            <span class="fw-bold small text-dark"><i class="bi bi-eye-fill me-1 text-success"></i> معاينة أولية لبيانات الملف (أول 5 صفوف)</span>
-                            <span class="badge bg-light text-muted border small">تحقق من صحة ترتيب الأعمدة</span>
+                        <div class="card-header bg-light py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold small text-dark"><i class="bi bi-eye-fill me-1 text-success"></i> معاينة أولية لبيانات الملف (أول 5 صفوف)</span>
+                                <span class="badge bg-light text-muted border small">تحقق من دقة الأعمدة وترتيبها</span>
+                            </div>
+
+                            <div class="input-group input-group-sm" style="width: 200px;">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-filter"></i></span>
+                                <input type="text" id="previewTableFilterInput" class="form-control border-start-0" placeholder="بحث في المعاينة...">
+                            </div>
                         </div>
-                        <div class="table-responsive" style="max-height: 240px;">
+                        <div class="table-responsive" style="max-height: 260px;">
                             <table class="table table-sm table-hover table-bordered mb-0 align-middle small text-nowrap" id="previewDataTable">
                                 <thead class="table-light sticky-top" id="previewTableHead">
                                     {{-- Populated via JS --}}
@@ -349,6 +399,19 @@
                                     {{-- Populated via JS --}}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Live Execution Progress Bar (Shows during upload/processing) --}}
+                <div id="modalExecutionProgressBar" class="d-none mt-3">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center justify-content-between small fw-bold mb-2">
+                            <span class="text-success" id="progressStatusText">جاري حفظ ومعالجة السجلات...</span>
+                            <span class="text-muted" id="progressPercentText">100%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 100%"></div>
                         </div>
                     </div>
                 </div>
@@ -414,8 +477,11 @@
                 <ul class="mb-0 ps-3 space-y-1" id="resultErrorsList"></ul>
             </div>
 
-            <div class="d-flex justify-content-center gap-2">
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn btn-outline-success rounded-pill px-4 fw-bold" id="btnImportAnotherFile" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-repeat me-1"></i> استيراد ملف آخر
+                </button>
                 <a href="#" id="resultTargetLink" class="btn btn-success rounded-pill px-4 fw-bold">
                     <span>الانتقال للقسم وعرض البيانات</span>
                     <i class="bi bi-arrow-left ms-1"></i>
@@ -450,8 +516,8 @@
     justify-content: center;
 }
 .step-pill .step-num {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: #e2e8f0;
     color: #64748b;
@@ -470,14 +536,28 @@
     background: #10b981;
     color: #ffffff;
 }
+.step-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    line-height: 1.25;
+}
+.step-desc {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-weight: normal;
+}
+.step-pill.step-active .step-desc {
+    color: #059669;
+}
 
 /* Section Pills Grid (Step 1) */
 .import-section-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
 }
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
     .import-section-grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -497,7 +577,7 @@
     background: #f8fafc;
     border: 1.5px solid #e2e8f0;
     border-radius: 16px;
-    padding: 11px 13px;
+    padding: 12px 14px;
     color: #334155;
     display: flex;
     align-items: center;
@@ -508,17 +588,17 @@
     width: 100%;
     position: relative;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    min-height: 64px;
+    min-height: 68px;
 }
 .sec-pill-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     transition: transform 0.25s ease;
@@ -585,7 +665,7 @@
     border-radius: 20px !important;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    min-height: 260px;
+    min-height: 270px;
     outline: none;
 }
 .import-dropzone:hover, .import-dropzone:focus, .import-dropzone.dragover {
@@ -594,8 +674,8 @@
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
 }
 .import-dropzone .icon-circle {
-    width: 72px;
-    height: 72px;
+    width: 74px;
+    height: 74px;
     border-radius: 50%;
     background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.2);
@@ -657,6 +737,13 @@
 @keyframes miniDotPulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.bg-purple-subtle {
+    background: rgba(139, 92, 246, 0.12) !important;
+}
+.text-purple {
+    color: #8b5cf6 !important;
 }
 
 /* Dark Mode Styles */
@@ -762,18 +849,9 @@ document.addEventListener('DOMContentLoaded', function() {
         'auto': 'التوزيع التلقائي الذكي الشامل (AI)',
         'cases': 'الحالات وطلبات المساعدة',
         'donors': 'المتبرعين',
-        'donations': 'التبرعات المالية',
+        'donations': 'التبرعات والمعاملات المالية',
         'beneficiaries': 'المستفيدين والبحث الميداني',
         'tasks': 'مهام فريق العمل'
-    };
-
-    const sectionColors = {
-        'auto': '#8b5cf6',
-        'cases': '#10b981',
-        'donors': '#f59e0b',
-        'donations': '#0ea5e9',
-        'beneficiaries': '#8b5cf6',
-        'tasks': '#ec4899'
     };
 
     const activeSectionLabelName = document.getElementById('activeSectionLabelName');
@@ -817,9 +895,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedState = document.getElementById('dropzoneSelectedState');
     const selectedFileNameText = document.getElementById('selectedFileNameText');
     const selectedFileSizeBadge = document.getElementById('selectedFileSizeBadge');
+    const selectedFileTypeBadge = document.getElementById('selectedFileTypeBadge');
     const btnRemoveFile = document.getElementById('btnRemoveSelectedFile');
     const btnStart = document.getElementById('btnStartQuickImport');
     const stepPill2 = document.getElementById('stepPill2');
+    const stepPill3 = document.getElementById('stepPill3');
+    const btnLoadDemo = document.getElementById('btnLoadDemoFile');
 
     if (fileInput) {
         fileInput.addEventListener('change', function() {
@@ -838,6 +919,11 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedFileNameText.textContent = file.name;
         selectedFileSizeBadge.textContent = sizeFormatted;
 
+        const ext = file.name.split('.').pop().toUpperCase();
+        if (selectedFileTypeBadge) {
+            selectedFileTypeBadge.textContent = ext;
+        }
+
         defaultState.classList.add('d-none');
         selectedState.classList.remove('d-none');
         if (stepPill2) stepPill2.classList.add('step-active');
@@ -850,6 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
         defaultState.classList.remove('d-none');
         selectedState.classList.add('d-none');
         if (stepPill2) stepPill2.classList.remove('step-active');
+        if (stepPill3) stepPill3.classList.remove('step-active');
         btnStart.setAttribute('disabled', 'disabled');
     }
 
@@ -860,10 +947,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 1-Click Demo File Generator
+    if (btnLoadDemo) {
+        btnLoadDemo.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const demoCsvContent = "\uFEFFاسم صاحب الحالة,رقم الهاتف,الرقم القومي,نوع المساعدة,المحافظة,المدينة,العنوان بالتفصيل,عدد أفراد الأسرة,تفاصيل ووصف الحالة\n"
+                + "أحمد محمد السيد,01012345678,29001011234567,medical,الغربية,طنطا,شارع البحر بجوار المستشفى,4,عملية جراحية وعلاج عاجل\n"
+                + "فاطمة إبراهيم حسن,01298765432,28505051234568,zad,كفر الشيخ,دسوق,قرية كفر مجر,3,أسرة أيتام تحتاج كفالة شهرية\n"
+                + "محمود عبد الرحمن علي,01145678901,27810101234569,water,الدقهلية,المنصورة,مركز شربين,5,توصيل وصلة مياه صالحة للشرب\n"
+                + "زينب مصطفى كمال,01599887766,29202021234570,hope,البحيرة,دمنهور,شارع الجمهورية,2,فحوصات وأدوية شهرية لمريض أورام";
+
+            const blob = new Blob([demoCsvContent], { type: 'text/csv;charset=utf-8;' });
+            const demoFile = new File([blob], 'ملف_حالات_تجريبي_إنسان.csv', { type: 'text/csv' });
+            
+            // Auto switch section to cases or auto
+            const casesPill = document.querySelector('.import-sec-pill[data-section="cases"]');
+            if (casesPill) casesPill.click();
+
+            handleFileSelected(demoFile);
+        });
+    }
+
     // Drag and Drop & Click Effects
     if (dropzone && fileInput) {
         dropzone.addEventListener('click', function(e) {
-            if (e.target.closest('#btnRemoveSelectedFile') || e.target.closest('button') || e.target.closest('a')) {
+            if (e.target.closest('#btnRemoveSelectedFile') || e.target.closest('#btnLoadDemoFile') || e.target.closest('button') || e.target.closest('a')) {
                 return;
             }
             fileInput.click();
@@ -889,7 +997,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 4. Start Upload & Preview (Step 1 -> Modal)
+    // 4. Start Upload & Preview (Step 2 -> Step 3 Modal)
     if (btnStart) {
         btnStart.addEventListener('click', function() {
             if (!currentUploadedFile) {
@@ -902,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('file', currentUploadedFile);
             formData.append('section', currentSelectedSection);
 
-            btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التحليل والتوزيع الذكي للأوراق...';
+            btnStart.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التحليل والمطابقة الذكية...';
             btnStart.setAttribute('disabled', 'disabled');
 
             fetch(previewUrl, {
@@ -924,6 +1032,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentImportHeaders = data.headers;
                 currentTargetFields = data.target_fields;
                 currentWorkbookAnalysis = data.workbook_analysis;
+
+                if (stepPill3) stepPill3.classList.add('step-active');
 
                 renderImportModal(data);
                 const modal = new bootstrap.Modal(document.getElementById('importMappingModal'));
@@ -1027,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             singleSheetMappingView.classList.remove('d-none');
             btnExecuteBatchImport.classList.add('d-none');
             btnExecuteFinalImport.classList.remove('d-none');
-            if (currentWorkbookAnalysis && currentWorkbookAnalysis.sheets.length > 1) {
+            if (currentWorkbookAnalysis && currentWorkbookAnalysis.sheets && currentWorkbookAnalysis.sheets.length > 1) {
                 btnBackToBatchView.classList.remove('d-none');
             } else {
                 btnBackToBatchView.classList.add('d-none');
@@ -1172,7 +1282,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('mappingFieldsContainer');
         container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-success mb-2"></div><div class="small text-muted fw-bold">جاري تحميل بيانات الورقة ومطابقة أعمدتها...</div></div>';
 
-        // Check if user changed section on batch table
         const secSel = document.querySelector(`.batch-sheet-section-select[data-idx="${sheetIdx}"]`);
         const targetSec = secSel ? secSel.value : 'auto';
 
@@ -1202,6 +1311,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error(err);
             alert('حدث خطأ أثناء تحميل بيانات ورقة العمل.');
         });
+    }
+
+    function updateMappedCount() {
+        const selects = document.querySelectorAll('.column-map-select');
+        let mapped = 0;
+        selects.forEach(s => {
+            if (s.value && s.value !== 'skip') mapped++;
+        });
+        const countEl = document.getElementById('mappedCountNumber');
+        if (countEl) countEl.textContent = mapped;
     }
 
     // Populate Detailed Mapping & Preview View for a Single Sheet
@@ -1246,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data.headers.forEach((headerName, colIdx) => {
             const suggestedField = data.suggested_mapping[colIdx] || '';
             const colDiv = document.createElement('div');
-            colDiv.className = 'col-md-6 col-lg-4';
+            colDiv.className = 'col-md-6 col-lg-4 mapping-col-item';
 
             let optionsHtml = '<option value="skip">-- تخطي هذا العمود (عدم استيراده) --</option>';
             for (const [fKey, fMeta] of Object.entries(data.target_fields)) {
@@ -1257,6 +1376,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const isMatched = suggestedField !== '';
             const hInfo = getArabicHeaderLabel(headerName, colIdx, data.header_translations);
+
+            colDiv.setAttribute('data-header', hInfo.title.toLowerCase());
+            colDiv.setAttribute('data-original', hInfo.original.toLowerCase());
 
             colDiv.innerHTML = `
                 <div class="p-3 rounded-3 border h-100 ${isMatched ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'bg-light'}">
@@ -1274,6 +1396,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             container.appendChild(colDiv);
+        });
+
+        updateMappedCount();
+
+        // Listen for change on selects
+        document.querySelectorAll('.column-map-select').forEach(sel => {
+            sel.addEventListener('change', updateMappedCount);
         });
 
         // 2. Build Live Preview Table
@@ -1294,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', function() {
         head.innerHTML = headRow;
 
         data.preview_rows.forEach((row, rIdx) => {
-            let tr = `<tr><td class="text-muted fw-bold">${rIdx + 1}</td>`;
+            let tr = `<tr class="preview-row-item"><td class="text-muted fw-bold">${rIdx + 1}</td>`;
             data.headers.forEach((_, cIdx) => {
                 const cellVal = row[cIdx] !== undefined ? row[cIdx] : '';
                 tr += `<td>${cellVal}</td>`;
@@ -1302,10 +1431,47 @@ document.addEventListener('DOMContentLoaded', function() {
             tr += '</tr>';
             body.innerHTML += tr;
         });
+
+        // Mapping search filter
+        const mappingSearchInput = document.getElementById('mappingSearchInput');
+        if (mappingSearchInput) {
+            mappingSearchInput.value = '';
+            mappingSearchInput.oninput = function() {
+                const q = this.value.trim().toLowerCase();
+                document.querySelectorAll('.mapping-col-item').forEach(item => {
+                    const h = item.getAttribute('data-header') || '';
+                    const orig = item.getAttribute('data-original') || '';
+                    if (!q || h.includes(q) || orig.includes(q)) {
+                        item.classList.remove('d-none');
+                    } else {
+                        item.classList.add('d-none');
+                    }
+                });
+            };
+        }
+
+        // Preview table filter
+        const previewFilterInput = document.getElementById('previewTableFilterInput');
+        if (previewFilterInput) {
+            previewFilterInput.value = '';
+            previewFilterInput.oninput = function() {
+                const q = this.value.trim().toLowerCase();
+                document.querySelectorAll('.preview-row-item').forEach(tr => {
+                    const text = tr.innerText.toLowerCase();
+                    if (!q || text.includes(q)) {
+                        tr.style.display = '';
+                    } else {
+                        tr.style.display = 'none';
+                    }
+                });
+            };
+        }
     }
 
     // 5. Confirm and Execute Import for Single Sheet
     const btnExecute = document.getElementById('btnExecuteFinalImport');
+    const progressBar = document.getElementById('modalExecutionProgressBar');
+
     if (btnExecute) {
         btnExecute.addEventListener('click', function() {
             const selects = document.querySelectorAll('.column-map-select');
@@ -1328,6 +1494,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             btnExecute.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري الحفظ وتوزيع البيانات...';
             btnExecute.setAttribute('disabled', 'disabled');
+            if (progressBar) progressBar.classList.remove('d-none');
 
             fetch(processUrl, {
                 method: 'POST',
@@ -1345,15 +1512,17 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(res => res.json())
             .then(data => {
-                btnExecute.innerHTML = '<i class="bi bi-check2-circle fs-5 me-1"></i> تأكيد واستيراد البيانات الآن';
+                btnExecute.innerHTML = '<i class="bi bi-check2-circle fs-5 me-1"></i> تأكيد واستيراد هذه الورقة فقط';
                 btnExecute.removeAttribute('disabled');
+                if (progressBar) progressBar.classList.add('d-none');
 
                 bootstrap.Modal.getInstance(document.getElementById('importMappingModal')).hide();
                 showImportResults(data);
             })
             .catch(err => {
-                btnExecute.innerHTML = '<i class="bi bi-check2-circle fs-5 me-1"></i> تأكيد واستيراد البيانات الآن';
+                btnExecute.innerHTML = '<i class="bi bi-check2-circle fs-5 me-1"></i> تأكيد واستيراد هذه الورقة فقط';
                 btnExecute.removeAttribute('disabled');
+                if (progressBar) progressBar.classList.add('d-none');
                 console.error(err);
                 alert('حدث خطأ غير متوقع أثناء معالجة البيانات.');
             });
@@ -1385,8 +1554,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            btnExecuteBatchImport.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التوزيع الذكي وحفظ كافة الأوراق...';
+            btnExecuteBatchImport.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التوزيع وحفظ كافة الأوراق...';
             btnExecuteBatchImport.setAttribute('disabled', 'disabled');
+            if (progressBar) progressBar.classList.remove('d-none');
 
             fetch(batchProcessUrl, {
                 method: 'POST',
@@ -1404,6 +1574,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 btnExecuteBatchImport.innerHTML = '<i class="bi bi-check2-all fs-5 me-1"></i> تأكيد وتوزيع كافة الأوراق المحددة في أقسامها الآن';
                 btnExecuteBatchImport.removeAttribute('disabled');
+                if (progressBar) progressBar.classList.add('d-none');
 
                 bootstrap.Modal.getInstance(document.getElementById('importMappingModal')).hide();
                 showImportResults(data);
@@ -1411,6 +1582,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 btnExecuteBatchImport.innerHTML = '<i class="bi bi-check2-all fs-5 me-1"></i> تأكيد وتوزيع كافة الأوراق المحددة في أقسامها الآن';
                 btnExecuteBatchImport.removeAttribute('disabled');
+                if (progressBar) progressBar.classList.add('d-none');
                 console.error(err);
                 alert('حدث خطأ أثناء توزيع الأوراق في النظام.');
             });
@@ -1463,6 +1635,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const resModal = new bootstrap.Modal(document.getElementById('importResultModal'));
         resModal.show();
+    }
+
+    // Reset view for importing another file
+    const btnImportAnother = document.getElementById('btnImportAnotherFile');
+    if (btnImportAnother) {
+        btnImportAnother.addEventListener('click', function() {
+            resetFileSelection();
+        });
     }
 });
 </script>
