@@ -179,10 +179,6 @@
                         <i class="bi bi-clock-history text-success fs-6"></i>
                         <span id="liveClockTime" class="font-monospace fw-bold" dir="ltr">{{ $currentTime }}</span>
                     </span>
-                    <a href="{{ route('data-import.index') }}" class="badge bg-white text-success rounded-pill px-3.5 py-2 d-inline-flex align-items-center gap-1.5 shadow-sm text-decoration-none hover-lift fw-bold" style="font-size: 0.95rem;" title="مركز استيراد وتوزيع ملفات الإكسيل">
-                        <i class="bi bi-file-earmark-spreadsheet-fill text-success fs-6"></i>
-                        <span>استيراد الإكسيل</span>
-                    </a>
                 </div>
             </div>
 
