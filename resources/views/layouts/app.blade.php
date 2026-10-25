@@ -446,7 +446,7 @@
       /* Global Visibility Fix: Force white text/icons on SOLID primary backgrounds ONLY */
       .bg-primary:not([class*="bg-opacity-"]),
       .btn-primary,
-      .badge.bg-primary {
+      .badge.bg-primary:not([class*="bg-opacity-"]) {
           color: #ffffff !important;
       }
 

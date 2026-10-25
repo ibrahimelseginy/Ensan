@@ -143,10 +143,11 @@
             <div class="glass-card mb-4 animate-slide-up animate-delay-1 p-3 p-xl-4 border border-light border-opacity-25 shadow-sm">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light border-opacity-25">
                     <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
-                        <i class="bi bi-pie-chart-fill"></i>ملخص العمليات
+                        <i class="bi bi-pie-chart-fill fs-5"></i>ملخص العمليات
                     </h6>
-                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2.5 py-1 small fw-bold">
-                        {{ number_format($stats['total']) }} عملية
+                    <span class="audit-total-counter-pill">
+                        <i class="bi bi-activity"></i>
+                        <span>{{ number_format($stats['total']) }} عملية</span>
                     </span>
                 </div>
                 
@@ -158,37 +159,37 @@
 
                     {{-- Total Stats --}}
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => ''])) }}" 
-                       class="stat-pill-card {{ empty($currentMethod) ? 'active' : '' }}">
-                        <div class="stat-pill-icon bg-primary text-white">
+                       class="stat-pill-card stat-pill-all {{ empty($currentMethod) ? 'active' : '' }}">
+                        <div class="stat-pill-icon">
                             <i class="bi bi-layers-fill"></i>
                         </div>
                         <div class="stat-pill-info">
-                            <div class="stat-pill-title text-main">إجمالي النشاط</div>
-                            <div class="stat-pill-sub text-muted">كافة العمليات</div>
+                            <div class="stat-pill-title">إجمالي النشاط</div>
+                            <div class="stat-pill-sub">كافة العمليات والأنشطة</div>
                         </div>
                         <div class="stat-pill-val">
-                            <span class="stat-num text-primary">{{ number_format($stats['total']) }}</span>
-                            <span class="stat-percent bg-primary bg-opacity-10 text-primary">100%</span>
+                            <span class="stat-num text-emerald">{{ number_format($stats['total']) }}</span>
+                            <span class="stat-percent-badge percent-emerald">100%</span>
                         </div>
                     </a>
 
                     {{-- POST - Add --}}
                     @php $postPercent = round(($stats['POST'] / $totalOps) * 100); @endphp
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'POST'])) }}"
-                       class="stat-pill-card {{ $currentMethod === 'POST' ? 'active active-success' : '' }}">
-                        <div class="stat-pill-icon bg-success text-white">
+                       class="stat-pill-card stat-pill-post {{ $currentMethod === 'POST' ? 'active' : '' }}">
+                        <div class="stat-pill-icon">
                             <i class="bi bi-plus-lg"></i>
                         </div>
                         <div class="stat-pill-info">
-                            <div class="stat-pill-title text-main">إضافة سجلات</div>
-                            <div class="stat-pill-sub text-muted">عمليات POST</div>
+                            <div class="stat-pill-title">إضافة سجلات</div>
+                            <div class="stat-pill-sub">عمليات POST</div>
                         </div>
                         <div class="stat-pill-val">
-                            <span class="stat-num {{ $stats['POST'] > 0 ? 'text-success' : 'text-muted opacity-50' }}">
+                            <span class="stat-num text-success">
                                 {{ number_format($stats['POST']) }}
                             </span>
                             @if($stats['POST'] > 0)
-                                <span class="stat-percent bg-success bg-opacity-10 text-success">{{ $postPercent }}%</span>
+                                <span class="stat-percent-badge percent-success">{{ $postPercent }}%</span>
                             @endif
                         </div>
                     </a>
@@ -199,20 +200,20 @@
                         $editPercent = round(($editCount / $totalOps) * 100); 
                     @endphp
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'PUT'])) }}"
-                       class="stat-pill-card {{ in_array($currentMethod, ['PUT', 'PATCH']) ? 'active active-info' : '' }}">
-                        <div class="stat-pill-icon bg-info text-white">
+                       class="stat-pill-card stat-pill-edit {{ in_array($currentMethod, ['PUT', 'PATCH']) ? 'active' : '' }}">
+                        <div class="stat-pill-icon">
                             <i class="bi bi-pencil-fill"></i>
                         </div>
                         <div class="stat-pill-info">
-                            <div class="stat-pill-title text-main">تعديل بيانات</div>
-                            <div class="stat-pill-sub text-muted">عمليات Update</div>
+                            <div class="stat-pill-title">تعديل وتحديث</div>
+                            <div class="stat-pill-sub">عمليات PUT & PATCH</div>
                         </div>
                         <div class="stat-pill-val">
-                            <span class="stat-num {{ $editCount > 0 ? 'text-info' : 'text-muted opacity-50' }}">
+                            <span class="stat-num text-info">
                                 {{ number_format($editCount) }}
                             </span>
                             @if($editCount > 0)
-                                <span class="stat-percent bg-info bg-opacity-10 text-info">{{ $editPercent }}%</span>
+                                <span class="stat-percent-badge percent-info">{{ $editPercent }}%</span>
                             @endif
                         </div>
                     </a>
@@ -220,20 +221,20 @@
                     {{-- DELETE --}}
                     @php $delPercent = round(($stats['DELETE'] / $totalOps) * 100); @endphp
                     <a href="{{ route('audits.index', array_merge(request()->query(), ['method' => 'DELETE'])) }}"
-                       class="stat-pill-card {{ $currentMethod === 'DELETE' ? 'active active-danger' : '' }}">
-                        <div class="stat-pill-icon bg-danger text-white">
+                       class="stat-pill-card stat-pill-delete {{ $currentMethod === 'DELETE' ? 'active' : '' }}">
+                        <div class="stat-pill-icon">
                             <i class="bi bi-trash3-fill"></i>
                         </div>
                         <div class="stat-pill-info">
-                            <div class="stat-pill-title text-main">حذف نهائي</div>
-                            <div class="stat-pill-sub text-muted">عمليات Delete</div>
+                            <div class="stat-pill-title">حذف نهائي</div>
+                            <div class="stat-pill-sub">عمليات DELETE</div>
                         </div>
                         <div class="stat-pill-val">
-                            <span class="stat-num {{ $stats['DELETE'] > 0 ? 'text-danger' : 'text-muted opacity-50' }}">
+                            <span class="stat-num text-danger">
                                 {{ number_format($stats['DELETE']) }}
                             </span>
                             @if($stats['DELETE'] > 0)
-                                <span class="stat-percent bg-danger bg-opacity-10 text-danger">{{ $delPercent }}%</span>
+                                <span class="stat-percent-badge percent-danger">{{ $delPercent }}%</span>
                             @endif
                         </div>
                     </a>
@@ -244,7 +245,7 @@
             <div class="glass-card animate-slide-up animate-delay-2 p-3 p-xl-4 border border-light border-opacity-25 shadow-sm">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light border-opacity-25">
                     <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
-                        <i class="bi bi-graph-up-arrow"></i>أكثر المسارات نشاطاً
+                        <i class="bi bi-graph-up-arrow fs-5"></i>أكثر المسارات نشاطاً
                     </h6>
                     <span class="live-pulse-badge">
                         <span class="live-dot"></span>تحديث مباشر
@@ -269,31 +270,32 @@
                             };
                             $ratio = round(($tp->c / $maxCount) * 100);
                         @endphp
-                        <div class="top-path-item-modern p-2.5 rounded-3 border">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center gap-2.5 overflow-hidden">
-                                    <div class="path-icon-sq bg-primary bg-opacity-10 text-primary rounded-2 d-flex align-items-center justify-content-center">
-                                        <i class="bi {{ $icon }} small"></i>
+                        <div class="top-path-item-modern p-3 rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+                                <div class="d-flex align-items-center gap-2.5 overflow-hidden flex-grow-1 min-w-0">
+                                    <div class="path-icon-sq rounded-2 d-flex align-items-center justify-content-center flex-shrink-0">
+                                        <i class="bi {{ $icon }} fs-6"></i>
                                     </div>
-                                    <div class="overflow-hidden">
-                                        <a href="{{ url($tp->path) }}" target="_blank" class="fw-bold text-decoration-none text-main d-block text-truncate" style="font-size: 0.85rem;" title="{{ $label }}">
+                                    <div class="overflow-hidden min-w-0 flex-grow-1">
+                                        <a href="{{ url($tp->path) }}" target="_blank" class="fw-bold text-decoration-none text-main d-block text-truncate" style="font-size: 0.88rem;" title="{{ $label }}">
                                             {{ $label }}
                                         </a>
-                                        <div class="text-muted font-monospace x-small text-truncate mt-0.5" dir="ltr" style="text-align: right; opacity: 0.7;" title="{{ $tp->path }}">
+                                        <div class="text-muted font-monospace x-small text-truncate mt-0.5" dir="ltr" style="text-align: right; opacity: 0.8;" title="{{ $tp->path }}">
                                             {{ $cleanPath }}
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-end flex-shrink-0 ms-2">
-                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-15 fw-bold px-2 py-1">
-                                        {{ number_format($tp->c) }} <small class="fw-normal">عملية</small>
+                                <div class="text-end flex-shrink-0">
+                                    <span class="audit-route-count-badge">
+                                        <span class="fw-bold">{{ number_format($tp->c) }}</span>
+                                        <span class="audit-route-unit">عملية</span>
                                     </span>
                                 </div>
                             </div>
-                            <div class="progress" style="height: 5px; border-radius: 9999px; background: rgba(var(--primary-rgb, 5, 150, 105), 0.08);">
+                            <div class="progress" style="height: 6px; border-radius: 9999px; background: rgba(5, 150, 105, 0.08);">
                                 <div class="progress-bar rounded-pill" 
                                      role="progressbar" 
-                                     style="width: {{ $ratio }}%; background: linear-gradient(90deg, var(--primary, #059669), #10b981); transition: width 0.8s ease;" 
+                                     style="width: {{ $ratio }}%; background: linear-gradient(90deg, #059669 0%, #10b981 100%); transition: width 0.8s ease;" 
                                      aria-valuenow="{{ $tp->c }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="{{ $maxCount }}">
@@ -437,6 +439,52 @@
 </div>
 
     <style>
+        /* High-Contrast Counter Pills */
+        .audit-total-counter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            background: #ecfdf5;
+            color: #047857 !important;
+            border: 1.5px solid #a7f3d0;
+            box-shadow: 0 1px 3px rgba(4, 120, 87, 0.08);
+            line-height: 1.2;
+        }
+        .theme-dark .audit-total-counter-pill {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7 !important;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .audit-route-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            background: #f0fdf4;
+            color: #15803d !important;
+            border: 1.5px solid #86efac;
+            box-shadow: 0 1px 3px rgba(21, 128, 61, 0.08);
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .audit-route-count-badge .audit-route-unit {
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+        .theme-dark .audit-route-count-badge {
+            background: rgba(16, 185, 129, 0.22);
+            color: #86efac !important;
+            border-color: rgba(134, 239, 172, 0.4);
+        }
+
         /* Modern Stat Pill Cards */
         .stat-pill-card {
             display: flex;
@@ -445,64 +493,101 @@
             padding: 12px 14px;
             border-radius: 14px;
             background: var(--bg-card, #ffffff);
-            border: 1px solid var(--border-color, rgba(0,0,0,0.06));
+            border: 1px solid var(--border-color, rgba(0,0,0,0.08));
             text-decoration: none !important;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
         }
         .theme-dark .stat-pill-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
         }
         .stat-pill-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
-            border-color: rgba(var(--primary-rgb, 5, 150, 105), 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
         }
-        .stat-pill-card.active {
-            border-color: var(--primary, #059669);
-            background: rgba(var(--primary-rgb, 5, 150, 105), 0.05);
-            box-shadow: 0 0 0 1px var(--primary, #059669);
+
+        /* Specific card styles */
+        .stat-pill-all .stat-pill-icon {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: #ffffff;
         }
-        .stat-pill-card.active-success {
+        .stat-pill-all.active {
+            border-color: #059669;
+            background: #f0fdf4;
+            box-shadow: 0 0 0 1.5px #059669;
+        }
+        .theme-dark .stat-pill-all.active {
+            background: rgba(5, 150, 105, 0.15);
+        }
+
+        .stat-pill-post .stat-pill-icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+        }
+        .stat-pill-post.active {
             border-color: #10b981;
-            background: rgba(16, 185, 129, 0.05);
-            box-shadow: 0 0 0 1px #10b981;
+            background: #ecfdf5;
+            box-shadow: 0 0 0 1.5px #10b981;
         }
-        .stat-pill-card.active-info {
+        .theme-dark .stat-pill-post.active {
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .stat-pill-edit .stat-pill-icon {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+        }
+        .stat-pill-edit.active {
             border-color: #0284c7;
-            background: rgba(2, 132, 199, 0.05);
-            box-shadow: 0 0 0 1px #0284c7;
+            background: #f0f9ff;
+            box-shadow: 0 0 0 1.5px #0284c7;
         }
-        .stat-pill-card.active-danger {
+        .theme-dark .stat-pill-edit.active {
+            background: rgba(2, 132, 199, 0.15);
+        }
+
+        .stat-pill-delete .stat-pill-icon {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+        }
+        .stat-pill-delete.active {
             border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.05);
-            box-shadow: 0 0 0 1px #ef4444;
+            background: #fef2f2;
+            box-shadow: 0 0 0 1.5px #ef4444;
+        }
+        .theme-dark .stat-pill-delete.active {
+            background: rgba(239, 68, 68, 0.15);
         }
 
         .stat-pill-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
         .stat-pill-info {
             flex: 1;
             min-width: 0;
         }
         .stat-pill-title {
-            font-weight: 700;
-            font-size: 0.88rem;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--text-main, #1e293b);
             line-height: 1.25;
+        }
+        .theme-dark .stat-pill-title {
+            color: #f1f5f9;
         }
         .stat-pill-sub {
             font-size: 0.72rem;
+            color: #64748b;
             line-height: 1.2;
             margin-top: 2px;
         }
@@ -514,56 +599,94 @@
             flex-shrink: 0;
         }
         .stat-num {
-            font-weight: 800;
-            font-size: 1.15rem;
+            font-weight: 900;
+            font-size: 1.2rem;
             line-height: 1;
             font-family: system-ui, -apple-system, sans-serif;
         }
-        .stat-percent {
+        .text-emerald { color: #047857 !important; }
+        .theme-dark .text-emerald { color: #34d399 !important; }
+
+        /* Percent Badges */
+        .stat-percent-badge {
             font-size: 0.68rem;
-            font-weight: 700;
-            padding: 1px 6px;
+            font-weight: 800;
+            padding: 2px 7px;
             border-radius: 9999px;
             line-height: 1.2;
+            border: 1px solid transparent;
+        }
+        .percent-emerald {
+            background: #ecfdf5;
+            color: #047857 !important;
+            border-color: #a7f3d0;
+        }
+        .percent-success {
+            background: #f0fdf4;
+            color: #15803d !important;
+            border-color: #bbf7d0;
+        }
+        .percent-info {
+            background: #f0f9ff;
+            color: #0369a1 !important;
+            border-color: #bae6fd;
+        }
+        .percent-danger {
+            background: #fef2f2;
+            color: #b91c1c !important;
+            border-color: #fecaca;
         }
 
         /* Modern Top Path Items */
         .top-path-item-modern {
             background: var(--bg-card, #ffffff);
-            border: 1px solid var(--border-color, rgba(0,0,0,0.06));
+            border: 1px solid var(--border-color, rgba(0,0,0,0.08));
+            border-radius: 12px;
             transition: all 0.2s ease;
         }
         .theme-dark .top-path-item-modern {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
         }
         .top-path-item-modern:hover {
-            border-color: rgba(var(--primary-rgb, 5, 150, 105), 0.3);
-            transform: translateX(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border-color: #10b981;
+            transform: translateX(-3px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
         }
         .path-icon-sq {
-            width: 32px;
-            height: 32px;
-            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .theme-dark .path-icon-sq {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         /* Live Pulse Badge */
         .live-pulse-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: #059669;
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            background: #ecfdf5;
+            color: #047857 !important;
+            border: 1.5px solid #a7f3d0;
             border-radius: 9999px;
             padding: 3px 10px;
-            font-size: 0.72rem;
-            font-weight: 700;
+            font-size: 0.74rem;
+            font-weight: 800;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
+        .theme-dark .live-pulse-badge {
+            background: rgba(16, 185, 129, 0.18);
+            color: #6ee7b7 !important;
+            border-color: rgba(16, 185, 129, 0.35);
+        }
         .live-pulse-badge .live-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             background: #10b981;
             border-radius: 50%;
             display: inline-block;
