@@ -371,11 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = "{{ csrf_token() }}";
 
     const targetSectionLinks = {
-        'cases': "{{ route('cases.case-applications') }}",
-        'donors': "{{ route('donors.index') }}",
-        'donations': "{{ route('donations.index') }}",
-        'beneficiaries': "{{ route('beneficiaries.index') }}",
-        'tasks': "{{ route('employee-tasks.index') }}"
+        'cases': "{{ Route::has('case-applications.index') ? route('case-applications.index') : url('/case-applications') }}",
+        'donors': "{{ Route::has('donors.index') ? route('donors.index') : url('/donors') }}",
+        'donations': "{{ Route::has('donations.index') ? route('donations.index') : url('/donations') }}",
+        'beneficiaries': "{{ Route::has('beneficiaries.index') ? route('beneficiaries.index') : url('/beneficiaries') }}",
+        'tasks': "{{ Route::has('employee-tasks.index') ? route('employee-tasks.index') : url('/employee-tasks') }}"
     };
 
     // 1. Section Pill Change
