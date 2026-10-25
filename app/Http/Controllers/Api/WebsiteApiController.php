@@ -3429,7 +3429,7 @@ final class WebsiteApiController extends Controller
                 'governorate'         => $app->governorate,
                 'city'                => $app->city,
                 'address'             => $app->address,
-                'created_at'          => $app->created_at?->format('Y-m-d H:i'),
+                'created_at'          => $app->created_at?->format('Y-m-d h:i A'),
                 'rejection_reason'    => $app->status === 'rejected' ? $app->rejection_reason : null,
                 'admin_notes'         => in_array($app->status, ['under_research', 'approved']) ? $app->admin_notes : null,
             ]
