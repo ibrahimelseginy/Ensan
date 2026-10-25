@@ -3182,18 +3182,28 @@
             <i class="bi bi-bell-fill"></i>
             <span>مفعّلة</span>
           </span>
+          <button type="button" id="desktopNotifDeniedBtn" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.72rem;" title="الإشعارات محظورة - اضغط للإصلاح" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
+            <i class="bi bi-slash-circle"></i>
+            <span>محظورة</span>
+          </button>
           <button type="button" id="enableDesktopNotifBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.74rem;" title="تفعيل إشعارات سطح المكتب">
             <i class="bi bi-bell"></i>
             <span>تفعيل</span>
           </button>
-          <button type="button" id="testNotifSoundBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.74rem;" title="تشغيل صوت التنبيه وتجربة الإشعار">
+          <button type="button" id="testNotifSoundBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.74rem;" title="تشغيل صوت التنبيه وتجربة إشعار سطح المكتب">
             <i class="bi bi-volume-up-fill"></i>
-            <span>تجربة الصوت</span>
+            <span>تجربة التنبيه</span>
+          </button>
+          <button type="button" class="btn btn-sm text-secondary p-1" title="دليل تفعيل الإشعارات في Mac و Windows" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
+            <i class="bi bi-question-circle fs-6"></i>
           </button>
           <button type="button" class="btn-close notif-btn-close ms-1" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
       </div>
       <div class="offcanvas-body p-3">
+        {{-- تنبيه مؤقت للعمليات السريعة والتجربة --}}
+        <div id="notifOffcanvasToast" class="alert alert-info py-2 px-3 mb-2 rounded-3 text-center border-0 shadow-sm d-none" style="font-size: 0.78rem;"></div>
+
         {{-- تنبيه تفعيل إشعارات سطح المكتب المباشرة --}}
         <div id="desktopNotifBanner" class="alert alert-primary d-none p-3 mb-3 rounded-3 border-0 bg-primary-subtle text-primary shadow-sm" style="font-size: 0.84rem;">
           <div class="d-flex align-items-center justify-content-between gap-2">
@@ -3208,6 +3218,24 @@
             </div>
             <button type="button" id="bannerEnableDesktopNotifBtn" class="btn btn-sm btn-primary rounded-pill px-3 text-nowrap fw-bold shadow-sm" style="font-size: 0.78rem;">
               <i class="bi bi-check-circle me-1"></i> تفعيل الآن
+            </button>
+          </div>
+        </div>
+
+        {{-- تنبيه إذا كانت الإشعارات محظورة بالمتصفح أو النظام --}}
+        <div id="desktopNotifDeniedBanner" class="alert alert-danger d-none p-3 mb-3 rounded-3 border-0 bg-danger-subtle text-danger shadow-sm" style="font-size: 0.84rem;">
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 34px; height: 34px; min-width: 34px;">
+                <i class="bi bi-slash-circle"></i>
+              </div>
+              <div>
+                <div class="fw-bold text-danger">إشعارات سطح المكتب محظورة</div>
+                <div class="text-secondary" style="font-size: 0.76rem;">الإشعارات محظورة بالمتصفح أو إعدادات النظام. لن تظهر التنبيهات على شاشتك.</div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 text-nowrap fw-bold shadow-sm" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
+              <i class="bi bi-wrench-adjustable me-1"></i> طريقة الحل
             </button>
           </div>
         </div>
@@ -3256,7 +3284,14 @@
         var enableDesktopNotifBtn = document.getElementById('enableDesktopNotifBtn');
         var bannerEnableDesktopNotifBtn = document.getElementById('bannerEnableDesktopNotifBtn');
         var desktopNotifBanner = document.getElementById('desktopNotifBanner');
+        var desktopNotifDeniedBanner = document.getElementById('desktopNotifDeniedBanner');
+        var desktopNotifDeniedBtn = document.getElementById('desktopNotifDeniedBtn');
         var desktopNotifStatusBadge = document.getElementById('desktopNotifStatusBadge');
+        var notifOffcanvasToast = document.getElementById('notifOffcanvasToast');
+        var floatingPrompt = document.getElementById('desktopNotifFloatingPrompt');
+        var floatingEnableBtn = document.getElementById('floatingEnableDesktopNotifBtn');
+        var floatingDismissBtn = document.getElementById('floatingDismissDesktopNotifBtn');
+        var modalTestBtn = document.getElementById('modalTestDesktopNotifBtn');
         var offcanvasCount = document.getElementById('notifOffcanvasCount');
         var markAllBtn = document.getElementById('markAllReadBtn');
         var fKey = 'sidebar.notifications.filter';
@@ -3423,21 +3458,48 @@
           });
         }
 
-        /* ── Desktop Notifications Integration ── */
+        /* ── Feedback Message for Offcanvas Drawer ── */
+        var showDrawerToast = function (msg, isError) {
+          if (!notifOffcanvasToast) {
+            notifOffcanvasToast = document.getElementById('notifOffcanvasToast');
+          }
+          if (!notifOffcanvasToast) return;
+          notifOffcanvasToast.className = 'alert ' + (isError ? 'alert-danger' : 'alert-info') + ' py-2 px-3 mb-2 rounded-3 text-center border-0 shadow-sm';
+          notifOffcanvasToast.textContent = msg;
+          notifOffcanvasToast.classList.remove('d-none');
+          setTimeout(function () {
+            if (notifOffcanvasToast) notifOffcanvasToast.classList.add('d-none');
+          }, 6500);
+        };
+
+        /* ── Desktop Notifications Integration (macOS & Windows Optimized) ── */
+        var getAbsoluteLogoUrl = function () {
+          var rawLogo = '{{ asset('images/logo.png') }}';
+          if (rawLogo.startsWith('http://') || rawLogo.startsWith('https://')) {
+            return rawLogo;
+          }
+          return window.location.origin + '/' + rawLogo.replace(/^\/+/, '');
+        };
+
         var updateDesktopNotifUI = function (permission) {
           if (!('Notification' in window)) {
             if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (desktopNotifDeniedBanner) desktopNotifDeniedBanner.classList.add('d-none');
+            if (desktopNotifDeniedBtn) desktopNotifDeniedBtn.classList.add('d-none');
             if (enableDesktopNotifBtn) {
               enableDesktopNotifBtn.classList.add('d-none');
               enableDesktopNotifBtn.classList.remove('d-flex');
             }
             if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+            if (floatingPrompt) floatingPrompt.classList.add('d-none');
             return;
           }
 
           var perm = permission || Notification.permission;
           if (perm === 'granted') {
             if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (desktopNotifDeniedBanner) desktopNotifDeniedBanner.classList.add('d-none');
+            if (desktopNotifDeniedBtn) desktopNotifDeniedBtn.classList.add('d-none');
             if (enableDesktopNotifBtn) {
               enableDesktopNotifBtn.classList.add('d-none');
               enableDesktopNotifBtn.classList.remove('d-flex');
@@ -3446,21 +3508,40 @@
               desktopNotifStatusBadge.classList.remove('d-none');
               desktopNotifStatusBadge.classList.add('d-inline-flex');
             }
+            if (floatingPrompt) floatingPrompt.classList.add('d-none');
           } else if (perm === 'default') {
             if (desktopNotifBanner) desktopNotifBanner.classList.remove('d-none');
+            if (desktopNotifDeniedBanner) desktopNotifDeniedBanner.classList.add('d-none');
+            if (desktopNotifDeniedBtn) desktopNotifDeniedBtn.classList.add('d-none');
             if (enableDesktopNotifBtn) {
               enableDesktopNotifBtn.classList.remove('d-none');
               enableDesktopNotifBtn.classList.add('d-flex');
             }
             if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+
+            // Show floating prompt if not dismissed in session
+            var dismissed = sessionStorage.getItem('desktop_notif_prompt_dismissed');
+            if (!dismissed && floatingPrompt) {
+              setTimeout(function () {
+                if (Notification.permission === 'default' && floatingPrompt) {
+                  floatingPrompt.classList.remove('d-none');
+                }
+              }, 2500);
+            }
           } else {
             // denied
             if (desktopNotifBanner) desktopNotifBanner.classList.add('d-none');
+            if (desktopNotifDeniedBanner) desktopNotifDeniedBanner.classList.remove('d-none');
+            if (desktopNotifDeniedBtn) {
+              desktopNotifDeniedBtn.classList.remove('d-none');
+              desktopNotifDeniedBtn.classList.add('d-inline-flex');
+            }
             if (enableDesktopNotifBtn) {
               enableDesktopNotifBtn.classList.add('d-none');
               enableDesktopNotifBtn.classList.remove('d-flex');
             }
             if (desktopNotifStatusBadge) desktopNotifStatusBadge.classList.add('d-none');
+            if (floatingPrompt) floatingPrompt.classList.add('d-none');
           }
         };
 
@@ -3471,84 +3552,173 @@
               swRegistration = reg;
             })
             .catch(function (err) {
-              console.warn('Service Worker registration failed:', err);
+              console.warn('Service Worker registration note:', err);
             });
         }
 
         var showDesktopNotification = function (title, body, link, tag) {
-          if (!('Notification' in window) || Notification.permission !== 'granted') return;
+          if (!('Notification' in window) || Notification.permission !== 'granted') return null;
+
+          var safeTitle = title || 'مؤسسة إنسان للأعمال الخيرية';
+          var logoUrl = getAbsoluteLogoUrl();
+          var targetLink = link || '{{ route('notifications.index') }}';
 
           var notifOptions = {
             body: body || 'لديك إشعار جديد في لوحة التحكم',
-            icon: '{{ asset('images/logo.png') }}',
-            badge: '{{ asset('images/logo.png') }}',
+            icon: logoUrl,
+            badge: logoUrl,
             tag: tag || ('ensan_' + Date.now()),
             lang: 'ar',
             dir: 'rtl',
             renotify: true,
+            requireInteraction: false,
             data: {
-              link: link || '{{ route('notifications.index') }}'
+              link: targetLink
             }
           };
 
+          // 1. Primary: Native Desktop Notification (Reliable across macOS Chrome/Safari/Edge and Windows)
+          try {
+            var notif = new Notification(safeTitle, notifOptions);
+            notif.onclick = function (e) {
+              e.preventDefault();
+              try { window.focus(); } catch (err) {}
+              if (targetLink) {
+                window.location.href = targetLink;
+              }
+              try { notif.close(); } catch (err) {}
+            };
+            return notif;
+          } catch (e) {
+            console.warn('Native Notification constructor fallback:', e);
+          }
+
+          // 2. Secondary fallback: Service Worker registration (e.g. mobile Chrome or restricted environments)
           if (swRegistration && swRegistration.showNotification) {
-            swRegistration.showNotification(title || 'مؤسسة إنسان للأعمال الخيرية', notifOptions)
-              .catch(function () {
-                fallbackNotification(title, notifOptions, link);
-              });
+            swRegistration.showNotification(safeTitle, notifOptions).catch(function (err) {
+              console.warn('SW showNotification error:', err);
+            });
           } else if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
             navigator.serviceWorker.ready.then(function (reg) {
               swRegistration = reg;
-              reg.showNotification(title || 'مؤسسة إنسان للأعمال الخيرية', notifOptions);
-            }).catch(function () {
-              fallbackNotification(title, notifOptions, link);
+              reg.showNotification(safeTitle, notifOptions);
+            }).catch(function (err) {
+              console.warn('SW ready showNotification error:', err);
             });
+          }
+          return null;
+        };
+
+        var openTroubleshootModal = function () {
+          var modalEl = document.getElementById('desktopNotifTroubleshootModal');
+          if (modalEl && typeof bootstrap !== 'undefined') {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
           } else {
-            fallbackNotification(title, notifOptions, link);
+            alert('تم حظر إذن الإشعارات بالمتصفح. لتفعيلها: انقر على أيقونة الأمان (القفل) 🔒 بجوار عنوان الموقع ثم اختر "السماح بالإشعارات" (Allow).');
           }
         };
 
-        var fallbackNotification = function (title, options, link) {
-          try {
-            var notif = new Notification(title || 'مؤسسة إنسان للأعمال الخيرية', options);
-            notif.onclick = function (e) {
-              e.preventDefault();
-              window.focus();
-              if (link) window.location.href = link;
-              notif.close();
-            };
-          } catch (e) {
-            console.warn('Fallback desktop notification error:', e);
-          }
-        };
-
-        var requestDesktopPermission = function () {
+        var requestDesktopPermission = function (onSuccess) {
           if (!('Notification' in window)) {
             alert('عذراً، متصفحك الحالي لا يدعم إشعارات سطح المكتب.');
             return;
           }
-          Notification.requestPermission().then(function (permission) {
+
+          var handleResult = function (permission) {
             updateDesktopNotifUI(permission);
             if (permission === 'granted') {
               showDesktopNotification(
                 'مؤسسة إنسان للأعمال الخيرية',
-                'تم تفعيل إشعارات سطح المكتب بنجاح! ستصلك التنبيهات والمهام فوراً على جهازك.',
+                'تم تفعيل إشعارات سطح المكتب بنجاح! ستصلك التنبيهات والمهام فوراً على جهازك. 🔔',
                 '{{ route('notifications.index') }}',
                 'ensan_welcome'
               );
               playNotificationSound();
+              showDrawerToast('تم تفعيل إشعارات سطح المكتب بنجاح! 🔔');
+              if (typeof onSuccess === 'function') onSuccess();
             } else if (permission === 'denied') {
-              alert('تم رفض إذن الإشعارات بالمتصفح. لتفعيلها: انقر على أيقونة الأمان (القفل) بجوار عنوان الموقع ثم اختر "السماح بالإشعارات".');
+              openTroubleshootModal();
             }
-          });
+          };
+
+          try {
+            var promise = Notification.requestPermission();
+            if (promise && typeof promise.then === 'function') {
+              promise.then(handleResult).catch(function (e) {
+                console.warn('requestPermission error:', e);
+              });
+            } else {
+              Notification.requestPermission(handleResult);
+            }
+          } catch (e) {
+            Notification.requestPermission(handleResult);
+          }
         };
 
         if (enableDesktopNotifBtn) {
-          enableDesktopNotifBtn.addEventListener('click', requestDesktopPermission);
+          enableDesktopNotifBtn.addEventListener('click', function () {
+            requestDesktopPermission();
+          });
         }
         if (bannerEnableDesktopNotifBtn) {
-          bannerEnableDesktopNotifBtn.addEventListener('click', requestDesktopPermission);
+          bannerEnableDesktopNotifBtn.addEventListener('click', function () {
+            requestDesktopPermission();
+          });
         }
+        if (floatingEnableBtn) {
+          floatingEnableBtn.addEventListener('click', function () {
+            requestDesktopPermission();
+          });
+        }
+        if (floatingDismissBtn) {
+          floatingDismissBtn.addEventListener('click', function () {
+            sessionStorage.setItem('desktop_notif_prompt_dismissed', '1');
+            if (floatingPrompt) floatingPrompt.classList.add('d-none');
+          });
+        }
+
+        var runDesktopTestNotification = function () {
+          playNotificationSound();
+          if (!('Notification' in window)) {
+            alert('عذراً، متصفحك لا يدعم إشعارات سطح المكتب.');
+            return;
+          }
+
+          if (Notification.permission === 'granted') {
+            showDesktopNotification(
+              'مؤسسة إنسان - تجربة التنبيه 🔔',
+              'صوت وإشعار سطح المكتب يعملان بشكل مثالي على جهازك! ✨',
+              '{{ route('notifications.index') }}',
+              'test_' + Date.now()
+            );
+            showDrawerToast('تم إرسال إشعار تجريبي لشاشتك بنجاح 🔔 إذا لم يظهر، تأكد من إعدادات النظام (Mac/Windows)');
+          } else if (Notification.permission === 'default') {
+            requestDesktopPermission(function () {
+              showDesktopNotification(
+                'مؤسسة إنسان - تجربة التنبيه 🔔',
+                'تم التفعيل وإرسال الإشعار التجريبي بنجاح! ✨',
+                '{{ route('notifications.index') }}',
+                'test_' + Date.now()
+              );
+            });
+          } else if (Notification.permission === 'denied') {
+            openTroubleshootModal();
+          }
+        };
+
+        if (testSoundBtn) {
+          testSoundBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            runDesktopTestNotification();
+          });
+        }
+
+        if (modalTestBtn) {
+          modalTestBtn.addEventListener('click', function () {
+            runDesktopTestNotification();
+          });
+        }
+
         updateDesktopNotifUI();
 
         var triggerDesktopNotifications = function (items, isInitialLoad) {
@@ -3585,7 +3755,7 @@
               var sig = notificationSignature(it);
               notified[sig] = Date.now();
               showDesktopNotification(
-                'مؤسسة إنسان - تنبيه جديد',
+                'مؤسسة إنسان - تنبيه جديد 🔔',
                 it.text,
                 it.link || '{{ route('notifications.index') }}',
                 sig
@@ -3597,21 +3767,6 @@
             try { sessionStorage.setItem(desktopNotifiedKey, JSON.stringify(notified)); } catch (e) {}
           }
         };
-
-        if (testSoundBtn) {
-          testSoundBtn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            playNotificationSound();
-            if ('Notification' in window && Notification.permission === 'granted') {
-              showDesktopNotification(
-                'مؤسسة إنسان - تجربة التنبيه',
-                'صوت وإشعار سطح المكتب يعملان بشكل مثالي! 🔔',
-                '',
-                'test_' + Date.now()
-              );
-            }
-          });
-        }
 
         var render = function (items) {
           list.innerHTML = '';
@@ -4392,7 +4547,206 @@
                   @include('dashboard.partials.app_launcher')
               </div>
           </div>
+  </div>
+
+  {{-- شريط عائم لتفعيل إشعارات سطح المكتب (Mac & Windows) --}}
+  <div id="desktopNotifFloatingPrompt" class="position-fixed bottom-0 end-0 m-3 d-none shadow-lg rounded-4 overflow-hidden" style="z-index: 1045; max-width: 440px; width: calc(100% - 2rem); border: 1px solid rgba(255,255,255,0.12); background: #0f172a; color: #fff;">
+    <div class="p-3 d-flex align-items-start gap-3">
+      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); color: #60a5fa;">
+        <i class="bi bi-bell-fill fs-5"></i>
       </div>
+      <div class="flex-grow-1">
+        <div class="fw-bold text-white mb-1" style="font-size: 0.88rem;">تفعيل إشعارات سطح المكتب</div>
+        <div class="text-white-50 mb-2.5" style="font-size: 0.78rem; line-height: 1.45;">لتصلك تنبيهات الحالات والطلبات فوراً على شاشة جهازك (Mac / Windows) حتى أثناء تصغير المتصفح.</div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" id="floatingEnableDesktopNotifBtn" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="font-size: 0.78rem;">
+            <i class="bi bi-check-circle me-1"></i> تفعيل الآن
+          </button>
+          <button type="button" id="floatingDismissDesktopNotifBtn" class="btn btn-sm btn-outline-light rounded-pill px-2.5" style="font-size: 0.78rem;">
+            لاحقاً
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- دليل تفعيل وحل مشاكل إشعارات سطح المكتب (Mac & Windows) --}}
+  <div class="modal fade" id="desktopNotifTroubleshootModal" tabindex="-1" aria-labelledby="desktopNotifTroubleshootModalLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
+        <div class="modal-header py-3 px-4 bg-light border-bottom">
+          <div class="d-flex align-items-center gap-2.5">
+            <div class="p-2 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+              <i class="bi bi-bell-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold text-dark mb-0" id="desktopNotifTroubleshootModalLabel">دليل تفعيل إشعارات سطح المكتب</h5>
+              <small class="text-secondary">خطوات حل مشكلة عدم ظهور الإشعارات على نظامي ماك (macOS) وويندوز (Windows)</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-3 p-md-4">
+          <!-- التبويبات -->
+          <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="notifHelpTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active rounded-pill fw-bold py-2 d-flex align-items-center justify-content-center gap-2" id="tab-mac-btn" data-bs-toggle="pill" data-bs-target="#tab-mac-pane" type="button" role="tab">
+                <i class="bi bi-apple fs-6"></i> نظام ماك (macOS)
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill fw-bold py-2 d-flex align-items-center justify-content-center gap-2" id="tab-win-btn" data-bs-toggle="pill" data-bs-target="#tab-win-pane" type="button" role="tab">
+                <i class="bi bi-windows fs-6 text-primary"></i> نظام ويندوز (Windows)
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill fw-bold py-2 d-flex align-items-center justify-content-center gap-2" id="tab-browser-btn" data-bs-toggle="pill" data-bs-target="#tab-browser-pane" type="button" role="tab">
+                <i class="bi bi-browser-chrome fs-6 text-warning"></i> المتصفح (Chrome / Safari / Edge)
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="notifHelpTabContent">
+            <!-- تبويب ماك -->
+            <div class="tab-pane fade show active" id="tab-mac-pane" role="tabpanel">
+              <div class="alert alert-primary bg-primary-subtle border-0 rounded-3 mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill fs-5 text-primary flex-shrink-0"></i>
+                <div style="font-size: 0.85rem;">في أجهزة ماك، يحجب النظام ظهور الإشعارات إذا لم يتم تفعيلها من إعدادات الماك أو إذا كان وضع عدم الإزعاج نشطاً.</div>
+              </div>
+
+              <div class="d-flex flex-column gap-3">
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">1</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">تفعيل إشعارات المتصفح في إعدادات الماك (System Settings)</h6>
+                    <p class="text-secondary mb-1" style="font-size: 0.84rem;">
+                      افتح <strong> تفاحة أبل</strong> في أعلى الشاشة ➔ <strong>System Settings (إعدادات النظام)</strong> ➔ <strong>Notifications (الإشعارات)</strong>.
+                    </p>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      ابحث عن متصفحك (<strong>Google Chrome</strong> أو Safari أو Edge) ➔ تأكد من تفعيل <strong>Allow Notifications</strong> واختيار نوع التنبيه <strong>Banners</strong> أو <strong>Alerts</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">إيقاف نمط التركيز / عدم الإزعاج (Focus / Do Not Disturb)</h6>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      انقر على أيقونة <strong>مركز التحكم (Control Center)</strong> في الزاوية العلوية بجوار الساعة ➔ تأكد من إيقاف <strong>Do Not Disturb (عدم الإزعاج)</strong>، لأن تفعيله يخفي جميع إشعارات البرامج على الماك تماماً.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">السماح بالإشعارات للموقع في المتصفح</h6>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      انقر على أيقونة القفل أو مفاتيح الإعدادات 🔒 بجانب رابط الموقع في شريط العناوين ➔ اضبط <strong>Notifications (الإشعارات)</strong> على <strong>Allow (سماح)</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- تبويب ويندوز -->
+            <div class="tab-pane fade" id="tab-win-pane" role="tabpanel">
+              <div class="alert alert-info bg-info-subtle border-0 rounded-3 mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill fs-5 text-info flex-shrink-0"></i>
+                <div style="font-size: 0.85rem;">في ويندوز 10 و 11، يجب تفعيل إشعارات المتصفح في إعدادات النظام وإيقاف مساعد التركيز (Focus Assist).</div>
+              </div>
+
+              <div class="d-flex flex-column gap-3">
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">1</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">تفعيل الإشعارات في إعدادات ويندوز (Windows Settings)</h6>
+                    <p class="text-secondary mb-1" style="font-size: 0.84rem;">
+                      اضغط على زر <strong>Windows + I</strong> لفتح الإعدادات ➔ اختر <strong>System (النظام)</strong> ➔ <strong>Notifications (الإشعارات)</strong>.
+                    </p>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      تأكد أن الإشعارات مفعّلة (On)، وانزل لأسفل قائمة البرامج وتأكد من تفعيل إشعارات <strong>Google Chrome</strong> أو <strong>Microsoft Edge</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">إيقاف مساعد التركيز (Focus Assist / Do Not Disturb)</h6>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      في ويندوز 11: افتح لوحة الإشعارات والساعة أسفل اليمين وتأكد من إيقاف <strong>Do not disturb</strong>.<br>
+                      في ويندوز 10: افتح مركز الإجراءات (Action Center) وتأكد من ضبط <strong>Focus assist</strong> على <strong>Off</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm d-flex align-items-start gap-3">
+                  <div class="badge bg-primary text-white rounded-circle p-2 fs-6 flex-shrink-0" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</div>
+                  <div>
+                    <h6 class="fw-bold text-dark mb-1">السماح بالإشعارات للموقع</h6>
+                    <p class="text-secondary mb-0" style="font-size: 0.84rem;">
+                      انقر على أيقونة القفل 🔒 بجوار الرابط ➔ فعّل خيار <strong>Notifications (الإشعارات)</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- تبويب المتصفح -->
+            <div class="tab-pane fade" id="tab-browser-pane" role="tabpanel">
+              <div class="d-flex flex-column gap-3">
+                <div class="p-3 rounded-3 border bg-white shadow-sm">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-browser-chrome fs-5 text-danger"></i>
+                    <h6 class="fw-bold mb-0">متصفح Google Chrome</h6>
+                  </div>
+                  <ol class="mb-0 text-secondary ps-3" style="font-size: 0.84rem; line-height: 1.6;">
+                    <li>انقر على أيقونة الإعدادات 🔒 بجوار رابط <code>system.ensaneg.com</code>.</li>
+                    <li>اضغط على <strong>Site settings (إعدادات الموقع)</strong>.</li>
+                    <li>ابحث عن <strong>Notifications (الإشعارات)</strong> واختر <strong>Allow (السماح)</strong>.</li>
+                    <li>أعد تحديث الصفحة (Refresh).</li>
+                  </ol>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-browser-edge fs-5 text-primary"></i>
+                    <h6 class="fw-bold mb-0">متصفح Microsoft Edge</h6>
+                  </div>
+                  <ol class="mb-0 text-secondary ps-3" style="font-size: 0.84rem; line-height: 1.6;">
+                    <li>انقر على أيقونة القفل 🔒 بجوار شريط العنوان.</li>
+                    <li>اختر <strong>Permissions for this site (أذونات هذا الموقع)</strong>.</li>
+                    <li>اضبط <strong>Notifications</strong> على <strong>Allow</strong>.</li>
+                  </ol>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-white shadow-sm">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-compass fs-5 text-info"></i>
+                    <h6 class="fw-bold mb-0">متصفح Safari (أجهزة ماك)</h6>
+                  </div>
+                  <ol class="mb-0 text-secondary ps-3" style="font-size: 0.84rem; line-height: 1.6;">
+                    <li>من شريط القوائم العلوي: Safari ➔ Settings (أو Preferences) ➔ Websites ➔ Notifications.</li>
+                    <li>ابحث عن <code>system.ensaneg.com</code> واضبطه على <strong>Allow</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer py-2.5 px-4 bg-light border-top d-flex align-items-center justify-content-between">
+          <button type="button" id="modalTestDesktopNotifBtn" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold d-flex align-items-center gap-1.5 shadow-sm">
+            <i class="bi bi-bell-fill"></i>
+            <span>إجراء تجربة الآن (إرسال إشعار للشاشة)</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">إغلاق</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
