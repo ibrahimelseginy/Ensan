@@ -717,6 +717,17 @@ body.theme-dark .launcher-cat-btn.active,
         </a>
         @endif
 
+        {{-- 3.2 استيراد الإكسيل والبيانات الذكي (Excel & CSV Hub) --}}
+        @if($u)
+        <a href="{{ route('data-import.index') }}" class="ensan-app-card" data-category="operations finance digital admin" data-title="استيراد الإكسيل Excel Hub" data-keywords="استيراد اكسيل شيت ملفات رفع توزيع ذكي بيانات excel csv import hub مخصص حالات تبرعات متبرعين">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #107c41, #1f9a55); box-shadow: 0 10px 20px -5px rgba(16, 124, 65, 0.45);">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+            </div>
+            <div class="ensan-app-title">استيراد الإكسيل</div>
+            <span class="ensan-app-badge badge-direct" style="background: rgba(16, 124, 65, 0.1); color: #107c41; border: 1px solid rgba(16, 124, 65, 0.2);"><i class="bi bi-cloud-arrow-up-fill"></i> Excel Hub</span>
+        </a>
+        @endif
+
         {{-- 3.5 التقديمات (Applications & Preliminary Research) --}}
         @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSubmissions" data-category="operations digital" data-title="التقديمات" data-keywords="تقديمات طلبات حالات بحث مبدئي زاد مدرار أورام استمارات submissions applications">
@@ -1996,6 +2007,17 @@ body.theme-dark .launcher-cat-btn.active,
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
                     @endif
+
+                    <a href="{{ route('data-import.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">مركز استيراد الإكسيل (Excel Hub)</div>
+                            <small class="text-muted">استيراد وتوزيع ملفات Excel في الحالات والتبرعات والمتبرعين والمهام</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
                 </div>
             </div>
         </div>
