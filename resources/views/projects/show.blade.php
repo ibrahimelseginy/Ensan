@@ -1024,6 +1024,8 @@
                                     </div>
                                 </div>
                                 @endforeach
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Zad Children & Assessments Pane --}}
@@ -1535,8 +1537,6 @@
                         </form>
                     </div>
                 </div>
-            </div>
-        </div>
     @endif
 
 </div>
