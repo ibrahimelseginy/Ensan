@@ -109,15 +109,15 @@
     <div class="row g-3 mb-4">
         <!-- KPI: Total Cases -->
         <div class="col-6 col-md-4 col-xl">
-            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('status', 'page'), [])) }}" class="text-decoration-none">
-                <div class="kpi-card-lux {{ !request('status') ? 'is-active' : '' }} p-3 rounded-4 shadow-xs bg-stats-card-main border d-flex align-items-center gap-3 transition-all">
-                    <div class="kpi-icon-wrap bg-primary bg-opacity-10 text-primary rounded-3 p-3 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-folder2-open fs-4"></i>
+            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('status', 'page'), [])) }}" class="text-decoration-none d-block h-100">
+                <div class="kpi-card-lux kpi-theme-all {{ !request('status') ? 'is-active' : '' }}">
+                    <div class="kpi-content-box">
+                        <span class="kpi-label-text">إجمالي الطلبات</span>
+                        <div class="kpi-number-display text-stats-main">{{ $statusCounts['all'] ?? $applications->total() }}</div>
+                        <span class="kpi-micro-badge kpi-badge-all">جميع الحالات الواردة</span>
                     </div>
-                    <div>
-                        <div class="text-muted small fw-bold mb-0.5">إجمالي الطلبات</div>
-                        <div class="kpi-value font-monospace fw-800 fs-4 text-stats-main">{{ $statusCounts['all'] ?? $applications->total() }}</div>
-                        <div class="x-small text-muted">جميع الحالات الواردة</div>
+                    <div class="kpi-icon-wrap kpi-icon-all">
+                        <i class="bi bi-folder2-open"></i>
                     </div>
                 </div>
             </a>
@@ -125,16 +125,16 @@
 
         <!-- KPI: Pending -->
         <div class="col-6 col-md-4 col-xl">
-            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'pending'])) }}" class="text-decoration-none">
-                <div class="kpi-card-lux {{ request('status') === 'pending' ? 'is-active border-warning' : '' }} p-3 rounded-4 shadow-xs bg-stats-card-main border d-flex align-items-center gap-3 transition-all">
-                    <div class="kpi-icon-wrap bg-warning bg-opacity-15 text-warning-emphasis rounded-3 p-3 d-flex align-items-center justify-content-center position-relative">
-                        <i class="bi bi-hourglass-split fs-4 text-warning"></i>
-                        <span class="pulse-indicator-dot dot-warning"></span>
+            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'pending'])) }}" class="text-decoration-none d-block h-100">
+                <div class="kpi-card-lux kpi-theme-pending {{ request('status') === 'pending' ? 'is-active' : '' }}">
+                    <div class="kpi-content-box">
+                        <span class="kpi-label-text">في انتظار البحث</span>
+                        <div class="kpi-number-display kpi-num-pending">{{ $statusCounts['pending'] ?? 0 }}</div>
+                        <span class="kpi-micro-badge kpi-badge-pending">بانتظار الفرز المبدئي</span>
                     </div>
-                    <div>
-                        <div class="text-muted small fw-bold mb-0.5">في انتظار البحث</div>
-                        <div class="kpi-value font-monospace fw-800 fs-4 text-warning">{{ $statusCounts['pending'] ?? 0 }}</div>
-                        <div class="x-small text-warning-emphasis fw-semibold">بانتظار الفرز المبدئي</div>
+                    <div class="kpi-icon-wrap kpi-icon-pending">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span class="pulse-indicator-dot dot-warning"></span>
                     </div>
                 </div>
             </a>
@@ -142,15 +142,15 @@
 
         <!-- KPI: Under Research -->
         <div class="col-6 col-md-4 col-xl">
-            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'under_research'])) }}" class="text-decoration-none">
-                <div class="kpi-card-lux {{ request('status') === 'under_research' ? 'is-active border-info' : '' }} p-3 rounded-4 shadow-xs bg-stats-card-main border d-flex align-items-center gap-3 transition-all">
-                    <div class="kpi-icon-wrap bg-info bg-opacity-15 text-info rounded-3 p-3 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-search fs-4"></i>
+            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'under_research'])) }}" class="text-decoration-none d-block h-100">
+                <div class="kpi-card-lux kpi-theme-research {{ request('status') === 'under_research' ? 'is-active' : '' }}">
+                    <div class="kpi-content-box">
+                        <span class="kpi-label-text">تحت البحث الميداني</span>
+                        <div class="kpi-number-display kpi-num-research">{{ $statusCounts['under_research'] ?? 0 }}</div>
+                        <span class="kpi-micro-badge kpi-badge-research">جاري الفحص والزيارة</span>
                     </div>
-                    <div>
-                        <div class="text-muted small fw-bold mb-0.5">تحت البحث</div>
-                        <div class="kpi-value font-monospace fw-800 fs-4 text-info">{{ $statusCounts['under_research'] ?? 0 }}</div>
-                        <div class="x-small text-info fw-semibold">جاري الفحص الميداني</div>
+                    <div class="kpi-icon-wrap kpi-icon-research">
+                        <i class="bi bi-search"></i>
                     </div>
                 </div>
             </a>
@@ -158,15 +158,15 @@
 
         <!-- KPI: Approved -->
         <div class="col-6 col-md-4 col-xl">
-            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'approved'])) }}" class="text-decoration-none">
-                <div class="kpi-card-lux {{ request('status') === 'approved' ? 'is-active border-success' : '' }} p-3 rounded-4 shadow-xs bg-stats-card-main border d-flex align-items-center gap-3 transition-all">
-                    <div class="kpi-icon-wrap bg-success bg-opacity-15 text-success rounded-3 p-3 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-check2-circle fs-4"></i>
+            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'approved'])) }}" class="text-decoration-none d-block h-100">
+                <div class="kpi-card-lux kpi-theme-approved {{ request('status') === 'approved' ? 'is-active' : '' }}">
+                    <div class="kpi-content-box">
+                        <span class="kpi-label-text">تم الاعتماد والموافقة</span>
+                        <div class="kpi-number-display kpi-num-approved">{{ $statusCounts['approved'] ?? 0 }}</div>
+                        <span class="kpi-micro-badge kpi-badge-approved">مستوفية للشروط</span>
                     </div>
-                    <div>
-                        <div class="text-muted small fw-bold mb-0.5">تم البحث والاعتماد</div>
-                        <div class="kpi-value font-monospace fw-800 fs-4 text-success">{{ $statusCounts['approved'] ?? 0 }}</div>
-                        <div class="x-small text-success fw-semibold">مستوفية للشروط</div>
+                    <div class="kpi-icon-wrap kpi-icon-approved">
+                        <i class="bi bi-check2-circle"></i>
                     </div>
                 </div>
             </a>
@@ -174,15 +174,15 @@
 
         <!-- KPI: Rejected -->
         <div class="col-6 col-md-4 col-xl">
-            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'rejected'])) }}" class="text-decoration-none">
-                <div class="kpi-card-lux {{ request('status') === 'rejected' ? 'is-active border-danger' : '' }} p-3 rounded-4 shadow-xs bg-stats-card-main border d-flex align-items-center gap-3 transition-all">
-                    <div class="kpi-icon-wrap bg-danger bg-opacity-15 text-danger rounded-3 p-3 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-x-circle fs-4"></i>
+            <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['status' => 'rejected'])) }}" class="text-decoration-none d-block h-100">
+                <div class="kpi-card-lux kpi-theme-rejected {{ request('status') === 'rejected' ? 'is-active' : '' }}">
+                    <div class="kpi-content-box">
+                        <span class="kpi-label-text">طلبات مرفوضة</span>
+                        <div class="kpi-number-display kpi-num-rejected">{{ $statusCounts['rejected'] ?? 0 }}</div>
+                        <span class="kpi-micro-badge kpi-badge-rejected">غير مطابقة للمعايير</span>
                     </div>
-                    <div>
-                        <div class="text-muted small fw-bold mb-0.5">مرفوضة</div>
-                        <div class="kpi-value font-monospace fw-800 fs-4 text-danger">{{ $statusCounts['rejected'] ?? 0 }}</div>
-                        <div class="x-small text-danger fw-semibold">غير مطابقة للمعايير</div>
+                    <div class="kpi-icon-wrap kpi-icon-rejected">
+                        <i class="bi bi-x-circle"></i>
                     </div>
                 </div>
             </a>
@@ -1296,43 +1296,280 @@ function submitBulkDelete() {
     font-family: var(--case-font);
 }
 
+.bg-theme-page {
+    background-color: #f8fafc;
+}
+.theme-dark .bg-theme-page {
+    background-color: #0b1324 !important;
+}
+.bg-stats-card-main {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+.theme-dark .bg-stats-card-main {
+    background-color: #111d33 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.text-stats-main {
+    color: #0f172a;
+}
+.theme-dark .text-stats-main {
+    color: #f8fafc !important;
+}
+.text-muted-theme {
+    color: #64748b;
+}
+.theme-dark .text-muted-theme {
+    color: #94a3b8 !important;
+}
+
 .fw-800 { font-weight: 800 !important; }
 .fs-7 { font-size: 0.82rem !important; }
 .x-small { font-size: 0.74rem !important; }
 .cursor-pointer { cursor: pointer; }
 .transition-all { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 
-/* KPI Cards */
+/* ========================================================
+   Executive KPI Cards
+   ======================================================== */
 .kpi-card-lux {
     background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 16px 18px;
+    height: 100%;
+    min-height: 104px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
     position: relative;
     overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
-.theme-dark .kpi-card-lux {
-    background: rgba(255, 255, 255, 0.035);
-    border-color: rgba(255, 255, 255, 0.08);
+
+.kpi-card-lux::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    background: var(--kpi-accent, #94a3b8);
+    opacity: 0.9;
 }
+
 .kpi-card-lux:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+    border-color: var(--kpi-accent, #cbd5e1) !important;
 }
+
 .kpi-card-lux.is-active {
-    border-width: 2px !important;
-    border-color: #065f46 !important;
-    box-shadow: 0 8px 20px rgba(6, 95, 70, 0.15);
+    border-color: var(--kpi-accent, #065f46) !important;
+    box-shadow: 0 0 0 2px var(--kpi-accent, #065f46), 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-dark .kpi-card-lux {
+    background: #111d33 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.theme-dark .kpi-card-lux.is-active {
+    background: #152238 !important;
+}
+
+.kpi-content-box {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    min-width: 0;
+}
+
+.kpi-label-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+.theme-dark .kpi-label-text {
+    color: #94a3b8;
+}
+
+.kpi-number-display {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    font-family: 'Outfit', 'IBM Plex Sans Arabic', sans-serif;
+    margin: 2px 0 4px 0;
+}
+
+.kpi-micro-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+/* Specific themes */
+.kpi-theme-all {
+    --kpi-accent: #059669;
+}
+.kpi-icon-all {
+    background: rgba(5, 150, 105, 0.08) !important;
+    color: #059669 !important;
+    border: 1px solid rgba(5, 150, 105, 0.2) !important;
+}
+.kpi-badge-all {
+    background: rgba(5, 150, 105, 0.08);
+    color: #047857;
+}
+
+.kpi-theme-pending {
+    --kpi-accent: #f59e0b;
+}
+.kpi-icon-pending {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: #d97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+.kpi-badge-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+}
+.kpi-num-pending {
+    color: #d97706 !important;
+}
+
+.kpi-theme-research {
+    --kpi-accent: #0284c7;
+}
+.kpi-icon-research {
+    background: rgba(2, 132, 199, 0.08) !important;
+    color: #0284c7 !important;
+    border: 1px solid rgba(2, 132, 199, 0.2) !important;
+}
+.kpi-badge-research {
+    background: rgba(2, 132, 199, 0.08);
+    color: #0369a1;
+}
+.kpi-num-research {
+    color: #0284c7 !important;
+}
+
+.kpi-theme-approved {
+    --kpi-accent: #10b981;
+}
+.kpi-icon-approved {
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: #059669 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+.kpi-badge-approved {
+    background: rgba(16, 185, 129, 0.08);
+    color: #047857;
+}
+.kpi-num-approved {
+    color: #059669 !important;
+}
+
+.kpi-theme-rejected {
+    --kpi-accent: #ef4444;
+}
+.kpi-icon-rejected {
+    background: rgba(239, 68, 68, 0.08) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+.kpi-badge-rejected {
+    background: rgba(239, 68, 68, 0.08);
+    color: #b91c1c;
+}
+.kpi-num-rejected {
+    color: #dc2626 !important;
+}
+
+/* Dark Mode Icon Overrides */
+.theme-dark .kpi-icon-all {
+    background: rgba(5, 150, 105, 0.18) !important;
+    color: #34d399 !important;
+    border-color: rgba(5, 150, 105, 0.35) !important;
+}
+.theme-dark .kpi-badge-all {
+    background: rgba(5, 150, 105, 0.2);
+    color: #34d399;
+}
+.theme-dark .kpi-icon-pending {
+    background: rgba(245, 158, 11, 0.18) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+.theme-dark .kpi-badge-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+.theme-dark .kpi-icon-research {
+    background: rgba(2, 132, 199, 0.18) !important;
+    color: #38bdf8 !important;
+    border-color: rgba(2, 132, 199, 0.35) !important;
+}
+.theme-dark .kpi-badge-research {
+    background: rgba(2, 132, 199, 0.2);
+    color: #38bdf8;
+}
+.theme-dark .kpi-icon-approved {
+    background: rgba(16, 185, 129, 0.18) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+.theme-dark .kpi-badge-approved {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+.theme-dark .kpi-icon-rejected {
+    background: rgba(239, 68, 68, 0.18) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+}
+.theme-dark .kpi-badge-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+/* Icon wrap */
+.kpi-icon-wrap {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+.kpi-card-lux:hover .kpi-icon-wrap {
+    transform: scale(1.08);
 }
 .pulse-indicator-dot {
     position: absolute;
-    top: 6px;
-    right: 6px;
+    top: 4px;
+    right: 4px;
     width: 8px;
     height: 8px;
     border-radius: 50%;
 }
 .dot-warning {
     background: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
     animation: livePulse 1.8s infinite ease-in-out;
 }
 @keyframes livePulse {
