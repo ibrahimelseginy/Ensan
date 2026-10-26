@@ -132,7 +132,7 @@ final class BeneficiaryWebController extends Controller
         $isDup      = !empty($duplicates);
         $donations  = $this->beneficiaryService->getBeneficiaryDonations((int)$beneficiary->id);
 
-        // Fetch activity / movement log (audits)
+        // Fetch activity / movement log (audits and change requests)
         $audits = \App\Models\Audit::query()
             ->where(function($q) use ($beneficiary) {
                 $q->where('entity_type', \App\Models\Beneficiary::class)->where('entity_id', $beneficiary->id)
@@ -142,6 +142,15 @@ final class BeneficiaryWebController extends Controller
             ->latest('created_at')
             ->limit(50)
             ->get();
+
+        $changeRequests = \App\Models\ChangeRequest::query()
+            ->where('model_type', \App\Models\Beneficiary::class)
+            ->where('model_id', $beneficiary->id)
+            ->with(['user', 'reviewer'])
+            ->latest('created_at')
+            ->get();
+
+        $beneficiary->setRelation('changeRequests', $changeRequests);
 
         // Fetch any linked case applications (for ID card photo & medical report)
         $linkedCaseApplications = \App\Models\MobileCaseApplication::query()
@@ -157,7 +166,7 @@ final class BeneficiaryWebController extends Controller
             ->latest()
             ->get();
 
-        return view('beneficiaries.show', compact('beneficiary', 'isDup', 'donations', 'audits', 'linkedCaseApplications'));
+        return view('beneficiaries.show', compact('beneficiary', 'isDup', 'donations', 'audits', 'changeRequests', 'linkedCaseApplications'));
     }
 
     public function edit(Beneficiary $beneficiary): View|RedirectResponse

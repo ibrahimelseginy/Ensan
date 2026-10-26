@@ -118,8 +118,17 @@
               <div class="info-row bg-light rounded-3 p-2">
                 <span class="info-label text-success fw-bold"><i class="bi bi-person-plus-fill me-1"></i> أضيف بواسطة</span>
                 <span class="info-value">
-                  @if($beneficiary->creator)
-                    <strong class="text-dark">{{ $beneficiary->creator->name }}</strong>
+                  @php
+                    $actualCreator = $beneficiary->actual_creator ?? $beneficiary->creator;
+                    $actualApprover = $beneficiary->actual_approver;
+                  @endphp
+                  @if($actualCreator)
+                    <strong class="text-dark">{{ $actualCreator->name }}</strong>
+                    @if($actualApprover && $actualApprover->id !== $actualCreator->id)
+                      <span class="badge bg-white text-secondary border px-2 py-0.5 small ms-1" title="تم اعتماد وقيد الملف بواسطة {{ $actualApprover->name }}">
+                        <i class="bi bi-check2-circle text-success me-1"></i>اعتماد: {{ $actualApprover->name }}
+                      </span>
+                    @endif
                     <span class="text-muted small d-block font-monospace"><i class="bi bi-clock me-1"></i>{{ $beneficiary->created_at?->format('Y-m-d H:i') }}</span>
                   @else
                     <span class="text-muted">النظام الأساسي ({{ $beneficiary->created_at?->format('Y-m-d') }})</span>
@@ -131,8 +140,17 @@
               <div class="info-row bg-light rounded-3 p-2">
                 <span class="info-label text-primary fw-bold"><i class="bi bi-pencil-square me-1"></i> آخر تعديل بواسطة</span>
                 <span class="info-value">
-                  @if($beneficiary->updater)
-                    <strong class="text-dark">{{ $beneficiary->updater->name }}</strong>
+                  @php
+                    $actualUpdater = $beneficiary->actual_updater ?? $beneficiary->updater;
+                    $actualUpdateApprover = $beneficiary->actual_update_approver;
+                  @endphp
+                  @if($actualUpdater)
+                    <strong class="text-dark">{{ $actualUpdater->name }}</strong>
+                    @if($actualUpdateApprover && $actualUpdateApprover->id !== $actualUpdater->id)
+                      <span class="badge bg-white text-secondary border px-2 py-0.5 small ms-1" title="تم اعتماد التعديل بواسطة {{ $actualUpdateApprover->name }}">
+                        <i class="bi bi-check2-circle text-primary me-1"></i>اعتماد: {{ $actualUpdateApprover->name }}
+                      </span>
+                    @endif
                     <span class="text-muted small d-block font-monospace"><i class="bi bi-clock me-1"></i>{{ $beneficiary->updated_at?->format('Y-m-d H:i') }}</span>
                   @else
                     <span class="text-muted">لم يُعدل بعد ({{ $beneficiary->updated_at?->format('Y-m-d') }})</span>
@@ -516,6 +534,17 @@
       </div>
 
       {{-- Activity & Audit Log Section (سجل الحركات والتعديلات) --}}
+      @php
+        $crList = isset($changeRequests) ? $changeRequests : collect();
+        $auditList = isset($audits) ? $audits : collect();
+        $creationCr = $crList->firstWhere('action', 'create');
+        $initialCreator = $beneficiary->actual_creator ?? ($creationCr?->user ?? $beneficiary->creator);
+        $initialApprover = $beneficiary->actual_approver ?? $creationCr?->reviewer;
+        $totalRegisteredEvents = $crList->count() + $auditList->count();
+        if ($totalRegisteredEvents === 0) {
+            $totalRegisteredEvents = 1;
+        }
+      @endphp
       <div class="card mb-4 shadow-sm border-0">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
@@ -528,13 +557,169 @@
             </div>
           </div>
           <span class="badge bg-secondary-subtle text-secondary font-monospace px-3 py-2 rounded-pill">
-            {{ isset($audits) ? $audits->count() : 0 }} إجراء مسجل
+            {{ $totalRegisteredEvents }} إجراء مسجل
           </span>
         </div>
         <div class="card-body p-4">
           <div class="activity-timeline position-relative ps-4" style="border-right: 2px dashed #cbd5e1; margin-right: 15px;">
             
-            {{-- Audited Events --}}
+            {{-- Change Requests (Workflow Movements & Updates) --}}
+            @foreach($crList as $cr)
+              @php
+                $isCreate = $cr->action === 'create';
+                $isUpdate = $cr->action === 'update';
+                $isDelete = $cr->action === 'delete';
+
+                $badgeClass = match($cr->action) {
+                  'create' => 'bg-success',
+                  'update' => 'bg-primary',
+                  'delete' => 'bg-danger',
+                  default => 'bg-info'
+                };
+                $actionLabel = match($cr->action) {
+                  'create' => 'إضافة وقيد جديد',
+                  'update' => 'تعديل وتحديث بيانات',
+                  'delete' => 'طلب إلغاء / حذف الملف',
+                  default => $cr->action
+                };
+                $dotColor = match($cr->action) {
+                  'create' => '#059669',
+                  'update' => '#0284c7',
+                  'delete' => '#dc2626',
+                  default => '#0ea5e9'
+                };
+
+                $requesterName = $cr->user?->name ?? 'مستخدم غير محدد';
+                $reviewerName = $cr->reviewer?->name;
+
+                // Extract diff / modified fields
+                $diff = [];
+                if (is_array($cr->payload)) {
+                    if (isset($cr->payload['diff']) && is_array($cr->payload['diff'])) {
+                        $diff = $cr->payload['diff'];
+                    } elseif (isset($cr->payload['data']) && is_array($cr->payload['data'])) {
+                        $diff = $cr->payload['data'];
+                    } elseif ($isUpdate) {
+                        $diff = $cr->payload;
+                    }
+                }
+              @endphp
+
+              <div class="timeline-item mb-4 position-relative">
+                <div class="position-absolute translate-middle-y" style="right: -24px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: {{ $dotColor }}; border: 3px solid #fff; box-shadow: 0 0 0 2px {{ $dotColor }};"></div>
+                <div class="p-3 bg-light rounded-3 border">
+                  
+                  {{-- Header Info --}}
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <span class="badge {{ $badgeClass }} text-white px-2 py-1 small">{{ $actionLabel }}</span>
+                      
+                      {{-- The user who actually did or requested the action --}}
+                      <span class="d-inline-flex align-items-center bg-white border px-2 py-1 rounded-2 shadow-xs">
+                        <i class="bi bi-person-fill text-primary me-1"></i>
+                        <span class="text-muted small me-1">المسؤول عن الإجراء:</span>
+                        <strong class="text-dark">{{ $requesterName }}</strong>
+                      </span>
+
+                      {{-- Approval / Review status & Reviewer --}}
+                      @if($cr->status === 'approved')
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                          <i class="bi bi-check-circle-fill me-1"></i>معتمد
+                          @if($reviewerName && $reviewerName !== $requesterName)
+                            <span class="ms-1 fw-normal text-dark">(بواسطة: {{ $reviewerName }})</span>
+                          @endif
+                        </span>
+                      @elseif($cr->status === 'pending')
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 small">
+                          <i class="bi bi-hourglass-split me-1"></i>قيد المراجعة والاعتماد
+                        </span>
+                      @elseif($cr->status === 'rejected')
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 small">
+                          <i class="bi bi-x-circle-fill me-1"></i>مرفوض
+                          @if($reviewerName)
+                            <span class="ms-1 fw-normal text-dark">(بواسطة: {{ $reviewerName }})</span>
+                          @endif
+                        </span>
+                      @endif
+                    </div>
+
+                    {{-- Timestamps --}}
+                    <div class="text-muted small font-monospace">
+                      <i class="bi bi-clock me-1"></i>{{ $cr->created_at?->format('Y-m-d H:i:s') ?? '—' }}
+                      @if($cr->created_at)
+                        <span class="badge bg-secondary-subtle text-secondary ms-1">({{ $cr->created_at->diffForHumans() }})</span>
+                      @endif
+                    </div>
+                  </div>
+
+                  {{-- Details Description --}}
+                  @if($isCreate)
+                    <div class="text-secondary small">
+                      <i class="bi bi-file-earmark-plus text-success me-1"></i>
+                      قام الموظف <strong>{{ $requesterName }}</strong> بإنشاء وقيد ملف الحالة برقم كود (<strong>{{ $cr->payload['code'] ?? $beneficiary->code }}</strong>)
+                      @if($reviewerName)
+                        ، وتمت مراجعته واعتماده رسمياً بواسطة <strong>{{ $reviewerName }}</strong>.
+                      @else
+                        .
+                      @endif
+                    </div>
+                  @elseif($isDelete)
+                    <div class="text-danger small">
+                      <i class="bi bi-trash text-danger me-1"></i>
+                      طلب حذف الملف بواسطة <strong>{{ $requesterName }}</strong>
+                      @if(!empty($cr->payload['note']))
+                        — سبب الحذف: {{ $cr->payload['note'] }}
+                      @endif
+                    </div>
+                  @elseif($isUpdate && !empty($diff))
+                    <div class="mt-2">
+                      <div class="small fw-bold text-dark mb-1">
+                        <i class="bi bi-pencil-square text-primary me-1"></i>التعديلات التي قام بها الموظف ({{ $requesterName }}):
+                      </div>
+                      <div class="table-responsive bg-white rounded border">
+                        <table class="table table-sm table-bordered mb-0 small">
+                          <thead class="table-light">
+                            <tr>
+                              <th style="width: 28%">الحقل المعدل</th>
+                              <th style="width: 36%" class="text-danger">القيمة السابقة</th>
+                              <th style="width: 36%" class="text-success">القيمة الجديدة</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @foreach($diff as $key => $val)
+                              @php
+                                if (in_array($key, ['__is_wrapped', 'updated_at', 'created_at', 'id'], true)) continue;
+                                $fieldLabel = \App\Support\ChangeRequestPresentation::fieldLabel((string)$key);
+                                $fromVal = is_array($val) && array_key_exists('from', $val) ? $val['from'] : null;
+                                $toVal = is_array($val) && array_key_exists('to', $val) ? $val['to'] : $val;
+
+                                $fromFormatted = \App\Support\ChangeRequestPresentation::formatValue((string)$key, $fromVal);
+                                $toFormatted = \App\Support\ChangeRequestPresentation::formatValue((string)$key, $toVal);
+                              @endphp
+                              <tr>
+                                <td class="fw-bold text-secondary">{{ $fieldLabel }}</td>
+                                <td class="text-danger text-break">{{ $fromFormatted ?: '—' }}</td>
+                                <td class="text-success fw-bold text-break">{{ $toFormatted ?: '—' }}</td>
+                              </tr>
+                            @endforeach
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  @endif
+
+                  {{-- Rejection reason if any --}}
+                  @if($cr->rejection_reason)
+                    <div class="mt-2 p-2 bg-danger-subtle text-danger rounded small">
+                      <strong>سبب الرفض: </strong>{{ $cr->rejection_reason }}
+                    </div>
+                  @endif
+
+                </div>
+              </div>
+            @endforeach
+
+            {{-- Fallback: Additional Direct Audits if any --}}
             @if(isset($audits) && $audits->isNotEmpty())
               @foreach($audits as $audit)
                 @php
@@ -559,7 +744,7 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                       <div class="d-flex align-items-center gap-2">
                         <span class="badge {{ $badgeClass }} text-white px-2 py-1 small">{{ $actionLabel }}</span>
-                        <strong class="text-dark"><i class="bi bi-person-fill text-muted me-1"></i>{{ $auditUser }}</strong>
+                        <strong class="text-dark"><i class="bi bi-person-fill text-muted me-1"></i>المسؤول: {{ $auditUser }}</strong>
                       </div>
                       <div class="text-muted small font-monospace">
                         <i class="bi bi-clock me-1"></i>{{ $audit->created_at?->format('Y-m-d H:i:s') ?? '—' }}
@@ -575,7 +760,7 @@
                       <div class="mt-2 pt-2 border-top small">
                         <span class="text-muted fw-bold">الحقول المعدلة: </span>
                         @foreach(array_keys($audit->new_values) as $key)
-                          <span class="badge bg-white text-dark border me-1 font-monospace">{{ $key }}</span>
+                          <span class="badge bg-white text-dark border me-1 font-monospace">{{ \App\Support\ChangeRequestPresentation::fieldLabel((string)$key) }}</span>
                         @endforeach
                       </div>
                     @endif
@@ -584,17 +769,29 @@
               @endforeach
             @endif
 
-            {{-- Initial Creation Event --}}
+            {{-- Initial Creation Event (Always anchored at base) --}}
             <div class="timeline-item position-relative">
-              <div class="position-absolute translate-middle-y" style="right: -24px; top: 12px; width: 16px; height: 16px; border-radius: 50%; background: #059669; border: 3px solid #fff; box-shadow: 0 0 0 2px #059669;"></div>
+              <div class="position-absolute translate-middle-y" style="right: -24px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: #059669; border: 3px solid #fff; box-shadow: 0 0 0 2px #059669;"></div>
               <div class="p-3 bg-success-subtle bg-opacity-25 rounded-3 border border-success-subtle">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
-                  <div class="d-flex align-items-center gap-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="badge bg-success text-white px-2 py-1 small">إنشاء وقيد الملف</span>
-                    <strong class="text-success"><i class="bi bi-person-check-fill me-1"></i>{{ $beneficiary->creator?->name ?? 'النظام الأساسي' }}</strong>
+                    <span class="d-inline-flex align-items-center bg-white border px-2 py-1 rounded-2 shadow-xs">
+                      <i class="bi bi-person-plus-fill text-success me-1"></i>
+                      <span class="text-muted small me-1">أضاف الحالة:</span>
+                      <strong class="text-success">{{ $initialCreator?->name ?? 'النظام الأساسي' }}</strong>
+                    </span>
+                    @if($initialApprover && $initialApprover->id !== $initialCreator?->id)
+                      <span class="badge bg-white text-secondary border px-2 py-1 small">
+                        <i class="bi bi-check2-circle text-success me-1"></i>اعتمد القيد: <strong class="text-dark">{{ $initialApprover->name }}</strong>
+                      </span>
+                    @endif
                   </div>
                   <div class="text-muted small font-monospace">
                     <i class="bi bi-calendar-event me-1"></i>{{ $beneficiary->created_at?->format('Y-m-d H:i:s') ?? '—' }}
+                    @if($beneficiary->created_at)
+                      <span class="badge bg-secondary-subtle text-secondary ms-1">({{ $beneficiary->created_at->diffForHumans() }})</span>
+                    @endif
                   </div>
                 </div>
                 <div class="text-muted small">

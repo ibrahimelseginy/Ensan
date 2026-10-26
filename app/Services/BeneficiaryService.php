@@ -60,6 +60,9 @@ final readonly class BeneficiaryService
         if (empty($modelData['code'])) {
             $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
         }
+        if (auth()->check() && empty($modelData['created_by'])) {
+            $modelData['created_by'] = auth()->id();
+        }
 
         $payload = array_merge($modelData, $relationData);
         $executor = function () use ($modelData, $relationData) {
@@ -103,6 +106,9 @@ final readonly class BeneficiaryService
         // Auto-generate code if missing
         if (empty($modelData['code']) && empty($beneficiary->code)) {
             $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
+        }
+        if (auth()->check() && empty($modelData['updated_by'])) {
+            $modelData['updated_by'] = auth()->id();
         }
 
         $payload = array_merge($modelData, $relationData);

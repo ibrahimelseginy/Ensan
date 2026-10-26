@@ -156,6 +156,9 @@ final class ChangeRequestWebController extends Controller
                 elseif ($changeRequest->action === 'update') $repository->update($instance, $executionData);
                 else $repository->delete($instance);
             } elseif ($changeRequest->action === 'create') {
+                if (empty($executionData['created_by']) && !empty($changeRequest->user_id)) {
+                    $executionData['created_by'] = $changeRequest->user_id;
+                }
                 $instance = $modelClass::create($executionData);
                 // Save the newly created model ID
                 $changeRequest->model_id = $instance->id;
@@ -206,6 +209,9 @@ final class ChangeRequestWebController extends Controller
             } elseif ($changeRequest->action === 'update') {
                 $instance = $modelClass::find($changeRequest->model_id);
                 if ($instance) {
+                    if (empty($executionData['updated_by']) && !empty($changeRequest->user_id)) {
+                        $executionData['updated_by'] = $changeRequest->user_id;
+                    }
                     $instance->update($executionData);
                     
                     if ($modelClass === 'App\Models\Role' && isset($executionData['permissions'])) {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Validation\ValidationException;
 
 final class Beneficiary extends Model
@@ -90,13 +91,18 @@ final class Beneficiary extends Model
         });
 
         static::updating(function (Beneficiary $beneficiary): void {
-            if (auth()->check()) {
+            if (empty($beneficiary->updated_by) && auth()->check()) {
                 $beneficiary->updated_by = auth()->id();
             }
             if (!empty($beneficiary->guest_house_id) && (empty($beneficiary->code) || !str_starts_with($beneficiary->code, 'G-'))) {
                 $beneficiary->code = self::nextGuestCode();
             }
         });
+    }
+
+    public function changeRequests(): MorphMany
+    {
+        return $this->morphMany(ChangeRequest::class, 'subject', 'model_type', 'model_id');
     }
 
     public function creator(): BelongsTo
@@ -107,6 +113,42 @@ final class Beneficiary extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function getActualCreatorAttribute(): ?User
+    {
+        $creationRequest = $this->relationLoaded('changeRequests')
+            ? $this->changeRequests->firstWhere('action', 'create')
+            : ChangeRequest::where('model_type', self::class)->where('model_id', $this->id)->where('action', 'create')->first();
+
+        return $creationRequest?->user ?? $this->creator;
+    }
+
+    public function getActualApproverAttribute(): ?User
+    {
+        $creationRequest = $this->relationLoaded('changeRequests')
+            ? $this->changeRequests->firstWhere('action', 'create')
+            : ChangeRequest::where('model_type', self::class)->where('model_id', $this->id)->where('action', 'create')->first();
+
+        return $creationRequest?->reviewer;
+    }
+
+    public function getActualUpdaterAttribute(): ?User
+    {
+        $updateRequest = $this->relationLoaded('changeRequests')
+            ? $this->changeRequests->where('action', 'update')->where('status', 'approved')->first()
+            : ChangeRequest::where('model_type', self::class)->where('model_id', $this->id)->where('action', 'update')->where('status', 'approved')->latest('updated_at')->first();
+
+        return $updateRequest?->user ?? $this->updater;
+    }
+
+    public function getActualUpdateApproverAttribute(): ?User
+    {
+        $updateRequest = $this->relationLoaded('changeRequests')
+            ? $this->changeRequests->where('action', 'update')->where('status', 'approved')->first()
+            : ChangeRequest::where('model_type', self::class)->where('model_id', $this->id)->where('action', 'update')->where('status', 'approved')->latest('updated_at')->first();
+
+        return $updateRequest?->reviewer;
     }
 
     public function caseApplications(): HasMany
