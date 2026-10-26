@@ -46,7 +46,7 @@ final class Leave extends Model
     {
         static::created(function ($leave) {
             if ($leave->status === 'approved' && $leave->type !== 'unpaid') {
-                $leave->user->adjustLeaveBalance(-$leave->days);
+                $leave->user?->adjustLeaveBalance(-$leave->days);
             }
         });
 
@@ -55,12 +55,12 @@ final class Leave extends Model
                 if ($leave->status === 'approved' && $leave->getOriginal('status') !== 'approved') {
                     // Deduct
                     if ($leave->type !== 'unpaid') {
-                        $leave->user->adjustLeaveBalance(-$leave->days);
+                        $leave->user?->adjustLeaveBalance(-$leave->days);
                     }
                 } elseif ($leave->getOriginal('status') === 'approved' && $leave->status !== 'approved') {
                     // Refund
                     if ($leave->type !== 'unpaid') {
-                        $leave->user->adjustLeaveBalance($leave->days);
+                        $leave->user?->adjustLeaveBalance($leave->days);
                     }
                 }
             }
@@ -77,12 +77,12 @@ final class Leave extends Model
                     $newType = $leave->type;
                     
                     if ($oldType === 'unpaid' && $newType !== 'unpaid') {
-                        $leave->user->adjustLeaveBalance(-$newDays);
+                        $leave->user?->adjustLeaveBalance(-$newDays);
                     } elseif ($oldType !== 'unpaid' && $newType === 'unpaid') {
-                        $leave->user->adjustLeaveBalance($oldDays);
+                        $leave->user?->adjustLeaveBalance($oldDays);
                     } elseif ($newType !== 'unpaid') {
                         $diff = $newDays - $oldDays;
-                        $leave->user->adjustLeaveBalance(-$diff);
+                        $leave->user?->adjustLeaveBalance(-$diff);
                     }
                 }
             }
@@ -91,7 +91,7 @@ final class Leave extends Model
         static::deleted(function ($leave) {
             if ($leave->status === 'approved') {
                 if ($leave->type !== 'unpaid') {
-                    $leave->user->adjustLeaveBalance($leave->days);
+                    $leave->user?->adjustLeaveBalance($leave->days);
                 }
             }
         });
