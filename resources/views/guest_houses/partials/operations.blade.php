@@ -349,26 +349,55 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                 <div>
                     <h6 class="fw-bold mb-0 text-success"><i class="bi bi-person-check-fill me-1"></i> الحالات المقيمة حاليًا بالدار</h6>
-                    <small class="text-muted">متابعة النزلاء الحاليين، ملاحظات وسلبيات الإقامة، وتسجيل مغادرة الحالات بشكل فردي</small>
+                    <small class="text-muted">متابعة النزلاء الحاليين، المرافقين، ملف الحالة، وسجل الملاحظات والإقامة</small>
                 </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 font-monospace">
+                    {{ $residentStays->count() }} حالة مقيمة حالياً
+                </span>
             </div>
 
             <div class="table-responsive mb-4">
                 <table class="table align-middle table-hover border">
-                    <thead class="table-light"><tr><th>المستفيد</th><th>الجناح / السرير</th><th>تاريخ الوصول</th><th>مدة الإقامة</th><th>ملاحظات الدار (السلبيات)</th><th>إجراء المغادرة</th></tr></thead>
+                    <thead class="table-light">
+                        <tr>
+                            <th>المستفيد (المريض)</th>
+                            <th>المرافق</th>
+                            <th>الجناح / السرير</th>
+                            <th>تاريخ الوصول / المدة</th>
+                            <th>سجل وتفاصيل الحالة</th>
+                            <th>ملاحظات وسلبيات</th>
+                            <th>إجراء المغادرة</th>
+                        </tr>
+                    </thead>
                     <tbody>
                     @forelse($residentStays as $stay)
                         @php
                             $patientProfile = $stay->beneficiary->patientProfile;
                             $hasNotes = !empty($patientProfile?->manager_notes);
+                            $companionName = $patientProfile?->companion_name;
                         @endphp
                         <tr>
                             <td>
-                                <strong>{{ $stay->beneficiary->full_name }}</strong>
-                                <div class="small text-muted">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
-                                <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary-subtle text-primary text-decoration-none mt-1 d-inline-block">
-                                    <i class="bi bi-person-badge me-1"></i> فتح ملف الحالة ({{ $stay->beneficiary->guest_code }})
-                                </a>
+                                <strong class="text-dark">{{ $stay->beneficiary->full_name }}</strong>
+                                <div class="small text-muted font-monospace">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
+                                <div class="mt-1 d-flex align-items-center gap-1">
+                                    <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary text-white text-decoration-none py-1 px-2" title="فتح الملف الشامل للحالة">
+                                        <i class="bi bi-person-vcard me-1"></i> ملف المستفيد ({{ $stay->beneficiary->code ?? '—' }})
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                @if(!empty($companionName))
+                                    <div class="fw-bold text-dark small"><i class="bi bi-person me-1 text-primary"></i>{{ $companionName }}</div>
+                                    @if($patientProfile?->companion_relation)
+                                        <span class="badge bg-secondary-subtle text-secondary small py-0 px-1">{{ $patientProfile->companion_relation }}</span>
+                                    @endif
+                                    @if($patientProfile?->companion_phone)
+                                        <div class="small text-muted font-monospace"><a href="tel:{{ $patientProfile->companion_phone }}" class="text-decoration-none text-muted"><i class="bi bi-telephone text-success me-1"></i>{{ $patientProfile->companion_phone }}</a></div>
+                                    @endif
+                                @else
+                                    <span class="text-muted small">بدون مرافق</span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge {{ $stay->is_temporary_out ? 'bg-warning-subtle text-warning border border-warning' : 'bg-primary-subtle text-primary border' }} px-2 py-1">
@@ -378,8 +407,117 @@
                                     <div class="small text-warning fw-bold mt-1"><i class="bi bi-clock-history me-1"></i> خارج للعلاج</div>
                                 @endif
                             </td>
-                            <td>{{ $stay->arrival_date?->format('Y-m-d') }}</td>
-                            <td>{{ $stay->expected_days ? $stay->expected_days . ' أيام' : 'غير محدد' }}</td>
+                            <td>
+                                <div>{{ $stay->arrival_date?->format('Y-m-d') }}</div>
+                                <div class="small text-muted">{{ $stay->expected_days ? $stay->expected_days . ' أيام مقررة' : 'غير محدد' }}</div>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1 fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#residentStayModal_{{ $stay->id }}" title="عرض البيانات الطبية، المرافق، وتفاصيل الإقامة">
+                                    <i class="bi bi-info-circle me-1 text-primary"></i> تفاصيل الحالة
+                                </button>
+
+                                {{-- Resident Stay Full Details Modal --}}
+                                <div class="modal fade" id="residentStayModal_{{ $stay->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <div class="modal-content shadow border-0">
+                                            <div class="modal-header bg-primary text-white py-2">
+                                                <h6 class="modal-title fw-bold">
+                                                    <i class="bi bi-person-vcard me-1"></i> كشف بيانات النزيل: {{ $stay->beneficiary->full_name }} ({{ $stay->beneficiary->code ?? '—' }})
+                                                </h6>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-3">
+                                                {{-- Row 1: Basic Info --}}
+                                                <div class="card border rounded-3 mb-3 p-3 bg-light-subtle">
+                                                    <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="bi bi-person-lines-fill me-1"></i> البيانات الشخصية للمستفيد</h6>
+                                                    <div class="row g-2 small">
+                                                        <div class="col-sm-6 col-md-4"><strong>الاسم الكامل:</strong> {{ $stay->beneficiary->full_name }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>الرقم القومي:</strong> <span class="font-monospace">{{ $stay->beneficiary->national_id ?: '—' }}</span></div>
+                                                        <div class="col-sm-6 col-md-4"><strong>رقم الهاتف:</strong> <span class="font-monospace">{{ $stay->beneficiary->phone ?: '—' }}</span></div>
+                                                        <div class="col-sm-6 col-md-4"><strong>السن / الميلاد:</strong> {{ $stay->beneficiary->age ? $stay->beneficiary->age . ' سنة' : ($stay->beneficiary->birth_date?->format('Y-m-d') ?: '—') }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>المحافظة / العنوان:</strong> {{ $stay->beneficiary->address ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>التصنيف:</strong> <span class="badge bg-secondary">{{ $stay->beneficiary->classification ?: 'A' }}</span></div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Row 2: Companion Info --}}
+                                                <div class="card border rounded-3 mb-3 p-3 bg-light-subtle">
+                                                    <h6 class="fw-bold text-success mb-2 border-bottom pb-1"><i class="bi bi-people-fill me-1"></i> بيانات المرافق</h6>
+                                                    @if(!empty($patientProfile?->companion_name))
+                                                        <div class="row g-2 small">
+                                                            <div class="col-sm-6 col-md-4"><strong>اسم المرافق:</strong> {{ $patientProfile->companion_name }}</div>
+                                                            <div class="col-sm-6 col-md-4"><strong>صلة القرابة:</strong> {{ $patientProfile->companion_relation ?: '—' }}</div>
+                                                            <div class="col-sm-6 col-md-4"><strong>الرقم القومي للمرافق:</strong> <span class="font-monospace">{{ $patientProfile->companion_national_id ?: '—' }}</span></div>
+                                                            <div class="col-sm-6 col-md-4"><strong>هاتف المرافق:</strong> <span class="font-monospace">{{ $patientProfile->companion_phone ?: '—' }}</span></div>
+                                                            <div class="col-sm-6 col-md-8"><strong>عنوان المرافق:</strong> {{ $patientProfile->companion_address ?: '—' }}</div>
+                                                        </div>
+                                                        @if($patientProfile->companion_id_front_path || $patientProfile->companion_id_back_path)
+                                                            <div class="mt-2 pt-2 border-top d-flex gap-2">
+                                                                @if($patientProfile->companion_id_front_path)
+                                                                    <a href="{{ Storage::disk('public')->url($patientProfile->companion_id_front_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">
+                                                                        <i class="bi bi-card-image me-1"></i> بطاقة المرافق (وجه)
+                                                                    </a>
+                                                                @endif
+                                                                @if($patientProfile->companion_id_back_path)
+                                                                    <a href="{{ Storage::disk('public')->url($patientProfile->companion_id_back_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">
+                                                                        <i class="bi bi-card-image me-1"></i> بطاقة المرافق (ظهر)
+                                                                    </a>
+                                                                @endif
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        <div class="text-muted small">لا يوجد مرافق مسجل مع الحالة في هذه الإقامة.</div>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Row 3: Medical & Stay Details --}}
+                                                <div class="card border rounded-3 mb-3 p-3 bg-light-subtle">
+                                                    <h6 class="fw-bold text-info-emphasis mb-2 border-bottom pb-1"><i class="bi bi-hospital me-1"></i> البيانات الطبية ومتابعة العلاج والإقامة</h6>
+                                                    <div class="row g-2 small">
+                                                        <div class="col-sm-6 col-md-4"><strong>نوع العلاج:</strong> {{ $patientProfile?->treatment_type ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>المستشفى / المركز:</strong> {{ $patientProfile?->medical_center ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>عدد الجلسات:</strong> {{ $patientProfile?->sessions_count ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>الجناح والسرير:</strong> {{ $stay->bed?->wing?->name ?: '—' }} / سرير {{ $stay->bed?->number ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>تاريخ الوصول:</strong> {{ $stay->arrival_date?->format('Y-m-d') }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>المدة المتوقعة:</strong> {{ $stay->expected_days ?: '—' }} يوم</div>
+                                                        @if($patientProfile?->medical_notes)
+                                                            <div class="col-12 mt-1"><strong>ملاحظات طبية:</strong> {{ $patientProfile->medical_notes }}</div>
+                                                        @endif
+                                                    </div>
+                                                    @if($patientProfile?->followup_card_path || $patientProfile?->referral_letter_path)
+                                                        <div class="mt-2 pt-2 border-top d-flex gap-2">
+                                                            @if($patientProfile->followup_card_path)
+                                                                <a href="{{ Storage::disk('public')->url($patientProfile->followup_card_path) }}" target="_blank" class="btn btn-sm btn-outline-info py-0">
+                                                                    <i class="bi bi-file-medical me-1"></i> كارت المتابعة
+                                                                </a>
+                                                            @endif
+                                                            @if($patientProfile->referral_letter_path)
+                                                                <a href="{{ Storage::disk('public')->url($patientProfile->referral_letter_path) }}" target="_blank" class="btn btn-sm btn-outline-warning py-0">
+                                                                    <i class="bi bi-file-earmark-text me-1"></i> خطاب التحويل
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Row 4: Manager Notes --}}
+                                                @if($hasNotes)
+                                                    <div class="alert alert-warning py-2 mb-0">
+                                                        <strong class="d-block mb-1"><i class="bi bi-shield-exclamation me-1"></i> ملاحظات وسلبيات مدونة من إدارة الدار:</strong>
+                                                        <span class="small">{{ $patientProfile->manager_notes }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="modal-footer py-2 d-flex justify-content-between">
+                                                <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="btn btn-primary btn-sm px-3 fw-bold">
+                                                    <i class="bi bi-box-arrow-up-right me-1"></i> فتح ملف الحالة الشامل بالمستفيدين
+                                                </a>
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>
                                 <button type="button" class="btn btn-sm {{ $hasNotes ? 'btn-warning text-dark' : 'btn-outline-secondary' }} rounded-pill px-2 py-1"
                                         data-bs-toggle="modal" data-bs-target="#managerNotesModal{{ $stay->id }}" title="ملاحظات وسلبيات الحالة">
@@ -436,7 +574,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty <tr><td colspan="6" class="text-center text-muted py-3">لا توجد حالات مقيمة حاليًا بالدار.</td></tr>
+                    @empty <tr><td colspan="7" class="text-center text-muted py-3">لا توجد حالات مقيمة حاليًا بالدار.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -444,27 +582,109 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3 pt-3 border-top">
                 <div>
-                    <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-arrow-repeat me-1"></i> آخر الحالات المغادرة — تسجيل عودة الحالة للدار</h6>
-                    <small class="text-muted">عند عودة المريض للدار في أي وقت، اختر السرير ومدة الإقامة المتوقعة لتسكينه فوراً</small>
+                    <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-arrow-repeat me-1"></i> آخر الحالات المغادرة — الاطلاع على السجل وتسجيل عودة الحالة للدار</h6>
+                    <small class="text-muted">الاطلاع الكامل على سجل إقامات النزلاء السابقين، المرافقين، وإمكانية إعادة التسكين مباشرة</small>
                 </div>
+                <span class="badge bg-secondary-subtle text-secondary font-monospace px-3 py-1">{{ $departedStays->count() }} حالة مغادرة</span>
             </div>
 
             <div class="table-responsive">
                 <table class="table align-middle table-hover border">
-                    <thead class="table-light"><tr><th>المستفيد</th><th>تاريخ المغادرة</th><th>سرير العودة</th><th>الوصول / الأيام</th><th>إجراء</th></tr></thead>
+                    <thead class="table-light">
+                        <tr>
+                            <th>المستفيد (المريض)</th>
+                            <th>المرافق</th>
+                            <th>تاريخ المغادرة</th>
+                            <th>سجل وتفاصيل الإقامة</th>
+                            <th>سرير العودة</th>
+                            <th>الوصول / الأيام</th>
+                            <th>إجراء التسكين</th>
+                        </tr>
+                    </thead>
                     <tbody>
                     @forelse($departedStays as $stay)
+                        @php
+                            $depProfile = $stay->beneficiary->patientProfile;
+                        @endphp
                         <tr>
+                            <td>
+                                <strong class="text-dark">{{ $stay->beneficiary->full_name }}</strong>
+                                <div class="small text-muted font-monospace">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
+                                <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary text-white text-decoration-none mt-1 d-inline-block">
+                                    <i class="bi bi-person-vcard me-1"></i> ملف المستفيد ({{ $stay->beneficiary->code ?? '—' }})
+                                </a>
+                            </td>
+                            <td>
+                                @if(!empty($depProfile?->companion_name))
+                                    <div class="fw-bold text-dark small"><i class="bi bi-person me-1 text-primary"></i>{{ $depProfile->companion_name }}</div>
+                                    @if($depProfile?->companion_relation)
+                                        <span class="badge bg-secondary-subtle text-secondary small py-0 px-1">{{ $depProfile->companion_relation }}</span>
+                                    @endif
+                                @else
+                                    <span class="text-muted small">بدون مرافق</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div>{{ $stay->departed_at?->format('Y-m-d') }}</div>
+                                <div class="small text-muted font-monospace">{{ $stay->departed_at?->format('H:i') }}</div>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1 text-dark" data-bs-toggle="modal" data-bs-target="#departedStayModal_{{ $stay->id }}">
+                                    <i class="bi bi-clock-history me-1 text-primary"></i> السجل والتفاصيل
+                                </button>
+
+                                {{-- Departed Stay Details Modal --}}
+                                <div class="modal fade" id="departedStayModal_{{ $stay->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <div class="modal-content shadow border-0">
+                                            <div class="modal-header bg-secondary text-white py-2">
+                                                <h6 class="modal-title fw-bold">
+                                                    <i class="bi bi-journal-medical me-1"></i> سجل إقامة المغادر: {{ $stay->beneficiary->full_name }}
+                                                </h6>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-3">
+                                                <div class="card border rounded-3 mb-3 p-3 bg-light-subtle">
+                                                    <h6 class="fw-bold text-primary mb-2 border-bottom pb-1"><i class="bi bi-calendar-check me-1"></i> بيانات الإقامة المنتهية</h6>
+                                                    <div class="row g-2 small">
+                                                        <div class="col-sm-6 col-md-4"><strong>تاريخ الوصول:</strong> {{ $stay->arrival_date?->format('Y-m-d') }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>تاريخ المغادرة:</strong> {{ $stay->departed_at?->format('Y-m-d H:i') }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>الجناح والسرير:</strong> {{ $stay->bed?->wing?->name ?: '—' }} / سرير {{ $stay->bed?->number ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>مدة الإقامة المقررة:</strong> {{ $stay->expected_days ?: '—' }} يوم</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card border rounded-3 mb-3 p-3 bg-light-subtle">
+                                                    <h6 class="fw-bold text-success mb-2 border-bottom pb-1"><i class="bi bi-people me-1"></i> بيانات النزيل والمرافق</h6>
+                                                    <div class="row g-2 small">
+                                                        <div class="col-sm-6 col-md-4"><strong>الرقم القومي:</strong> <span class="font-monospace">{{ $stay->beneficiary->national_id ?: '—' }}</span></div>
+                                                        <div class="col-sm-6 col-md-4"><strong>الهاتف:</strong> <span class="font-monospace">{{ $stay->beneficiary->phone ?: '—' }}</span></div>
+                                                        <div class="col-sm-6 col-md-4"><strong>العنوان:</strong> {{ $stay->beneficiary->address ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>المرافق:</strong> {{ $depProfile?->companion_name ?: 'بدون مرافق' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>صلة القرابة:</strong> {{ $depProfile?->companion_relation ?: '—' }}</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>هاتف المرافق:</strong> <span class="font-monospace">{{ $depProfile?->companion_phone ?: '—' }}</span></div>
+                                                    </div>
+                                                </div>
+
+                                                @if($depProfile?->manager_notes)
+                                                    <div class="alert alert-warning py-2 mb-0">
+                                                        <strong class="d-block mb-1"><i class="bi bi-shield-exclamation me-1"></i> ملاحظات وسلبيات الإقامة:</strong>
+                                                        <span class="small">{{ $depProfile->manager_notes }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="modal-footer py-2 d-flex justify-content-between">
+                                                <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="btn btn-primary btn-sm px-3 fw-bold">
+                                                    <i class="bi bi-box-arrow-up-right me-1"></i> فتح ملف الحالة الشامل
+                                                </a>
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <form method="POST" action="{{ route('guest-houses.stays.return', [$guest_house, $stay]) }}">
                                 @csrf
-                                <td>
-                                    <strong>{{ $stay->beneficiary->full_name }}</strong>
-                                    <div class="small text-muted">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
-                                    <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary-subtle text-primary text-decoration-none mt-1 d-inline-block">
-                                        <i class="bi bi-person-badge me-1"></i> فتح ملف الحالة ({{ $stay->beneficiary->guest_code }})
-                                    </a>
-                                </td>
-                                <td>{{ $stay->departed_at?->format('Y-m-d H:i') }}</td>
                                 <td>
                                     <select name="guest_house_bed_id" class="form-select form-select-sm" required style="min-width: 140px;">
                                         <option value="">— اختر سرير —</option>
@@ -481,12 +701,12 @@
                                 </td>
                                 <td>
                                     <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold" @disabled($availableBeds->isEmpty())>
-                                        <i class="bi bi-box-arrow-in-right me-1"></i> تسكين مجدداً / عودة مقيم
+                                        <i class="bi bi-box-arrow-in-right me-1"></i> تسكين مجدداً
                                     </button>
                                 </td>
                             </form>
                         </tr>
-                    @empty <tr><td colspan="5" class="text-center text-muted py-3">لا توجد حالات مغادرة مسجلة.</td></tr>
+                    @empty <tr><td colspan="7" class="text-center text-muted py-3">لا توجد حالات مغادرة مسجلة.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -693,7 +913,7 @@
                                         @endphp
                                         <div class="border-bottom pb-2 mb-2">
                                             <div class="form-check mb-1">
-                                                <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
+                                                <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" onchange="handleMealCheckboxChange(this, '{{ $mealType }}', '{{ $stay->beneficiary_id }}', {{ !empty($cNameVal) ? 1 : 0 }})" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
                                                 <label class="form-check-label small fw-bold" for="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}">
                                                     {{ $stay->beneficiary->full_name }}
                                                     <span class="text-muted fw-normal" style="font-size:0.75rem">({{ $stay->bed?->wing?->name ?: 'جناح' }} - سرير {{ $stay->bed?->number ?: '—' }})</span>
@@ -768,27 +988,41 @@
                                     };
                                     $receivedServings = $pMeal->servings->where('received', true);
                                     $totalMeals = $receivedServings->sum(fn($s) => $s->total_meals_count ?: ($s->patient_meals_count + $s->companion_meals_count ?: 1));
+                                    $pMealsSum = $receivedServings->sum(fn($s) => $s->patient_meals_count ?: 1);
+                                    $cMealsSum = $receivedServings->sum('companion_meals_count');
                                 @endphp
                                 <tr>
                                     <td>
                                         <strong>{{ $pTypeLabel }}</strong>
-                                        <div class="small text-muted font-monospace">{{ $pMeal->meal_date }}</div>
+                                        <div class="small text-muted font-monospace">{{ $pMeal->meal_date?->format('Y-m-d') ?: $pMeal->meal_date }}</div>
                                     </td>
                                     <td>{{ $pMeal->served_at ? substr($pMeal->served_at, 0, 5) : '—' }}</td>
                                     <td>
-                                        <span class="badge bg-success-subtle text-success fs-6 fw-bold px-2 py-1">
+                                        <span class="badge bg-success text-white fs-6 fw-bold px-2 py-1">
                                             {{ $totalMeals }} وجبة
                                         </span>
-                                        <div class="small text-muted">({{ $receivedServings->count() }} حالة)</div>
+                                        <div class="small text-muted mt-1 font-monospace">
+                                            <span>مريض: {{ $pMealsSum }}</span> · <span>مرافق: {{ $cMealsSum }}</span>
+                                        </div>
                                     </td>
                                     <td>
                                         @if($pMeal->warehouse && $pMeal->item)
-                                            <div class="small"><i class="bi bi-box-seam text-info me-1"></i>{{ $pMeal->quantity_deducted }} {{ $pMeal->item->unit ?: 'وحدة' }} من {{ $pMeal->item->name }}</div>
+                                            <div class="small text-dark mb-1">
+                                                <i class="bi bi-box-seam text-info me-1"></i>
+                                                <strong>{{ $pMeal->quantity_deducted }}</strong> {{ $pMeal->item->unit ?: 'وحدة' }} من {{ $pMeal->item->name }}
+                                                <span class="text-muted d-block" style="font-size:0.75rem">مخزن: {{ $pMeal->warehouse->name }}</span>
+                                            </div>
                                         @endif
-                                        @if($pMeal->expense_recorded)
-                                            <div class="small text-danger"><i class="bi bi-receipt me-1"></i>تم تسجيل مصروف</div>
+                                        @if($pMeal->expense_recorded || !empty($pMeal->expense_amount))
+                                            <div class="small text-danger fw-bold">
+                                                <i class="bi bi-receipt me-1"></i>
+                                                مصروف: {{ number_format((float)$pMeal->expense_amount, 2) }} ج
+                                                @if($pMeal->treasury)
+                                                    <span class="text-muted fw-normal d-block" style="font-size:0.75rem">خزينة: {{ $pMeal->treasury->name }}</span>
+                                                @endif
+                                            </div>
                                         @endif
-                                        @if(!$pMeal->warehouse && !$pMeal->expense_recorded)
+                                        @if(!$pMeal->warehouse && !$pMeal->expense_recorded && empty($pMeal->expense_amount))
                                             <span class="text-muted small">—</span>
                                         @endif
                                     </td>
@@ -797,16 +1031,38 @@
                                     </td>
                                     <td>
                                         @if($pMeal->image_url)
-                                            <a href="{{ $pMeal->image_url }}" target="_blank" class="d-inline-block">
-                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="rounded border shadow-xs" style="width: 45px; height: 40px; object-fit: cover;">
+                                            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#mealPhotoModal_{{ $pMeal->id }}" class="d-inline-flex align-items-center gap-1 text-decoration-none">
+                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="rounded border shadow-xs" style="width: 44px; height: 38px; object-fit: cover;">
+                                                <span class="badge bg-light text-primary border small"><i class="bi bi-zoom-in"></i> عرض</span>
                                             </a>
+
+                                            {{-- Photo Preview Modal --}}
+                                            <div class="modal fade" id="mealPhotoModal_{{ $pMeal->id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content shadow border-0 text-center">
+                                                        <div class="modal-header py-2 bg-dark text-white">
+                                                            <h6 class="modal-title fw-bold">
+                                                                <i class="bi bi-camera me-1"></i> صورة {{ $pTypeLabel }} — {{ $pMeal->meal_date?->format('Y-m-d') ?: $pMeal->meal_date }}
+                                                            </h6>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-2 bg-dark-subtle">
+                                                            <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="img-fluid rounded shadow">
+                                                        </div>
+                                                        <div class="modal-footer py-1 justify-content-between">
+                                                            <a href="{{ $pMeal->image_url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-up-right me-1"></i> فتح بالحجم الكامل</a>
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
                                             <span class="text-muted small">بدون صورة</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#mealArchiveModal_{{ $pMeal->id }}">
-                                            <i class="bi bi-people me-1"></i> عرض الكشف ({{ $receivedServings->count() }})
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#mealArchiveModal_{{ $pMeal->id }}">
+                                            <i class="bi bi-people me-1"></i> كشف المستلمين ({{ $totalMeals }} وجبة)
                                         </button>
 
                                         {{-- Modal for Attendance & Companions --}}
@@ -815,14 +1071,22 @@
                                                 <div class="modal-content shadow border-0">
                                                     <div class="modal-header bg-primary text-white py-2">
                                                         <h6 class="modal-title fw-bold">
-                                                            <i class="bi bi-card-checklist me-1"></i> كشف حضور {{ $pTypeLabel }} — {{ $pMeal->meal_date }}
+                                                            <i class="bi bi-card-checklist me-1"></i> كشف استلام وجبات {{ $pTypeLabel }} — {{ $pMeal->meal_date?->format('Y-m-d') ?: $pMeal->meal_date }}
                                                         </h6>
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body p-3">
+                                                        {{-- Summary Badges --}}
+                                                        <div class="d-flex flex-wrap gap-2 mb-3 p-2 bg-light rounded-3 border">
+                                                            <span class="badge bg-success fs-6 py-1.5 px-3">إجمالي الوجبات: {{ $totalMeals }}</span>
+                                                            <span class="badge bg-primary-subtle text-primary fs-6 py-1.5 px-3">وجبات المرضى: {{ $pMealsSum }}</span>
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis fs-6 py-1.5 px-3">وجبات المرافقين: {{ $cMealsSum }}</span>
+                                                            <span class="badge bg-secondary-subtle text-secondary fs-6 py-1.5 px-3">الحالات المسجلة: {{ $receivedServings->count() }}</span>
+                                                        </div>
+
                                                         @if($pMeal->image_url)
                                                             <div class="text-center mb-3">
-                                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="img-fluid rounded border shadow-sm" style="max-height: 220px;">
                                                             </div>
                                                         @endif
                                                         @if($pMeal->notes)
@@ -834,10 +1098,10 @@
                                                                     <tr>
                                                                         <th>#</th>
                                                                         <th>اسم المريض / النزيل</th>
-                                                                        <th>وجبات المريض</th>
+                                                                        <th class="text-center">وجبة مريض</th>
                                                                         <th>اسم المرافق</th>
-                                                                        <th>وجبات المرافق</th>
-                                                                        <th>إجمالي الوجبات</th>
+                                                                        <th class="text-center">وجبة مرافق</th>
+                                                                        <th class="text-center">إجمالي الوجبات</th>
                                                                         <th>وقت الاستلام</th>
                                                                     </tr>
                                                                 </thead>
@@ -951,8 +1215,23 @@
 </div>
 
 <script>
+    function handleMealCheckboxChange(chk, mealType, benId, hasCompanion) {
+        const pInput = document.querySelector(`input[name="servings[${benId}][patient_meals_count]"]`);
+        const cInput = document.querySelector(`input[name="servings[${benId}][companion_meals_count]"]`);
+        if (chk.checked) {
+            if (pInput && parseInt(pInput.value || 0) === 0) pInput.value = 1;
+            if (cInput && hasCompanion && parseInt(cInput.value || 0) === 0) cInput.value = 1;
+        } else {
+            if (pInput) pInput.value = 0;
+            if (cInput) cInput.value = 0;
+        }
+    }
+
     function toggleAllMeals(type, check) {
-        document.querySelectorAll('.meal-chk-' + type).forEach(chk => chk.checked = check);
+        document.querySelectorAll('.meal-chk-' + type).forEach(chk => {
+            chk.checked = check;
+            chk.dispatchEvent(new Event('change'));
+        });
     }
 
     function toggleCustodyTypeFields(type) {

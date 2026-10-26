@@ -124,7 +124,7 @@ final class GuestHouseWebController extends Controller
         $residentStays = $guest_house->stays()->where('status', 'resident')
             ->with(['beneficiary.patientProfile', 'bed.wing'])->latest('arrival_date')->get();
         $departedStays = $guest_house->stays()->where('status', 'departed')
-            ->with(['beneficiary', 'bed.wing'])->latest('departed_at')->limit(30)->get();
+            ->with(['beneficiary.patientProfile', 'bed.wing'])->latest('departed_at')->limit(50)->get();
         $guestHouseCustodies = $guest_house->custodies()->with(['treasury', 'warehouse'])->where('is_active', true)->get();
         $inventoryCustodies = $guestHouseCustodies->where('type', 'in_kind');
         $guestHouseInventory = InventoryTransaction::query()
@@ -141,8 +141,9 @@ final class GuestHouseWebController extends Controller
         $todayMeals = $guest_house->meals()->whereDate('meal_date', today())
             ->with('servings.beneficiary')->get()->keyBy('meal_type');
         $pastMeals = $guest_house->meals()
-            ->with(['servings.beneficiary', 'creator', 'warehouse', 'item'])
+            ->with(['servings.beneficiary', 'creator', 'warehouse', 'item', 'treasury', 'expense'])
             ->latest('meal_date')
+            ->latest('id')
             ->limit(50)
             ->get();
 
@@ -898,12 +899,14 @@ final class GuestHouseWebController extends Controller
             $meal = GuestHouseMeal::updateOrCreate(
                 ['guest_house_id' => $guest_house->id, 'meal_date' => $data['meal_date'], 'meal_type' => $data['meal_type']],
                 [
-                    'served_at' => $data['served_at'] ?? null,
-                    'notes' => $data['notes'] ?? null,
-                    'created_by' => auth()->id(),
-                    'warehouse_id' => $data['warehouse_id'] ?? null,
-                    'item_id' => $data['item_id'] ?? null,
-                    'quantity_deducted' => $data['quantity_deducted'] ?? null,
+                    'served_at'          => $data['served_at'] ?? null,
+                    'notes'              => $data['notes'] ?? null,
+                    'created_by'         => auth()->id(),
+                    'warehouse_id'       => $data['warehouse_id'] ?? null,
+                    'inventory_item_id'  => $data['item_id'] ?? null,
+                    'quantity_deducted'  => $data['quantity_deducted'] ?? null,
+                    'treasury_id'        => $data['expense_treasury_id'] ?? null,
+                    'expense_amount'     => !empty($data['record_expense']) ? ($data['expense_amount'] ?? null) : null,
                 ]
             );
 
@@ -914,32 +917,46 @@ final class GuestHouseWebController extends Controller
             // Deduct from inventory if warehouse and item specified
             if (!empty($data['warehouse_id']) && !empty($data['item_id']) && !empty($data['quantity_deducted'])) {
                 InventoryTransaction::create([
-                    'warehouse_id' => $data['warehouse_id'],
-                    'item_id' => $data['item_id'],
-                    'guest_house_id' => $guest_house->id,
-                    'type' => 'out',
-                    'quantity' => (float)$data['quantity_deducted'],
+                    'warehouse_id'     => $data['warehouse_id'],
+                    'item_id'          => $data['item_id'],
+                    'guest_house_id'   => $guest_house->id,
+                    'type'             => 'out',
+                    'quantity'         => (float)$data['quantity_deducted'],
                     'transaction_date' => $data['meal_date'],
-                    'notes' => 'صرف وجبات ' . ($meal->meal_type ?? 'دار الضيافة') . ' بتاريخ ' . $data['meal_date'],
-                    'status' => 'approved',
-                    'created_by' => auth()->id(),
+                    'notes'            => 'صرف وجبات ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
+                    'status'           => 'approved',
+                    'user_id'          => auth()->id(),
+                    'created_by'       => auth()->id(),
+                    'approved_by'      => auth()->id(),
+                    'approved_at'      => now(),
                 ]);
             }
 
             // Record expense if requested
             if (!empty($data['record_expense']) && !empty($data['expense_amount']) && !empty($data['expense_treasury_id'])) {
-                $expense = \App\Models\Expense::create([
-                    'treasury_id' => $data['expense_treasury_id'],
+                $expenseData = [
+                    'type'           => 'operational',
+                    'category'       => 'إعاشة ووجبات',
+                    'amount'         => (float)$data['expense_amount'],
+                    'currency'       => 'EGP',
+                    'treasury_id'    => $data['expense_treasury_id'],
                     'guest_house_id' => $guest_house->id,
-                    'amount' => (float)$data['expense_amount'],
-                    'date' => $data['meal_date'],
-                    'category' => 'إعاشة ووجبات',
-                    'description' => 'تكلفة وجبة ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
-                    'created_by' => auth()->id(),
-                ]);
+                    'paid_at'        => $data['meal_date'],
+                    'description'    => 'تكلفة وجبة ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
+                    'created_by'     => auth()->id(),
+                    'status'         => 'approved',
+                ];
+
+                $expense = \App\Models\Expense::create($expenseData);
+                try {
+                    app(\App\Services\TreasuryIntegrationService::class)->processExpenseFromTreasury($expense, (int)$data['expense_treasury_id']);
+                } catch (\Throwable $e) {
+                    \Log::warning('Treasury integration error: ' . $e->getMessage());
+                }
+
                 $meal->update([
                     'expense_recorded' => true,
-                    'expense_id' => $expense->id,
+                    'expense_id'       => $expense->id,
                 ]);
             }
 
@@ -947,6 +964,7 @@ final class GuestHouseWebController extends Controller
             $servingsInput = $data['servings'] ?? [];
             $residentIds = $guest_house->stays()->where('status', 'resident')->pluck('beneficiary_id')->unique();
 
+            $totalMealsServed = 0;
             foreach ($residentIds as $beneficiaryId) {
                 $received = in_array((int) $beneficiaryId, $receivedIds, true);
                 $bServing = $servingsInput[$beneficiaryId] ?? [];
@@ -954,17 +972,31 @@ final class GuestHouseWebController extends Controller
                 $companionName = !empty($bServing['companion_name']) ? trim((string)$bServing['companion_name']) : null;
                 $pMeals = isset($bServing['patient_meals_count']) ? (int)$bServing['patient_meals_count'] : ($received ? 1 : 0);
                 $cMeals = isset($bServing['companion_meals_count']) ? (int)$bServing['companion_meals_count'] : 0;
+                
+                if ($pMeals > 0 || $cMeals > 0) {
+                    $received = true;
+                }
+                if (! $received) {
+                    $pMeals = 0;
+                    $cMeals = 0;
+                }
                 $totMeals = $pMeals + $cMeals;
+                if ($received) {
+                    $totalMealsServed += $totMeals;
+                }
 
                 $meal->servings()->updateOrCreate(['beneficiary_id' => $beneficiaryId], [
-                    'received' => $received,
-                    'received_at' => $received ? now() : null,
-                    'companion_name' => $companionName,
-                    'patient_meals_count' => $pMeals,
-                    'companion_meals_count' => $cMeals,
-                    'total_meals_count' => $totMeals,
+                    'received'               => $received,
+                    'received_at'            => $received ? now() : null,
+                    'companion_name'         => $companionName,
+                    'patient_meals_count'    => $pMeals,
+                    'companion_meals_count'  => $cMeals,
+                    'total_meals_count'      => $totMeals,
+                    'companion_received'     => ($cMeals > 0),
                 ]);
             }
+
+            $meal->update(['total_meals_served' => $totalMealsServed]);
         });
 
         return back()->with('success', 'تم حفظ كشف الوجبة للمقيمين والمرافقين بنجاح.');

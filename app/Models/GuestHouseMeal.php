@@ -26,11 +26,16 @@ final class GuestHouseMeal extends Model
         'warehouse_id',
         'treasury_id',
         'expense_amount',
+        'quantity_deducted',
+        'expense_id',
+        'expense_recorded',
     ];
 
     protected $casts = [
-        'meal_date'      => 'date',
-        'expense_amount' => 'decimal:2',
+        'meal_date'         => 'date',
+        'expense_amount'    => 'decimal:2',
+        'quantity_deducted' => 'decimal:2',
+        'expense_recorded'  => 'boolean',
     ];
 
     public function guestHouse(): BelongsTo
@@ -62,4 +67,10 @@ final class GuestHouseMeal extends Model
     {
         return $this->belongsTo(Treasury::class, 'treasury_id');
     }
+
+    public function expense(): BelongsTo
+    {
+        return $this->belongsTo(Expense::class, 'expense_id');
+    }
 }
+

@@ -201,19 +201,19 @@
                 <div class="source-segmented-group d-flex flex-wrap gap-1.5 p-1 bg-light rounded-pill border">
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('source', 'page'), [])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ !request('source') ? 'active-seg shadow-xs' : '' }}">
-                        <i class="bi bi-grid-fill me-1"></i> جميع المصادر <span class="badge ms-1 font-monospace {{ !request('source') ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary bg-opacity-15 text-muted' }}">{{ $sourceCounts['all'] ?? 0 }}</span>
+                        <i class="bi bi-grid-fill me-1"></i> جميع المصادر <span class="badge ms-1 font-monospace {{ !request('source') ? 'bg-white text-dark shadow-xs' : 'bg-secondary-subtle text-secondary border' }}">{{ $sourceCounts['all'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'website'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'website' ? 'active-seg-website shadow-xs' : '' }}">
-                        <i class="bi bi-globe2 me-1 {{ request('source') == 'website' ? 'text-white' : 'text-info' }}"></i> الويبسايت <span class="badge ms-1 font-monospace {{ request('source') == 'website' ? 'bg-white bg-opacity-25 text-white' : 'bg-info bg-opacity-15 text-info' }}">{{ $sourceCounts['website'] ?? 0 }}</span>
+                        <i class="bi bi-globe2 me-1 {{ request('source') == 'website' ? 'text-white' : 'text-info' }}"></i> الويبسايت <span class="badge ms-1 font-monospace {{ request('source') == 'website' ? 'bg-white text-dark shadow-xs' : 'bg-info-subtle text-info-emphasis border border-info-subtle' }}">{{ $sourceCounts['website'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'system'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'system' ? 'active-seg-system shadow-xs' : '' }}">
-                        <i class="bi bi-laptop me-1 {{ request('source') == 'system' ? 'text-white' : 'text-success' }}"></i> السيستم <span class="badge ms-1 font-monospace {{ request('source') == 'system' ? 'bg-white bg-opacity-25 text-white' : 'bg-success bg-opacity-15 text-success' }}">{{ $sourceCounts['system'] ?? 0 }}</span>
+                        <i class="bi bi-laptop me-1 {{ request('source') == 'system' ? 'text-white' : 'text-success' }}"></i> السيستم <span class="badge ms-1 font-monospace {{ request('source') == 'system' ? 'bg-white text-dark shadow-xs' : 'bg-success-subtle text-success-emphasis border border-success-subtle' }}">{{ $sourceCounts['system'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'mobile'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'mobile' ? 'active-seg-mobile shadow-xs' : '' }}">
-                        <i class="bi bi-phone-fill me-1 {{ request('source') == 'mobile' ? 'text-white' : 'text-warning' }}"></i> الموبايل <span class="badge ms-1 font-monospace {{ request('source') == 'mobile' ? 'bg-white bg-opacity-25 text-white' : 'bg-warning bg-opacity-15 text-warning-emphasis' }}">{{ $sourceCounts['mobile'] ?? 0 }}</span>
+                        <i class="bi bi-phone-fill me-1 {{ request('source') == 'mobile' ? 'text-white' : 'text-warning' }}"></i> الموبايل <span class="badge ms-1 font-monospace {{ request('source') == 'mobile' ? 'bg-white text-dark shadow-xs' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' }}">{{ $sourceCounts['mobile'] ?? 0 }}</span>
                     </a>
                 </div>
             </div>

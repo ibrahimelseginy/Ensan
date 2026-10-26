@@ -602,53 +602,104 @@
         </div>
     </div>
 
-    <!-- Metrics Row -->
+    <!-- Top Period Filter & Date Selection Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 p-3 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="p-2 bg-primary-subtle text-primary rounded-circle"><i class="bi bi-calendar-range fs-5"></i></span>
+                <div>
+                    <h6 class="fw-bold mb-0">إحصائيات ومؤشرات دار الضيافة</h6>
+                    <small class="text-muted">مؤشرات الإشغال، الليالي الفندقية، والمستفيدين خلال الفترة المحددة</small>
+                </div>
+            </div>
+            <form method="GET" action="{{ route('guest-houses.show', $guest_house) }}" class="d-flex align-items-center gap-2 flex-wrap mb-0">
+                <span class="small fw-bold text-muted"><i class="bi bi-funnel me-1"></i>تحديد التاريخ:</span>
+                <input type="date" name="kpi_from" value="{{ $kpiFrom }}" class="form-control form-control-sm" style="width: 140px;">
+                <span class="small text-muted">إلى</span>
+                <input type="date" name="kpi_to" value="{{ $kpiTo }}" class="form-control form-control-sm" style="width: 140px;">
+                <button type="submit" class="btn btn-sm btn-primary px-3 rounded-pill fw-bold">
+                    <i class="bi bi-arrow-repeat me-1"></i> احتساب
+                </button>
+                @if(request('kpi_from') || request('kpi_to'))
+                    <a href="{{ route('guest-houses.show', $guest_house) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="إعادة ضبط للشهر الحالي">
+                        <i class="bi bi-x-circle"></i> الشهر الحالي
+                    </a>
+                @endif
+            </form>
+        </div>
+    </div>
+
+    <!-- Metrics Row (6 Cards: Financials + General Total + Monthly Nights + Monthly Guests) -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="gh-metric-card">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100">
                 <div class="gh-metric-icon bg-success bg-opacity-10 text-success">
                     <i class="bi bi-cash-coin"></i>
                 </div>
                 <div class="text-muted small">اجمالي التبرعات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($donationsTotal) }}</h3>
+                <h4 class="fw-bold mb-0">{{ number_format($donationsTotal) }}</h4>
                 <div class="small text-success mt-1">
                     <i class="bi bi-arrow-up"></i> {{ $donationsCount }} عملية
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="gh-metric-card">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100">
                 <div class="gh-metric-icon bg-danger bg-opacity-10 text-danger">
                     <i class="bi bi-cart"></i>
                 </div>
                 <div class="text-muted small">اجمالي المصروفات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($expensesTotal) }}</h3>
+                <h4 class="fw-bold mb-0">{{ number_format($expensesTotal) }}</h4>
                 <div class="small text-danger mt-1">
                     <i class="bi bi-arrow-down"></i> {{ $expensesCount }} عملية
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="gh-metric-card">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100">
                 <div class="gh-metric-icon bg-primary bg-opacity-10 text-primary">
                     <i class="bi bi-wallet2"></i>
                 </div>
                 <div class="text-muted small">صافي الحسابات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($netBalance) }}</h3>
+                <h4 class="fw-bold mb-0">{{ number_format($netBalance) }}</h4>
                 <div class="small text-muted mt-1">
                     الرصيد الحالي
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="gh-metric-card">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100">
                 <div class="gh-metric-icon bg-info bg-opacity-10 text-info">
                     <i class="bi bi-people"></i>
                 </div>
-                <div class="text-muted small">المستفيدون</div>
-                <h3 class="fw-bold mb-0">{{ number_format($beneficiariesCount) }}</h3>
+                <div class="text-muted small">إجمالي المستفيدين</div>
+                <h4 class="fw-bold mb-0">{{ number_format($beneficiariesCount) }}</h4>
                 <div class="small text-muted mt-1">
-                    مستفيد مسجل
+                    مستفيد مسجل كلياً
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100 border border-primary border-opacity-25" style="background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);">
+                <div class="gh-metric-icon bg-primary bg-opacity-15 text-primary">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </div>
+                <div class="text-muted small fw-bold">الليالي خلال الشهر</div>
+                <h4 class="fw-bold mb-0 text-primary">{{ number_format($monthlyNightsCount) }}</h4>
+                <div class="small text-primary-emphasis mt-1">
+                    <i class="bi bi-check2-circle me-1"></i>ليلة إقامة فعلية
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="gh-metric-card h-100 border border-warning border-opacity-25" style="background: linear-gradient(180deg, #ffffff 0%, #fffcf5 100%);">
+                <div class="gh-metric-icon bg-warning bg-opacity-15 text-warning-emphasis">
+                    <i class="bi bi-person-hearts"></i>
+                </div>
+                <div class="text-muted small fw-bold">المستفيدون خلال الشهر</div>
+                <h4 class="fw-bold mb-0 text-dark">{{ number_format($monthlyBeneficiariesCount) }}</h4>
+                <div class="small text-warning-emphasis mt-1">
+                    <i class="bi bi-people-fill me-1"></i>نزيل خلال الفترة
                 </div>
             </div>
         </div>
