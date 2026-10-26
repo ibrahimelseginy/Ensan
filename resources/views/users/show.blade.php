@@ -58,7 +58,7 @@
                                     @csrf
                                     @method('PUT')
                                     <input type="file" id="profile_photo_upload" name="profile_photo" accept="image/*"
-                                        onchange="if(confirm('{{ $canManageUsers ? 'هل تريد تغيير الصورة الشخصية؟' : 'سيتم إرسال الصورة الجديدة إلى الأدمن للموافقة. هل تريد المتابعة؟' }}')) document.getElementById('avatar-form').submit()">
+                                        onchange="if(confirm('هل تريد تغيير الصورة الشخصية؟')) document.getElementById('avatar-form').submit()">
                                 </form>
                             @endif
                         </div>
@@ -186,6 +186,7 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
+                            {{-- 1. صورة العقد --}}
                             <div class="col-md-4">
                                 <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
                                     <div>
@@ -193,25 +194,39 @@
                                         @if($user->getFileUrl('contract_image'))
                                             <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
                                                 @if(Str::endsWith($user->contract_image, '.pdf'))
-                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 110px; width: 100%;">
                                                         <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
                                                     </div>
                                                 @else
-                                                    <img src="{{ $user->getFileUrl('contract_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <img src="{{ $user->getFileUrl('contract_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 110px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
                                                     <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
                                                 @endif
                                             </a>
                                         @else
-                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                            <div class="py-4 text-muted small"><i class="bi bi-file-earmark-x text-secondary fs-4 d-block mb-1"></i> لا توجد صورة مرفقة</div>
                                         @endif
                                     </div>
-                                    @if($user->getFileUrl('contract_image'))
-                                        <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                                            <i class="bi bi-eye me-1"></i> عرض
-                                        </a>
-                                    @endif
+                                    <div class="mt-2 d-flex gap-1.5 justify-content-center">
+                                        @if($user->getFileUrl('contract_image'))
+                                            <a href="{{ $user->getFileUrl('contract_image') }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                                                <i class="bi bi-eye me-1"></i> عرض
+                                            </a>
+                                        @endif
+                                        @if(!$pendingRequest && ($isOwnProfile || $canManageUsers))
+                                            <label for="upload_contract_image" class="btn btn-sm {{ $user->getFileUrl('contract_image') ? 'btn-outline-secondary' : 'btn-primary' }} flex-fill mb-0 cursor-pointer text-nowrap" style="cursor: pointer;">
+                                                <i class="bi bi-upload me-1"></i> {{ $user->getFileUrl('contract_image') ? 'استبدال' : 'إضافة المستند' }}
+                                            </label>
+                                            <form id="form_contract_image" action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data" class="d-none">
+                                                @csrf @method('PUT')
+                                                <input type="file" id="upload_contract_image" name="contract_image" accept="image/*,application/pdf"
+                                                    onchange="if(confirm('هل تريد رفع صورة العقد؟')) this.form.submit()">
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
+
+                            {{-- 2. الفيش الجنائي --}}
                             <div class="col-md-4">
                                 <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
                                     <div>
@@ -219,25 +234,39 @@
                                         @if($user->getFileUrl('criminal_record_image'))
                                             <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
                                                 @if(Str::endsWith($user->criminal_record_image, '.pdf'))
-                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 110px; width: 100%;">
                                                         <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
                                                     </div>
                                                 @else
-                                                    <img src="{{ $user->getFileUrl('criminal_record_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <img src="{{ $user->getFileUrl('criminal_record_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 110px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
                                                     <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
                                                 @endif
                                             </a>
                                         @else
-                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                            <div class="py-4 text-muted small"><i class="bi bi-file-earmark-x text-secondary fs-4 d-block mb-1"></i> لا توجد صورة مرفقة</div>
                                         @endif
                                     </div>
-                                    @if($user->getFileUrl('criminal_record_image'))
-                                        <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                                            <i class="bi bi-eye me-1"></i> عرض
-                                        </a>
-                                    @endif
+                                    <div class="mt-2 d-flex gap-1.5 justify-content-center">
+                                        @if($user->getFileUrl('criminal_record_image'))
+                                            <a href="{{ $user->getFileUrl('criminal_record_image') }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                                                <i class="bi bi-eye me-1"></i> عرض
+                                            </a>
+                                        @endif
+                                        @if(!$pendingRequest && ($isOwnProfile || $canManageUsers))
+                                            <label for="upload_criminal_record_image" class="btn btn-sm {{ $user->getFileUrl('criminal_record_image') ? 'btn-outline-secondary' : 'btn-primary' }} flex-fill mb-0 cursor-pointer text-nowrap" style="cursor: pointer;">
+                                                <i class="bi bi-upload me-1"></i> {{ $user->getFileUrl('criminal_record_image') ? 'استبدال' : 'إضافة المستند' }}
+                                            </label>
+                                            <form id="form_criminal_record_image" action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data" class="d-none">
+                                                @csrf @method('PUT')
+                                                <input type="file" id="upload_criminal_record_image" name="criminal_record_image" accept="image/*,application/pdf"
+                                                    onchange="if(confirm('هل تريد رفع صورة الفيش الجنائي؟')) this.form.submit()">
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
+
+                            {{-- 3. البطاقة الشخصية --}}
                             <div class="col-md-4">
                                 <div class="p-3 border rounded bg-body-tertiary text-center h-100 d-flex flex-column justify-content-between">
                                     <div>
@@ -245,23 +274,35 @@
                                         @if($user->getFileUrl('id_card_image'))
                                             <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="d-block mb-2 text-decoration-none">
                                                 @if(Str::endsWith($user->id_card_image, '.pdf'))
-                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 100px; width: 100%;">
+                                                    <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 110px; width: 100%;">
                                                         <i class="bi bi-file-earmark-pdf text-danger fs-1"></i>
                                                     </div>
                                                 @else
-                                                    <img src="{{ $user->getFileUrl('id_card_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 100px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <img src="{{ $user->getFileUrl('id_card_image') }}" class="img-thumbnail rounded shadow-sm" style="height: 110px; width: 100%; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
                                                     <div class="text-muted small py-3" style="display: none;"><i class="bi bi-exclamation-circle text-warning me-1"></i> تعذر معاينة الملف</div>
                                                 @endif
                                             </a>
                                         @else
-                                            <div class="py-4 text-muted small"><i class="bi bi-x-circle me-1"></i> لا توجد صورة</div>
+                                            <div class="py-4 text-muted small"><i class="bi bi-file-earmark-x text-secondary fs-4 d-block mb-1"></i> لا توجد صورة مرفقة</div>
                                         @endif
                                     </div>
-                                    @if($user->getFileUrl('id_card_image'))
-                                        <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                                            <i class="bi bi-eye me-1"></i> عرض
-                                        </a>
-                                    @endif
+                                    <div class="mt-2 d-flex gap-1.5 justify-content-center">
+                                        @if($user->getFileUrl('id_card_image'))
+                                            <a href="{{ $user->getFileUrl('id_card_image') }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                                                <i class="bi bi-eye me-1"></i> عرض
+                                            </a>
+                                        @endif
+                                        @if(!$pendingRequest && ($isOwnProfile || $canManageUsers))
+                                            <label for="upload_id_card_image" class="btn btn-sm {{ $user->getFileUrl('id_card_image') ? 'btn-outline-secondary' : 'btn-primary' }} flex-fill mb-0 cursor-pointer text-nowrap" style="cursor: pointer;">
+                                                <i class="bi bi-upload me-1"></i> {{ $user->getFileUrl('id_card_image') ? 'استبدال' : 'إضافة المستند' }}
+                                            </label>
+                                            <form id="form_id_card_image" action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data" class="d-none">
+                                                @csrf @method('PUT')
+                                                <input type="file" id="upload_id_card_image" name="id_card_image" accept="image/*,application/pdf"
+                                                    onchange="if(confirm('هل تريد رفع صورة البطاقة الشخصية؟')) this.form.submit()">
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

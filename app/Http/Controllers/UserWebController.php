@@ -73,7 +73,8 @@ final class UserWebController extends Controller
             ->where('status', 'pending')
             ->first();
 
-        $isOwnProfile   = (int) request()->user()->id === (int) $user->id;
+        $currentUserId  = request()->user()?->id ?? auth()->id();
+        $isOwnProfile   = (int) $currentUserId === (int) $user->id;
         $canManageUsers = Gate::allows('users.edit');
         $canViewUsers   = Gate::allows('users.view');
         $canDeleteUsers = Gate::allows('users.delete');
@@ -94,7 +95,8 @@ final class UserWebController extends Controller
             return redirect()->route('users.show', $user)->with('info', 'يوجد طلب تعديل قيد مراجعة الأدمن حاليًا.');
         }
 
-        $isOwnProfile   = (int) request()->user()->id === (int) $user->id;
+        $currentUserId  = request()->user()?->id ?? auth()->id();
+        $isOwnProfile   = (int) $currentUserId === (int) $user->id;
         $canManageUsers = Gate::allows('users.edit');
         $roles = $canManageUsers ? Role::orderBy('name')->get() : collect();
 
@@ -103,6 +105,27 @@ final class UserWebController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        // Direct single document/photo upload without requiring full form submission
+        $singleDocFields = [
+            'profile_photo'         => ['dir' => 'profile-photos', 'col' => 'profile_photo_path', 'msg' => 'تم تحديث الصورة الشخصية بنجاح.'],
+            'contract_image'        => ['dir' => 'user-docs', 'col' => 'contract_image', 'msg' => 'تم تحديث صورة العقد بنجاح.'],
+            'criminal_record_image' => ['dir' => 'user-docs', 'col' => 'criminal_record_image', 'msg' => 'تم تحديث الفيش الجنائي بنجاح.'],
+            'id_card_image'         => ['dir' => 'user-docs', 'col' => 'id_card_image', 'msg' => 'تم تحديث صورة البطاقة الشخصية بنجاح.'],
+        ];
+
+        foreach ($singleDocFields as $field => $config) {
+            if ($request->hasFile($field) && count(array_filter($request->except(['_token', '_method', $field]))) === 0) {
+                $canEdit = Gate::allows('users.edit')
+                    || (int)$request->user()->id === (int)$user->id
+                    || $request->user()->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']);
+
+                if ($canEdit) {
+                    $user->uploadImage($request->file($field), $config['dir'], $config['col']);
+                    return redirect()->route('users.show', $user)->with('success', $config['msg']);
+                }
+            }
+        }
+
         if ($this->hasPendingRequest($user)) {
             return redirect()->route('users.show', $user)->with('info', 'يوجد طلب تعديل قيد مراجعة الأدمن حاليًا.');
         }
@@ -127,10 +150,6 @@ final class UserWebController extends Controller
             'criminal_record_image' => $request->file('criminal_record_image'),
             'id_card_image'         => $request->file('id_card_image'),
         ];
-
-        if ($isOwnEmployeeRequest) {
-            $files = Arr::only($files, ['profile_photo']);
-        }
 
         $result = $this->userService->updateUser($user, $data, array_filter($files));
 

@@ -45,7 +45,13 @@ final readonly class UserService
         $data['is_volunteer'] = false;
         
         $roles = $data['roles'] ?? [];
-        unset($data['roles']);
+        unset(
+            $data['roles'],
+            $data['profile_photo'],
+            $data['contract_image'],
+            $data['criminal_record_image'],
+            $data['id_card_image']
+        );
 
         $user = $this->userRepository->create($data);
 
@@ -85,7 +91,11 @@ final readonly class UserService
         $roles = $data['roles'] ?? null;
         unset($data['roles']);
 
-        $isAdmin = request()->user()?->hasRole('admin') ?? false;
+        $currentUser = request()->user() ?? auth()->user();
+        $isAdmin = $currentUser && (
+            $currentUser->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) ||
+            \Illuminate\Support\Facades\Gate::allows('users.edit')
+        );
 
         if ($isAdmin) {
             // Accounts managed by an admin from this screen are employees.

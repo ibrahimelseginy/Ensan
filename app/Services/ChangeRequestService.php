@@ -24,8 +24,8 @@ class ChangeRequestService
 
         // Admin and manager roles auto-approve and execute immediately
         $isAdminOrManager = $user && (
-            $user->hasRole('admin') ||
-            $user->hasRole('manager')
+            $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) ||
+            \Illuminate\Support\Facades\Gate::allows('users.edit')
         );
 
         $canAutoApprove = $isAdminOrManager || !$forceRequest;
