@@ -12,25 +12,40 @@ class User extends Authenticatable
 
     protected $fillable = ['code', 'name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (($user->is_volunteer || $user->role === 'volunteer') && (empty($user->code) || !str_starts_with($user->code, 'V-'))) {
+                $user->code = self::nextVolunteerCode();
+            }
+        });
+
+        static::updating(function (User $user): void {
+            if (($user->is_volunteer || $user->role === 'volunteer') && (empty($user->code) || !str_starts_with($user->code, 'V-'))) {
+                $user->code = self::nextVolunteerCode();
+            }
+        });
+    }
+
     public static function nextVolunteerCode(): string
     {
-        $last = self::query()
+        $codes = self::query()
             ->where('code', 'like', 'V-%')
-            ->orderByDesc('id')
-            ->value('code');
+            ->pluck('code');
 
-        if ($last && preg_match('/V-(\d+)/', $last, $m)) {
-            $num = (int)$m[1] + 1;
-        } else {
-            $num = self::where('is_volunteer', true)->count() + 1;
+        $maxNum = 0;
+        foreach ($codes as $code) {
+            if (preg_match('/V-(\d+)/', (string) $code, $m)) {
+                $maxNum = max($maxNum, (int) $m[1]);
+            }
         }
 
-        return sprintf('V-%05d', $num);
+        return sprintf('V-%05d', $maxNum + 1);
     }
 
     public function getVolunteerCodeAttribute(): string
     {
-        if (!empty($this->code)) {
+        if (!empty($this->code) && str_starts_with($this->code, 'V-')) {
             return $this->code;
         }
         return sprintf('V-%05d', $this->id);

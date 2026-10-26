@@ -31,17 +31,18 @@ final class PrivateDocumentService
     public function url(string $path): ?string
     {
         if (!str_starts_with($path, 'private/') || !$this->canRead($path)) return null;
-        return URL::temporarySignedRoute('documents.download', now()->addMinutes(5), ['path' => $path]);
+        return URL::temporarySignedRoute('documents.download', now()->addHours(24), ['path' => $path]);
     }
 
     private function canRead(string $path): bool
     {
-        $user = request()->user() ?? auth('web_donor')->user();
+        $user = auth()->user() ?? (request() ? request()->user() : null) ?? auth('web_donor')->user();
         if ($user instanceof User) {
-            if ($user->hasRole('admin') || $user->hasRole('manager')) return true;
+            if ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) return true;
             if (str_contains($path, 'user-docs/')) {
-                if ($user->hasPermission('users.view')) return true;
-                return in_array($path, [$user->contract_image, $user->criminal_record_image, $user->id_card_image], true);
+                if ($user->hasPermission('users.view') || $user->hasPermission('users.edit') || \Illuminate\Support\Facades\Gate::allows('users.view') || \Illuminate\Support\Facades\Gate::allows('users.edit')) return true;
+                return in_array($path, [$user->contract_image, $user->criminal_record_image, $user->id_card_image], true)
+                    || User::where('contract_image', $path)->orWhere('criminal_record_image', $path)->orWhere('id_card_image', $path)->exists();
             }
             if (str_starts_with($path, 'private/attachments/')) return $user->hasPermission('attachments.view');
             if ($user->hasPermission('donations.view') || $user->hasPermission('website.donation_accounts.view')) return true;

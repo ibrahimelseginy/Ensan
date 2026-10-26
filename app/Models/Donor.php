@@ -21,6 +21,9 @@ final class Donor extends Model
     {
         static::creating(function (Donor $donor): void {
             $donor->code = self::normalizeCode($donor->code) ?: self::nextAvailableCode();
+            if ($donor->code && !str_starts_with($donor->code, 'D-')) {
+                $donor->code = self::nextAvailableCode();
+            }
         });
 
         static::updating(function (Donor $donor): void {
@@ -31,6 +34,9 @@ final class Donor extends Model
                 $donor->code = $originalCode;
             } elseif ($originalCode === null) {
                 $donor->code = self::normalizeCode($donor->code) ?: self::nextAvailableCode();
+            }
+            if ($donor->code && !str_starts_with($donor->code, 'D-')) {
+                $donor->code = self::nextAvailableCode();
             }
         });
     }
@@ -44,7 +50,7 @@ final class Donor extends Model
 
     public function getDisplayCodeAttribute(): string
     {
-        if (!empty($this->code)) {
+        if (!empty($this->code) && str_starts_with($this->code, 'D-')) {
             return $this->code;
         }
         return sprintf('D-%05d', $this->id);
@@ -52,7 +58,17 @@ final class Donor extends Model
 
     public static function nextAvailableCode(): string
     {
-        $nextId = ((int) self::max('id')) + 1;
+        $codes = self::query()
+            ->where('code', 'like', 'D-%')
+            ->pluck('code');
+
+        $maxNum = 0;
+        foreach ($codes as $c) {
+            if (preg_match('/D-(\d+)/', (string) $c, $m)) {
+                $maxNum = max($maxNum, (int) $m[1]);
+            }
+        }
+
         $pendingCodes = ChangeRequest::query()
             ->where('model_type', self::class)
             ->where('action', 'create')
@@ -71,9 +87,10 @@ final class Donor extends Model
             ->filter()
             ->all();
 
+        $nextNum = $maxNum + 1;
         do {
-            $code = 'D-' . str_pad((string) $nextId, 5, '0', STR_PAD_LEFT);
-            $nextId++;
+            $code = sprintf('D-%05d', $nextNum);
+            $nextNum++;
         } while (self::where('code', $code)->exists() || in_array($code, $pendingCodes, true));
 
         return $code;

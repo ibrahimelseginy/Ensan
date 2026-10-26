@@ -120,8 +120,12 @@ final class UserWebController extends Controller
                     || $request->user()->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']);
 
                 if ($canEdit) {
+                    $oldVal = $user->{$config['col']};
                     $user->uploadImage($request->file($field), $config['dir'], $config['col']);
-                    return redirect()->route('users.show', $user)->with('success', $config['msg']);
+                    if ($user->{$config['col']} !== $oldVal && !empty($user->{$config['col']})) {
+                        return redirect()->route('users.show', $user)->with('success', $config['msg']);
+                    }
+                    return redirect()->route('users.show', $user)->with('error', 'تعذر رفع المستند، يرجى التأكد من صيغة الملف وحجمه.');
                 }
             }
         }

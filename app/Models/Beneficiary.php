@@ -84,11 +84,17 @@ final class Beneficiary extends Model
             if (empty($beneficiary->classification)) {
                 $beneficiary->classification = 'A';
             }
+            if (!empty($beneficiary->guest_house_id) && (empty($beneficiary->code) || !str_starts_with($beneficiary->code, 'G-'))) {
+                $beneficiary->code = self::nextGuestCode();
+            }
         });
 
         static::updating(function (Beneficiary $beneficiary): void {
             if (auth()->check()) {
                 $beneficiary->updated_by = auth()->id();
+            }
+            if (!empty($beneficiary->guest_house_id) && (empty($beneficiary->code) || !str_starts_with($beneficiary->code, 'G-'))) {
+                $beneficiary->code = self::nextGuestCode();
             }
         });
     }
@@ -169,18 +175,18 @@ final class Beneficiary extends Model
 
     public static function nextGuestCode(): string
     {
-        $last = self::query()
+        $codes = self::query()
             ->where('code', 'like', 'G-%')
-            ->orderByDesc('id')
-            ->value('code');
+            ->pluck('code');
 
-        if ($last && preg_match('/G-(\d+)/', $last, $m)) {
-            $num = (int)$m[1] + 1;
-        } else {
-            $num = self::whereNotNull('guest_house_id')->count() + 1;
+        $maxNum = 0;
+        foreach ($codes as $code) {
+            if (preg_match('/G-(\d+)/', (string) $code, $m)) {
+                $maxNum = max($maxNum, (int) $m[1]);
+            }
         }
 
-        return sprintf('G-%05d', $num);
+        return sprintf('G-%05d', $maxNum + 1);
     }
 
     public function getGuestCodeAttribute(): string
