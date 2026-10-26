@@ -23,6 +23,7 @@ final class StoreBeneficiaryRequest extends FormRequest
         return [
             'existing_beneficiary_id'   => 'nullable|exists:beneficiaries,id',
             'code'                      => 'nullable|string|max:50|unique:beneficiaries,code',
+            'classification'            => 'nullable|string|in:A,B,a,b',
             'full_name'                 => $hasExisting 
                                             ? 'nullable|string|max:255' 
                                             : ['required', 'string', 'max:255', new UniqueBeneficiaryName()],

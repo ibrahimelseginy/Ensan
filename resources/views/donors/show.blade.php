@@ -9,7 +9,10 @@
             </div>
             <div>
                 <h4 class="mb-1">{{ $donor->name }}</h4>
-                <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fw-bold px-2.5 py-1">
+                        {{ $donor->display_code }}
+                    </span>
                     <span
                         class="badge bg-secondary-subtle text-body border">{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}</span>
                     <span

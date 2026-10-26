@@ -201,19 +201,19 @@
                 <div class="source-segmented-group d-flex flex-wrap gap-1.5 p-1 bg-light rounded-pill border">
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('source', 'page'), [])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ !request('source') ? 'active-seg shadow-xs' : '' }}">
-                        <i class="bi bi-grid-fill me-1"></i> جميع المصادر <span class="badge bg-secondary bg-opacity-25 text-dark ms-1 font-monospace">{{ $sourceCounts['all'] ?? 0 }}</span>
+                        <i class="bi bi-grid-fill me-1"></i> جميع المصادر <span class="badge ms-1 font-monospace {{ !request('source') ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary bg-opacity-15 text-muted' }}">{{ $sourceCounts['all'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'website'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'website' ? 'active-seg-website shadow-xs' : '' }}">
-                        <i class="bi bi-globe2 me-1 text-info"></i> الويبسايت <span class="badge bg-info bg-opacity-25 text-info ms-1 font-monospace">{{ $sourceCounts['website'] ?? 0 }}</span>
+                        <i class="bi bi-globe2 me-1 {{ request('source') == 'website' ? 'text-white' : 'text-info' }}"></i> الويبسايت <span class="badge ms-1 font-monospace {{ request('source') == 'website' ? 'bg-white bg-opacity-25 text-white' : 'bg-info bg-opacity-15 text-info' }}">{{ $sourceCounts['website'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'system'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'system' ? 'active-seg-system shadow-xs' : '' }}">
-                        <i class="bi bi-laptop me-1 text-success"></i> السيستم <span class="badge bg-success bg-opacity-25 text-success ms-1 font-monospace">{{ $sourceCounts['system'] ?? 0 }}</span>
+                        <i class="bi bi-laptop me-1 {{ request('source') == 'system' ? 'text-white' : 'text-success' }}"></i> السيستم <span class="badge ms-1 font-monospace {{ request('source') == 'system' ? 'bg-white bg-opacity-25 text-white' : 'bg-success bg-opacity-15 text-success' }}">{{ $sourceCounts['system'] ?? 0 }}</span>
                     </a>
                     <a href="{{ route('mobile.case-applications.index', array_merge(request()->except('page'), ['source' => 'mobile'])) }}" 
                        class="btn btn-sm rounded-pill px-3 fw-bold source-seg-btn {{ request('source') == 'mobile' ? 'active-seg-mobile shadow-xs' : '' }}">
-                        <i class="bi bi-phone-fill me-1 text-warning"></i> الموبايل <span class="badge bg-warning bg-opacity-25 text-warning-emphasis ms-1 font-monospace">{{ $sourceCounts['mobile'] ?? 0 }}</span>
+                        <i class="bi bi-phone-fill me-1 {{ request('source') == 'mobile' ? 'text-white' : 'text-warning' }}"></i> الموبايل <span class="badge ms-1 font-monospace {{ request('source') == 'mobile' ? 'bg-white bg-opacity-25 text-white' : 'bg-warning bg-opacity-15 text-warning-emphasis' }}">{{ $sourceCounts['mobile'] ?? 0 }}</span>
                     </a>
                 </div>
             </div>
@@ -545,6 +545,18 @@
                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow-lg modal-glass-theme" style="border-radius: 24px; overflow: hidden;">
                         
+                        <!-- Official Print-Only Letterhead -->
+                        <div class="print-official-header d-none w-100 p-3 mb-2 border-bottom border-2 border-success align-items-center justify-content-between">
+                            <div>
+                                <h4 class="fw-bold mb-1" style="color: #059669 !important;">مؤسسة إنسان الخيرية</h4>
+                                <div class="small text-muted">إدارة البحث الميداني والرعاية الاجتماعية — استمارة فحص وبحث مبدئي</div>
+                            </div>
+                            <div class="text-start">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2.5 py-1 small fw-bold">#{{ $app->id }} - {{ $app->case_type_label }}</span>
+                                <div class="small text-muted mt-1">تاريخ القيد: {{ $app->created_at->format('Y-m-d') }}</div>
+                            </div>
+                        </div>
+
                         <!-- Modal Header -->
                         <div class="modal-header bg-stats-header px-4 py-3 border-bottom border-light-subtle d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-2.5">
@@ -552,7 +564,12 @@
                                     {{ $initial }}
                                 </div>
                                 <div>
-                                    <h5 class="modal-title fw-800 text-stats-main mb-0">{{ $app->applicant_name }}</h5>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h5 class="modal-title fw-800 text-stats-main mb-0">{{ $app->applicant_name }}</h5>
+                                        <span class="badge bg-{{ $app->status_color }} bg-opacity-15 text-{{ $app->status_color }} border border-{{ $app->status_color }} border-opacity-25 rounded-pill px-2.5 py-0.5 x-small fw-bold">
+                                            {{ $app->status_label }}
+                                        </span>
+                                    </div>
                                     <div class="d-flex align-items-center gap-2 mt-1">
                                         <span class="badge {{ $app->source_badge['class'] }} rounded-pill px-2 py-0.5 x-small fw-bold">
                                             <i class="bi {{ $app->source_badge['icon'] }}"></i> {{ $app->source_badge['label'] }}
@@ -563,9 +580,10 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" onclick="window.print()">
-                                    <i class="bi bi-printer me-1"></i> طباعة
-                                </button>
+                                <a href="{{ route('mobile.case-applications.print', $app->id) }}?autoprint=1" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3.5 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" title="طباعة الاستمارة الرسمية A4 أو الحفظ كـ PDF">
+                                    <i class="bi bi-printer-fill"></i>
+                                    <span>طباعة الاستمارة الرسمية (A4)</span>
+                                </a>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                         </div>
@@ -583,12 +601,15 @@
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <label class="text-muted small fw-bold mb-1 d-block">رقم الهاتف الأساسي</label>
-                                                <div class="d-flex align-items-center gap-2">
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
                                                     <a href="tel:{{ $app->applicant_phone }}" class="fw-bold fs-6 font-monospace text-primary text-decoration-none">
                                                         <i class="bi bi-telephone-fill me-1"></i>{{ $app->applicant_phone }}
                                                     </a>
+                                                    <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0.5" onclick="navigator.clipboard.writeText('{{ $app->applicant_phone }}'); const el=this; el.innerHTML='<i class=\'bi bi-check2\'></i> تم النسخ'; setTimeout(() => el.innerHTML='<i class=\'bi bi-copy\'></i> نسخ', 1500);" title="نسخ رقم الهاتف">
+                                                        <i class="bi bi-copy"></i> نسخ
+                                                    </button>
                                                     @if(!empty($cleanPhone))
-                                                        <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMsg }}" target="_blank" class="btn btn-xs btn-success rounded-pill px-2.5 py-1 fw-bold text-white d-inline-flex align-items-center gap-1">
+                                                        <a href="https://wa.me/{{ $whatsappNumber }}?text={{ $whatsappMsg }}" target="_blank" class="btn btn-xs btn-success rounded-pill px-2.5 py-1 fw-bold text-white d-inline-flex align-items-center gap-1 shadow-xs">
                                                             <i class="bi bi-whatsapp"></i> واتساب
                                                         </a>
                                                     @endif
@@ -754,7 +775,15 @@
 
                                                 <!-- Rejection Reason Textarea -->
                                                 <div class="col-12 {{ in_array($app->status, ['rejected', 'مرفوض']) ? '' : 'd-none' }}" id="rejectionReasonBox{{ $app->id }}">
-                                                    <label class="form-label small fw-bold text-danger">سبب الرفض <span class="text-danger">* (إلزامي في حال الرفض)</span></label>
+                                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                                        <label class="form-label small fw-bold text-danger mb-0">سبب الرفض <span class="text-danger">* (إلزامي في حال الرفض)</span></label>
+                                                    </div>
+                                                    <div class="quick-rejection-chips d-flex gap-1 flex-wrap mb-2">
+                                                        <button type="button" class="btn btn-xs btn-outline-danger rounded-pill py-0.5 px-2" onclick="setRejectionReason({{ $app->id }}, 'الحالة خارج نطاق التغطية الجغرافية المعتمدة للمؤسسة حالياً')">خارج النطاق الجغرافي</button>
+                                                        <button type="button" class="btn btn-xs btn-outline-danger rounded-pill py-0.5 px-2" onclick="setRejectionReason({{ $app->id }}, 'عدم استيفاء شروط ومعايير القبول المعتمدة للمشروع')">عدم استيفاء الشروط</button>
+                                                        <button type="button" class="btn btn-xs btn-outline-danger rounded-pill py-0.5 px-2" onclick="setRejectionReason({{ $app->id }}, 'أرقام الهاتف غير صحيحة أو مغلقة وتعذر الوصول لصاحب الحالة')">تعذر التواصل</button>
+                                                        <button type="button" class="btn btn-xs btn-outline-danger rounded-pill py-0.5 px-2" onclick="setRejectionReason({{ $app->id }}, 'تكرار الطلب، توجد استمارة سابقة مسجلة لنفس الحالة')">طلب مكرر</button>
+                                                    </div>
                                                     <textarea name="rejection_reason" id="rejectionInput{{ $app->id }}" class="form-control border-danger rounded-3" rows="3" placeholder="اكتب سبب عدم قبول الطلب بالتفصيل لتسجيله رسمياً في السجل...">{{ $app->rejection_reason }}</textarea>
                                                 </div>
 
@@ -778,6 +807,41 @@
                                         <form id="del-form-{{ $app->id }}" action="{{ route('mobile.case-applications.destroy', $app->id) }}" method="POST" class="d-none">
                                             @csrf @method('DELETE')
                                         </form>
+
+                                        <!-- Official Print-Only Summary & Signatures Block -->
+                                        <div class="print-only-decision d-none">
+                                            <div class="p-3 border rounded-3 bg-light" style="border: 1px solid #cbd5e1 !important; page-break-inside: avoid;">
+                                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                    <span class="fw-bold">قرار ونتيجة البحث المبدئي: <span class="badge bg-secondary text-dark">{{ $app->status_label }}</span></span>
+                                                    <span class="small text-muted font-monospace">كود الطلب: #{{ $app->id }}</span>
+                                                </div>
+                                                @if($app->status === 'rejected' && $app->rejection_reason)
+                                                    <div class="alert alert-danger py-1.5 px-2.5 small mb-2">
+                                                        <strong>سبب عدم القبول / الرفض:</strong> {{ $app->rejection_reason }}
+                                                    </div>
+                                                @endif
+                                                @if($app->admin_notes)
+                                                    <div class="small text-muted mb-2">
+                                                        <strong>ملاحظات وتوجيهات إدارية:</strong> {{ $app->admin_notes }}
+                                                    </div>
+                                                @endif
+                                                <div class="row text-center mt-3 pt-2 border-top">
+                                                    <div class="col-4">
+                                                        <div class="x-small text-muted mb-3">باحث الحالة / المستلم</div>
+                                                        <div class="border-top pt-1 small fw-bold">التوقيع: .....................</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="x-small text-muted mb-3">مدير إدارة البحث الاجتماعي</div>
+                                                        <div class="border-top pt-1 small fw-bold">الاعتماد: .....................</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="border border-secondary border-dashed rounded p-2 x-small text-muted h-100 d-flex align-items-center justify-content-center">
+                                                            خاتم مؤسسة إنسان
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1220,6 +1284,14 @@ function toggleRejectionBox(appId) {
     }
 }
 
+function setRejectionReason(appId, reason) {
+    const input = document.getElementById('rejectionInput' + appId);
+    if (input) {
+        input.value = reason;
+        input.focus();
+    }
+}
+
 function toggleNewSubmitter() {
     const isOther = document.getElementById('newSubOther').checked;
     const box = document.getElementById('newSubmitterFields');
@@ -1580,27 +1652,36 @@ function submitBulkDelete() {
 /* Source Segmented Control */
 .source-seg-btn {
     border: none;
-    color: #475569;
-    transition: all 0.2s;
+    color: #64748b;
+    font-size: 0.85rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .source-seg-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.04);
     color: #0f172a;
 }
 .active-seg {
-    background: #0f172a !important;
+    background: linear-gradient(135deg, #0d9488, #059669) !important;
     color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35) !important;
 }
 .active-seg-website {
-    background: #0284c7 !important;
+    background: linear-gradient(135deg, #0284c7, #2563eb) !important;
     color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
 }
 .active-seg-system {
-    background: #059669 !important;
+    background: linear-gradient(135deg, #059669, #10b981) !important;
     color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
 }
 .active-seg-mobile {
-    background: #d97706 !important;
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35) !important;
+}
+.active-seg .badge, .active-seg-website .badge, .active-seg-system .badge, .active-seg-mobile .badge {
+    background: rgba(255, 255, 255, 0.25) !important;
     color: #ffffff !important;
 }
 
@@ -1951,6 +2032,159 @@ function submitBulkDelete() {
 }
 .theme-dark .executive-data-table td {
     border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Modal Dossier Card & Panel Modernization */
+.dossier-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+.theme-dark .dossier-card {
+    background: #152238 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-decision-panel {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+.theme-dark .admin-decision-panel {
+    background: #152238 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Hide UI navigation, action bars, search, hero headers, buttons */
+    header, nav, .navbar, .sidebar, .btn, .dashboard-hero, #bulk-action-bar, 
+    .kpi-card-lux, .source-seg-btn, .view-toggle-btn, .search-input-lux, 
+    .pagination, .modal-backdrop, .modal-header .btn-close, .modal-header .btn, 
+    #createCaseModal, .quick-rejection-chips, .case-card-item, .view-mode-section:not(#tableViewContainer) {
+        display: none !important;
+    }
+
+    /* Hide any modal that is NOT currently open (Prevents 5 duplicate pages) */
+    .modal:not(.show) {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+    body.modal-open .modal:not(.show) {
+        display: none !important;
+    }
+
+    /* Only show the currently opened modal */
+    .modal.show {
+        position: static !important;
+        display: block !important;
+        background: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+    }
+
+    .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+    }
+
+    .modal-header {
+        background: transparent !important;
+        padding: 0 0 8px 0 !important;
+        border-bottom: 2px solid #059669 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .modal-body {
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+    }
+
+    /* Show Print Letterhead & Decision Summary */
+    .print-official-header {
+        display: flex !important;
+    }
+
+    .print-only-decision {
+        display: block !important;
+        margin-top: 10px !important;
+    }
+
+    /* Hide edit forms during print */
+    .admin-decision-panel form {
+        display: none !important;
+    }
+
+    .dossier-card, .admin-decision-panel {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-bottom: 8px !important;
+        padding: 10px !important;
+    }
+
+    /* Grid formatting for print */
+    .col-lg-7 {
+        width: 58% !important;
+        float: right !important;
+    }
+    .col-lg-5 {
+        width: 42% !important;
+        float: left !important;
+    }
+    .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+
+    /* If no modal is open and user prints the table */
+    body:not(.modal-open) #tableViewContainer {
+        display: block !important;
+    }
+    body:not(.modal-open) .executive-data-table {
+        display: table !important;
+        width: 100% !important;
+    }
+    body:not(.modal-open) .modal {
+        display: none !important;
+    }
 }
 </style>
 @endsection

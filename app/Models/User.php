@@ -10,7 +10,31 @@ class User extends Authenticatable
 {
     use SoftDeletes, \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
-    protected $fillable = ['name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
+    protected $fillable = ['code', 'name', 'email', 'password', 'phone', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
+
+    public static function nextVolunteerCode(): string
+    {
+        $last = self::query()
+            ->where('code', 'like', 'V-%')
+            ->orderByDesc('id')
+            ->value('code');
+
+        if ($last && preg_match('/V-(\d+)/', $last, $m)) {
+            $num = (int)$m[1] + 1;
+        } else {
+            $num = self::where('is_volunteer', true)->count() + 1;
+        }
+
+        return sprintf('V-%05d', $num);
+    }
+
+    public function getVolunteerCodeAttribute(): string
+    {
+        if (!empty($this->code)) {
+            return $this->code;
+        }
+        return sprintf('V-%05d', $this->id);
+    }
 
     public function tokens(): HasMany
     {

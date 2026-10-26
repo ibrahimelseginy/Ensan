@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 {{-- Premium Dashboard Hero --}}
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);">
@@ -59,7 +59,12 @@
         <div class="card h-100 shadow-sm border-0">
           <div class="card-body position-relative">
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <h5 class="card-title fw-bold text-body mb-0 text-truncate" style="max-width: 70%;">{{ $v->name }}</h5>
+              <div>
+                <h5 class="card-title fw-bold text-body mb-1 text-truncate" style="max-width: 220px;">{{ $v->name }}</h5>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-0.5 rounded-pill x-small fw-bold">
+                  {{ $v->volunteer_code }}
+                </span>
+              </div>
               @if($v->active)
                 <span class="badge bg-success-subtle text-success rounded-pill">نشط</span>
               @else

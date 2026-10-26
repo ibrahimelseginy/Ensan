@@ -140,6 +140,40 @@ final class GuestHouseWebController extends Controller
             ->get();
         $todayMeals = $guest_house->meals()->whereDate('meal_date', today())
             ->with('servings.beneficiary')->get()->keyBy('meal_type');
+        $pastMeals = $guest_house->meals()
+            ->with(['servings.beneficiary', 'creator', 'warehouse', 'item'])
+            ->latest('meal_date')
+            ->limit(50)
+            ->get();
+
+        $kpiFrom = request('kpi_from', now()->startOfMonth()->toDateString());
+        $kpiTo   = request('kpi_to', now()->endOfMonth()->toDateString());
+
+        $staysInPeriod = $guest_house->stays()
+            ->whereDate('arrival_date', '<=', $kpiTo)
+            ->where(function ($q) use ($kpiFrom) {
+                $q->whereNull('departed_at')->orWhereDate('departed_at', '>=', $kpiFrom);
+            })
+            ->with('beneficiary')
+            ->get();
+
+        $monthlyBeneficiariesCount = $staysInPeriod->pluck('beneficiary_id')->unique()->count();
+
+        $monthlyNightsCount = 0;
+        foreach ($staysInPeriod as $s) {
+            $arr = \Carbon\Carbon::parse($s->arrival_date)->startOfDay();
+            $dep = $s->departed_at ? \Carbon\Carbon::parse($s->departed_at)->startOfDay() : now()->startOfDay();
+            $start = $arr->max(\Carbon\Carbon::parse($kpiFrom)->startOfDay());
+            $end = $dep->min(\Carbon\Carbon::parse($kpiTo)->startOfDay());
+            if ($end->gte($start)) {
+                $monthlyNightsCount += max(1, $start->diffInDays($end));
+            }
+        }
+
+        $totalWingsCount = max(3, $guestHouseWings->count());
+        $activeWingsCount = max(3, $guestHouseWings->where('is_active', true)->count());
+        $totalCapacityBeds = max(24, $guestHouseWings->sum(fn ($w) => $w->beds->count()));
+
         $pendingBookings = WebRoomBooking::query()
             ->where('status', 'pending')
             ->where(function ($query) use ($guest_house) {
@@ -175,6 +209,14 @@ final class GuestHouseWebController extends Controller
             ,'guestHouseInventory'
             ,'inventoryLogs'
             ,'todayMeals'
+            ,'pastMeals'
+            ,'kpiFrom'
+            ,'kpiTo'
+            ,'monthlyBeneficiariesCount'
+            ,'monthlyNightsCount'
+            ,'totalWingsCount'
+            ,'activeWingsCount'
+            ,'totalCapacityBeds'
             ,'pendingBookings'
             ,'pendingMobileCases'
         ), $stats));
@@ -234,7 +276,7 @@ final class GuestHouseWebController extends Controller
 
         $data['status'] = 'new';
         if (empty($data['code'])) {
-            $data['code'] = 'BEN-' . strtoupper(Str::random(6));
+            $data['code'] = Beneficiary::nextGuestCode();
         }
 
         DB::transaction(function () use ($request, $guest_house, $data, $existingBeneficiaryId, $allocatedBeneficiaryIds, $sponsorIds, $bedId, $profileData, $arrivalDate, $expectedDays): void {
@@ -836,31 +878,96 @@ final class GuestHouseWebController extends Controller
     public function storeMeal(Request $request, GuestHouse $guest_house): RedirectResponse
     {
         $data = $request->validate([
-            'meal_date' => 'required|date', 'meal_type' => 'required|in:breakfast,lunch,dinner',
-            'served_at' => 'nullable|date_format:H:i', 'meal_image' => 'nullable|any_image|max:10240',
+            'meal_date' => 'required|date',
+            'meal_type' => 'required|in:breakfast,lunch,dinner',
+            'served_at' => 'nullable|date_format:H:i',
+            'meal_image' => 'nullable|any_image|max:10240',
             'received_beneficiary_ids' => 'nullable|array',
-            'received_beneficiary_ids.*' => 'integer|exists:beneficiaries,id', 'notes' => 'nullable|string|max:1000',
+            'received_beneficiary_ids.*' => 'integer|exists:beneficiaries,id',
+            'notes' => 'nullable|string|max:1000',
+            'warehouse_id' => 'nullable|integer|exists:warehouses,id',
+            'item_id' => 'nullable|integer|exists:items,id',
+            'quantity_deducted' => 'nullable|numeric|min:0.01',
+            'record_expense' => 'nullable|boolean',
+            'expense_amount' => 'nullable|numeric|min:0.01',
+            'expense_treasury_id' => 'nullable|integer|exists:treasuries,id',
+            'servings' => 'nullable|array',
         ]);
 
         DB::transaction(function () use ($request, $guest_house, $data): void {
             $meal = GuestHouseMeal::updateOrCreate(
                 ['guest_house_id' => $guest_house->id, 'meal_date' => $data['meal_date'], 'meal_type' => $data['meal_type']],
-                ['served_at' => $data['served_at'] ?? null, 'notes' => $data['notes'] ?? null, 'created_by' => auth()->id()]
+                [
+                    'served_at' => $data['served_at'] ?? null,
+                    'notes' => $data['notes'] ?? null,
+                    'created_by' => auth()->id(),
+                    'warehouse_id' => $data['warehouse_id'] ?? null,
+                    'item_id' => $data['item_id'] ?? null,
+                    'quantity_deducted' => $data['quantity_deducted'] ?? null,
+                ]
             );
+
             if ($request->hasFile('meal_image')) {
                 $meal->uploadImage($request->file('meal_image'), 'guest-houses/meals');
             }
+
+            // Deduct from inventory if warehouse and item specified
+            if (!empty($data['warehouse_id']) && !empty($data['item_id']) && !empty($data['quantity_deducted'])) {
+                InventoryTransaction::create([
+                    'warehouse_id' => $data['warehouse_id'],
+                    'item_id' => $data['item_id'],
+                    'guest_house_id' => $guest_house->id,
+                    'type' => 'out',
+                    'quantity' => (float)$data['quantity_deducted'],
+                    'transaction_date' => $data['meal_date'],
+                    'notes' => 'صرف وجبات ' . ($meal->meal_type ?? 'دار الضيافة') . ' بتاريخ ' . $data['meal_date'],
+                    'status' => 'approved',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // Record expense if requested
+            if (!empty($data['record_expense']) && !empty($data['expense_amount']) && !empty($data['expense_treasury_id'])) {
+                $expense = \App\Models\Expense::create([
+                    'treasury_id' => $data['expense_treasury_id'],
+                    'guest_house_id' => $guest_house->id,
+                    'amount' => (float)$data['expense_amount'],
+                    'date' => $data['meal_date'],
+                    'category' => 'إعاشة ووجبات',
+                    'description' => 'تكلفة وجبة ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
+                    'created_by' => auth()->id(),
+                ]);
+                $meal->update([
+                    'expense_recorded' => true,
+                    'expense_id' => $expense->id,
+                ]);
+            }
+
             $receivedIds = array_map('intval', $data['received_beneficiary_ids'] ?? []);
+            $servingsInput = $data['servings'] ?? [];
             $residentIds = $guest_house->stays()->where('status', 'resident')->pluck('beneficiary_id')->unique();
+
             foreach ($residentIds as $beneficiaryId) {
                 $received = in_array((int) $beneficiaryId, $receivedIds, true);
+                $bServing = $servingsInput[$beneficiaryId] ?? [];
+                
+                $companionName = !empty($bServing['companion_name']) ? trim((string)$bServing['companion_name']) : null;
+                $pMeals = isset($bServing['patient_meals_count']) ? (int)$bServing['patient_meals_count'] : ($received ? 1 : 0);
+                $cMeals = isset($bServing['companion_meals_count']) ? (int)$bServing['companion_meals_count'] : 0;
+                $totMeals = $pMeals + $cMeals;
+
                 $meal->servings()->updateOrCreate(['beneficiary_id' => $beneficiaryId], [
-                    'received' => $received, 'received_at' => $received ? now() : null,
+                    'received' => $received,
+                    'received_at' => $received ? now() : null,
+                    'companion_name' => $companionName,
+                    'patient_meals_count' => $pMeals,
+                    'companion_meals_count' => $cMeals,
+                    'total_meals_count' => $totMeals,
                 ]);
             }
         });
 
-        return back()->with('success', 'تم حفظ كشف الوجبة للمقيمين.');
+        return back()->with('success', 'تم حفظ كشف الوجبة للمقيمين والمرافقين بنجاح.');
     }
 
     public function decideBooking(Request $request, GuestHouse $guest_house, WebRoomBooking $booking): RedirectResponse
@@ -1071,7 +1178,7 @@ final class GuestHouseWebController extends Controller
 
         if (! $beneficiary) {
             $beneficiary = Beneficiary::create([
-                'code' => 'BEN-' . strtoupper(Str::random(6)), 'full_name' => $data['name'],
+                'code' => Beneficiary::nextGuestCode(), 'full_name' => $data['name'],
                 'national_id' => $data['national_id'] ?? null, 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null, 'assistance_type' => 'service',
                 'status' => 'accepted', 'guest_house_id' => $guestHouse->id, 'notes' => $data['notes'] ?? null,

@@ -1077,6 +1077,8 @@ final class DataImportService
         $b->assistance_type = $data['assistance_type'] ?? 'مالية';
         $b->notes = $data['notes'] ?? 'تم الاستيراد عبر ملف Excel';
         $b->status = 'active';
+        $b->created_by = $userId;
+        $b->updated_by = $userId;
         $b->code = 'BEN-' . date('ymd') . '-' . mt_rand(100, 999);
         $b->save();
 

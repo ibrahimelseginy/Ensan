@@ -33,6 +33,9 @@
             };
           @endphp
           <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
+          <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-1 fw-bold fs-6">
+            <i class="bi bi-award-fill me-1"></i> تصنيف ({{ $beneficiary->classification ?? 'A' }})
+          </span>
           @if(!empty($isDup) && $isDup)
             <span class="badge bg-danger">مكرر محتمل</span>
           @endif
@@ -89,17 +92,51 @@
           </div>
 
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="info-row">
                 <span class="info-label">كود المستفيد</span>
                 <span class="info-value font-monospace">{{ $beneficiary->code ?? '—' }}</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <div class="info-row">
+                <span class="info-label">تصنيف الملف</span>
+                <span class="info-value">
+                  <span class="badge bg-primary text-white px-2 py-1 fw-bold">تصنيف ({{ $beneficiary->classification ?? 'A' }})</span>
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4">
               <div class="info-row">
                 <span class="info-label">الحالة</span>
                 <span class="info-value">
                   <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-row bg-light rounded-3 p-2">
+                <span class="info-label text-success fw-bold"><i class="bi bi-person-plus-fill me-1"></i> أضيف بواسطة</span>
+                <span class="info-value">
+                  @if($beneficiary->creator)
+                    <strong class="text-dark">{{ $beneficiary->creator->name }}</strong>
+                    <span class="text-muted small d-block font-monospace"><i class="bi bi-clock me-1"></i>{{ $beneficiary->created_at?->format('Y-m-d H:i') }}</span>
+                  @else
+                    <span class="text-muted">النظام الأساسي ({{ $beneficiary->created_at?->format('Y-m-d') }})</span>
+                  @endif
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-row bg-light rounded-3 p-2">
+                <span class="info-label text-primary fw-bold"><i class="bi bi-pencil-square me-1"></i> آخر تعديل بواسطة</span>
+                <span class="info-value">
+                  @if($beneficiary->updater)
+                    <strong class="text-dark">{{ $beneficiary->updater->name }}</strong>
+                    <span class="text-muted small d-block font-monospace"><i class="bi bi-clock me-1"></i>{{ $beneficiary->updated_at?->format('Y-m-d H:i') }}</span>
+                  @else
+                    <span class="text-muted">لم يُعدل بعد ({{ $beneficiary->updated_at?->format('Y-m-d') }})</span>
+                  @endif
                 </span>
               </div>
             </div>
@@ -152,7 +189,9 @@
         </div>
       </div>
 
-      @php($activeFamilyMembers = $beneficiary->familyMembers->where('active', true))
+      @php
+        $activeFamilyMembers = $beneficiary->familyMembers->where('active', true);
+      @endphp
       @if($activeFamilyMembers->isNotEmpty())
         <div class="card mb-4">
           <div class="card-body">
@@ -300,54 +339,271 @@
         </div>
       </div>
 
-      {{-- Attachments Section --}}
-      <div class="card">
+      {{-- Attachments & Official Documents Section --}}
+      <div class="card mb-4 shadow-sm">
         <div class="card-body">
-          <div class="section-title mb-3">
-            <i class="bi bi-paperclip"></i>
-            <h5 class="mb-0">المرفقات</h5>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="section-title mb-0">
+              <i class="bi bi-paperclip text-primary fs-5"></i>
+              <h5 class="mb-0 fw-bold">الأوراق والمرفقات الرسمية</h5>
+            </div>
+            @php
+              $totalAttsCount = $beneficiary->attachments->count() + ($linkedCaseApplications?->filter(fn($app) => $app->id_image_path || $app->medical_report_path)->count() ?? 0);
+            @endphp
+            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill font-monospace">
+              {{ $totalAttsCount }} مستند / ملف
+            </span>
           </div>
 
-          <form method="POST" action="{{ route('attachments.store') }}" enctype="multipart/form-data" class="mb-3">
+          {{-- Upload Form --}}
+          <form method="POST" action="{{ route('attachments.store') }}" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded-3 border">
             @csrf
-            <!-- Use PHP class syntax for clean namespace -->
             <input type="hidden" name="entity_type" value="{{ \App\Models\Beneficiary::class }}">
             <input type="hidden" name="entity_id" value="{{ $beneficiary->id }}">
-            <div class="d-flex gap-2 align-items-center">
-              <div class="flex-grow-1 input-icon-wrapper">
-                <input type="file" name="file" class="form-control" required>
-                <i class="bi bi-upload input-icon"></i>
+            <div class="row g-2 align-items-center">
+              <div class="col-md-9">
+                <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة للملف</label>
+                <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip">
+                <div class="form-text small text-muted">يدعم الصور (JPG, PNG, WEBP) وملفات PDF وWord حتى 10 ميجابايت.</div>
               </div>
-              <button class="btn btn-primary">
-                <i class="bi bi-cloud-upload me-1"></i> رفع
-              </button>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm w-100 py-2 fw-bold shadow-sm">
+                  <i class="bi bi-upload me-1"></i> رفع المستند
+                </button>
+              </div>
             </div>
           </form>
 
-          @php($atts = $beneficiary->attachments)
+          {{-- 1. Documents from Linked Mobile Application if any --}}
+          @if(isset($linkedCaseApplications) && $linkedCaseApplications->isNotEmpty())
+            @php
+              $hasLinkedDocs = $linkedCaseApplications->contains(fn($app) => !empty($app->id_image_path) || !empty($app->medical_report_path));
+            @endphp
+            @if($hasLinkedDocs)
+              <div class="mb-4">
+                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                  <i class="bi bi-file-earmark-person-fill text-success me-1"></i> الأوراق والمستندات المرفوعة من استمارة التقديم والبحث
+                </h6>
+                <div class="row g-3">
+                  @foreach($linkedCaseApplications as $caseApp)
+                    @if($caseApp->id_image_path)
+                      @php
+                        $idUrl = $caseApp->id_image_url ?? (Storage::disk('public')->exists($caseApp->id_image_path) ? Storage::disk('public')->url($caseApp->id_image_path) : asset('storage/' . ltrim($caseApp->id_image_path, '/')));
+                      @endphp
+                      <div class="col-md-6">
+                        <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
+                          <div class="d-flex align-items-center gap-3 mb-2">
+                            <a href="{{ $idUrl }}" target="_blank" class="d-block text-decoration-none">
+                              <img src="{{ $idUrl }}" alt="صورة البطاقة" class="rounded border shadow-xs" style="width: 70px; height: 70px; object-fit: cover;">
+                            </a>
+                            <div class="flex-grow-1 overflow-hidden">
+                              <span class="badge bg-success-subtle text-success small mb-1">صورة بطاقة الرقم القومي</span>
+                              <div class="fw-bold text-truncate small" title="{{ basename($caseApp->id_image_path) }}">{{ basename($caseApp->id_image_path) }}</div>
+                              <div class="text-muted" style="font-size: 0.75rem;">استمارة تقديم #{{ $caseApp->reference_number ?? $caseApp->id }}</div>
+                            </div>
+                          </div>
+                          <div class="d-flex gap-2 mt-2 pt-2 border-top">
+                            <a href="{{ $idUrl }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                              <i class="bi bi-eye me-1"></i> عرض الصورة
+                            </a>
+                            <a href="{{ $idUrl }}" download class="btn btn-sm btn-light border" title="تحميل">
+                              <i class="bi bi-download"></i>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    @endif
+
+                    @if($caseApp->medical_report_path)
+                      @php
+                        $medUrl = $caseApp->medical_report_url ?? (Storage::disk('public')->exists($caseApp->medical_report_path) ? Storage::disk('public')->url($caseApp->medical_report_path) : asset('storage/' . ltrim($caseApp->medical_report_path, '/')));
+                        $isMedImage = in_array(strtolower(pathinfo($caseApp->medical_report_path, PATHINFO_EXTENSION)), ['jpg','jpeg','png','webp'], true);
+                      @endphp
+                      <div class="col-md-6">
+                        <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
+                          <div class="d-flex align-items-center gap-3 mb-2">
+                            @if($isMedImage)
+                              <a href="{{ $medUrl }}" target="_blank" class="d-block text-decoration-none">
+                                <img src="{{ $medUrl }}" alt="التقرير الطبي" class="rounded border shadow-xs" style="width: 70px; height: 70px; object-fit: cover;">
+                              </a>
+                            @else
+                              <div class="rounded border bg-light d-flex align-items-center justify-content-center text-danger" style="width: 70px; height: 70px; font-size: 2rem;">
+                                <i class="bi bi-file-earmark-medical"></i>
+                              </div>
+                            @endif
+                            <div class="flex-grow-1 overflow-hidden">
+                              <span class="badge bg-danger-subtle text-danger small mb-1">التقرير الطبي / أوراق الحالة</span>
+                              <div class="fw-bold text-truncate small" title="{{ basename($caseApp->medical_report_path) }}">{{ basename($caseApp->medical_report_path) }}</div>
+                              <div class="text-muted" style="font-size: 0.75rem;">استمارة تقديم #{{ $caseApp->reference_number ?? $caseApp->id }}</div>
+                            </div>
+                          </div>
+                          <div class="d-flex gap-2 mt-2 pt-2 border-top">
+                            <a href="{{ $medUrl }}" target="_blank" class="btn btn-sm btn-outline-danger flex-fill">
+                              <i class="bi bi-eye me-1"></i> فتح المستند
+                            </a>
+                            <a href="{{ $medUrl }}" download class="btn btn-sm btn-light border" title="تحميل">
+                              <i class="bi bi-download"></i>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    @endif
+                  @endforeach
+                </div>
+              </div>
+            @endif
+          @endif
+
+          {{-- 2. Direct File Attachments --}}
+          @php
+            $atts = $beneficiary->attachments;
+          @endphp
+          <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+            <i class="bi bi-folder2-open text-primary me-1"></i> مرفقات الملف المباشرة
+          </h6>
           @if($atts->count() > 0)
-            <div class="list-group">
+            <div class="row g-3">
               @foreach($atts as $a)
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-file-earmark text-primary"></i>
-                    <a href="{{ $a->image_url }}" target="_blank">{{ basename($a->path) }}</a>
+                @php
+                  $isImg = $a->is_image;
+                  $fileUrl = route('attachments.show', $a);
+                  $fileName = $a->original_name ?? basename($a->path);
+                @endphp
+                <div class="col-md-6">
+                  <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                      @if($isImg)
+                        <a href="{{ $fileUrl }}" target="_blank" class="d-block text-decoration-none">
+                          <img src="{{ $fileUrl }}" alt="{{ $fileName }}" class="rounded border shadow-xs" style="width: 65px; height: 65px; object-fit: cover;">
+                        </a>
+                      @else
+                        <div class="rounded border bg-light d-flex align-items-center justify-content-center text-primary" style="width: 65px; height: 65px; font-size: 1.8rem;">
+                          <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                      @endif
+                      <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-bold text-truncate small" title="{{ $fileName }}">{{ $fileName }}</div>
+                        <div class="text-muted small font-monospace"><i class="bi bi-clock me-1"></i>{{ $a->created_at?->format('Y-m-d H:i') ?? '—' }}</div>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-2 pt-2 border-top align-items-center">
+                      <a href="{{ $fileUrl }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                        <i class="bi bi-eye me-1"></i> فتح
+                      </a>
+                      <a href="{{ $fileUrl }}" download class="btn btn-sm btn-light border" title="تحميل">
+                        <i class="bi bi-download"></i>
+                      </a>
+                      <form method="POST" action="{{ route('attachments.destroy', $a) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا الملف نهائياً؟');">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-outline-danger" title="حذف">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <form method="POST" action="{{ route('attachments.destroy', $a) }}">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-sm btn-outline-danger">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </form>
                 </div>
               @endforeach
             </div>
           @else
-            <div class="empty-state py-4">
-              <i class="bi bi-folder2-open"></i>
-              <p class="mb-0">لا توجد مرفقات</p>
-            </div>
+            @if(!isset($hasLinkedDocs) || !$hasLinkedDocs)
+              <div class="empty-state py-4 text-center text-muted">
+                <i class="bi bi-folder2-open display-4 d-block mb-2 text-secondary opacity-50"></i>
+                <p class="mb-0">لا توجد ملفات أو أوراق مرفقة حالياً لهذا المستفيد.</p>
+              </div>
+            @endif
           @endif
+        </div>
+      </div>
+
+      {{-- Activity & Audit Log Section (سجل الحركات والتعديلات) --}}
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="p-2 bg-info-subtle text-info rounded-3">
+              <i class="bi bi-clock-history fs-5"></i>
+            </span>
+            <div>
+              <h5 class="mb-0 fw-bold">سجل الحركات والتعديلات على الملف</h5>
+              <div class="text-muted small">تتبع دقيق لجميع الإجراءات والتحديثات والمستخدمين المسؤولين عنها</div>
+            </div>
+          </div>
+          <span class="badge bg-secondary-subtle text-secondary font-monospace px-3 py-2 rounded-pill">
+            {{ isset($audits) ? $audits->count() : 0 }} إجراء مسجل
+          </span>
+        </div>
+        <div class="card-body p-4">
+          <div class="activity-timeline position-relative ps-4" style="border-right: 2px dashed #cbd5e1; margin-right: 15px;">
+            
+            {{-- Audited Events --}}
+            @if(isset($audits) && $audits->isNotEmpty())
+              @foreach($audits as $audit)
+                @php
+                  $auditUser = $audit->user?->name ?? 'مستخدم غير محدد';
+                  $action = $audit->action ?? 'تعديل';
+                  $badgeClass = match(strtolower($action)) {
+                    'created', 'insert' => 'bg-success',
+                    'updated', 'update' => 'bg-primary',
+                    'deleted', 'delete' => 'bg-danger',
+                    default => 'bg-info'
+                  };
+                  $actionLabel = match(strtolower($action)) {
+                    'created', 'insert' => 'إضافة وقيد جديد',
+                    'updated', 'update' => 'تعديل وحفظ بيانات',
+                    'deleted', 'delete' => 'حذف بيانات',
+                    default => $action
+                  };
+                @endphp
+                <div class="timeline-item mb-4 position-relative">
+                  <div class="position-absolute translate-middle-y" style="right: -24px; top: 12px; width: 16px; height: 16px; border-radius: 50%; background: #0284c7; border: 3px solid #fff; box-shadow: 0 0 0 2px #0284c7;"></div>
+                  <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge {{ $badgeClass }} text-white px-2 py-1 small">{{ $actionLabel }}</span>
+                        <strong class="text-dark"><i class="bi bi-person-fill text-muted me-1"></i>{{ $auditUser }}</strong>
+                      </div>
+                      <div class="text-muted small font-monospace">
+                        <i class="bi bi-clock me-1"></i>{{ $audit->created_at?->format('Y-m-d H:i:s') ?? '—' }}
+                        @if($audit->created_at)
+                          <span class="badge bg-secondary-subtle text-secondary ms-1">({{ $audit->created_at->diffForHumans() }})</span>
+                        @endif
+                      </div>
+                    </div>
+                    @if($audit->description)
+                      <div class="text-secondary small">{{ $audit->description }}</div>
+                    @endif
+                    @if(!empty($audit->new_values) && is_array($audit->new_values))
+                      <div class="mt-2 pt-2 border-top small">
+                        <span class="text-muted fw-bold">الحقول المعدلة: </span>
+                        @foreach(array_keys($audit->new_values) as $key)
+                          <span class="badge bg-white text-dark border me-1 font-monospace">{{ $key }}</span>
+                        @endforeach
+                      </div>
+                    @endif
+                  </div>
+                </div>
+              @endforeach
+            @endif
+
+            {{-- Initial Creation Event --}}
+            <div class="timeline-item position-relative">
+              <div class="position-absolute translate-middle-y" style="right: -24px; top: 12px; width: 16px; height: 16px; border-radius: 50%; background: #059669; border: 3px solid #fff; box-shadow: 0 0 0 2px #059669;"></div>
+              <div class="p-3 bg-success-subtle bg-opacity-25 rounded-3 border border-success-subtle">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success text-white px-2 py-1 small">إنشاء وقيد الملف</span>
+                    <strong class="text-success"><i class="bi bi-person-check-fill me-1"></i>{{ $beneficiary->creator?->name ?? 'النظام الأساسي' }}</strong>
+                  </div>
+                  <div class="text-muted small font-monospace">
+                    <i class="bi bi-calendar-event me-1"></i>{{ $beneficiary->created_at?->format('Y-m-d H:i:s') ?? '—' }}
+                  </div>
+                </div>
+                <div class="text-muted small">
+                  تم تسجيل ملف الحالة وإصدار الكود الرسمي (<strong class="font-monospace text-dark">{{ $beneficiary->code }}</strong>) بنجاح.
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

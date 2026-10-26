@@ -452,6 +452,15 @@
                             @endif
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-2" id="zad-children-tab" data-bs-toggle="pill" data-bs-target="#zad-children-pane" type="button" role="tab">
+                            <i class="bi bi-balloon-heart-fill text-warning"></i>
+                            <span>قائمة الأطفال المكفولين والتقييمات</span>
+                            @if(isset($zadChildren) && $zadChildren->count() > 0)
+                                <span class="badge bg-warning text-dark rounded-pill px-2">{{ $zadChildren->count() }}</span>
+                            @endif
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content" id="zadProjectTabsContent">
@@ -1015,6 +1024,380 @@
                                     </div>
                                 </div>
                                 @endforeach
+                    </div>
+
+                    {{-- Zad Children & Assessments Pane --}}
+                    <div class="tab-pane fade" id="zad-children-pane" role="tabpanel">
+                        <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
+                            <div class="card-body p-3 p-md-4">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-3" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-balloon-heart-fill fs-5"></i>
+                                        </span>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">قائمة الأطفال المكفولين والتقييمات الشاملة</h5>
+                                            <small class="text-muted">متابعة دورية لحفظ القرآن الكريم، الآداب الإسلامية، الأداء الدراسي، والمشاركة المباشرة مع الكفلاء</small>
+                                        </div>
+                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-1.5 ms-2 fw-bold" style="font-size: 0.82rem;">
+                                            {{ isset($zadChildren) ? $zadChildren->count() : 0 }} طفل مكفول
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table align-middle table-hover border">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>الطفل المكفول</th>
+                                                <th>ولي الأمر / الأسرة</th>
+                                                <th>الكفيل والواتساب</th>
+                                                <th>التقييم الشامل (الدخول)</th>
+                                                <th>آخر تقييم شهري</th>
+                                                <th>الملف</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($zadChildren ?? [] as $child)
+                                                @php
+                                                    $entry = $child->entryAssessment;
+                                                    $latestMonthly = $child->latestMonthlyAssessment;
+                                                    $childAge = $child->birth_date ? $child->birth_date->age . ' سنة' : ($child->age ? $child->age . ' سنة' : '—');
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold fs-6">{{ $child->full_name }}</div>
+                                                        <div class="small text-muted font-monospace">كود: {{ $child->code }}</div>
+                                                        <div class="small text-primary">{{ $childAge }} · {{ $child->education_level ?: '—' }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-semibold">{{ $child->beneficiary->mother_name ?: $child->beneficiary->full_name }}</div>
+                                                        <div class="small text-muted font-monospace">كود الأسرة: {{ $child->beneficiary->code }}</div>
+                                                    </td>
+                                                    <td>
+                                                        @forelse($child->sponsors as $sp)
+                                                            @php
+                                                                $spPhone = preg_replace('/[^0-9]/', '', $sp->phone ?? '');
+                                                                if (str_starts_with($spPhone, '01')) { $spPhone = '2' . $spPhone; }
+                                                                $evalScore = $latestMonthly ? $latestMonthly->overall_percentage . '%' : 'قيد المتابعة';
+                                                                $quranScore = $latestMonthly ? ($latestMonthly->quran_grade_percentage . '% - حفظ: ' . ($latestMonthly->quran_memorized_parts ?: '—')) : '—';
+                                                                $waMsg = "السلام عليكم ورحمة الله وبركاته،\nأهلاً بك كافل الخير أ/ " . $sp->name . "،\nيسر مؤسسة إنسان للأعمال الخيرية موافاتكم بتقرير المتابعة والتقييم الشهري للطفل المكفول برعايتكم الكريمة:\n" .
+                                                                         "👤 اسم الطفل: " . $child->full_name . " (كود: " . $child->code . ")\n" .
+                                                                         "📊 النتيجة الإجمالية للتقييم: " . $evalScore . "\n" .
+                                                                         "📖 القرآن الكريم: " . $quranScore . "\n" .
+                                                                         "جزاكم الله خير الجزاء على رعايتكم الكريمة ودعمكم المستمر.";
+                                                            @endphp
+                                                            <div class="mb-1">
+                                                                <a href="{{ route('donors.show', $sp) }}" class="fw-bold text-success text-decoration-none small">
+                                                                    <i class="bi bi-person-heart me-1"></i>{{ $sp->name }}
+                                                                </a>
+                                                                @if(!empty($spPhone))
+                                                                    <a href="https://wa.me/{{ $spPhone }}?text={{ urlencode($waMsg) }}" target="_blank" class="badge bg-success text-white text-decoration-none ms-1 px-2 py-1 shadow-xs" title="مشاركة تقرير المتابعة عبر الواتساب">
+                                                                        <i class="bi bi-whatsapp me-1"></i> واتساب
+                                                                    </a>
+                                                                @endif
+                                                            </div>
+                                                        @empty
+                                                            <span class="text-muted small">غير مكفول بعد</span>
+                                                        @endforelse
+                                                    </td>
+                                                    <td>
+                                                        @if($entry)
+                                                            <span class="badge bg-success-subtle text-success border border-success mb-1 d-inline-block">
+                                                                <i class="bi bi-lock-fill me-1"></i> معتمد ومغلق
+                                                            </span>
+                                                            <button type="button" class="btn btn-sm btn-outline-success d-block rounded-pill px-2 py-0" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#viewEntryAssessment_{{ $child->id }}">
+                                                                <i class="bi bi-eye me-1"></i> معاينة التقييم
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-2 py-1 fw-bold shadow-xs" data-bs-toggle="modal" data-bs-target="#addEntryAssessment_{{ $child->id }}">
+                                                                <i class="bi bi-journal-plus me-1"></i> إجراء التقييم الشامل
+                                                            </button>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($latestMonthly)
+                                                            <div class="d-flex align-items-center gap-1 mb-1">
+                                                                <span class="badge {{ $latestMonthly->overall_percentage >= 85 ? 'bg-success' : ($latestMonthly->overall_percentage >= 70 ? 'bg-primary' : 'bg-warning text-dark') }} fs-6 fw-bold font-monospace">
+                                                                    {{ $latestMonthly->overall_percentage }}%
+                                                                </span>
+                                                                <span class="text-muted small font-monospace">({{ $latestMonthly->assessment_month }}/{{ $latestMonthly->assessment_year }})</span>
+                                                            </div>
+                                                            @if($latestMonthly->test_image_url)
+                                                                <a href="{{ $latestMonthly->test_image_url }}" target="_blank" class="small text-primary d-block">
+                                                                    <i class="bi bi-paperclip me-1"></i> ورقة الاختبار
+                                                                </a>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted small d-block mb-1">لا يوجد تقييم شهري بعد</span>
+                                                        @endif
+                                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-2 py-0 mt-1" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#addMonthlyAssessment_{{ $child->id }}">
+                                                            <i class="bi bi-plus-circle me-1"></i> تقييم شهري
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ route('beneficiary-family-members.show', $child) }}" class="btn btn-sm btn-light border rounded-circle" title="فتح الملف المستقل">
+                                                            <i class="bi bi-box-arrow-up-left"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+
+                                                {{-- Modal: Add Monthly Assessment --}}
+                                                <div class="modal fade" id="addMonthlyAssessment_{{ $child->id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                        <div class="modal-content shadow border-0">
+                                                            <div class="modal-header bg-primary text-white py-2">
+                                                                <h6 class="modal-title fw-bold">
+                                                                    <i class="bi bi-calendar2-check-fill me-1"></i> استمارة التقييم الشهري — {{ $child->full_name }}
+                                                                </h6>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="POST" action="{{ route('child-assessments.store-monthly', $child) }}" enctype="multipart/form-data">
+                                                                @csrf
+                                                                <div class="modal-body p-3">
+                                                                    <div class="row g-2 mb-3">
+                                                                        <div class="col-md-3">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">شهر التقييم</label>
+                                                                            <select name="assessment_month" class="form-select form-select-sm" required>
+                                                                                @for($m = 1; $m <= 12; $m++)
+                                                                                    <option value="{{ $m }}" @selected($m == now()->month)>شهر {{ $m }}</option>
+                                                                                @endfor
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">السنة</label>
+                                                                            <input type="number" name="assessment_year" value="{{ now()->year }}" class="form-control form-control-sm" required>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">اسم القائم بالتقييم</label>
+                                                                            <input type="text" name="evaluator_name" value="{{ auth()->user()?->name }}" class="form-control form-control-sm" required>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">الصفة / الدور</label>
+                                                                            <input type="text" name="evaluator_role" value="مشرف متابعة أيتام" class="form-control form-control-sm">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="card p-3 bg-light rounded-3 border mb-3">
+                                                                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-award me-1"></i> الدرجات والنسب المئوية (%)</h6>
+                                                                        <div class="row g-2">
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1">الأجزاء المحفوظة من القرآن</label>
+                                                                                <input type="text" name="quran_memorized_parts" placeholder="مثلاً: جزئي عم وتبارك" class="form-control form-control-sm">
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1 text-success">درجة اختبار القرآن (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="quran_grade_percentage" placeholder="100" class="form-control form-control-sm" required>
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1 text-info">درجة الحديث والآداب (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="hadith_grade_percentage" placeholder="95" class="form-control form-control-sm">
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1">مستوى الالتزام بالصلاة</label>
+                                                                                <select name="prayer_commitment_level" class="form-select form-select-sm">
+                                                                                    <option value="ممتاز وملتزم بجميع الصلوات">ممتاز وملتزم بجميع الصلوات</option>
+                                                                                    <option value="جيد جداً مع متابعة">جيد جداً مع متابعة</option>
+                                                                                    <option value="متوسط ويحتاج تذكير">متوسط ويحتاج تذكير</option>
+                                                                                    <option value="ضعيف ومقصر">ضعيف ومقصر</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1">تقييم السلوك والأخلاق (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="morals_grade_percentage" placeholder="90" class="form-control form-control-sm">
+                                                                            </div>
+                                                                            <div class="col-md-4">
+                                                                                <label class="form-label small fw-bold mb-1 text-primary">النسبة الإجمالية العامة (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="overall_percentage" placeholder="يترك فارغاً للحساب التلقائي" class="form-control form-control-sm">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-camera me-1"></i> إرفاق صورة ورقة الاختبار أو التقييم</label>
+                                                                        <input type="file" name="test_image" accept="image/*" class="form-control form-control-sm">
+                                                                    </div>
+
+                                                                    <div class="row g-2">
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label small fw-bold mb-1 text-success">نقاط القوة والإيجابيات</label>
+                                                                            <textarea name="strengths" rows="2" class="form-control form-control-sm" placeholder="سرعة الحفظ، حسن الخلق، التفاعل الممتاز..."></textarea>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label small fw-bold mb-1 text-danger">نقاط الضعف والتوصيات</label>
+                                                                            <textarea name="recommendations" rows="2" class="form-control form-control-sm" placeholder="تكثيف المراجعة لجزء عم، الاهتمام بمخارج الحروف..."></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer py-2">
+                                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                                                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold"><i class="bi bi-save me-1"></i> حفظ التقييم الشهري</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Modal: Add Comprehensive Entry Assessment --}}
+                                                @if(!$entry)
+                                                <div class="modal fade" id="addEntryAssessment_{{ $child->id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-xl">
+                                                        <div class="modal-content shadow border-0">
+                                                            <div class="modal-header bg-warning text-dark py-2">
+                                                                <h6 class="modal-title fw-bold">
+                                                                    <i class="bi bi-file-earmark-check-fill me-1"></i> نموذج التقييم العام الشامل للطفل (عند دخول المشروع) — {{ $child->full_name }}
+                                                                </h6>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="POST" action="{{ route('child-assessments.store-entry', $child) }}" enctype="multipart/form-data">
+                                                                @csrf
+                                                                <div class="modal-body p-3">
+                                                                    <div class="alert alert-warning py-2 small mb-3">
+                                                                        <i class="bi bi-info-circle me-1"></i> <strong>تنبيه هام:</strong> هذا التقييم الشامل يُجرى مرة واحدة عند دخول الطفل للمشروع، ويتم قفله واعتماده تلقائياً بعد الحفظ ليكون مرجعاً أساسياً لقياس التطور.
+                                                                    </div>
+
+                                                                    <div class="row g-2 mb-3">
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">اسم الأخصائي / القائم بالتقييم</label>
+                                                                            <input type="text" name="evaluator_name" value="{{ auth()->user()?->name }}" class="form-control form-control-sm" required>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">الصفة الوظيفية</label>
+                                                                            <input type="text" name="evaluator_role" value="أخصائي تقييم وبحث اجتماعي" class="form-control form-control-sm">
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold text-muted mb-1">الأجزاء المحفوظة عند الدخول</label>
+                                                                            <input type="text" name="quran_memorized_parts" placeholder="مثلاً: جزء عم كاملاً" class="form-control form-control-sm">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="card p-3 bg-light rounded-3 border mb-3">
+                                                                        <h6 class="fw-bold text-primary mb-2">محاور التقييم الشامل (وفق استمارة التقييم الـ 8 صفحات)</h6>
+                                                                        <div class="row g-2">
+                                                                            <div class="col-md-3">
+                                                                                <label class="form-label small fw-bold mb-1">نسبة التقييم القرآني المبدئي (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="quran_grade_percentage" placeholder="85" class="form-control form-control-sm">
+                                                                            </div>
+                                                                            <div class="col-md-3">
+                                                                                <label class="form-label small fw-bold mb-1">نسبة الحديث والآداب (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="hadith_grade_percentage" placeholder="80" class="form-control form-control-sm">
+                                                                            </div>
+                                                                            <div class="col-md-3">
+                                                                                <label class="form-label small fw-bold mb-1">التزام الصلاة والطهارة</label>
+                                                                                <select name="prayer_commitment_level" class="form-select form-select-sm">
+                                                                                    <option value="ملتزم بجميع الصلوات">ملتزم بجميع الصلوات</option>
+                                                                                    <option value="يصلي معظمها">يصلي معظمها</option>
+                                                                                    <option value="غير منتظم">غير منتظم</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="col-md-3">
+                                                                                <label class="form-label small fw-bold mb-1">السلوك والأخلاق (%)</label>
+                                                                                <input type="number" step="0.5" min="0" max="100" name="morals_grade_percentage" placeholder="90" class="form-control form-control-sm">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row g-2 mb-3">
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold mb-1">الوضع الصحي والبدني</label>
+                                                                            <textarea name="form_data[health_status]" rows="2" class="form-control form-control-sm" placeholder="الأمراض المزمنة، التغذية، اللياقة البدنية..."></textarea>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold mb-1">الوضع النفسي والاجتماعي</label>
+                                                                            <textarea name="form_data[psychological_status]" rows="2" class="form-control form-control-sm" placeholder="الاندماج، الخجل، النشاط، علاقة الطفل بالأسرة والأقران..."></textarea>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <label class="form-label small fw-bold mb-1">الهوايات والمهارات</label>
+                                                                            <textarea name="form_data[hobbies_skills]" rows="2" class="form-control form-control-sm" placeholder="الرسم، الخط، الرياضة، الحساب الذهني..."></textarea>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label small fw-bold mb-1 text-success">أبرز نقاط القوة</label>
+                                                                            <textarea name="strengths" rows="2" class="form-control form-control-sm" placeholder="نقاط القوة والمواهب والصفات الإيجابية..."></textarea>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <label class="form-label small fw-bold mb-1 text-danger">الاحتياجات وخطة الرعاية الفردية</label>
+                                                                            <textarea name="recommendations" rows="2" class="form-control form-control-sm" placeholder="الاحتياجات التعليمية والتربوية والتوصيات..."></textarea>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-camera me-1"></i> إرفاق استمارة التقييم الورقية الموقعة (إن وجدت)</label>
+                                                                        <input type="file" name="test_image" accept="image/*" class="form-control form-control-sm">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer py-2">
+                                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                                                    <button type="submit" class="btn btn-warning btn-sm px-4 fw-bold text-dark"><i class="bi bi-lock-fill me-1"></i> حفظ واعتماد وقفل التقييم الشامل</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @else
+                                                {{-- Modal: View Locked Entry Assessment --}}
+                                                <div class="modal fade" id="viewEntryAssessment_{{ $child->id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                        <div class="modal-content shadow border-0">
+                                                            <div class="modal-header bg-success text-white py-2">
+                                                                <h6 class="modal-title fw-bold">
+                                                                    <i class="bi bi-shield-lock-fill me-1"></i> وثيقة التقييم الشامل المعتمدة — {{ $child->full_name }}
+                                                                </h6>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body p-3">
+                                                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
+                                                                    <div><strong>القائم بالتقييم:</strong> {{ $entry->evaluator_name }} ({{ $entry->evaluator_role }})</div>
+                                                                    <div class="font-monospace text-muted small"><i class="bi bi-calendar me-1"></i>{{ $entry->created_at?->format('Y-m-d') }}</div>
+                                                                </div>
+                                                                <div class="row g-2 mb-3">
+                                                                    <div class="col-md-3 text-center p-2 bg-success-subtle rounded border">
+                                                                        <div class="small text-muted">القرآن الكريم</div>
+                                                                        <div class="fs-5 fw-bold text-success">{{ $entry->quran_grade_percentage ?? '—' }}%</div>
+                                                                        <div class="small text-muted">{{ $entry->quran_memorized_parts ?: '—' }}</div>
+                                                                    </div>
+                                                                    <div class="col-md-3 text-center p-2 bg-info-subtle rounded border">
+                                                                        <div class="small text-muted">الحديث والآداب</div>
+                                                                        <div class="fs-5 fw-bold text-info">{{ $entry->hadith_grade_percentage ?? '—' }}%</div>
+                                                                    </div>
+                                                                    <div class="col-md-3 text-center p-2 bg-warning-subtle rounded border">
+                                                                        <div class="small text-muted">الصلاة والطهارة</div>
+                                                                        <div class="small fw-bold text-dark mt-1">{{ $entry->prayer_commitment_level ?: '—' }}</div>
+                                                                    </div>
+                                                                    <div class="col-md-3 text-center p-2 bg-primary-subtle rounded border">
+                                                                        <div class="small text-muted">النتيجة الإجمالية</div>
+                                                                        <div class="fs-5 fw-bold text-primary">{{ $entry->overall_percentage ?? '—' }}%</div>
+                                                                    </div>
+                                                                </div>
+                                                                @if($entry->strengths)
+                                                                    <div class="p-2 rounded bg-light border mb-2"><strong class="text-success">نقاط القوة:</strong> {{ $entry->strengths }}</div>
+                                                                @endif
+                                                                @if($entry->recommendations)
+                                                                    <div class="p-2 rounded bg-light border mb-2"><strong class="text-danger">التوصيات وخطة الرعاية:</strong> {{ $entry->recommendations }}</div>
+                                                                @endif
+                                                                @if($entry->test_image_url)
+                                                                    <div class="mt-2 text-center">
+                                                                        <img src="{{ $entry->test_image_url }}" alt="استمارة التقييم" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="modal-footer py-2">
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                            @empty
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-4 text-muted">
+                                                        <i class="bi bi-balloon-heart fs-2 d-block mb-1 opacity-50"></i>
+                                                        لا يوجد أطفال مكفولين مسجلين في هذا المشروع حتى الآن.
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1152,12 +1535,14 @@
                         </form>
                     </div>
                 </div>
-            @endif
-
+            </div>
         </div>
+    @endif
 
-        <!-- Right Column: Sidebar -->
-        <div class="col-lg-4">
+</div>
+
+<!-- Left Column (in RTL): Sidebar -->
+<div class="col-lg-4">
 
             <!-- Manager Card -->
             <div class="card border-0 shadow-sm mb-4">
@@ -1181,10 +1566,14 @@
                         <form method="POST" action="{{ route('projects.setManager', $project) }}"
                             enctype="multipart/form-data">
                             @csrf
+                            @php
+                                $staffUsers = ($users ?? null) ?: \App\Models\User::orderBy('name')->get();
+                            @endphp
                             <select name="manager_user_id" class="form-select form-select-sm mb-2">
-                                <option value="">—</option>
-                                @foreach($volunteers as $v)
-                                    <option value="{{ $v->id }}" @selected($project->manager_user_id == $v->id)>{{ $v->name }}
+                                <option value="">— اختر مدير المشروع —</option>
+                                @foreach($staffUsers as $v)
+                                    <option value="{{ $v->id }}" @selected($project->manager_user_id == $v->id)>
+                                        {{ $v->name }} ({{ $v->job_title ?: ($v->role ?: 'مستخدم') }})
                                     </option>
                                 @endforeach
                             </select>
@@ -1219,9 +1608,10 @@
                             enctype="multipart/form-data">
                             @csrf
                             <select name="deputy_user_id" class="form-select form-select-sm mb-2">
-                                <option value="">—</option>
-                                @foreach($volunteers as $v)
-                                    <option value="{{ $v->id }}" @selected($project->deputy_user_id == $v->id)>{{ $v->name }}
+                                <option value="">— اختر نائب المدير —</option>
+                                @foreach($staffUsers as $v)
+                                    <option value="{{ $v->id }}" @selected($project->deputy_user_id == $v->id)>
+                                        {{ $v->name }} ({{ $v->job_title ?: ($v->role ?: 'مستخدم') }})
                                     </option>
                                 @endforeach
                             </select>

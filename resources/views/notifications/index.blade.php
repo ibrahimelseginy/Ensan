@@ -20,6 +20,7 @@
                         <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-tags"></i></span>
                         <select name="category" class="form-select border-start-0 ps-0">
                             <option value="">جميع القطاعات والأقسام</option>
+                            <option value="targeted_employee" @selected($category === 'targeted_employee')>🔔 تنبيهات مخصصة لوظيفتي وحسابي</option>
                             <option value="cases" @selected($category === 'cases')>الحالات وطلبات المساعدة (المقبولة والمرفوضة والجديدة)</option>
                             <option value="field_visits" @selected($category === 'field_visits')>الزيارات الميدانية والبحث</option>
                             <option value="tasks" @selected($category === 'tasks')>مهام الموظفين وفريق العمل</option>
@@ -84,6 +85,7 @@
         @forelse($items as $n)
             @php
                 $catName = match($n['category'] ?? '') {
+                    'targeted_employee' => 'تنبيه موجه للموظف',
                     'cases' => 'الحالات وطلبات المساعدة',
                     'field_visits' => 'الزيارات الميدانية',
                     'tasks' => 'مهام فريق العمل',

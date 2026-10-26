@@ -26,7 +26,8 @@ final class Beneficiary extends Model
         'source_name', 'reference_number', 'deceased_husband_name', 'deceased_husband_birth_date', 'deceased_husband_death_date', 'deceased_husband_age',
         'transit_details', 'death_details', 'income_aid_sources', 'expenses_debts_details', 'zad_details',
         'need_type', 'family_members_count', 'social_status_description', 'guide_name', 'guide_phone',
-        'midrar_details', 'hospital_name', 'tumor_location', 'treatment_protocol', 'tumor_details'
+        'midrar_details', 'hospital_name', 'tumor_location', 'treatment_protocol', 'tumor_details',
+        'created_by', 'updated_by', 'classification'
     ];
 
     protected $casts = [
@@ -76,6 +77,40 @@ final class Beneficiary extends Model
                 ]);
             }
         });
+        static::creating(function (Beneficiary $beneficiary): void {
+            if (auth()->check() && empty($beneficiary->created_by)) {
+                $beneficiary->created_by = auth()->id();
+            }
+            if (empty($beneficiary->classification)) {
+                $beneficiary->classification = 'A';
+            }
+        });
+
+        static::updating(function (Beneficiary $beneficiary): void {
+            if (auth()->check()) {
+                $beneficiary->updated_by = auth()->id();
+            }
+        });
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function caseApplications(): HasMany
+    {
+        return $this->hasMany(MobileCaseApplication::class);
+    }
+
+    public function childAssessments(): HasMany
+    {
+        return $this->hasMany(ChildAssessment::class)->latest('assessment_date');
     }
 
     public function project(): BelongsTo
@@ -130,5 +165,29 @@ final class Beneficiary extends Model
     public function getNameAttribute()
     {
         return $this->full_name;
+    }
+
+    public static function nextGuestCode(): string
+    {
+        $last = self::query()
+            ->where('code', 'like', 'G-%')
+            ->orderByDesc('id')
+            ->value('code');
+
+        if ($last && preg_match('/G-(\d+)/', $last, $m)) {
+            $num = (int)$m[1] + 1;
+        } else {
+            $num = self::whereNotNull('guest_house_id')->count() + 1;
+        }
+
+        return sprintf('G-%05d', $num);
+    }
+
+    public function getGuestCodeAttribute(): string
+    {
+        if (!empty($this->code) && str_starts_with($this->code, 'G-')) {
+            return $this->code;
+        }
+        return sprintf('G-%05d', $this->id);
     }
 }

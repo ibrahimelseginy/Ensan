@@ -2839,7 +2839,7 @@
               </a>
             @endif
 
-            @if($navUser && $navUser->hasPermission('notifications.view'))
+            @if($navUser)
               <button class="btn btn-glass-pill" id="notificationBellBtn" style="overflow: visible !important;"
                 type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات" title="الإشعارات">
                 <i class="bi bi-bell fs-5"></i>
@@ -3165,9 +3165,7 @@
     @include('partials.admin_login_notifications_modal')
   @endif
 
-  @if($navUser && $navUser->hasPermission('notifications.view'))
-
-
+  @if($navUser)
     <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
       <div class="offcanvas-header border-bottom py-3 px-3">
         <div class="d-flex align-items-center gap-2">

@@ -109,6 +109,11 @@ final class ProjectWebController extends Controller
             ->orderBy('name')
             ->get();
 
+        $zadChildren = \App\Models\BeneficiaryFamilyMember::query()
+            ->whereHas('beneficiary', fn ($q) => $q->where('project_id', $project->id))
+            ->with(['beneficiary', 'sponsors', 'entryAssessment', 'latestMonthlyAssessment'])
+            ->get();
+
         return view('projects.show', array_merge(compact(
             'project',
             'volunteers',
@@ -121,7 +126,8 @@ final class ProjectWebController extends Controller
             'projectBeneficiaryOptions',
             'projectWarehouses',
             'projectDonationTreasuries',
-            'projectExpenseTreasuries'
+            'projectExpenseTreasuries',
+            'zadChildren'
         ), $stats));
     }
 
@@ -172,16 +178,34 @@ final class ProjectWebController extends Controller
 
     public function setManager(Project $project, Request $request): RedirectResponse
     {
-        $data = $request->validate(['manager_user_id' => 'nullable|exists:users,id']);
+        $data = $request->validate([
+            'manager_user_id' => 'nullable|exists:users,id',
+            'manager_photo'   => 'nullable|image|max:5120'
+        ]);
+
+        if ($request->hasFile('manager_photo')) {
+            $data['manager_photo_path'] = $request->file('manager_photo')->store('projects/managers', 'public');
+        }
+        unset($data['manager_photo']);
+
         $project->update($data);
-        return back()->with('success', 'تم تعيين مدير المشروع بنجاح');
+        return back()->with('success', 'تم تعيين وتحديث مدير المشروع بنجاح');
     }
 
     public function setDeputy(Project $project, Request $request): RedirectResponse
     {
-        $data = $request->validate(['deputy_user_id' => 'nullable|exists:users,id']);
+        $data = $request->validate([
+            'deputy_user_id' => 'nullable|exists:users,id',
+            'deputy_photo'   => 'nullable|image|max:5120'
+        ]);
+
+        if ($request->hasFile('deputy_photo')) {
+            $data['deputy_photo_path'] = $request->file('deputy_photo')->store('projects/deputies', 'public');
+        }
+        unset($data['deputy_photo']);
+
         $project->update($data);
-        return back()->with('success', 'تم تعيين نائب مدير المشروع بنجاح');
+        return back()->with('success', 'تم تعيين وتحديث نائب مدير المشروع بنجاح');
     }
 
     public function attachVolunteer(Request $request, Project $project): RedirectResponse

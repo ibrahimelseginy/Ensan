@@ -66,14 +66,21 @@
       <div class="form-section">
         <div class="form-section-title"><i class="bi bi-folder-symlink"></i><span>المشروع وحالة الملف</span></div>
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">المشروع</label>
             <select name="project_id" id="projectSelect" class="form-select">
               <option value="">— اختر المشروع —</option>
               @foreach($projects as $project)<option value="{{ $project->id }}" data-name="{{ $project->name }}" @selected((string) old('project_id') === (string) $project->id)>{{ $project->name }}</option>@endforeach
             </select>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">تصنيف الحالة</label>
+            <select name="classification" class="form-select">
+              <option value="A" @selected(old('classification', 'A') === 'A')>تصنيف (A)</option>
+              <option value="B" @selected(old('classification') === 'B')>تصنيف (B)</option>
+            </select>
+          </div>
+          <div class="col-md-4">
             <label class="form-label">حالة الملف</label>
             <select name="status" id="statusSelect" class="form-select">
               <option value="new" @selected(old('status', 'new') === 'new')>تحت التقديم (ملف جديد)</option>

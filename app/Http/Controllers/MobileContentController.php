@@ -59,8 +59,13 @@ final class MobileContentController extends Controller
     // --- Notifications Management ---
     public function notificationsIndex()
     {
-        $notifications = MobileNotification::orderByDesc('created_at')->get();
-        return view('mobile.notifications', compact('notifications'));
+        $notifications = MobileNotification::with('targetUser')->orderByDesc('created_at')->get();
+        $jobTitles = \App\Models\User::distinct()->whereNotNull('job_title')->where('job_title', '!=', '')->pluck('job_title');
+        $departments = \App\Models\User::distinct()->whereNotNull('department')->where('department', '!=', '')->pluck('department');
+        $roles = \App\Models\Role::orderBy('name')->get();
+        $employees = \App\Models\User::where('active', true)->orderBy('name')->get(['id', 'name', 'job_title', 'department']);
+
+        return view('mobile.notifications', compact('notifications', 'jobTitles', 'departments', 'roles', 'employees'));
     }
 
     public function notificationStore(Request $request)
@@ -70,10 +75,14 @@ final class MobileContentController extends Controller
             'body' => 'required|string',
             'category' => 'nullable|string|in:عام,حملات,تبرعات,عاجل',
             'target_audience' => 'nullable|string',
+            'target_type' => 'nullable|string|in:all,job_title,department,role,user',
+            'target_job_title' => 'nullable|string|max:255',
+            'target_department' => 'nullable|string|max:255',
+            'target_role' => 'nullable|string|max:255',
+            'target_user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image'
         ]);
 
-        // Logic to send push notification via Firebase/OneSignal would go here
         $data['is_sent'] = true;
         $data['sent_at'] = now();
 
@@ -82,7 +91,7 @@ final class MobileContentController extends Controller
         if ($request->hasFile('image')) {
             $notification->uploadImage($request->file('image'), 'mobile/notifications');
         }
-        return back()->with('success', 'Notification sent successfully');
+        return back()->with('success', 'تم إرسال وبث الإشعار للموظفين المستهدفين بنجاح.');
     }
 
     public function notificationUpdate(Request $request, MobileNotification $notification)
@@ -92,6 +101,11 @@ final class MobileContentController extends Controller
             'body' => 'required|string',
             'category' => 'nullable|string',
             'target_audience' => 'nullable|string',
+            'target_type' => 'nullable|string|in:all,job_title,department,role,user',
+            'target_job_title' => 'nullable|string|max:255',
+            'target_department' => 'nullable|string|max:255',
+            'target_role' => 'nullable|string|max:255',
+            'target_user_id' => 'nullable|exists:users,id',
             'image' => 'nullable|image'
         ]);
 
@@ -101,7 +115,7 @@ final class MobileContentController extends Controller
             $notification->uploadImage($request->file('image'), 'mobile/notifications');
         }
 
-        return back()->with('success', 'Notification updated successfully');
+        return back()->with('success', 'تم تعديل الإشعار وتحديث الشريحة المستهدفة بنجاح.');
     }
 
     public function notificationDestroy(MobileNotification $notification)
@@ -619,6 +633,11 @@ final class MobileContentController extends Controller
     {
         $application->delete();
         return back()->with('success', 'تم حذف طلب البحث المبدئي بنجاح');
+    }
+
+    public function printCaseApplication(\App\Models\MobileCaseApplication $application)
+    {
+        return view('mobile.case_application_print', compact('application'));
     }
 
     // --- صفحة تقديم الحالات العامة على الويب ---

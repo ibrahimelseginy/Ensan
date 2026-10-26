@@ -56,6 +56,9 @@ final readonly class VolunteerService
         $data['password']     = Hash::make($data['password']);
         $data['is_volunteer'] = true;
         $data['is_employee']  = false;
+        if (empty($data['code'])) {
+            $data['code'] = User::nextVolunteerCode();
+        }
         
         $user = $this->volunteerRepository->create($data);
 

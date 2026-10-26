@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 
@@ -57,7 +57,9 @@
                                 <div class="small mb-2">
                                     <span class="fw-bold text-success">{{ number_format((float) $r->total, 0) }}</span>
                                 </div>
-                                @php($mm = $stats['delegateMonthly']->firstWhere('delegate_id', $r->delegate_id))
+                                @php
+                                    $mm = $stats['delegateMonthly']->firstWhere('delegate_id', $r->delegate_id);
+                                @endphp
                                 <div class="border-top pt-2 mt-2">
                                     <div class="small text-muted mb-1">الشهر الحالي</div>
                                     <div class="d-flex justify-content-between small">

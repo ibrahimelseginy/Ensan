@@ -42,6 +42,14 @@ final class Donor extends Model
         return $normalized !== '' ? $normalized : null;
     }
 
+    public function getDisplayCodeAttribute(): string
+    {
+        if (!empty($this->code)) {
+            return $this->code;
+        }
+        return sprintf('D-%05d', $this->id);
+    }
+
     public static function nextAvailableCode(): string
     {
         $nextId = ((int) self::max('id')) + 1;
@@ -64,7 +72,7 @@ final class Donor extends Model
             ->all();
 
         do {
-            $code = 'DON-' . str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
+            $code = 'D-' . str_pad((string) $nextId, 5, '0', STR_PAD_LEFT);
             $nextId++;
         } while (self::where('code', $code)->exists() || in_array($code, $pendingCodes, true));
 

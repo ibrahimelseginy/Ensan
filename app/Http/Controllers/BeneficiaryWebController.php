@@ -119,13 +119,45 @@ final class BeneficiaryWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المستفيد لديه طلب مراجعة حالياً');
         }
 
-        $beneficiary->load(['allocatedBeneficiaries', 'sponsors', 'familyMembers.sponsors']);
+        $beneficiary->load([
+            'allocatedBeneficiaries',
+            'sponsors',
+            'familyMembers.sponsors',
+            'creator',
+            'updater',
+            'attachments',
+        ]);
 
         $duplicates = $this->beneficiaryService->checkDuplicates($beneficiary);
         $isDup      = !empty($duplicates);
         $donations  = $this->beneficiaryService->getBeneficiaryDonations((int)$beneficiary->id);
 
-        return view('beneficiaries.show', compact('beneficiary', 'isDup', 'donations'));
+        // Fetch activity / movement log (audits)
+        $audits = \App\Models\Audit::query()
+            ->where(function($q) use ($beneficiary) {
+                $q->where('entity_type', \App\Models\Beneficiary::class)->where('entity_id', $beneficiary->id)
+                  ->orWhere('path', 'like', "%beneficiaries/{$beneficiary->id}%");
+            })
+            ->with('user')
+            ->latest('created_at')
+            ->limit(50)
+            ->get();
+
+        // Fetch any linked case applications (for ID card photo & medical report)
+        $linkedCaseApplications = \App\Models\MobileCaseApplication::query()
+            ->where('beneficiary_id', $beneficiary->id)
+            ->orWhere(function($q) use ($beneficiary) {
+                if (!empty($beneficiary->national_id)) {
+                    $q->where('applicant_id_number', $beneficiary->national_id);
+                }
+                if (!empty($beneficiary->phone)) {
+                    $q->orWhere('applicant_phone', $beneficiary->phone);
+                }
+            })
+            ->latest()
+            ->get();
+
+        return view('beneficiaries.show', compact('beneficiary', 'isDup', 'donations', 'audits', 'linkedCaseApplications'));
     }
 
     public function edit(Beneficiary $beneficiary): View|RedirectResponse

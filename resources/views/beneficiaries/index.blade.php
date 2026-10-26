@@ -411,8 +411,10 @@
           @foreach($beneficiaries as $b)
             <tr>
               <td><input type="checkbox" class="row-check" name="ids[]" value="{{ $b->id }}"></td>
-              <td>{{ $b->id }}</td>
-              <td><span class="badge bg-light text-dark border">{{ $b->code ?? ('BEN-' . $b->id) }}</span></td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ $b->code ?? ('BEN-' . $b->id) }}</span>
+                <span class="badge bg-primary text-white ms-1 fw-bold" title="تصنيف الحالة">{{ $b->classification ?? 'A' }}</span>
+              </td>
               <td>
                 <div class="fw-bold">{{ $b->full_name }}</div>
                 @if($b->guardian_name)
@@ -486,7 +488,17 @@
                 @endif
               </td>
               <td>{{ $b->project?->name ?? '—' }}</td>
-              <td>{{ optional($b->created_at)->format('Y-m-d') ?? '—' }}</td>
+              <td>
+                <div class="fw-semibold">{{ optional($b->created_at)->format('Y-m-d') ?? '—' }}</div>
+                @if($b->creator)
+                  <div class="small text-muted" title="أضيف بواسطة"><i class="bi bi-person-plus text-success me-1"></i>{{ $b->creator->name }}</div>
+                @else
+                  <div class="small text-muted" title="أضيف بواسطة"><i class="bi bi-shield-check text-secondary me-1"></i>النظام / استيراد</div>
+                @endif
+                @if($b->updater && $b->updater_id !== $b->created_by)
+                  <div class="small text-muted" title="آخر تعديل"><i class="bi bi-pencil text-primary me-1"></i>{{ $b->updater->name }}</div>
+                @endif
+              </td>
               <td class="text-end beneficiary-action-cell">
                 @php
                   $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));

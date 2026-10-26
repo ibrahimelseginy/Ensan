@@ -654,6 +654,68 @@
         </div>
     </div>
 
+    {{-- Operational & Monthly KPIs Row --}}
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 border-bottom pb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="p-2 bg-primary-subtle text-primary rounded-3"><i class="bi bi-graph-up-arrow fs-5"></i></span>
+                <div>
+                    <h6 class="fw-bold mb-0">مؤشرات الأداء والتشغيل للدار</h6>
+                    <small class="text-muted">متابعة دقيقة للأجنحة، السعة الاستيعابية، والليالي المنقضية والمستفيدين خلال الفترة</small>
+                </div>
+            </div>
+            {{-- KPI Date Filter Form --}}
+            <form method="GET" action="{{ route('guest-houses.show', $guest_house) }}" class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="small fw-bold text-muted"><i class="bi bi-calendar3 me-1"></i> فترة التقرير:</span>
+                <input type="date" name="kpi_from" value="{{ $kpiFrom }}" class="form-control form-control-sm" style="width: 140px;">
+                <span class="small text-muted">إلى</span>
+                <input type="date" name="kpi_to" value="{{ $kpiTo }}" class="form-control form-control-sm" style="width: 140px;">
+                <button type="submit" class="btn btn-sm btn-primary px-3 rounded-pill fw-bold">
+                    <i class="bi bi-funnel me-1"></i> احتساب المؤشرات
+                </button>
+            </form>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small mb-1"><i class="bi bi-door-open text-primary me-1"></i> إجمالي الأجنحة</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h4 class="fw-bold mb-0 text-primary">{{ $totalWingsCount }}</h4>
+                        <span class="badge bg-success-subtle text-success small">{{ $activeWingsCount }} أجنحة نشطة</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small mb-1"><i class="bi bi-grid text-success me-1"></i> الطاقة الاستيعابية</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h4 class="fw-bold mb-0 text-success">{{ $totalCapacityBeds }}</h4>
+                        <span class="text-muted small">سرير إجمالي</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small mb-1"><i class="bi bi-moon-stars text-info me-1"></i> عدد الليالي خلال الشهر / الفترة</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h4 class="fw-bold mb-0 text-info">{{ number_format($monthlyNightsCount) }}</h4>
+                        <span class="text-muted small">ليلة إقامة</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small mb-1"><i class="bi bi-people-fill text-warning me-1"></i> مستفيدون خلال الشهر / الفترة</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h4 class="fw-bold mb-0 text-warning">{{ number_format($monthlyBeneficiariesCount) }}</h4>
+                        <span class="text-muted small">مريض / نزيل</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @include('guest_houses.partials.operations')
 
     <div class="row g-4">

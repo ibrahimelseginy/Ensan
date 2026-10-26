@@ -36,29 +36,52 @@ final class NotificationWebController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if (! $user || ! $user->hasPermission('notifications.view')) { abort(403); }
+        if (! $user) { abort(401); }
 
         $category = $request->input('category');
         $type = $request->input('type');
 
         $items = [];
         $suggestions = [];
-        $isAdmin = $user->hasRole('admin');
+        $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin');
+        $isManager = $user->hasRole('manager');
 
-        // Helper check closure
-        $canAccess = function (string $permission, array $roles = []) use ($user, $isAdmin): bool {
-            if ($isAdmin) return true;
+        // Helper check closure matching role, permissions, or job title
+        $canAccess = function (string $permission, array $roles = [], array $jobKeywords = []) use ($user, $isAdmin, $isManager): bool {
+            if ($isAdmin || $isManager) return true;
             if ($permission !== '' && $user->hasPermission($permission)) return true;
             foreach ($roles as $role) {
                 if ($user->hasRole($role)) return true;
+            }
+            $userJob = mb_strtolower((string) ($user->job_title . ' ' . $user->department));
+            foreach ($jobKeywords as $keyword) {
+                if ($keyword !== '' && str_contains($userJob, mb_strtolower($keyword))) return true;
             }
             return false;
         };
 
         // ==========================================
+        // 0. الإشعارات والتنبيهات الموجهة للموظف (حسب الوظيفة / القسم / الاسم)
+        // ==========================================
+        $targetedNotifications = \App\Models\MobileNotification::forUser($user)
+            ->where('is_sent', true)
+            ->latest('sent_at')
+            ->limit(15)
+            ->get();
+
+        foreach ($targetedNotifications as $tNotif) {
+            $items[] = [
+                'category' => 'targeted_employee',
+                'type' => $tNotif->category === 'عاجل' ? 'danger' : ($tNotif->category === 'حملات' ? 'primary' : 'success'),
+                'text' => '🔔 تنبيه مخصص: ' . $tNotif->title . ' — ' . $tNotif->body . ' (' . $tNotif->target_description . ')',
+                'link' => route('notifications.index'),
+            ];
+        }
+
+        // ==========================================
         // 1. الحالات وطلبات المساعدة (المقبولة والمرفوضة والجديدة)
         // ==========================================
-        if ($canAccess('beneficiaries.view', ['social_researcher', 'researcher', 'field_researcher']) || $isAdmin || $user->hasPermission('cases.view')) {
+        if ($canAccess('beneficiaries.view', ['social_researcher', 'researcher', 'field_researcher'], ['باحث', 'رعاية', 'اجتماعي', 'حالات']) || $user->hasPermission('cases.view')) {
             // أ) الحالات المقبولة والمعتمدة حديثاً (خلال آخر 14 يوم)
             $recentAcceptedCases = MobileCaseApplication::whereIn('status', ['approved', 'completed'])
                 ->where('updated_at', '>=', now()->subDays(14))

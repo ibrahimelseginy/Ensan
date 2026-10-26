@@ -12,7 +12,19 @@ final class Attachment extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return app(\App\Services\ImageUploadService::class)->url($this->path);
+        return route('attachments.show', $this);
+    }
+
+    public function getViewUrlAttribute(): string
+    {
+        return route('attachments.show', $this);
+    }
+
+    public function getIsImageAttribute(): bool
+    {
+        $ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'], true)
+            || str_starts_with((string)$this->mime, 'image/');
     }
 
     public function attachable(): MorphTo

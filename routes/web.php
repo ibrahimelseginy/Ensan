@@ -156,6 +156,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('image', [ImageUploadController::class, 'destroy'])->name('upload.image.destroy');
     });
 
+    // --- General Entity Attachments ---
+    Route::get('attachments/{attachment}', [\App\Http\Controllers\AttachmentWebController::class, 'show'])->name('attachments.show');
+    Route::post('attachments', [\App\Http\Controllers\AttachmentWebController::class, 'store'])->name('attachments.store');
+    Route::delete('attachments/{attachment}', [\App\Http\Controllers\AttachmentWebController::class, 'destroy'])->name('attachments.destroy');
+
     // --- Core Dashboard ---
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('dashboard', [DashboardWebController::class, 'index'])->name('dashboard.index');
@@ -221,6 +226,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('beneficiaries/{beneficiary}/pdf', [BeneficiaryWebController::class, 'pdf'])->name('beneficiaries.pdf');
         Route::get('beneficiary-family-members/{familyMember}', [BeneficiaryFamilyMemberWebController::class, 'show'])
             ->name('beneficiary-family-members.show');
+        Route::post('beneficiary-family-members/{familyMember}/assessments/entry', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeEntry'])
+            ->name('child-assessments.store-entry');
+        Route::post('beneficiary-family-members/{familyMember}/assessments/monthly', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeMonthly'])
+            ->name('child-assessments.store-monthly');
+        Route::get('child-assessments/{assessment}', [\App\Http\Controllers\ChildAssessmentWebController::class, 'show'])
+            ->name('child-assessments.show');
         Route::post('beneficiaries/bulk', [BeneficiaryWebController::class, 'bulkUpdate'])->name('beneficiaries.bulk');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
     });
@@ -262,8 +273,6 @@ Route::middleware(['auth'])->group(function () {
     // --- HR & Volunteers ---
     Route::middleware('permission:manage_volunteers_hr')->group(function () {
         Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
-        Route::post('attachments', [AttachmentWebController::class, 'store'])->name('attachments.store');
-        Route::delete('attachments/{attachment}', [AttachmentWebController::class, 'destroy'])->name('attachments.destroy');
         
         Route::get('volunteers/reports', [VolunteerWebController::class, 'reports'])->name('volunteers.reports');
         Route::resource('volunteers', VolunteerWebController::class);
@@ -630,6 +639,7 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:mobile.case_applications.view')->group(function () {
             Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
             Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
+            Route::get('/case-applications/{application}/print', [MobileContentController::class, 'printCaseApplication'])->name('case-applications.print');
             Route::post('/case-applications/{application}/status', [MobileContentController::class, 'updateCaseApplicationStatus'])->name('case-applications.update');
             Route::delete('/case-applications/{application}', [MobileContentController::class, 'destroyCaseApplication'])->name('case-applications.destroy');
             Route::post('/case-applications/bulk-destroy', [MobileContentController::class, 'bulkDestroyCaseApplications'])->name('case-applications.bulk-destroy');
@@ -640,6 +650,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:mobile.case_applications.view')->group(function () {
         Route::get('/case-applications', [MobileContentController::class, 'caseApplicationsIndex'])->name('case-applications.index');
         Route::post('/case-applications', [MobileContentController::class, 'storeCaseApplication'])->name('case-applications.store');
+        Route::get('/case-applications/{application}/print', [MobileContentController::class, 'printCaseApplication'])->name('case-applications.print');
     });
 
     Route::middleware('permission:manage_change_requests')->group(function () {

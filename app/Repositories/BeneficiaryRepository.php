@@ -28,7 +28,7 @@ final readonly class BeneficiaryRepository
         $dir            = $filters['dir'] ?? 'desc';
 
         return Beneficiary::query()
-            ->with(['project', 'campaign', 'familyMembers' => fn ($query) => $query->where('active', true)])
+            ->with(['project', 'campaign', 'creator', 'updater', 'familyMembers' => fn ($query) => $query->where('active', true)])
             ->withCount('attachments')
             ->when($q, function ($qr) use ($q) {
                 $qr->where(function ($w) use ($q) {

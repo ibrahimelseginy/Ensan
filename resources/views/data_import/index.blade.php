@@ -136,38 +136,42 @@
         <div class="card-body p-4 pt-3">
             <div class="row g-3 g-lg-4" id="templateCardsRow">
                 @foreach($sections as $secKey => $secConfig)
-                    <div class="col-md-6 col-lg-4 template-card-col" data-name="{{ $secConfig['name'] }}" data-desc="{{ $secConfig['description'] }}" data-fields="{{ implode(' ', array_column($secConfig['fields'], 'label')) }}">
-                        <div class="template-box p-3.5 p-md-4 rounded-4 border h-100 d-flex flex-column justify-content-between position-relative" style="--sec-accent: {{ $secConfig['color'] }};">
+                    <div class="col-12 col-md-6 col-xl-6 template-card-col mb-1" data-name="{{ $secConfig['name'] }}" data-desc="{{ $secConfig['description'] }}" data-fields="{{ implode(' ', array_column($secConfig['fields'], 'label')) }}">
+                        <div class="template-box p-4 rounded-4 border h-100 d-flex flex-column justify-content-between position-relative" style="--sec-accent: {{ $secConfig['color'] }};">
                             <div>
-                                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-light-subtle">
-                                    <div class="d-flex align-items-center gap-2.5">
-                                        <div class="template-icon text-white shadow-xs" style="background-color: {{ $secConfig['color'] }};">
+                                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-light-subtle">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="template-icon shadow-sm" style="background: linear-gradient(135deg, {{ $secConfig['color'] }}, color-mix(in srgb, {{ $secConfig['color'] }} 80%, black));">
                                             <i class="bi {{ $secConfig['icon'] }}"></i>
                                         </div>
                                         <div>
-                                            <h6 class="fw-bold mb-0 text-main">{{ $secConfig['name'] }}</h6>
-                                            <span class="text-muted x-small">{{ $secConfig['badge'] }}</span>
+                                            <h6 class="fw-bold mb-1 text-main fs-6">{{ $secConfig['name'] }}</h6>
+                                            <span class="badge rounded-pill px-2.5 py-0.5 x-small fw-bold" style="background: {{ $secConfig['color'] }}1a; color: {{ $secConfig['color'] }}; border: 1px solid {{ $secConfig['color'] }}33;">
+                                                {{ $secConfig['badge'] }}
+                                            </span>
                                         </div>
                                     </div>
-                                    <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill x-small fw-bold d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-columns-gap"></i>
-                                        <span>{{ count($secConfig['fields']) }} حقول</span>
+                                    <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill small fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                                        <i class="bi bi-columns-gap text-muted"></i>
+                                        <span>{{ count($secConfig['fields']) }} أعمدة</span>
                                     </span>
                                 </div>
                                 
-                                <p class="text-muted small mb-3 template-desc lh-base">{{ $secConfig['description'] }}</p>
+                                <p class="text-secondary small mb-3 template-desc lh-base">{{ $secConfig['description'] }}</p>
 
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-dark fw-bold x-small d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-tags-fill text-muted"></i>
-                                            <span>الأعمدة والحقول:</span>
+                                <div class="template-fields-section p-3 rounded-3 mb-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">
+                                        <span class="text-dark fw-bold x-small d-inline-flex align-items-center gap-1.5">
+                                            <i class="bi bi-tag-fill" style="color: {{ $secConfig['color'] }};"></i>
+                                            <span>الأعمدة والحقول المعتمدة:</span>
                                         </span>
-                                        <span class="text-muted x-small opacity-75">(*) حقل مطلوب</span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-0.5 x-small fw-bold">
+                                            <span class="field-req-dot me-1"></span> (*) حقول إلزامية
+                                        </span>
                                     </div>
                                     <div class="template-fields-wrap d-flex flex-wrap gap-1.5">
                                         @foreach($secConfig['fields'] as $fKey => $fMeta)
-                                            <span class="template-field-pill {{ $fMeta['required'] ? 'field-pill-req' : 'field-pill-opt' }}" title="{{ $fMeta['required'] ? 'حقل إلزامي للاستيراد' : 'حقل اختياري' }}">
+                                            <span class="template-field-pill {{ $fMeta['required'] ? 'field-pill-req' : 'field-pill-opt' }}" title="{{ $fMeta['required'] ? 'حقل إلزامي للاستيراد في هذا النموذج' : 'حقل اختياري' }}">
                                                 @if($fMeta['required'])
                                                     <span class="field-req-dot"></span>
                                                 @endif
@@ -178,14 +182,14 @@
                                 </div>
                             </div>
 
-                            <div class="template-actions pt-3 border-top mt-auto d-flex align-items-center gap-2">
-                                <a href="{{ route('data-import.template', $secKey) }}" class="btn btn-sm btn-outline-success rounded-pill flex-grow-1 py-2 fw-bold d-inline-flex align-items-center justify-content-center gap-1.5 hover-lift" title="تحميل قالب Excel جاهز بالأعمدة القياسية">
-                                    <i class="bi bi-file-earmark-arrow-down-fill"></i>
-                                    <span>تحميل النموذج</span>
+                            <div class="template-actions pt-3 border-top mt-auto d-flex align-items-stretch gap-2.5">
+                                <a href="{{ route('data-import.template', $secKey) }}" class="btn btn-template-download rounded-pill flex-fill py-2.5 fw-bold d-inline-flex align-items-center justify-content-center gap-2 hover-lift" title="تحميل قالب Excel جاهز بالأعمدة القياسية">
+                                    <i class="bi bi-file-earmark-arrow-down-fill text-success fs-5"></i>
+                                    <span>تحميل النموذج (Excel)</span>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-2 fw-bold text-dark d-inline-flex align-items-center gap-1 btn-quick-select-section hover-lift" data-section="{{ $secKey }}" title="تحديد هذا القسم للاستيراد الآن">
-                                    <i class="bi bi-arrow-up-circle-fill text-primary"></i>
-                                    <span>استيراد</span>
+                                <button type="button" class="btn btn-template-import rounded-pill flex-fill py-2.5 fw-bold text-white d-inline-flex align-items-center justify-content-center gap-2 btn-quick-select-section hover-lift shadow-sm" data-section="{{ $secKey }}" style="--sec-btn-bg: {{ $secConfig['color'] }};" title="تحديد هذا القسم للاستيراد والرفع الآن">
+                                    <i class="bi bi-cloud-arrow-up-fill fs-5"></i>
+                                    <span>استيراد السجلات الآن</span>
                                 </button>
                             </div>
                         </div>
@@ -328,65 +332,116 @@
     flex-shrink: 0;
 }
 .template-box {
-    background: var(--bg-card, #ffffff);
-    border-color: #e2e8f0 !important;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    background: #ffffff;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+.template-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--sec-accent, #10b981);
+    transition: height 0.25s ease;
 }
 .template-box:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+    transform: translateY(-5px);
     border-color: var(--sec-accent, #10b981) !important;
+    box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--sec-accent, #10b981) !important;
+}
+.template-box:hover::before {
+    height: 6px;
 }
 .template-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
+    color: #ffffff;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 .template-desc {
-    min-height: 38px;
-    font-size: 0.84rem;
+    min-height: 42px;
+    font-size: 0.86rem;
+    color: #475569;
+}
+.template-fields-section {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 14px;
 }
 .template-fields-wrap {
-    min-height: 72px;
+    min-height: 52px;
     align-content: flex-start;
 }
 .template-field-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 8px;
-    font-size: 0.72rem;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.76rem;
     font-weight: 600;
     line-height: 1.3;
     transition: all 0.15s ease;
 }
 .field-pill-opt {
-    background: #f1f5f9;
+    background: #ffffff;
     color: #475569;
     border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 .field-pill-req {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+    font-weight: 700;
 }
 .field-req-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #dc2626;
+    background: #e11d48;
     display: inline-block;
+    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2);
 }
 .template-field-pill:hover {
     transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.btn-template-download {
+    background: #ffffff;
+    color: #047857 !important;
+    border: 1.5px solid #10b981;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+.btn-template-download:hover {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #065f46 !important;
+    transform: translateY(-1px);
+}
+.btn-template-import {
+    background: linear-gradient(135deg, var(--sec-btn-bg, #059669), color-mix(in srgb, var(--sec-btn-bg, #059669) 80%, black));
+    border: none;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+.btn-template-import:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 .templates-overview-card, .import-guidelines-card {
     background: var(--bg-card, #ffffff);
@@ -404,15 +459,27 @@
 .theme-dark .template-desc {
     color: #94a3b8 !important;
 }
+.theme-dark .template-fields-section {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
 .theme-dark .field-pill-opt {
     background: #1e293b;
-    color: #94a3b8;
-    border-color: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 .theme-dark .field-pill-req {
     background: rgba(220, 38, 38, 0.15);
     color: #f87171;
     border-color: rgba(220, 38, 38, 0.3);
+}
+.theme-dark .btn-template-download {
+    background: transparent;
+    color: #34d399 !important;
+    border-color: #059669;
+}
+.theme-dark .btn-template-download:hover {
+    background: rgba(5, 150, 105, 0.15);
 }
 .theme-dark .stat-pill-float {
     background: #1e293b !important;

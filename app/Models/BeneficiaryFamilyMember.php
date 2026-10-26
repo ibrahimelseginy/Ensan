@@ -75,6 +75,25 @@ final class BeneficiaryFamilyMember extends Model
             ->withTimestamps();
     }
 
+    public function assessments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ChildAssessment::class, 'family_member_id')->latest('assessment_date');
+    }
+
+    public function entryAssessment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ChildAssessment::class, 'family_member_id')
+            ->where('type', 'entry')
+            ->latestOfMany('assessment_date');
+    }
+
+    public function latestMonthlyAssessment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ChildAssessment::class, 'family_member_id')
+            ->where('type', 'monthly')
+            ->latestOfMany('assessment_date');
+    }
+
     public function getRelationshipLabelAttribute(): string
     {
         return match ($this->relationship) {

@@ -144,7 +144,7 @@
                                                     </div>
                                                     <div>
                                                         <h6 class="fw-bold mb-0 text-dark">{{ $patient?->full_name }}</h6>
-                                                        <div class="text-muted small">كود: <span class="badge bg-secondary-subtle text-dark">{{ $patient?->code ?: '—' }}</span> | قومي: {{ $patient?->national_id ?: 'غير مسجل' }}</div>
+                                                        <div class="text-muted small">كود النزيل: <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fw-bold">{{ $patient?->guest_code }}</span> | قومي: {{ $patient?->national_id ?: 'غير مسجل' }}</div>
                                                     </div>
                                                 </div>
 
@@ -366,6 +366,9 @@
                             <td>
                                 <strong>{{ $stay->beneficiary->full_name }}</strong>
                                 <div class="small text-muted">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
+                                <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary-subtle text-primary text-decoration-none mt-1 d-inline-block">
+                                    <i class="bi bi-person-badge me-1"></i> فتح ملف الحالة ({{ $stay->beneficiary->guest_code }})
+                                </a>
                             </td>
                             <td>
                                 <span class="badge {{ $stay->is_temporary_out ? 'bg-warning-subtle text-warning border border-warning' : 'bg-primary-subtle text-primary border' }} px-2 py-1">
@@ -457,6 +460,9 @@
                                 <td>
                                     <strong>{{ $stay->beneficiary->full_name }}</strong>
                                     <div class="small text-muted">{{ $stay->beneficiary->phone ?: 'بدون هاتف' }}</div>
+                                    <a href="{{ route('beneficiaries.show', $stay->beneficiary) }}" target="_blank" class="badge bg-primary-subtle text-primary text-decoration-none mt-1 d-inline-block">
+                                        <i class="bi bi-person-badge me-1"></i> فتح ملف الحالة ({{ $stay->beneficiary->guest_code }})
+                                    </a>
                                 </td>
                                 <td>{{ $stay->departed_at?->format('Y-m-d H:i') }}</td>
                                 <td>
@@ -585,64 +591,288 @@
                     @php
                         $savedMeal = $todayMeals->get($mealType);
                         $received = $savedMeal?->servings?->where('received', true)->pluck('beneficiary_id')->map(fn($id)=>(int)$id)->all() ?? [];
+                        $savedServingsByBen = $savedMeal?->servings?->keyBy('beneficiary_id') ?? collect();
                     @endphp
                     <div class="col-lg-4">
-                        <form class="border rounded-3 p-3 h-100 bg-light-subtle shadow-sm" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.meals.store', $guest_house) }}">
+                        <form class="border rounded-3 p-3 h-100 bg-light-subtle shadow-sm d-flex flex-column justify-content-between" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.meals.store', $guest_house) }}">
                             @csrf
                             <input type="hidden" name="meal_type" value="{{ $mealType }}">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold mb-0">
-                                    @if($mealType === 'breakfast') 🍳 @elseif($mealType === 'lunch') 🍲 @else 🥪 @endif
-                                    {{ $mealLabel }}
-                                </h6>
-                                @if($savedMeal)
-                                    <span class="badge bg-success small"><i class="bi bi-check me-1"></i> مسجلة</span>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">
+                                        @if($mealType === 'breakfast') 🍳 @elseif($mealType === 'lunch') 🍲 @else 🥪 @endif
+                                        {{ $mealLabel }}
+                                    </h6>
+                                    @if($savedMeal)
+                                        <span class="badge bg-success small"><i class="bi bi-check me-1"></i> مسجلة</span>
+                                    @endif
+                                </div>
+
+                                <div class="row g-2 mb-2">
+                                    <div class="col-7">
+                                        <label class="form-label small text-muted mb-0">تاريخ الوجبة</label>
+                                        <input type="date" name="meal_date" value="{{ now()->toDateString() }}" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="form-label small text-muted mb-0">وقت التقديم</label>
+                                        <input type="time" name="served_at" value="{{ $savedMeal?->served_at ? substr($savedMeal->served_at,0,5) : '' }}" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+
+                                {{-- Inventory & Expense Options (Accordion) --}}
+                                <div class="accordion mb-2" id="mealOptionsAcc_{{ $mealType }}">
+                                    <div class="accordion-item border rounded-2">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed py-1 px-2 small fw-bold text-muted bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#mealInvExp_{{ $mealType }}">
+                                                <i class="bi bi-box-seam me-1 text-primary"></i> خصم من المخزون ومصروف (اختياري)
+                                            </button>
+                                        </h2>
+                                        <div id="mealInvExp_{{ $mealType }}" class="accordion-collapse collapse p-2 bg-light">
+                                            <div class="row g-1 mb-2">
+                                                <div class="col-6">
+                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">المخزن</label>
+                                                    <select name="warehouse_id" class="form-select form-select-sm">
+                                                        <option value="">— بدون خصم —</option>
+                                                        @foreach($guestHouseWarehouses ?? [] as $wh)
+                                                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الصنف</label>
+                                                    <select name="item_id" class="form-select form-select-sm">
+                                                        <option value="">— اختر الصنف —</option>
+                                                        @foreach($guestHouseItems ?? [] as $itm)
+                                                            <option value="{{ $itm->id }}">{{ $itm->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-12 mt-1">
+                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الكمية المصروفة</label>
+                                                    <input type="number" step="0.01" min="0" name="quantity_deducted" class="form-control form-control-sm" placeholder="مثلاً: 25">
+                                                </div>
+                                            </div>
+                                            <div class="border-top pt-2">
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" name="record_expense" value="1" id="recExp_{{ $mealType }}" onchange="document.getElementById('expDetails_{{ $mealType }}').style.display = this.checked ? 'block' : 'none'">
+                                                    <label class="form-check-label small fw-bold text-danger" for="recExp_{{ $mealType }}" style="font-size:0.75rem">تسجيل تكلفة الوجبة كمصروف</label>
+                                                </div>
+                                                <div id="expDetails_{{ $mealType }}" style="display:none;" class="row g-1 mt-1">
+                                                    <div class="col-6">
+                                                        <select name="expense_treasury_id" class="form-select form-select-sm">
+                                                            <option value="">— الخزينة —</option>
+                                                            @foreach($guestHouseExpenseTreasuries ?? [] as $tr)
+                                                                <option value="{{ $tr->id }}">{{ $tr->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <input type="number" step="0.01" min="0" name="expense_amount" class="form-control form-control-sm" placeholder="المبلغ (ج)">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-muted">المقيمون والمرافقون:</span>
+                                    <div>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-primary small me-2" onclick="toggleAllMeals('{{ $mealType }}', true)">الكل</button>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-secondary small" onclick="toggleAllMeals('{{ $mealType }}', false)">إلغاء</button>
+                                    </div>
+                                </div>
+
+                                <div class="border rounded p-2 mb-2 bg-white" style="max-height:230px; overflow-y:auto">
+                                    @forelse($residentStays as $stay)
+                                        @php
+                                            $srv = $savedServingsByBen->get($stay->beneficiary_id);
+                                            $pMealsVal = $srv ? $srv->patient_meals_count : 1;
+                                            $cNameVal = $srv?->companion_name ?: ($stay->beneficiary->patientProfile?->companion_name ?: '');
+                                            $cMealsVal = $srv ? $srv->companion_meals_count : (!empty($cNameVal) ? 1 : 0);
+                                        @endphp
+                                        <div class="border-bottom pb-2 mb-2">
+                                            <div class="form-check mb-1">
+                                                <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
+                                                <label class="form-check-label small fw-bold" for="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}">
+                                                    {{ $stay->beneficiary->full_name }}
+                                                    <span class="text-muted fw-normal" style="font-size:0.75rem">({{ $stay->bed?->wing?->name ?: 'جناح' }} - سرير {{ $stay->bed?->number ?: '—' }})</span>
+                                                </label>
+                                            </div>
+                                            <div class="row g-1 ps-4" style="font-size:0.8rem">
+                                                <div class="col-4">
+                                                    <label class="text-muted d-block" style="font-size:0.7rem">وجبة مريض</label>
+                                                    <input type="number" min="0" max="5" name="servings[{{ $stay->beneficiary_id }}][patient_meals_count]" value="{{ $pMealsVal }}" class="form-control form-control-sm text-center py-0" style="height:26px;">
+                                                </div>
+                                                <div class="col-5">
+                                                    <label class="text-muted d-block" style="font-size:0.7rem">اسم المرافق</label>
+                                                    <input type="text" name="servings[{{ $stay->beneficiary_id }}][companion_name]" value="{{ $cNameVal }}" placeholder="المرافق" class="form-control form-control-sm py-0" style="height:26px; font-size:0.75rem;">
+                                                </div>
+                                                <div class="col-3">
+                                                    <label class="text-muted d-block" style="font-size:0.7rem">وجبة مرافق</label>
+                                                    <input type="number" min="0" max="5" name="servings[{{ $stay->beneficiary_id }}][companion_meals_count]" value="{{ $cMealsVal }}" class="form-control form-control-sm text-center py-0" style="height:26px;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted small">لا يوجد مقيمون حالياً.</span>
+                                    @endforelse
+                                </div>
+
+                                <label class="form-label small fw-bold mb-1"><i class="bi bi-camera me-1"></i> إرفاق صورة {{ $mealLabel }}</label>
+                                <input type="file" name="meal_image" accept="image/*" class="form-control form-control-sm mb-2">
+                                @if($savedMeal?->image_url)
+                                    <div class="d-flex align-items-center gap-2 mb-2 p-1 border rounded bg-white">
+                                        <img src="{{ $savedMeal->image_url }}" alt="{{ $mealLabel }}" class="rounded" style="width: 44px; height: 38px; object-fit: cover;">
+                                        <a href="{{ $savedMeal->image_url }}" target="_blank" class="small text-primary fw-bold">عرض صورة {{ $mealLabel }} المرفقة</a>
+                                    </div>
                                 @endif
                             </div>
-
-                            <div class="row g-2 mb-2">
-                                <div class="col-7">
-                                    <input type="date" name="meal_date" value="{{ now()->toDateString() }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-5">
-                                    <input type="time" name="served_at" value="{{ $savedMeal?->served_at ? substr($savedMeal->served_at,0,5) : '' }}" class="form-control form-control-sm">
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small fw-bold text-muted">قائمة المقيمين (استلام الوجبة):</span>
-                                <div>
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-primary small me-2" onclick="toggleAllMeals('{{ $mealType }}', true)">الكل</button>
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-secondary small" onclick="toggleAllMeals('{{ $mealType }}', false)">إلغاء</button>
-                                </div>
-                            </div>
-
-                            <div class="border rounded p-2 mb-2 bg-white" style="max-height:190px; overflow-y:auto">
-                                @forelse($residentStays as $stay)
-                                    <div class="form-check mb-1">
-                                        <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
-                                        <label class="form-check-label small" for="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}">
-                                            {{ $stay->beneficiary->full_name }}
-                                            <span class="text-muted" style="font-size:0.75rem">({{ $stay->bed?->wing?->name ?: 'جناح' }} - سرير {{ $stay->bed?->number ?: '—' }})</span>
-                                        </label>
-                                    </div>
-                                @empty
-                                    <span class="text-muted small">لا يوجد مقيمون حالياً.</span>
-                                @endforelse
-                            </div>
-
-                            <label class="form-label small fw-bold"><i class="bi bi-camera me-1"></i> إرفاق صورة {{ $mealLabel }}</label>
-                            <input type="file" name="meal_image" accept="image/*" class="form-control form-control-sm mb-2">
-                            @if($savedMeal?->image_url)
-                                <div class="d-flex align-items-center gap-2 mb-2 p-1 border rounded bg-white">
-                                    <img src="{{ $savedMeal->image_url }}" alt="{{ $mealLabel }}" class="rounded" style="width: 44px; height: 38px; object-fit: cover;">
-                                    <a href="{{ $savedMeal->image_url }}" target="_blank" class="small text-primary fw-bold">عرض صورة {{ $mealLabel }} المرفقة</a>
-                                </div>
-                            @endif
-                            <button class="btn btn-primary btn-sm w-100 rounded-pill fw-bold">حفظ كشف {{ $mealLabel }}</button>
+                            <button class="btn btn-primary btn-sm w-100 rounded-pill fw-bold mt-2">حفظ كشف {{ $mealLabel }}</button>
                         </form>
                     </div>
                 @endforeach
+            </div>
+
+            {{-- Meal History Archive (سجل كشوفات الوجبات السابقة) --}}
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-album text-primary me-1"></i> سجل كشوفات الوجبات السابقة والأرشيف</h6>
+                        <small class="text-muted">أرشيف لجميع كشوفات الوجبات المسجلة، أسماء المستلمين والمرافقين، والصور المرفقة</small>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace px-3 py-1">{{ isset($pastMeals) ? $pastMeals->count() : 0 }} كشف مسجل</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>التاريخ والنوع</th>
+                                <th>وقت التقديم</th>
+                                <th>عدد الوجبات المستلمة</th>
+                                <th>خصم المخزون والمصروفات</th>
+                                <th>المسؤول</th>
+                                <th>صورة الوجبة</th>
+                                <th>كشف المستلمين والمرافقين</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pastMeals ?? [] as $pMeal)
+                                @php
+                                    $pTypeLabel = match($pMeal->meal_type) {
+                                        'breakfast' => '🍳 إفطار',
+                                        'lunch' => '🍲 غداء',
+                                        'dinner' => '🥪 عشاء',
+                                        default => $pMeal->meal_type
+                                    };
+                                    $receivedServings = $pMeal->servings->where('received', true);
+                                    $totalMeals = $receivedServings->sum(fn($s) => $s->total_meals_count ?: ($s->patient_meals_count + $s->companion_meals_count ?: 1));
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <strong>{{ $pTypeLabel }}</strong>
+                                        <div class="small text-muted font-monospace">{{ $pMeal->meal_date }}</div>
+                                    </td>
+                                    <td>{{ $pMeal->served_at ? substr($pMeal->served_at, 0, 5) : '—' }}</td>
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success fs-6 fw-bold px-2 py-1">
+                                            {{ $totalMeals }} وجبة
+                                        </span>
+                                        <div class="small text-muted">({{ $receivedServings->count() }} حالة)</div>
+                                    </td>
+                                    <td>
+                                        @if($pMeal->warehouse && $pMeal->item)
+                                            <div class="small"><i class="bi bi-box-seam text-info me-1"></i>{{ $pMeal->quantity_deducted }} {{ $pMeal->item->unit ?: 'وحدة' }} من {{ $pMeal->item->name }}</div>
+                                        @endif
+                                        @if($pMeal->expense_recorded)
+                                            <div class="small text-danger"><i class="bi bi-receipt me-1"></i>تم تسجيل مصروف</div>
+                                        @endif
+                                        @if(!$pMeal->warehouse && !$pMeal->expense_recorded)
+                                            <span class="text-muted small">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="small">{{ $pMeal->creator?->name ?? 'النظام' }}</div>
+                                    </td>
+                                    <td>
+                                        @if($pMeal->image_url)
+                                            <a href="{{ $pMeal->image_url }}" target="_blank" class="d-inline-block">
+                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="rounded border shadow-xs" style="width: 45px; height: 40px; object-fit: cover;">
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">بدون صورة</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#mealArchiveModal_{{ $pMeal->id }}">
+                                            <i class="bi bi-people me-1"></i> عرض الكشف ({{ $receivedServings->count() }})
+                                        </button>
+
+                                        {{-- Modal for Attendance & Companions --}}
+                                        <div class="modal fade" id="mealArchiveModal_{{ $pMeal->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content shadow border-0">
+                                                    <div class="modal-header bg-primary text-white py-2">
+                                                        <h6 class="modal-title fw-bold">
+                                                            <i class="bi bi-card-checklist me-1"></i> كشف حضور {{ $pTypeLabel }} — {{ $pMeal->meal_date }}
+                                                        </h6>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body p-3">
+                                                        @if($pMeal->image_url)
+                                                            <div class="text-center mb-3">
+                                                                <img src="{{ $pMeal->image_url }}" alt="صورة الوجبة" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
+                                                            </div>
+                                                        @endif
+                                                        @if($pMeal->notes)
+                                                            <div class="alert alert-info py-2 small mb-3"><strong>ملاحظات:</strong> {{ $pMeal->notes }}</div>
+                                                        @endif
+                                                        <div class="table-responsive">
+                                                            <table class="table table-bordered table-sm align-middle">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>#</th>
+                                                                        <th>اسم المريض / النزيل</th>
+                                                                        <th>وجبات المريض</th>
+                                                                        <th>اسم المرافق</th>
+                                                                        <th>وجبات المرافق</th>
+                                                                        <th>إجمالي الوجبات</th>
+                                                                        <th>وقت الاستلام</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($receivedServings as $idx => $srv)
+                                                                        <tr>
+                                                                            <td>{{ $loop->iteration }}</td>
+                                                                            <td><strong>{{ $srv->beneficiary?->full_name ?? '—' }}</strong></td>
+                                                                            <td class="text-center font-monospace">{{ $srv->patient_meals_count ?: 1 }}</td>
+                                                                            <td>{{ $srv->companion_name ?: '—' }}</td>
+                                                                            <td class="text-center font-monospace">{{ $srv->companion_meals_count ?: 0 }}</td>
+                                                                            <td class="text-center fw-bold text-success font-monospace">{{ $srv->total_meals_count ?: ($srv->patient_meals_count + $srv->companion_meals_count ?: 1) }}</td>
+                                                                            <td class="small text-muted font-monospace">{{ $srv->received_at ? \Carbon\Carbon::parse($srv->received_at)->format('H:i') : '—' }}</td>
+                                                                        </tr>
+                                                                    @empty
+                                                                        <tr><td colspan="7" class="text-center text-muted py-2">لم يتم تسجيل استلام لأي نزيل في هذا الكشف.</td></tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer py-2">
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="7" class="text-center text-muted py-3">لا توجد كشوفات وجبات سابقة مسجلة.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

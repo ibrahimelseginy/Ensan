@@ -11,7 +11,9 @@
 @endsection
 
 @section('content')
-@php($patientMember = $beneficiary->familyMembers->firstWhere('is_patient', true))
+@php
+  $patientMember = $beneficiary->familyMembers->firstWhere('is_patient', true);
+@endphp
 <div class="page-header">
   <div><h4 class="mb-1"><i class="bi bi-person-gear text-primary"></i> تعديل ملف المستفيد</h4><div class="small text-muted">{{ $beneficiary->full_name }} — {{ $beneficiary->code }}</div></div>
   <a href="{{ route('beneficiaries.show', $beneficiary) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i> رجوع</a>
@@ -45,8 +47,9 @@
     <div class="form-section">
       <div class="form-section-title"><i class="bi bi-folder-symlink"></i><span>المشروع وحالة الملف</span></div>
       <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">المشروع</label><select name="project_id" id="projectSelect" class="form-select"><option value="">— اختر المشروع —</option>@foreach($projects as $project)<option value="{{ $project->id }}" data-name="{{ $project->name }}" @selected((string) old('project_id', $beneficiary->project_id) === (string) $project->id)>{{ $project->name }}</option>@endforeach</select></div>
-        <div class="col-md-6"><label class="form-label">حالة الملف</label><select name="status" id="statusSelect" class="form-select"><option value="pending" @selected(old('status',$beneficiary->status)==='pending')>تحت التقديم</option><option value="new" @selected(old('status',$beneficiary->status)==='new')>جديد</option><option value="under_review" @selected(old('status',$beneficiary->status)==='under_review')>تحت المراجعة</option><option value="accepted" @selected(old('status',$beneficiary->status)==='accepted')>مقبول</option><option value="rejected" @selected(old('status',$beneficiary->status)==='rejected')>مرفوض</option><option value="archived_improved" @selected(old('status',$beneficiary->status)==='archived_improved')>أرشيف — تحسن مادي / شفاء</option><option value="archived_deceased" @selected(old('status',$beneficiary->status)==='archived_deceased')>أرشيف — توفي</option></select></div>
+        <div class="col-md-4"><label class="form-label">المشروع</label><select name="project_id" id="projectSelect" class="form-select"><option value="">— اختر المشروع —</option>@foreach($projects as $project)<option value="{{ $project->id }}" data-name="{{ $project->name }}" @selected((string) old('project_id', $beneficiary->project_id) === (string) $project->id)>{{ $project->name }}</option>@endforeach</select></div>
+        <div class="col-md-4"><label class="form-label fw-bold">تصنيف الحالة</label><select name="classification" class="form-select"><option value="A" @selected(old('classification', $beneficiary->classification ?? 'A') === 'A')>تصنيف (A)</option><option value="B" @selected(old('classification', $beneficiary->classification) === 'B')>تصنيف (B)</option></select></div>
+        <div class="col-md-4"><label class="form-label">حالة الملف</label><select name="status" id="statusSelect" class="form-select"><option value="pending" @selected(old('status',$beneficiary->status)==='pending')>تحت التقديم</option><option value="new" @selected(old('status',$beneficiary->status)==='new')>جديد</option><option value="under_review" @selected(old('status',$beneficiary->status)==='under_review')>تحت المراجعة</option><option value="accepted" @selected(old('status',$beneficiary->status)==='accepted')>مقبول</option><option value="rejected" @selected(old('status',$beneficiary->status)==='rejected')>مرفوض</option><option value="archived_improved" @selected(old('status',$beneficiary->status)==='archived_improved')>أرشيف — تحسن مادي / شفاء</option><option value="archived_deceased" @selected(old('status',$beneficiary->status)==='archived_deceased')>أرشيف — توفي</option></select></div>
         <div class="col-12" id="rejectionReasonBox" style="display:none"><label class="form-label text-danger">سبب الرفض</label><textarea name="rejection_reason" class="form-control" rows="2">{{ old('rejection_reason',$beneficiary->rejection_reason) }}</textarea></div>
         <div class="col-12" id="archiveReasonBox" style="display:none"><label class="form-label">سبب الأرشفة</label><textarea name="archived_reason" class="form-control" rows="2">{{ old('archived_reason',$beneficiary->archived_reason) }}</textarea></div>
       </div>

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid p-0">
@@ -36,6 +36,11 @@
                             @endif
                         </div>
                         <h3 class="fw-bold mb-1">{{ $volunteer->name }}</h3>
+                        <div class="mb-2">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-3 py-1 fs-6 rounded-pill fw-bold">
+                                كود المتطوع: {{ $volunteer->volunteer_code }}
+                            </span>
+                        </div>
                         <p class="text-muted mb-3">{{ $volunteer->email }}</p>
 
                         <div class="mb-4">

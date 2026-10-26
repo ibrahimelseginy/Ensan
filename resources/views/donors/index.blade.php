@@ -487,7 +487,7 @@
           <div class="d-flex align-items-center gap-3">
              <input type="checkbox" class="form-check-input donor-check" value="{{ $donor->id }}"
                     data-id="{{ $donor->id }}"
-                    data-code="{{ $donor->code ?? ('DON-'.$donor->id) }}"
+                    data-code="{{ $donor->display_code }}"
                     data-name="{{ $donor->name }}"
                     data-type="{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}"
                     data-phone="{{ $donor->phone ?? '—' }}"
@@ -515,7 +515,7 @@
                     <a href="{{ route('donors.show',$donor) }}" class="text-decoration-none text-dark stretched-link-custom">{{ $donor->name }}</a>
                 </h5>
                 <div class="text-muted small">
-                    <span class="font-monospace text-primary">{{ $donor->code ?? ('DON-'.$donor->id) }}</span>
+                    <span class="font-monospace text-primary fw-bold">{{ $donor->display_code }}</span>
                     • {{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}
                     • {{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}
                 </div>
