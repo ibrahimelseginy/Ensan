@@ -150,10 +150,61 @@
     .amount-inkind { color: #f59e0b; }
 
     .donations-bulk-bar {
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 14px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        position: fixed !important;
+        bottom: 28px !important;
+        left: 50% !important;
+        transform: translateX(-50%) translateY(100px) scale(0.95);
+        background: rgba(15, 23, 42, 0.94) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
+        border-radius: 50px !important;
+        box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+        z-index: 1060 !important;
+        padding: 8px 18px !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+    }
+    .donations-bulk-bar.active {
+        display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: translateX(-50%) translateY(0) scale(1) !important;
+    }
+    .bulk-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 30px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        font-weight: 600;
+    }
+    .bulk-clear-btn {
+        color: #94a3b8 !important;
+        font-size: 0.82rem !important;
+        font-weight: 500 !important;
+        transition: color 0.15s ease !important;
+    }
+    .bulk-clear-btn:hover {
+        color: #f8fafc !important;
+    }
+    .bulk-delete-btn {
+        background: #dc2626 !important;
+        border-color: #ef4444 !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+        transition: all 0.2s ease !important;
+    }
+    .bulk-delete-btn:hover {
+        background: #b91c1c !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4) !important;
     }
   </style>
 @endsection
@@ -436,10 +487,24 @@
         @endforelse
     </div>
 
-    {{-- Bulk Actions Bar --}}
-    <div class="donations-bulk-bar d-flex gap-2 align-items-center mt-3 p-3 flex-wrap" id="inkindBulkBar" style="display:none;">
-        <span class="small fw-bold text-white px-2 py-1 bg-white bg-opacity-10 rounded-pill" id="inkindSelectedCount">0 محدد</span>
-        <button class="btn btn-outline-danger btn-sm ms-auto rounded-pill px-3" onclick="submitBulkDelete('inkind-check')"><i class="bi bi-trash me-1"></i> حذف المحدد</button>
+    {{-- Floating Bulk Actions Bar --}}
+    <div class="donations-bulk-bar d-none align-items-center gap-3" id="inkindBulkBar">
+        <div class="d-flex align-items-center gap-2">
+            <span class="bulk-count-badge">
+                <i class="bi bi-check2-circle text-success fs-6"></i>
+                <span>تم تحديد <b id="inkindSelectedCount" class="text-white">0</b> تبرع</span>
+            </span>
+            <button type="button" class="btn btn-sm btn-link text-white-50 text-decoration-none p-1 bulk-clear-btn" onclick="clearBulkSelection('inkind-check')" title="إلغاء التحديد">
+                <i class="bi bi-x-circle"></i> إلغاء
+            </button>
+        </div>
+        <div class="vr bg-secondary opacity-50 my-1 mx-1" style="height: 24px;"></div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm bulk-delete-btn" onclick="submitBulkDelete('inkind-check')">
+                <i class="bi bi-trash3-fill"></i>
+                <span>حذف المحدد</span>
+            </button>
+        </div>
     </div>
 
     <div class="mt-4 d-flex justify-content-center" dir="ltr">
@@ -535,6 +600,13 @@
         updateBulkBar(className);
     }
 
+    function clearBulkSelection(className) {
+        document.querySelectorAll('.' + className).forEach(cb => cb.checked = false);
+        const masterCheck = document.getElementById('selectAll');
+        if (masterCheck) masterCheck.checked = false;
+        updateBulkBar(className);
+    }
+
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('inkind-check')) updateBulkBar('inkind-check');
     });
@@ -542,10 +614,25 @@
     function updateBulkBar(className) {
         const checked = document.querySelectorAll('.' + className + ':checked').length;
         const bar = document.getElementById('inkindBulkBar');
-        document.getElementById('inkindSelectedCount').textContent = checked + ' محدد';
-        bar.style.display = checked > 0 ? 'flex' : 'none';
-        bar.style.setProperty('display', checked > 0 ? 'flex' : 'none', 'important');
+        const countEl = document.getElementById('inkindSelectedCount');
+        if (countEl) countEl.textContent = checked;
+        if (!bar) return;
+        if (checked > 0) {
+            bar.classList.remove('d-none');
+            requestAnimationFrame(() => bar.classList.add('active'));
+        } else {
+            bar.classList.remove('active');
+            setTimeout(() => {
+                if (!bar.classList.contains('active')) {
+                    bar.classList.add('d-none');
+                }
+            }, 250);
+        }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBulkBar('inkind-check');
+    });
 
     function submitBulkDelete(className) {
         const ids = [];
