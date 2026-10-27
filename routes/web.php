@@ -93,6 +93,14 @@ Route::get('documents/{path}', [\App\Http\Controllers\PrivateDocumentController:
 // --- Protected Routes ---
 Route::middleware(['auth'])->group(function () {
 
+    // --- Internal Employee Chat (AI-Bot Style) ---
+    Route::prefix('internal-chat')->name('internal-chat.')->group(function () {
+        Route::get('contacts', [\App\Http\Controllers\InternalChatController::class, 'getContacts'])->name('contacts');
+        Route::get('messages', [\App\Http\Controllers\InternalChatController::class, 'getMessages'])->name('messages');
+        Route::post('send', [\App\Http\Controllers\InternalChatController::class, 'sendMessage'])->name('send');
+        Route::get('unread-count', [\App\Http\Controllers\InternalChatController::class, 'unreadCount'])->name('unread-count');
+    });
+
     // --- Privacy-Preserving Remote Search APIs (Min 2 chars required, no preloading) ---
     Route::get('api/search/beneficiaries', function (\Illuminate\Http\Request $request) {
         $q = trim((string) $request->input('q', ''));
@@ -176,9 +184,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('batch-process', [\App\Http\Controllers\DataImportWebController::class, 'batchProcess'])->name('batch-process');
     });
 
-    Route::middleware('permission:notifications.view')
-        ->get('notifications', [NotificationWebController::class, 'index'])
-        ->name('notifications.index');
+    Route::middleware('permission:notifications.view')->group(function () {
+        Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/store-targeted', [NotificationWebController::class, 'storeTargeted'])->name('notifications.store-targeted');
+        Route::post('notifications/mark-read', [NotificationWebController::class, 'markRead'])->name('notifications.mark-read');
+        Route::post('notifications/mark-all-read', [NotificationWebController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::post('notifications/dismiss', [NotificationWebController::class, 'dismiss'])->name('notifications.dismiss');
+        Route::post('notifications/clear-read', [NotificationWebController::class, 'clearRead'])->name('notifications.clear-read');
+    });
 
     Route::middleware('permission:audits.view')->group(function () {
         Route::get('audits', [AuditWebController::class, 'index'])->name('audits.index');
@@ -372,6 +385,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('permission:complaints.view')->group(function () {
+        Route::post('complaints/{complaint}/reply', [ComplaintWebController::class, 'reply'])->name('complaints.reply');
         Route::resource('complaints', ComplaintWebController::class);
     });
 
