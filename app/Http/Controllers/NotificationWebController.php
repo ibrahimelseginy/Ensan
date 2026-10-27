@@ -632,7 +632,40 @@ final class NotificationWebController extends Controller
             'suggestions' => $suggestions,
             'canCreateNotif' => $canCreateNotif,
             'employees' => $employees,
+            'systemUpdateModules' => \App\Services\SystemUpdateNotificationService::getModules(),
         ]);
+    }
+
+    public function broadcastSystemUpdate(Request $request, \App\Services\SystemUpdateNotificationService $service)
+    {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+
+        $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin') || $user->hasRole('مدير المؤسسة بالكامل');
+        $isManager = $user->hasRole('manager');
+        if (!$isAdmin && !$isManager && !$user->hasPermission('notifications.create')) {
+            abort(403, 'غير مصرح لك بإرسال إشعارات تحديث النظام.');
+        }
+
+        $data = $request->validate([
+            'module' => 'required|string',
+            'details' => 'required|string|max:3000',
+            'custom_title' => 'nullable|string|max:191',
+        ]);
+
+        $res = $service->broadcastUpdate(
+            $data['module'],
+            $data['details'],
+            $data['custom_title'] ?? null,
+            true
+        );
+
+        $moduleName = $res['module_name'] ?? 'النظام';
+        $count = $res['notified_count'] ?? 0;
+
+        return back()->with('success', "تم إرسال إشعار التحديث بنجاح إلى {$count} موظف معني في ({$moduleName}) بتوقيع مهندس إبراهيم 🛠️");
     }
 
     public function storeTargeted(Request $request)

@@ -187,6 +187,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:notifications.view')->group(function () {
         Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
         Route::post('notifications/store-targeted', [NotificationWebController::class, 'storeTargeted'])->name('notifications.store-targeted');
+        Route::post('notifications/broadcast-update', [NotificationWebController::class, 'broadcastSystemUpdate'])->name('notifications.broadcast-update');
         Route::post('notifications/mark-read', [NotificationWebController::class, 'markRead'])->name('notifications.mark-read');
         Route::post('notifications/mark-all-read', [NotificationWebController::class, 'markAllRead'])->name('notifications.mark-all-read');
         Route::post('notifications/dismiss', [NotificationWebController::class, 'dismiss'])->name('notifications.dismiss');
