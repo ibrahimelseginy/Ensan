@@ -1,14 +1,43 @@
 @auth
 <div id="ensanChatWidget" dir="rtl">
-    <!-- Floating Launcher Button with Ensan Logo + AI Sparkle -->
-    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" title="مساعد إنسان الذكي (Ensan AI) ومحادثات الفريق" aria-label="فتح الشات الذكي">
+    <!-- Floating Welcome Speech Bubble from Anis on System Open -->
+    <div id="ensanWelcomeBubble" class="ensan-welcome-bubble d-none shadow-lg">
+        <button type="button" class="welcome-bubble-close" id="closeWelcomeBubbleBtn" title="إغلاق الترحيب" aria-label="إغلاق">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="d-flex align-items-center gap-2.5">
+            <div class="welcome-avatar-wrap flex-shrink-0">
+                <div class="welcome-avatar-circle">
+                    <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="welcome-ensan-logo">
+                    <span class="welcome-person-emoji">🙋‍♂️</span>
+                </div>
+            </div>
+            <div class="welcome-bubble-content flex-grow-1">
+                <div class="welcome-bubble-title">أهلاً بك يا {{ auth()->user()->name }} 🌿</div>
+                <div class="welcome-bubble-text">أنا <strong>أنيس</strong> رفيق العمل في إنسان، جاهز لمساعدتك وتنسيق مهامك!</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-end gap-2 mt-2 pt-1 border-top border-light">
+            <button type="button" id="welcomeStartChatBtn" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold" style="font-size: 0.74rem;">
+                <i class="bi bi-chat-heart me-1"></i> فتح المحادثة
+            </button>
+            <button type="button" id="welcomeDismissBtn" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-muted" style="font-size: 0.72rem;">
+                لاحقاً
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Launcher Button with Ensan Logo + Welcoming Person -->
+    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" title="أنيس - رفيق العمل ومحادثات الفريق" aria-label="فتح محادثات إنسان">
         <span class="ensan-chat-pulse"></span>
         <div class="ensan-chat-launcher-icon">
-            <!-- Merged Ensan Logo with AI Sparkle -->
-            <div class="ensan-ai-badge-wrap">
+            <!-- Pure Ensan Logo with Welcoming Person waving -->
+            <div class="ensan-launcher-brand-wrap">
                 <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-launcher-heart">
-                <span class="ensan-ai-chip">AI</span>
-                <i class="bi bi-stars ensan-ai-sparkle"></i>
+                <div class="ensan-welcoming-person" title="أنيس يرحب بك!">
+                    <span class="person-wave-hand">👋</span>
+                    <span class="person-avatar-mini">🙋‍♂️</span>
+                </div>
             </div>
             <svg class="close-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -28,13 +57,13 @@
                 </button>
                 <div class="ensan-bot-avatar position-relative flex-shrink-0">
                     <div id="currentChatAvatar" class="avatar-circle ensan-avatar-heart-wrap">
-                        <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan AI" class="ensan-header-logo">
-                        <span class="avatar-ai-tag">AI</span>
+                        <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo">
+                        <span class="avatar-person-tag">🙋‍♂️</span>
                     </div>
                     <span id="chatOnlineIndicator" class="online-indicator"></span>
                 </div>
                 <div class="chat-header-info overflow-hidden">
-                    <h6 id="currentChatTitle" class="m-0 fw-bold text-white text-truncate">أنيس - مساعد إنسان الذكي</h6>
+                    <h6 id="currentChatTitle" class="m-0 fw-bold text-white text-truncate">أنيس - رفيق العمل</h6>
                     <small id="currentChatSubtitle" class="text-white-50 text-truncate d-block" style="font-size: 0.74rem;">القناة العامة وتواصل فريق العمل</small>
                 </div>
             </div>
@@ -70,7 +99,7 @@
                 <div class="ensan-bot-welcome">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <div class="bot-badge">
-                            <i class="bi bi-stars text-warning me-1"></i> أنيس | رفيق العمل الذكي
+                            <i class="bi bi-person-heart text-success me-1"></i> أنيس | رفيق العمل
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">
                             <i class="bi bi-broadcast me-1"></i> بث مباشر للفريق
@@ -447,11 +476,96 @@
     justify-content: center;
 }
 
-/* Ensan Heart + AI Badge */
-.ensan-ai-badge-wrap {
+/* ── Welcome Greeting Bubble on System Open ── */
+.ensan-welcome-bubble {
+    position: absolute;
+    bottom: 82px;
+    left: 0;
+    width: 330px;
+    max-width: calc(100vw - 36px);
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 14px 14px 10px 14px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2), 0 3px 12px rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    z-index: 99991;
+    animation: welcomeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes welcomeSlideUp {
+    0% { opacity: 0; transform: translateY(16px) scale(0.94); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.welcome-bubble-close {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.welcome-bubble-close:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.welcome-avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
-    width: 36px;
-    height: 36px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.welcome-ensan-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.welcome-person-emoji {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    animation: waveHand 2.2s infinite ease-in-out;
+}
+
+.welcome-bubble-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #065f46;
+    margin-bottom: 2px;
+}
+
+.welcome-bubble-text {
+    font-size: 0.78rem;
+    color: #475569;
+    line-height: 1.45;
+}
+
+/* Ensan Heart + Welcoming Person */
+.ensan-launcher-brand-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -459,35 +573,51 @@
 }
 
 .ensan-launcher-heart {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     object-fit: contain;
-    filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    margin-right: 4px;
 }
 
-.ensan-ai-chip {
+.ensan-welcoming-person {
     position: absolute;
     bottom: -2px;
     right: -4px;
-    background: #fef08a;
-    color: #854d0e;
-    font-size: 0.62rem;
-    font-weight: 900;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 6px;
-    border: 1px solid #ffffff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #ffffff;
+    border-radius: 50%;
+    border: 1.5px solid #10b981;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
-.ensan-ai-sparkle {
+.person-avatar-mini {
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
+.person-wave-hand {
     position: absolute;
-    top: -3px;
-    left: -3px;
-    color: #fef08a;
-    font-size: 0.75rem;
-    animation: pulseGlow 2s infinite;
+    top: -9px;
+    right: -5px;
+    font-size: 0.85rem;
+    line-height: 1;
+    animation: waveHand 2.2s infinite ease-in-out;
+    transform-origin: 70% 70%;
+    display: inline-block;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+}
+
+@keyframes waveHand {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(18deg); }
+    40% { transform: rotate(-12deg); }
+    60% { transform: rotate(14deg); }
+    80% { transform: rotate(-6deg); }
 }
 
 .ensan-chat-launcher-icon .close-icon-svg {
@@ -497,7 +627,7 @@
     position: absolute;
 }
 
-.ensan-chat-widget-open .ensan-ai-badge-wrap {
+.ensan-chat-widget-open .ensan-launcher-brand-wrap {
     display: none;
 }
 
@@ -610,17 +740,17 @@
     filter: brightness(0) invert(1);
 }
 
-.avatar-ai-tag {
+.avatar-person-tag {
     position: absolute;
-    bottom: 1px;
-    right: 1px;
-    background: #fef08a;
-    color: #854d0e;
-    font-size: 0.55rem;
-    font-weight: 900;
-    padding: 1px 3px;
-    border-radius: 4px;
+    bottom: -2px;
+    right: -2px;
+    background: #ffffff;
+    font-size: 0.82rem;
     line-height: 1;
+    border-radius: 50%;
+    padding: 1px;
+    border: 1.5px solid #10b981;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .avatar-circle img:not(.ensan-header-logo) {
@@ -1534,6 +1664,7 @@
     }
 
     function openChat() {
+        if (typeof hideWelcomeGreeting === 'function') hideWelcomeGreeting();
         isOpen = true;
         widget.classList.add('ensan-chat-widget-open');
         loadContacts();
@@ -1582,9 +1713,9 @@
             updateNavTabButtons('channel');
 
             currentContactId = 'public';
-            currentChatTitle.textContent = 'أنيس - مساعد إنسان الذكي';
+            currentChatTitle.textContent = 'أنيس - رفيق العمل';
             currentChatSubtitle.textContent = 'القناة العامة وتواصل فريق العمل';
-            currentChatAvatar.innerHTML = '<img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo"><span class="avatar-ai-tag">AI</span>';
+            currentChatAvatar.innerHTML = '<img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo"><span class="avatar-person-tag">🙋‍♂️</span>';
             headerAudienceBadgeBtn.classList.toggle('d-none', currentAudienceTarget === 'all');
 
             loadMessages();
@@ -1855,7 +1986,7 @@
 
         var avatarContent;
         if (isBot) {
-            avatarContent = '<div class="avatar-circle ensan-avatar-heart-wrap" style="width:28px;height:28px;background:#ecfdf5;border:1px solid #10b981;"><span style="font-size:1rem;">🤖</span></div>';
+            avatarContent = '<div class="avatar-circle ensan-avatar-heart-wrap" style="width:28px;height:28px;background:#ecfdf5;border:1px solid #10b981;"><span style="font-size:1rem;">🙋‍♂️</span></div>';
         } else {
             avatarContent = m.sender_avatar
                 ? '<img src="' + m.sender_avatar + '" alt="" onerror="this.parentElement.textContent=\'' + (m.sender_initial || 'M') + '\';">'
@@ -1864,7 +1995,7 @@
 
         var senderNameHtml;
         if (isBot) {
-            senderNameHtml = '<span class="msg-sender-name text-success fw-bold"><i class="bi bi-stars text-warning me-1"></i> ' + escapeHtml(m.sender_name) + '</span>';
+            senderNameHtml = '<span class="msg-sender-name text-success fw-bold"><i class="bi bi-person-heart text-success me-1"></i> ' + escapeHtml(m.sender_name) + '</span>';
         } else if (!m.is_me) {
             senderNameHtml = '<span class="msg-sender-name">' + escapeHtml(m.sender_name) + '</span>';
         } else {
@@ -2345,6 +2476,46 @@
         };
         return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
     }
+
+    // Welcome Greeting on System Open
+    var welcomeBubble = document.getElementById('ensanWelcomeBubble');
+    var closeWelcomeBubbleBtn = document.getElementById('closeWelcomeBubbleBtn');
+    var welcomeStartChatBtn = document.getElementById('welcomeStartChatBtn');
+    var welcomeDismissBtn = document.getElementById('welcomeDismissBtn');
+
+    function showWelcomeGreeting() {
+        if (!welcomeBubble) return;
+        var welcomed = sessionStorage.getItem('ensan_anis_welcomed');
+        if (welcomed) return;
+
+        setTimeout(function() {
+            if (!isOpen) {
+                welcomeBubble.classList.remove('d-none');
+                playNotificationSound();
+                setTimeout(function() {
+                    hideWelcomeGreeting();
+                }, 14000);
+            }
+        }, 1200);
+    }
+
+    function hideWelcomeGreeting() {
+        if (!welcomeBubble) return;
+        welcomeBubble.classList.add('d-none');
+        sessionStorage.setItem('ensan_anis_welcomed', '1');
+    }
+
+    if (closeWelcomeBubbleBtn) closeWelcomeBubbleBtn.addEventListener('click', hideWelcomeGreeting);
+    if (welcomeDismissBtn) welcomeDismissBtn.addEventListener('click', hideWelcomeGreeting);
+    if (welcomeStartChatBtn) {
+        welcomeStartChatBtn.addEventListener('click', function() {
+            hideWelcomeGreeting();
+            openChat();
+        });
+    }
+
+    // Trigger welcoming popup on system open
+    showWelcomeGreeting();
 
     // Initial check
     checkUnreadBadge();

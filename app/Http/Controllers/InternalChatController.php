@@ -317,8 +317,8 @@ class InternalChatController extends Controller
 
         $avatar = null;
         if ($isBot) {
-            $senderName = 'أنيس | المساعد الذكي 🤖';
-            $senderInitial = '🤖';
+            $senderName = 'أنيس | رفيق العمل 🌿';
+            $senderInitial = 'أ';
             $avatar = asset('images/heart-icon.png');
         } else {
             $senderName = $sender ? $sender->name : 'موظف';
@@ -332,7 +332,7 @@ class InternalChatController extends Controller
         if ($isBot) {
             $targetingBadge = [
                 'type' => 'bot',
-                'label' => 'رد ذكي آلي 🌟',
+                'label' => 'رفيق العمل 🌿',
                 'color' => 'success'
             ];
         } elseif ($m->isPublic()) {
@@ -489,8 +489,8 @@ class InternalChatController extends Controller
                    "• يمكن للزملاء الاطلاع على الشكاوى المسندة إليهم عبر بوابة الشكاوى، ويتم إرسال إشعار فوري لأي تحديث يطرأ على الحالة.";
         }
 
-        // Default intelligent assistant reply
-        return "أهلاً بك يا {$userName} 🌟 أنا **أنيس**، رفيق العمل الذكي في مؤسسة إنسان. أنا متواجد دائماً لمساعدتك في استخراج الإحصائيات، متابعة الشكاوى وطلبات التعديل، أو توجيهك في نظام العمل. كيف يمكنني خدمتك تحديداً؟";
+        // Default assistant reply
+        return "أهلاً بك يا {$userName} 🌿 أنا **أنيس**، رفيق العمل في مؤسسة إنسان. أنا متواجد دائماً لمساعدتك في استخراج الإحصائيات، متابعة الشكاوى وطلبات التعديل، أو التنسيق مع الفريق. كيف يمكنني مساندتك اليوم؟";
     }
 
     /**
