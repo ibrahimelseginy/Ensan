@@ -20,6 +20,44 @@
             overflow: hidden;
             background: var(--card-bg, #ffffff);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+        .project-details-row {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            align-items: flex-start !important;
+        }
+        .project-details-main {
+            min-width: 0 !important;
+            flex: 0 0 66.666667% !important;
+            max-width: 66.666667% !important;
+        }
+        .project-details-sidebar {
+            min-width: 0 !important;
+            flex: 0 0 33.333333% !important;
+            max-width: 33.333333% !important;
+        }
+        .project-sticky-sidebar {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 85px;
+            z-index: 10;
+        }
+        @media (max-width: 991.98px) {
+            .project-details-main,
+            .project-details-sidebar {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+            .project-sticky-sidebar {
+                position: static;
+            }
+        }
+        .tab-content,
+        .tab-pane {
+            min-width: 0 !important;
+            max-width: 100% !important;
         }
         .project-table-scroll {
             overflow-x: auto;
@@ -414,9 +452,9 @@
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Left Column: Main Content -->
-        <div class="col-lg-8">
+    <div class="row g-4 project-details-row">
+        <!-- Main Column: Content -->
+        <div class="col-lg-8 project-details-main">
 
             <!-- Campaigns Section -->
             <div class="card border-0 shadow-sm mb-4">
@@ -1832,8 +1870,8 @@
 
 </div>
 
-<!-- Left Column (in RTL): Sidebar -->
-<div class="col-lg-4">
+<!-- Sidebar Column -->
+<div class="col-lg-4 project-details-sidebar">
 
             <!-- Manager Card -->
             <div class="card border-0 shadow-sm mb-4">
