@@ -12,12 +12,19 @@ final class ChangeRequestWebController extends Controller
 {
     public function index(Request $request)
     {
-        // Only admin should see this
-        if (!request()->user() || !request()->user()->hasRole('admin')) {
-            abort(403, 'غير مصرح لك بدخول هذه الصفحة. هذه الصفحة للأدمن فقط.');
+        $user = request()->user();
+        if (!$user) {
+            abort(401);
         }
 
+        $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin') || $user->hasPermission('manage_change_requests');
+
         $query = ChangeRequest::with(['user', 'reviewer', 'subject']);
+
+        if (!$isAdmin) {
+            // Non-admins see only their own change requests
+            $query->where('user_id', $user->id);
+        }
 
         if ($request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
@@ -106,7 +113,8 @@ final class ChangeRequestWebController extends Controller
             'visitsByBeneficiary',
             'visitsByNationalId',
             'visitsByName',
-            'visitsByPhone'
+            'visitsByPhone',
+            'isAdmin'
         ));
     }
 
@@ -445,6 +453,8 @@ final class ChangeRequestWebController extends Controller
 
             \Illuminate\Support\Facades\DB::commit();
 
+            $this->notifyEmployee($changeRequest, 'approved');
+
             return back()->with('success', 'تم قبول التغيير وتنفيذه بنجاح');
 
         } catch (\Throwable $e) {
@@ -580,6 +590,8 @@ final class ChangeRequestWebController extends Controller
         if (! $processed) {
             return back()->with('error', 'الطلب تمت معالجته مسبقاً');
         }
+
+        $this->notifyEmployee($changeRequest, 'rejected', $validated['rejection_reason'] ?? null);
 
         return back()->with('success', 'تم رفض الطلب بنجاح. لم يتم تطبيق أي تغييرات.');
     }
@@ -757,6 +769,59 @@ final class ChangeRequestWebController extends Controller
         ]);
 
         return back()->with('success', 'تم إلغاء الطلب بنجاح');
+    }
+
+    private function notifyEmployee(ChangeRequest $changeRequest, string $status, ?string $reason = null): void
+    {
+        try {
+            if (!$changeRequest->user_id) {
+                return;
+            }
+
+            $isApproved = $status === 'approved';
+            $modelBasename = class_basename($changeRequest->model_type);
+            $modelAr = match($modelBasename) {
+                'Beneficiary' => 'حالة / مستفيد',
+                'Donation' => 'تبرع',
+                'Expense' => 'مصروف',
+                'Delegate' => 'مندوب',
+                'DelegateTrip' => 'مشوار مندوب',
+                'Campaign' => 'حملة',
+                'Leave' => 'إجازة',
+                'Task' => 'مهمة',
+                'Account' => 'حساب مالي',
+                'JournalEntry' => 'قيد يومية',
+                default => $modelBasename
+            };
+
+            $actionAr = match($changeRequest->action) {
+                'create' => 'إضافة',
+                'update' => 'تعديل',
+                'delete' => 'حذف',
+                'cancel' => 'إلغاء',
+                default => $changeRequest->action
+            };
+
+            $pData = is_array($changeRequest->payload) ? ($changeRequest->payload['data'] ?? $changeRequest->payload) : [];
+            $itemName = trim((string)($changeRequest->subject?->full_name ?? ($changeRequest->subject?->name ?? ($pData['full_name'] ?? ($pData['name'] ?? '')))));
+            $itemDesc = $itemName !== '' ? " ({$itemName})" : ($changeRequest->model_id ? " (كود: #{$changeRequest->model_id})" : '');
+            $reviewerName = auth()->user()?->name ? " (بواسطة: " . auth()->user()->name . ")" : '';
+            $reasonText = (!$isApproved && !empty($reason)) ? " — سبب الرفض: {$reason}" : '';
+
+            \App\Models\MobileNotification::create([
+                'title' => $isApproved ? "تمت الموافقة على طلب {$actionAr} {$modelAr}" : "تم رفض طلب {$actionAr} {$modelAr}",
+                'body' => $isApproved 
+                    ? "تمت الموافقة على طلبك لـ {$actionAr} {$modelAr}{$itemDesc} بنجاح{$reviewerName}"
+                    : "تم رفض طلبك لـ {$actionAr} {$modelAr}{$itemDesc}{$reasonText}{$reviewerName}",
+                'category' => $isApproved ? \App\Models\MobileNotification::CATEGORY_GENERAL : \App\Models\MobileNotification::CATEGORY_URGENT,
+                'target_type' => 'user',
+                'target_user_id' => $changeRequest->user_id,
+                'is_sent' => true,
+                'sent_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify employee for change request: ' . $e->getMessage());
+        }
     }
 }
 

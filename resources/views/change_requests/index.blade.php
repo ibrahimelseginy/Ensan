@@ -17,6 +17,7 @@
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-4">
                     <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-list-check me-2"></i>السجل ({{ $requests->total() }})</h5>
+                    @if(!empty($isAdmin))
                     <div class="d-none" id="bulk-actions">
                         <button class="btn btn-sm btn-outline-warning" onclick="submitBulk('revert')">
                             <i class="bi bi-arrow-counterclockwise"></i> تراجع
@@ -25,6 +26,7 @@
                             <i class="bi bi-trash"></i> حذف
                         </button>
                     </div>
+                    @endif
                 </div>
 
                 <div class="btn-group bg-light p-1 rounded-3">
@@ -44,7 +46,11 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="border-0" style="width: 40px;">
-                            <input type="checkbox" class="form-check-input" id="check-all" onchange="toggleAll(this)">
+                            @if(!empty($isAdmin))
+                                <input type="checkbox" class="form-check-input" id="check-all" onchange="toggleAll(this)">
+                            @else
+                                <i class="bi bi-hash text-muted"></i>
+                            @endif
                         </th>
                         <th class="border-0">#</th>
                         <th class="border-0">المستخدم</th>
@@ -98,7 +104,11 @@
                         @endphp
                         <tr>
                             <td>
-                                <input type="checkbox" class="form-check-input bulk-item" value="{{ $req->id }}" onchange="updateBulkUI()">
+                                @if(!empty($isAdmin))
+                                    <input type="checkbox" class="form-check-input bulk-item" value="{{ $req->id }}" onchange="updateBulkUI()">
+                                @else
+                                    <span class="text-muted small">{{ ($requests->currentPage() - 1) * $requests->perPage() + $loop->iteration }}</span>
+                                @endif
                             </td>
                             <td>{{ ($requests->currentPage() - 1) * $requests->perPage() + $loop->iteration }}</td>
                             <td>
@@ -152,32 +162,36 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                @if($req->status === 'pending')
-                                    <div class="btn-group">
-                                        <form action="{{ route('change-requests.approve', $req) }}" method="POST" onsubmit="return confirm('تأكيد الموافقة على الطلب؟');">
-                                            @csrf
-                                            <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> موافقة</button>
-                                        </form>
-                                        <button class="btn btn-sm btn-danger ms-1" onclick="openRejectModal('{{ $req->id }}')">
-                                            <i class="bi bi-x-lg"></i> رفض
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="d-flex gap-1 align-items-center">
-                                        <form action="{{ route('change-requests.revert', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من التراجع عن هذا القرار؟ سيتم محاولة عكس أي تعديلات برمجية تمت وإعادة الطلب لحالة التعليق.');">
-                                            @csrf
-                                            <button class="btn btn-sm btn-outline-warning" title="تراجع عن القرار">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                @if(!empty($isAdmin))
+                                    @if($req->status === 'pending')
+                                        <div class="btn-group">
+                                            <form action="{{ route('change-requests.approve', $req) }}" method="POST" onsubmit="return confirm('تأكيد الموافقة على الطلب؟');">
+                                                @csrf
+                                                <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> موافقة</button>
+                                            </form>
+                                            <button class="btn btn-sm btn-danger ms-1" onclick="openRejectModal('{{ $req->id }}')">
+                                                <i class="bi bi-x-lg"></i> رفض
                                             </button>
-                                        </form>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick='openEditModal(@json($req))'>
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <form action="{{ route('change-requests.destroy', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل نهائياً؟');">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    </div>
+                                        </div>
+                                    @else
+                                        <div class="d-flex gap-1 align-items-center">
+                                            <form action="{{ route('change-requests.revert', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من التراجع عن هذا القرار؟ سيتم محاولة عكس أي تعديلات برمجية تمت وإعادة الطلب لحالة التعليق.');">
+                                                @csrf
+                                                <button class="btn btn-sm btn-outline-warning" title="تراجع عن القرار">
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick='openEditModal(@json($req))'>
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form action="{{ route('change-requests.destroy', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل نهائياً؟');">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                @else
+                                    <span class="badge bg-light text-muted border py-1 px-2 small"><i class="bi bi-eye"></i> للاطلاع</span>
                                 @endif
                             </td>
                         </tr>
