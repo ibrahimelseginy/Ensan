@@ -67,4 +67,18 @@ final class ChildAssessment extends Model
             default => 'تقييم دوري / شهري',
         };
     }
+
+    public function getReviewerRoleLabelAttribute(): string
+    {
+        return match ($this->reviewer_role) {
+            'volunteer' => 'متطوع',
+            default => 'موظف',
+        };
+    }
+
+    public function uploadImage($file, string $directory = 'children/assessments'): void
+    {
+        $path = app(\App\Services\ImageUploadService::class)->upload($file, $directory);
+        $this->update(['test_image_path' => $path]);
+    }
 }

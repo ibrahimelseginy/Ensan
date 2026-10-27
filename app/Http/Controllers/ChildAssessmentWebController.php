@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BeneficiaryFamilyMember;
 use App\Models\ChildAssessment;
+use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,123 +17,147 @@ final class ChildAssessmentWebController extends Controller
     {
         $existing = $familyMember->entryAssessment;
         if ($existing && $existing->is_locked) {
-            return back()->with('error', 'تم إجراء التقييم الشامل واعتماده وإغلاقه مسبقاً، لا يمكن التعديل عليه.');
+            return back()->with('error', 'تم اعتماد وقفل تقييم الدخول مسبقاً، والنموذج غير قابل للتعديل بعد تنفيذه.');
         }
 
         $data = $request->validate([
-            'evaluator_name' => 'required|string|max:150',
-            'evaluator_role' => 'nullable|string|max:100',
-            'quran_memorized_parts' => 'nullable|string|max:100',
-            'quran_grade_percentage' => 'nullable|numeric|min:0|max:100',
-            'hadith_grade_percentage' => 'nullable|numeric|min:0|max:100',
-            'prayer_commitment_level' => 'nullable|string|max:100',
-            'morals_grade_percentage' => 'nullable|numeric|min:0|max:100',
-            'overall_percentage' => 'nullable|numeric|min:0|max:100',
-            'strengths' => 'nullable|string|max:1000',
-            'weaknesses' => 'nullable|string|max:1000',
-            'recommendations' => 'nullable|string|max:1000',
+            'assessment_date' => 'nullable|date',
+            'reviewer_name' => 'required|string|max:150',
+            'reviewer_role' => 'required|in:employee,volunteer',
+            'academic_rating' => 'nullable|numeric|min:0|max:100',
+            'psychological_rating' => 'nullable|numeric|min:0|max:100',
+            'social_rating' => 'nullable|numeric|min:0|max:100',
+            'health_rating' => 'nullable|numeric|min:0|max:100',
+            'score_percentage' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|string|max:2000',
-            'form_data' => 'nullable|array',
-            'test_image' => 'nullable|any_image|max:10240',
+            'data' => 'nullable|array',
+            'test_image' => 'nullable|file|max:15360',
         ]);
 
-        $overall = $data['overall_percentage'] ?? null;
-        if ($overall === null && isset($data['quran_grade_percentage'], $data['hadith_grade_percentage'], $data['morals_grade_percentage'])) {
-            $overall = round(((float)$data['quran_grade_percentage'] + (float)$data['hadith_grade_percentage'] + (float)$data['morals_grade_percentage']) / 3, 1);
+        $score = $data['score_percentage'] ?? null;
+        if ($score === null) {
+            $parts = array_filter([
+                $data['academic_rating'] ?? null,
+                $data['psychological_rating'] ?? null,
+                $data['social_rating'] ?? null,
+            ], fn($v) => $v !== null && $v !== '');
+            $score = !empty($parts) ? round(array_sum($parts) / count($parts), 1) : null;
         }
 
-        $assessment = ChildAssessment::create([
-            'child_id' => $familyMember->id,
+        $imagePath = null;
+        if ($request->hasFile('test_image')) {
+            $imagePath = app(ImageUploadService::class)->upload($request->file('test_image'), 'children/assessments');
+        }
+
+        ChildAssessment::create([
+            'family_member_id' => $familyMember->id,
             'beneficiary_id' => $familyMember->beneficiary_id,
-            'assessment_type' => ChildAssessment::TYPE_ENTRY,
-            'assessment_month' => (int)now()->month,
-            'assessment_year' => (int)now()->year,
+            'type' => 'entry',
+            'assessment_date' => $data['assessment_date'] ?? now()->toDateString(),
+            'reviewer_name' => $data['reviewer_name'],
+            'reviewer_role' => $data['reviewer_role'],
+            'score_percentage' => $score,
+            'academic_rating' => $data['academic_rating'] ?? null,
+            'psychological_rating' => $data['psychological_rating'] ?? null,
+            'social_rating' => $data['social_rating'] ?? null,
+            'health_rating' => $data['health_rating'] ?? null,
+            'test_image_path' => $imagePath,
             'is_locked' => true,
-            'evaluator_name' => $data['evaluator_name'],
-            'evaluator_role' => $data['evaluator_role'] ?? 'أخصائي التقييم والمتابعة',
-            'quran_memorized_parts' => $data['quran_memorized_parts'] ?? null,
-            'quran_grade_percentage' => $data['quran_grade_percentage'] ?? null,
-            'hadith_grade_percentage' => $data['hadith_grade_percentage'] ?? null,
-            'prayer_commitment_level' => $data['prayer_commitment_level'] ?? null,
-            'morals_grade_percentage' => $data['morals_grade_percentage'] ?? null,
-            'overall_percentage' => $overall,
-            'strengths' => $data['strengths'] ?? null,
-            'weaknesses' => $data['weaknesses'] ?? null,
-            'recommendations' => $data['recommendations'] ?? null,
             'notes' => $data['notes'] ?? null,
-            'form_data' => $data['form_data'] ?? null,
+            'data' => $data['data'] ?? [],
             'created_by' => auth()->id(),
         ]);
 
-        if ($request->hasFile('test_image')) {
-            $assessment->uploadImage($request->file('test_image'), 'children/assessments');
-        }
-
-        return back()->with('success', 'تم تسجيل واعتماد التقييم العام الشامل لدخول المشروع وقفل النموذج بنجاح.');
+        return back()->with('success', 'تم تسجيل تقييم دخول الطفل الشامل واعتماده وإغلاقه بنجاح.');
     }
 
     public function storeMonthly(Request $request, BeneficiaryFamilyMember $familyMember): RedirectResponse
     {
         $data = $request->validate([
-            'assessment_month' => 'required|integer|between:1,12',
-            'assessment_year' => 'required|integer|between:2020,2035',
-            'evaluator_name' => 'required|string|max:150',
-            'evaluator_role' => 'nullable|string|max:100',
-            'quran_memorized_parts' => 'nullable|string|max:100',
-            'quran_grade_percentage' => 'required|numeric|min:0|max:100',
-            'hadith_grade_percentage' => 'nullable|numeric|min:0|max:100',
-            'prayer_commitment_level' => 'nullable|string|max:100',
-            'morals_grade_percentage' => 'nullable|numeric|min:0|max:100',
-            'overall_percentage' => 'nullable|numeric|min:0|max:100',
-            'strengths' => 'nullable|string|max:1000',
-            'weaknesses' => 'nullable|string|max:1000',
-            'recommendations' => 'nullable|string|max:1000',
+            'assessment_date' => 'required|date',
+            'reviewer_name' => 'required|string|max:150',
+            'reviewer_role' => 'required|in:employee,volunteer',
+            'academic_rating' => 'required|numeric|min:0|max:100',
+            'psychological_rating' => 'required|numeric|min:0|max:100',
+            'social_rating' => 'nullable|numeric|min:0|max:100',
+            'score_percentage' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|string|max:2000',
-            'test_image' => 'nullable|any_image|max:10240',
+            'data' => 'nullable|array',
+            'test_image' => 'nullable|file|max:15360',
         ]);
 
-        $overall = $data['overall_percentage'] ?? null;
-        if ($overall === null) {
-            $parts = array_filter([
-                $data['quran_grade_percentage'],
-                $data['hadith_grade_percentage'] ?? null,
-                $data['morals_grade_percentage'] ?? null,
+        $score = $data['score_percentage'] ?? null;
+        if ($score === null) {
+            $ratings = array_filter([
+                $data['academic_rating'],
+                $data['psychological_rating'],
+                $data['social_rating'] ?? null,
             ], fn($v) => $v !== null && $v !== '');
-            $overall = !empty($parts) ? round(array_sum($parts) / count($parts), 1) : $data['quran_grade_percentage'];
+            $score = !empty($ratings) ? round(array_sum($ratings) / count($ratings), 1) : (float)$data['academic_rating'];
         }
 
-        $assessment = ChildAssessment::create([
-            'child_id' => $familyMember->id,
+        $imagePath = null;
+        if ($request->hasFile('test_image')) {
+            $imagePath = app(ImageUploadService::class)->upload($request->file('test_image'), 'children/assessments');
+        }
+
+        ChildAssessment::create([
+            'family_member_id' => $familyMember->id,
             'beneficiary_id' => $familyMember->beneficiary_id,
-            'assessment_type' => ChildAssessment::TYPE_MONTHLY,
-            'assessment_month' => (int)$data['assessment_month'],
-            'assessment_year' => (int)$data['assessment_year'],
+            'type' => 'monthly',
+            'assessment_date' => $data['assessment_date'],
+            'reviewer_name' => $data['reviewer_name'],
+            'reviewer_role' => $data['reviewer_role'],
+            'score_percentage' => $score,
+            'academic_rating' => $data['academic_rating'],
+            'psychological_rating' => $data['psychological_rating'],
+            'social_rating' => $data['social_rating'] ?? null,
+            'test_image_path' => $imagePath,
             'is_locked' => false,
-            'evaluator_name' => $data['evaluator_name'],
-            'evaluator_role' => $data['evaluator_role'] ?? 'معلم/مشرف المتابعة',
-            'quran_memorized_parts' => $data['quran_memorized_parts'] ?? null,
-            'quran_grade_percentage' => $data['quran_grade_percentage'],
-            'hadith_grade_percentage' => $data['hadith_grade_percentage'] ?? null,
-            'prayer_commitment_level' => $data['prayer_commitment_level'] ?? null,
-            'morals_grade_percentage' => $data['morals_grade_percentage'] ?? null,
-            'overall_percentage' => $overall,
-            'strengths' => $data['strengths'] ?? null,
-            'weaknesses' => $data['weaknesses'] ?? null,
-            'recommendations' => $data['recommendations'] ?? null,
             'notes' => $data['notes'] ?? null,
+            'data' => $data['data'] ?? [],
             'created_by' => auth()->id(),
         ]);
 
-        if ($request->hasFile('test_image')) {
-            $assessment->uploadImage($request->file('test_image'), 'children/assessments');
-        }
+        return back()->with('success', 'تم حفظ التقييم الشهري للطفل وإرفاق الاختبار بنجاح.');
+    }
 
-        return back()->with('success', 'تم حفظ نتيجة التقييم الشهري للطفل وإرفاق الاختبار بنجاح.');
+    public function uploadDocument(Request $request, BeneficiaryFamilyMember $familyMember): RedirectResponse
+    {
+        $request->validate([
+            'document' => 'required|file|max:20480',
+            'name' => 'nullable|string|max:150',
+        ]);
+
+        $file = $request->file('document');
+        $path = app(ImageUploadService::class)->upload($file, 'children/documents');
+
+        $familyMember->attachments()->create([
+            'path' => $path,
+            'mime' => $file->getClientMimeType(),
+            'original_name' => $request->input('name') ?: $file->getClientOriginalName(),
+        ]);
+
+        return back()->with('success', 'تم إرفاق ملف الطفل وحفظه بنجاح.');
     }
 
     public function show(ChildAssessment $assessment): View
     {
-        $assessment->load(['child.sponsors', 'child.beneficiary', 'creator']);
+        $assessment->load(['familyMember.sponsors', 'familyMember.beneficiary.project', 'creator']);
         return view('beneficiaries.family-members.assessment-show', compact('assessment'));
+    }
+
+    public function report(BeneficiaryFamilyMember $familyMember): View
+    {
+        $familyMember->load([
+            'beneficiary.project',
+            'sponsors',
+            'entryAssessment',
+            'latestMonthlyAssessment',
+            'assessments',
+            'attachments',
+        ]);
+
+        return view('beneficiaries.family-members.child-dossier-report', compact('familyMember'));
     }
 }

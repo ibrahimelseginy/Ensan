@@ -111,7 +111,9 @@ final class ProjectWebController extends Controller
 
         $zadChildren = \App\Models\BeneficiaryFamilyMember::query()
             ->whereHas('beneficiary', fn ($q) => $q->where('project_id', $project->id))
-            ->with(['beneficiary', 'sponsors', 'entryAssessment', 'latestMonthlyAssessment'])
+            ->where('relationship', 'child')
+            ->with(['beneficiary', 'sponsors', 'entryAssessment', 'latestMonthlyAssessment', 'assessments', 'attachments'])
+            ->orderBy('full_name')
             ->get();
 
         return view('projects.show', array_merge(compact(

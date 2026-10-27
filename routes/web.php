@@ -230,6 +230,10 @@ Route::middleware(['auth'])->group(function () {
             ->name('child-assessments.store-entry');
         Route::post('beneficiary-family-members/{familyMember}/assessments/monthly', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeMonthly'])
             ->name('child-assessments.store-monthly');
+        Route::post('beneficiary-family-members/{familyMember}/documents', [\App\Http\Controllers\ChildAssessmentWebController::class, 'uploadDocument'])
+            ->name('child-assessments.upload-document');
+        Route::get('beneficiary-family-members/{familyMember}/report', [\App\Http\Controllers\ChildAssessmentWebController::class, 'report'])
+            ->name('child-assessments.report');
         Route::get('child-assessments/{assessment}', [\App\Http\Controllers\ChildAssessmentWebController::class, 'show'])
             ->name('child-assessments.show');
         Route::post('beneficiaries/bulk', [BeneficiaryWebController::class, 'bulkUpdate'])->name('beneficiaries.bulk');

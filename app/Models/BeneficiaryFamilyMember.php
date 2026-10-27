@@ -94,6 +94,11 @@ final class BeneficiaryFamilyMember extends Model
             ->latestOfMany('assessment_date');
     }
 
+    public function attachments(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable', 'entity_type', 'entity_id')->latest();
+    }
+
     public function getRelationshipLabelAttribute(): string
     {
         return match ($this->relationship) {
