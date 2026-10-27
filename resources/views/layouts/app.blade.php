@@ -1309,171 +1309,436 @@
         }
 
         /* ============================================================== */
-        /* Notifications Offcanvas Styling (Light & Dark Modes)           */
+        /* Notifications Offcanvas Styling (Ultra-Modern Premium Design)  */
         /* ============================================================== */
         .offcanvas#notifOffcanvas {
             width: 440px !important;
             max-width: 100vw !important;
-            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.22) !important;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.25) !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
 
-        /* Light Mode */
+        .notif-header-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .notif-header-icon {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.25));
+            color: #10b981;
+            font-size: 1.15rem;
+        }
+        .notif-header-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .notif-header-count {
+            font-size: 0.72rem;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+        }
+        .notif-status-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+        }
+        .notif-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .notif-status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .notif-status-active .notif-status-dot {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+        .notif-status-denied {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            cursor: pointer;
+        }
+        .notif-status-denied .notif-status-dot {
+            background: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+        }
+        .notif-status-prompt {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+            cursor: pointer;
+        }
+        .notif-status-prompt .notif-status-dot {
+            background: #0ea5e9;
+            box-shadow: 0 0 6px #0ea5e9;
+        }
+
+        .notif-icon-circle-btn {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+        .notif-icon-circle-btn:hover {
+            transform: scale(1.08);
+        }
+
+        .notif-toolbar-card {
+            border-radius: 14px;
+            padding: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .notif-input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+        }
+        .notif-input-group .notif-addon {
+            border-radius: 0 10px 10px 0 !important;
+            padding: 0 12px !important;
+            border-left: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            height: 44px !important;
+            min-height: 44px !important;
+        }
+        .notif-select {
+            height: 44px !important;
+            min-height: 44px !important;
+            border-radius: 10px 0 0 10px !important;
+            font-weight: 600 !important;
+            font-size: 0.88rem !important;
+            line-height: 1.5 !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+            padding-inline-start: 14px !important;
+            padding-inline-end: 36px !important;
+            box-sizing: border-box !important;
+            cursor: pointer;
+        }
+        .notif-action-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .notif-action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Notification Item Cards */
+        .notification-card {
+            border-radius: 14px !important;
+            overflow: hidden;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+        }
+        .notification-card.notif-unread {
+            border-right: 4px solid #10b981 !important;
+        }
+        .notification-card.notif-unread.border-danger {
+            border-right-color: #ef4444 !important;
+        }
+        .notification-card.notif-unread.border-warning {
+            border-right-color: #f59e0b !important;
+        }
+        .notification-card.notif-unread.border-info {
+            border-right-color: #0ea5e9 !important;
+        }
+        .notification-card.notif-unread.border-success {
+            border-right-color: #10b981 !important;
+        }
+        .notification-card.notif-unread.border-secondary {
+            border-right-color: #64748b !important;
+        }
+        .notification-card.notif-read {
+            opacity: 0.82;
+        }
+
+        /* Empty State */
+        .notif-empty-state {
+            padding: 40px 20px;
+        }
+        .notif-empty-icon-wrap {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .notif-empty-bell {
+            font-size: 2.3rem;
+            color: #10b981;
+            position: relative;
+            z-index: 2;
+        }
+        .notif-empty-glow {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
+            filter: blur(8px);
+            animation: pulseGlow 3s infinite;
+        }
+        .notif-empty-sparkle {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            color: #f59e0b;
+            font-size: 1.15rem;
+            z-index: 3;
+            animation: pulseGlow 2s infinite;
+        }
+        .notif-empty-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .notif-empty-desc {
+            font-size: 0.84rem;
+            line-height: 1.6;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Light Mode Theme */
         body:not(.theme-dark) .offcanvas#notifOffcanvas {
             background-color: #ffffff !important;
             color: #0f172a !important;
             border-right: 1px solid #e2e8f0 !important;
         }
         body:not(.theme-dark) .offcanvas#notifOffcanvas .offcanvas-header {
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0 !important;
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7 !important;
         }
         body:not(.theme-dark) .offcanvas#notifOffcanvas .offcanvas-body {
             background-color: #f8fafc !important;
         }
+        body:not(.theme-dark) .notif-icon-circle-btn {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+        body:not(.theme-dark) .notif-icon-circle-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        body:not(.theme-dark) .notif-close-circle:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
         body:not(.theme-dark) .notif-toolbar-card {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
         }
         body:not(.theme-dark) .notif-input-group .notif-addon {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+            background: #f8fafc;
+            border-color: #e2e8f0;
             color: #64748b;
         }
         body:not(.theme-dark) .notif-select {
             background-color: #ffffff;
-            border-color: #cbd5e1;
+            border-color: #e2e8f0;
             color: #0f172a;
-            font-weight: 600;
         }
         body:not(.theme-dark) .notif-action-btn {
             background: #f8fafc;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #e2e8f0;
             color: #334155;
-            font-weight: 600;
-            font-size: 0.78rem;
-            padding: 6px 11px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-            text-decoration: none;
-            transition: all 0.2s ease;
         }
         body:not(.theme-dark) .notif-action-btn:hover {
-            background: #e2e8f0;
+            background: #f1f5f9;
             color: #0f172a;
-            border-color: #94a3b8;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         }
-        body:not(.theme-dark) .notif-btn-sound {
-            background: #eff6ff;
-            color: #0284c7;
-            border: 1px solid #bae6fd;
-            font-weight: 600;
+        body:not(.theme-dark) .notif-empty-icon-wrap {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.08));
         }
-        body:not(.theme-dark) .notif-btn-sound:hover {
-            background: #0284c7;
-            color: #ffffff;
+        body:not(.theme-dark) .notif-empty-title {
+            color: #0f172a;
         }
-        body:not(.theme-dark) .notif-badge-active {
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-            font-weight: 700;
+        body:not(.theme-dark) .notif-empty-desc {
+            color: #64748b;
+        }
+        body:not(.theme-dark) .notification-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        body:not(.theme-dark) .notification-card .card-body {
+            background: transparent !important;
+        }
+        body:not(.theme-dark) .notification-card.notif-unread {
+            background: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+        }
+        body:not(.theme-dark) .notification-card p {
+            color: #1e293b !important;
+        }
+        body:not(.theme-dark) .notification-card.notif-read p {
+            color: #64748b !important;
         }
 
-        /* Dark Mode */
+        /* Dark Mode Theme */
         .theme-dark .offcanvas#notifOffcanvas,
         html.theme-dark .offcanvas#notifOffcanvas,
         body.theme-dark .offcanvas#notifOffcanvas {
             background-color: #0b1322 !important;
             color: #f1f5f9 !important;
-            border-right: 1px solid rgba(148, 163, 184, 0.15) !important;
+            border-right: 1px solid rgba(148, 163, 184, 0.12) !important;
         }
         .theme-dark .offcanvas#notifOffcanvas .offcanvas-header,
         html.theme-dark .offcanvas#notifOffcanvas .offcanvas-header,
         body.theme-dark .offcanvas#notifOffcanvas .offcanvas-header {
-            background: #141e30 !important;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
-        }
-        .theme-dark .offcanvas#notifOffcanvas .btn-close,
-        html.theme-dark .offcanvas#notifOffcanvas .btn-close,
-        body.theme-dark .offcanvas#notifOffcanvas .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%);
+            background: #0f172a !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
         }
         .theme-dark .offcanvas#notifOffcanvas .offcanvas-body,
         html.theme-dark .offcanvas#notifOffcanvas .offcanvas-body,
         body.theme-dark .offcanvas#notifOffcanvas .offcanvas-body {
-            background-color: #0b1322 !important;
+            background-color: #090e17 !important;
+        }
+        .theme-dark .notif-icon-circle-btn,
+        html.theme-dark .notif-icon-circle-btn,
+        body.theme-dark .notif-icon-circle-btn {
+            background: #1e293b !important;
+            border-color: rgba(148, 163, 184, 0.2) !important;
+            color: #94a3b8 !important;
+        }
+        .theme-dark .notif-icon-circle-btn:hover,
+        html.theme-dark .notif-icon-circle-btn:hover,
+        body.theme-dark .notif-icon-circle-btn:hover {
+            background: #27354a !important;
+            color: #ffffff !important;
+            border-color: rgba(148, 163, 184, 0.35) !important;
+        }
+        .theme-dark .notif-close-circle:hover,
+        html.theme-dark .notif-close-circle:hover,
+        body.theme-dark .notif-close-circle:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
         }
         .theme-dark .notif-toolbar-card,
         html.theme-dark .notif-toolbar-card,
         body.theme-dark .notif-toolbar-card {
-            background: #152238 !important;
-            border: 1px solid rgba(148, 163, 184, 0.18) !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+            background: #111c2e !important;
+            border: 1px solid rgba(148, 163, 184, 0.16) !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
         }
         .theme-dark .notif-input-group .notif-addon,
         html.theme-dark .notif-input-group .notif-addon,
         body.theme-dark .notif-input-group .notif-addon {
-            background: #0b1322 !important;
-            border-color: rgba(148, 163, 184, 0.25) !important;
-            color: #94a3b8 !important;
+            background: #090e17 !important;
+            border-color: rgba(148, 163, 184, 0.2) !important;
+            color: #38bdf8 !important;
         }
         .theme-dark .notif-select,
         html.theme-dark .notif-select,
         body.theme-dark .notif-select {
-            background-color: #0b1322 !important;
-            border-color: rgba(148, 163, 184, 0.25) !important;
+            background-color: #090e17 !important;
+            border-color: rgba(148, 163, 184, 0.2) !important;
             color: #f8fafc !important;
-            font-weight: 600;
         }
         .theme-dark .notif-action-btn,
         html.theme-dark .notif-action-btn,
         body.theme-dark .notif-action-btn {
-            background: #1e293b !important;
-            border: 1px solid rgba(148, 163, 184, 0.25) !important;
-            color: #f1f5f9 !important;
-            font-weight: 600;
-            font-size: 0.78rem;
-            padding: 6px 11px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-            text-decoration: none;
-            transition: all 0.2s ease;
+            background: #1a283e !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+            color: #e2e8f0 !important;
         }
         .theme-dark .notif-action-btn:hover,
         html.theme-dark .notif-action-btn:hover,
         body.theme-dark .notif-action-btn:hover {
-            background: #27354a !important;
+            background: #22344f !important;
             color: #ffffff !important;
             border-color: rgba(148, 163, 184, 0.4) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-        .theme-dark .notif-btn-sound,
-        html.theme-dark .notif-btn-sound,
-        body.theme-dark .notif-btn-sound {
-            background: rgba(14, 165, 233, 0.16) !important;
-            color: #38bdf8 !important;
-            border: 1px solid rgba(56, 189, 248, 0.35) !important;
-            font-weight: 600;
+        .theme-dark .notif-empty-icon-wrap,
+        html.theme-dark .notif-empty-icon-wrap,
+        body.theme-dark .notif-empty-icon-wrap {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .theme-dark .notif-btn-sound:hover,
-        html.theme-dark .notif-btn-sound:hover,
-        body.theme-dark .notif-btn-sound:hover {
-            background: #0284c7 !important;
-            color: #ffffff !important;
+        .theme-dark .notif-empty-title,
+        html.theme-dark .notif-empty-title,
+        body.theme-dark .notif-empty-title {
+            color: #f8fafc !important;
         }
-        .theme-dark .notif-badge-active,
-        html.theme-dark .notif-badge-active,
-        body.theme-dark .notif-badge-active {
-            background: rgba(16, 185, 129, 0.2) !important;
-            color: #34d399 !important;
-            border: 1px solid rgba(16, 185, 129, 0.35) !important;
-            font-weight: 700;
+        .theme-dark .notif-empty-desc,
+        html.theme-dark .notif-empty-desc,
+        body.theme-dark .notif-empty-desc {
+            color: #94a3b8 !important;
+        }
+        .theme-dark .notification-card,
+        html.theme-dark .notification-card,
+        body.theme-dark .notification-card {
+            background: #111c2e !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+        }
+        .theme-dark .notification-card .card-body,
+        html.theme-dark .notification-card .card-body,
+        body.theme-dark .notification-card .card-body {
+            background: transparent !important;
+        }
+        .theme-dark .notification-card.notif-unread,
+        html.theme-dark .notification-card.notif-unread,
+        body.theme-dark .notification-card.notif-unread {
+            background: #142238 !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+        .theme-dark .notification-card p,
+        html.theme-dark .notification-card p,
+        body.theme-dark .notification-card p {
+            color: #f1f5f9 !important;
+        }
+        .theme-dark .notification-card.notif-read p,
+        html.theme-dark .notification-card.notif-read p,
+        body.theme-dark .notification-card.notif-read p {
+            color: #94a3b8 !important;
         }
 
         /* Ensure dropdown is completely solid, non-transparent and above all other elements */
@@ -3167,35 +3432,43 @@
 
   @if($navUser)
     <div class="offcanvas offcanvas-end" tabindex="-1" id="notifOffcanvas" aria-labelledby="notifOffcanvasLabel">
-      <div class="offcanvas-header border-bottom py-3 px-3">
-        <div class="d-flex align-items-center gap-2">
-          <div class="p-1.5 rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-            <i class="bi bi-bell-fill fs-6"></i>
-          </div>
-          <h5 id="notifOffcanvasLabel" class="mb-0 fw-bold fs-6">الإشعارات</h5>
-          <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger text-white px-2 py-0.5 d-none" style="font-size: 0.72rem;">0</span>
-        </div>
-        <div class="d-flex align-items-center gap-1.5">
-          <span id="desktopNotifStatusBadge" class="badge rounded-pill notif-badge-active px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.72rem;" title="إشعارات سطح المكتب مفعّلة">
+      <div class="offcanvas-header py-3 px-3">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="notif-header-icon shadow-sm">
             <i class="bi bi-bell-fill"></i>
-            <span>مفعّلة</span>
-          </span>
-          <button type="button" id="desktopNotifDeniedBtn" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.72rem;" title="الإشعارات محظورة - اضغط للإصلاح" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
-            <i class="bi bi-slash-circle"></i>
-            <span>محظورة</span>
-          </button>
-          <button type="button" id="enableDesktopNotifBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2 py-1 d-none align-items-center gap-1" style="font-size: 0.74rem;" title="تفعيل إشعارات سطح المكتب">
-            <i class="bi bi-bell"></i>
-            <span>تفعيل</span>
-          </button>
-          <button type="button" id="testNotifSoundBtn" class="btn btn-sm notif-btn-sound rounded-pill px-2.5 py-1 d-flex align-items-center gap-1" style="font-size: 0.74rem;" title="تشغيل صوت التنبيه وتجربة إشعار سطح المكتب">
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <h5 id="notifOffcanvasLabel" class="notif-header-title mb-0">مركز الإشعارات</h5>
+              <span id="notifOffcanvasCount" class="badge rounded-pill bg-danger text-white notif-header-count px-2 py-0.5 d-none">0</span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5 mt-0.5">
+              <span id="desktopNotifStatusBadge" class="notif-status-badge notif-status-active d-none" title="إشعارات سطح المكتب مفعّلة ومربوطة بالنظام">
+                <span class="notif-status-dot"></span>
+                <span>تنبيهات فورية نشطة</span>
+              </span>
+              <button type="button" id="desktopNotifDeniedBtn" class="notif-status-badge notif-status-denied border-0 d-none" title="الإشعارات محظورة - اضغط لمعرفة خطوات التفعيل" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
+                <span class="notif-status-dot"></span>
+                <span>محظورة بالمتصفح (انقر للحل)</span>
+              </button>
+              <button type="button" id="enableDesktopNotifBtn" class="notif-status-badge notif-status-prompt border-0 d-none" style="cursor: pointer;" title="انقر لتفعيل إشعارات سطح المكتب">
+                <span class="notif-status-dot"></span>
+                <span>تفعيل على الشاشة</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-1.5">
+          <button type="button" id="testNotifSoundBtn" class="btn notif-icon-circle-btn" title="تجربة صوت التنبيه وإشعار سطح المكتب" aria-label="تجربة التنبيه">
             <i class="bi bi-volume-up-fill"></i>
-            <span>تجربة التنبيه</span>
           </button>
-          <button type="button" class="btn btn-sm text-secondary p-1" title="دليل تفعيل الإشعارات في Mac و Windows" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal">
-            <i class="bi bi-question-circle fs-6"></i>
+          <button type="button" class="btn notif-icon-circle-btn" title="دليل الإشعارات وإعدادات النظام" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal" aria-label="دليل التنبيهات">
+            <i class="bi bi-question-circle"></i>
           </button>
-          <button type="button" class="btn-close notif-btn-close ms-1" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          <button type="button" class="btn notif-icon-circle-btn notif-close-circle" data-bs-dismiss="offcanvas" aria-label="إغلاق">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
       </div>
       <div class="offcanvas-body p-3">
@@ -3210,7 +3483,7 @@
                 <i class="bi bi-bell-fill"></i>
               </div>
               <div>
-                <div class="fw-bold text-dark">تفعيل إشعارات سطح المكتب</div>
+                <div class="fw-bold">تفعيل إشعارات سطح المكتب</div>
                 <div class="text-secondary" style="font-size: 0.76rem;">استقبل تنبيهات المهام والطلبات فوراً على شاشتك حتى أثناء تصغير المتصفح</div>
               </div>
             </div>
@@ -3238,33 +3511,35 @@
           </div>
         </div>
 
-        {{-- شريط أدوات الفلترة والإجراءات السريعة (منسق بالكامل بدون نزول لأسفل) --}}
-        <div class="notif-toolbar-card mb-3 p-2 rounded-3">
-          <div class="d-flex align-items-center justify-content-between gap-2 flex-nowrap">
-            <div class="notif-filter-wrapper flex-grow-1" style="max-width: 140px; min-width: 110px;">
-              <div class="input-group input-group-sm notif-input-group">
-                <span class="input-group-text notif-addon"><i class="bi bi-funnel"></i></span>
-                <select id="notifSideFilter" class="form-select form-select-sm notif-select">
-                  <option value="">الكل</option>
-                  <option value="success">نجاح</option>
-                  <option value="info">معلومة</option>
-                  <option value="warning">تحذير</option>
-                  <option value="danger">هام</option>
-                  <option value="secondary">عام</option>
-                </select>
-              </div>
+        {{-- شريط أدوات الفلترة والإجراءات السريعة بتنسيق حديث --}}
+        <div class="notif-toolbar-card mb-3">
+          {{-- الصف الأول: حقل الفلترة بكامل العرض لمنع أي اقتطاع في النص العربي --}}
+          <div class="notif-filter-wrapper mb-2">
+            <div class="input-group notif-input-group">
+              <span class="input-group-text notif-addon"><i class="bi bi-funnel-fill"></i></span>
+              <select id="notifSideFilter" class="form-select notif-select">
+                <option value="">جميع الإشعارات</option>
+                <option value="unread">غير المقروءة فقط</option>
+                <option value="read">المقروءة فقط</option>
+                <option value="danger">عاجل وهام</option>
+                <option value="warning">تنبيهات وتحذيرات</option>
+                <option value="success">قرارات واعتمادات</option>
+                <option value="info">إشعارات ومعلومات</option>
+                <option value="secondary">عام ونظام</option>
+              </select>
             </div>
+          </div>
 
-            <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
-              <button type="button" id="markAllReadBtn" class="btn btn-sm notif-action-btn" title="تحديد الكل كمقروء">
-                <i class="bi bi-check2-all text-primary"></i>
-                <span>تحديد كمقروء</span>
-              </button>
-              <a href="{{ route('notifications.index') }}" class="btn btn-sm notif-action-btn" title="عرض جميع الإشعارات">
-                <i class="bi bi-box-arrow-up-left"></i>
-                <span>عرض الكل</span>
-              </a>
-            </div>
+          {{-- الصف الثاني: أزرار الإجراءات مقسمة بالتساوي وبأيقونات واضحة --}}
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" id="markAllReadBtn" class="btn notif-action-btn flex-grow-1" title="تحديد جميع الإشعارات كمقروءة">
+              <i class="bi bi-check2-all text-primary fs-6"></i>
+              <span>تحديد كمقروء</span>
+            </button>
+            <a href="{{ route('notifications.index') }}" class="btn notif-action-btn flex-grow-1" title="فتح أرشيف وسجل الإشعارات الكامل">
+              <i class="bi bi-box-arrow-up-left fs-6"></i>
+              <span>عرض السجل</span>
+            </a>
           </div>
         </div>
 
@@ -3431,17 +3706,26 @@
         var markAllAsSeen = function () {
           if (Array.isArray(currentItems) && currentItems.length > 0) {
             var seen = readSeen();
+            var keys = [];
             currentItems.forEach(function (item) {
-              seen[notificationSignature(item)] = Date.now();
+              var sig = notificationSignature(item);
+              seen[sig] = Date.now();
+              if (item.id) keys.push(item.id);
             });
             saveSeen(seen);
+
+            fetch('{{ route('notifications.mark-all-read') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              },
+              body: JSON.stringify({ keys: keys })
+            }).catch(function () {});
           }
           lastItemCount = 0;
           updateBellBadge(0);
-          if (list) {
-            var dots = list.querySelectorAll('.notif-unread-dot');
-            dots.forEach(function (d) { d.remove(); });
-          }
+          render(currentItems);
         };
 
         if (markAllBtn) {
@@ -3452,7 +3736,7 @@
 
         if (bellBtn) {
           bellBtn.addEventListener('click', function () {
-            markAllAsSeen();
+            load();
           });
         }
 
@@ -3769,22 +4053,39 @@
         var render = function (items) {
           list.innerHTML = '';
           if (!items || !items.length) {
-            list.innerHTML = '<div class="alert alert-secondary text-center py-5 border-0 bg-opacity-10" style="background: var(--gray-100)"><i class="bi bi-bell-slash fs-1 d-block mb-3 opacity-25"></i><p class="mb-0 fw-medium">لا توجد إشعارات حالياً</p></div>';
+            list.innerHTML = `
+              <div class="notif-empty-state text-center">
+                <div class="notif-empty-icon-wrap">
+                  <div class="notif-empty-glow"></div>
+                  <i class="bi bi-bell-fill notif-empty-bell"></i>
+                  <i class="bi bi-stars notif-empty-sparkle"></i>
+                </div>
+                <h6 class="notif-empty-title">لا توجد إشعارات حالياً</h6>
+                <p class="notif-empty-desc">أنت على اطلاع بكل المستجدات! سنخطرك فور ورود أي طلب أو تحديث جديد يخصك.</p>
+              </div>
+            `;
             return;
           }
           var val = filter.value;
           var seen = readSeen();
-          items.forEach(function (n) {
-            if (val && n.type !== val) return;
+          var visibleCount = 0;
 
+          items.forEach(function (n) {
             var sig = notificationSignature(n);
-            var isUnread = !seen[sig];
+            var isUnread = !seen[sig] && !n.is_read;
+
+            if (val === 'unread' && !isUnread) return;
+            if (val === 'read' && isUnread) return;
+            if (val && val !== 'unread' && val !== 'read' && n.type !== val) return;
+
+            visibleCount++;
 
             var card = document.createElement('div');
-            card.className = 'card border-0 mb-3 notification-card border-' + n.type;
+            card.className = 'card border-0 mb-3 notification-card border-' + n.type + (isUnread ? ' notif-unread shadow-sm' : ' notif-read opacity-75');
+            card.style.transition = 'all 0.25s ease';
 
             var cardBody = document.createElement('div');
-            cardBody.className = 'card-body p-3';
+            cardBody.className = 'card-body p-3' + (isUnread ? '' : ' bg-light bg-opacity-40');
 
             var iconMap = {
               'success': 'check-circle-fill',
@@ -3803,48 +4104,105 @@
             };
 
             var header = document.createElement('div');
-            header.className = 'd-flex align-items-center justify-content-between mb-3';
+            header.className = 'd-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-light';
 
             var headRight = document.createElement('div');
             headRight.className = 'd-flex align-items-center gap-2';
 
             var iconSpan = document.createElement('span');
             iconSpan.className = 'd-flex align-items-center justify-content-center rounded-circle bg-' + n.type + ' bg-opacity-10 text-' + n.type;
-            iconSpan.style.width = '32px';
-            iconSpan.style.height = '32px';
-            iconSpan.innerHTML = '<i class="bi bi-' + (iconMap[n.type] || 'bell') + ' fs-5"></i>';
+            iconSpan.style.width = '30px';
+            iconSpan.style.height = '30px';
+            iconSpan.innerHTML = '<i class="bi bi-' + (iconMap[n.type] || 'bell') + ' fs-6"></i>';
 
             var badge = document.createElement('span');
-            badge.className = 'notif-label bg-' + n.type + ' bg-opacity-10 text-' + n.type + ' border border-' + n.type + ' border-opacity-25';
+            badge.className = 'notif-label bg-' + n.type + ' bg-opacity-10 text-' + n.type + ' border border-' + n.type + ' border-opacity-25 px-2 py-0.5 rounded-pill small fw-bold';
             badge.textContent = labelMap[n.type] || 'إشعار';
 
             headRight.appendChild(iconSpan);
             headRight.appendChild(badge);
             header.appendChild(headRight);
 
+            var headLeft = document.createElement('div');
+            headLeft.className = 'd-flex align-items-center gap-2';
+
+            var timeSpan = document.createElement('span');
+            timeSpan.className = 'text-muted small d-inline-flex align-items-center gap-1';
+            timeSpan.style.fontSize = '0.72rem';
+            timeSpan.innerHTML = '<i class="bi bi-clock"></i>' + (n.time_ago || 'الآن');
+            headLeft.appendChild(timeSpan);
+
             if (isUnread) {
               var unreadDot = document.createElement('span');
               unreadDot.className = 'notif-unread-dot badge bg-danger rounded-pill px-2 py-0.5';
-              unreadDot.style.fontSize = '0.68rem';
+              unreadDot.style.fontSize = '0.65rem';
               unreadDot.textContent = 'جديد';
-              header.appendChild(unreadDot);
+              headLeft.appendChild(unreadDot);
+            } else {
+              var readBadge = document.createElement('span');
+              readBadge.className = 'badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5';
+              readBadge.style.fontSize = '0.65rem';
+              readBadge.innerHTML = '<i class="bi bi-check2"></i> مقروء';
+              headLeft.appendChild(readBadge);
             }
 
+            var dismissBtn = document.createElement('button');
+            dismissBtn.type = 'button';
+            dismissBtn.className = 'btn btn-link text-muted p-0 opacity-50';
+            dismissBtn.style.lineHeight = '1';
+            dismissBtn.title = 'إخفاء الإشعار';
+            dismissBtn.innerHTML = '<i class="bi bi-x-lg" style="font-size: 0.72rem;"></i>';
+            dismissBtn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              card.style.transform = 'translateX(30px)';
+              card.style.opacity = '0';
+              setTimeout(function () { card.remove(); }, 250);
+
+              var s = readSeen();
+              s[sig] = Date.now();
+              saveSeen(s);
+
+              fetch('{{ route('notifications.dismiss') }}', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ id: n.id })
+              }).catch(function () {});
+
+              updateBellBadge(getUnreadCount(currentItems));
+            });
+            headLeft.appendChild(dismissBtn);
+
+            header.appendChild(headLeft);
+
             var textPara = document.createElement('p');
-            textPara.className = 'mb-3 lh-base fw-medium';
-            textPara.style.fontSize = '0.95rem';
+            textPara.className = 'mb-2.5 lh-base fw-medium ' + (isUnread ? 'text-dark' : 'text-muted');
+            textPara.style.fontSize = '0.92rem';
             textPara.textContent = n.text;
 
             var actionDiv = document.createElement('div');
-            actionDiv.className = 'd-flex justify-content-start';
+            actionDiv.className = 'd-flex justify-content-between align-items-center pt-1';
+
             var link = document.createElement('a');
             link.href = n.link;
-            link.className = 'btn btn-' + n.type + ' btn-sm rounded-pill px-4 shadow-sm';
+            link.className = 'btn btn-' + n.type + ' btn-sm rounded-pill px-3.5 shadow-xs fw-semibold';
             link.innerHTML = '<i class="bi bi-box-arrow-up-right me-1"></i> فتح';
             link.addEventListener('click', function () {
               var s = readSeen();
               s[sig] = Date.now();
               saveSeen(s);
+
+              fetch('{{ route('notifications.mark-read') }}', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ id: n.id })
+              }).catch(function () {});
+
               updateBellBadge(getUnreadCount(currentItems));
             });
             actionDiv.appendChild(link);
@@ -3855,6 +4213,21 @@
             card.appendChild(cardBody);
             list.appendChild(card);
           });
+
+          if (visibleCount === 0) {
+            list.innerHTML = `
+              <div class="notif-empty-state text-center">
+                <div class="notif-empty-icon-wrap" style="background: rgba(56, 189, 248, 0.1);">
+                  <i class="bi bi-funnel text-info" style="font-size: 2.2rem; position: relative; z-index: 2;"></i>
+                </div>
+                <h6 class="notif-empty-title">لا توجد إشعارات مطابقة للتصفية</h6>
+                <p class="notif-empty-desc mb-3">لم يتم العثور على أي إشعارات ضمن التصنيف المختار.</p>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="var f=document.getElementById('notifSideFilter'); if(f){f.value=''; f.dispatchEvent(new Event('change'));}">
+                  <i class="bi bi-arrow-repeat me-1"></i> عرض جميع الإشعارات
+                </button>
+              </div>
+            `;
+          }
         };
 
         var load = function () {
@@ -3862,20 +4235,11 @@
             .then(function (r) { if (!r.ok) throw new Error('Notification request failed'); return r.json(); })
             .then(function (d) {
               currentItems = d.items || [];
-              var isOffcanvasOpen = off && (off.classList.contains('show') || off.classList.contains('showing'));
-              if (isOffcanvasOpen) {
-                var seen = readSeen();
-                currentItems.forEach(function (item) {
-                  seen[notificationSignature(item)] = Date.now();
-                });
-                saveSeen(seen);
-              }
-              var unreadCount = isOffcanvasOpen ? 0 : getUnreadCount(currentItems);
+              var unreadCount = getUnreadCount(currentItems);
 
               render(currentItems);
               updateBellBadge(unreadCount);
 
-              // Sound and Desktop notification triggering logic for unread items:
               if (lastItemCount === null) {
                 lastItemCount = unreadCount;
                 if (unreadCount > 0 && !sessionStorage.getItem('ensan_notif_sound_played')) {
@@ -3893,15 +4257,6 @@
             })
             .catch(function () { render([]); updateBellBadge(0); });
         };
-
-        if (off) {
-          off.addEventListener('show.bs.offcanvas', function () {
-            markAllAsSeen();
-          });
-          off.addEventListener('shown.bs.offcanvas', function () {
-            markAllAsSeen();
-          });
-        }
 
         filter.addEventListener('change', function () { localStorage.setItem(fKey, filter.value || ''); load(); });
         var saved = localStorage.getItem(fKey); if (saved !== null) filter.value = saved;
@@ -4882,6 +5237,8 @@
       });
   })();
   </script>
+
+  @include('components.internal-chat-widget')
 
   @yield('scripts')
 </body>
