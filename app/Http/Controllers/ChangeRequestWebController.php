@@ -778,6 +778,16 @@ final class ChangeRequestWebController extends Controller
                 return;
             }
 
+            // إذا كان المراجع هو نفس صاحب الطلب (المدير ينفذ لنفسه)، لا نرسل له إشعاراً
+            if ($changeRequest->reviewer_id && (int) $changeRequest->reviewer_id === (int) $changeRequest->user_id) {
+                return;
+            }
+
+            // لا ترسل إشعاراً للمدير الحالي المسجل دخوله (المعتمد) بل فقط للموظف صاحب الطلب
+            if (auth()->id() && (int) auth()->id() === (int) $changeRequest->user_id) {
+                return;
+            }
+
             $isApproved = $status === 'approved';
             $modelBasename = class_basename($changeRequest->model_type);
             $modelAr = match($modelBasename) {

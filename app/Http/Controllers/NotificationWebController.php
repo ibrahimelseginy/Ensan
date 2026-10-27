@@ -73,7 +73,14 @@ final class NotificationWebController extends Controller
             ->where('is_sent', true)
             ->latest('sent_at')
             ->limit(15)
-            ->get();
+            ->get()
+            ->filter(function ($tNotif) use ($user) {
+                // استبعاد أي إشعار موجه ناتج عن موافقة إذا كان المستخدم الحالي هو نفسه المعتمد
+                if (!empty($user->name) && str_contains((string) $tNotif->body, "بواسطة: {$user->name}")) {
+                    return false;
+                }
+                return true;
+            });
 
         foreach ($targetedNotifications as $tNotif) {
             $rawDate = $tNotif->sent_at ?: $tNotif->created_at;
@@ -366,10 +373,16 @@ final class NotificationWebController extends Controller
             }
         }
 
-        // ب) للموظف: إشعار بحالة الطلبات الخاصة به عند الرفض أو الموافقة
+        // ب) للموظف: إشعار بحالة الطلبات الخاصة به عند الرفض أو الموافقة (يظهر فقط للموظف صاحب الطلب، ولا يظهر للمدير صاحب القرار)
         $myChangeRequests = ChangeRequest::with(['reviewer', 'subject'])
             ->where('user_id', $user->id)
             ->whereIn('status', ['approved', 'rejected'])
+            ->where(function ($q) use ($user) {
+                // استبعاد الحالات التي يكون فيها المراجع هو نفس المستخدم الحالي (المدير لا تظهر له موافقاته الشخصية)
+                $q->whereNull('reviewer_id')
+                  ->orWhere('reviewer_id', '!=', $user->id);
+            })
+            ->whereRaw('(reviewer_id IS NULL OR user_id != reviewer_id)')
             ->where('updated_at', '>=', now()->subDays(30))
             ->latest('updated_at')
             ->limit(20)
