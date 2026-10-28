@@ -141,6 +141,8 @@ final readonly class BeneficiaryRepository
                         $q->where('donationable_type', \App\Models\Beneficiary::class)
                           ->where('donationable_id', $beneficiaryId);
                     })
+                    ->orWhereRaw("beneficiary_allocations LIKE ?", ['%"beneficiary_id":' . (int) $beneficiaryId . '%'])
+                    ->orWhereRaw("beneficiary_allocations LIKE ?", ['%"beneficiary_id":"' . (int) $beneficiaryId . '"%'])
                     ->orWhereRaw("allocation_note REGEXP ?", ['beneficiary_id=' . (int) $beneficiaryId . '([^0-9]|$)'])
                     ->orWhereRaw("allocation_note REGEXP ?", ['beneficiary_ids=[0-9,]*' . (int) $beneficiaryId . '([^0-9]|$)']);
             })

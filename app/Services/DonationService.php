@@ -72,6 +72,48 @@ final readonly class DonationService
             $data['sponsorship_beneficiary_id']
         );
 
+        // Process Multi-Beneficiary Allocations
+        if (!empty($data['beneficiary_allocations']) && is_array($data['beneficiary_allocations'])) {
+            $formattedAllocations = [];
+            $allocBenIds = [];
+            foreach ($data['beneficiary_allocations'] as $alloc) {
+                if (empty($alloc['beneficiary_id'])) continue;
+                $bId = (int)$alloc['beneficiary_id'];
+                $allocBenIds[] = $bId;
+                $formattedAllocations[$bId] = [
+                    'beneficiary_id' => $bId,
+                    'amount'         => !empty($alloc['amount']) ? (float)$alloc['amount'] : 0,
+                    'notes'          => !empty($alloc['notes']) ? (string)$alloc['notes'] : null,
+                ];
+            }
+
+            if (!empty($formattedAllocations)) {
+                $bens = Beneficiary::whereIn('id', array_keys($formattedAllocations))->get()->keyBy('id');
+                $finalAllocations = [];
+                foreach ($formattedAllocations as $bId => $item) {
+                    $ben = $bens->get($bId);
+                    $finalAllocations[] = [
+                        'beneficiary_id' => $bId,
+                        'name'           => $ben?->full_name ?? ('مستفيد #' . $bId),
+                        'code'           => $ben?->code ?? ('BEN-' . $bId),
+                        'phone'          => $ben?->phone,
+                        'amount'         => $item['amount'],
+                        'notes'          => $item['notes'],
+                    ];
+                }
+                $data['beneficiary_allocations'] = $finalAllocations;
+
+                if (empty($data['beneficiary_id'])) {
+                    $data['beneficiary_id'] = $allocBenIds[0];
+                }
+
+                $existingBenIds = !empty($data['beneficiary_ids']) && is_array($data['beneficiary_ids']) ? $data['beneficiary_ids'] : [];
+                $data['beneficiary_ids'] = array_values(array_unique(array_merge($existingBenIds, $allocBenIds)));
+            } else {
+                $data['beneficiary_allocations'] = null;
+            }
+        }
+
         // Link explicit beneficiary_id to donationable polymorphic fields if empty
         if (!empty($data['beneficiary_id'])) {
             $data['beneficiary_id'] = (int)$data['beneficiary_id'];
@@ -109,13 +151,28 @@ final readonly class DonationService
                 $this->processPostCreate($donation);
             }
 
-            // Sync direct beneficiary linking with donor
-            if (!empty($donation->beneficiary_id) && !empty($donation->donor_id)) {
-                $donor = Donor::find($donation->donor_id);
-                if ($donor) {
-                    $donor->sponsoredBeneficiaries()->syncWithoutDetaching([(int)$donation->beneficiary_id]);
-                    if (!$donor->sponsored_beneficiary_id) {
-                        $donor->forceFill(['sponsored_beneficiary_id' => (int)$donation->beneficiary_id])->save();
+            // Sync direct beneficiary linking with donor (supports multi-case allocations)
+            if (!empty($donation->donor_id)) {
+                $allAllocBenIds = [];
+                if (!empty($donation->beneficiary_allocations) && is_array($donation->beneficiary_allocations)) {
+                    foreach ($donation->beneficiary_allocations as $alloc) {
+                        if (!empty($alloc['beneficiary_id'])) {
+                            $allAllocBenIds[] = (int)$alloc['beneficiary_id'];
+                        }
+                    }
+                }
+                if (!empty($donation->beneficiary_id)) {
+                    $allAllocBenIds[] = (int)$donation->beneficiary_id;
+                }
+                $allAllocBenIds = array_values(array_unique($allAllocBenIds));
+
+                if (!empty($allAllocBenIds)) {
+                    $donor = Donor::find($donation->donor_id);
+                    if ($donor) {
+                        $donor->sponsoredBeneficiaries()->syncWithoutDetaching($allAllocBenIds);
+                        if (!$donor->sponsored_beneficiary_id) {
+                            $donor->forceFill(['sponsored_beneficiary_id' => $allAllocBenIds[0]])->save();
+                        }
                     }
                 }
             }

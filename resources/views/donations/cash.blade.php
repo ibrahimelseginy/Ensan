@@ -42,58 +42,85 @@
         color: #0f172a !important;
     }
 
-    /* Select2 Clear Button (مسح البحث) */
+    /* Select2 Clear Button (مسح البحث) - Perfectly Centered */
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear,
     .select2-container--default .select2-selection--single .select2-selection__clear {
         position: absolute !important;
-        left: 12px !important;
+        left: 10px !important;
         right: auto !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         width: 22px !important;
         height: 22px !important;
+        min-width: 22px !important;
+        max-width: 22px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        float: none !important;
+        box-sizing: border-box !important;
         background: #f1f5f9 !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 50% !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        text-align: center !important;
         font-size: 0 !important;
+        line-height: 1 !important;
+        text-indent: 0 !important;
         cursor: pointer !important;
         transition: all 0.2s ease !important;
         z-index: 10 !important;
+        overflow: hidden !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear > *,
+    .select2-container--default .select2-selection--single .select2-selection__clear > * {
+        display: none !important;
     }
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear::before,
     .select2-container--default .select2-selection--single .select2-selection__clear::before {
         content: "×" !important;
-        font-size: 15px !important;
-        line-height: 1 !important;
-        font-family: Arial, sans-serif !important;
+        font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
+        line-height: 1 !important;
         color: #64748b !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        padding-bottom: 2px !important;
+        text-indent: 0 !important;
     }
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover,
     .select2-container--default .select2-selection--single .select2-selection__clear:hover {
         background: #fee2e2 !important;
         border-color: #f87171 !important;
-        transform: translateY(-50%) scale(1.12) !important;
+        transform: translateY(-50%) scale(1.1) !important;
     }
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover::before,
     .select2-container--default .select2-selection--single .select2-selection__clear:hover::before {
         color: #dc2626 !important;
     }
-    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear,
+    .theme-dark .select2-container--default .select2-selection--single .select2-selection__clear {
         background: #334155 !important;
         border-color: #475569 !important;
     }
-    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear::before {
+    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear::before,
+    .theme-dark .select2-container--default .select2-selection--single .select2-selection__clear::before {
         color: #94a3b8 !important;
     }
-    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover {
+    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover,
+    .theme-dark .select2-container--default .select2-selection--single .select2-selection__clear:hover {
         background: rgba(239, 68, 68, 0.25) !important;
         border-color: #ef4444 !important;
     }
-    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover::before {
+    .theme-dark .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear:hover::before,
+    .theme-dark .select2-container--default .select2-selection--single .select2-selection__clear:hover::before {
         color: #fca5a5 !important;
     }
 

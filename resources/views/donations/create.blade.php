@@ -41,6 +41,26 @@
     .month-pill-checkbox input[type="checkbox"] {
       display: none;
     }
+    .month-pill-checkbox * {
+      pointer-events: none;
+    }
+
+    .allocated-case-row {
+      transition: all 0.2s ease;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+    }
+    .allocated-case-row:hover {
+      border-color: #10b981;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+    }
+    .theme-dark .allocated-case-row {
+      background: #1e293b;
+      border-color: #334155;
+    }
+    .theme-dark .allocated-case-row:hover {
+      border-color: #10b981;
+    }
 
     /* Donor type toggle buttons active state: pure white text and icon */
     .btn-check:checked + label[for="donorTypeNew"],
@@ -338,40 +358,51 @@
             </select>
           </div>
 
-          {{-- تحديد الحالة المستفيدة برقم الكود أو الاسم --}}
+          {{-- تحديد الحالات المستفيدة وتوزيع مبالغ التبرع --}}
           <div class="col-md-12">
-            <div class="p-3 rounded-3 bg-white bg-opacity-75 border border-success border-opacity-25 shadow-sm">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="form-label fw-bold text-success mb-0">
-                  <i class="bi bi-person-heart me-1"></i> الحالة المستفيدة (كود الحالة أو الاسم)
+            <div class="p-3 rounded-3 bg-white bg-opacity-75 border border-success border-opacity-35 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <label class="form-label fw-bold text-success mb-0 fs-6">
+                  <i class="bi bi-people-fill me-1"></i> الحالات المستفيدة وتوزيع المبالغ (يمكن إضافة أكثر من حالة)
                 </label>
-                <span class="text-muted small"><i class="bi bi-search me-1"></i> اكتب كود الحالة (مثال: BEN-0012) أو اسم المستفيد</span>
+                <span class="text-muted small"><i class="bi bi-search me-1"></i> ابحث بكود الحالة (مثال: BEN-0012) أو اسم المستفيد لإضافتها</span>
               </div>
-              <select name="beneficiary_id" id="beneficiarySelect" class="form-select">
-                <option value=""></option>
-                @if($selectedBeneficiary)
-                  <option value="{{ $selectedBeneficiary->id }}" selected>
-                    {{ $selectedBeneficiary->full_name }} — {{ $selectedBeneficiary->code ?? ('BEN-' . $selectedBeneficiary->id) }}
-                  </option>
-                @endif
-              </select>
-              <div class="form-text small text-muted">
-                إذا كان التبرع موجهاً لحالة معينة أو كفالة، اختر الحالة وسيتم تسجيل التبرع مباشرةً في ملفها وسجلها المالي.
+              
+              <div class="row g-2 align-items-center mb-2">
+                <div class="col-12">
+                  <select id="beneficiarySelect" class="form-select">
+                    <option value=""></option>
+                  </select>
+                </div>
               </div>
 
-              <div id="beneficiarySelectedBadge" class="mt-2" style="{{ $selectedBeneficiary ? '' : 'display:none' }}">
-                <div class="p-2.5 rounded bg-success bg-opacity-10 border border-success border-opacity-25 d-flex align-items-center justify-content-between">
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success font-monospace px-2.5 py-1.5" id="badgeCaseCode">{{ $selectedBeneficiary?->code ?? ('BEN-' . $selectedBeneficiary?->id) }}</span>
-                    <span class="fw-bold text-success" id="badgeCaseName">{{ $selectedBeneficiary?->full_name }}</span>
-                    @if($selectedBeneficiary?->phone)
-                      <span class="text-muted small">({{ $selectedBeneficiary->phone }})</span>
-                    @endif
-                  </div>
-                  <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" id="clearBeneficiaryBtn" title="إلغاء تخصيص الحالة">
-                    <i class="bi bi-x-circle me-1"></i> مسح
-                  </button>
+              {{-- Hidden input for backward compatibility with primary beneficiary --}}
+              <input type="hidden" name="beneficiary_id" id="primaryBeneficiaryId" value="{{ $selectedBeneficiary?->id }}">
+
+              {{-- Container for Allocated Cases --}}
+              <div id="allocatedCasesList" class="mt-2">
+                {{-- Dynamically populated rows --}}
+              </div>
+
+              <div id="emptyAllocatedNotice" class="text-center py-3 text-muted border border-dashed rounded-3 bg-light bg-opacity-50" style="display:none;">
+                <i class="bi bi-inbox fs-4 d-block mb-1 text-secondary"></i>
+                <span class="small">لم يتم اختيار أي حالة مستفيدة بعد. اختر حالة من حقل البحث أعلاه لتخصيص مبلغ لها.</span>
+              </div>
+
+              {{-- Summary Bar --}}
+              <div id="allocatedCasesSummary" class="p-2.5 rounded bg-light border d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2" style="display:none !important;">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success-subtle text-success border border-success border-opacity-25" id="allocatedCountBadge">0 حالات</span>
+                  <span class="text-muted small">إجمالي المبالغ المخصصة للحالات:</span>
+                  <span class="fw-bold text-success font-monospace fs-6" id="allocatedTotalAmount">0.00 ج.م</span>
                 </div>
+                <button type="button" class="btn btn-sm btn-outline-success" id="btnSyncAllocatedToTotal" title="نسخ مجموع مبالغ الحالات إلى حقل قيمة التبرع أعلاه">
+                  <i class="bi bi-arrow-left-right me-1"></i> اعتماد كقيمة التبرع الإجمالية
+                </button>
+              </div>
+
+              <div class="form-text small text-muted mt-2">
+                <i class="bi bi-info-circle me-1"></i> يمكنك إضافة عدة حالات مستفيدة لنفس التبرع وتحديد المبلغ المخصص لكل حالة بدقة، وسيقوم النظام بتسجيل التبرع في ملف وسجل كل حالة تلقائياً.
               </div>
             </div>
           </div>
@@ -510,9 +541,37 @@
           'family' => $member->beneficiary?->full_name,
       ];
   });
+  $initialAllocations = [];
+  $oldAllocations = old('beneficiary_allocations');
+  if ($oldAllocations && is_array($oldAllocations)) {
+      foreach ($oldAllocations as $bId => $aData) {
+          $actualId = (int)($aData['beneficiary_id'] ?? $bId);
+          $bModel = \App\Models\Beneficiary::find($actualId);
+          if ($bModel) {
+              $initialAllocations[] = [
+                  'id' => $bModel->id,
+                  'code' => $bModel->code ?? ('BEN-' . $bModel->id),
+                  'name' => $bModel->full_name,
+                  'phone' => $bModel->phone,
+                  'amount' => $aData['amount'] ?? '',
+                  'notes' => $aData['notes'] ?? '',
+              ];
+          }
+      }
+  } elseif ($selectedBeneficiary) {
+      $initialAllocations[] = [
+          'id' => $selectedBeneficiary->id,
+          'code' => $selectedBeneficiary->code ?? ('BEN-' . $selectedBeneficiary->id),
+          'name' => $selectedBeneficiary->full_name,
+          'phone' => $selectedBeneficiary->phone,
+          'amount' => old('amount', ''),
+          'notes' => old('allocation_note', ''),
+      ];
+  }
 @endphp
 <script>
 $(function () {
+  const initialAllocations = @json($initialAllocations);
   const sponsoredByDonor = @json($sponsoredByDonorData);
   const donorsLookup = @json($donorsLookup);
   const allMembersList = @json($allMembersData);
@@ -601,31 +660,128 @@ $(function () {
 
   $('#sponsoredMembersSelect').select2({theme:'bootstrap-5',dir:'rtl',width:'100%',placeholder:'اختر واحدًا أو أكثر...'});
 
-  // Update Beneficiary Badge
-  function updateBeneficiaryBadge(data) {
-    if (data && data.id) {
-      const code = data.code || 'BEN-' + data.id;
-      const name = data.full_name || data.text || '';
-      $('#badgeCaseCode').text(code);
-      $('#badgeCaseName').text(name);
-      $('#beneficiarySelectedBadge').show();
+  // Multi-Beneficiary Allocation Logic
+  function addBeneficiaryRow(item) {
+    if (!item || !item.id) return;
+
+    // Check if already in list
+    const existing = $(`.allocated-case-row[data-id="${item.id}"]`);
+    if (existing.length > 0) {
+      existing.find('.case-amount-input').focus();
+      existing.addClass('border-success').css('transition', 'all 0.3s');
+      setTimeout(() => existing.removeClass('border-success'), 1200);
+      return;
+    }
+
+    const bId = item.id;
+    const bCode = item.code || ('BEN-' + bId);
+    const bName = item.name || item.full_name || item.text || ('مستفيد #' + bId);
+    const bPhone = item.phone || '';
+    const bAmt = (item.amount !== undefined && item.amount !== null) ? item.amount : '';
+    const bNotes = item.notes || '';
+
+    const rowHtml = `
+      <div class="allocated-case-row p-2.5 mb-2 rounded-3 border bg-white shadow-xs" data-id="${bId}">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-5 d-flex align-items-center gap-2">
+            <span class="badge bg-success font-monospace px-2.5 py-1.5">${bCode}</span>
+            <div class="overflow-hidden">
+              <span class="fw-bold text-dark d-block text-truncate" title="${bName}">${bName}</span>
+              ${bPhone ? `<span class="text-muted small font-monospace"><i class="bi bi-telephone me-1"></i>${bPhone}</span>` : ''}
+            </div>
+            <input type="hidden" name="beneficiary_allocations[${bId}][beneficiary_id]" value="${bId}">
+          </div>
+          <div class="col-md-3">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light text-muted">المبلغ</span>
+              <input type="number" step="any" min="0" name="beneficiary_allocations[${bId}][amount]" class="form-control fw-bold text-success text-center case-amount-input" placeholder="0.00" value="${bAmt}">
+              <span class="input-group-text bg-light text-muted">ج.م</span>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <input type="text" name="beneficiary_allocations[${bId}][notes]" class="form-control form-control-sm" placeholder="ملاحظة خاصة بالحالة..." value="${bNotes}">
+          </div>
+          <div class="col-md-1 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-case-btn py-1 px-2" title="إزالة هذه الحالة">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $('#allocatedCasesList').append(rowHtml);
+    updateAllocatedCasesSummary();
+
+    const newRow = $(`.allocated-case-row[data-id="${bId}"]`);
+    newRow.find('.case-amount-input').focus();
+  }
+
+  $(document).on('click', '.remove-case-btn', function() {
+    $(this).closest('.allocated-case-row').remove();
+    updateAllocatedCasesSummary();
+  });
+
+  $(document).on('input change', '.case-amount-input', function() {
+    updateAllocatedCasesSummary();
+  });
+
+  function updateAllocatedCasesSummary() {
+    let total = 0;
+    let count = 0;
+    $('.allocated-case-row').each(function() {
+      count++;
+      const amt = parseFloat($(this).find('.case-amount-input').val()) || 0;
+      total += amt;
+    });
+
+    const firstRow = $('.allocated-case-row').first();
+    const firstBenId = firstRow.length > 0 ? firstRow.data('id') : '';
+    $('#primaryBeneficiaryId').val(firstBenId);
+
+    if (count > 0) {
+      $('#allocatedCasesSummary').attr('style', 'display: flex !important;');
+      $('#allocatedCountBadge').text(`${count} ${count === 1 ? 'حالة' : 'حالات'}`);
+      $('#allocatedTotalAmount').text(total.toFixed(2) + ' ج.م');
+      $('#emptyAllocatedNotice').hide();
     } else {
-      $('#beneficiarySelectedBadge').hide();
+      $('#allocatedCasesSummary').attr('style', 'display: none !important;');
+      $('#emptyAllocatedNotice').show();
     }
   }
 
+  $('#btnSyncAllocatedToTotal').on('click', function() {
+    let total = 0;
+    $('.case-amount-input').each(function() {
+      total += parseFloat($(this).val()) || 0;
+    });
+    if (total > 0) {
+      $('#donationAmount').val(total.toFixed(2)).trigger('input');
+    }
+  });
+
+  // When a beneficiary is selected, add to multi-case allocation list and reset search input
   $('#beneficiarySelect').on('select2:select', function(e) {
-    updateBeneficiaryBadge(e.params.data);
+    const data = e.params.data;
+    addBeneficiaryRow({
+      id: data.id,
+      code: data.code || ('BEN-' + data.id),
+      name: data.full_name || data.text,
+      phone: data.phone || '',
+      amount: '',
+      notes: ''
+    });
+    $(this).val(null).trigger('change');
   });
 
-  $('#beneficiarySelect').on('select2:clear', function() {
-    updateBeneficiaryBadge(null);
-  });
-
-  $('#clearBeneficiaryBtn').on('click', function() {
-    $('#beneficiarySelect').val(null).trigger('change');
-    updateBeneficiaryBadge(null);
-  });
+  // Initialize preloaded allocations
+  if (Array.isArray(initialAllocations) && initialAllocations.length > 0) {
+    initialAllocations.forEach(function(item) {
+      addBeneficiaryRow(item);
+    });
+  } else {
+    updateAllocatedCasesSummary();
+  }
 
   // Toggle Donor Mode (Registered vs New)
   function toggleDonorMode() {
@@ -666,19 +822,15 @@ $(function () {
       $('#donorDueInfo').html(dueHtml);
       $('#donorDetailsInfoBox').show();
 
-      // If donor has a sponsored beneficiary and none selected, auto-select
-      if (donor.sponsored_beneficiary_id && !$('#beneficiarySelect').val()) {
-        const option = new Option(
-          donor.sponsored_beneficiary_name + ' — ' + (donor.sponsored_beneficiary_code || ('BEN-' + donor.sponsored_beneficiary_id)),
-          donor.sponsored_beneficiary_id,
-          true,
-          true
-        );
-        $('#beneficiarySelect').append(option).trigger('change');
-        updateBeneficiaryBadge({
+      // If donor has a sponsored beneficiary and none added yet, auto-add
+      if (donor.sponsored_beneficiary_id && $('.allocated-case-row').length === 0) {
+        addBeneficiaryRow({
           id: donor.sponsored_beneficiary_id,
           code: donor.sponsored_beneficiary_code || ('BEN-' + donor.sponsored_beneficiary_id),
-          full_name: donor.sponsored_beneficiary_name
+          name: donor.sponsored_beneficiary_name,
+          phone: '',
+          amount: donor.sponsorship_monthly_amount || '',
+          notes: ''
         });
       }
 
@@ -748,14 +900,14 @@ $(function () {
   }
 
   // Paid Months Logic & Live Next Due Date Calculation
-  $('.month-pill-checkbox').on('click', function(e) {
-    if (e.target.tagName.toLowerCase() !== 'input') {
-      const chk = $(this).find('input[type="checkbox"]');
-      chk.prop('checked', !chk.prop('checked')).trigger('change');
-    }
+  $(document).on('click', '.month-pill-checkbox', function(e) {
+    e.preventDefault();
+    const chk = $(this).find('.paid-month-input');
+    const newState = !chk.prop('checked');
+    chk.prop('checked', newState).trigger('change');
   });
 
-  $('.paid-month-input').on('change', function() {
+  $(document).on('change', '.paid-month-input', function() {
     const label = $(this).closest('.month-pill-checkbox');
     const checked = $(this).is(':checked');
     label.toggleClass('active', checked);

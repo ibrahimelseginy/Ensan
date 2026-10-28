@@ -142,7 +142,57 @@
                 </div>
               </div>
 
-              @if($donation->beneficiary)
+              @if(!empty($donation->beneficiary_allocations) && count($donation->beneficiary_allocations) > 0)
+                <div class="col-md-12">
+                  <div class="p-3 rounded-3 bg-white bg-opacity-75 border border-success border-opacity-35 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                      <span class="info-label text-success fw-bold fs-6">
+                        <i class="bi bi-people-fill me-1"></i> الحالات المستفيدة المخصصة لهذا التبرع ({{ count($donation->beneficiary_allocations) }})
+                      </span>
+                      <span class="badge bg-success font-monospace px-2.5 py-1">مجموع المخصص: {{ number_format(collect($donation->beneficiary_allocations)->sum('amount'), 2) }} {{ $donation->currency ?: 'ج.م' }}</span>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 130px;">كود الحالة</th>
+                            <th>اسم المستفيد</th>
+                            <th class="text-center" style="width: 140px;">المبلغ المخصص</th>
+                            <th>ملاحظات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @foreach($donation->beneficiary_allocations as $alloc)
+                            <tr>
+                              <td>
+                                <span class="badge bg-success font-monospace">{{ $alloc['code'] ?? ('BEN-' . ($alloc['beneficiary_id'] ?? '')) }}</span>
+                              </td>
+                              <td>
+                                @if(!empty($alloc['beneficiary_id']))
+                                  <a href="{{ route('beneficiaries.show', $alloc['beneficiary_id']) }}" class="fw-bold text-success text-decoration-none">
+                                    {{ $alloc['name'] ?? 'مستفيد' }}
+                                  </a>
+                                @else
+                                  <span class="fw-bold text-dark">{{ $alloc['name'] ?? 'مستفيد' }}</span>
+                                @endif
+                                @if(!empty($alloc['phone']))
+                                  <span class="text-muted small ms-1 font-monospace">({{ $alloc['phone'] }})</span>
+                                @endif
+                              </td>
+                              <td class="text-center fw-bold text-success font-monospace fs-6">
+                                {{ number_format((float)($alloc['amount'] ?? 0), 2) }} ج.م
+                              </td>
+                              <td class="text-muted small">
+                                {{ $alloc['notes'] ?? '—' }}
+                              </td>
+                            </tr>
+                          @endforeach
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              @elseif($donation->beneficiary)
                 <div class="col-md-12">
                   <div class="info-row bg-success bg-opacity-10 border border-success border-opacity-25 rounded p-2.5">
                     <span class="info-label text-success fw-bold"><i class="bi bi-person-heart me-1"></i> الحالة المستفيدة</span>

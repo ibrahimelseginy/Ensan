@@ -215,7 +215,29 @@
         </div>
       </div>
 
-      @if($donation->beneficiary)
+      @if(!empty($donation->beneficiary_allocations) && count($donation->beneficiary_allocations) > 0)
+      <div class="row g-2 align-items-start border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
+        <div class="col-sm-3 text-muted fw-bold">الحالات المستفيدة:</div>
+        <div class="col-sm-9">
+          <div class="d-flex flex-column gap-1.5">
+            @foreach($donation->beneficiary_allocations as $alloc)
+              <div class="d-flex align-items-center justify-content-between p-1.5 rounded bg-light border" style="font-size: 0.85rem;">
+                <div>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-1.5 py-0.5 me-1">{{ $alloc['code'] ?? ('BEN-' . ($alloc['beneficiary_id'] ?? '')) }}</span>
+                  <span class="fw-bold text-dark">{{ $alloc['name'] ?? 'مستفيد' }}</span>
+                  @if(!empty($alloc['notes']))
+                    <span class="text-muted small ms-1">({{ $alloc['notes'] }})</span>
+                  @endif
+                </div>
+                <div class="fw-bold text-success font-monospace">
+                  {{ number_format((float)($alloc['amount'] ?? 0), 2) }} ج.م
+                </div>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      </div>
+      @elseif($donation->beneficiary)
       <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
         <div class="col-sm-3 text-muted fw-bold">الحالة المستفيدة:</div>
         <div class="col-sm-9 fw-bolder text-dark">

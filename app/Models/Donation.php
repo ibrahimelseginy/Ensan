@@ -42,6 +42,7 @@ final class Donation extends Model
         'route_id',
         'allocation_note',
         'beneficiary_id',
+        'beneficiary_allocations',
         'paid_months',
         'received_at',
         'created_by',
@@ -59,7 +60,8 @@ final class Donation extends Model
         'amount' => 'decimal:2',
         'estimated_value' => 'decimal:2',
         'quantity' => 'decimal:2',
-        'paid_months' => 'array'
+        'paid_months' => 'array',
+        'beneficiary_allocations' => 'array'
     ];
 
     public function donationable()

@@ -53,6 +53,10 @@ final class StoreDonationRequest extends FormRequest
             'allocation_type'          => 'nullable|string',
             'sponsorship_kind'         => 'nullable|string',
             'beneficiary_id'           => 'nullable|exists:beneficiaries,id',
+            'beneficiary_allocations'  => 'nullable|array',
+            'beneficiary_allocations.*.beneficiary_id' => 'required_with:beneficiary_allocations|exists:beneficiaries,id',
+            'beneficiary_allocations.*.amount'         => 'nullable|numeric|min:0',
+            'beneficiary_allocations.*.notes'          => 'nullable|string',
             'beneficiary_ids'          => 'nullable|required_with:sponsorship_kind|array|min:1',
             'beneficiary_ids.*'        => 'nullable|exists:beneficiaries,id',
             'family_member_id'         => [
