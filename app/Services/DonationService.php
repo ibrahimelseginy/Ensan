@@ -41,22 +41,45 @@ final readonly class DonationService
 
         // 1. Handle Inline Donor Creation
         if (empty($data['donor_id']) && !empty($data['new_donor_name'])) {
+            $classification = $data['new_donor_classification'] ?? 'one_time';
             $donor = $this->donorRepository->create([
-                'code'            => $data['new_donor_code'] ?? null,
-                'name'            => $data['new_donor_name'],
-                'type'            => 'individual',
-                'phone'           => $data['new_donor_phone'] ?? null,
-                'national_id'     => $data['new_donor_national_id'] ?? null,
-                'address'         => $data['new_donor_address'] ?? null,
-                'classification'  => $data['new_donor_classification'] ?? 'one_time',
-                'recurring_cycle' => $data['new_donor_cycle'] ?? null,
-                'active'          => true
+                'code'                       => $data['new_donor_code'] ?? null,
+                'name'                       => $data['new_donor_name'],
+                'type'                       => 'individual',
+                'phone'                      => $data['new_donor_phone'] ?? null,
+                'address'                    => $data['new_donor_address'] ?? null,
+                'classification'             => $classification,
+                'recurring_cycle'            => $classification === 'recurring' ? ($data['new_donor_cycle'] ?? 'monthly') : null,
+                'monthly_donation_day'       => !empty($data['new_donor_monthly_day']) ? (int)$data['new_donor_monthly_day'] : null,
+                'sponsorship_monthly_amount' => !empty($data['new_donor_sponsorship_amount']) ? (float)$data['new_donor_sponsorship_amount'] : null,
+                'sponsored_beneficiary_id'   => !empty($data['sponsorship_beneficiary_id']) ? (int)$data['sponsorship_beneficiary_id'] : (!empty($data['beneficiary_id']) ? (int)$data['beneficiary_id'] : null),
+                'active'                     => true
             ]);
             $data['donor_id'] = $donor->id;
         }
 
         // Cleanup temporary donor fields
-        unset($data['new_donor_code'], $data['new_donor_name'], $data['new_donor_phone'], $data['new_donor_national_id'], $data['new_donor_address'], $data['new_donor_classification'], $data['new_donor_cycle']);
+        unset(
+            $data['new_donor_code'],
+            $data['new_donor_name'],
+            $data['new_donor_phone'],
+            $data['new_donor_national_id'],
+            $data['new_donor_address'],
+            $data['new_donor_classification'],
+            $data['new_donor_cycle'],
+            $data['new_donor_monthly_day'],
+            $data['new_donor_sponsorship_amount'],
+            $data['sponsorship_beneficiary_id']
+        );
+
+        // Link explicit beneficiary_id to donationable polymorphic fields if empty
+        if (!empty($data['beneficiary_id'])) {
+            $data['beneficiary_id'] = (int)$data['beneficiary_id'];
+            if (empty($data['donationable_id'])) {
+                $data['donationable_type'] = Beneficiary::class;
+                $data['donationable_id'] = $data['beneficiary_id'];
+            }
+        }
 
         if (array_key_exists('add_to_inventory', $data)) {
             $data['auto_added_to_inventory'] = (bool) $data['add_to_inventory'];
@@ -84,6 +107,35 @@ final readonly class DonationService
                 $this->linkDonorToBeneficiaryFromDonation($donation);
             } else {
                 $this->processPostCreate($donation);
+            }
+
+            // Sync direct beneficiary linking with donor
+            if (!empty($donation->beneficiary_id) && !empty($donation->donor_id)) {
+                $donor = Donor::find($donation->donor_id);
+                if ($donor) {
+                    $donor->sponsoredBeneficiaries()->syncWithoutDetaching([(int)$donation->beneficiary_id]);
+                    if (!$donor->sponsored_beneficiary_id) {
+                        $donor->forceFill(['sponsored_beneficiary_id' => (int)$donation->beneficiary_id])->save();
+                    }
+                }
+            }
+
+            // If paid months are specified, calculate and advance the next due date for the donor
+            if (!empty($data['paid_months']) && is_array($data['paid_months']) && !empty($donation->donor_id)) {
+                $donor = Donor::find($donation->donor_id);
+                if ($donor) {
+                    $sortedMonths = array_values(array_filter($data['paid_months']));
+                    sort($sortedMonths);
+                    $latestMonth = end($sortedMonths);
+                    if ($latestMonth && preg_match('/^\d{4}-\d{2}$/', $latestMonth)) {
+                        $day = (int)($donor->monthly_donation_day ?: ($donation->received_at ? $donation->received_at->day : 1));
+                        $nextDate = \Carbon\Carbon::parse($latestMonth . '-01')->addMonth();
+                        $targetDay = min(max($day, 1), $nextDate->daysInMonth);
+                        $nextDate->day($targetDay)->startOfDay();
+                        $donor->next_due_date = $nextDate->toDateString();
+                        $donor->save();
+                    }
+                }
             }
 
             $this->linkDonationToFamilyMembers($donation, $familyMemberIds);

@@ -12,9 +12,15 @@ final class Donor extends Model
 
     protected $fillable = [
         'code', 'name', 'type', 'phone', 'national_id', 'email', 'address', 'classification', 'recurring_cycle',
-        'monthly_donation_day', 'active',
+        'monthly_donation_day', 'next_due_date', 'active',
         'sponsorship_type', 'sponsored_beneficiary_id', 'sponsorship_project_id', 'sponsorship_monthly_amount',
         'allocation_type', 'monthly_allocation_target', 'campaign_id', 'guest_house_id'
+    ];
+
+    protected $casts = [
+        'next_due_date' => 'date',
+        'active' => 'boolean',
+        'sponsorship_monthly_amount' => 'decimal:2',
     ];
 
     protected static function booted(): void
@@ -99,6 +105,11 @@ final class Donor extends Model
     public function sponsoredBeneficiaries()
     {
         return $this->belongsToMany(Beneficiary::class, 'beneficiary_sponsors')->withTimestamps();
+    }
+
+    public function sponsoredBeneficiary()
+    {
+        return $this->belongsTo(Beneficiary::class, 'sponsored_beneficiary_id');
     }
 
     public function sponsoredFamilyMembers()

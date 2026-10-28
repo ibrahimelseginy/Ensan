@@ -488,11 +488,20 @@
                                     {{ $d->donor->name }}
                                 </a>
                                 <span class="badge-receipt-mini text-primary">{{ $d->donor->code ?? ('DON-'.$d->donor->id) }}</span>
-                                @if($d->donor->national_id)
-                                    <span class="badge-receipt-mini text-secondary font-monospace" title="الرقم القومي للمتبرع"><i class="bi bi-card-heading me-1"></i>{{ $d->donor->national_id }}</span>
-                                @endif
                             @else
                                 <span class="donor-name-title text-truncate">فاعل خير</span>
+                            @endif
+
+                            @if($d->beneficiary)
+                                <a href="{{ route('beneficiaries.show', $d->beneficiary) }}" class="badge-receipt-mini text-success border border-success-subtle" title="الحالة المكفولة">
+                                    <i class="bi bi-person-heart me-1"></i>{{ $d->beneficiary->code ?? ('BEN-'.$d->beneficiary->id) }}
+                                </a>
+                            @endif
+
+                            @if(!empty($d->paid_months) && is_array($d->paid_months))
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5" style="font-size: 0.7rem;" title="الشهور: {{ implode(', ', $d->paid_months) }}">
+                                    <i class="bi bi-calendar-check me-1"></i>{{ count($d->paid_months) }} شهر
+                                </span>
                             @endif
 
                             @if($d->status === 'cancelled')

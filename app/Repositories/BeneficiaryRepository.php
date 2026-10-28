@@ -135,7 +135,16 @@ final readonly class BeneficiaryRepository
 
     public function getDonations(int $beneficiaryId): Collection
     {
-        return \App\Models\Donation::whereRaw("allocation_note REGEXP ?", ['beneficiary_id=' . (int) $beneficiaryId . '([^0-9]|$)'])
+        return \App\Models\Donation::where(function ($query) use ($beneficiaryId) {
+                $query->where('beneficiary_id', $beneficiaryId)
+                    ->orWhere(function ($q) use ($beneficiaryId) {
+                        $q->where('donationable_type', \App\Models\Beneficiary::class)
+                          ->where('donationable_id', $beneficiaryId);
+                    })
+                    ->orWhereRaw("allocation_note REGEXP ?", ['beneficiary_id=' . (int) $beneficiaryId . '([^0-9]|$)'])
+                    ->orWhereRaw("allocation_note REGEXP ?", ['beneficiary_ids=[0-9,]*' . (int) $beneficiaryId . '([^0-9]|$)']);
+            })
+            ->where('status', '!=', 'cancelled')
             ->with(['donor', 'project', 'campaign', 'guestHouse'])
             ->orderByDesc('received_at')
             ->get();

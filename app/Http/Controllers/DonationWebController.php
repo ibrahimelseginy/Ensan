@@ -356,7 +356,12 @@ final class DonationWebController extends Controller
     public function create(): View
     {
         $donors      = Donor::query()
-            ->with(['sponsoredFamilyMembers' => fn ($query) => $query->where('active', true), 'sponsoredFamilyMembers.beneficiary'])
+            ->with([
+                'sponsoredFamilyMembers' => fn ($query) => $query->where('active', true),
+                'sponsoredFamilyMembers.beneficiary',
+                'sponsoredBeneficiary',
+                'sponsoredBeneficiaries',
+            ])
             ->orderBy('name')
             ->get();
         $projects    = Project::orderBy('name')->get();
@@ -371,8 +376,16 @@ final class DonationWebController extends Controller
         }
         $items         = \App\Models\Item::when(Schema::hasColumn('items', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         $activeCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
+
+        $selectedDonorId = old('donor_id', request('donor_id'));
+        $selectedDonor = $selectedDonorId ? Donor::with(['sponsoredBeneficiary', 'sponsoredBeneficiaries'])->find($selectedDonorId) : null;
+
+        $selectedBeneficiaryId = old('beneficiary_id', request('beneficiary_id'));
+        $selectedBeneficiary = $selectedBeneficiaryId ? Beneficiary::find($selectedBeneficiaryId) : null;
+
         return view('donations.create', compact(
-            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items', 'activeCampaigns'
+            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items', 'activeCampaigns',
+            'selectedDonor', 'selectedBeneficiary'
         ));
     }
 

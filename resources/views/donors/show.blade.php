@@ -104,6 +104,18 @@
                                 <label class="text-muted small mb-1">موعد التبرع الشهري</label>
                                 <div class="fw-medium"><i class="bi bi-calendar-event text-warning me-1"></i>يوم {{ $donor->monthly_donation_day ?? 1 }} من كل شهر</div>
                             </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1">موعد الاستحقاق والتبرع القادم</label>
+                                <div class="fw-bold font-monospace">
+                                    @if($donor->next_due_date)
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 fs-6">
+                                            <i class="bi bi-calendar-check me-1"></i>{{ $donor->next_due_date->format('Y-m-d') }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted small">يتم احتسابه تلقائياً عند تسجيل التبرع</span>
+                                    @endif
+                                </div>
+                            </div>
                         @endif
 
                         @php $sponsored = $donor->sponsoredBeneficiaries; @endphp
@@ -204,6 +216,7 @@
                         <th>القيمة</th>
                         <th>القناة</th>
                         <th>التوجيه</th>
+                        <th>الحالة / الشهور المسددة</th>
                         <th class="text-center" style="min-width: 160px;">الإجراءات</th>
                     </tr>
                 </thead>
@@ -229,7 +242,7 @@
                                 @if($d->type === 'cash')
                                     {{ $d->cash_channel === 'instapay' ? 'انستا باي' : ($d->cash_channel === 'vodafone_cash' ? 'فودافون كاش' : 'نقدي') }}
                                     @if($d->receipt_number)
-                                    <div class="text-muted" style="font-size:0.8em">{{ $d->receipt_number }}</div>@endif
+                                    <div class="text-muted" style="font-size:0.8em">#{{ $d->receipt_number }}</div>@endif
                                 @else
                                     —
                                 @endif
@@ -241,6 +254,25 @@
                                 @if($d->campaign)
                                     <div class="text-truncate" style="max-width:150px" title="{{$d->campaign->name}}"><i
                                 class="bi bi-megaphone text-muted me-1"></i>{{$d->campaign->name}}</div>@endif
+                                @if($d->purpose_label)
+                                    <span class="badge bg-light text-dark border">{{ $d->purpose_label }}</span>
+                                @endif
+                            </td>
+                            <td class="small">
+                                @if($d->beneficiary)
+                                    <a href="{{ route('beneficiaries.show', $d->beneficiary) }}" class="badge bg-success-subtle text-success text-decoration-none d-inline-block mb-1">
+                                        <i class="bi bi-person-heart me-1"></i>{{ $d->beneficiary->code ?? ('BEN-'.$d->beneficiary->id) }}
+                                    </a>
+                                @endif
+                                @if(!empty($d->paid_months) && is_array($d->paid_months))
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach($d->paid_months as $pm)
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size:0.7rem">{{ $pm }}</span>
+                                        @endforeach
+                                    </div>
+                                @elseif(!$d->beneficiary)
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
                             <td class="text-center">
                                 <div class="d-inline-flex gap-1">

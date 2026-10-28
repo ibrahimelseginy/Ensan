@@ -215,6 +215,27 @@
         </div>
       </div>
 
+      @if($donation->beneficiary)
+      <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
+        <div class="col-sm-3 text-muted fw-bold">الحالة المستفيدة:</div>
+        <div class="col-sm-9 fw-bolder text-dark">
+          <span>{{ $donation->beneficiary->full_name }}</span>
+          <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 font-monospace px-2 py-0.5">
+            كود الحالة: {{ $donation->beneficiary->code ?? ('BEN-' . $donation->beneficiary->id) }}
+          </span>
+        </div>
+      </div>
+      @endif
+
+      @if(!empty($donation->paid_months) && is_array($donation->paid_months))
+      <div class="row g-2 align-items-center border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
+        <div class="col-sm-3 text-muted fw-bold">الشهور المسددة:</div>
+        <div class="col-sm-9 fw-bold text-success font-monospace">
+          {{ implode(' ، ', $donation->paid_months) }}
+        </div>
+      </div>
+      @endif
+
       <div class="row g-2 align-items-center">
         <div class="col-sm-3 text-muted fw-bold">طريقة السداد:</div>
         <div class="col-sm-9 fw-medium text-dark d-flex align-items-center gap-3">

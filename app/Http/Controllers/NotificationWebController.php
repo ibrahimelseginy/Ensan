@@ -326,7 +326,7 @@ final class NotificationWebController extends Controller
         // ==========================================
         // 6. Monthly Donation Reminders
         // ==========================================
-        if ($canAccess('donors.view') || $user->hasPermission('donations.view')) {
+        if ($canAccess('donors.view', ['reception', 'receptionist'], ['استقبال', 'خدمة عملاء', 'reception']) || $user->hasPermission('donations.view') || $user->hasPermission('donations.create')) {
             $monthlyDonationItems = $this->monthlyDonationReminderService->notificationItems();
             foreach ($monthlyDonationItems as $idx => $mItem) {
                 $rawItems[] = [

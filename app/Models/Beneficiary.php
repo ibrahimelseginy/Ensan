@@ -47,7 +47,11 @@ final class Beneficiary extends Model
         if ($this->birth_date) {
             return \Carbon\Carbon::parse($this->birth_date)->age;
         }
-        return $value;
+        if ($value !== null) {
+            $elapsed = $this->created_at ? (int) $this->created_at->diffInYears(now()) : 0;
+            return (int) $value + $elapsed;
+        }
+        return null;
     }
 
     public function getDeceasedHusbandAgeAttribute($value): ?int
@@ -56,12 +60,77 @@ final class Beneficiary extends Model
             $end = $this->deceased_husband_death_date ?? now();
             return (int) \Carbon\Carbon::parse($this->deceased_husband_birth_date)->diffInYears($end);
         }
-        return $value;
+        if ($value !== null) {
+            $end = $this->deceased_husband_death_date ?? now();
+            $elapsed = $this->created_at ? (int) $this->created_at->diffInYears($end) : 0;
+            return (int) $value + $elapsed;
+        }
+        return null;
+    }
+
+    public function patientMember(): ?BeneficiaryFamilyMember
+    {
+        return $this->relationLoaded('familyMembers')
+            ? $this->familyMembers->firstWhere('is_patient', true)
+            : $this->familyMembers()->where('is_patient', true)->first();
+    }
+
+    public function getPatientAgeAttribute($value): ?int
+    {
+        $member = $this->patientMember();
+        if ($member && $member->birth_date) {
+            $end = $member->death_date ?? now();
+            return (int) \Carbon\Carbon::parse($member->birth_date)->diffInYears($end);
+        }
+        if ($member && $member->age) {
+            return (int) $member->age;
+        }
+        if ($value !== null) {
+            $elapsed = $this->created_at ? (int) $this->created_at->diffInYears(now()) : 0;
+            return (int) $value + $elapsed;
+        }
+        if ($this->birth_date && $this->patient_name && ($this->patient_name === $this->full_name || ($this->patient_relationship ?? '') === 'patient')) {
+            return (int) \Carbon\Carbon::parse($this->birth_date)->age;
+        }
+        return null;
+    }
+
+    public function getPatientBirthDateAttribute(): ?string
+    {
+        $member = $this->patientMember();
+        if ($member && $member->birth_date) {
+            return $member->birth_date->format('Y-m-d');
+        }
+        if ($this->birth_date && $this->patient_name && ($this->patient_name === $this->full_name || ($this->patient_relationship ?? '') === 'patient')) {
+            return $this->birth_date->format('Y-m-d');
+        }
+        return null;
     }
 
     protected static function booted(): void
     {
         static::saving(function (Beneficiary $beneficiary): void {
+            // Auto-sync birth_date and age dynamically from elapsed years
+            if (!empty($beneficiary->birth_date)) {
+                $beneficiary->age = (int) \Carbon\Carbon::parse($beneficiary->birth_date)->age;
+            } elseif (!empty($beneficiary->age) && (int) $beneficiary->age > 0) {
+                $beneficiary->birth_date = \Carbon\Carbon::now()->subYears((int) $beneficiary->age)->startOfYear()->format('Y-m-d');
+            }
+
+            // Also for deceased husband if in Zad project
+            if (!empty($beneficiary->deceased_husband_birth_date)) {
+                $end = $beneficiary->deceased_husband_death_date ?? now();
+                $beneficiary->deceased_husband_age = (int) \Carbon\Carbon::parse($beneficiary->deceased_husband_birth_date)->diffInYears($end);
+            } elseif (!empty($beneficiary->deceased_husband_age) && (int) $beneficiary->deceased_husband_age > 0 && empty($beneficiary->deceased_husband_birth_date)) {
+                $base = $beneficiary->deceased_husband_death_date ?? now();
+                $beneficiary->deceased_husband_birth_date = \Carbon\Carbon::parse($base)->subYears((int) $beneficiary->deceased_husband_age)->startOfYear()->format('Y-m-d');
+            }
+
+            // Auto-sync patient age if patient is beneficiary himself
+            if (empty($beneficiary->patient_age) && !empty($beneficiary->patient_name) && !empty($beneficiary->birth_date) && ($beneficiary->patient_name === $beneficiary->full_name || ($beneficiary->patient_relationship ?? '') === 'patient')) {
+                $beneficiary->patient_age = (int) \Carbon\Carbon::parse($beneficiary->birth_date)->age;
+            }
+
             if ($beneficiary->exists && ! $beneficiary->isDirty('full_name')) {
                 return;
             }
@@ -197,6 +266,13 @@ final class Beneficiary extends Model
     public function sponsors(): BelongsToMany
     {
         return $this->belongsToMany(Donor::class, 'beneficiary_sponsors')->withTimestamps();
+    }
+
+    public function donations(): HasMany
+    {
+        return $this->hasMany(Donation::class, 'beneficiary_id')
+            ->where('status', '!=', 'cancelled')
+            ->orderByDesc('received_at');
     }
 
     public function familyMembers(): HasMany

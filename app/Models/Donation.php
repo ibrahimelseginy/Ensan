@@ -41,6 +41,8 @@ final class Donation extends Model
         'delegate_id',
         'route_id',
         'allocation_note',
+        'beneficiary_id',
+        'paid_months',
         'received_at',
         'created_by',
         'auto_added_to_inventory',
@@ -56,7 +58,8 @@ final class Donation extends Model
         'is_flagged' => 'boolean',
         'amount' => 'decimal:2',
         'estimated_value' => 'decimal:2',
-        'quantity' => 'decimal:2'
+        'quantity' => 'decimal:2',
+        'paid_months' => 'array'
     ];
 
     public function donationable()
@@ -77,6 +80,11 @@ final class Donation extends Model
     public function donor(): BelongsTo 
     { 
         return $this->belongsTo(Donor::class); 
+    }
+
+    public function beneficiary(): BelongsTo
+    {
+        return $this->belongsTo(Beneficiary::class, 'beneficiary_id');
     }
 
     public function familyMembers(): BelongsToMany

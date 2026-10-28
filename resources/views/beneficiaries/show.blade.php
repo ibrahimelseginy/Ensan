@@ -228,7 +228,7 @@
                     </div>
                     <div class="row g-2 small mb-3">
                       <div class="col-6"><span class="text-muted">العمر:</span> {{ $member->birth_date ? $member->birth_date->age . ' سنة' : ($member->age ? $member->age . ' سنة' : '—') }}</div>
-                      <div class="col-6"><span class="text-muted">الميلاد:</span> {{ optional($member->birth_date)->format('Y-m-d') ?? '—' }}</div>
+                      <div class="col-6"><span class="text-muted">الميلاد:</span> {{ optional($member->birth_date)->format('Y-m-d') ?? ($member->age ? \Carbon\Carbon::now()->subYears((int) $member->age)->format('Y') . ' (تقديري)' : '—') }}</div>
                       <div class="col-6"><span class="text-muted">التعليم:</span> {{ $member->education_level ?? '—' }}</div>
                       <div class="col-6"><span class="text-muted">الكفالة:</span> {{ $member->sponsorship_amount ? number_format((float)$member->sponsorship_amount, 2) . ' ج' : '—' }}</div>
                       @if($member->phone)<div class="col-12"><span class="text-muted">الهاتف:</span> {{ $member->phone }}</div>@endif
@@ -305,18 +305,25 @@
       {{-- Donations History --}}
       <div class="card mb-4">
         <div class="card-body">
-          <div class="section-title mb-3">
-            <i class="bi bi-gift"></i>
-            <h5 class="mb-0">سجل التبرعات الموجهة</h5>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="section-title mb-0">
+              <i class="bi bi-gift text-success"></i>
+              <h5 class="mb-0">سجل التبرعات والكفالات الموجهة للحالة</h5>
+            </div>
+            <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-outline-success">
+              <i class="bi bi-plus-lg me-1"></i> إضافة تبرع / كفالة للحالة
+            </a>
           </div>
           @if(isset($donations) && $donations->count() > 0)
             <div class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>رقم الإيصال</th>
                     <th>المتبرع</th>
                     <th>القيمة</th>
+                    <th>البند</th>
+                    <th>الشهور المسددة</th>
                     <th>التاريخ</th>
                     <th class="text-center" style="min-width: 150px;">الإجراءات</th>
                   </tr>
@@ -324,16 +331,34 @@
                 <tbody>
                   @foreach($donations as $d)
                     <tr>
-                      <td>{{ $d->id }}</td>
+                      <td class="font-monospace fw-bold text-primary">{{ $d->receipt_number ?: ('#' . $d->id) }}</td>
                       <td>
-                        <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none">
-                          {{ $d->donor->name ?? 'فاعل خير' }}
-                        </a>
+                        @if($d->donor)
+                          <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none fw-bold">
+                            {{ $d->donor->name }}
+                          </a>
+                          <div class="small text-muted font-monospace">{{ $d->donor->display_code }}</div>
+                        @else
+                          <span class="text-muted">فاعل خير</span>
+                        @endif
                       </td>
                       <td>
-                        <span
-                          class="fw-bold">{{ $d->type == 'cash' ? number_format($d->amount, 2) : number_format($d->estimated_value, 2) }}</span>
+                        <span class="fw-bold text-success">{{ $d->type == 'cash' ? number_format($d->amount, 2) : number_format($d->estimated_value, 2) }}</span>
                         <span class="text-muted small">{{ $d->currency }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark border">{{ $d->purpose_label }}</span>
+                      </td>
+                      <td>
+                        @if(!empty($d->paid_months) && is_array($d->paid_months))
+                          <div class="d-flex flex-wrap gap-1">
+                            @foreach($d->paid_months as $pm)
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">{{ $pm }}</span>
+                            @endforeach
+                          </div>
+                        @else
+                          <span class="text-muted small">—</span>
+                        @endif
                       </td>
                       <td>{{ $d->received_at?->format('Y-m-d') }}</td>
                       <td class="text-center">
@@ -352,7 +377,10 @@
               </table>
             </div>
           @else
-            <p class="text-muted text-center py-3">لا توجد تبرعات مسجلة لهذا المستفيد</p>
+            <p class="text-muted text-center py-4 mb-0">
+              <i class="bi bi-inbox fs-3 d-block text-muted opacity-50 mb-2"></i>
+              لا توجد تبرعات أو كفالات مسجلة لهذه الحالة حتى الآن.
+            </p>
           @endif
         </div>
       </div>

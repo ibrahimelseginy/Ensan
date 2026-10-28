@@ -142,6 +142,33 @@
                 </div>
               </div>
 
+              @if($donation->beneficiary)
+                <div class="col-md-12">
+                  <div class="info-row bg-success bg-opacity-10 border border-success border-opacity-25 rounded p-2.5">
+                    <span class="info-label text-success fw-bold"><i class="bi bi-person-heart me-1"></i> الحالة المستفيدة</span>
+                    <span class="info-value">
+                      <a href="{{ route('beneficiaries.show', $donation->beneficiary) }}" class="fw-bold text-success text-decoration-none">
+                        {{ $donation->beneficiary->full_name }}
+                        <span class="badge bg-success font-monospace ms-2">كود: {{ $donation->beneficiary->code ?? ('BEN-'.$donation->beneficiary->id) }}</span>
+                      </a>
+                    </span>
+                  </div>
+                </div>
+              @endif
+
+              @if(!empty($donation->paid_months) && is_array($donation->paid_months))
+                <div class="col-md-12">
+                  <div class="p-2.5 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                    <span class="fw-bold text-primary small d-block mb-1.5"><i class="bi bi-calendar-check me-1"></i> الشهور المسددة لهذا التبرع:</span>
+                    <div class="d-flex flex-wrap gap-1.5">
+                      @foreach($donation->paid_months as $pm)
+                        <span class="badge bg-primary px-2.5 py-1 font-monospace">{{ $pm }}</span>
+                      @endforeach
+                    </div>
+                  </div>
+                </div>
+              @endif
+
             </div>
 
             @if($donation->familyMembers->isNotEmpty())
