@@ -26,14 +26,17 @@
         </div>
     </div>
 
-    <!-- Hover Speech Tooltip from Anis -->
+    <!-- Hover Speech Tooltip from Anis (Positioned on the Right of Launcher) -->
     <div id="anisHoverTooltip" class="anis-hover-tooltip d-none" aria-hidden="true">
         <span class="anis-tooltip-wave">👋</span>
-        <span>مرحباً، أنا <strong>أنيس</strong> مساعدك الشخصي</span>
+        <div class="d-inline-flex flex-column" style="line-height: 1.35; text-align: right;">
+            <span class="fw-bold" style="color: #34d399; font-size: 0.82rem;">أنيس - رفيق العمل ومحادثات الفريق</span>
+            <span style="font-size: 0.74rem; color: #e2e8f0;">مرحباً، أنا <strong>أنيس</strong> مساعدك الشخصي</span>
+        </div>
     </div>
 
     <!-- Floating Launcher Button with Pure Ensan Logo Only -->
-    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" title="أنيس - رفيق العمل ومحادثات الفريق" aria-label="فتح محادثات إنسان">
+    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" aria-label="أنيس - رفيق العمل ومحادثات الفريق">
         <span class="ensan-chat-pulse"></span>
         <div class="ensan-chat-launcher-icon">
             <!-- Pure Ensan Logo Only -->
@@ -465,36 +468,55 @@
     100% { transform: scale(1.2); opacity: 0; }
 }
 
-/* Hover Speech Tooltip for Anis */
+/* Hover Speech Tooltip for Anis - Positioned on the RIGHT of launcher button */
 .anis-hover-tooltip {
     position: absolute;
-    bottom: 12px;
-    right: 76px;
+    left: 76px !important;
+    right: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     background: #0f172a;
     color: #ffffff;
-    padding: 8px 14px;
-    border-radius: 20px 20px 4px 20px;
+    padding: 8px 16px;
+    border-radius: 14px;
     font-size: 0.84rem;
     font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(16, 185, 129, 0.35);
-    border: 1px solid rgba(16, 185, 129, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 14px rgba(16, 185, 129, 0.4);
+    border: 1.5px solid #10b981;
     pointer-events: none;
     z-index: 10001;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 9px;
     animation: anisTooltipPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-origin: bottom right;
+    transform-origin: center left;
+}
+
+.anis-hover-tooltip::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 7px solid #10b981;
 }
 
 .theme-dark .anis-hover-tooltip {
     background: #1e293b;
-    border-color: rgba(16, 185, 129, 0.55);
+    border-color: #10b981;
+}
+.theme-dark .anis-hover-tooltip::before {
+    border-right-color: #10b981;
 }
 
 .anis-tooltip-wave {
     display: inline-block;
+    font-size: 1.15rem;
     animation: anisWaveHand 1.2s infinite ease-in-out;
     transform-origin: 70% 70%;
 }
@@ -508,11 +530,11 @@
 @keyframes anisTooltipPop {
     from {
         opacity: 0;
-        transform: scale(0.85) translateX(8px);
+        transform: translateY(-50%) scale(0.88) translateX(-10px);
     }
     to {
         opacity: 1;
-        transform: scale(1) translateX(0);
+        transform: translateY(-50%) scale(1) translateX(0);
     }
 }
 
