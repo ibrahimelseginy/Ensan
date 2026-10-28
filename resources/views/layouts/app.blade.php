@@ -4459,6 +4459,12 @@
                 lastItemCount = unreadCount;
                 playNotificationSound();
                 triggerDesktopNotifications(currentItems, false);
+                if (typeof window.speakAnisNotification === 'function' && currentItems.length > 0) {
+                    var latestUnread = currentItems.find(function(it) { return !it.read; }) || currentItems[0];
+                    if (latestUnread && latestUnread.text) {
+                        window.speakAnisNotification(latestUnread.text);
+                    }
+                }
               } else {
                 lastItemCount = unreadCount;
               }

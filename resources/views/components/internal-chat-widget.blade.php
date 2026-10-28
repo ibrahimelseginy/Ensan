@@ -13,7 +13,7 @@
             </div>
             <div class="welcome-bubble-content flex-grow-1">
                 <div class="welcome-bubble-title">أهلاً بك يا {{ auth()->user()->name }} 🌿</div>
-                <div class="welcome-bubble-text">أنا <strong>أنيس</strong> رفيق العمل في إنسان، جاهز لمساعدتك وتنسيق مهامك!</div>
+                <div class="welcome-bubble-text">أنا <strong>أنيس</strong> زميل العمل في إنسان، جاهز لمساعدتك وتنسيق مهامك!</div>
             </div>
         </div>
         <div class="d-flex align-items-center justify-content-end gap-2 mt-2 pt-1 border-top border-light">
@@ -30,13 +30,13 @@
     <div id="anisHoverTooltip" class="anis-hover-tooltip d-none" aria-hidden="true">
         <span class="anis-tooltip-wave">👋</span>
         <div class="d-inline-flex flex-column" style="line-height: 1.35; text-align: right;">
-            <span class="fw-bold" style="color: #34d399; font-size: 0.82rem;">أنيس - رفيق العمل ومحادثات الفريق</span>
-            <span style="font-size: 0.74rem; color: #e2e8f0;">مرحباً، أنا <strong>أنيس</strong> مساعدك الشخصي</span>
+            <span class="fw-bold" style="color: #34d399; font-size: 0.82rem;">أنيس - زميل العمل ومحادثات الفريق</span>
+            <span style="font-size: 0.74rem; color: #e2e8f0;">مرحباً، أنا <strong>أنيس</strong> زميل العمل</span>
         </div>
     </div>
 
     <!-- Floating Launcher Button with Pure Ensan Logo Only -->
-    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" aria-label="أنيس - رفيق العمل ومحادثات الفريق">
+    <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" aria-label="أنيس - زميل العمل ومحادثات الفريق">
         <span class="ensan-chat-pulse"></span>
         <div class="ensan-chat-launcher-icon">
             <!-- Pure Ensan Logo Only -->
@@ -64,18 +64,61 @@
                     <span id="chatOnlineIndicator" class="online-indicator"></span>
                 </div>
                 <div class="chat-header-info overflow-hidden">
-                    <h6 id="currentChatTitle" class="m-0 fw-bold text-white text-truncate">أنيس - رفيق العمل</h6>
+                    <h6 id="currentChatTitle" class="m-0 fw-bold text-white text-truncate">أنيس - زميل العمل</h6>
                     <small id="currentChatSubtitle" class="text-white-50 text-truncate d-block" style="font-size: 0.74rem;">القناة العامة وتواصل فريق العمل</small>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                <button type="button" id="anisVoiceSettingsToggleBtn" class="ensan-btn-icon" title="التحكم في صوت أنيس والتنبيهات">
+                    <i class="bi bi-volume-up" id="anisHeaderVoiceIcon"></i>
+                </button>
                 <button type="button" id="headerAudienceBadgeBtn" class="ensan-header-pill d-none" title="تعديل نطاق ظهور الرسائل">
                     <i class="bi bi-shield-lock-fill"></i>
                     <span id="headerAudienceBadgeText">مخصصة</span>
                 </button>
                 <button type="button" id="minimizeChatBtn" class="ensan-btn-icon" title="تصغير الشات">
                     <i class="bi bi-dash-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Voice Settings Flyout Panel -->
+        <div id="anisVoiceSettingsPanel" class="anis-voice-panel d-none">
+            <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-1.5">
+                    <i class="bi bi-soundwave text-success fs-5"></i>
+                    <strong class="text-dark small">التحكم في صوت أنيس (زميل العمل)</strong>
+                </div>
+                <button type="button" class="btn-close" id="closeVoiceSettingsBtn" style="font-size: 0.65rem;" aria-label="إغلاق"></button>
+            </div>
+            
+            <div class="mb-2.5">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small">مستوى الصوت:</span>
+                    <span class="badge bg-success-subtle text-success font-monospace" id="anisVolumeLabel">50% (متوسط)</span>
+                </div>
+                <input type="range" class="form-range" id="anisVolumeInput" min="0" max="100" step="5" value="50">
+                <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.72rem;">
+                    <span role="button" id="presetMuteBtn" class="cursor-pointer text-hover-danger">كتم 🔇</span>
+                    <span role="button" id="presetMediumBtn" class="cursor-pointer text-success fw-bold">متوسط 50% 🔉 (الافتراضي)</span>
+                    <span role="button" id="presetHighBtn" class="cursor-pointer text-hover-primary">عالي 100% 🔊</span>
+                </div>
+            </div>
+
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="anisVoiceNotificationsToggle" checked>
+                <label class="form-check-label text-dark small" for="anisVoiceNotificationsToggle">
+                    نطق التنبيهات الجديدة بصوت أنيس 🔔
+                </label>
+            </div>
+
+            <div class="d-flex gap-1.5 mt-2 pt-2 border-top">
+                <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1 py-1" id="anisVoiceMuteToggleBtn" style="font-size: 0.74rem;">
+                    <i class="bi bi-volume-mute me-1"></i> <span id="muteBtnLabelText">كتم الصوت</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-success flex-grow-1 py-1" id="anisVoiceTestSampleBtn" style="font-size: 0.74rem;">
+                    <i class="bi bi-play-fill me-1"></i> تجربة الصوت الآن
                 </button>
             </div>
         </div>
@@ -100,7 +143,7 @@
                 <div class="ensan-bot-welcome">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <div class="bot-badge">
-                            <i class="bi bi-person-heart text-success me-1"></i> أنيس | رفيق العمل
+                            <i class="bi bi-person-heart text-success me-1"></i> أنيس | زميل العمل
                         </div>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">
                             <i class="bi bi-broadcast me-1"></i> بث مباشر للفريق
@@ -469,6 +512,32 @@
 }
 
 /* Hover Speech Tooltip for Anis - Positioned on the RIGHT of launcher button */
+.anis-voice-panel {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    position: relative;
+    z-index: 100;
+}
+.theme-dark .anis-voice-panel {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+.theme-dark .anis-voice-panel .text-dark {
+    color: #f8fafc !important;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.text-hover-danger:hover {
+    color: #ef4444 !important;
+}
+.text-hover-primary:hover {
+    color: #10b981 !important;
+}
+
 .anis-hover-tooltip {
     position: absolute;
     left: 76px !important;
@@ -1673,15 +1742,75 @@
     }
 
     // ==========================================
-    // Voice Greeting on Hovering over Anis
+    // Voice Greeting & Spoken Notifications Control
     // ==========================================
     var hoverTooltip = document.getElementById('anisHoverTooltip');
     var lastAnisSpeakTime = 0;
-    var anisAudio = null;
+    var lastNotifSpeakTime = 0;
+
+    // Default volume is MEDIUM (0.5 = 50%) as requested by user
+    var anisVoiceConfig = {
+        volume: 0.5,
+        enabled: true,
+        speakNotifications: true
+    };
+
+    // Load saved preferences from localStorage
     try {
-        anisAudio = new Audio('{{ asset("audio/anis_greeting.m4a") }}');
-        anisAudio.preload = 'auto';
+        var savedVoiceConfig = localStorage.getItem('anis_voice_config_v2');
+        if (savedVoiceConfig) {
+            var parsedConfig = JSON.parse(savedVoiceConfig);
+            if (typeof parsedConfig.volume === 'number') anisVoiceConfig.volume = parsedConfig.volume;
+            if (typeof parsedConfig.enabled === 'boolean') anisVoiceConfig.enabled = parsedConfig.enabled;
+            if (typeof parsedConfig.speakNotifications === 'boolean') anisVoiceConfig.speakNotifications = parsedConfig.speakNotifications;
+        }
     } catch (e) {}
+
+    function saveAnisVoiceConfig() {
+        try {
+            localStorage.setItem('anis_voice_config_v2', JSON.stringify(anisVoiceConfig));
+        } catch (e) {}
+        updateVoiceUI();
+    }
+
+    function updateVoiceUI() {
+        var pct = Math.round(anisVoiceConfig.volume * 100);
+        var slider = document.getElementById('anisVolumeInput');
+        var label = document.getElementById('anisVolumeLabel');
+        var notifsToggle = document.getElementById('anisVoiceNotificationsToggle');
+        var headerIcon = document.getElementById('anisHeaderVoiceIcon');
+        var muteBtnText = document.getElementById('muteBtnLabelText');
+
+        if (slider) slider.value = pct;
+        if (notifsToggle) notifsToggle.checked = anisVoiceConfig.speakNotifications;
+
+        var volDesc = 'متوسط';
+        if (pct === 0 || !anisVoiceConfig.enabled) {
+            volDesc = 'مكتوم 🔇';
+        } else if (pct < 35) {
+            volDesc = 'منخفض 🔉 (' + pct + '%)';
+        } else if (pct <= 65) {
+            volDesc = 'متوسط 🔉 (' + pct + '%) [الافتراضي]';
+        } else {
+            volDesc = 'عالي 🔊 (' + pct + '%)';
+        }
+
+        if (label) label.textContent = pct + '% (' + volDesc + ')';
+
+        if (headerIcon) {
+            if (pct === 0 || !anisVoiceConfig.enabled) {
+                headerIcon.className = 'bi bi-volume-mute text-danger';
+            } else if (pct < 50) {
+                headerIcon.className = 'bi bi-volume-down text-white';
+            } else {
+                headerIcon.className = 'bi bi-volume-up text-white';
+            }
+        }
+
+        if (muteBtnText) {
+            muteBtnText.textContent = (pct === 0 || !anisVoiceConfig.enabled) ? 'تشغيل الصوت' : 'كتم الصوت';
+        }
+    }
 
     // Prime Web Speech voices in background
     if ('speechSynthesis' in window) {
@@ -1695,15 +1824,19 @@
         } catch (e) {}
     }
 
-    function speakAnisWebSpeech() {
+    function speakAnisWebSpeech(text, customPitch, customRate) {
         if (!('speechSynthesis' in window)) return;
+        if (!anisVoiceConfig.enabled || anisVoiceConfig.volume <= 0) return;
+
         try {
             window.speechSynthesis.cancel();
-            var text = 'مَرْحَبًا، أَنَا أَنِيس، مُسَاعِدُكَ الشَّخْصِي.';
-            var u = new SpeechSynthesisUtterance(text);
+            var speechText = text || 'مَرْحَبًا، أَنَا أَنِيس، زَمِيلُ الْعَمَلِ فِي إِنْسَان.';
+            var u = new SpeechSynthesisUtterance(speechText);
             u.lang = 'ar-SA';
-            u.rate = 0.92;
-            u.pitch = 0.88; // Masculine, dignified pitch
+            u.rate = customRate || 0.92;
+            u.pitch = customPitch || 0.88; // Masculine, dignified pitch
+            u.volume = anisVoiceConfig.volume; // Default 0.5 (medium)
+
             var voices = window.speechSynthesis.getVoices() || [];
             var maleVoice = voices.find(function(v) {
                 var n = (v.name || '').toLowerCase();
@@ -1725,24 +1858,120 @@
     }
 
     function playAnisVoiceGreeting() {
+        if (!anisVoiceConfig.enabled || anisVoiceConfig.volume <= 0) return;
         var now = Date.now();
         if (now - lastAnisSpeakTime < 4500) {
             return; // debounce 4.5s
         }
         lastAnisSpeakTime = now;
-
-        if (anisAudio) {
-            anisAudio.currentTime = 0;
-            var playPromise = anisAudio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(function(err) {
-                    speakAnisWebSpeech();
-                });
-            }
-        } else {
-            speakAnisWebSpeech();
-        }
+        speakAnisWebSpeech('مَرْحَبًا، أَنَا أَنِيس، زَمِيلُ الْعَمَلِ فِي إِنْسَان.');
     }
+
+    // Global function to announce incoming notifications with Anis's voice
+    window.speakAnisNotification = function(text) {
+        if (!anisVoiceConfig.enabled || !anisVoiceConfig.speakNotifications || anisVoiceConfig.volume <= 0) {
+            return;
+        }
+        var clean = (text || '').replace(/<[^>]*>?/gm, '').trim();
+        if (!clean) return;
+        if (clean.length > 130) {
+            clean = clean.substring(0, 125) + '...';
+        }
+
+        var now = Date.now();
+        if (now - lastNotifSpeakTime < 5000) return; // debounce
+        lastNotifSpeakTime = now;
+
+        var message = 'تنبيه جديد يا زميلي: ' + clean;
+        speakAnisWebSpeech(message, 0.92, 0.95);
+    };
+
+    // Voice Panel Event Listeners
+    var voicePanel = document.getElementById('anisVoiceSettingsPanel');
+    var voiceToggleBtn = document.getElementById('anisVoiceSettingsToggleBtn');
+    var closeVoiceBtn = document.getElementById('closeVoiceSettingsBtn');
+    var volumeSlider = document.getElementById('anisVolumeInput');
+    var notifsToggle = document.getElementById('anisVoiceNotificationsToggle');
+    var muteBtn = document.getElementById('anisVoiceMuteToggleBtn');
+    var testSampleBtn = document.getElementById('anisVoiceTestSampleBtn');
+    var presetMute = document.getElementById('presetMuteBtn');
+    var presetMed = document.getElementById('presetMediumBtn');
+    var presetHigh = document.getElementById('presetHighBtn');
+
+    if (voiceToggleBtn && voicePanel) {
+        voiceToggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            voicePanel.classList.toggle('d-none');
+            updateVoiceUI();
+        });
+    }
+
+    if (closeVoiceBtn && voicePanel) {
+        closeVoiceBtn.addEventListener('click', function() {
+            voicePanel.classList.add('d-none');
+        });
+    }
+
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', function() {
+            anisVoiceConfig.volume = parseFloat(this.value) / 100;
+            anisVoiceConfig.enabled = anisVoiceConfig.volume > 0;
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (notifsToggle) {
+        notifsToggle.addEventListener('change', function() {
+            anisVoiceConfig.speakNotifications = this.checked;
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (muteBtn) {
+        muteBtn.addEventListener('click', function() {
+            if (anisVoiceConfig.volume > 0 && anisVoiceConfig.enabled) {
+                anisVoiceConfig.previousVolume = anisVoiceConfig.volume;
+                anisVoiceConfig.volume = 0;
+                anisVoiceConfig.enabled = false;
+            } else {
+                anisVoiceConfig.volume = anisVoiceConfig.previousVolume || 0.5;
+                anisVoiceConfig.enabled = true;
+            }
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (presetMute) {
+        presetMute.addEventListener('click', function() {
+            anisVoiceConfig.volume = 0;
+            anisVoiceConfig.enabled = false;
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (presetMed) {
+        presetMed.addEventListener('click', function() {
+            anisVoiceConfig.volume = 0.5;
+            anisVoiceConfig.enabled = true;
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (presetHigh) {
+        presetHigh.addEventListener('click', function() {
+            anisVoiceConfig.volume = 1.0;
+            anisVoiceConfig.enabled = true;
+            saveAnisVoiceConfig();
+        });
+    }
+
+    if (testSampleBtn) {
+        testSampleBtn.addEventListener('click', function() {
+            speakAnisWebSpeech('أَهْلاً بِكَ، أَنَا أَنِيس، زَمِيلُ الْعَمَلِ. هَذَا هُوَ مُسْتَوَى صَوْتِي الْحَالِي.');
+        });
+    }
+
+    updateVoiceUI();
 
     if (launcher) {
         launcher.addEventListener('mouseenter', function() {
@@ -1824,7 +2053,7 @@
             updateNavTabButtons('channel');
 
             currentContactId = 'public';
-            currentChatTitle.textContent = 'أنيس - رفيق العمل';
+            currentChatTitle.textContent = 'أنيس - زميل العمل';
             currentChatSubtitle.textContent = 'القناة العامة وتواصل فريق العمل';
             currentChatAvatar.innerHTML = '<img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo">';
             headerAudienceBadgeBtn.classList.toggle('d-none', currentAudienceTarget === 'all');
