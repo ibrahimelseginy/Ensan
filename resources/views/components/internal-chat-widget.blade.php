@@ -9,7 +9,6 @@
             <div class="welcome-avatar-wrap flex-shrink-0">
                 <div class="welcome-avatar-circle">
                     <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="welcome-ensan-logo">
-                    <span class="welcome-person-emoji">🙋‍♂️</span>
                 </div>
             </div>
             <div class="welcome-bubble-content flex-grow-1">
@@ -27,18 +26,12 @@
         </div>
     </div>
 
-    <!-- Floating Launcher Button with Ensan Logo + Welcoming Person -->
+    <!-- Floating Launcher Button with Pure Ensan Logo Only -->
     <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" title="أنيس - رفيق العمل ومحادثات الفريق" aria-label="فتح محادثات إنسان">
         <span class="ensan-chat-pulse"></span>
         <div class="ensan-chat-launcher-icon">
-            <!-- Pure Ensan Logo with Welcoming Person waving -->
-            <div class="ensan-launcher-brand-wrap">
-                <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-launcher-heart">
-                <div class="ensan-welcoming-person" title="أنيس يرحب بك!">
-                    <span class="person-wave-hand">👋</span>
-                    <span class="person-avatar-mini">🙋‍♂️</span>
-                </div>
-            </div>
+            <!-- Pure Ensan Logo Only -->
+            <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-launcher-heart">
             <svg class="close-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -58,7 +51,6 @@
                 <div class="ensan-bot-avatar position-relative flex-shrink-0">
                     <div id="currentChatAvatar" class="avatar-circle ensan-avatar-heart-wrap">
                         <img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo">
-                        <span class="avatar-person-tag">🙋‍♂️</span>
                     </div>
                     <span id="chatOnlineIndicator" class="online-indicator"></span>
                 </div>
@@ -561,63 +553,18 @@
     line-height: 1.45;
 }
 
-/* Ensan Heart + Welcoming Person */
-.ensan-launcher-brand-wrap {
-    position: relative;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.25s ease;
-}
-
+/* Pure Ensan Heart Logo */
 .ensan-launcher-heart {
-    width: 28px;
-    height: 28px;
+    width: 33px;
+    height: 33px;
     object-fit: contain;
     filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.25));
-    margin-right: 4px;
+    transition: transform 0.25s ease;
+    display: block;
 }
 
-.ensan-welcoming-person {
-    position: absolute;
-    bottom: -2px;
-    right: -4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    background: #ffffff;
-    border-radius: 50%;
-    border: 1.5px solid #10b981;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.person-avatar-mini {
-    font-size: 0.82rem;
-    line-height: 1;
-}
-
-.person-wave-hand {
-    position: absolute;
-    top: -9px;
-    right: -5px;
-    font-size: 0.85rem;
-    line-height: 1;
-    animation: waveHand 2.2s infinite ease-in-out;
-    transform-origin: 70% 70%;
-    display: inline-block;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
-}
-
-@keyframes waveHand {
-    0%, 100% { transform: rotate(0deg); }
-    20% { transform: rotate(18deg); }
-    40% { transform: rotate(-12deg); }
-    60% { transform: rotate(14deg); }
-    80% { transform: rotate(-6deg); }
+.ensan-chat-launcher:hover .ensan-launcher-heart {
+    transform: scale(1.1);
 }
 
 .ensan-chat-launcher-icon .close-icon-svg {
@@ -627,12 +574,12 @@
     position: absolute;
 }
 
-.ensan-chat-widget-open .ensan-launcher-brand-wrap {
-    display: none;
+.ensan-chat-widget-open .ensan-launcher-heart {
+    display: none !important;
 }
 
 .ensan-chat-widget-open .ensan-chat-launcher-icon .close-icon-svg {
-    display: block;
+    display: block !important;
 }
 
 .ensan-chat-badge {
@@ -1715,7 +1662,7 @@
             currentContactId = 'public';
             currentChatTitle.textContent = 'أنيس - رفيق العمل';
             currentChatSubtitle.textContent = 'القناة العامة وتواصل فريق العمل';
-            currentChatAvatar.innerHTML = '<img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo"><span class="avatar-person-tag">🙋‍♂️</span>';
+            currentChatAvatar.innerHTML = '<img src="{{ asset('images/heart-icon.png') }}" alt="Ensan" class="ensan-header-logo">';
             headerAudienceBadgeBtn.classList.toggle('d-none', currentAudienceTarget === 'all');
 
             loadMessages();
