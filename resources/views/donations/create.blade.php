@@ -68,6 +68,57 @@
     #donorTypeRegistered:checked + label * {
       color: #ffffff !important;
     }
+
+    /* Select2 Clear Button - Centered circular badge */
+    .select2-container--bootstrap-5 .select2-selection__clear,
+    html[dir="rtl"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+      position: absolute !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      right: auto !important;
+      left: 0.75rem !important;
+      width: 20px !important;
+      height: 20px !important;
+      min-width: 20px !important;
+      min-height: 20px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #f1f5f9 !important;
+      background-image: none !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 50% !important;
+      color: #475569 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      line-height: 1 !important;
+      direction: ltr !important;
+      unicode-bidi: normal !important;
+      cursor: pointer !important;
+      z-index: 10 !important;
+      transition: all 0.15s ease-in-out !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection__clear:hover {
+      background: #fee2e2 !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+      transform: translateY(-50%) scale(1.12) !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection__clear span {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
   </style>
 @endsection
 
