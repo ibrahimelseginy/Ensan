@@ -26,6 +26,12 @@
         </div>
     </div>
 
+    <!-- Hover Speech Tooltip from Anis -->
+    <div id="anisHoverTooltip" class="anis-hover-tooltip d-none" aria-hidden="true">
+        <span class="anis-tooltip-wave">👋</span>
+        <span>مرحباً، أنا <strong>أنيس</strong> مساعدك الشخصي</span>
+    </div>
+
     <!-- Floating Launcher Button with Pure Ensan Logo Only -->
     <button type="button" id="ensanChatLauncher" class="ensan-chat-launcher" title="أنيس - رفيق العمل ومحادثات الفريق" aria-label="فتح محادثات إنسان">
         <span class="ensan-chat-pulse"></span>
@@ -457,6 +463,57 @@
     0% { transform: scale(0.95); opacity: 0.85; }
     50% { transform: scale(1.2); opacity: 0; }
     100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* Hover Speech Tooltip for Anis */
+.anis-hover-tooltip {
+    position: absolute;
+    bottom: 12px;
+    right: 76px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 20px 20px 4px 20px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(16, 185, 129, 0.35);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    pointer-events: none;
+    z-index: 10001;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    animation: anisTooltipPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: bottom right;
+}
+
+.theme-dark .anis-hover-tooltip {
+    background: #1e293b;
+    border-color: rgba(16, 185, 129, 0.55);
+}
+
+.anis-tooltip-wave {
+    display: inline-block;
+    animation: anisWaveHand 1.2s infinite ease-in-out;
+    transform-origin: 70% 70%;
+}
+
+@keyframes anisWaveHand {
+    0%, 100% { transform: rotate(0deg); }
+    20%, 60% { transform: rotate(14deg); }
+    40%, 80% { transform: rotate(-14deg); }
+}
+
+@keyframes anisTooltipPop {
+    from {
+        opacity: 0;
+        transform: scale(0.85) translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateX(0);
+    }
 }
 
 .ensan-chat-launcher-icon {
@@ -1593,10 +1650,95 @@
         } catch (e) {}
     }
 
-    // Toggle Chat
-    launcher.addEventListener('click', function() {
-        toggleChat();
-    });
+    // ==========================================
+    // Voice Greeting on Hovering over Anis
+    // ==========================================
+    var hoverTooltip = document.getElementById('anisHoverTooltip');
+    var lastAnisSpeakTime = 0;
+    var anisAudio = null;
+    try {
+        anisAudio = new Audio('{{ asset("audio/anis_greeting.m4a") }}');
+        anisAudio.preload = 'auto';
+    } catch (e) {}
+
+    // Prime Web Speech voices in background
+    if ('speechSynthesis' in window) {
+        try {
+            window.speechSynthesis.getVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+        } catch (e) {}
+    }
+
+    function speakAnisWebSpeech() {
+        if (!('speechSynthesis' in window)) return;
+        try {
+            window.speechSynthesis.cancel();
+            var text = 'مَرْحَبًا، أَنَا أَنِيس، مُسَاعِدُكَ الشَّخْصِي.';
+            var u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ar-SA';
+            u.rate = 0.92;
+            u.pitch = 0.88; // Masculine, dignified pitch
+            var voices = window.speechSynthesis.getVoices() || [];
+            var maleVoice = voices.find(function(v) {
+                var n = (v.name || '').toLowerCase();
+                return (n.includes('maged') || n.includes('tarik') || n.includes('shakir') || n.includes('hamed') || n.includes('male') || n.includes('naayf'))
+                    && !n.includes('female') && !n.includes('zeina') && !n.includes('laila') && !n.includes('salma') && !n.includes('maryam');
+            });
+            if (!maleVoice && voices.length) {
+                maleVoice = voices.find(function(v) {
+                    var n = (v.name || '').toLowerCase();
+                    return (v.lang && (v.lang.startsWith('ar') || v.lang.includes('Arabic')))
+                        && !n.includes('female') && !n.includes('zeina') && !n.includes('laila') && !n.includes('salma') && !n.includes('maryam');
+                }) || voices.find(function(v) {
+                    return v.lang && (v.lang.startsWith('ar') || v.lang.includes('Arabic'));
+                });
+            }
+            if (maleVoice) u.voice = maleVoice;
+            window.speechSynthesis.speak(u);
+        } catch (e) {}
+    }
+
+    function playAnisVoiceGreeting() {
+        var now = Date.now();
+        if (now - lastAnisSpeakTime < 4500) {
+            return; // debounce 4.5s
+        }
+        lastAnisSpeakTime = now;
+
+        if (anisAudio) {
+            anisAudio.currentTime = 0;
+            var playPromise = anisAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(function(err) {
+                    speakAnisWebSpeech();
+                });
+            }
+        } else {
+            speakAnisWebSpeech();
+        }
+    }
+
+    if (launcher) {
+        launcher.addEventListener('mouseenter', function() {
+            if (isOpen) return;
+            if (hoverTooltip) hoverTooltip.classList.remove('d-none');
+            playAnisVoiceGreeting();
+        });
+
+        launcher.addEventListener('mouseleave', function() {
+            if (hoverTooltip) hoverTooltip.classList.add('d-none');
+        });
+
+        // Toggle Chat
+        launcher.addEventListener('click', function() {
+            if (hoverTooltip) hoverTooltip.classList.add('d-none');
+            toggleChat();
+        });
+    }
 
     minimizeChatBtn.addEventListener('click', function() {
         closeChat();
