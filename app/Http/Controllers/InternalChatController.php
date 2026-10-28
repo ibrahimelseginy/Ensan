@@ -391,7 +391,7 @@ class InternalChatController extends Controller
             if ($bot) {
                 return $bot;
             }
-            return User::where('role', 'admin')->orWhere('is_admin', 1)->first() ?: User::first();
+            return User::whereIn('role', ['admin', 'super_admin', 'manager'])->first() ?: User::first();
         });
     }
 
