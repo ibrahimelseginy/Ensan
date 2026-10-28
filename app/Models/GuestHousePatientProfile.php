@@ -27,6 +27,12 @@ final class GuestHousePatientProfile extends Model
         ];
     }
 
+    public function hasCompanion(): bool
+    {
+        return GuestHouseMealServing::isRealCompanion($this->companion_name);
+    }
+
     public function beneficiary() { return $this->belongsTo(Beneficiary::class); }
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
 }
+

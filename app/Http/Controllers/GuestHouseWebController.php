@@ -970,8 +970,11 @@ final class GuestHouseWebController extends Controller
                 $bServing = $servingsInput[$beneficiaryId] ?? [];
                 
                 $companionName = !empty($bServing['companion_name']) ? trim((string)$bServing['companion_name']) : null;
+                $hasRealCompanion = GuestHouseMealServing::isRealCompanion($companionName);
+
                 $pMeals = isset($bServing['patient_meals_count']) ? (int)$bServing['patient_meals_count'] : ($received ? 1 : 0);
-                $cMeals = isset($bServing['companion_meals_count']) ? (int)$bServing['companion_meals_count'] : 0;
+                // وجبة المرافق تُحتسب فقط في حال وجود مرافق حقيقي (ليس فارغاً أو 'لا يوجد' أو 'بدون مرافق')
+                $cMeals = ($hasRealCompanion && isset($bServing['companion_meals_count'])) ? (int)$bServing['companion_meals_count'] : 0;
                 
                 if ($pMeals > 0 || $cMeals > 0) {
                     $received = true;

@@ -907,16 +907,23 @@
                                     @forelse($residentStays as $stay)
                                         @php
                                             $srv = $savedServingsByBen->get($stay->beneficiary_id);
-                                            $pMealsVal = $srv ? $srv->patient_meals_count : 1;
                                             $cNameVal = $srv?->companion_name ?: ($stay->beneficiary->patientProfile?->companion_name ?: '');
-                                            $cMealsVal = $srv ? $srv->companion_meals_count : (!empty($cNameVal) ? 1 : 0);
+                                            $hasCompanion = \App\Models\GuestHouseMealServing::isRealCompanion($cNameVal);
+                                            $pMealsVal = $srv ? $srv->patient_meals_count : 1;
+                                            // وجبة المرافق تكون 1 افتراضياً فقط إذا كان للمريض مرافق فعلي، أما إذا كان بدون مرافق فتكون 0 قطعاً
+                                            $cMealsVal = $hasCompanion ? ($srv ? $srv->companion_meals_count : 1) : 0;
                                         @endphp
                                         <div class="border-bottom pb-2 mb-2">
                                             <div class="form-check mb-1">
-                                                <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" onchange="handleMealCheckboxChange(this, '{{ $mealType }}', '{{ $stay->beneficiary_id }}', {{ !empty($cNameVal) ? 1 : 0 }})" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
+                                                <input class="form-check-input meal-chk-{{ $mealType }}" type="checkbox" name="received_beneficiary_ids[]" value="{{ $stay->beneficiary_id }}" id="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}" onchange="handleMealCheckboxChange(this, '{{ $mealType }}', '{{ $stay->beneficiary_id }}', {{ $hasCompanion ? 1 : 0 }})" @checked(in_array((int)$stay->beneficiary_id, $received, true))>
                                                 <label class="form-check-label small fw-bold" for="meal-{{ $mealType }}-{{ $stay->beneficiary_id }}">
                                                     {{ $stay->beneficiary->full_name }}
                                                     <span class="text-muted fw-normal" style="font-size:0.75rem">({{ $stay->bed?->wing?->name ?: 'جناح' }} - سرير {{ $stay->bed?->number ?: '—' }})</span>
+                                                    @if(!$hasCompanion)
+                                                        <span class="badge bg-secondary-subtle text-secondary py-0 px-1 ms-1" style="font-size:0.68rem"><i class="bi bi-person me-0.5"></i> بدون مرافق (وجبة واحدة)</span>
+                                                    @else
+                                                        <span class="badge bg-info-subtle text-info-emphasis py-0 px-1 ms-1" style="font-size:0.68rem"><i class="bi bi-people me-0.5"></i> مع مرافق (وجبتان)</span>
+                                                    @endif
                                                 </label>
                                             </div>
                                             <div class="row g-1 ps-4" style="font-size:0.8rem">
@@ -926,7 +933,7 @@
                                                 </div>
                                                 <div class="col-5">
                                                     <label class="text-muted d-block" style="font-size:0.7rem">اسم المرافق</label>
-                                                    <input type="text" name="servings[{{ $stay->beneficiary_id }}][companion_name]" value="{{ $cNameVal }}" placeholder="المرافق" class="form-control form-control-sm py-0" style="height:26px; font-size:0.75rem;">
+                                                    <input type="text" name="servings[{{ $stay->beneficiary_id }}][companion_name]" value="{{ $cNameVal }}" placeholder="المرافق (أو بدون)" oninput="handleCompanionNameInput(this, '{{ $stay->beneficiary_id }}')" class="form-control form-control-sm py-0" style="height:26px; font-size:0.75rem;">
                                                 </div>
                                                 <div class="col-3">
                                                     <label class="text-muted d-block" style="font-size:0.7rem">وجبة مرافق</label>
@@ -1215,12 +1222,43 @@
 </div>
 
 <script>
-    function handleMealCheckboxChange(chk, mealType, benId, hasCompanion) {
+    function isRealCompanionName(name) {
+        if (!name) return false;
+        const clean = name.trim().replace(/\s+/g, ' ').toLowerCase();
+        const norm = clean.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
+        const negatives = [
+            'لا يوجد', 'لايوجد', 'لا يوجد مرافق', 'لايوجد مرافق',
+            'لا يوجد مرافقين', 'لايوجد مرافقين', 'بدون مرافق', 'بدون مرافقين',
+            'بدون مرافق له', 'بدون', 'لا', 'كلا', 'منفرد', 'لوحده', 'بمفرده',
+            'غير متوفر', '-', '--', '---', 'none', 'no', 'null', 'n/a', 'na'
+        ];
+        return !negatives.includes(norm);
+    }
+
+    function handleCompanionNameInput(input, benId) {
+        const cInput = document.querySelector(`input[name="servings[${benId}][companion_meals_count]"]`);
+        const chk = document.querySelector(`input[name="received_beneficiary_ids[]"][value="${benId}"]`);
+        if (!isRealCompanionName(input.value)) {
+            if (cInput) cInput.value = 0;
+        } else {
+            if (cInput && parseInt(cInput.value || 0) === 0 && (!chk || chk.checked)) {
+                cInput.value = 1;
+            }
+        }
+    }
+
+    function handleMealCheckboxChange(chk, mealType, benId, initialHasCompanion) {
         const pInput = document.querySelector(`input[name="servings[${benId}][patient_meals_count]"]`);
         const cInput = document.querySelector(`input[name="servings[${benId}][companion_meals_count]"]`);
+        const cNameInput = document.querySelector(`input[name="servings[${benId}][companion_name]"]`);
+
+        const hasCompanion = cNameInput ? isRealCompanionName(cNameInput.value) : !!initialHasCompanion;
+
         if (chk.checked) {
             if (pInput && parseInt(pInput.value || 0) === 0) pInput.value = 1;
-            if (cInput && hasCompanion && parseInt(cInput.value || 0) === 0) cInput.value = 1;
+            if (cInput) {
+                cInput.value = hasCompanion ? (parseInt(cInput.value || 0) > 0 ? cInput.value : 1) : 0;
+            }
         } else {
             if (pInput) pInput.value = 0;
             if (cInput) cInput.value = 0;
