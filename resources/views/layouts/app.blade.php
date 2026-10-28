@@ -3463,7 +3463,7 @@
           <button type="button" id="testNotifSoundBtn" class="btn notif-icon-circle-btn" title="تجربة صوت التنبيه وإشعار سطح المكتب" aria-label="تجربة التنبيه">
             <i class="bi bi-volume-up-fill"></i>
           </button>
-          <button type="button" class="btn notif-icon-circle-btn" title="دليل الإشعارات وإعدادات النظام" data-bs-toggle="modal" data-bs-target="#desktopNotifTroubleshootModal" aria-label="دليل التنبيهات">
+          <button type="button" id="notifDrawerHelpBtn" class="btn notif-icon-circle-btn" title="دليل الإشعارات وإعدادات النظام" aria-label="دليل التنبيهات">
             <i class="bi bi-question-circle"></i>
           </button>
           <button type="button" class="btn notif-icon-circle-btn notif-close-circle" data-bs-dismiss="offcanvas" aria-label="إغلاق">
@@ -3893,12 +3893,62 @@
 
         var openTroubleshootModal = function () {
           var modalEl = document.getElementById('desktopNotifTroubleshootModal');
-          if (modalEl && typeof bootstrap !== 'undefined') {
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          if (!modalEl) return;
+
+          // Ensure modal is attached directly to document.body
+          if (modalEl.parentElement !== document.body) {
+            document.body.appendChild(modalEl);
+          }
+
+          var offEl = document.getElementById('notifOffcanvas');
+          var wasOffcanvasOpen = offEl && offEl.classList.contains('show');
+
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var modalInst = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            if (wasOffcanvasOpen && bootstrap.Offcanvas) {
+              var offInst = bootstrap.Offcanvas.getInstance(offEl);
+              if (offInst) {
+                offInst.hide();
+                modalEl.addEventListener('hidden.bs.modal', function onModalClosed() {
+                  try {
+                    bootstrap.Offcanvas.getOrCreateInstance(offEl).show();
+                  } catch (e) {}
+                }, { once: true });
+              }
+            }
+
+            modalInst.show();
           } else {
             alert('تم حظر إذن الإشعارات بالمتصفح. لتفعيلها: انقر على أيقونة الأمان (القفل) 🔒 بجوار عنوان الموقع ثم اختر "السماح بالإشعارات" (Allow).');
           }
         };
+
+        var notifDrawerHelpBtn = document.getElementById('notifDrawerHelpBtn');
+        if (notifDrawerHelpBtn) {
+          notifDrawerHelpBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openTroubleshootModal();
+          });
+        }
+
+        document.querySelectorAll('[data-bs-target="#desktopNotifTroubleshootModal"]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openTroubleshootModal();
+          });
+        });
+
+        // Enable tab switching in troubleshoot modal
+        document.querySelectorAll('#notifHelpTab button[data-bs-toggle]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+              bootstrap.Tab.getOrCreateInstance(btn).show();
+            }
+          });
+        });
 
         var requestDesktopPermission = function (onSuccess) {
           if (!('Notification' in window)) {
@@ -4900,6 +4950,7 @@
                   @include('dashboard.partials.app_launcher')
               </div>
           </div>
+      </div>
   </div>
 
   {{-- شريط عائم لتفعيل إشعارات سطح المكتب (Mac & Windows) --}}
