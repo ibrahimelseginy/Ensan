@@ -41,6 +41,33 @@
     .month-pill-checkbox input[type="checkbox"] {
       display: none;
     }
+
+    /* Donor type toggle buttons active state: pure white text and icon */
+    .btn-check:checked + label[for="donorTypeNew"],
+    .btn-check:checked + .btn-outline-success,
+    #donorTypeNew:checked + label {
+      background-color: #10b981 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
+    }
+    .btn-check:checked + label[for="donorTypeNew"] *,
+    .btn-check:checked + .btn-outline-success *,
+    #donorTypeNew:checked + label * {
+      color: #ffffff !important;
+    }
+
+    .btn-check:checked + label[for="donorTypeRegistered"],
+    .btn-check:checked + .btn-outline-primary,
+    #donorTypeRegistered:checked + label {
+      background-color: #0d6efd !important;
+      border-color: #0b5ed7 !important;
+      color: #ffffff !important;
+    }
+    .btn-check:checked + label[for="donorTypeRegistered"] *,
+    .btn-check:checked + .btn-outline-primary *,
+    #donorTypeRegistered:checked + label * {
+      color: #ffffff !important;
+    }
   </style>
 @endsection
 

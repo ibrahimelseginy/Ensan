@@ -476,6 +476,37 @@
           color: white !important;
       }
 
+      .btn-check:checked + .btn-outline-success,
+      .btn-check:checked + .btn-success,
+      .btn-outline-success:active,
+      .btn-outline-success.active {
+          background-color: var(--success, #10b981) !important;
+          border-color: var(--success, #10b981) !important;
+          color: #ffffff !important;
+      }
+      .btn-check:checked + .btn-outline-success *,
+      .btn-check:checked + .btn-success *,
+      .btn-outline-success:active *,
+      .btn-outline-success.active * {
+          color: #ffffff !important;
+      }
+
+      .btn-check:checked + .btn-outline-primary,
+      .btn-check:checked + .btn-primary,
+      .btn-outline-primary:active,
+      .btn-outline-primary.active {
+          background-color: var(--primary) !important;
+          border-color: var(--primary) !important;
+          color: #ffffff !important;
+      }
+      .btn-check:checked + .btn-outline-primary *,
+      .btn-check:checked + .btn-primary *,
+      .btn-outline-primary:active *,
+      .btn-outline-primary.active * {
+          color: #ffffff !important;
+      }
+
+
       .btn-secondary {
           background-color: #F3F4F6 !important;
           border-color: #E5E7EB !important;
