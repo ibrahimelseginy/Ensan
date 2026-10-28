@@ -1405,6 +1405,13 @@
             transform: scale(1.08);
         }
 
+        #desktopNotifTroubleshootModal {
+            z-index: 1090 !important;
+        }
+        #desktopNotifTroubleshootModal .modal-dialog {
+            z-index: 1091 !important;
+        }
+
         .notif-toolbar-card {
             border-radius: 14px;
             padding: 10px;
@@ -3463,7 +3470,14 @@
           <button type="button" id="testNotifSoundBtn" class="btn notif-icon-circle-btn" title="تجربة صوت التنبيه وإشعار سطح المكتب" aria-label="تجربة التنبيه">
             <i class="bi bi-volume-up-fill"></i>
           </button>
-          <button type="button" id="notifDrawerHelpBtn" class="btn notif-icon-circle-btn" title="دليل الإشعارات وإعدادات النظام" aria-label="دليل التنبيهات">
+          <button type="button" 
+                  id="notifDrawerHelpBtn" 
+                  class="btn notif-icon-circle-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#desktopNotifTroubleshootModal" 
+                  onclick="if(window.openTroubleshootModal){window.openTroubleshootModal(event);}" 
+                  title="دليل الإشعارات وإعدادات النظام" 
+                  aria-label="دليل التنبيهات">
             <i class="bi bi-question-circle"></i>
           </button>
           <button type="button" class="btn notif-icon-circle-btn notif-close-circle" data-bs-dismiss="offcanvas" aria-label="إغلاق">
@@ -3891,7 +3905,10 @@
           return null;
         };
 
-        var openTroubleshootModal = function () {
+        var openTroubleshootModal = function (e) {
+          if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+          }
           var modalEl = document.getElementById('desktopNotifTroubleshootModal');
           if (!modalEl) return;
 
@@ -3900,54 +3917,105 @@
             document.body.appendChild(modalEl);
           }
 
-          var offEl = document.getElementById('notifOffcanvas');
-          var wasOffcanvasOpen = offEl && offEl.classList.contains('show');
+          modalEl.style.zIndex = '1090';
 
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             var modalInst = bootstrap.Modal.getOrCreateInstance(modalEl);
-
-            if (wasOffcanvasOpen && bootstrap.Offcanvas) {
-              var offInst = bootstrap.Offcanvas.getInstance(offEl);
-              if (offInst) {
-                offInst.hide();
-                modalEl.addEventListener('hidden.bs.modal', function onModalClosed() {
-                  try {
-                    bootstrap.Offcanvas.getOrCreateInstance(offEl).show();
-                  } catch (e) {}
-                }, { once: true });
-              }
-            }
-
             modalInst.show();
+          } else if (window.jQuery && typeof window.jQuery.fn.modal === 'function') {
+            window.jQuery(modalEl).modal('show');
           } else {
-            alert('تم حظر إذن الإشعارات بالمتصفح. لتفعيلها: انقر على أيقونة الأمان (القفل) 🔒 بجوار عنوان الموقع ثم اختر "السماح بالإشعارات" (Allow).');
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.removeAttribute('aria-hidden');
+            modalEl.setAttribute('aria-modal', 'true');
+            var customBd = document.querySelector('.notif-custom-modal-backdrop');
+            if (!customBd) {
+              customBd = document.createElement('div');
+              customBd.className = 'modal-backdrop fade show notif-custom-modal-backdrop';
+              customBd.style.zIndex = '1085';
+              document.body.appendChild(customBd);
+              customBd.addEventListener('click', function () {
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                customBd.remove();
+              });
+            }
           }
         };
+        window.openTroubleshootModal = openTroubleshootModal;
+
+        var troubleshootModalEl = document.getElementById('desktopNotifTroubleshootModal');
+        if (troubleshootModalEl) {
+          troubleshootModalEl.addEventListener('show.bs.modal', function () {
+            troubleshootModalEl.style.zIndex = '1090';
+            setTimeout(function () {
+              var backdrops = document.querySelectorAll('.modal-backdrop');
+              if (backdrops.length > 0) {
+                backdrops[backdrops.length - 1].style.zIndex = '1085';
+              }
+            }, 15);
+          });
+
+          troubleshootModalEl.addEventListener('hidden.bs.modal', function () {
+            var offEl = document.getElementById('notifOffcanvas');
+            if (offEl && offEl.classList.contains('show')) {
+              document.body.classList.add('modal-open');
+              document.body.style.overflow = 'hidden';
+            }
+            var customBd = document.querySelector('.notif-custom-modal-backdrop');
+            if (customBd) customBd.remove();
+          });
+        }
 
         var notifDrawerHelpBtn = document.getElementById('notifDrawerHelpBtn');
         if (notifDrawerHelpBtn) {
           notifDrawerHelpBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            e.stopPropagation();
-            openTroubleshootModal();
+            openTroubleshootModal(e);
           });
         }
 
         document.querySelectorAll('[data-bs-target="#desktopNotifTroubleshootModal"]').forEach(function (btn) {
           btn.addEventListener('click', function (e) {
             e.preventDefault();
-            e.stopPropagation();
-            openTroubleshootModal();
+            openTroubleshootModal(e);
           });
         });
 
-        // Enable tab switching in troubleshoot modal
-        document.querySelectorAll('#notifHelpTab button[data-bs-toggle]').forEach(function(btn) {
-          btn.addEventListener('click', function(e) {
+        // Fail-safe delegation for help button and tabs
+        document.addEventListener('click', function (e) {
+          var helpBtn = e.target.closest('#notifDrawerHelpBtn') || e.target.closest('[data-bs-target="#desktopNotifTroubleshootModal"]');
+          if (helpBtn) {
+            e.preventDefault();
+            openTroubleshootModal(e);
+            return;
+          }
+
+          var tabBtn = e.target.closest('#notifHelpTab button[data-bs-toggle="pill"], #notifHelpTab button[data-bs-toggle="tab"]');
+          if (tabBtn) {
+            e.preventDefault();
             if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-              bootstrap.Tab.getOrCreateInstance(btn).show();
+              bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+            } else {
+              var targetSelector = tabBtn.getAttribute('data-bs-target');
+              if (targetSelector) {
+                document.querySelectorAll('#notifHelpTab button').forEach(function(b) {
+                  b.classList.remove('active');
+                  b.setAttribute('aria-selected', 'false');
+                });
+                document.querySelectorAll('#notifHelpTabContent .tab-pane').forEach(function(p) {
+                  p.classList.remove('show', 'active');
+                });
+                tabBtn.classList.add('active');
+                tabBtn.setAttribute('aria-selected', 'true');
+                var targetPane = document.querySelector(targetSelector);
+                if (targetPane) {
+                  targetPane.classList.add('show', 'active');
+                }
+              }
             }
-          });
+          }
         });
 
         var requestDesktopPermission = function (onSuccess) {
@@ -4975,7 +5043,7 @@
   </div>
 
   {{-- دليل تفعيل وحل مشاكل إشعارات سطح المكتب (Mac & Windows) --}}
-  <div class="modal fade" id="desktopNotifTroubleshootModal" tabindex="-1" aria-labelledby="desktopNotifTroubleshootModalLabel" aria-hidden="true" style="z-index: 1065;">
+  <div class="modal fade" id="desktopNotifTroubleshootModal" tabindex="-1" aria-labelledby="desktopNotifTroubleshootModalLabel" aria-hidden="true" style="z-index: 1090 !important;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden">
         <div class="modal-header py-3 px-4 bg-light border-bottom">
