@@ -222,11 +222,8 @@
     </div>
     <div class="d-flex align-items-center gap-2">
         <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#inKindDonationsFeed', {title: 'كشف التبرعات العينية والمخزون المورد'}) : window.print()">
-            <i class="bi bi-printer me-1"></i> طباعة الكشف
+            <i class="bi bi-printer me-1"></i> معاينة الكشف
         </button>
-        <a href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'in_kind'])) }}" data-no-loader download class="btn btn-sm btn-outline-light rounded-pill px-3">
-            <i class="bi bi-download me-1"></i> تصدير CSV
-        </a>
     </div>
 </div>
 
@@ -428,6 +425,16 @@
                             @if($d->project)
                                 <span>•</span>
                                 <span class="text-muted"><i class="bi bi-folder2 me-1"></i>{{ $d->project->name }}</span>
+                            @endif
+                            @php
+                                $recordedUser = $d->createdBy ?? $d->user;
+                            @endphp
+                            @if($recordedUser)
+                                <span>•</span>
+                                <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning border-opacity-25 rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size: 0.75rem; font-weight: 600;" title="المستخدم الذي قام بتسجيل التبرع">
+                                    <i class="bi bi-person-check-fill"></i>
+                                    <span>تسجيل: {{ $recordedUser->name }}</span>
+                                </span>
                             @endif
                         </div>
                     </div>

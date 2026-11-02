@@ -24,22 +24,77 @@ final readonly class BeneficiaryRepository
         $hasPhone       = $filters['has_phone'] ?? null;
         $hasAttachments = $filters['has_attachments'] ?? null;
         $addressLike    = $filters['address_like'] ?? null;
+        $codeYear       = $filters['code_year'] ?? null;
         $sort           = $filters['sort'] ?? 'id';
         $dir            = $filters['dir'] ?? 'desc';
 
         return Beneficiary::query()
-            ->with(['project', 'campaign', 'creator', 'updater', 'familyMembers' => fn ($query) => $query->where('active', true)])
+            ->with(['project', 'campaign', 'creator', 'updater', 'patientProfile', 'familyMembers' => fn ($query) => $query->where('active', true)])
             ->withCount('attachments')
+            ->when($codeYear, function ($qr) use ($codeYear) {
+                $cy = trim((string) $codeYear);
+                $cy = str_replace(
+                    ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    $cy
+                );
+                if (preg_match('/^(?:19|20)?(\d{2})$/', $cy, $m)) {
+                    $yr = $m[1];
+                    $qr->where(function ($w) use ($yr) {
+                        $w->where('code', 'like', $yr . '%')
+                          ->orWhere('code', 'like', 'G-' . $yr . '%')
+                          ->orWhere('patient_code', 'like', $yr . '%')
+                          ->orWhereHas('familyMembers', fn ($members) => $members->where('code', 'like', $yr . '%'));
+                    });
+                }
+            })
             ->when($q, function ($qr) use ($q) {
-                $qr->where(function ($w) use ($q) {
-                    $w->where('full_name', 'like', '%' . $q . '%')
-                      ->orWhere('code', 'like', '%' . $q . '%')
-                      ->orWhere('phone', 'like', '%' . $q . '%')
-                      ->orWhere('national_id', 'like', '%' . $q . '%')
-                      ->orWhere('visa_card_number', 'like', '%' . $q . '%')
+                $rawQ = trim((string) $q);
+                $cleanQ = str_replace(
+                    ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    $rawQ
+                );
+
+                // إذا كان البحث برقمين فقط (مثل 26 أو 25 أو 24) -> تصفية بسنة الدخول (أول رقمين من الكود)
+                if (preg_match('/^\d{2}$/', $cleanQ)) {
+                    $qr->where(function ($w) use ($cleanQ, $rawQ) {
+                        $w->where('code', 'like', $cleanQ . '%')
+                          ->orWhere('code', 'like', 'G-' . $cleanQ . '%')
+                          ->orWhere('patient_code', 'like', $cleanQ . '%')
+                          ->orWhereHas('familyMembers', fn ($members) => $members->where('code', 'like', $cleanQ . '%'))
+                          ->orWhere('full_name', 'like', '%' . $rawQ . '%');
+                    });
+                    return;
+                }
+
+                // إذا كتب السنة كاملة 4 أرقام (مثل 2026 أو 2025)
+                if (preg_match('/^(?:19|20)(\d{2})$/', $cleanQ, $matches)) {
+                    $yr = $matches[1];
+                    $qr->where(function ($w) use ($yr, $cleanQ, $rawQ) {
+                        $w->where('code', 'like', $yr . '%')
+                          ->orWhere('code', 'like', 'G-' . $yr . '%')
+                          ->orWhere('code', 'like', '%' . $cleanQ . '%')
+                          ->orWhere('patient_code', 'like', $yr . '%')
+                          ->orWhereHas('familyMembers', fn ($members) => $members->where('code', 'like', $yr . '%'))
+                          ->orWhere('full_name', 'like', '%' . $rawQ . '%');
+                    });
+                    return;
+                }
+
+                // البحث الشامل العادي بالاسم، الكود، الهاتف، أو الرقم القومي
+                $qr->where(function ($w) use ($cleanQ, $rawQ) {
+                    $w->where('full_name', 'like', '%' . $rawQ . '%')
+                      ->orWhere('code', 'like', '%' . $cleanQ . '%')
+                      ->orWhere('phone', 'like', '%' . $cleanQ . '%')
+                      ->orWhere('national_id', 'like', '%' . $cleanQ . '%')
+                      ->orWhere('visa_card_number', 'like', '%' . $cleanQ . '%')
+                      ->orWhere('patient_code', 'like', '%' . $cleanQ . '%')
+                      ->orWhere('patient_name', 'like', '%' . $rawQ . '%')
+                      ->orWhere('guardian_name', 'like', '%' . $rawQ . '%')
                       ->orWhereHas('familyMembers', fn ($members) => $members
-                          ->where('full_name', 'like', '%' . $q . '%')
-                          ->orWhere('code', 'like', '%' . $q . '%'));
+                          ->where('full_name', 'like', '%' . $rawQ . '%')
+                          ->orWhere('code', 'like', '%' . $cleanQ . '%'));
                 });
             })
             ->when($status, fn($qr) => $qr->where('status', $status))
@@ -52,9 +107,22 @@ final readonly class BeneficiaryRepository
             ->when(!$dateFrom && $dateTo, fn($qr) => $qr->whereDate('created_at', '<=', $dateTo))
             ->when($hasPhone == '1', fn($qr) => $qr->whereNotNull('phone')->where('phone', '<>', ''))
             ->when($addressLike, fn($qr) => $qr->where('address', 'like', '%' . $addressLike . '%'))
-            ->when($hasAttachments == '1', fn($qr) => $qr->having('attachments_count', '>', 0))
+            ->when($hasAttachments == '1', function ($qr) {
+                $qr->where(function ($w) {
+                    $w->has('attachments')
+                      ->orWhereHas('patientProfile', function ($p) {
+                          $p->whereNotNull('patient_id_front_path')
+                            ->orWhereNotNull('patient_id_back_path')
+                            ->orWhereNotNull('companion_id_front_path')
+                            ->orWhereNotNull('companion_id_back_path')
+                            ->orWhereNotNull('followup_card_path')
+                            ->orWhereNotNull('referral_letter_path');
+                      });
+                });
+            })
             ->orderBy($sort, $dir)
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function findById(int $id): ?Beneficiary
@@ -80,11 +148,16 @@ final readonly class BeneficiaryRepository
     public function getDuplicates(Beneficiary $beneficiary): array
     {
         $duplicates = [];
-        if (!empty($beneficiary->phone)) {
-            $duplicates['phone'] = Beneficiary::where('phone', $beneficiary->phone)->where('id', '<>', $beneficiary->id)->count() > 0;
+        $phone = trim((string)$beneficiary->phone);
+        $invalidPhoneValues = ['-', '--', '—', 'لا يوجد', 'لايوجد', 'بدون', '0', '00000000000', '0000000000', 'none', 'null'];
+        if ($phone !== '' && strlen($phone) >= 7 && !in_array($phone, $invalidPhoneValues, true) && preg_match('/\d{7,}/', $phone)) {
+            $duplicates['phone'] = Beneficiary::where('phone', $phone)->where('id', '<>', $beneficiary->id)->count() > 0;
         }
-        if (!empty($beneficiary->national_id)) {
-            $duplicates['national_id'] = Beneficiary::where('national_id', $beneficiary->national_id)->where('id', '<>', $beneficiary->id)->count() > 0;
+
+        $nid = trim((string)$beneficiary->national_id);
+        $invalidNidValues = ['-', '--', '—', 'لا يوجد', 'لايوجد', 'بدون', '0', '00000000000000', 'none', 'null'];
+        if ($nid !== '' && strlen($nid) === 14 && !in_array($nid, $invalidNidValues, true) && ctype_digit($nid)) {
+            $duplicates['national_id'] = Beneficiary::where('national_id', $nid)->where('id', '<>', $beneficiary->id)->count() > 0;
         }
         return $duplicates;
     }
@@ -115,6 +188,8 @@ final readonly class BeneficiaryRepository
             ->select('phone')
             ->whereNotNull('phone')
             ->where('phone', '<>', '')
+            ->whereRaw("LENGTH(TRIM(phone)) >= 7")
+            ->whereNotIn('phone', ['-', '--', '—', 'لا يوجد', 'لايوجد', 'بدون', '0', '00000000000', '0000000000', 'none', 'null'])
             ->groupBy('phone')
             ->havingRaw('COUNT(*) > 1')
             ->pluck('phone')
@@ -127,6 +202,8 @@ final readonly class BeneficiaryRepository
             ->select('national_id')
             ->whereNotNull('national_id')
             ->where('national_id', '<>', '')
+            ->whereRaw("LENGTH(TRIM(national_id)) = 14")
+            ->whereNotIn('national_id', ['-', '--', '—', 'لا يوجد', 'لايوجد', 'بدون', '0', '00000000000000', 'none', 'null'])
             ->groupBy('national_id')
             ->havingRaw('COUNT(*) > 1')
             ->pluck('national_id')

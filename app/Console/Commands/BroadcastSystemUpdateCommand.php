@@ -22,7 +22,7 @@ class BroadcastSystemUpdateCommand extends Command
      *
      * @var string
      */
-    protected $description = 'إرسال إشعار للموظفين بتحديث النظام في الجزء الخاص بهم فقط بتوقيع مهندس إبراهيم';
+    protected $description = 'إرسال إشعار للموظفين بتحديث النظام في الجزء الخاص بهم فقط بتوقيع مهندس إبراهيم السجيني';
 
     /**
      * Execute the console command.
@@ -39,7 +39,7 @@ class BroadcastSystemUpdateCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("جاري إرسال إشعار التحديث الخاص بـ [{$module}] بتوقيع: مهندس إبراهيم 🛠️ ...");
+        $this->info("جاري إرسال إشعار التحديث الخاص بـ [{$module}] بتوقيع: مهندس إبراهيم السجيني 🛠️ ...");
 
         $res = $service->broadcastUpdate($module, $details, $title);
 

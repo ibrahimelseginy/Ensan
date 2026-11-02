@@ -236,12 +236,34 @@ final class ReportsWebController extends Controller
             });
         }
         if (!empty($q)) {
-            $beneficiariesBase->where(function ($w) use ($q) {
-                $w->where('full_name', 'like', "%{$q}%")
-                  ->orWhere('code', 'like', "%{$q}%")
-                  ->orWhere('national_id', 'like', "%{$q}%")
-                  ->orWhere('phone', 'like', "%{$q}%");
-            });
+            $cleanQ = str_replace(
+                ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+                ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                $q
+            );
+
+            if (preg_match('/^\d{2}$/', $cleanQ)) {
+                $beneficiariesBase->where(function ($w) use ($cleanQ, $q) {
+                    $w->where('code', 'like', "{$cleanQ}%")
+                      ->orWhere('code', 'like', "G-{$cleanQ}%")
+                      ->orWhere('full_name', 'like', "%{$q}%");
+                });
+            } elseif (preg_match('/^(?:19|20)(\d{2})$/', $cleanQ, $matches)) {
+                $yr = $matches[1];
+                $beneficiariesBase->where(function ($w) use ($yr, $cleanQ, $q) {
+                    $w->where('code', 'like', "{$yr}%")
+                      ->orWhere('code', 'like', "G-{$yr}%")
+                      ->orWhere('code', 'like', "%{$cleanQ}%")
+                      ->orWhere('full_name', 'like', "%{$q}%");
+                });
+            } else {
+                $beneficiariesBase->where(function ($w) use ($q, $cleanQ) {
+                    $w->where('full_name', 'like', "%{$q}%")
+                      ->orWhere('code', 'like', "%{$cleanQ}%")
+                      ->orWhere('national_id', 'like', "%{$cleanQ}%")
+                      ->orWhere('phone', 'like', "%{$cleanQ}%");
+                });
+            }
         }
 
         $beneficiariesTotal = (int) (clone $beneficiariesBase)->count();

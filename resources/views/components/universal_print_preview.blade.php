@@ -356,9 +356,8 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-start" style="line-height: 1.4;">
                                     <div class="small fw-bold" style="color: #475569 !important;">جمهورية مصر العربية</div>
-                                    <div class="small fw-bold" style="color: #475569 !important;">وزارة التضامن الاجتماعي</div>
                                     <div class="fw-bolder fs-6" style="color: #0f172a !important;">مؤسسة إنسان الخيرية</div>
-                                    <div style="font-size: 0.72rem; color: #64748b !important;">مشهرة برقم رسمي للعمل التنموي والخيري</div>
+                                    <div class="fw-bold" style="font-size: 0.78rem; color: #475569 !important;">المشهرة برقم 63 لسنة 2017م</div>
                                 </div>
                                 <div class="text-center">
                                     <img src="{{ asset('images/heart-icon.png') }}" alt="شعار إنسان" style="height: 48px; width: auto;" onerror="this.style.display='none'">

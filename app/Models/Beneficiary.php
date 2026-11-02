@@ -253,6 +253,18 @@ final class Beneficiary extends Model
         return $this->hasMany(GuestHouseStay::class);
     }
 
+    public function getIsGuestHouseCaseAttribute(): bool
+    {
+        return !empty($this->guest_house_id)
+            || str_starts_with((string) $this->code, 'G-')
+            || $this->relationLoaded('patientProfile') ? $this->patientProfile !== null : $this->patientProfile()->exists();
+    }
+
+    public function getGuestHouseDocumentsCountAttribute(): int
+    {
+        return $this->patientProfile?->uploaded_documents_count ?? 0;
+    }
+
     public function allocatedBeneficiaries(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -266,6 +278,35 @@ final class Beneficiary extends Model
     public function sponsors(): BelongsToMany
     {
         return $this->belongsToMany(Donor::class, 'beneficiary_sponsors')->withTimestamps();
+    }
+
+    /**
+     * إجمالي مبالغ كفالات أفراد الأسرة (الأطفال المكفولين)
+     * بحيث يُجمع مجموع كفالات الأطفال تلقائياً في إجمالي كفالة الأسرة.
+     */
+    public function getTotalFamilySponsorshipAmountAttribute(): float
+    {
+        $membersSum = (float) $this->familyMembers
+            ->where('active', true)
+            ->whereNotNull('sponsorship_amount')
+            ->sum(fn ($m) => (float) $m->sponsorship_amount);
+
+        if ($membersSum > 0) {
+            return $membersSum;
+        }
+
+        return (float) ($this->monthly_sponsorship_amount ?? 0);
+    }
+
+    /**
+     * عدد الأطفال / الأفراد المكفولين فعلياً في الأسرة
+     */
+    public function getSponsoredChildrenCountCalculatedAttribute(): int
+    {
+        return $this->familyMembers
+            ->where('active', true)
+            ->filter(fn ($m) => ($m->sponsorship_amount && (float)$m->sponsorship_amount > 0) || $m->sponsors->isNotEmpty())
+            ->count();
     }
 
     public function donations(): HasMany

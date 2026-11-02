@@ -142,6 +142,75 @@
                 </div>
               </div>
 
+              <div class="col-md-6">
+                <div class="info-row">
+                  <span class="info-label">مسجّل التبرع</span>
+                  <span class="info-value">
+                    @php
+                      $recordedUser = $donation->createdBy ?? $donation->user;
+                    @endphp
+                    @if($recordedUser)
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                        <i class="bi bi-person-check me-1"></i>{{ $recordedUser->name }}
+                      </span>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </span>
+                </div>
+              </div>
+
+              @if(!empty($donation->split_allocations) && count($donation->split_allocations) > 0)
+                <div class="col-md-12">
+                  <div class="p-3 rounded-3 bg-white bg-opacity-75 border border-success border-opacity-35 shadow-sm mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                      <span class="info-label text-success fw-bold fs-6">
+                        <i class="bi bi-pie-chart-fill me-1"></i> تفاصيل توزيع مبالغ التبرع على الجهات وبنود الإيصال ({{ count($donation->split_allocations) }})
+                      </span>
+                      <span class="badge bg-success font-monospace px-2.5 py-1">إجمالي الموزع: {{ number_format(collect($donation->split_allocations)->sum('amount'), 2) }} {{ $donation->currency ?: 'ج.م' }}</span>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width: 140px;">نوع التخصيص</th>
+                            <th>الجهة المحددة</th>
+                            <th style="width: 150px;">بند الإيصال</th>
+                            <th class="text-center" style="width: 140px;">المبلغ المخصص</th>
+                            <th>ملاحظات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @foreach($donation->split_allocations as $sp)
+                            <tr>
+                              <td>
+                                <span class="badge {{ match($sp['type'] ?? '') { 'campaign' => 'bg-primary-subtle text-primary border border-primary-subtle', 'guest_house' => 'bg-info-subtle text-info border border-info-subtle', 'project' => 'bg-warning-subtle text-dark border border-warning-subtle', 'beneficiary' => 'bg-success-subtle text-success border border-success-subtle', default => 'bg-secondary-subtle text-dark' } }} px-2 py-1">
+                                  {{ $sp['type_label'] ?? 'عام' }}
+                                </span>
+                              </td>
+                              <td class="fw-bold">
+                                {{ $sp['target_name'] ?? '—' }}
+                              </td>
+                              <td>
+                                <span class="small fw-semibold text-muted">
+                                  {{ match($sp['purpose'] ?? '') { 'kafalat_aytam' => 'كفالات أيتام', 'kafalat_awram' => 'كفالات أورام', 'sadaqat' => 'صدقات', 'zakat_maal' => 'زكاة مال', 'sadaqa_jariya' => 'صدقات جارية', default => ($sp['purpose'] ?? '—') } }}
+                                </span>
+                              </td>
+                              <td class="text-center fw-bold text-success font-monospace fs-6">
+                                {{ number_format((float)($sp['amount'] ?? 0), 2) }} ج.م
+                              </td>
+                              <td class="text-muted small">
+                                {{ $sp['notes'] ?? '—' }}
+                              </td>
+                            </tr>
+                          @endforeach
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              @endif
+
               @if(!empty($donation->beneficiary_allocations) && count($donation->beneficiary_allocations) > 0)
                 <div class="col-md-12">
                   <div class="p-3 rounded-3 bg-white bg-opacity-75 border border-success border-opacity-35 shadow-sm">

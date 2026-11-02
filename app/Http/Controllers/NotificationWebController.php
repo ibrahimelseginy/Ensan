@@ -665,7 +665,7 @@ final class NotificationWebController extends Controller
         $moduleName = $res['module_name'] ?? 'النظام';
         $count = $res['notified_count'] ?? 0;
 
-        return back()->with('success', "تم إرسال إشعار التحديث بنجاح إلى {$count} موظف معني في ({$moduleName}) بتوقيع مهندس إبراهيم 🛠️");
+        return back()->with('success', "تم إرسال إشعار التحديث بنجاح إلى {$count} موظف معني في ({$moduleName}) بتوقيع مهندس إبراهيم السجيني 🛠️");
     }
 
     public function storeTargeted(Request $request)

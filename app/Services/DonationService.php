@@ -72,6 +72,92 @@ final readonly class DonationService
             $data['sponsorship_beneficiary_id']
         );
 
+        // Process Split Allocations (Projects, Campaigns, Guest Houses, Beneficiaries, General)
+        if (!empty($data['split_allocations']) && is_array($data['split_allocations'])) {
+            $formattedSplits = [];
+            $splitBenAllocations = [];
+            $firstProjectId = null;
+            $firstCampaignId = null;
+            $firstGuestHouseId = null;
+
+            foreach ($data['split_allocations'] as $split) {
+                $type = $split['type'] ?? 'general';
+                $amt = !empty($split['amount']) ? (float)$split['amount'] : 0;
+                if ($amt <= 0) continue;
+
+                $targetId = !empty($split['target_id']) ? (int)$split['target_id'] : null;
+                $purpose = !empty($split['purpose']) ? (string)$split['purpose'] : ($data['purpose'] ?? null);
+                $notes = !empty($split['notes']) ? (string)$split['notes'] : null;
+
+                $targetName = null;
+                $typeLabel = match ($type) {
+                    'project'     => 'مشروع',
+                    'campaign'    => 'حملة نشطة',
+                    'guest_house' => 'دار ضيافة',
+                    'beneficiary' => 'حالة مستفيدة',
+                    default       => 'عام / غير مخصص'
+                };
+
+                if ($type === 'project' && $targetId) {
+                    $proj = \App\Models\Project::find($targetId);
+                    $targetName = $proj?->name ?? ('مشروع #' . $targetId);
+                    if (!$firstProjectId) $firstProjectId = $targetId;
+                } elseif ($type === 'campaign' && $targetId) {
+                    $camp = \App\Models\Campaign::find($targetId);
+                    $targetName = $camp?->name ?? ('حملة #' . $targetId);
+                    if (!$firstCampaignId) $firstCampaignId = $targetId;
+                } elseif ($type === 'guest_house' && $targetId) {
+                    $gh = \App\Models\GuestHouse::find($targetId);
+                    $targetName = $gh?->name ?? ('دار ضيافة #' . $targetId);
+                    if (!$firstGuestHouseId) $firstGuestHouseId = $targetId;
+                } elseif ($type === 'beneficiary' && $targetId) {
+                    $ben = Beneficiary::find($targetId);
+                    $targetName = $ben?->full_name ?? ('مستفيد #' . $targetId);
+                    $splitBenAllocations[] = [
+                        'beneficiary_id' => $targetId,
+                        'name'           => $ben?->full_name,
+                        'code'           => $ben?->code ?? ('BEN-' . $targetId),
+                        'phone'          => $ben?->phone,
+                        'amount'         => $amt,
+                        'notes'          => $notes,
+                    ];
+                }
+
+                $formattedSplits[] = [
+                    'type'        => $type,
+                    'type_label'  => $typeLabel,
+                    'target_id'   => $targetId,
+                    'target_name' => $targetName,
+                    'purpose'     => $purpose,
+                    'amount'      => $amt,
+                    'notes'       => $notes,
+                ];
+            }
+
+            if (!empty($formattedSplits)) {
+                $data['split_allocations'] = $formattedSplits;
+
+                if (empty($data['project_id']) && $firstProjectId) {
+                    $data['project_id'] = $firstProjectId;
+                }
+                if (empty($data['campaign_id']) && $firstCampaignId) {
+                    $data['campaign_id'] = $firstCampaignId;
+                }
+                if (empty($data['guest_house_id']) && $firstGuestHouseId) {
+                    $data['guest_house_id'] = $firstGuestHouseId;
+                }
+
+                if (!empty($splitBenAllocations) && empty($data['beneficiary_allocations'])) {
+                    $data['beneficiary_allocations'] = $splitBenAllocations;
+                    if (empty($data['beneficiary_id'])) {
+                        $data['beneficiary_id'] = $splitBenAllocations[0]['beneficiary_id'];
+                    }
+                }
+            } else {
+                $data['split_allocations'] = null;
+            }
+        }
+
         // Process Multi-Beneficiary Allocations
         if (!empty($data['beneficiary_allocations']) && is_array($data['beneficiary_allocations'])) {
             $formattedAllocations = [];
@@ -136,9 +222,14 @@ final readonly class DonationService
         // 2. Handle Allocation Note Magic Strings
         $this->processAllocationNotes($data);
 
-        // 3. Prepare default values
         if (empty($data['received_at'])) {
             $data['received_at'] = now();
+        }
+        if (empty($data['created_by']) && auth()->check()) {
+            $data['created_by'] = auth()->id();
+        }
+        if (empty($data['user_id']) && auth()->check()) {
+            $data['user_id'] = auth()->id();
         }
 
         $executor = function () use ($data, $familyMemberIds) {
@@ -197,7 +288,16 @@ final readonly class DonationService
 
             $this->linkDonationToFamilyMembers($donation, $familyMemberIds);
 
-            if (!empty($donation->campaign_id)) {
+            if (!empty($donation->split_allocations) && is_array($donation->split_allocations)) {
+                foreach ($donation->split_allocations as $split) {
+                    if (($split['type'] ?? '') === 'campaign' && !empty($split['target_id'])) {
+                        $camp = \App\Models\Campaign::find($split['target_id']);
+                        if ($camp) {
+                            $camp->increment('current_amount', (float)($split['amount'] ?? 0));
+                        }
+                    }
+                }
+            } elseif (!empty($donation->campaign_id)) {
                 $campaign = \App\Models\Campaign::find($donation->campaign_id);
                 if ($campaign) {
                     $val = $donation->type === 'cash' ? (float)$donation->amount : (float)$donation->estimated_value;
@@ -252,7 +352,17 @@ final readonly class DonationService
                 $this->treasuryIntegrationService->cancelDonationTransaction($donation, $reason);
             }
 
-            if (!empty($donation->campaign_id)) {
+            if (!empty($donation->split_allocations) && is_array($donation->split_allocations)) {
+                foreach ($donation->split_allocations as $split) {
+                    if (($split['type'] ?? '') === 'campaign' && !empty($split['target_id'])) {
+                        $camp = \App\Models\Campaign::find($split['target_id']);
+                        if ($camp) {
+                            $dec = (float)($split['amount'] ?? 0);
+                            $camp->decrement('current_amount', min((float)$camp->current_amount, $dec));
+                        }
+                    }
+                }
+            } elseif (!empty($donation->campaign_id)) {
                 $campaign = \App\Models\Campaign::find($donation->campaign_id);
                 if ($campaign) {
                     $val = $donation->type === 'cash' ? (float)$donation->amount : (float)$donation->estimated_value;

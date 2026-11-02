@@ -1,9 +1,21 @@
-@if(request()->user()?->hasPermission('beneficiaries.view'))
+@php
+    $currentUser = auth()->user() ?? request()->user();
+    $isGhManager = $currentUser?->hasRole(['admin', 'super_admin', 'manager', 'مدراء دار الضيافه', 'مدير دار الضيافة', 'مدير دار ضيافة كفر الشيخ', 'مدير دار ضيافة طنطا', 'مدير المؤسسة بالكامل', 'إدارة'])
+        || ((int)($guest_house->manager_user_id ?? $guest_house->manager_id ?? 0) === (int)($currentUser?->id ?? 0))
+        || ($currentUser && $currentUser->hasPermission("guest_houses.manage.{$guest_house->id}"))
+        || ($currentUser && $currentUser->hasPermission('manage_guest_house'));
+
+    $canAccessGhBeneficiary = $currentUser?->hasPermission('beneficiaries.view')
+        || $currentUser?->hasPermission('beneficiaries.create')
+        || $currentUser?->hasPermission('guest_houses.view')
+        || $isGhManager;
+@endphp
+@if($canAccessGhBeneficiary)
     @php
         $selectedAllocatedBeneficiaries = array_map('intval', old('allocated_beneficiary_ids', []));
         $selectedSponsors = array_map('intval', old('sponsor_ids', []));
     @endphp
-    <div class="modal fade" id="guestHouseBeneficiaryModal" tabindex="-1" aria-labelledby="guestHouseBeneficiaryModalLabel" aria-hidden="true">
+    <div class="modal fade" id="guestHouseBeneficiaryModal" aria-labelledby="guestHouseBeneficiaryModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <form class="modal-content" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.storeBeneficiary', $guest_house) }}">
                 @csrf
@@ -30,26 +42,63 @@
                     {{-- 1. اختيار نزيل مسجل مسبقاً (لحالات التردد والعودة) --}}
                     <div class="p-3 bg-light rounded-4 border mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-primary fs-6 mb-0">
+                            <label class="form-label fw-bold text-primary fs-6 mb-0" for="beneficiaryQuickSearchInput">
                                 <i class="bi bi-clock-history me-1"></i> هل النزيل مسجل مسبقاً؟ (اختيار حالة مسجلة مسبقاً)
                             </label>
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
                                 <i class="bi bi-search me-1"></i> بحث فوري
                             </span>
                         </div>
-                        <select name="existing_beneficiary_id" id="existingGuestSelect" class="form-select" onchange="handleGuestHouseSelectExisting(this)">
-                            <option value="">— نزيل جديد (تسجيل حالة جديدة لأول مرة) —</option>
-                            @foreach($beneficiaryOptions as $opt)
-                                <option value="{{ $opt->id }}" 
-                                    data-name="{{ $opt->full_name }}" 
-                                    data-code="{{ $opt->code }}" 
-                                    data-nid="{{ $opt->national_id }}" 
-                                    data-phone="{{ $opt->phone }}" 
-                                    data-address="{{ $opt->address }}">
-                                    {{ $opt->full_name }} (كود: {{ $opt->code ?: '—' }} | قومي: {{ $opt->national_id ?: '—' }}@if($opt->phone) | هاتف: {{ $opt->phone }}@endif)
-                                </option>
-                            @endforeach
-                        </select>
+
+                        {{-- Hidden Input for form submission --}}
+                        <input type="hidden" name="existing_beneficiary_id" id="existing_beneficiary_id_val" value="{{ old('existing_beneficiary_id') }}">
+
+                        {{-- Search Input Box --}}
+                        <div class="position-relative" id="beneficiarySearchContainer">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-primary">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" 
+                                       id="beneficiaryQuickSearchInput" 
+                                       class="form-control border-start-0 ps-0" 
+                                       placeholder="اكتب للبحث (اسم المريض، الرقم القومي 14 رقم، الكود، أو الهاتف)..." 
+                                       autocomplete="off"
+                                       style="height: 46px; font-size: 0.95rem;">
+                                <span class="input-group-text bg-white border-start-0" id="searchFeedbackBox" style="min-width: 44px; justify-content: center;">
+                                    <span id="searchSpinner" class="spinner-border spinner-border-sm text-primary d-none" role="status"></span>
+                                    <button type="button" id="clearSearchTextBtn" class="btn btn-sm btn-link text-muted p-0 d-none" title="مسح">
+                                        <i class="bi bi-x-circle-fill fs-6"></i>
+                                    </button>
+                                </span>
+                            </div>
+
+                            {{-- Live Dropdown Results --}}
+                            <div id="beneficiarySearchResultsList" 
+                                 class="position-absolute w-100 bg-white rounded-3 shadow-lg border mt-1 d-none" 
+                                 style="z-index: 1075; max-height: 280px; overflow-y: auto; right: 0; left: 0;">
+                            </div>
+                        </div>
+
+                        {{-- Selected Beneficiary Card (shows when a beneficiary is picked) --}}
+                        <div id="selectedBeneficiaryBanner" class="alert alert-success mt-2 mb-0 p-3 rounded-3 d-none align-items-center justify-content-between flex-wrap gap-2 border-success border-opacity-25" style="background-color: #ecfdf5;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-person-check-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <strong class="text-dark fs-6" id="selectedBenFullName"></strong>
+                                        <span class="badge bg-success font-monospace" id="selectedBenCodeBadge"></span>
+                                    </div>
+                                    <div class="small text-muted mt-1" id="selectedBenMetaText"></div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="resetSelectedBeneficiarySearch()">
+                                <i class="bi bi-x-circle me-1"></i> إلغاء / تسجيل نزيل جديد
+                            </button>
+                        </div>
+
                         <div class="form-text small text-muted mt-2">
                             <i class="bi bi-info-circle me-1"></i> يمكنك البحث بالاسم أو الرقم القومي أو الكود أو رقم الهاتف. عند اختيار مريض يتم استرجاع بياناته تلقائياً.
                         </div>
@@ -299,7 +348,9 @@
 @endif
 
 @php
-    $canAccessGhDonation = request()->user()?->hasPermission('donations.view') || request()->user()?->hasPermission('donations.create') || auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير دار الضيافة', 'مدير المؤسسة بالكامل', 'إدارة']) || ((int)$guest_house->manager_id === (int)auth()->id());
+    $canAccessGhDonation = request()->user()?->hasPermission('donations.view')
+        || request()->user()?->hasPermission('donations.create')
+        || $isGhManager;
 @endphp
 
 @if($canAccessGhDonation)
@@ -457,7 +508,13 @@
     </div>
 @endif
 
-@if(request()->user()?->hasPermission('manage_finance') && request()->user()?->hasPermission('expenses.view'))
+@php
+    $canAccessGhExpense = ((request()->user()?->hasPermission('manage_finance') && request()->user()?->hasPermission('expenses.view'))
+        || request()->user()?->hasPermission('expenses.view')
+        || request()->user()?->hasPermission('expenses.create')
+        || $isGhManager);
+@endphp
+@if($canAccessGhExpense)
     <div class="modal fade" id="guestHouseExpenseModal" tabindex="-1" aria-labelledby="guestHouseExpenseModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <form class="modal-content" method="POST" action="{{ route('guest-houses.storeExpense', $guest_house) }}">

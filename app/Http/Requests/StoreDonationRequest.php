@@ -57,6 +57,12 @@ final class StoreDonationRequest extends FormRequest
             'beneficiary_allocations.*.beneficiary_id' => 'required_with:beneficiary_allocations|exists:beneficiaries,id',
             'beneficiary_allocations.*.amount'         => 'nullable|numeric|min:0',
             'beneficiary_allocations.*.notes'          => 'nullable|string',
+            'split_allocations'        => 'nullable|array',
+            'split_allocations.*.type' => 'required_with:split_allocations|in:project,campaign,guest_house,beneficiary,general',
+            'split_allocations.*.target_id' => 'nullable',
+            'split_allocations.*.purpose'   => 'nullable|string',
+            'split_allocations.*.amount'    => 'required_with:split_allocations|numeric|min:0.01',
+            'split_allocations.*.notes'     => 'nullable|string',
             'beneficiary_ids'          => 'nullable|required_with:sponsorship_kind|array|min:1',
             'beneficiary_ids.*'        => 'nullable|exists:beneficiaries,id',
             'family_member_id'         => [

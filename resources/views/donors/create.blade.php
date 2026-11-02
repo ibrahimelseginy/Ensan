@@ -115,7 +115,7 @@
                     data-placeholder="ابحث باسم الطفل أو كود الحالة..." multiple>
                     @foreach($familyMembers as $member)
                       <option value="{{ $member->id }}" @selected(in_array((int) $member->id, array_map('intval', old('sponsored_family_member_ids', [])), true))>
-                        {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary->full_name }} — {{ $member->code }}
+                        {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary?->full_name ?? 'الأسرة' }} — {{ $member->code }}
                       </option>
                     @endforeach
                   </select>

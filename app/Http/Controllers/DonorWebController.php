@@ -89,8 +89,8 @@ final class DonorWebController extends Controller
     {
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
         $familyMembers = BeneficiaryFamilyMember::query()
-            ->where('active', true)
-            ->where(fn ($query) => $query->where('relationship', 'child')->orWhere('is_patient', true))
+            ->where(fn ($q) => $q->whereNull('active')->orWhere('active', true)->orWhere('active', 1))
+            ->where(fn ($query) => $query->whereIn('relationship', ['child', 'son', 'daughter', 'orphan', 'patient', 'ابن', 'ابنة', 'طفل', 'يتيم', 'مريض'])->orWhere('is_patient', true)->orWhereNull('relationship'))
             ->with('beneficiary')
             ->orderBy('full_name')
             ->get();
@@ -185,8 +185,8 @@ final class DonorWebController extends Controller
         $donor->load(['sponsoredBeneficiaries', 'sponsoredFamilyMembers']);
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
         $familyMembers = BeneficiaryFamilyMember::query()
-            ->where('active', true)
-            ->where(fn ($query) => $query->where('relationship', 'child')->orWhere('is_patient', true))
+            ->where(fn ($q) => $q->whereNull('active')->orWhere('active', true)->orWhere('active', 1))
+            ->where(fn ($query) => $query->whereIn('relationship', ['child', 'son', 'daughter', 'orphan', 'patient', 'ابن', 'ابنة', 'طفل', 'يتيم', 'مريض'])->orWhere('is_patient', true)->orWhereNull('relationship'))
             ->with('beneficiary')
             ->orderBy('full_name')
             ->get();

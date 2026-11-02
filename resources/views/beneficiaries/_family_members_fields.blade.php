@@ -70,15 +70,15 @@
       </div>
       <div class="col-md-3" id="spouseBirthDateCol">
         <label class="form-label">تاريخ الميلاد</label>
-        <input type="date" name="family_members[0][birth_date]" id="spouseBirthDate" class="form-control" value="{{ data_get($familyRows, '0.birth_date') }}" onchange="updateSpouseAge()">
+        <input type="date" name="family_members[0][birth_date]" id="spouseBirthDate" class="form-control" value="{{ data_get($familyRows, '0.birth_date') }}" oninput="updateSpouseAge()" onchange="updateSpouseAge()">
       </div>
       <div class="col-md-3" id="spouseDeathDateCol" style="display:none;">
         <label class="form-label text-danger fw-bold"><i class="bi bi-clock-history me-1"></i> تاريخ الوفاة</label>
-        <input type="date" name="family_members[0][death_date]" id="spouseDeathDate" class="form-control border-danger" value="{{ data_get($familyRows, '0.death_date') }}" onchange="updateSpouseAge()">
+        <input type="date" name="family_members[0][death_date]" id="spouseDeathDate" class="form-control border-danger" value="{{ data_get($familyRows, '0.death_date') }}" oninput="updateSpouseAge()" onchange="updateSpouseAge()">
       </div>
       <div class="col-md-2" id="spouseAgeCol">
         <label class="form-label" id="spouseAgeLabel">العمر</label>
-        <input type="number" min="0" max="120" name="family_members[0][age]" id="spouseAge" class="form-control" value="{{ data_get($familyRows, '0.age') }}" placeholder="تلقائي">
+        <input type="number" min="0" max="120" name="family_members[0][age]" id="spouseAge" class="form-control" value="{{ data_get($familyRows, '0.age') }}" placeholder="تلقائي" oninput="updateSpouseBirthDate()" onchange="updateSpouseBirthDate()">
       </div>
       <div class="col-md-2 spouse-standard-field">
         <label class="form-label">الكود</label>
@@ -121,11 +121,11 @@
             </div>
             <div class="col-md-2">
               <label class="form-label">تاريخ الميلاد</label>
-              <input type="date" name="family_members[{{ $index }}][birth_date]" id="child_birth_{{ $index }}" class="form-control" value="{{ data_get($familyRows, $index . '.birth_date') }}" onchange="calcAge(this.value, null, 'child_age_{{ $index }}')">
+              <input type="date" name="family_members[{{ $index }}][birth_date]" id="child_birth_{{ $index }}" class="form-control" value="{{ data_get($familyRows, $index . '.birth_date') }}" oninput="calcAge(this.value, null, 'child_age_{{ $index }}')" onchange="calcAge(this.value, null, 'child_age_{{ $index }}')">
             </div>
             <div class="col-md-2">
               <label class="form-label">العمر (تلقائي)</label>
-              <input type="number" min="0" max="120" name="family_members[{{ $index }}][age]" id="child_age_{{ $index }}" class="form-control" value="{{ data_get($familyRows, $index . '.age') }}" placeholder="بالسنوات">
+              <input type="number" min="0" max="120" name="family_members[{{ $index }}][age]" id="child_age_{{ $index }}" class="form-control" value="{{ data_get($familyRows, $index . '.age') }}" placeholder="بالسنوات" oninput="calcBirthFromAge(this.value, 'child_birth_{{ $index }}')" onchange="calcBirthFromAge(this.value, 'child_birth_{{ $index }}')">
             </div>
             <div class="col-md-2">
               <label class="form-label">كود الطفل</label>
@@ -167,8 +167,25 @@ function calcAge(birthDateVal, deathDateVal, targetId) {
   }
   if (age >= 0) {
     const target = document.getElementById(targetId);
-    if (target) target.value = age;
+    if (target && target.value != age) target.value = age;
   }
+}
+
+function calcBirthFromAge(ageVal, targetBirthId, deathDateVal) {
+  if (ageVal === '' || ageVal === null || isNaN(ageVal)) return;
+  const age = parseInt(ageVal, 10);
+  if (isNaN(age) || age < 0 || age > 120) return;
+  const target = document.getElementById(targetBirthId);
+  if (!target) return;
+
+  const baseDate = (deathDateVal && !isNaN(new Date(deathDateVal).getTime())) ? new Date(deathDateVal) : new Date();
+  const birthYear = baseDate.getFullYear() - age;
+
+  let monthDay = '01-01';
+  if (target.value && target.value.length === 10) {
+    monthDay = target.value.substring(5);
+  }
+  target.value = `${birthYear}-${monthDay}`;
 }
 
 function updateSpouseAge() {
@@ -176,6 +193,46 @@ function updateSpouseAge() {
   const d = document.getElementById('spouseDeathDate')?.value;
   calcAge(b, d, 'spouseAge');
 }
+
+function updateSpouseBirthDate() {
+  const age = document.getElementById('spouseAge')?.value;
+  const d = document.getElementById('spouseDeathDate')?.value;
+  calcBirthFromAge(age, 'spouseBirthDate', d);
+}
+
+function syncNationalIdToBirthDate(nationalIdVal, targetBirthId, targetAgeId) {
+  if (!nationalIdVal) return;
+  // Convert Arabic/Eastern numbers to Western numbers:
+  let cleaned = String(nationalIdVal).trim()
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  if (cleaned.length !== 14 || !/^\d{14}$/.test(cleaned)) return;
+  
+  const c = parseInt(cleaned.charAt(0), 10);
+  let century = (c === 3) ? 2000 : (c === 2 ? 1900 : null);
+  if (!century) return;
+  
+  const year = century + parseInt(cleaned.substring(1, 3), 10);
+  const month = cleaned.substring(3, 5);
+  const day = cleaned.substring(5, 7);
+  
+  const m = parseInt(month, 10);
+  const d = parseInt(day, 10);
+  if (m < 1 || m > 12 || d < 1 || d > 31) return;
+  
+  const birthDateStr = `${year}-${month}-${day}`;
+  const targetBirth = document.getElementById(targetBirthId);
+  if (targetBirth) {
+    targetBirth.value = birthDateStr;
+    targetBirth.dispatchEvent(new Event('input', { bubbles: true }));
+    targetBirth.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  if (targetAgeId) {
+    calcAge(birthDateStr, null, targetAgeId);
+  }
+}
+window.syncNationalIdToBirthDate = syncNationalIdToBirthDate;
+window.calcAge = calcAge;
+window.calcBirthFromAge = calcBirthFromAge;
 
 function toggleSpouseZadMode(isZad) {
   const title = document.getElementById('spouseCardTitle');

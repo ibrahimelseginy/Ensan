@@ -55,8 +55,11 @@ final class ComplaintTrackingController extends Controller
             ]);
         }
 
-        // Query database
-        $complaint = Complaint::where('tracking_code', $code)->first();
+        // Query database (case-insensitive and tolerant of uppercase/lowercase)
+        $complaint = Complaint::where('tracking_code', $code)
+            ->orWhere('tracking_code', $clean)
+            ->orWhereRaw('LOWER(tracking_code) = ?', [strtolower($clean)])
+            ->first();
 
         // 2. Safe privacy masking for public display
         $maskedPhone = null;

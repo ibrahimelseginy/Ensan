@@ -294,7 +294,7 @@
                 <label class="form-label fw-bold small text-uppercase text-muted">بحث</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="بالاسم/الهاتف/الكود...">
+                    <input name="q" value="{{ $q ?? '' }}" class="form-control border-start-0" placeholder="بالاسم/الهاتف/الكود (أو اكتب 26 لسنة 2026)...">
                 </div>
             </div>
             <div class="col-md-2">
@@ -376,7 +376,14 @@
                     <option value="100" @selected(($perPage ?? 20) == 100)>100</option>
                 </select>
             </div>
-            <div class="col-md-5 d-flex align-items-end gap-2">
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">سنة الكود (سنة الدخول)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar-event text-muted"></i></span>
+                    <input type="text" name="code_year" value="{{ $code_year ?? ($codeYear ?? '') }}" class="form-control border-start-0" placeholder="أول رقمين (مثال: 26 أو 25)" maxlength="4" title="بحث بسنة الدخول من خلال أول رقمين من الكود (مثلاً 26 لسنة 2026)">
+                </div>
+            </div>
+            <div class="col-md-7 d-flex align-items-end gap-2">
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
                 <button class="btn btn-outline-info" type="button" onclick="openBeneficiariesPrintPreview()" title="معاينة الكشف الرسمي قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة الكشف</button>
@@ -395,8 +402,9 @@
         <thead class="table-light">
           <tr>
             <th width="40"><input type="checkbox" onclick="document.querySelectorAll('.row-check').forEach(cb=>cb.checked=this.checked)"></th>
-            <th width="60">#</th>
-            <th>الكود</th>
+            <th width="50" class="text-center">#</th>
+            <th width="110">الكود</th>
+            <th width="75" class="text-center">التصنيف</th>
             <th>اسم ولي الأمر / المستفيد</th>
             <th>الرقم القومي / الفيزا</th>
             <th>الهاتف</th>
@@ -404,16 +412,27 @@
             <th>نوع المساعدة</th>
             <th>المشروع</th>
             <th>تاريخ التسجيل</th>
-            <th width="80">الإجراءات</th>
+            <th width="80" class="text-center">الإجراءات</th>
           </tr>
         </thead>
         <tbody>
           @foreach($beneficiaries as $b)
             <tr>
               <td><input type="checkbox" class="row-check" name="ids[]" value="{{ $b->id }}"></td>
+              <td class="text-center text-muted fw-bold small">{{ method_exists($beneficiaries, 'firstItem') && $beneficiaries->firstItem() ? ($beneficiaries->firstItem() + $loop->index) : $loop->iteration }}</td>
               <td>
-                <span class="badge bg-light text-dark border">{{ $b->code ?? ('BEN-' . $b->id) }}</span>
-                <span class="badge bg-primary text-white ms-1 fw-bold" title="تصنيف الحالة">{{ $b->classification ?? 'A' }}</span>
+                <span class="badge bg-light text-dark border font-monospace">{{ $b->code ?? ('BEN-' . $b->id) }}</span>
+              </td>
+              <td class="text-center">
+                @php
+                  $badgeCls = match($b->classification ?? 'A') {
+                    'A' => 'success',
+                    'B' => 'info',
+                    'C' => 'warning',
+                    default => 'primary'
+                  };
+                @endphp
+                <span class="badge bg-{{ $badgeCls }} text-white fw-bold px-2 py-1" title="تصنيف الحالة">{{ $b->classification ?? 'A' }}</span>
               </td>
               <td>
                 <div class="fw-bold">{{ $b->full_name }}</div>
@@ -458,7 +477,14 @@
                   };
                 @endphp
                 <span class="badge bg-{{ $cls }}">{{ $s_ar }}</span>
-                @php $isDup = ((in_array($b->phone, $dupPhones ?? []) && $b->phone) || (in_array($b->national_id, $dupNids ?? []) && $b->national_id)); @endphp
+                @php 
+                  $cPhone = trim((string)$b->phone);
+                  $cNid = trim((string)$b->national_id);
+                  $invalidPlaceholders = ['', '-', '--', '—', 'لا يوجد', 'لايوجد', 'بدون', '0', '00000000000', 'none', 'null'];
+                  $isPhPhone = in_array($cPhone, $invalidPlaceholders, true) || strlen($cPhone) < 7 || !preg_match('/\d{7,}/', $cPhone);
+                  $isPhNid = in_array($cNid, $invalidPlaceholders, true) || strlen($cNid) !== 14 || !ctype_digit($cNid);
+                  $isDup = ((!$isPhPhone && in_array($b->phone, $dupPhones ?? [], true)) || (!$isPhNid && in_array($b->national_id, $dupNids ?? [], true))); 
+                @endphp
                 @if($isDup)
                   <span class="badge bg-danger">مكرر</span>
                 @endif
@@ -499,7 +525,7 @@
                   <div class="small text-muted" title="آخر تعديل"><i class="bi bi-pencil text-primary me-1"></i>{{ $b->updater->name }}</div>
                 @endif
               </td>
-              <td class="text-end beneficiary-action-cell">
+              <td class="text-center beneficiary-action-cell">
                 @php
                   $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));
                 @endphp
@@ -571,9 +597,12 @@
                         </ul>
                     </div>
                 @endif
-                @if(($b->attachments_count ?? 0) > 0)
-                  <div class="mt-1"><span class="badge bg-info bg-opacity-10 text-info" style="font-size:0.7rem"><i
-                        class="bi bi-paperclip"></i> {{ $b->attachments_count }}</span></div>
+                @php
+                  $totalAttCount = ($b->attachments_count ?? 0) + ($b->patientProfile?->uploaded_documents_count ?? 0);
+                @endphp
+                @if($totalAttCount > 0)
+                  <div class="mt-1"><span class="badge bg-info bg-opacity-10 text-info" style="font-size:0.7rem" title="عدد المرفقات والأوراق الرسمية"><i
+                        class="bi bi-paperclip"></i> {{ $totalAttCount }}</span></div>
                 @endif
               </td>
             </tr>
@@ -695,7 +724,7 @@
     }
   </script>
   <div class="mt-4 d-flex justify-content-center">
-    {{ $beneficiaries->links() }}
+    {{ $beneficiaries->appends(request()->query())->links() }}
   </div>
   <div class="row g-3 mt-3">
     <div class="col-md-3">

@@ -1,6 +1,32 @@
 @extends('layouts.app')
 @section('content')
 
+    @php
+        $sponsored = $donor->sponsoredBeneficiaries;
+        $familyMembers = $donor->sponsoredFamilyMembers;
+
+        // حساب قيمة الكفالة الشهرية الفعلية
+        $effectiveMonthlyAmount = 0.0;
+        if ((float) $donor->sponsorship_monthly_amount > 0) {
+            $effectiveMonthlyAmount = (float) $donor->sponsorship_monthly_amount;
+        } else {
+            // محاولة جلب القيمة من آخر تبرع نقدي نشط
+            $latestCashDonation = $history->first(fn($d) => $d->type === 'cash' && $d->status !== 'cancelled');
+            if ($latestCashDonation && (float)$latestCashDonation->amount > 0) {
+                $effectiveMonthlyAmount = (float) $latestCashDonation->amount;
+            } elseif ($sponsored->isNotEmpty() && (float) ($sponsored->first()->monthly_sponsorship_amount ?? 0) > 0) {
+                $effectiveMonthlyAmount = (float) $sponsored->first()->monthly_sponsorship_amount;
+            }
+        }
+
+        $hasSponsorshipOrRecurring = ($donor->classification === 'recurring')
+            || ((float) $donor->sponsorship_monthly_amount > 0)
+            || ($effectiveMonthlyAmount > 0)
+            || $sponsored->isNotEmpty()
+            || $familyMembers->isNotEmpty()
+            || ($donor->allocation_type === 'sponsorship');
+    @endphp
+
     {{-- Page Header --}}
     <div class="page-header mb-4">
         <div class="d-flex gap-3 align-items-center">
@@ -19,6 +45,11 @@
                         class="badge {{ $donor->active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
                         {{ $donor->active ? 'نشط' : 'غير نشط' }}
                     </span>
+                    @if($effectiveMonthlyAmount > 0)
+                        <span class="badge bg-success text-white border border-success px-2.5 py-1 fw-bold shadow-sm">
+                            <i class="bi bi-heart-pulse-fill me-1"></i>كفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
+                        </span>
+                    @endif
                     @if($donor->phone)
                         <span class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ $donor->phone }}</span>
                     @endif
@@ -118,14 +149,53 @@
                             </div>
                         @endif
 
-                        @php $sponsored = $donor->sponsoredBeneficiaries; @endphp
                         <div class="col-md-12">
-                            <label class="text-muted small mb-1">الأطفال / الحالات المكفولة ({{ $sponsored->count() }})</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="text-muted small mb-0">الأطفال / الحالات المكفولة ({{ $sponsored->count() }})</label>
+                                @if($effectiveMonthlyAmount > 0)
+                                    <span class="text-success small fw-bold font-monospace">
+                                        <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
+                                    </span>
+                                @endif
+                            </div>
                             <div class="d-flex flex-wrap gap-2 mt-1">
                                 @forelse($sponsored as $sb)
-                                    <a href="{{ route('beneficiaries.show', $sb) }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
-                                        <i class="bi bi-person-heart me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
-                                    </a>
+                                    @php
+                                        $childCommitment = null;
+                                        if ($effectiveMonthlyAmount > 0 && $sponsored->count() === 1) {
+                                            $childCommitment = $effectiveMonthlyAmount;
+                                        }
+                                        if (!$childCommitment) {
+                                            foreach ($history as $h) {
+                                                if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
+                                                    foreach ($h->beneficiary_allocations as $ba) {
+                                                        if (($ba['beneficiary_id'] ?? null) == $sb->id || ($ba['code'] ?? null) == $sb->code) {
+                                                            $childCommitment = (float)($ba['amount'] ?? 0);
+                                                            break 2;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (!$childCommitment && (float)($sb->monthly_sponsorship_amount ?? 0) > 0) {
+                                            $childCommitment = (float)$sb->monthly_sponsorship_amount;
+                                        }
+                                    @endphp
+                                    <div class="d-inline-flex align-items-center bg-white border border-success rounded-pill px-3 py-1 shadow-sm">
+                                        <a href="{{ route('beneficiaries.show', $sb) }}" class="text-success text-decoration-none fw-bold me-2">
+                                            <i class="bi bi-person-heart me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
+                                        </a>
+                                        @if($childCommitment > 0)
+                                            <span class="badge bg-success text-white font-monospace fs-7 px-2.5 py-1 rounded-pill">
+                                                {{ number_format($childCommitment, 2) }} ج.م شهرياً
+                                            </span>
+                                        @endif
+                                        @if((float)($sb->monthly_sponsorship_amount ?? 0) > 0 && (float)$sb->monthly_sponsorship_amount != $childCommitment)
+                                            <span class="text-muted small ms-1" style="font-size: 0.78rem;" title="إجمالي كفالة الحالة">
+                                                (احتياج الحالة: {{ number_format((float)$sb->monthly_sponsorship_amount, 2) }} ج.م)
+                                            </span>
+                                        @endif
+                                    </div>
                                 @empty
                                     <span class="text-muted small">لا توجد حالات مكفولة مسجلة باسم هذا المتبرع</span>
                                 @endforelse
@@ -137,10 +207,41 @@
                                 <label class="text-muted small mb-1">الأفراد المرتبطون بالكفالة تحديدًا ({{ $donor->sponsoredFamilyMembers->count() }})</label>
                                 <div class="row g-2 mt-1">
                                     @foreach($donor->sponsoredFamilyMembers as $familyMember)
+                                        @php
+                                            $fmAmount = $familyMember->pivot->monthly_amount 
+                                                ?? ($effectiveMonthlyAmount > 0 && $donor->sponsoredFamilyMembers->count() === 1 ? $effectiveMonthlyAmount : null);
+                                            if (!$fmAmount) {
+                                                foreach ($history as $h) {
+                                                    if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
+                                                        foreach ($h->beneficiary_allocations as $ba) {
+                                                            if (($ba['code'] ?? null) == $familyMember->code || ($ba['beneficiary_id'] ?? null) == $familyMember->beneficiary_id) {
+                                                                $fmAmount = (float)($ba['amount'] ?? 0);
+                                                                break 2;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (!$fmAmount && (float)($familyMember->sponsorship_amount ?? 0) > 0) {
+                                                $fmAmount = (float)$familyMember->sponsorship_amount;
+                                            }
+                                        @endphp
                                         <div class="col-md-6">
-                                            <a href="{{ route('beneficiary-family-members.show', $familyMember) }}" class="text-decoration-none d-block border rounded-3 p-2">
-                                                <div class="fw-bold text-success"><i class="bi bi-person-badge me-1"></i>{{ $familyMember->full_name }}</div>
-                                                <div class="small text-muted">{{ $familyMember->relationship_label }} — أسرة {{ $familyMember->beneficiary->full_name }} — {{ $familyMember->code }}</div>
+                                            <a href="{{ route('beneficiary-family-members.show', $familyMember) }}" class="text-decoration-none d-block border rounded-3 p-2.5 bg-light bg-opacity-25 hover-shadow">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-success"><i class="bi bi-person-badge me-1"></i>{{ $familyMember->full_name }}</span>
+                                                    @if($fmAmount > 0)
+                                                        <span class="badge bg-success text-white font-monospace px-2.5 py-1 rounded-pill">
+                                                            {{ number_format((float)$fmAmount, 2) }} ج.م شهرياً
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="small text-muted mt-1">
+                                                    {{ $familyMember->relationship_label }} — أسرة {{ $familyMember->beneficiary?->full_name }} — كود: {{ $familyMember->code }}
+                                                    @if((float)($familyMember->sponsorship_amount ?? 0) > 0 && (float)$familyMember->sponsorship_amount != $fmAmount)
+                                                        <span class="text-secondary ms-1">(احتياج الكفالة الكلي: {{ number_format((float)$familyMember->sponsorship_amount, 2) }} ج.م)</span>
+                                                    @endif
+                                                </div>
                                             </a>
                                         </div>
                                     @endforeach
@@ -148,20 +249,38 @@
                             </div>
                         @endif
 
-                        @if($donor->allocation_type === 'sponsorship' || ($donor->sponsorship_type && $donor->sponsorship_type !== 'none' && $donor->sponsorship_type !== 'sadaqa_jariya'))
-                            @if($donor->sponsorship_monthly_amount > 0)
-                                <div class="col-12">
-                                    <hr class="my-0 opacity-25">
+                        @if($hasSponsorshipOrRecurring)
+                            <div class="col-12">
+                                <hr class="my-1 opacity-25">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1"><i class="bi bi-cash-coin text-success me-1"></i>قيمة الكفالة / الالتزام الشهري</label>
+                                <div>
+                                    @if($donor->sponsorship_monthly_amount > 0)
+                                        <span class="fs-5 fw-bold text-success font-monospace">{{ number_format($donor->sponsorship_monthly_amount, 2) }}</span>
+                                        <span class="text-muted small">جنيه مصري / شهرياً</span>
+                                    @elseif($effectiveMonthlyAmount > 0)
+                                        <span class="fs-5 fw-bold text-success font-monospace">{{ number_format($effectiveMonthlyAmount, 2) }}</span>
+                                        <span class="text-muted small">جنيه مصري (محسوب من التبرعات)</span>
+                                    @else
+                                        <span class="text-muted small">غير محددة — <a href="{{ route('donors.edit', $donor) }}" class="text-primary text-decoration-none"><i class="bi bi-pencil me-1"></i>تحديد القيمة</a></span>
+                                    @endif
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small mb-1">قيمة الكفالة الشهرية</label>
-                                    <div class="fw-medium">{{ number_format($donor->sponsorship_monthly_amount, 2) }} جنيه</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1"><i class="bi bi-check2-circle text-primary me-1"></i>حالة سداد هذا الشهر ({{ now()->format('m / Y') }})</label>
+                                <div>
+                                    @if($paidThisMonth > 0)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 fs-6">
+                                            <i class="bi bi-check2-all me-1"></i>تم سداد {{ number_format($paidThisMonth, 2) }} جنيه
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 fs-6">
+                                            <i class="bi bi-hourglass-split me-1"></i>لم يُسدد بعد لهذا الشهر
+                                        </span>
+                                    @endif
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small mb-1">المدفوع ({{ now()->format('m/Y') }})</label>
-                                    <div class="fw-medium text-success">{{ number_format($paidThisMonth, 2) }} جنيه</div>
-                                </div>
-                            @endif
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -171,6 +290,24 @@
         <!-- Stats -->
         <div class="col-md-4">
             <div class="row g-3">
+                @if($hasSponsorshipOrRecurring && $effectiveMonthlyAmount > 0)
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0d7a5f 0%, #15803d 100%);">
+                            <div class="card-body p-3 text-center">
+                                <div class="opacity-90 small mb-1"><i class="bi bi-heart-pulse-fill me-1"></i>قيمة الكفالة / التبرع الشهري</div>
+                                <div class="h3 fw-bold mb-0 font-monospace">{{ number_format($effectiveMonthlyAmount, 2) }} <span class="fs-6 fw-normal opacity-75">ج.م / شهرياً</span></div>
+                                <div class="mt-2 pt-2 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center small">
+                                    <span class="opacity-90">سداد {{ now()->format('m / Y') }}:</span>
+                                    @if($paidThisMonth > 0)
+                                        <span class="badge bg-white text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>تم السداد ({{ number_format($paidThisMonth, 2) }})</span>
+                                    @else
+                                        <span class="badge bg-white text-warning text-dark fw-bold"><i class="bi bi-clock-history me-1"></i>بانتظار السداد</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <div class="col-12">
                     <div class="card border-0 shadow-sm bg-primary text-white">
                         <div class="card-body p-4 text-center">
@@ -446,9 +583,8 @@
                                     {{-- Right Column: Official Authority Details --}}
                                     <div style="text-align: right; line-height: 1.45; min-width: 180px;">
                                         <div style="font-size: 13px; font-weight: 800; color: #1e293b !important;">جمهورية مصر العربية</div>
-                                        <div style="font-size: 12px; font-weight: 700; color: #334155 !important;">وزارة التضامن الاجتماعي</div>
                                         <div style="font-size: 17px; font-weight: 900; color: #047857 !important; margin-top: 2px;">مؤسسة إنسان الخيرية</div>
-                                        <div style="font-size: 11px; font-weight: 600; color: #64748b !important;">مشهرة برقم رسمي للعمل الخيري والتنموي</div>
+                                        <div style="font-size: 12px; font-weight: 700; color: #475569 !important;">المشهرة برقم 63 لسنة 2017م</div>
                                     </div>
 
                                     {{-- Center Column: Document Title & Branding --}}
@@ -501,6 +637,12 @@
                                             <span style="color: #475569 !important; font-weight: 700;">الكفالات المسجلة:</span>
                                             <strong style="color: #1d4ed8 !important; font-weight: 900;">{{ $donor->sponsoredBeneficiaries->count() }} كفالة منتظمة</strong>
                                         </div>
+                                        @if($effectiveMonthlyAmount > 0)
+                                        <div>
+                                            <span style="color: #475569 !important; font-weight: 700;">قيمة الكفالة الشهرية:</span>
+                                            <strong style="color: #047857 !important; font-weight: 900; font-family: monospace;">{{ number_format($effectiveMonthlyAmount, 2) }} ج.م</strong>
+                                        </div>
+                                        @endif
                                         @if($donor->monthly_allocation_target)
                                         <div style="grid-column: span 3; border-top: 1px dashed #94a3b8; padding-top: 6px; margin-top: 2px;">
                                             <span style="color: #475569 !important; font-weight: 700;">وجهة التبرع الشهري المحددة:</span>

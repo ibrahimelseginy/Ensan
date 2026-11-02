@@ -107,27 +107,190 @@ Route::middleware(['auth'])->group(function () {
         if (mb_strlen($q) < 2) {
             return response()->json([]);
         }
+
+        $cleanQ = str_replace(
+            ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+            $q
+        );
+
+        $variants = \App\Helpers\ArabicSearchHelper::getVariants($q);
+        if (empty($variants)) {
+            $variants = [$q];
+        }
+
+        $words = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY);
+
         $results = \App\Models\Beneficiary::query()
-            ->where(function ($query) use ($q) {
-                $query->where('full_name', 'like', "%{$q}%")
-                    ->orWhere('code', 'like', "%{$q}%")
-                    ->orWhere('national_id', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%");
+            ->with([
+                'patientProfile',
+                'familyMembers' => fn ($query) => $query->where(fn($sq) => $sq->whereNull('active')->orWhere('active', true)->orWhere('active', 1))
+            ])
+            ->where(function ($query) use ($variants, $q, $cleanQ, $words) {
+                // تصفية بسنة الكود إذا كان الإدخال رقمين
+                if (preg_match('/^\d{2}$/', $cleanQ)) {
+                    $query->where('code', 'like', $cleanQ . '%')
+                          ->orWhere('code', 'like', 'G-' . $cleanQ . '%')
+                          ->orWhere('patient_code', 'like', $cleanQ . '%')
+                          ->orWhereHas('familyMembers', fn ($m) => $m->where('code', 'like', $cleanQ . '%'))
+                          ->orWhere('full_name', 'like', "%{$q}%");
+                    return;
+                }
+
+                // إذا كتب سنة كاملة مثل 2026
+                if (preg_match('/^(?:19|20)(\d{2})$/', $cleanQ, $mYear)) {
+                    $yr = $mYear[1];
+                    $query->where('code', 'like', $yr . '%')
+                          ->orWhere('code', 'like', 'G-' . $yr . '%')
+                          ->orWhere('code', 'like', "%{$cleanQ}%")
+                          ->orWhere('patient_code', 'like', $yr . '%')
+                          ->orWhereHas('familyMembers', fn ($m) => $m->where('code', 'like', $yr . '%'))
+                          ->orWhere('full_name', 'like', "%{$q}%");
+                    return;
+                }
+
+                // البحث في حقول المستفيد الأساسي
+                foreach ($variants as $var) {
+                    $query->orWhere('full_name', 'like', "%{$var}%")
+                          ->orWhere('patient_name', 'like', "%{$var}%")
+                          ->orWhere('guardian_name', 'like', "%{$var}%");
+                }
+
+                if (count($words) > 1) {
+                    $query->orWhere(function ($sub) use ($words) {
+                        foreach ($words as $w) {
+                            $sub->where(function ($wSub) use ($w) {
+                                $wVariants = \App\Helpers\ArabicSearchHelper::getVariants($w);
+                                foreach ($wVariants as $wv) {
+                                    $wSub->orWhere('full_name', 'like', "%{$wv}%")
+                                         ->orWhere('patient_name', 'like', "%{$wv}%")
+                                         ->orWhere('guardian_name', 'like', "%{$wv}%");
+                                }
+                            });
+                        }
+                    });
+                }
+
+                $query->orWhere('code', 'like', "%{$cleanQ}%")
+                    ->orWhere('patient_code', 'like', "%{$cleanQ}%")
+                    ->orWhere('national_id', 'like', "%{$cleanQ}%")
+                    ->orWhere('phone', 'like', "%{$cleanQ}%")
+                    ->orWhere('backup_phone', 'like', "%{$cleanQ}%");
+
+                // البحث الشامل في أفراد الأسرة (الأطفال، الأيتام، المرضى المكفولين)
+                $query->orWhereHas('familyMembers', function ($fmQuery) use ($variants, $q, $cleanQ, $words) {
+                    $fmQuery->where(function ($wSub) use ($variants, $q, $cleanQ, $words) {
+                        foreach ($variants as $var) {
+                            $wSub->orWhere('full_name', 'like', "%{$var}%");
+                        }
+                        if (count($words) > 1) {
+                            $wSub->orWhere(function ($subWord) use ($words) {
+                                foreach ($words as $w) {
+                                    $subWord->where(function ($wInner) use ($w) {
+                                        $wVars = \App\Helpers\ArabicSearchHelper::getVariants($w);
+                                        foreach ($wVars as $wv) {
+                                            $wInner->orWhere('full_name', 'like', "%{$wv}%");
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        $wSub->orWhere('code', 'like', "%{$cleanQ}%")
+                             ->orWhere('national_id', 'like', "%{$cleanQ}%")
+                             ->orWhere('phone', 'like', "%{$cleanQ}%");
+                    });
+                });
             })
-            ->limit(25)
-            ->get(['id', 'full_name', 'code', 'national_id', 'phone', 'address'])
-            ->map(function ($b) {
-                return [
-                    'id'          => $b->id,
-                    'text'        => $b->full_name . ' (' . ($b->code ?: 'ID: '.$b->id) . ($b->national_id ? ' | قومي: '.$b->national_id : '') . ($b->phone ? ' | هاتف: '.$b->phone : '') . ')',
-                    'full_name'   => $b->full_name,
-                    'code'        => $b->code,
-                    'national_id' => $b->national_id,
-                    'phone'       => $b->phone,
-                    'address'     => $b->address,
+            ->limit(35)
+            ->get();
+
+        $resultsList = [];
+        foreach ($results as $b) {
+            $matchedMembers = collect();
+            if ($b->relationLoaded('familyMembers') && $b->familyMembers->isNotEmpty()) {
+                foreach ($b->familyMembers as $m) {
+                    $mName = (string) $m->full_name;
+                    $mCode = (string) $m->code;
+                    $mNat  = (string) $m->national_id;
+                    $mPhone= (string) $m->phone;
+
+                    $match = false;
+                    if (!empty($mCode) && stripos($mCode, $cleanQ) !== false) {
+                        $match = true;
+                    } elseif (!empty($mNat) && stripos($mNat, $cleanQ) !== false) {
+                        $match = true;
+                    } elseif (!empty($mPhone) && stripos($mPhone, $cleanQ) !== false) {
+                        $match = true;
+                    } else {
+                        foreach ($variants as $v) {
+                            if (mb_stripos($mName, $v) !== false) {
+                                $match = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($match) {
+                        $matchedMembers->push($m);
+                    }
+                }
+            }
+
+            if ($matchedMembers->isNotEmpty()) {
+                foreach ($matchedMembers as $member) {
+                    $relLabel = match($member->relationship) {
+                        'child' => 'الطفل',
+                        'patient' => 'المريض',
+                        'spouse', 'husband', 'wife' => 'الزوج/الزوجة',
+                        default => 'الطفل / المكفول'
+                    };
+                    $label = "{$relLabel}: {$member->full_name} (ملف الأسرة/الأم: {$b->full_name})"
+                           . " — كود الأسرة: " . ($b->code ?: 'ID: '.$b->id)
+                           . ($member->code ? " | كود الطفل: {$member->code}" : '');
+
+                    $resultsList[] = [
+                        'id'                  => $b->id,
+                        'text'                => $label,
+                        'full_name'           => $member->full_name . ' (أسرة: ' . $b->full_name . ')',
+                        'guardian_name'       => $b->full_name,
+                        'patient_name'        => $member->full_name,
+                        'code'                => $b->code ?: ('BEN-' . $b->id),
+                        'member_code'         => $member->code,
+                        'national_id'         => $member->national_id ?: $b->national_id,
+                        'phone'               => $member->phone ?: $b->phone,
+                        'address'             => $b->address,
+                        'gender'              => $b->patientProfile?->gender ?: $b->gender,
+                        'matched_member_id'   => $member->id,
+                        'matched_member_name' => $member->full_name,
+                        'matched_member_code' => $member->code,
+                        'notes'               => "كفالة {$relLabel}: {$member->full_name}" . ($member->code ? " [{$member->code}]" : ''),
+                    ];
+                }
+            } else {
+                $displayName = !empty($b->patient_name) ? $b->patient_name : $b->full_name;
+                $guardianText = (!empty($b->patient_name) && $b->patient_name !== $b->full_name) ? " (المستفيد: {$b->full_name})" : '';
+                $text = $displayName . $guardianText . ' (' . ($b->code ?: 'ID: '.$b->id) . ($b->national_id ? ' | قومي: '.$b->national_id : '') . ($b->phone ? ' | هاتف: '.$b->phone : '') . ')';
+
+                $resultsList[] = [
+                    'id'                  => $b->id,
+                    'text'                => $text,
+                    'full_name'           => $b->full_name,
+                    'patient_name'        => $b->patient_name ?: $b->full_name,
+                    'guardian_name'       => $b->guardian_name,
+                    'code'                => $b->code ?: ('BEN-' . $b->id),
+                    'member_code'         => null,
+                    'national_id'         => $b->national_id,
+                    'phone'               => $b->phone,
+                    'address'             => $b->address,
+                    'gender'              => $b->patientProfile?->gender ?: $b->gender,
+                    'matched_member_id'   => null,
+                    'matched_member_name' => null,
+                    'matched_member_code' => null,
+                    'notes'               => '',
                 ];
-            });
-        return response()->json($results);
+            }
+        }
+        return response()->json($resultsList);
     })->name('api.search.beneficiaries');
 
     Route::get('api/search/donors', function (\Illuminate\Http\Request $request) {
@@ -143,19 +306,26 @@ Route::middleware(['auth'])->group(function () {
                     ->orWhere('national_id', 'like', "%{$q}%");
             })
             ->limit(25)
-            ->get(['id', 'name', 'code', 'phone', 'national_id'])
+            ->get()
             ->map(function ($d) {
                 return [
-                    'id'          => $d->id,
-                    'text'        => $d->name . ' — ' . $d->code . ($d->phone ? ' — ' . $d->phone : '') . ($d->national_id ? ' — قومي: ' . $d->national_id : ''),
-                    'name'        => $d->name,
-                    'code'        => $d->code,
-                    'phone'       => $d->phone,
-                    'national_id' => $d->national_id,
+                    'id'                  => $d->id,
+                    'text'                => $d->name . ' — ' . $d->code . ($d->phone ? ' — ' . $d->phone : '') . ($d->national_id ? ' — قومي: ' . $d->national_id : ''),
+                    'name'                => $d->name,
+                    'code'                => $d->code,
+                    'phone'               => $d->phone,
+                    'national_id'         => $d->national_id,
+                    'sponsorship_profile' => $d->getSponsorshipProfile(),
                 ];
             });
         return response()->json($results);
     })->name('api.search.donors');
+
+    Route::get('api/donors/{donor}/sponsorship-profile', function (\App\Models\Donor $donor) {
+        return response()->json($donor->getSponsorshipProfile());
+    })->name('api.donors.sponsorship-profile');
+
+    Route::get('api/global-search', [\App\Http\Controllers\GlobalSearchController::class, 'search'])->name('api.global.search');
 
     // --- Image Upload (AJAX / Fetch from Web Dashboard) ---
     Route::prefix('upload')->middleware('throttle:heavy-ops')->group(function () {
@@ -240,6 +410,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('beneficiaries/{beneficiary}/pdf', [BeneficiaryWebController::class, 'pdf'])->name('beneficiaries.pdf');
         Route::get('beneficiary-family-members/{familyMember}', [BeneficiaryFamilyMemberWebController::class, 'show'])
             ->name('beneficiary-family-members.show');
+        Route::post('beneficiary-family-members/{familyMember}/sponsors', [BeneficiaryFamilyMemberWebController::class, 'attachSponsor'])
+            ->name('beneficiary-family-members.attach-sponsor');
+        Route::delete('beneficiary-family-members/{familyMember}/sponsors/{donor}', [BeneficiaryFamilyMemberWebController::class, 'detachSponsor'])
+            ->name('beneficiary-family-members.detach-sponsor');
+        Route::patch('beneficiary-family-members/{familyMember}/sponsorship', [BeneficiaryFamilyMemberWebController::class, 'updateSponsorship'])
+            ->name('beneficiary-family-members.update-sponsorship');
         Route::post('beneficiary-family-members/{familyMember}/assessments/entry', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeEntry'])
             ->name('child-assessments.store-entry');
         Route::post('beneficiary-family-members/{familyMember}/assessments/monthly', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeMonthly'])
@@ -251,6 +427,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('child-assessments/{assessment}', [\App\Http\Controllers\ChildAssessmentWebController::class, 'show'])
             ->name('child-assessments.show');
         Route::post('beneficiaries/bulk', [BeneficiaryWebController::class, 'bulkUpdate'])->name('beneficiaries.bulk');
+        Route::post('beneficiaries/{beneficiary}/patient-documents', [BeneficiaryWebController::class, 'uploadPatientDocument'])->name('beneficiaries.upload-patient-doc');
+        Route::delete('beneficiaries/{beneficiary}/patient-documents/{docType}', [BeneficiaryWebController::class, 'deletePatientDocument'])->name('beneficiaries.delete-patient-doc');
+        Route::post('beneficiaries/{beneficiary}/sponsors', [BeneficiaryWebController::class, 'attachSponsor'])->name('beneficiaries.attach-sponsor');
+        Route::delete('beneficiaries/{beneficiary}/sponsors/{donor}', [BeneficiaryWebController::class, 'detachSponsor'])->name('beneficiaries.detach-sponsor');
+        Route::post('beneficiaries/{beneficiary}/direct-aid', [BeneficiaryWebController::class, 'recordDirectAid'])->name('beneficiaries.record-direct-aid');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
     });
 
@@ -672,17 +853,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/case-applications/{application}/print', [MobileContentController::class, 'printCaseApplication'])->name('case-applications.print');
     });
 
-    Route::middleware('permission:manage_change_requests')->group(function () {
-        Route::get('admin/change-requests', [\App\Http\Controllers\ChangeRequestWebController::class, 'index'])->name('change-requests.index');
-        Route::post('admin/change-requests/{changeRequest}/approve', [\App\Http\Controllers\ChangeRequestWebController::class, 'approve'])->name('change-requests.approve');
-        Route::post('admin/change-requests/{changeRequest}/reject', [\App\Http\Controllers\ChangeRequestWebController::class, 'reject'])->name('change-requests.reject');
-        Route::delete('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'destroy'])->name('change-requests.destroy');
-        Route::post('admin/change-requests/bulk-destroy', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkDestroy'])->name('change-requests.bulk-destroy');
-        Route::post('admin/change-requests/bulk-revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkRevert'])->name('change-requests.bulk-revert');
-        Route::post('admin/change-requests/{changeRequest}/revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'revert'])->name('change-requests.revert');
-        Route::post('admin/change-requests/{changeRequest}/cancel', [\App\Http\Controllers\ChangeRequestWebController::class, 'cancel'])->name('change-requests.cancel');
-        Route::put('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'update'])->name('change-requests.update');
-    });
+    // Change Requests Routes (Viewable by authenticated staff, approvals managed by controllers)
+    Route::get('admin/change-requests', [\App\Http\Controllers\ChangeRequestWebController::class, 'index'])->name('change-requests.index');
+    Route::post('admin/change-requests/{changeRequest}/update-payload', [\App\Http\Controllers\ChangeRequestWebController::class, 'updatePayload'])->name('change-requests.update-payload');
+    Route::post('admin/change-requests/{changeRequest}/edit-and-approve', [\App\Http\Controllers\ChangeRequestWebController::class, 'editAndApprove'])->name('change-requests.edit-and-approve');
+    Route::post('admin/change-requests/{changeRequest}/resubmit', [\App\Http\Controllers\ChangeRequestWebController::class, 'resubmit'])->name('change-requests.resubmit');
+    Route::post('admin/change-requests/{changeRequest}/approve', [\App\Http\Controllers\ChangeRequestWebController::class, 'approve'])->name('change-requests.approve');
+    Route::post('admin/change-requests/{changeRequest}/reject', [\App\Http\Controllers\ChangeRequestWebController::class, 'reject'])->name('change-requests.reject');
+    Route::delete('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'destroy'])->name('change-requests.destroy');
+    Route::post('admin/change-requests/bulk-destroy', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkDestroy'])->name('change-requests.bulk-destroy');
+    Route::post('admin/change-requests/bulk-revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'bulkRevert'])->name('change-requests.bulk-revert');
+    Route::post('admin/change-requests/{changeRequest}/revert', [\App\Http\Controllers\ChangeRequestWebController::class, 'revert'])->name('change-requests.revert');
+    Route::post('admin/change-requests/{changeRequest}/cancel', [\App\Http\Controllers\ChangeRequestWebController::class, 'cancel'])->name('change-requests.cancel');
+    Route::put('admin/change-requests/{changeRequest}', [\App\Http\Controllers\ChangeRequestWebController::class, 'update'])->name('change-requests.update');
 
     // --- Specialized Services ---
     Route::middleware('permission:manage_specialized_services')->group(function () {
@@ -733,16 +916,16 @@ Route::middleware(['auth'])->group(function () {
             ->name('guest-houses.destroyMonthlyVolunteer');
     });
     Route::post('guest-houses/{guest_house}/beneficiaries', [GuestHouseWebController::class, 'storeBeneficiary'])
-        ->middleware(['permission:guest_houses.view', 'permission:beneficiaries.view'])
+        ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.storeBeneficiary');
     Route::post('guest-houses/{guest_house}/beneficiaries/{beneficiary}/manager-notes', [GuestHouseWebController::class, 'saveManagerNotes'])
         ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.beneficiaries.saveNotes');
     Route::post('guest-houses/{guest_house}/donations', [GuestHouseWebController::class, 'storeDonation'])
-        ->middleware(['permission:guest_houses.view', 'permission:donations.view'])
+        ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.storeDonation');
     Route::post('guest-houses/{guest_house}/expenses', [GuestHouseWebController::class, 'storeExpense'])
-        ->middleware(['permission:guest_houses.view', 'permission:manage_finance', 'permission:expenses.view'])
+        ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.storeExpense');
     Route::middleware('permission:guest_houses.view')->group(function () {
         Route::post('guest-houses/{guest_house}/wings', [GuestHouseWebController::class, 'storeWing'])->name('guest-houses.wings.store');

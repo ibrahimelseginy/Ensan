@@ -185,9 +185,10 @@
             {{-- Clean Standalone Search Box Matching Navbar Style (Image 2) --}}
             <div class="col-lg-5 col-md-12">
                 <div class="position-relative hero-search-wrap">
-                    <input type="text" id="ensanAppSearch" class="form-control hero-clean-search" 
-                           placeholder="ابحث عن تقارير، متبرعين، أو مهام..." autocomplete="off">
+                    <input type="text" id="ensanAppSearch" class="form-control hero-clean-search ensan-global-search-input" 
+                           placeholder="بحث شامل: كود، اسم، هاتف (حالة، متبرع، موظف)..." autocomplete="off">
                     <i class="bi bi-search hero-search-icon"></i>
+                    <div class="global-search-dropdown shadow-lg d-none"></div>
                 </div>
             </div>
         </div>

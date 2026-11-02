@@ -23,6 +23,7 @@ use App\Models\WebBranch;
 use App\Models\WebVolunteerWall;
 use App\Models\WebFaq;
 use App\Models\WebEvent;
+use App\Models\Complaint;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 
@@ -1374,11 +1375,44 @@ final class WebsiteApiController extends Controller
         }
 
         $contactMsg = WebContactMessage::create($data);
+
+        // Generate or use provided unique tracking code for the message
+        $customCode = trim((string)($request->input('code') ?: $request->input('tracking_code')));
+        if (!empty($customCode) && !Complaint::where('tracking_code', $customCode)->exists()) {
+            $trackingCode = strtoupper($customCode);
+        } else {
+            $trackingCode = Complaint::generateUniqueTrackingCode();
+        }
+
+        $subjectTitle = !empty($data['subject']) ? $data['subject'] : 'رسالة من الموقع الإلكتروني';
+        $fullMessage = "البريد الإلكتروني: {$data['email']}\n" .
+                       (!empty($data['subject']) ? "الموضوع: {$data['subject']}\n\n" : "\n") .
+                       $data['message'];
+
+        // Link message into the complaints system as 'website'
+        $complaint = Complaint::create([
+            'tracking_code' => $trackingCode,
+            'source_type' => 'website',
+            'source_id' => $contactMsg->id,
+            'complainant_name' => $data['name'],
+            'complainant_phone' => $data['phone'],
+            'subject' => $subjectTitle,
+            'message' => $fullMessage,
+            'status' => 'open',
+            'attachment_path' => $data['image_path'] ?? null,
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'تم استلام رسالتك بنجاح، وسنقوم بالرد عليك في أقرب وقت.',
+            'tracking_code' => $trackingCode,
+            'code' => $trackingCode,
             'data' => [
-                'id' => $contactMsg->id
+                'id' => $contactMsg->id,
+                'complaint_id' => $complaint->id,
+                'code' => $trackingCode,
+                'tracking_code' => $trackingCode,
+                'tracking_url' => url('/track-complaint?code=' . $trackingCode),
             ]
         ]);
     }

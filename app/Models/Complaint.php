@@ -29,16 +29,12 @@ final class Complaint extends Model
 
     public static function generateUniqueTrackingCode(): string
     {
-        // Use unambiguous characters (excluding easily confused 0, O, 1, I)
-        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $charsLen = strlen($chars);
+        $maxId = (int) (static::max('id') ?? 0);
+        $next = $maxId + 1;
         do {
-            $random = '';
-            for ($i = 0; $i < 6; $i++) {
-                $random .= $chars[random_int(0, $charsLen - 1)];
-            }
-            $code = 'ENS-' . $random;
-        } while (static::where('tracking_code', $code)->exists());
+            $code = 'Ensan-' . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+            $next++;
+        } while (static::where('tracking_code', $code)->orWhere('tracking_code', strtoupper($code))->exists());
 
         return $code;
     }
@@ -55,6 +51,9 @@ final class Complaint extends Model
         if (!empty($this->complainant_name)) {
             return $this->complainant_name;
         }
+        if ($this->source_type === 'website') {
+            return $this->complainant_name ?: 'زائر الموقع الإلكتروني';
+        }
         if ($this->source_type === 'donor') {
             return \App\Models\Donor::find($this->source_id)?->name ?? ('متبرع #' . $this->source_id);
         }
@@ -70,6 +69,7 @@ final class Complaint extends Model
     public function getSourceModelAttribute(): mixed
     {
         return match ($this->source_type) {
+            'website' => \App\Models\WebContactMessage::find($this->source_id),
             'donor' => \App\Models\Donor::find($this->source_id),
             'beneficiary' => \App\Models\Beneficiary::find($this->source_id),
             'employee' => \App\Models\User::find($this->source_id),
@@ -80,6 +80,7 @@ final class Complaint extends Model
     public function getSourceTypeNameAttribute(): string
     {
         return match ($this->source_type) {
+            'website' => 'الموقع الإلكتروني',
             'donor' => 'متبرع',
             'beneficiary' => 'مستفيد',
             'employee' => 'موظف',

@@ -76,9 +76,8 @@
       <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom border-2" style="border-color: #059669 !important;">
         <div class="text-end" style="line-height: 1.4;">
           <div class="small fw-bold text-muted" style="color: #475569 !important;">جمهورية مصر العربية</div>
-          <div class="small fw-bold text-muted" style="color: #475569 !important;">وزارة التضامن الاجتماعي</div>
           <div class="fw-bolder fs-6 text-dark" style="color: #0f172a !important;">مؤسسة إنسان الخيرية</div>
-          <div class="text-muted" style="font-size: 0.72rem; color: #64748b !important;">مشهرة برقم رسمي للعمل الخيري والتنموي</div>
+          <div class="fw-bold" style="font-size: 0.78rem; color: #475569 !important;">المشهرة برقم 63 لسنة 2017م</div>
         </div>
 
         <div class="text-center px-2">

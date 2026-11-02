@@ -139,9 +139,8 @@
       {{-- Right Official Details --}}
       <div class="text-start" style="line-height: 1.5;">
         <div class="small fw-bold text-muted">جمهورية مصر العربية</div>
-        <div class="small fw-bold text-muted">وزارة التضامن الاجتماعي</div>
         <div class="fw-bolder fs-6 text-dark">مؤسسة إنسان الخيرية</div>
-        <div class="text-muted" style="font-size: 0.72rem;">مشهرة برقم رسمي للعمل الخيري</div>
+        <div class="fw-bold" style="font-size: 0.78rem; color: #475569;">المشهرة برقم 63 لسنة 2017م</div>
       </div>
 
       {{-- Center Title Box --}}
@@ -212,8 +211,39 @@
           @if($donation->campaign)
             <span class="badge bg-light text-dark border ms-2"><i class="bi bi-megaphone me-1"></i>حملة: {{ $donation->campaign->name }}</span>
           @endif
+          @if($donation->guestHouse)
+            <span class="badge bg-light text-dark border ms-2"><i class="bi bi-hospital me-1"></i>دار الضيافة: {{ $donation->guestHouse->name }}</span>
+          @endif
         </div>
       </div>
+
+      @if(!empty($donation->split_allocations) && count($donation->split_allocations) > 0)
+      <div class="row g-2 align-items-start border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
+        <div class="col-sm-3 text-muted fw-bold">تفاصيل توزيع التبرع:</div>
+        <div class="col-sm-9">
+          <table class="table table-sm table-bordered align-middle mb-0 text-dark" style="border-color: #cbd5e1 !important; font-size: 0.85rem; background: #ffffff !important;">
+            <thead style="background: #f1f5f9 !important;">
+              <tr>
+                <th style="width: 32%;">الجهة المخصصة</th>
+                <th style="width: 25%;">بند التبرع</th>
+                <th class="text-center" style="width: 22%;">المبلغ المخصص</th>
+                <th>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($donation->split_allocations as $sp)
+                <tr>
+                  <td class="fw-bold">{{ $sp['type_label'] ?? '' }}: {{ $sp['target_name'] ?? 'عام' }}</td>
+                  <td>{{ match($sp['purpose'] ?? '') { 'kafalat_aytam' => 'كفالات أيتام', 'kafalat_awram' => 'كفالات أورام', 'sadaqat' => 'صدقات', 'zakat_maal' => 'زكاة مال', 'sadaqa_jariya' => 'صدقات جارية', default => ($sp['purpose'] ?? '—') } }}</td>
+                  <td class="text-center fw-bold font-monospace text-success">{{ number_format((float)($sp['amount'] ?? 0), 2) }} ج.م</td>
+                  <td class="small text-muted">{{ $sp['notes'] ?? '—' }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      </div>
+      @endif
 
       @if(!empty($donation->beneficiary_allocations) && count($donation->beneficiary_allocations) > 0)
       <div class="row g-2 align-items-start border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
@@ -281,7 +311,7 @@
       <div class="col-4">
         <div class="fw-bold small mb-5 text-dark">المستلم / المحصل</div>
         <div class="border-top mx-auto pt-1 small text-muted" style="border-color: #475569 !important; width: 140px;">
-          {{ auth()->user()?->name ?? 'التوقيع' }}
+          {{ $donation->createdBy?->name ?? $donation->user?->name ?? (auth()->user()?->name ?? 'التوقيع') }}
         </div>
       </div>
       <div class="col-4">

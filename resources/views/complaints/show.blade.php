@@ -69,22 +69,34 @@
                             <div class="info-row">
                                 <span class="info-label">صاحب الشكوى</span>
                                 <span class="info-value">
-                                    <span class="badge bg-primary-subtle text-primary me-1">{{ $complaint->source_type_name }}</span>
-                                    @php $sourceModel = $complaint->source_model; @endphp
-                                    @if($complaint->source_type === 'donor' && $sourceModel)
-                                        <a href="{{ route('donors.show', $sourceModel) }}" class="fw-bold text-decoration-none">
-                                            {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
-                                        </a>
-                                    @elseif($complaint->source_type === 'beneficiary' && $sourceModel)
-                                        <a href="{{ route('beneficiaries.show', $sourceModel) }}" class="fw-bold text-decoration-none">
-                                            {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
-                                        </a>
-                                    @elseif($complaint->source_type === 'employee' && $sourceModel)
-                                        <a href="{{ route('users.show', $sourceModel) }}" class="fw-bold text-decoration-none">
-                                            {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
-                                        </a>
-                                    @else
+                                    @if($complaint->source_type === 'website')
+                                        <span class="badge bg-info-subtle text-info border border-info border-opacity-25 me-1">
+                                            <i class="bi bi-globe me-1"></i>الموقع الإلكتروني
+                                        </span>
                                         <strong class="text-dark">{{ $complaint->source_name }}</strong>
+                                        @if($complaint->source_id && \Illuminate\Support\Facades\Route::has('website.contact-messages.index'))
+                                            <a href="{{ route('website.contact-messages.index') }}" class="small ms-2 text-decoration-none">
+                                                (رسالة الموقع #{{ $complaint->source_id }})
+                                            </a>
+                                        @endif
+                                    @else
+                                        <span class="badge bg-primary-subtle text-primary me-1">{{ $complaint->source_type_name }}</span>
+                                        @php $sourceModel = $complaint->source_model; @endphp
+                                        @if($complaint->source_type === 'donor' && $sourceModel)
+                                            <a href="{{ route('donors.show', $sourceModel) }}" class="fw-bold text-decoration-none">
+                                                {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
+                                            </a>
+                                        @elseif($complaint->source_type === 'beneficiary' && $sourceModel)
+                                            <a href="{{ route('beneficiaries.show', $sourceModel) }}" class="fw-bold text-decoration-none">
+                                                {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
+                                            </a>
+                                        @elseif($complaint->source_type === 'employee' && $sourceModel)
+                                            <a href="{{ route('users.show', $sourceModel) }}" class="fw-bold text-decoration-none">
+                                                {{ $complaint->source_name }} <i class="bi bi-box-arrow-up-right small"></i>
+                                            </a>
+                                        @else
+                                            <strong class="text-dark">{{ $complaint->source_name }}</strong>
+                                        @endif
                                     @endif
 
                                     @if(!empty($complaint->complainant_phone))
@@ -147,15 +159,51 @@
 
                         @if($complaint->resolution)
                         <div class="col-12">
-                            <div class="p-3 rounded mt-2" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                            <div class="p-3 rounded mt-2" style="background: #f0fdf4; border: 1.5px solid #86efac;">
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                    <span class="text-success fw-bold small">الحل المقدَّم</span>
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    <span class="text-success fw-bold">الرد الرسمي والإجراءات المتخذة:</span>
                                 </div>
-                                <div>{{ $complaint->resolution }}</div>
+                                <div style="white-space: pre-line; line-height: 1.8;" class="text-dark">{{ $complaint->resolution }}</div>
                             </div>
                         </div>
                         @endif
+
+                        {{-- Reply Form Section --}}
+                        <div class="col-12 mt-4">
+                            <div class="card border border-success border-opacity-25 shadow-sm rounded-3">
+                                <div class="card-header bg-success bg-opacity-10 text-success py-2.5 px-3 d-flex align-items-center gap-2 fw-bold">
+                                    <i class="bi bi-reply-fill fs-5"></i>
+                                    إضافة رد / حل رسمي على الشكوى
+                                </div>
+                                <div class="card-body p-3">
+                                    <form method="POST" action="{{ route('complaints.reply', $complaint) }}">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small text-dark">نص الرد أو الحل المقترح للشاكي *</label>
+                                            <textarea name="reply" rows="4" class="form-control" placeholder="اكتب رد المؤسسة أو توضيح الإجراءات المتخذة..." required></textarea>
+                                            <div class="form-text text-muted small">سيظهر هذا الرد مباشرة للشاكي في صفحة تتبع الشكوى بكود التتبع ({{ $complaint->tracking_code }}).</div>
+                                        </div>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-7">
+                                                <label class="form-label fw-bold small text-muted">تحديث حالة الشكوى بعد الرد:</label>
+                                                <select name="status" class="form-select form-select-sm">
+                                                    <option value="resolved" @selected($complaint->status === 'resolved' || $complaint->status === 'closed')>تم الحل بنجاح (Resolved)</option>
+                                                    <option value="in_progress" @selected($complaint->status === 'in_progress')>جارية المتابعة (In Progress)</option>
+                                                    <option value="closed">إغلاق الشكوى نهائياً (Closed)</option>
+                                                    <option value="open" @selected($complaint->status === 'open')>إبقاء الشكوى مفتوحة (Open)</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5 d-flex justify-content-end align-items-end mt-3 mt-md-0">
+                                                <button type="submit" class="btn btn-success btn-sm px-4 py-2 fw-bold shadow-sm w-100 w-md-auto">
+                                                    <i class="bi bi-send-fill me-1"></i> حفظ وإرسال الرد
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -11,8 +11,12 @@
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             @if(!empty($canCreateNotif))
-                <button type="button" class="btn text-white rounded-pill px-3 shadow-sm fw-bold border-0" style="background: linear-gradient(135deg, #1e293b, #0f172a);" data-bs-toggle="modal" data-bs-target="#broadcastSystemUpdateModal">
-                    <i class="bi bi-tools text-warning me-1"></i> إرسال تحديث نظام (م. إبراهيم)
+                <button type="button" class="btn rounded-pill px-3 py-2 shadow-sm border-0 d-inline-flex align-items-center gap-2" 
+                        style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; color: #ffffff !important; font-family: 'IBM Plex Sans Arabic', sans-serif !important; font-weight: 700 !important; font-size: 0.92rem; border: 1px solid rgba(255, 255, 255, 0.15) !important;" 
+                        data-bs-toggle="modal" data-bs-target="#broadcastSystemUpdateModal">
+                    <i class="bi bi-rocket-takeoff-fill text-warning fs-6" style="color: #f59e0b !important;"></i>
+                    <span style="color: #ffffff !important; font-family: 'IBM Plex Sans Arabic', sans-serif !important; font-weight: 700 !important;">إرسال تحديث نظام</span>
+                    <span class="badge rounded-pill px-2 py-0.5" style="background: rgba(245, 158, 11, 0.2) !important; color: #fbbf24 !important; border: 1px solid rgba(245, 158, 11, 0.35) !important; font-size: 0.76rem; font-weight: 700;">م. إبراهيم السجيني</span>
                 </button>
                 <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#createEmployeeNotifModal">
                     <i class="bi bi-send-fill me-1"></i> إرسال إشعار لموظف
@@ -307,13 +311,13 @@
                 <div class="modal-header text-white border-0 py-3 px-4" style="background: linear-gradient(135deg, #1e293b, #0f172a);">
                     <div class="d-flex align-items-center gap-2">
                         <div class="rounded-circle bg-warning bg-opacity-25 p-2 text-warning d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                            <i class="bi bi-tools fs-5"></i>
+                            <i class="bi bi-rocket-takeoff-fill fs-5" style="color: #f59e0b !important;"></i>
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0" id="broadcastSystemUpdateModalLabel">
                                 إشعار موظفي النظام بتحديث وتطوير الأقسام
                             </h5>
-                            <small class="text-white-50">إرسال التحديث لموظفي القسم المعني فقط بتوقيع مهندس إبراهيم</small>
+                            <small class="text-white-50">إرسال التحديث لموظفي القسم المعني فقط بتوقيع مهندس إبراهيم السجيني</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -379,7 +383,7 @@
                         <div class="bg-white p-3 rounded-2 border border-light-subtle shadow-sm text-end" style="font-family: inherit;">
                             <div class="text-muted small mb-2">[تفاصيل التحديث التي ستكتبها بالأعلى]</div>
                             <div class="text-success fw-bold small mb-1">✅ تم إنجاز هذا التحديث لخدمتكم وضمان أفضل أداء للعمل.</div>
-                            <div class="fw-bold text-dark pt-1 border-top border-light">— مهندس إبراهيم 🛠️</div>
+                            <div class="fw-bold text-dark pt-1 border-top border-light">— مهندس إبراهيم السجيني 🛠️</div>
                         </div>
                     </div>
                 </div>

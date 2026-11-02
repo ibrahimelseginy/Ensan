@@ -162,19 +162,50 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                @if(!empty($isAdmin))
-                                    @if($req->status === 'pending')
+                                @if($req->status === 'pending')
+                                    @if(!empty($isAdmin))
                                         <div class="btn-group">
-                                            <form action="{{ route('change-requests.approve', $req) }}" method="POST" onsubmit="return confirm('تأكيد الموافقة على الطلب؟');">
+                                            <form action="{{ route('change-requests.approve', $req) }}" method="POST" onsubmit="return confirm('تأكيد الموافقة على الطلب وتنفيذه فوراً؟');" class="d-inline">
                                                 @csrf
                                                 <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> موافقة</button>
                                             </form>
+                                            <button type="button" class="btn btn-sm btn-primary ms-1" onclick="openPayloadEditModal({{ $req->id }}, 'pending')" title="تعديل البيانات قبل القبول">
+                                                <i class="bi bi-pencil-square"></i> تعديل
+                                            </button>
                                             <button class="btn btn-sm btn-danger ms-1" onclick="openRejectModal('{{ $req->id }}')">
                                                 <i class="bi bi-x-lg"></i> رفض
                                             </button>
                                         </div>
                                     @else
-                                        <div class="d-flex gap-1 align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openPayloadEditModal({{ $req->id }}, 'pending')">
+                                            <i class="bi bi-pencil"></i> تعديل البيانات
+                                        </button>
+                                        <span class="badge bg-warning-subtle text-dark border ms-1"><i class="bi bi-hourglass-split"></i> معلق</span>
+                                    @endif
+                                @elseif($req->status === 'rejected')
+                                    <div class="d-flex gap-1 align-items-center justify-content-end flex-wrap">
+                                        <button type="button" class="btn btn-sm btn-success fw-bold shadow-xs" onclick="openPayloadEditModal({{ $req->id }}, 'rejected')" title="تعديل البيانات وإعادة تقديم الطلب للموافقة">
+                                            <i class="bi bi-pencil-square me-1"></i> تعديل وإعادة تقديم
+                                        </button>
+                                        @if($modelBasename === 'Beneficiary' && $isCreate)
+                                            <a href="{{ route('beneficiaries.create', ['change_request_id' => $req->id]) }}" class="btn btn-sm btn-outline-success" title="تعديل في استمارة المستفيد الكاملة">
+                                                <i class="bi bi-ui-checks"></i>
+                                            </a>
+                                        @endif
+                                        @if(!empty($isAdmin))
+                                            <form action="{{ route('change-requests.revert', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من التراجع عن هذا القرار؟');">
+                                                @csrf
+                                                <button class="btn btn-sm btn-outline-warning" title="تراجع عن الرفض"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                            </form>
+                                            <form action="{{ route('change-requests.destroy', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل نهائياً؟');">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @else
+                                    @if(!empty($isAdmin))
+                                        <div class="d-flex gap-1 align-items-center justify-content-end">
                                             <form action="{{ route('change-requests.revert', $req) }}" method="POST" class="d-inline-block" onsubmit="return confirm('هل أنت متأكد من التراجع عن هذا القرار؟ سيتم محاولة عكس أي تعديلات برمجية تمت وإعادة الطلب لحالة التعليق.');">
                                                 @csrf
                                                 <button class="btn btn-sm btn-outline-warning" title="تراجع عن القرار">
@@ -189,9 +220,9 @@
                                                 <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </div>
+                                    @else
+                                        <span class="badge bg-light text-muted border py-1 px-2 small"><i class="bi bi-eye"></i> للاطلاع</span>
                                     @endif
-                                @else
-                                    <span class="badge bg-light text-muted border py-1 px-2 small"><i class="bi bi-eye"></i> للاطلاع</span>
                                 @endif
                             </td>
                         </tr>
@@ -422,6 +453,37 @@
                                                 'patient_phone' => 'هاتف المريض',
                                                 'patient_backup_phone' => 'هاتف إضافي للمريض',
                                                 'patient_relationship' => 'صلة قرابة المريض',
+                                                'status' => 'الحالة',
+                                                'brothers_count' => 'عدد الإخوة',
+                                                'children_count' => 'عدد الأبناء',
+                                                'sponsored_children_count' => 'عدد الأبناء المكفولين',
+                                                'guardian_name' => 'اسم ولي الأمر',
+                                                'mother_name' => 'اسم الأم',
+                                                'children_names' => 'أسماء الأبناء',
+                                                'study_grade' => 'المرحلة الدراسية',
+                                                'poultry_type' => 'نوع الدواجن',
+                                                'meat' => 'اللحوم',
+                                                'source_name' => 'اسم المصدر',
+                                                'reference_number' => 'الرقم المرجعي',
+                                                'deceased_husband_name' => 'اسم الزوج المتوفى',
+                                                'deceased_husband_birth_date' => 'تاريخ ميلاد الزوج المتوفى',
+                                                'deceased_husband_death_date' => 'تاريخ وفاة الزوج',
+                                                'deceased_husband_age' => 'سن الزوج عند الوفاة',
+                                                'transit_details' => 'تفاصيل الترانزيت',
+                                                'death_details' => 'تفاصيل الوفاة',
+                                                'income_aid_sources' => 'مصادر الدخل والمساعدات',
+                                                'expenses_debts_details' => 'المصروفات والديون',
+                                                'zad_details' => 'تفاصيل زاد',
+                                                'midrar_details' => 'تفاصيل مدرار',
+                                                'hospital_name' => 'اسم المستشفى',
+                                                'tumor_location' => 'مكان الورم',
+                                                'treatment_protocol' => 'بروتوكول العلاج',
+                                                'tumor_details' => 'تفاصيل الورم',
+                                                'collection_day' => 'يوم استلام الكفالة',
+                                                'rejection_reason' => 'سبب الرفض',
+                                                'archived_reason' => 'سبب الأرشفة',
+                                                'age' => 'السن',
+                                                'classification' => 'التصنيف',
                                                 'adult_children_count' => 'عدد الأبناء البالغين',
                                                 'adult_children_ages' => 'أعمار الأبناء البالغين',
                                                 'monthly_sponsorship_amount' => 'مبلغ الكفالة الشهري',
@@ -660,6 +722,57 @@
                                          </div>
                                     @endif
 
+                                    {{-- Quick Action Bar inside Details Card --}}
+                                    @if($req->status === 'pending')
+                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 p-3 rounded-4 bg-light border mt-3">
+                                            <div class="small text-muted">
+                                                <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                                                يمكنك فحص وتعديل أي من الحقول أعلاه قبل اعتمادها، أو الموافقة فوراً بالبيانات الحالية.
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill fw-semibold shadow-xs" onclick="openPayloadEditModal({{ $req->id }}, 'pending')">
+                                                    <i class="bi bi-pencil-square me-1"></i> تعديل البيانات قبل القبول
+                                                </button>
+                                                @if(!empty($isAdmin))
+                                                    <form action="{{ route('change-requests.approve', $req) }}" method="POST" class="d-inline" onsubmit="return confirm('تأكيد الموافقة على الطلب وتنفيذه فوراً؟');">
+                                                        @csrf
+                                                        <button class="btn btn-sm btn-success px-3 rounded-pill fw-bold shadow-xs">
+                                                            <i class="bi bi-check-circle-fill me-1"></i> موافقة وتنفيذ فوري
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill shadow-xs" onclick="openRejectModal('{{ $req->id }}')">
+                                                        <i class="bi bi-x-circle me-1"></i> رفض الطلب
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @elseif($req->status === 'rejected')
+                                        <div class="p-3 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-25 mt-3">
+                                            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                                                <div>
+                                                    <div class="fw-bold text-danger d-flex align-items-center gap-1.5 mb-1">
+                                                        <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                                                        <span>سبب رفض الطلب:</span>
+                                                        <span class="badge bg-danger text-white ms-1">{{ $req->rejection_reason ?: 'لم يتم توضيح سبب محدد' }}</span>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        لا داعي لإعادة إدخال أي بيانات من الصفر! اضغط على <strong>"تعديل وإعادة تقديم"</strong> لتصحيح الملاحظات وتحديث الطلب مباشرة.
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                                                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-xs" onclick="openPayloadEditModal({{ $req->id }}, 'rejected')">
+                                                        <i class="bi bi-pencil-square me-1"></i> تعديل سريع وإعادة إرسال
+                                                    </button>
+                                                    @if($modelBasename === 'Beneficiary' && $isCreate)
+                                                        <a href="{{ route('beneficiaries.create', ['change_request_id' => $req->id]) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-semibold shadow-xs">
+                                                            <i class="bi bi-ui-checks me-1"></i> تعديل في استمارة المستفيد الكاملة
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </td>
                         </tr>
@@ -880,7 +993,321 @@
     </div>
 </div>
 
+{{-- Payload Edit Modal (For Admin editing before approval AND Employee resubmitting rejected requests) --}}
+<div class="modal fade" id="payloadEditModal" tabindex="-1" aria-labelledby="payloadEditModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <form id="payloadEditForm" method="POST" class="modal-content shadow-lg border-0 rounded-4">
+            @csrf
+            <div class="modal-header border-bottom py-3 px-4 bg-white" id="payloadEditModalHeader">
+                <div class="d-flex align-items-center gap-2.5">
+                    <span class="avatar avatar-sm bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                        <i class="bi bi-pencil-square fs-5"></i>
+                    </span>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark fs-6 mb-0" id="payloadEditModalTitle">
+                            تعديل بيانات الطلب
+                        </h5>
+                        <div class="text-muted small" id="payloadEditModalSubtitle"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body p-4 bg-light bg-opacity-40">
+                {{-- Dynamic Alert Notice --}}
+                <div id="payloadEditNotice" class="alert mb-3 rounded-3 shadow-2xs border"></div>
+
+                {{-- Fields Container --}}
+                <div id="payloadEditFieldsContainer" class="row g-3">
+                    {{-- Dynamically injected inputs --}}
+                </div>
+
+                {{-- Notes / Resubmit reason --}}
+                <div class="mt-3 pt-3 border-top" id="payloadEditNotesSection">
+                    <label class="form-label fw-bold small text-muted">ملاحظات التعديل / توضيح للمراجعة (اختياري)</label>
+                    <textarea name="resubmit_notes" id="payloadEditNotes" class="form-control" rows="2" placeholder="اكتب أي ملاحظة توضيحية حول البيانات التي تم تعديلها..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2.5 px-4 bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div id="payloadEditSecondaryActions"></div>
+                <div class="d-flex align-items-center gap-2 ms-auto" id="payloadEditPrimaryActions">
+                    {{-- Dynamically injected action buttons (Save, Save & Approve, Resubmit) --}}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    const arabicFieldLabels = {
+        'name': 'الاسم',
+        'full_name': 'الاسم بالكامل',
+        'national_id': 'الرقم القومي',
+        'phone': 'رقم الهاتف الأساسي',
+        'backup_phone': 'رقم هاتف إضافي',
+        'birth_date': 'تاريخ الميلاد',
+        'age': 'السن',
+        'address': 'العنوان بالتفصيل',
+        'governorate': 'المحافظة',
+        'center': 'المركز / الحي',
+        'village': 'القرية',
+        'street': 'الشارع',
+        'marital_status': 'الحالة الاجتماعية',
+        'health_status': 'الحالة الصحية',
+        'housing_type': 'نوع السكن',
+        'home_ownership': 'ملكية السكن',
+        'classification': 'تصنيف الحالة',
+        'status': 'حالة الملف',
+        'assistance_type': 'نوع المساعدة',
+        'assistance_amount': 'مبلغ المساعدة',
+        'collection_method': 'طريقة الاستلام',
+        'collection_day': 'يوم الاستلام',
+        'income_source': 'مصدر الدخل',
+        'monthly_income': 'الدخل الشهري',
+        'family_members_count': 'عدد أفراد الأسرة',
+        'social_status_description': 'الوصف الاجتماعي',
+        'notes': 'ملاحظات عامة',
+        'project_id': 'المشروع',
+        'campaign_id': 'الحملة',
+        'amount': 'المبلغ',
+        'description': 'الوصف',
+        'patient_name': 'اسم المريض',
+        'patient_code': 'كود المريض',
+        'patient_age': 'سن المريض',
+        'patient_birth_date': 'تاريخ ميلاد المريض',
+        'patient_phone': 'هاتف المريض',
+        'patient_backup_phone': 'هاتف إضافي للمريض',
+        'patient_relationship': 'صلة قرابة المريض',
+        'notes_cases': 'تقرير الحالة والتشخيص الطبي',
+        'donor_id': 'المتبرع',
+        'receipt_number': 'رقم الإيصال'
+    };
+
+    const requestsLookup = @json($requestsLookup ?? []);
+    const projectsList = @json($projectsMap ?? []);
+    const isUserAdmin = {{ !empty($isAdmin) ? 'true' : 'false' }};
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function openPayloadEditModal(reqId, mode) {
+        const req = requestsLookup[reqId];
+        if (!req) return;
+
+        const form = document.getElementById('payloadEditForm');
+        form.action = req.update_url;
+
+        document.getElementById('payloadEditModalTitle').innerText = `تعديل بيانات طلب ${req.action === 'create' ? 'إضافة' : (req.action === 'update' ? 'تعديل' : req.action)} ${req.model_basename} #${req.id}`;
+        document.getElementById('payloadEditModalSubtitle').innerText = `مقدم الطلب: ${req.user_name} • الحالة: ${req.status === 'pending' ? 'قيد المراجعة' : (req.status === 'rejected' ? 'مرفوض' : req.status)}`;
+
+        // Set Alert Notice
+        const noticeEl = document.getElementById('payloadEditNotice');
+        if (mode === 'rejected') {
+            noticeEl.className = 'alert alert-danger mb-3 rounded-3 shadow-2xs border border-danger border-opacity-30';
+            noticeEl.innerHTML = `
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-exclamation-octagon-fill fs-5 mt-0.5 text-danger flex-shrink-0"></i>
+                    <div>
+                        <div class="fw-bold text-danger">سبب الرفض السابق: ${escapeHtml(req.rejection_reason || 'غير محدد')}</div>
+                        <div class="text-muted small mt-1">تم استرجاع كافة بيانات الطلب المحفوظة أدناه لتتمكن من تصحيحها وإعادة تقديمها للموافقة بنقرة واحدة، دون الحاجة لإعادة كتابة أي شيء من البداية.</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            noticeEl.className = 'alert alert-primary mb-3 rounded-3 shadow-2xs border border-primary border-opacity-30';
+            noticeEl.innerHTML = `
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-info-circle-fill fs-5 mt-0.5 text-primary flex-shrink-0"></i>
+                    <div>
+                        <div class="fw-bold text-primary">تعديل بيانات الطلب قبل الموافقة</div>
+                        <div class="text-muted small mt-1">يمكنك تصحيح أو إضافة أي بيانات مطلوبة. اضغط <strong>"حفظ وموافقة فورية"</strong> لاعتمادها وتنفيذها في قاعدة البيانات مباشرة، أو <strong>"حفظ التعديلات"</strong> للإبقاء عليها قيد المراجعة.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Build fields
+        const container = document.getElementById('payloadEditFieldsContainer');
+        container.innerHTML = '';
+
+        const payload = req.payload || {};
+        const keys = Object.keys(payload).filter(k => !['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members_data'].includes(k));
+
+        if (keys.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-3">لا توجد حقول إضافية قابلة للتعديل في هذا الطلب.</div>';
+        } else {
+            keys.forEach(k => {
+                const val = payload[k];
+                const label = arabicFieldLabels[k] || k;
+
+                if (k === 'family_members') {
+                    if (Array.isArray(val) && val.length > 0) {
+                        const famHtml = `
+                            <div class="col-12">
+                                <div class="p-3 rounded-3 bg-white border d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div>
+                                        <span class="fw-bold text-dark"><i class="bi bi-people-fill text-info me-1"></i> أفراد الأسرة المسجلون في الطلب:</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle ms-1 font-monospace">${val.length} أفراد</span>
+                                        <div class="text-muted small mt-1">${val.map(f => f.full_name || 'فرد').join('، ')}</div>
+                                    </div>
+                                    ${req.create_form_url ? `
+                                        <a href="${req.create_form_url}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="bi bi-pencil-square me-1"></i> تعديل تفصيلي في استمارة المستفيد
+                                        </a>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', famHtml);
+                    }
+                    return;
+                }
+
+                // Project Select
+                if (k === 'project_id') {
+                    let optionsHtml = '<option value="">— اختر المشروع —</option>';
+                    Object.keys(projectsList).forEach(pId => {
+                        const pName = projectsList[pId];
+                        const selected = String(val) === String(pId) ? 'selected' : '';
+                        optionsHtml += `<option value="${pId}" ${selected}>${escapeHtml(pName)}</option>`;
+                    });
+                    const fieldHtml = `
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-dark">${escapeHtml(label)}</label>
+                            <select name="fields[${k}]" class="form-select">${optionsHtml}</select>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', fieldHtml);
+                    return;
+                }
+
+                // Status select if status field in payload
+                if (k === 'status' && req.model_basename === 'Beneficiary') {
+                    const statuses = {
+                        'new': 'تحت التقديم (جديد)',
+                        'under_review': 'تحت المراجعة',
+                        'accepted': 'مقبول',
+                        'rejected': 'مرفوض',
+                        'archived_improved': 'أرشيف — تحسن مادي / شفاء',
+                        'archived_deceased': 'أرشيف — توفي'
+                    };
+                    let optionsHtml = '';
+                    Object.keys(statuses).forEach(stKey => {
+                        const selected = String(val) === String(stKey) ? 'selected' : '';
+                        optionsHtml += `<option value="${stKey}" ${selected}>${statuses[stKey]}</option>`;
+                    });
+                    const fieldHtml = `
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-dark">${escapeHtml(label)}</label>
+                            <select name="fields[${k}]" class="form-select">${optionsHtml}</select>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', fieldHtml);
+                    return;
+                }
+
+                // Classification A/B
+                if (k === 'classification') {
+                    const fieldHtml = `
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-dark">${escapeHtml(label)}</label>
+                            <select name="fields[${k}]" class="form-select">
+                                <option value="A" ${val === 'A' ? 'selected' : ''}>تصنيف (A)</option>
+                                <option value="B" ${val === 'B' ? 'selected' : ''}>تصنيف (B)</option>
+                            </select>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', fieldHtml);
+                    return;
+                }
+
+                // Textarea for large text
+                if (['notes', 'notes_cases', 'description', 'social_status_description', 'address', 'archived_reason', 'rejection_reason'].includes(k)) {
+                    const fieldHtml = `
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-dark">${escapeHtml(label)}</label>
+                            <textarea name="fields[${k}]" class="form-control" rows="2">${escapeHtml(val || '')}</textarea>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', fieldHtml);
+                    return;
+                }
+
+                // If object or array (other than family_members)
+                if (typeof val === 'object' && val !== null) {
+                    return;
+                }
+
+                // Regular input
+                const isWide = ['full_name', 'name', 'patient_name', 'title'].includes(k);
+                const colClass = isWide ? 'col-md-6' : 'col-md-4 col-sm-6';
+                const inputType = ['amount', 'age', 'patient_age', 'monthly_income', 'collection_day', 'family_members_count'].includes(k) ? 'number' : (['birth_date', 'patient_birth_date', 'date', 'received_at'].includes(k) ? 'date' : 'text');
+                const fieldHtml = `
+                    <div class="${colClass}">
+                        <label class="form-label fw-bold small text-dark">${escapeHtml(label)}</label>
+                        <input type="${inputType}" name="fields[${k}]" value="${escapeHtml(val || '')}" class="form-control">
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', fieldHtml);
+            });
+        }
+
+        document.getElementById('payloadEditNotes').value = '';
+
+        // Action buttons
+        const secondaryContainer = document.getElementById('payloadEditSecondaryActions');
+        const primaryContainer = document.getElementById('payloadEditPrimaryActions');
+        secondaryContainer.innerHTML = '';
+        primaryContainer.innerHTML = '';
+
+        if (mode === 'rejected') {
+            if (req.create_form_url) {
+                secondaryContainer.innerHTML = `
+                    <a href="${req.create_form_url}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                        <i class="bi bi-ui-checks me-1"></i> فتح في استمارة المستفيد الكاملة
+                    </a>
+                `;
+            }
+            primaryContainer.innerHTML = `
+                <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" name="action_type" value="save" class="btn btn-outline-secondary px-3">
+                    <i class="bi bi-save me-1"></i> حفظ كمسودة
+                </button>
+                <button type="submit" name="action_type" value="resubmit" class="btn btn-success fw-bold px-4 shadow-sm">
+                    <i class="bi bi-send-check-fill me-1"></i> حفظ وإعادة الإرسال للموافقة
+                </button>
+            `;
+        } else {
+            // Pending
+            if (isUserAdmin) {
+                primaryContainer.innerHTML = `
+                    <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" name="action_type" value="save" class="btn btn-outline-primary fw-semibold px-3">
+                        <i class="bi bi-save me-1"></i> حفظ التعديلات فقط
+                    </button>
+                    <button type="submit" name="action_type" value="approve" class="btn btn-success fw-bold px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-1"></i> حفظ وموافقة فورية
+                    </button>
+                `;
+            } else {
+                primaryContainer.innerHTML = `
+                    <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" name="action_type" value="save" class="btn btn-primary fw-bold px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> حفظ تعديلات الطلب
+                    </button>
+                `;
+            }
+        }
+
+        new bootstrap.Modal(document.getElementById('payloadEditModal')).show();
+    }
+
     function openRejectModal(id) {
         const form = document.getElementById('rejectForm');
         form.action = "{{ url('admin/change-requests') }}/" + id + "/reject";

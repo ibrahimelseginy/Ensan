@@ -180,8 +180,8 @@ class SystemUpdateNotificationService
         // Title with Eng. Ibrahim signature
         $title = $customTitle ?: "🛠️ تحديث وتطوير في {$moduleShort}";
 
-        // Body formatted clearly and signed by Eng. Ibrahim
-        $body = "{$details}\n\n✅ تم إنجاز هذا التحديث لخدمتكم وضمان أفضل أداء للعمل.\n— مهندس إبراهيم 🛠️";
+        // Body formatted clearly and signed by Eng. Ibrahim Elseginy
+        $body = "{$details}\n\n✅ تم إنجاز هذا التحديث لخدمتكم وضمان أفضل أداء للعمل.\n— مهندس إبراهيم السجيني 🛠️";
 
         $employees = $this->getTargetEmployees($moduleId);
         $notifiedCount = 0;
@@ -215,7 +215,7 @@ class SystemUpdateNotificationService
                 if ($ibrahimUser) {
                     $channelMsg = "📢 **تحديث نظام جديد ({$moduleShort})**\n" .
                                   "{$details}\n" .
-                                  "تم توجيه التحديث للموظفين المعنيين.\n— **مهندس إبراهيم** 🛠️";
+                                  "تم توجيه التحديث للموظفين المعنيين.\n— **مهندس إبراهيم السجيني** 🛠️";
 
                     InternalMessage::create([
                         'sender_id' => $ibrahimUser->id,

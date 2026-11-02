@@ -32,12 +32,12 @@
         <div class="col-md-3"><label class="form-label form-label-required">اسم ولي الأمر بالكامل</label><input name="full_name" value="{{ old('full_name', $beneficiary->full_name) }}" required class="form-control @error('full_name') is-invalid @enderror">@error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
         <div class="col-md-3">
           <label class="form-label">الرقم القومي</label>
-          <input name="national_id" id="guardian_national_id" maxlength="14" value="{{ old('national_id', $beneficiary->national_id) }}" class="form-control" oninput="checkDuplicateNationalId(this, {{ $beneficiary->id }})">
+          <input name="national_id" id="guardian_national_id" maxlength="14" value="{{ old('national_id', $beneficiary->national_id) }}" class="form-control" oninput="checkDuplicateNationalId(this, {{ $beneficiary->id }}); if (typeof syncNationalIdToBirthDate === 'function') syncNationalIdToBirthDate(this.value, 'guardian_birth_date', 'guardian_age');">
           <div id="national_id_warning" class="mt-1"></div>
         </div>
         <div class="col-md-3"><label class="form-label">رقم الفيزا / كارت الكفالة</label><input name="visa_card_number" value="{{ old('visa_card_number', $beneficiary->visa_card_number) }}" class="form-control"></div>
-        <div class="col-md-3"><label class="form-label">تاريخ الميلاد</label><input type="date" name="birth_date" id="guardian_birth_date" value="{{ old('birth_date', optional($beneficiary->birth_date)->format('Y-m-d')) }}" class="form-control" onchange="calcAge(this.value, null, 'guardian_age')"></div>
-        <div class="col-md-3"><label class="form-label">السن (محسوب تلقائياً)</label><input type="number" min="0" max="120" name="age" id="guardian_age" value="{{ old('age', $beneficiary->age) }}" class="form-control" placeholder="تلقائي"></div>
+        <div class="col-md-3"><label class="form-label">تاريخ الميلاد</label><input type="date" name="birth_date" id="guardian_birth_date" value="{{ old('birth_date', optional($beneficiary->birth_date)->format('Y-m-d')) }}" class="form-control" oninput="calcAge(this.value, null, 'guardian_age')" onchange="calcAge(this.value, null, 'guardian_age')"></div>
+        <div class="col-md-3"><label class="form-label">السن (محسوب تلقائياً)</label><input type="number" min="0" max="120" name="age" id="guardian_age" value="{{ old('age', $beneficiary->age) }}" class="form-control" placeholder="تلقائي" oninput="calcBirthFromAge(this.value, 'guardian_birth_date')" onchange="calcBirthFromAge(this.value, 'guardian_birth_date')"></div>
         <div class="col-md-3"><label class="form-label">الهاتف الأساسي</label><input name="phone" value="{{ old('phone', $beneficiary->phone) }}" class="form-control"></div>
         <div class="col-md-3"><label class="form-label">هاتف إضافي</label><input name="backup_phone" value="{{ old('backup_phone', $beneficiary->backup_phone) }}" class="form-control"></div>
         <div class="col-12"><label class="form-label">العنوان</label><input name="address" value="{{ old('address', $beneficiary->address) }}" class="form-control"></div>
@@ -102,13 +102,13 @@
       <div id="bathaFields" class="project-special-box mt-4" style="display:none">
         <h6 class="fw-bold text-primary mb-3"><i class="bi bi-hospital me-1"></i> ملف المريض — مشروع بعثاء الأمل</h6>
         <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">اسم المريض بالكامل</label><input name="patient_name" value="{{ old('patient_name',$beneficiary->patient_name) }}" class="form-control"></div>
-          <div class="col-md-2"><label class="form-label">صلة المريض</label><select name="patient_relationship" class="form-select">@foreach(['husband'=>'الزوج','wife'=>'الزوجة','child'=>'ابن / طفلة','patient'=>'المستفيد نفسه','other'=>'فرد آخر'] as $value=>$label)<option value="{{ $value }}" @selected(old('patient_relationship',$patientMember?->relationship ?? 'patient')===$value)>{{ $label }}</option>@endforeach</select></div>
-          <div class="col-md-2"><label class="form-label">تاريخ الميلاد</label><input name="patient_birth_date" type="date" value="{{ old('patient_birth_date',optional($patientMember?->birth_date)->format('Y-m-d')) }}" class="form-control"></div>
-          <div class="col-md-2"><label class="form-label">السن</label><input name="patient_age" type="number" min="0" max="120" value="{{ old('patient_age',$beneficiary->patient_age) }}" class="form-control"></div>
-          <div class="col-md-2"><label class="form-label">كود المريض</label><input name="patient_code" value="{{ old('patient_code',$beneficiary->patient_code) }}" class="form-control"></div>
-          <div class="col-md-3"><label class="form-label">هاتف المريض</label><input name="patient_phone" value="{{ old('patient_phone',$patientMember?->phone) }}" class="form-control"></div>
-          <div class="col-md-3"><label class="form-label">هاتف إضافي</label><input name="patient_backup_phone" value="{{ old('patient_backup_phone',$patientMember?->backup_phone) }}" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label">اسم المريض بالكامل</label><input name="patient_name" id="patient_name" value="{{ old('patient_name',$beneficiary->patient_name) }}" class="form-control" placeholder="مختلف عن اسم ولي الأمر"></div>
+          <div class="col-md-2"><label class="form-label">صلة المريض</label><select name="patient_relationship" id="patient_relationship" class="form-select" onchange="syncPatientFromBeneficiary()">@foreach(['husband'=>'الزوج','wife'=>'الزوجة','child'=>'ابن / طفلة','patient'=>'المستفيد نفسه','other'=>'فرد آخر'] as $value=>$label)<option value="{{ $value }}" @selected(old('patient_relationship',$patientMember?->relationship ?? 'patient')===$value)>{{ $label }}</option>@endforeach</select></div>
+          <div class="col-md-2"><label class="form-label">تاريخ الميلاد</label><input name="patient_birth_date" id="patient_birth_date" type="date" value="{{ old('patient_birth_date',optional($patientMember?->birth_date)->format('Y-m-d')) }}" class="form-control" oninput="calcAge(this.value, null, 'patient_age')" onchange="calcAge(this.value, null, 'patient_age')"></div>
+          <div class="col-md-2"><label class="form-label">السن (محسوب تلقائياً)</label><input name="patient_age" id="patient_age" type="number" min="0" max="120" value="{{ old('patient_age',$beneficiary->patient_age) }}" class="form-control" placeholder="تلقائي" oninput="calcBirthFromAge(this.value, 'patient_birth_date')" onchange="calcBirthFromAge(this.value, 'patient_birth_date')"></div>
+          <div class="col-md-2"><label class="form-label">كود المريض</label><input name="patient_code" id="patient_code" value="{{ old('patient_code',$beneficiary->patient_code) }}" class="form-control" placeholder="تلقائي"></div>
+          <div class="col-md-3"><label class="form-label">هاتف المريض</label><input name="patient_phone" id="patient_phone" value="{{ old('patient_phone',$patientMember?->phone) }}" class="form-control" placeholder="01xxxxxxxxx"></div>
+          <div class="col-md-3"><label class="form-label">هاتف إضافي</label><input name="patient_backup_phone" id="patient_backup_phone" value="{{ old('patient_backup_phone',$patientMember?->backup_phone) }}" class="form-control" placeholder="01xxxxxxxxx"></div>
           <div class="col-md-3"><label class="form-label">نوع المساعدة</label><select name="sponsorship_scope_type" class="form-select"><option value="kafala" @selected(old('sponsorship_scope_type',$beneficiary->sponsorship_scope_type)==='kafala')>كفالة شهرية</option><option value="temporary" @selected(old('sponsorship_scope_type',$beneficiary->sponsorship_scope_type)==='temporary')>مساعدة مؤقتة / علاج</option></select></div>
           <div class="col-md-3"><label class="form-label">مبلغ الكفالة</label><input name="monthly_sponsorship_amount" type="number" min="0" step="0.01" value="{{ old('monthly_sponsorship_amount',$beneficiary->monthly_sponsorship_amount) }}" class="form-control"></div>
           <div class="col-md-3"><label class="form-label">عدد إخوته</label><input name="brothers_count" type="number" min="0" value="{{ old('brothers_count',$beneficiary->brothers_count) }}" class="form-control"></div>
@@ -131,6 +131,81 @@
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded',function(){const assistanceType=document.getElementById('assistanceType'),projectSelect=document.getElementById('projectSelect'),statusSelect=document.getElementById('statusSelect');function monthly(){document.querySelectorAll('.monthly-fields').forEach(el=>el.style.display=assistanceType?.value==='monthly'?'':'none')}function project(){const option=projectSelect?.options[projectSelect.selectedIndex],name=option?.dataset.name||option?.text||'',zadBox=document.getElementById('zadProjectFields'),bathaBox=document.getElementById('bathaFields'),isZad=name.includes('زاد'),isBatha=name.includes('بعثاء')||name.includes('علاج');zadBox.style.display=isZad?'':'none';bathaBox.style.display=isBatha?'':'none';zadBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isZad);bathaBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isBatha);if(typeof toggleSpouseZadMode==='function')toggleSpouseZadMode(isZad)}function status(){const value=statusSelect?.value,rejection=document.getElementById('rejectionReasonBox'),archive=document.getElementById('archiveReasonBox');rejection.style.display=value==='rejected'?'':'none';archive.style.display=['archived_improved','archived_deceased'].includes(value)?'':'none';rejection.querySelector('textarea').required=value==='rejected';archive.querySelector('textarea').required=['archived_improved','archived_deceased'].includes(value)}assistanceType?.addEventListener('change',monthly);projectSelect?.addEventListener('change',project);statusSelect?.addEventListener('change',status);monthly();project();status()});
+function syncPatientFromBeneficiary() {
+  const rel = document.getElementById('patient_relationship')?.value;
+  if (rel === 'patient') {
+    const mainName = document.querySelector('input[name="full_name"]')?.value;
+    const pName = document.getElementById('patient_name');
+    if (pName && (!pName.value || pName.value === mainName)) {
+      pName.value = mainName || '';
+    }
+    const bDate = document.getElementById('guardian_birth_date')?.value;
+    const pDate = document.getElementById('patient_birth_date');
+    if (bDate && pDate && !pDate.value) {
+      pDate.value = bDate;
+      if (typeof calcAge === 'function') calcAge(bDate, null, 'patient_age');
+    }
+    const bAge = document.getElementById('guardian_age')?.value;
+    const pAge = document.getElementById('patient_age');
+    if (bAge && pAge && !pAge.value) {
+      pAge.value = bAge;
+    }
+    const phone = document.querySelector('input[name="phone"]')?.value;
+    const pPhone = document.getElementById('patient_phone');
+    if (phone && pPhone && !pPhone.value) {
+      pPhone.value = phone;
+    }
+    const bPhone = document.querySelector('input[name="backup_phone"]')?.value;
+    const pBPhone = document.getElementById('patient_backup_phone');
+    if (bPhone && pBPhone && !pBPhone.value) {
+      pBPhone.value = bPhone;
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  const assistanceType=document.getElementById('assistanceType'),projectSelect=document.getElementById('projectSelect'),statusSelect=document.getElementById('statusSelect');
+  function monthly(){document.querySelectorAll('.monthly-fields').forEach(el=>el.style.display=assistanceType?.value==='monthly'?'':'none')}
+  function project(){
+    const option=projectSelect?.options[projectSelect.selectedIndex],name=option?.dataset.name||option?.text||'',zadBox=document.getElementById('zadProjectFields'),bathaBox=document.getElementById('bathaFields');
+    const isZad=name.includes('زاد');
+    const isBatha=name.includes('بعثاء')||name.includes('بناء')||name.includes('الأمل')||name.includes('علاج')||name.includes('أورام');
+    zadBox.style.display=isZad?'':'none';
+    bathaBox.style.display=isBatha?'':'none';
+    zadBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isZad);
+    bathaBox.querySelectorAll('input,select,textarea').forEach(field=>field.disabled=!isBatha);
+    if(typeof toggleSpouseZadMode==='function')toggleSpouseZadMode(isZad);
+  }
+  function status(){const value=statusSelect?.value,rejection=document.getElementById('rejectionReasonBox'),archive=document.getElementById('archiveReasonBox');rejection.style.display=value==='rejected'?'':'none';archive.style.display=['archived_improved','archived_deceased'].includes(value)?'':'none';rejection.querySelector('textarea').required=value==='rejected';archive.querySelector('textarea').required=['archived_improved','archived_deceased'].includes(value)}
+  assistanceType?.addEventListener('change',monthly);
+  projectSelect?.addEventListener('change',project);
+  statusSelect?.addEventListener('change',status);
+  monthly();
+  project();
+  status();
+
+  // Automatic National ID to Birth Date & Age synchronization
+  const nidInput = document.getElementById('guardian_national_id');
+  if (nidInput) {
+    const handleNid = () => {
+      if (typeof syncNationalIdToBirthDate === 'function') {
+        syncNationalIdToBirthDate(nidInput.value, 'guardian_birth_date', 'guardian_age');
+      }
+    };
+    nidInput.addEventListener('input', handleNid);
+    nidInput.addEventListener('change', handleNid);
+    nidInput.addEventListener('paste', () => setTimeout(handleNid, 50));
+    nidInput.addEventListener('keyup', handleNid);
+  }
+
+  // Initial calculation for patient age if birth date is present
+  const pDateEl = document.getElementById('patient_birth_date');
+  const pAgeEl = document.getElementById('patient_age');
+  if (pDateEl && pDateEl.value && pAgeEl && !pAgeEl.value && typeof calcAge === 'function') {
+    calcAge(pDateEl.value, null, 'patient_age');
+  } else if (pAgeEl && pAgeEl.value && pDateEl && !pDateEl.value && typeof calcBirthFromAge === 'function') {
+    calcBirthFromAge(pAgeEl.value, 'patient_birth_date');
+  }
+});
 </script>
 @endsection

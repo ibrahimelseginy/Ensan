@@ -24,4 +24,16 @@ final class GuestHouseStay extends Model
     public function bed() { return $this->belongsTo(GuestHouseBed::class, 'guest_house_bed_id'); }
     public function previousStay() { return $this->belongsTo(self::class, 'previous_stay_id'); }
     public function source() { return $this->morphTo(); }
+
+    public function getActualDaysAttribute(): int
+    {
+        if (!$this->arrival_date) {
+            return (int) ($this->expected_days ?? 1);
+        }
+        $start = \Carbon\Carbon::parse($this->arrival_date)->startOfDay();
+        $end = $this->departed_at 
+            ? \Carbon\Carbon::parse($this->departed_at)->startOfDay() 
+            : now()->startOfDay();
+        return max(1, $start->diffInDays($end));
+    }
 }

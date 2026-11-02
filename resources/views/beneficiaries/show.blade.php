@@ -43,11 +43,17 @@
       </div>
     </div>
     <div class="btn-group">
-      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: 'استمارة وملف المستفيد — {{ $beneficiary->full_name }}'}) : window.print()" class="btn btn-outline-info" title="معاينة الاستمارة الرسمية قبل الطباعة">
-        <i class="bi bi-eye me-1"></i> معاينة الاستمارة الرسمية
+      @php
+        $isGhCase = $beneficiary->is_guest_house_case;
+        $printTitle = $isGhCase ? ('إستمارة دخول دار الضيافة — ' . $beneficiary->full_name) : ('استمارة وملف المستفيد — ' . $beneficiary->full_name);
+        $previewLabel = $isGhCase ? 'معاينة إستمارة الدخول' : 'معاينة الاستمارة الرسمية';
+        $printLabel = $isGhCase ? 'طباعة إستمارة الدخول' : 'طباعة الاستمارة';
+      @endphp
+      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: '{{ $printTitle }}'}) : window.print()" class="btn btn-outline-info" title="{{ $previewLabel }}">
+        <i class="bi bi-eye me-1"></i> {{ $previewLabel }}
       </button>
-      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: 'استمارة وملف المستفيد — {{ $beneficiary->full_name }}'}) : window.print()" class="btn btn-outline-primary" title="طباعة الاستمارة الرسمية">
-        <i class="bi bi-printer me-1"></i> طباعة الاستمارة
+      <button type="button" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#printableBeneficiaryDossier', {title: '{{ $printTitle }}'}) : window.print()" class="btn btn-outline-primary" title="{{ $printLabel }}">
+        <i class="bi bi-printer me-1"></i> {{ $printLabel }}
       </button>
       @if(optional(auth()->user())->hasRole('admin') || optional(auth()->user())->hasRole('manager'))
         <a class="btn btn-outline-primary" href="{{ route('beneficiaries.edit', $beneficiary) }}">
@@ -218,32 +224,109 @@
             <div class="row g-3">
               @foreach($activeFamilyMembers as $member)
                 <div class="col-md-6">
-                  <div class="border rounded-3 p-3 h-100">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                      <div><div class="fw-bold fs-6">{{ $member->full_name }}</div><div class="small text-muted">{{ $member->relationship_label }} @if($member->is_patient) — مريض @endif</div></div>
+                  <div class="border rounded-3 p-3 h-100 bg-white shadow-xs position-relative">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div>
+                        <div class="fw-bold fs-6 text-dark">{{ $member->full_name }}</div>
+                        <div class="small text-muted">{{ $member->relationship_label }} @if($member->is_patient) <span class="badge bg-danger-subtle text-danger ms-1">مريض أورام/علاج</span> @endif</div>
+                      </div>
                       <div class="d-flex align-items-center gap-1">
                         <span class="badge bg-primary-subtle text-primary font-monospace">{{ $member->code }}</span>
-                        <a href="{{ route('beneficiary-family-members.show', $member) }}" class="btn btn-sm btn-outline-primary" title="فتح الملف المستقل"><i class="bi bi-box-arrow-up-left"></i></a>
+                        <a href="{{ route('beneficiary-family-members.show', $member) }}" class="btn btn-sm btn-outline-primary py-0.5 px-2" title="فتح الملف المستقل للطفل"><i class="bi bi-box-arrow-up-left"></i></a>
                       </div>
                     </div>
                     <div class="row g-2 small mb-3">
                       <div class="col-6"><span class="text-muted">العمر:</span> {{ $member->birth_date ? $member->birth_date->age . ' سنة' : ($member->age ? $member->age . ' سنة' : '—') }}</div>
                       <div class="col-6"><span class="text-muted">الميلاد:</span> {{ optional($member->birth_date)->format('Y-m-d') ?? ($member->age ? \Carbon\Carbon::now()->subYears((int) $member->age)->format('Y') . ' (تقديري)' : '—') }}</div>
                       <div class="col-6"><span class="text-muted">التعليم:</span> {{ $member->education_level ?? '—' }}</div>
-                      <div class="col-6"><span class="text-muted">الكفالة:</span> {{ $member->sponsorship_amount ? number_format((float)$member->sponsorship_amount, 2) . ' ج' : '—' }}</div>
+                      <div class="col-6">
+                        <span class="text-muted">الكفالة:</span> 
+                        @if($member->sponsorship_amount && (float)$member->sponsorship_amount > 0)
+                          <span class="badge bg-success-subtle text-success border border-success fw-bold px-2 py-0.5">{{ number_format((float)$member->sponsorship_amount, 2) }} ج.م</span>
+                        @else
+                          <span class="text-muted small">بدون كفالة خاصة</span>
+                        @endif
+                      </div>
                       @if($member->phone)<div class="col-12"><span class="text-muted">الهاتف:</span> {{ $member->phone }}</div>@endif
                       @if($member->case_details)<div class="col-12"><span class="text-muted">التفاصيل:</span> {{ $member->case_details }}</div>@endif
                     </div>
                     <div class="border-top pt-2">
-                      <div class="small fw-bold mb-2">الكفلاء / المتبرعون</div>
+                      <div class="d-flex justify-content-between align-items-center mb-1.5">
+                        <span class="small fw-bold text-dark"><i class="bi bi-person-heart text-success me-1"></i>كفلاء هذا الطفل:</span>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 rounded-pill font-monospace" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#attachMemberSponsorModal{{ $member->id }}">
+                          <i class="bi bi-plus-circle me-0.5"></i> ربط كافل بالطفل
+                        </button>
+                      </div>
                       <div class="d-flex flex-wrap gap-1">
                         @forelse($member->sponsors as $sponsor)
-                          <a href="{{ route('donors.show', $sponsor) }}" class="badge bg-success-subtle text-success text-decoration-none p-2"><i class="bi bi-person-heart me-1"></i>{{ $sponsor->name }}</a>
+                          <div class="badge bg-success-subtle text-success border border-success p-1 d-inline-flex align-items-center gap-1">
+                            <a href="{{ route('donors.show', $sponsor) }}" class="text-success text-decoration-none fw-bold small">
+                              {{ $sponsor->name }}
+                              @if($sponsor->pivot->monthly_amount)
+                                ({{ number_format((float)$sponsor->pivot->monthly_amount) }} ج)
+                              @endif
+                            </a>
+                            <form action="{{ route('beneficiary-family-members.detach-sponsor', [$member, $sponsor]) }}" method="POST" onsubmit="return confirm('هل تريد بالتأكيد إلغاء ربط الكافل بهذا الطفل؟');" class="d-inline m-0">
+                              @csrf
+                              @method('DELETE')
+                              <button type="submit" class="btn btn-link p-0 text-danger border-0" style="font-size: 0.75rem; line-height: 1;" title="إلغاء الربط"><i class="bi bi-x-circle-fill"></i></button>
+                            </form>
+                          </div>
                         @empty
-                          <span class="small text-muted">لم يتم ربط كافل بهذا الفرد حتى الآن.</span>
+                          <span class="small text-muted fst-italic">لم يتم ربط كافل خاص بهذا الفرد حتى الآن.</span>
                         @endforelse
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {{-- Modal for attaching sponsor to this specific member --}}
+                <div class="modal fade" id="attachMemberSponsorModal{{ $member->id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <form action="{{ route('beneficiary-family-members.attach-sponsor', $member) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                      @csrf
+                      <div class="modal-header py-3 px-4 text-white border-0" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%);">
+                        <div class="d-flex align-items-center gap-2">
+                          <i class="bi bi-person-heart fs-5"></i>
+                          <h5 class="modal-title fw-bold mb-0 text-white">ربط كافل بالطفل: {{ $member->full_name }}</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body p-4 bg-white text-dark">
+                        <div class="alert alert-success border-0 rounded-3 small mb-3">
+                          <i class="bi bi-shield-check me-1"></i> يتم ربط الكافل بملف الطفل <strong>{{ $member->full_name }}</strong> مباشرة، ويسمّع مبلغ كفالته تلقائياً في إجمالي كفالات الأسرة.
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-bold text-dark mb-1">اختر الكافل / المتبرع <span class="text-danger">*</span></label>
+                          <select name="donor_id" class="form-select rounded-3" required>
+                            <option value="">-- اختر المتبرع من القائمة --</option>
+                            @foreach($allDonors ?? [] as $dn)
+                              <option value="{{ $dn->id }}" @selected($member->sponsors->contains($dn->id))>
+                                {{ $dn->name }} ({{ $dn->code ?? ('D-'.$dn->id) }}) {{ $dn->phone ? '— '.$dn->phone : '' }}
+                              </option>
+                            @endforeach
+                          </select>
+                        </div>
+
+                        <div class="mb-3">
+                          <label class="form-label fw-bold text-dark mb-1">مبلغ الكفالة الشهري للطفل (ج.م)</label>
+                          <input type="number" step="0.01" min="0" name="monthly_amount" value="{{ $member->sponsorship_amount }}" class="form-control rounded-3" placeholder="مثال: 200 أو 1500">
+                          <div class="form-text text-muted small">سيتم تحديث مبلغ كفالة الطفل ويُضاف إلى إجمالي كفالات الأسرة.</div>
+                        </div>
+
+                        <div class="mb-2">
+                          <label class="form-label fw-bold text-muted small mb-1">ملاحظات الكفالة (اختياري)</label>
+                          <input type="text" name="notes" class="form-control rounded-3" placeholder="مثال: كفالة يتيم، علاج أورام، شهرية...">
+                        </div>
+                      </div>
+                      <div class="modal-footer py-2.5 px-4 bg-light border-top d-flex justify-content-between">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                          <i class="bi bi-link-45deg me-1"></i> اعتماد وربط الكافل بالطفل
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               @endforeach
@@ -302,74 +385,461 @@
         </div>
       @endif
 
-      {{-- Donations History --}}
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="section-title mb-0">
-              <i class="bi bi-gift text-success"></i>
-              <h5 class="mb-0">سجل التبرعات والكفالات الموجهة للحالة</h5>
+      {{-- ── Comprehensive Aid & Services Ledger (سجل المساعدات والكفالات والخدمات الشامل) ── --}}
+      <div class="card mb-4 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+        <div class="card-header bg-white py-3 px-4 border-bottom">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                <i class="bi bi-journal-check fs-5"></i>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold text-dark">سجل المساعدات والكفالات والخدمات المستلمة للحالة</h5>
+                <small class="text-muted">توثيق زمني شامل لكل ما قُدّم للحالة من إقامات دار الضيافة، كفالات وتبرعات، ومساعدات المشاريع والحملات</small>
+              </div>
             </div>
-            <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-outline-success">
-              <i class="bi bi-plus-lg me-1"></i> إضافة تبرع / كفالة للحالة
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5">
+                <i class="bi bi-plus-circle"></i>
+                <span>إضافة تبرع / كفالة نقدية</span>
+              </a>
+              <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#recordDirectAidModal">
+                <i class="bi bi-box-seam"></i>
+                <span>تسجيل مساعدة / كرتونة / خدمة</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#attachSponsorModal">
+                <i class="bi bi-person-heart text-danger"></i>
+                <span>ربط كفيل بالحالة</span>
+              </button>
+              @if(!empty($beneficiary->guest_house_id) || $activeStay)
+                <a href="{{ route('guest-houses.show', $beneficiary->guest_house_id ?? $activeStay?->guest_house_id) }}" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5" title="الانتقال لدار الضيافة">
+                  <i class="bi bi-hospital"></i>
+                  <span>دار الضيافة</span>
+                </a>
+              @endif
+            </div>
           </div>
-          @if(isset($donations) && $donations->count() > 0)
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>رقم الإيصال</th>
-                    <th>المتبرع</th>
-                    <th>القيمة</th>
-                    <th>البند</th>
-                    <th>الشهور المسددة</th>
+        </div>
+
+        <div class="card-body p-4 bg-light bg-opacity-50">
+          {{-- ── 1. Hero Highlights (Active Stay & Sponsorship Status) ── --}}
+          <div class="row g-3 mb-4">
+            {{-- Guest House Resident Status Card --}}
+            <div class="col-lg-6">
+              @if($activeStay)
+                <div class="p-3 rounded-4 border border-success border-opacity-50 h-100 shadow-sm" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="p-2 rounded-circle bg-success text-white shadow-sm d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-hospital fs-6"></i>
+                      </span>
+                      <div>
+                        <div class="fw-bold text-success fs-6 d-flex align-items-center gap-1.5">
+                          <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 9px; height: 9px;"></span>
+                          مقيمة حالياً بدار الضيافة لمرضى الأورام
+                        </div>
+                        <small class="text-muted fw-semibold">شاملة الإقامة والإعاشة الكاملة والانتقالات الطبية لمركز الأورام</small>
+                      </div>
+                    </div>
+                    <span class="badge bg-success text-white px-2.5 py-1.5 rounded-pill fw-bold shadow-2xs">إقامة جارية</span>
+                  </div>
+                  <div class="row g-2 mt-2 pt-2 border-top border-success border-opacity-25 small">
+                    <div class="col-sm-6">
+                      <span class="text-muted">الدار:</span>
+                      <strong class="text-dark">{{ $activeStay->guestHouse?->name ?? 'دار الضيافة' }}</strong>
+                    </div>
+                    <div class="col-sm-6">
+                      <span class="text-muted">مكان التسكين:</span>
+                      <strong class="text-dark">{{ $activeStay->bed?->wing?->name ?? 'جناح الإقامة' }} @if($activeStay->bed) (سرير: {{ $activeStay->bed->code ?? $activeStay->bed->bed_number }}) @endif</strong>
+                    </div>
+                    <div class="col-sm-6">
+                      <span class="text-muted">تاريخ الدخول:</span>
+                      <strong class="text-dark font-monospace">{{ $activeStay->arrival_date ? $activeStay->arrival_date->format('Y-m-d') : ($activeStay->admitted_at ? $activeStay->admitted_at->format('Y-m-d') : 'اليوم') }}</strong>
+                    </div>
+                    <div class="col-sm-6">
+                      <span class="text-muted">مدة الإقامة:</span>
+                      <strong class="text-success fw-bold">{{ $activeStay->actual_days }} يوم (مستمرة)</strong>
+                    </div>
+                  </div>
+                </div>
+              @elseif($guestHouseStays->isNotEmpty())
+                <div class="p-3 rounded-4 border border-secondary border-opacity-25 h-100 bg-white shadow-sm">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="p-2 rounded-circle bg-light text-secondary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                      <i class="bi bi-hospital fs-6"></i>
+                    </span>
+                    <div>
+                      <div class="fw-bold text-dark fs-6">سجل استضافات دار الضيافة</div>
+                      <small class="text-muted">إجمالي فترات الاستضافة السابقة: <strong>{{ $guestHouseStays->count() }} فترات</strong> (غير مقيمة بالدار حالياً)</small>
+                    </div>
+                  </div>
+                  <div class="small text-muted mt-2 pt-2 border-top">
+                    آخر إقامة: {{ $guestHouseStays->first()->guestHouse?->name ?? 'دار الضيافة' }} — غادرت بتاريخ {{ optional($guestHouseStays->first()->departed_at)->format('Y-m-d') ?? '—' }}
+                  </div>
+                </div>
+              @else
+                <div class="p-3 rounded-4 border border-dashed h-100 bg-white d-flex align-items-center gap-3">
+                  <span class="p-2 rounded-circle bg-light text-muted d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="bi bi-hospital fs-6"></i>
+                  </span>
+                  <div>
+                    <div class="fw-bold text-muted fs-6">دار الضيافة لمرضى الأورام</div>
+                    <small class="text-muted">لا توجد إقامات مسجلة للحالة بدار الضيافة حالياً.</small>
+                  </div>
+                </div>
+              @endif
+            </div>
+
+            {{-- Sponsorship & Project Status Card --}}
+            <div class="col-lg-6">
+              <div class="p-3 rounded-4 border border-primary border-opacity-25 h-100 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="p-2 rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                      <i class="bi bi-diagram-3 fs-6"></i>
+                    </span>
+                    <div>
+                      <div class="fw-bold text-primary fs-6">
+                        مشروع الحالة والكفالات
+                      </div>
+                      <small class="text-muted">
+                        المشروع: <strong>{{ $beneficiary->project?->name ?? 'مشروع عام' }}</strong> — نوع المساعدة: <strong>{{ $typeText }}</strong>
+                      </small>
+                    </div>
+                  </div>
+                  @if($allBeneficiarySponsors->isNotEmpty() || $beneficiary->total_family_sponsorship_amount > 0)
+                    <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-bold">
+                      <i class="bi bi-patch-check-fill me-1"></i>مكفولة
+                    </span>
+                  @else
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-0.5" data-bs-toggle="modal" data-bs-target="#attachSponsorModal">
+                      <i class="bi bi-plus me-1"></i>ربط كفيل
+                    </button>
+                  @endif
+                </div>
+
+                {{-- Financial & Child Breakdown --}}
+                <div class="d-flex align-items-center justify-content-between bg-light rounded-3 p-2.5 my-2 border">
+                  <div>
+                    <span class="text-muted small">إجمالي الكفالة الشهرية للأسرة:</span>
+                    <strong class="text-success fs-6 font-monospace d-block">{{ number_format($beneficiary->total_family_sponsorship_amount, 2) }} ج.م</strong>
+                  </div>
+                  @if($beneficiary->sponsored_children_count_calculated > 0)
+                    <div class="text-end">
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
+                        <i class="bi bi-people-fill me-1"></i>{{ $beneficiary->sponsored_children_count_calculated }} أفراد/أطفال مكفولين
+                      </span>
+                    </div>
+                  @endif
+                </div>
+
+                <div class="mt-2 pt-2 border-top small">
+                  @if($allBeneficiarySponsors->isNotEmpty())
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <span class="text-muted">الكفلاء المعتمدون:</span>
+                      @foreach($allBeneficiarySponsors as $sp)
+                        <a href="{{ route('donors.show', $sp) }}" class="badge bg-success-subtle text-success text-decoration-none px-2.5 py-1.5 rounded-pill border border-success-subtle">
+                          <i class="bi bi-person-heart me-1"></i>{{ $sp->name }} <span class="font-monospace opacity-75">({{ $sp->display_code }})</span>
+                        </a>
+                      @endforeach
+                    </div>
+                  @else
+                    <div class="text-muted d-flex justify-content-between align-items-center">
+                      <span>الحالة مسجلة تحت مشروع <strong>{{ $beneficiary->project?->name ?? 'العام' }}</strong> وبانتظار ربط كفيل مباشر لاستحقاق الكفالة الدورية.</span>
+                    </div>
+                  @endif
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- ── 2. Metric Pills Summary ── --}}
+          @php
+            $cashDonationsCount = $donations->where('type', 'cash')->count();
+            $cashTotalSum = $donations->where('type', 'cash')->sum('amount');
+            $inKindDonationsCount = $donations->where('type', 'in_kind')->count();
+            $inKindTotalSum = $donations->where('type', 'in_kind')->sum('estimated_value');
+            $totalStaysCount = $guestHouseStays->count();
+            $totalMealsCount = $mealServings->sum('total_meals_count') ?: $mealServings->count();
+            $totalRamadanCount = $ramadanBags->count();
+            $grandTotalOperations = $donations->count() + $totalStaysCount + $mealServings->count() + $totalRamadanCount;
+          @endphp
+
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="p-2.5 rounded-3 bg-white border text-center shadow-2xs">
+                <div class="text-muted small">إجمالي التبرعات النقدية</div>
+                <div class="fw-bold fs-6 text-success font-monospace">{{ number_format($cashTotalSum, 2) }} <small class="text-muted">ج.م</small></div>
+                <small class="text-muted" style="font-size: 11px;">{{ $cashDonationsCount }} إيصالات مسددة</small>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2.5 rounded-3 bg-white border text-center shadow-2xs">
+                <div class="text-muted small">المساعدات العينية ورمضان</div>
+                <div class="fw-bold fs-6 text-primary font-monospace">{{ $inKindDonationsCount + $totalRamadanCount }} <small class="text-muted">مساعدات</small></div>
+                <small class="text-muted" style="font-size: 11px;">كراتين، سلات، أدوية، كسوة</small>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2.5 rounded-3 bg-white border text-center shadow-2xs">
+                <div class="text-muted small">استضافات دار الضيافة</div>
+                <div class="fw-bold fs-6 text-info font-monospace">{{ $totalStaysCount }} <small class="text-muted">إقامات</small></div>
+                <small class="text-muted" style="font-size: 11px;">@if($activeStay)<span class="text-success fw-bold">مقيمة حالياً بالدار</span>@else إقامات سابقة @endif</small>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2.5 rounded-3 bg-white border text-center shadow-2xs">
+                <div class="text-muted small">وجبات الإعاشة المقدمة</div>
+                <div class="fw-bold fs-6 text-warning font-monospace">{{ $totalMealsCount }} <small class="text-muted">وجبة</small></div>
+                <small class="text-muted" style="font-size: 11px;">إعاشة دار الضيافة</small>
+              </div>
+            </div>
+          </div>
+
+          {{-- ── 3. Tabs / Filter Bar ── --}}
+          <ul class="nav nav-pills mb-3 gap-2" id="aidLedgerTabs" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active rounded-pill px-3 py-1.5 fw-bold text-dark bg-white border shadow-2xs" id="tab-all-btn" type="button" onclick="filterAidLedger('all', this)">
+                <i class="bi bi-collection me-1"></i> السجل الشامل ({{ $grandTotalOperations }})
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-semibold text-dark bg-white border" id="tab-gh-btn" type="button" onclick="filterAidLedger('gh', this)">
+                <i class="bi bi-hospital me-1 text-info"></i> دار الضيافة ({{ $totalStaysCount + $mealServings->count() }})
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-semibold text-dark bg-white border" id="tab-cash-btn" type="button" onclick="filterAidLedger('cash', this)">
+                <i class="bi bi-cash-coin me-1 text-success"></i> التبرعات والكفالات المالية ({{ $cashDonationsCount }})
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link rounded-pill px-3 py-1.5 fw-semibold text-dark bg-white border" id="tab-inkind-btn" type="button" onclick="filterAidLedger('inkind', this)">
+                <i class="bi bi-box-seam me-1 text-primary"></i> المساعدات العينية والمشاريع ({{ $inKindDonationsCount + $totalRamadanCount }})
+              </button>
+            </li>
+          </ul>
+
+          {{-- ── 4. Unified Ledger Table ── --}}
+          @if($grandTotalOperations > 0)
+            <div class="table-responsive bg-white rounded-3 border shadow-2xs">
+              <table class="table table-hover align-middle mb-0" id="aidLedgerTable">
+                <thead class="table-light">
+                  <tr class="small text-muted">
+                    <th style="width: 150px;">النوع والتصنيف</th>
+                    <th>البيان والتفاصيل</th>
+                    <th>المصدر / الجهة / المتبرع</th>
+                    <th>القيمة / المقابل</th>
                     <th>التاريخ</th>
-                    <th class="text-center" style="min-width: 150px;">الإجراءات</th>
+                    <th>الحالة</th>
+                    <th class="text-center" style="width: 120px;">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {{-- 1. Active Stay (Always on top if resident) --}}
+                  @if($activeStay)
+                    <tr class="aid-ledger-row table-success" data-category="gh">
+                      <td>
+                        <span class="badge bg-success text-white px-2.5 py-1 rounded-pill shadow-2xs">
+                          <i class="bi bi-hospital me-1"></i> إقامة دار ضيافة
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">إقامة نشطة حالياً بدار الضيافة لمرضى الأورام</strong>
+                        <div class="small text-muted">
+                          {{ $activeStay->bed?->wing?->name ?? 'جناح الإقامة' }} @if($activeStay->bed) — سرير: {{ $activeStay->bed->code ?? $activeStay->bed->bed_number }} @endif
+                          — شاملة الإعاشة والرعاية
+                        </div>
+                      </td>
+                      <td>
+                        <span class="fw-semibold text-dark">{{ $activeStay->guestHouse?->name ?? 'دار الضيافة' }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-success bg-opacity-15 text-success fw-bold">خدمة استضافة مجانية</span>
+                      </td>
+                      <td>
+                        <span class="font-monospace text-dark">{{ $activeStay->arrival_date ? $activeStay->arrival_date->format('Y-m-d') : ($activeStay->admitted_at ? $activeStay->admitted_at->format('Y-m-d') : 'اليوم') }}</span>
+                        <div class="small text-success fw-bold">منذ {{ $activeStay->actual_days }} يوم</div>
+                      </td>
+                      <td>
+                        <span class="badge bg-success text-white px-2 py-1 rounded-pill fw-bold">
+                          <i class="bi bi-check-circle-fill me-1"></i> مقيمة حالياً بالدار
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <a href="{{ route('guest-houses.show', $activeStay->guest_house_id) }}" class="btn btn-sm btn-outline-success px-2 py-1" title="فتح دار الضيافة">
+                          <i class="bi bi-box-arrow-up-left"></i> فتح الدار
+                        </a>
+                      </td>
+                    </tr>
+                  @endif
+
+                  {{-- 2. Past Guest House Stays --}}
+                  @foreach($guestHouseStays as $stay)
+                    @if($activeStay && $stay->id === $activeStay->id) @continue @endif
+                    <tr class="aid-ledger-row" data-category="gh">
+                      <td>
+                        <span class="badge bg-info-subtle text-info px-2 py-1 rounded-pill border border-info-subtle">
+                          <i class="bi bi-hospital me-1"></i> إقامة سابقة
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">استضافة بدار الضيافة لمرضى الأورام</strong>
+                        <div class="small text-muted">
+                          {{ $stay->bed?->wing?->name ?? 'الجناح' }} @if($stay->bed) — سرير {{ $stay->bed->bed_number }} @endif
+                          — المدة: {{ $stay->actual_days }} يوم
+                        </div>
+                      </td>
+                      <td>
+                        <span class="text-dark">{{ $stay->guestHouse?->name ?? 'دار الضيافة' }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-muted border">استضافة مجانية</span>
+                      </td>
+                      <td>
+                        <span class="font-monospace text-muted">{{ $stay->arrival_date ? $stay->arrival_date->format('Y-m-d') : ($stay->admitted_at ? $stay->admitted_at->format('Y-m-d') : '—') }}</span>
+                        @if($stay->departed_at)
+                          <div class="small text-muted">المغادرة: {{ $stay->departed_at->format('Y-m-d') }}</div>
+                        @endif
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">مكتملة</span>
+                      </td>
+                      <td class="text-center">
+                        <a href="{{ route('guest-houses.show', $stay->guest_house_id) }}" class="btn btn-sm btn-outline-secondary px-2 py-1" title="عرض الدار">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  @endforeach
+
+                  {{-- 3. Donations & Sponsorships --}}
                   @foreach($donations as $d)
-                    <tr>
-                      <td class="font-monospace fw-bold text-primary">{{ $d->receipt_number ?: ('#' . $d->id) }}</td>
+                    <tr class="aid-ledger-row" data-category="{{ $d->type === 'cash' ? 'cash' : 'inkind' }}">
+                      <td>
+                        @if($d->type === 'cash')
+                          <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill border border-success-subtle">
+                            <i class="bi bi-cash-coin me-1"></i> كفالة / مساعدة نقدية
+                          </span>
+                        @else
+                          <span class="badge bg-primary-subtle text-primary px-2 py-1 rounded-pill border border-primary-subtle">
+                            <i class="bi bi-box-seam me-1"></i> مساعدة عينية
+                          </span>
+                        @endif
+                      </td>
+                      <td>
+                        <div class="fw-bold text-dark">{{ $d->purpose ?: ($d->purpose_label ?: 'مساعدة للحالة') }}</div>
+                        <div class="small text-muted font-monospace">إيصال: {{ $d->receipt_number ?: ('#' . $d->id) }}</div>
+                        @if(!empty($d->paid_months) && is_array($d->paid_months))
+                          <div class="d-flex flex-wrap gap-1 mt-1">
+                            @foreach($d->paid_months as $pm)
+                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 10px;">{{ $pm }}</span>
+                            @endforeach
+                          </div>
+                        @endif
+                      </td>
                       <td>
                         @if($d->donor)
-                          <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none fw-bold">
-                            {{ $d->donor->name }}
+                          <a href="{{ route('donors.show', $d->donor_id) }}" class="text-decoration-none fw-bold text-dark">
+                            <i class="bi bi-person-heart text-success me-1"></i>{{ $d->donor->name }}
                           </a>
                           <div class="small text-muted font-monospace">{{ $d->donor->display_code }}</div>
                         @else
-                          <span class="text-muted">فاعل خير</span>
+                          <span class="text-muted"><i class="bi bi-person me-1"></i>فاعل خير / عام</span>
+                        @endif
+                        @if($d->project)
+                          <div class="small text-primary"><i class="bi bi-rocket me-1"></i>{{ $d->project->name }}</div>
                         @endif
                       </td>
                       <td>
-                        <span class="fw-bold text-success">{{ $d->type == 'cash' ? number_format($d->amount, 2) : number_format($d->estimated_value, 2) }}</span>
-                        <span class="text-muted small">{{ $d->currency }}</span>
-                      </td>
-                      <td>
-                        <span class="badge bg-light text-dark border">{{ $d->purpose_label }}</span>
-                      </td>
-                      <td>
-                        @if(!empty($d->paid_months) && is_array($d->paid_months))
-                          <div class="d-flex flex-wrap gap-1">
-                            @foreach($d->paid_months as $pm)
-                              <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">{{ $pm }}</span>
-                            @endforeach
-                          </div>
+                        @if($d->type === 'cash')
+                          <span class="fw-bold text-success font-monospace fs-6">{{ number_format($d->amount, 2) }}</span>
+                          <span class="text-muted small">{{ $d->currency }}</span>
                         @else
-                          <span class="text-muted small">—</span>
+                          <span class="fw-bold text-primary font-monospace">{{ $d->estimated_value > 0 ? number_format($d->estimated_value, 2) . ' ج.م' : 'مساعدة عينية' }}</span>
                         @endif
                       </td>
-                      <td>{{ $d->received_at?->format('Y-m-d') }}</td>
+                      <td>
+                        <span class="font-monospace text-dark">{{ $d->received_at?->format('Y-m-d') ?? $d->created_at->format('Y-m-d') }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-success bg-opacity-15 text-success px-2 py-1 rounded-pill fw-bold">
+                          <i class="bi bi-check2 me-1"></i> مسدد ومستلم
+                        </span>
+                      </td>
                       <td class="text-center">
                         <div class="d-inline-flex gap-1">
                           <a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-outline-primary px-2 py-1" title="عرض التفاصيل">
-                            <i class="bi bi-eye me-1"></i> عرض
+                            <i class="bi bi-eye"></i>
                           </a>
                           <a href="{{ route('donations.show', $d) }}?print=1" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1" title="طباعة الإيصال">
-                            <i class="bi bi-printer me-1"></i> طباعة
+                            <i class="bi bi-printer"></i>
                           </a>
                         </div>
+                      </td>
+                    </tr>
+                  @endforeach
+
+                  {{-- 4. Ramadan Bags & Food Parcels --}}
+                  @foreach($ramadanBags as $bag)
+                    <tr class="aid-ledger-row" data-category="inkind">
+                      <td>
+                        <span class="badge bg-warning-subtle text-dark px-2 py-1 rounded-pill border border-warning-subtle">
+                          <i class="bi bi-basket me-1 text-warning"></i> كرتونة مواد غذائية
+                        </span>
+                      </td>
+                      <td>
+                        <strong class="text-dark">توزيع كرتونة رمضان / سلة غذائية</strong>
+                        @if(!empty($bag->bag_contents))
+                          <div class="small text-muted">{{ $bag->bag_contents }}</div>
+                        @endif
+                      </td>
+                      <td>
+                        <span class="text-dark">مشروع زاد / حملة رمضان</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-muted border">كرتونة تموينية</span>
+                      </td>
+                      <td>
+                        <span class="font-monospace text-muted">{{ $bag->created_at->format('Y-m-d') }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-success bg-opacity-15 text-success px-2 py-1 rounded-pill">تم التسليم</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-muted">—</span>
+                      </td>
+                    </tr>
+                  @endforeach
+
+                  {{-- 5. Guest House Meal Servings (Grouped or listed) --}}
+                  @foreach($mealServings->take(10) as $serving)
+                    <tr class="aid-ledger-row" data-category="gh">
+                      <td>
+                        <span class="badge bg-light text-dark px-2 py-1 rounded-pill border">
+                          <i class="bi bi-egg-fried me-1 text-warning"></i> وجبة إعاشة
+                        </span>
+                      </td>
+                      <td>
+                        <span class="text-dark">وجبة إعاشة بدار الضيافة ({{ $serving->total_meals_count ?? 1 }} وجبة)</span>
+                        @if($serving->notes)
+                          <div class="small text-muted">{{ $serving->notes }}</div>
+                        @endif
+                      </td>
+                      <td>
+                        <span class="text-muted">{{ ($serving->guestHouseMeal ?? $serving->meal)?->guestHouse?->name ?? 'دار الضيافة' }}</span>
+                      </td>
+                      <td>
+                        <span class="text-muted small">إعاشة مجانية</span>
+                      </td>
+                      <td>
+                        <span class="font-monospace text-muted">{{ $serving->received_at ? \Carbon\Carbon::parse($serving->received_at)->format('Y-m-d') : $serving->created_at->format('Y-m-d') }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-success border border-success-subtle">تم التقديم</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-muted">—</span>
                       </td>
                     </tr>
                   @endforeach
@@ -377,10 +847,19 @@
               </table>
             </div>
           @else
-            <p class="text-muted text-center py-4 mb-0">
-              <i class="bi bi-inbox fs-3 d-block text-muted opacity-50 mb-2"></i>
-              لا توجد تبرعات أو كفالات مسجلة لهذه الحالة حتى الآن.
-            </p>
+            <div class="p-5 text-center bg-white rounded-3 border">
+              <i class="bi bi-journal-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+              <h6 class="fw-bold text-dark mb-1">لا توجد مساعدات أو كفالات مسجلة لهذه الحالة حتى الآن</h6>
+              <p class="text-muted small mb-3">يمكنك تسجيل استلام مساعدة عينية أو نقدية أو ربط كفيل بالحالة مباشرة عبر الأزرار أدناه.</p>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                  <i class="bi bi-plus-lg me-1"></i> إضافة تبرع / كفالة نقدية
+                </a>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#recordDirectAidModal">
+                  <i class="bi bi-box-seam me-1"></i> تسجيل مساعدة عينية أو كرتونة
+                </button>
+              </div>
+            </div>
           @endif
         </div>
       </div>
@@ -388,30 +867,62 @@
       {{-- Attachments & Official Documents Section --}}
       <div class="card mb-4 shadow-sm">
         <div class="card-body">
+          @php
+            $ghUploadedCount = collect($guestHouseDocs ?? [])->where('is_uploaded', true)->count();
+            $mobileDocsCount = ($linkedCaseApplications?->filter(fn($app) => !empty($app->id_image_path) || !empty($app->medical_report_path))->count() ?? 0);
+            $bookingDocsCount = ($linkedBookings?->filter(fn($bk) => !empty($bk->patient_id_path) || !empty($bk->companion_id_path) || !empty($bk->medical_transfer_path) || !empty($bk->followup_card_path) || !empty($bk->medical_report_path))->count() ?? 0);
+            $directAttsCount = $beneficiary->attachments->count();
+            $totalAttsCount = $ghUploadedCount + $mobileDocsCount + $bookingDocsCount + $directAttsCount;
+          @endphp
+
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="section-title mb-0">
               <i class="bi bi-paperclip text-primary fs-5"></i>
               <h5 class="mb-0 fw-bold">الأوراق والمرفقات الرسمية</h5>
             </div>
-            @php
-              $totalAttsCount = $beneficiary->attachments->count() + ($linkedCaseApplications?->filter(fn($app) => $app->id_image_path || $app->medical_report_path)->count() ?? 0);
-            @endphp
-            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill font-monospace">
-              {{ $totalAttsCount }} مستند / ملف
-            </span>
+            <div class="d-flex align-items-center gap-2">
+              @if(!empty($isGuestHouseCase))
+                <span class="badge bg-info-subtle text-info fw-bold px-3 py-2 rounded-pill font-monospace">
+                  <i class="bi bi-hospital me-1"></i> دار الضيافة: {{ $ghUploadedCount }}/6
+                </span>
+              @endif
+              <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill font-monospace">
+                إجمالي الملفات: {{ $totalAttsCount }}
+              </span>
+            </div>
           </div>
 
           {{-- Upload Form --}}
-          <form method="POST" action="{{ route('attachments.store') }}" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded-3 border">
+          <form method="POST" action="{{ route('attachments.store') }}" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded-3 border" id="quickUploadForm">
             @csrf
             <input type="hidden" name="entity_type" value="{{ \App\Models\Beneficiary::class }}">
             <input type="hidden" name="entity_id" value="{{ $beneficiary->id }}">
             <div class="row g-2 align-items-center">
-              <div class="col-md-9">
-                <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة للملف</label>
-                <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip">
-                <div class="form-text small text-muted">يدعم الصور (JPG, PNG, WEBP) وملفات PDF وWord حتى 10 ميجابايت.</div>
-              </div>
+              @if(!empty($isGuestHouseCase))
+                <div class="col-md-3">
+                  <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-tag me-1"></i> نوع المستند</label>
+                  <select name="target_doc_type" id="quickDocTypeSelect" class="form-select form-select-sm" onchange="toggleQuickUploadTarget(this.value)">
+                    <option value="general">مرفق عام للملف</option>
+                    <option value="patient_id_front">بطاقة المريض (الوجه)</option>
+                    <option value="patient_id_back">بطاقة المريض (الظهر)</option>
+                    <option value="companion_id_front">بطاقة المرافق (الوجه)</option>
+                    <option value="companion_id_back">بطاقة المرافق (الظهر)</option>
+                    <option value="followup_card">كارت المتابعة (جرعات الكيماوي)</option>
+                    <option value="referral_letter">خطاب التحويل / التقرير الطبي</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة</label>
+                  <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip" capture="environment">
+                  <div class="form-text small text-muted">يدعم الصور وملفات PDF حتى 15 ميجابايت (يمكنك تصوير البطاقة أو رفعها).</div>
+                </div>
+              @else
+                <div class="col-md-9">
+                  <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة للملف</label>
+                  <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip">
+                  <div class="form-text small text-muted">يدعم الصور (JPG, PNG, WEBP) وملفات PDF وWord حتى 10 ميجابايت.</div>
+                </div>
+              @endif
               <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary btn-sm w-100 py-2 fw-bold shadow-sm">
                   <i class="bi bi-upload me-1"></i> رفع المستند
@@ -420,7 +931,148 @@
             </div>
           </form>
 
-          {{-- 1. Documents from Linked Mobile Application if any --}}
+          {{-- 1. Official Guest House Documents & Cards (خاص بدار الضيافة) --}}
+          @if(!empty($isGuestHouseCase))
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                  <i class="bi bi-hospital text-info me-1"></i> أوراق وبطاقات دار الضيافة الرسمية (المريض والمرافق)
+                </h6>
+                <div class="d-flex gap-2 align-items-center">
+                  @if($ghUploadedCount === 6)
+                    <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle me-1"></i> كامل الأوراق الرسمية متوفرة</span>
+                  @else
+                    <span class="badge bg-warning-subtle text-warning small"><i class="bi bi-exclamation-triangle me-1"></i> متوفر {{ $ghUploadedCount }} من 6 مستندات</span>
+                  @endif
+                  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadGuestDocModal">
+                    <i class="bi bi-cloud-arrow-up me-1"></i> رفع / تحديث مستند
+                  </button>
+                </div>
+              </div>
+
+              <div class="row g-3">
+                @foreach(($guestHouseDocs ?? []) as $docKey => $doc)
+                  <div class="col-md-6 col-lg-4">
+                    @if($doc['is_uploaded'])
+                      <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between border-start border-4 border-primary">
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                          @if($doc['is_image'])
+                            <a href="{{ $doc['url'] }}" target="_blank" class="d-block text-decoration-none flex-shrink-0">
+                              <img src="{{ $doc['url'] }}" alt="{{ $doc['title'] }}" class="rounded border shadow-xs" style="width: 70px; height: 70px; object-fit: cover;">
+                            </a>
+                          @else
+                            <a href="{{ $doc['url'] }}" target="_blank" class="rounded border bg-light d-flex align-items-center justify-content-center text-danger flex-shrink-0 text-decoration-none" style="width: 70px; height: 70px; font-size: 2rem;">
+                              <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                          @endif
+                          <div class="flex-grow-1 overflow-hidden">
+                            <span class="badge {{ $doc['badge_class'] ?? 'bg-primary-subtle text-primary' }} small mb-1">{{ $doc['badge'] ?? 'مستند رسمي' }}</span>
+                            <div class="fw-bold text-truncate small" title="{{ $doc['title'] }}">{{ $doc['title'] }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ $doc['subtitle'] }}</div>
+                          </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-2 pt-2 border-top align-items-center">
+                          <a href="{{ $doc['url'] }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                            <i class="bi bi-eye me-1"></i> عرض
+                          </a>
+                          <a href="{{ $doc['url'] }}" download class="btn btn-sm btn-light border" title="تحميل">
+                            <i class="bi bi-download"></i>
+                          </a>
+                          <button type="button" class="btn btn-sm btn-light border text-warning" title="استبدال" onclick="openDocUploadModal('{{ $doc['key'] }}', '{{ $doc['title'] }}')">
+                            <i class="bi bi-arrow-repeat"></i>
+                          </button>
+                          <form method="POST" action="{{ route('beneficiaries.delete-patient-doc', ['beneficiary' => $beneficiary->id, 'docType' => $doc['key']]) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا المستند؟');">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" title="حذف">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    @else
+                      <div class="border border-dashed rounded-3 p-3 bg-light-subtle h-100 d-flex flex-column justify-content-between text-center">
+                        <div>
+                          <div class="rounded-circle bg-white border d-inline-flex align-items-center justify-content-center mb-2 text-muted shadow-xs" style="width: 44px; height: 44px;">
+                            <i class="bi {{ $doc['icon'] }} fs-5"></i>
+                          </div>
+                          <div class="fw-bold text-dark small mb-1">{{ $doc['title'] }}</div>
+                          <div class="text-muted small mb-2" style="font-size: 0.72rem;">{{ $doc['subtitle'] }}</div>
+                          <span class="badge bg-secondary-subtle text-secondary small">غير مرفوع حتى الآن</span>
+                        </div>
+                        <div class="mt-2 pt-2 border-top">
+                          <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold" onclick="openDocUploadModal('{{ $doc['key'] }}', '{{ $doc['title'] }}')">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> رفع هذا المستند
+                          </button>
+                        </div>
+                      </div>
+                    @endif
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          @endif
+
+          {{-- 2. Documents from Linked Web Room Bookings if any --}}
+          @if(isset($linkedBookings) && $linkedBookings->isNotEmpty())
+            @php
+              $bookingWithDocs = $linkedBookings->filter(fn($bk) => $bk->patient_id_path || $bk->companion_id_path || $bk->medical_transfer_path || $bk->followup_card_path || $bk->medical_report_path);
+            @endphp
+            @if($bookingWithDocs->isNotEmpty())
+              <div class="mb-4">
+                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                  <i class="bi bi-calendar2-check text-info me-1"></i> المستندات المرفوعة من الحجز الإلكتروني للدار
+                </h6>
+                <div class="row g-3">
+                  @foreach($bookingWithDocs as $bk)
+                    @foreach([
+                      'patient_id_path' => ['بطاقة المريض (الحجز)', 'bg-primary-subtle text-primary'],
+                      'companion_id_path' => ['بطاقة المرافق (الحجز)', 'bg-secondary-subtle text-secondary'],
+                      'followup_card_path' => ['كارت المتابعة (الحجز)', 'bg-info-subtle text-info'],
+                      'medical_transfer_path' => ['خطاب التحويل (الحجز)', 'bg-warning-subtle text-warning'],
+                      'medical_report_path' => ['التقرير الطبي (الحجز)', 'bg-danger-subtle text-danger'],
+                    ] as $bkCol => [$bkTitle, $bkBadge])
+                      @if(!empty($bk->{$bkCol}))
+                        @php
+                          $bkUrl = app(\App\Services\ImageUploadService::class)->url($bk->{$bkCol}) ?? asset('storage/' . ltrim($bk->{$bkCol}, '/'));
+                          $isBkImg = in_array(strtolower(pathinfo($bk->{$bkCol}, PATHINFO_EXTENSION)), ['jpg','jpeg','png','webp'], true);
+                        @endphp
+                        <div class="col-md-6 col-lg-4">
+                          <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                              @if($isBkImg)
+                                <a href="{{ $bkUrl }}" target="_blank" class="d-block text-decoration-none">
+                                  <img src="{{ $bkUrl }}" alt="{{ $bkTitle }}" class="rounded border shadow-xs" style="width: 65px; height: 65px; object-fit: cover;">
+                                </a>
+                              @else
+                                <div class="rounded border bg-light d-flex align-items-center justify-content-center text-primary" style="width: 65px; height: 65px; font-size: 1.8rem;">
+                                  <i class="bi bi-file-earmark-medical"></i>
+                                </div>
+                              @endif
+                              <div class="flex-grow-1 overflow-hidden">
+                                <span class="badge {{ $bkBadge }} small mb-1">{{ $bkTitle }}</span>
+                                <div class="fw-bold text-truncate small" title="{{ basename($bk->{$bkCol}) }}">{{ basename($bk->{$bkCol}) }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">طلب حجز #{{ $bk->id }}</div>
+                              </div>
+                            </div>
+                            <div class="d-flex gap-2 mt-2 pt-2 border-top">
+                              <a href="{{ $bkUrl }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                                <i class="bi bi-eye me-1"></i> فتح
+                              </a>
+                              <a href="{{ $bkUrl }}" download class="btn btn-sm btn-light border" title="تحميل">
+                                <i class="bi bi-download"></i>
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      @endif
+                    @endforeach
+                  @endforeach
+                </div>
+              </div>
+            @endif
+          @endif
+
+          {{-- 3. Documents from Linked Mobile Application if any --}}
           @if(isset($linkedCaseApplications) && $linkedCaseApplications->isNotEmpty())
             @php
               $hasLinkedDocs = $linkedCaseApplications->contains(fn($app) => !empty($app->id_image_path) || !empty($app->medical_report_path));
@@ -434,9 +1086,9 @@
                   @foreach($linkedCaseApplications as $caseApp)
                     @if($caseApp->id_image_path)
                       @php
-                        $idUrl = $caseApp->id_image_url ?? (Storage::disk('public')->exists($caseApp->id_image_path) ? Storage::disk('public')->url($caseApp->id_image_path) : asset('storage/' . ltrim($caseApp->id_image_path, '/')));
+                        $idUrl = $caseApp->id_image_url ?? app(\App\Services\ImageUploadService::class)->url($caseApp->id_image_path) ?? asset('storage/' . ltrim($caseApp->id_image_path, '/'));
                       @endphp
-                      <div class="col-md-6">
+                      <div class="col-md-6 col-lg-4">
                         <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
                           <div class="d-flex align-items-center gap-3 mb-2">
                             <a href="{{ $idUrl }}" target="_blank" class="d-block text-decoration-none">
@@ -462,10 +1114,10 @@
 
                     @if($caseApp->medical_report_path)
                       @php
-                        $medUrl = $caseApp->medical_report_url ?? (Storage::disk('public')->exists($caseApp->medical_report_path) ? Storage::disk('public')->url($caseApp->medical_report_path) : asset('storage/' . ltrim($caseApp->medical_report_path, '/')));
+                        $medUrl = $caseApp->medical_report_url ?? app(\App\Services\ImageUploadService::class)->url($caseApp->medical_report_path) ?? asset('storage/' . ltrim($caseApp->medical_report_path, '/'));
                         $isMedImage = in_array(strtolower(pathinfo($caseApp->medical_report_path, PATHINFO_EXTENSION)), ['jpg','jpeg','png','webp'], true);
                       @endphp
-                      <div class="col-md-6">
+                      <div class="col-md-6 col-lg-4">
                         <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
                           <div class="d-flex align-items-center gap-3 mb-2">
                             @if($isMedImage)
@@ -500,7 +1152,7 @@
             @endif
           @endif
 
-          {{-- 2. Direct File Attachments --}}
+          {{-- 4. Direct File Attachments --}}
           @php
             $atts = $beneficiary->attachments;
           @endphp
@@ -515,7 +1167,7 @@
                   $fileUrl = route('attachments.show', $a);
                   $fileName = $a->original_name ?? basename($a->path);
                 @endphp
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <div class="border rounded-3 p-3 bg-white h-100 shadow-sm d-flex flex-column justify-content-between">
                     <div class="d-flex align-items-center gap-3 mb-2">
                       @if($isImg)
@@ -551,7 +1203,7 @@
               @endforeach
             </div>
           @else
-            @if(!isset($hasLinkedDocs) || !$hasLinkedDocs)
+            @if($totalAttsCount == 0 && empty($isGuestHouseCase))
               <div class="empty-state py-4 text-center text-muted">
                 <i class="bi bi-folder2-open display-4 d-block mb-2 text-secondary opacity-50"></i>
                 <p class="mb-0">لا توجد ملفات أو أوراق مرفقة حالياً لهذا المستفيد.</p>
@@ -560,6 +1212,69 @@
           @endif
         </div>
       </div>
+
+      {{-- Modal to Upload/Replace Guest House Patient Document --}}
+      @if(!empty($isGuestHouseCase))
+        <div class="modal fade" id="uploadGuestDocModal" tabindex="-1" aria-labelledby="uploadGuestDocModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+              <form method="POST" action="{{ route('beneficiaries.upload-patient-doc', $beneficiary) }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header bg-light">
+                  <h5 class="modal-title fw-bold" id="uploadGuestDocModalLabel">
+                    <i class="bi bi-cloud-arrow-up text-primary me-1"></i> رفع مستند لدار الضيافة
+                  </h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">نوع المستند</label>
+                    <select name="doc_type" id="modal_doc_type" class="form-select" required onchange="handleModalDocTypeChange(this.value)">
+                      <option value="patient_id_front">بطاقة المريض (الوجه)</option>
+                      <option value="patient_id_back">بطاقة المريض (الظهر)</option>
+                      <option value="companion_id_front">بطاقة المرافق (الوجه)</option>
+                      <option value="companion_id_back">بطاقة المرافق (الظهر)</option>
+                      <option value="followup_card">كارت المتابعة (جرعات الكيماوي)</option>
+                      <option value="referral_letter">خطاب التحويل / التقرير الطبي</option>
+                    </select>
+                  </div>
+
+                  {{-- Companion extra info (if companion doc selected) --}}
+                  <div id="modalCompanionFields" style="display:none;" class="p-3 bg-light rounded-3 mb-3 border">
+                    <div class="small fw-bold text-secondary mb-2"><i class="bi bi-person-badge me-1"></i> بيانات المرافق (اختياري)</div>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <input type="text" name="companion_name" class="form-control form-control-sm" placeholder="اسم المرافق" value="{{ $patientProfile?->companion_name }}">
+                      </div>
+                      <div class="col-6">
+                        <input type="text" name="companion_relation" class="form-control form-control-sm" placeholder="صلة القرابة" value="{{ $patientProfile?->companion_relation }}">
+                      </div>
+                      <div class="col-6">
+                        <input type="text" name="companion_national_id" maxlength="14" class="form-control form-control-sm" placeholder="الرقم القومي للمرافق" value="{{ $patientProfile?->companion_national_id }}">
+                      </div>
+                      <div class="col-6">
+                        <input type="text" name="companion_phone" class="form-control form-control-sm" placeholder="هاتف المرافق" value="{{ $patientProfile?->companion_phone }}">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">اختر الملف أو التقط صورة بالكاميرا</label>
+                    <input type="file" name="file" class="form-control" required accept="image/*,.pdf,.doc,.docx" capture="environment">
+                    <div class="form-text small">يدعم تصوير البطاقات والمستندات بالكاميرا أو رفع صور وملفات PDF حتى 15 ميجابايت.</div>
+                  </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                  <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">
+                    <i class="bi bi-upload me-1"></i> حفظ ورفع المستند
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      @endif
 
       {{-- Activity & Audit Log Section (سجل الحركات والتعديلات) --}}
       @php
@@ -1033,6 +1748,323 @@
       }
 </style>
 
+@endsection
+
+@section('scripts')
+<script>
+function openDocUploadModal(docType, docTitle) {
+  var select = document.getElementById('modal_doc_type');
+  if (select) {
+    select.value = docType;
+    handleModalDocTypeChange(docType);
+  }
+  var label = document.getElementById('uploadGuestDocModalLabel');
+  if (label && docTitle) {
+    label.innerHTML = '<i class="bi bi-cloud-arrow-up text-primary me-1"></i> رفع / تحديث: ' + docTitle;
+  }
+  var modalEl = document.getElementById('uploadGuestDocModal');
+  if (modalEl) {
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  }
+}
+
+function handleModalDocTypeChange(val) {
+  var compBox = document.getElementById('modalCompanionFields');
+  if (compBox) {
+    if (val === 'companion_id_front' || val === 'companion_id_back') {
+      compBox.style.display = 'block';
+    } else {
+      compBox.style.display = 'none';
+    }
+  }
+}
+
+function toggleQuickUploadTarget(val) {
+  var form = document.getElementById('quickUploadForm');
+  if (!form) return;
+  if (val === 'general') {
+    form.action = "{{ route('attachments.store') }}";
+    var hidden = form.querySelector('input[name="doc_type"]');
+    if (hidden) hidden.remove();
+  } else {
+    form.action = "{{ route('beneficiaries.upload-patient-doc', $beneficiary) }}";
+    var hidden = form.querySelector('input[name="doc_type"]');
+    if (!hidden) {
+      hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = 'doc_type';
+      form.appendChild(hidden);
+    }
+    hidden.value = val;
+  }
+}
+</script>
+
+{{-- Modal: Quick Record Direct Aid / Assistance --}}
+<div class="modal fade" id="recordDirectAidModal" tabindex="-1" aria-labelledby="recordDirectAidModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <form action="{{ route('beneficiaries.record-direct-aid', $beneficiary) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      @csrf
+      <div class="modal-header py-3 px-4 text-white border-0" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+        <div class="d-flex align-items-center gap-2">
+          <div class="p-2 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+            <i class="bi bi-box-seam fs-6"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold mb-0 text-white" id="recordDirectAidModalLabel">تسجيل استلام مساعدة أو خدمة للحالة</h5>
+            <small class="text-white-50">سيتم توثيق المساعدة برقم إيصال رسمي وإدراجها فوراً في سجل الحالة وملفها</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-white text-dark">
+        {{-- Target Beneficiary Notice --}}
+        <div class="p-3 rounded-3 bg-light border d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <div class="text-muted small">الحالة المستفيدة:</div>
+            <strong class="fs-6 text-dark">{{ $beneficiary->full_name }}</strong>
+            <span class="badge bg-success-subtle text-success font-monospace ms-2">{{ $beneficiary->code }}</span>
+          </div>
+          <div class="text-end small">
+            <span class="text-muted">المشروع:</span>
+            <strong class="text-primary">{{ $beneficiary->project?->name ?? 'مشروع عام' }}</strong>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          {{-- Aid Type --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">نوع المساعدة <span class="text-danger">*</span></label>
+            <select name="aid_type" id="directAidTypeSelect" class="form-select rounded-3 fw-bold" required onchange="handleAidTypeChange(this.value)">
+              <option value="in_kind" selected>📦 مساعدة عينية (كرتونة مواد غذائية، سلة، أجهزة، كسوة)</option>
+              <option value="cash">💵 مساعدة نقدية / كفالة مالية</option>
+              <option value="service">🏨 خدمة رعاية / إعاشة / علاج</option>
+            </select>
+          </div>
+
+          {{-- Purpose (بند الإيصال / الغرض) --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">بند الإيصال / الغرض <span class="text-danger">*</span></label>
+            <select name="purpose" id="directAidPurposeSelect" class="form-select rounded-3 fw-bold" onchange="handlePurposeSelectChange(this.value)">
+              <option value="كرتونة مواد غذائية شهرية">📦 كرتونة مواد غذائية شهرية</option>
+              <option value="سلة تموين ومواد غذائية">🛒 سلة تموين ومواد غذائية</option>
+              <option value="sadaqat">🤝 صدقات (مساعدة عامة)</option>
+              <option value="kafalat_aytam">👶 كفالات أيتام</option>
+              <option value="kafalat_awram">🎗️ كفالات أورام</option>
+              <option value="zakat_maal">💰 زكاة مال</option>
+              <option value="sadaqa_jariya">🌱 صدقة جارية</option>
+              <option value="مساعدة علاجية وأدوية">💊 مساعدة علاجية وأدوية</option>
+              <option value="كسوة وملابس">👕 كسوة وملابس</option>
+              <option value="أجهزة ومستلزمات منزلية">🛋️ أجهزة ومستلزمات منزلية</option>
+              <option value="other">✏️ بند آخر (اكتبه في الخانة التالية)...</option>
+            </select>
+          </div>
+
+          {{-- Category Title (بيان أو مسمى المساعدة التفصيلي) --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">بيان المساعدة التفصيلي</label>
+            <input type="text" name="category_title" id="directAidCategoryTitle" class="form-control rounded-3" placeholder="مثال: كرتونة مواد غذائية شهرية، أو كفالة شهرية" value="كرتونة مواد غذائية شهرية">
+          </div>
+
+          {{-- Amount / Estimated Value --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1" id="aidAmountLabel">القيمة التقديرية أو المبلغ (ج.م)</label>
+            <input type="number" step="0.01" min="0" name="amount" class="form-control rounded-3 font-monospace" placeholder="0.00" value="0.00">
+          </div>
+
+          {{-- Project Assignment --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">تخصيص المشروع</label>
+            <select name="project_id" class="form-select rounded-3">
+              @if($beneficiary->project)
+                <option value="{{ $beneficiary->project_id }}" selected>مشروع الحالة: {{ $beneficiary->project->name }}</option>
+              @endif
+              <option value="none" @selected(!$beneficiary->project_id)>-- عام / بدون تخصيص لمشروع --</option>
+              @if(!empty($allProjects))
+                @foreach($allProjects as $proj)
+                  @if($proj->id !== $beneficiary->project_id)
+                    <option value="{{ $proj->id }}">{{ $proj->name }}</option>
+                  @endif
+                @endforeach
+              @endif
+            </select>
+            <div class="form-text small text-muted">يمكنك ربط المساعدة بمشروع الحالة أو جعلها عامة بدون مشروع.</div>
+          </div>
+
+          {{-- Date --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">تاريخ التسليم / الاستلام <span class="text-danger">*</span></label>
+            <input type="date" name="received_at" class="form-control rounded-3 font-monospace" required value="{{ date('Y-m-d') }}">
+          </div>
+
+          {{-- Donor / Sponsor (Optional) --}}
+          <div class="col-md-12">
+            <label class="form-label fw-bold small text-dark mb-1">المتبرع أو الكفيل المموّل (اختياري)</label>
+            <select name="donor_id" class="form-select rounded-3">
+              <option value="">-- فاعل خير / تبرع عام / المؤسسة --</option>
+              @foreach($allDonors as $dn)
+                <option value="{{ $dn->id }}" @selected($beneficiary->sponsors->contains($dn->id))>
+                  {{ $dn->name }} ({{ $dn->code ?? ('D-'.$dn->id) }}) {{ $dn->phone ? '— '.$dn->phone : '' }}
+                </option>
+              @endforeach
+            </select>
+            <div class="form-text small text-muted">في حال اختيار متبرع، سيتم ربطه تلقائياً ككافل في ملف الحالة إن لم يكن مرتبطاً مسبقاً.</div>
+          </div>
+
+          {{-- Notes --}}
+          <div class="col-12">
+            <label class="form-label fw-bold small text-dark mb-1">ملاحظات وبيان التسليم</label>
+            <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="اكتب أي ملاحظات إضافية بخصوص تسليم المساعدة للحالة..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer py-2.5 px-4 bg-light border-top d-flex justify-content-between">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-1.5">
+          <i class="bi bi-check2-circle fs-6"></i>
+          <span>حفظ وتوثيق المساعدة في السجل</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Modal: Attach Sponsor to Beneficiary --}}
+<div class="modal fade" id="attachSponsorModal" tabindex="-1" aria-labelledby="attachSponsorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form action="{{ route('beneficiaries.attach-sponsor', $beneficiary) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      @csrf
+      <div class="modal-header py-3 px-4 text-white border-0" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%);">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-person-heart fs-5"></i>
+          <h5 class="modal-title fw-bold mb-0 text-white" id="attachSponsorModalLabel">ربط كفيل بملف الحالة</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-white text-dark">
+        <div class="alert alert-info border-0 rounded-3 small mb-3">
+          <i class="bi bi-info-circle-fill me-1"></i> يمكنك توجيه الكفالة لطفل/فرد محدد في الأسرة أو للأسرة ككل. في حال ربط الكفيل بطفل، يتم تسجيل الكفالة باسمه وتُجمع تلقائياً في إجمالي كفالات الأسرة.
+        </div>
+
+        {{-- Family Member (Child) Selection --}}
+        <div class="mb-3">
+          <label class="form-label fw-bold text-dark mb-1">المستفيد من الكفالة (الطفل أو الأسرة ككل)</label>
+          <select name="family_member_id" class="form-select rounded-3">
+            <option value="">🏠 ملف الأسرة بالكامل (كفالة عامة للأسرة)</option>
+            @if($beneficiary->familyMembers->isNotEmpty())
+              <optgroup label="أطفال وأفراد الأسرة:">
+                @foreach($beneficiary->familyMembers as $m)
+                  <option value="{{ $m->id }}">
+                    👶 {{ $m->full_name }} ({{ $m->relationship ?? 'ابن/ابنة' }}) @if($m->sponsorship_amount > 0) — الكفالة الحالية: {{ number_format($m->sponsorship_amount, 2) }} ج.م @endif
+                  </option>
+                @endforeach
+              </optgroup>
+            @endif
+          </select>
+          <div class="form-text small text-muted">اختر الطفل لتخصيص الكفالة له باسمه، أو اتركها لملف الأسرة ككل.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold text-dark mb-1">اختر المتبرع / الكفيل <span class="text-danger">*</span></label>
+          <select name="donor_id" class="form-select rounded-3" required>
+            <option value="">-- اختر المتبرع من القائمة --</option>
+            @foreach($allDonors as $dn)
+              <option value="{{ $dn->id }}" @selected($beneficiary->sponsors->contains($dn->id))>
+                {{ $dn->name }} ({{ $dn->code ?? ('D-'.$dn->id) }}) {{ $dn->phone ? '— '.$dn->phone : '' }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold text-dark mb-1">قيمة الكفالة الشهرية (ج.م) <small class="text-muted">(اختياري للتحديث)</small></label>
+          <input type="number" step="0.01" min="0" name="monthly_amount" class="form-control rounded-3 font-monospace" placeholder="مثال: 500.00">
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label fw-bold text-muted small mb-1">ملاحظات الكفالة (اختياري)</label>
+          <input type="text" name="notes" class="form-control rounded-3" placeholder="مثال: كفالة أورام للطفل، كفالة يتيم شهرية">
+        </div>
+      </div>
+
+      <div class="modal-footer py-2.5 px-4 bg-light border-top d-flex justify-content-between">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+          <i class="bi bi-link-45deg me-1"></i> اعتماد وربط الكفيل
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function filterAidLedger(cat, btn) {
+  var rows = document.querySelectorAll('.aid-ledger-row');
+  rows.forEach(function(row) {
+    if (cat === 'all') {
+      row.style.display = '';
+    } else if (row.getAttribute('data-category') === cat) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  var buttons = document.querySelectorAll('#aidLedgerTabs .nav-link');
+  buttons.forEach(function(b) {
+    b.classList.remove('active', 'bg-white', 'shadow-2xs');
+    b.classList.add('bg-light');
+  });
+  if (btn) {
+    btn.classList.add('active', 'bg-white', 'shadow-2xs');
+    btn.classList.remove('bg-light');
+  }
+}
+
+function handleAidTypeChange(type) {
+  var label = document.getElementById('aidAmountLabel');
+  var purposeSel = document.getElementById('directAidPurposeSelect');
+  var titleInput = document.getElementById('directAidCategoryTitle');
+
+  if (type === 'cash') {
+    if (label) label.innerText = 'مبلغ المساعدة النقدية (ج.م) *';
+    if (purposeSel && (purposeSel.value.includes('كرتونة') || purposeSel.value.includes('سلة'))) {
+      purposeSel.value = 'sadaqat';
+      if (titleInput) titleInput.value = 'مساعدة نقدية للحالة';
+    }
+  } else if (type === 'service') {
+    if (label) label.innerText = 'التكلفة أو القيمة التقديرية للخدمة (اختياري)';
+    if (purposeSel && (purposeSel.value === 'sadaqat' || purposeSel.value.includes('كرتونة'))) {
+      purposeSel.value = 'مساعدة علاجية وأدوية';
+      if (titleInput) titleInput.value = 'خدمة رعاية وعلاج للحالة';
+    }
+  } else {
+    if (label) label.innerText = 'القيمة التقديرية للمساعدة العينية (ج.م)';
+    if (purposeSel && (purposeSel.value === 'sadaqat' || purposeSel.value === 'kafalat_aytam')) {
+      purposeSel.value = 'كرتونة مواد غذائية شهرية';
+      if (titleInput) titleInput.value = 'كرتونة مواد غذائية شهرية';
+    }
+  }
+}
+
+function handlePurposeSelectChange(val) {
+  var titleInput = document.getElementById('directAidCategoryTitle');
+  if (!titleInput) return;
+  if (val === 'other') {
+    titleInput.value = '';
+    titleInput.focus();
+  } else {
+    var sel = document.getElementById('directAidPurposeSelect');
+    if (sel && sel.selectedIndex >= 0) {
+      var optText = sel.options[sel.selectedIndex].text.replace(/^[^\s]+\s*/, '');
+      titleInput.value = optText;
+    }
+  }
+}
+</script>
 @endsection
 
 

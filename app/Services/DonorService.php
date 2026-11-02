@@ -175,11 +175,10 @@ final readonly class DonorService
                 ->pluck('beneficiaries.id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
-            $modelData['allocation_type'] = ($sponsoredBeneficiaryIds ?? $currentBeneficiaryIds) !== []
-                ? 'sponsorship'
-                : null;
-        } elseif (($modelData['allocation_type'] ?? $donor->allocation_type) === 'sponsorship') {
-            $modelData['allocation_type'] = null;
+            if (($sponsoredBeneficiaryIds ?? $currentBeneficiaryIds) !== [] || !empty($modelData['sponsorship_monthly_amount'])) {
+                $modelData['allocation_type'] = 'sponsorship';
+                $modelData['sponsorship_type'] = 'monthly_sponsor';
+            }
         }
 
         $payload = array_merge($modelData, [
@@ -274,8 +273,10 @@ final readonly class DonorService
 
         if ($classification === 'recurring' && $cycle === 'monthly') {
             $data['sponsorship_type'] = 'monthly_sponsor';
+        } elseif (!empty($data['sponsorship_monthly_amount']) || ($data['allocation_type'] ?? null) === 'sponsorship') {
+            $data['sponsorship_type'] = 'monthly_sponsor';
         } elseif (($data['sponsorship_type'] ?? null) !== 'sadaqa_jariya') {
-            $data['sponsorship_type'] = 'none';
+            $data['sponsorship_type'] = $data['sponsorship_type'] ?? $donor?->sponsorship_type ?? 'none';
         }
 
         if (array_key_exists('monthly_allocation_target', $data)

@@ -40,6 +40,14 @@
             border: 1px solid #ced4da;
             z-index: 1060 !important;
         }
+        .ben-result-item {
+            cursor: pointer;
+            transition: background 0.15s ease;
+            text-align: right;
+        }
+        .ben-result-item:hover, .ben-result-item:focus {
+            background-color: #ecfdf5 !important;
+        }
     </style>
 @endsection
 
@@ -74,61 +82,214 @@
                     minimumResultsForSearch: 0, dropdownParent: $('#guestHouseBeneficiaryModal'),
                     placeholder: 'ابحث واختر النوع...'
                 });
+            }
 
-                if (document.getElementById('existingGuestSelect')) {
-                    $('#existingGuestSelect').select2({
-                        theme: 'bootstrap-5',
-                        dir: 'rtl',
-                        width: '100%',
-                        allowClear: true,
-                        minimumInputLength: 2,
-                        dropdownParent: $('#guestHouseBeneficiaryModal'),
-                        placeholder: '— اكتب حرفين على الأقل للبحث (اسم / قومي / كود / هاتف) —',
-                        ajax: {
-                            url: '{{ route("api.search.beneficiaries") }}',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function (params) {
-                                return { q: params.term };
-                            },
-                            processResults: function (data) {
-                                return {
-                                    results: data.map(function (item) {
-                                        return {
-                                            id: item.id,
-                                            text: item.text,
-                                            itemData: item
-                                        };
-                                    })
-                                };
-                            },
-                            cache: true
-                        },
-                        language: {
-                            inputTooShort: function () {
-                                return 'يرجى كتابة حرفين على الأقل للبحث (حفاظاً على الخصوصية)';
-                            },
-                            noResults: function () {
-                                return 'لا توجد حالة مسجلة بهذا الاسم أو الرقم القومي';
-                            },
-                            searching: function () {
-                                return 'جاري البحث في الحالات المسجلة...';
+            // --- Fast Interactive Beneficiary Search Inside Modal ---
+            const quickSearchInput = document.getElementById('beneficiaryQuickSearchInput');
+            const searchResultsList = document.getElementById('beneficiarySearchResultsList');
+            const searchSpinner = document.getElementById('searchSpinner');
+            const clearSearchBtn = document.getElementById('clearSearchTextBtn');
+            const hiddenExistingId = document.getElementById('existing_beneficiary_id_val');
+            const selectedBanner = document.getElementById('selectedBeneficiaryBanner');
+            const searchContainer = document.getElementById('beneficiarySearchContainer');
+            let searchTimeout = null;
+
+            if (quickSearchInput && searchResultsList) {
+                quickSearchInput.addEventListener('input', function () {
+                    const q = this.value.trim();
+                    if (clearSearchBtn) clearSearchBtn.classList.toggle('d-none', !q);
+
+                    if (q.length < 2) {
+                        searchResultsList.classList.add('d-none');
+                        searchResultsList.innerHTML = '';
+                        if (searchSpinner) searchSpinner.classList.add('d-none');
+                        return;
+                    }
+
+                    if (searchSpinner) searchSpinner.classList.remove('d-none');
+                    clearTimeout(searchTimeout);
+
+                    searchTimeout = setTimeout(function () {
+                        fetch('{{ route("api.search.beneficiaries") }}?q=' + encodeURIComponent(q), {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
                             }
-                        }
-                    }).on('select2:select', function (e) {
-                        const item = e.params.data.itemData;
-                        if (item) {
-                            if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = item.code || '';
-                            if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = item.full_name || '';
-                            if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = item.national_id || '';
-                            if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = item.phone || '';
-                            if (document.getElementById('gh_patient_address')) document.getElementById('gh_patient_address').value = item.address || '';
-                        }
-                    }).on('change', function () {
-                        handleGuestHouseSelectExisting(this);
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (searchSpinner) searchSpinner.classList.add('d-none');
+                            if (!Array.isArray(data) || data.length === 0) {
+                                searchResultsList.innerHTML = `
+                                    <div class="p-3 text-center text-muted small">
+                                        <i class="bi bi-person-x fs-4 d-block mb-1 text-secondary"></i>
+                                        لا توجد حالة مسجلة بهذا الاسم أو الرقم القومي ("${q}")
+                                    </div>`;
+                                searchResultsList.classList.remove('d-none');
+                                return;
+                            }
+
+                            let html = '<div class="list-group list-group-flush">';
+                            data.forEach(item => {
+                                const codeBadge = item.code ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">${item.code}</span>` : '';
+                                const nidText = item.national_id ? `<span class="text-muted"><i class="bi bi-card-text me-1"></i>قومي: ${item.national_id}</span>` : '';
+                                const phoneText = item.phone ? `<span class="text-muted"><i class="bi bi-telephone me-1"></i>${item.phone}</span>` : '';
+                                
+                                const isDiff = Boolean(item.patient_name && item.full_name && item.patient_name.trim() !== item.full_name.trim());
+                                const titleHtml = isDiff 
+                                    ? `<div class="d-flex align-items-center gap-1.5"><strong class="text-dark">${item.patient_name}</strong> <span class="badge bg-info-subtle text-info border border-info-subtle px-1.5 py-0.5" style="font-size:0.7rem;">مريض</span></div><div class="small text-muted">المستفيد / ولي الأمر: ${item.full_name}</div>`
+                                    : `<strong class="text-dark">${item.patient_name || item.full_name}</strong>`;
+                                
+                                html += `
+                                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2.5 ben-result-item" 
+                                            data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                ${titleHtml}
+                                                ${codeBadge}
+                                            </div>
+                                            <div class="small d-flex gap-3 text-muted">
+                                                ${nidText}
+                                                ${phoneText}
+                                            </div>
+                                        </div>
+                                        <span class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-0.5" style="font-size: 0.78rem;">
+                                            اختيار <i class="bi bi-arrow-left"></i>
+                                        </span>
+                                    </button>`;
+                            });
+                            html += '</div>';
+                            searchResultsList.innerHTML = html;
+                            searchResultsList.classList.remove('d-none');
+
+                            searchResultsList.querySelectorAll('.ben-result-item').forEach(btn => {
+                                btn.addEventListener('click', function () {
+                                    const itemData = JSON.parse(this.getAttribute('data-item'));
+                                    selectBeneficiaryForGuestHouse(itemData);
+                                });
+                            });
+                        })
+                        .catch(err => {
+                            if (searchSpinner) searchSpinner.classList.add('d-none');
+                            console.error('Beneficiary search error:', err);
+                        });
+                    }, 200);
+                });
+
+                if (clearSearchBtn) {
+                    clearSearchBtn.addEventListener('click', function () {
+                        quickSearchInput.value = '';
+                        searchResultsList.classList.add('d-none');
+                        clearSearchBtn.classList.add('d-none');
+                        quickSearchInput.focus();
                     });
                 }
+
+                // Close search dropdown on click outside
+                document.addEventListener('click', function (e) {
+                    if (searchContainer && !searchContainer.contains(e.target)) {
+                        searchResultsList.classList.add('d-none');
+                    }
+                });
             }
+
+            window.selectBeneficiaryForGuestHouse = function (item) {
+                if (!item) return;
+
+                const patName = item.patient_name || item.full_name || '';
+
+                if (hiddenExistingId) hiddenExistingId.value = item.id;
+                if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = item.code || '';
+                if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = patName;
+                if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = item.national_id || '';
+                if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = item.phone || '';
+                if (document.getElementById('gh_patient_address')) document.getElementById('gh_patient_address').value = item.address || '';
+
+                // Auto-fill companion info if available
+                const compNameInput = document.querySelector('input[name="companion_name"]');
+                if (compNameInput && item.companion_name) compNameInput.value = item.companion_name;
+                const compRelInput = document.querySelector('input[name="companion_relation"]');
+                if (compRelInput && item.companion_relation) compRelInput.value = item.companion_relation;
+                const compNidInput = document.querySelector('input[name="companion_national_id"]');
+                if (compNidInput && item.companion_national_id) compNidInput.value = item.companion_national_id;
+                const compPhoneInput = document.querySelector('input[name="companion_phone"]');
+                if (compPhoneInput && item.companion_phone) compPhoneInput.value = item.companion_phone;
+                const compAddrInput = document.querySelector('input[name="companion_address"]');
+                if (compAddrInput && item.companion_address) compAddrInput.value = item.companion_address;
+
+                // Auto-fill medical info if available
+                const medCenterInput = document.querySelector('input[name="medical_center"]');
+                if (medCenterInput && item.medical_center) medCenterInput.value = item.medical_center;
+                const treatTypeSelect = document.querySelector('select[name="treatment_type"]');
+                if (treatTypeSelect && item.treatment_type) {
+                    treatTypeSelect.value = item.treatment_type;
+                    if (typeof toggleTreatmentDocs === 'function') toggleTreatmentDocs(item.treatment_type);
+                }
+                const sessCountInput = document.querySelector('input[name="sessions_count"]');
+                if (sessCountInput && item.sessions_count) sessCountInput.value = item.sessions_count;
+
+                // Auto-detect gender
+                if (item.gender) {
+                    const gSelect = document.getElementById('gh_patient_gender');
+                    if (gSelect) gSelect.value = item.gender;
+                } else if (item.national_id && String(item.national_id).length === 14) {
+                    const gDigit = parseInt(String(item.national_id).charAt(12), 10);
+                    const gSelect = document.getElementById('gh_patient_gender');
+                    if (gSelect && !isNaN(gDigit)) {
+                        gSelect.value = (gDigit % 2 !== 0) ? 'male' : 'female';
+                    }
+                }
+
+                // Show selected banner
+                const nameEl = document.getElementById('selectedBenFullName');
+                const codeEl = document.getElementById('selectedBenCodeBadge');
+                const metaEl = document.getElementById('selectedBenMetaText');
+
+                if (nameEl) nameEl.textContent = patName;
+                if (codeEl) codeEl.textContent = item.code ? item.code : ('BEN-' + item.id);
+                if (metaEl) {
+                    const nidStr = item.national_id ? `الرقم القومي: ${item.national_id}` : '';
+                    const phoneStr = item.phone ? `الهاتف: ${item.phone}` : '';
+                    const addressStr = item.address ? `العنوان: ${item.address}` : '';
+                    metaEl.textContent = [nidStr, phoneStr, addressStr].filter(Boolean).join(' • ');
+                }
+
+                if (selectedBanner) {
+                    selectedBanner.classList.remove('d-none');
+                    selectedBanner.classList.add('d-flex');
+                }
+                if (searchContainer) {
+                    searchContainer.classList.add('d-none');
+                }
+                if (searchResultsList) {
+                    searchResultsList.classList.add('d-none');
+                }
+            };
+
+            window.resetSelectedBeneficiarySearch = function () {
+                if (hiddenExistingId) hiddenExistingId.value = '';
+                if (quickSearchInput) {
+                    quickSearchInput.value = '';
+                    if (clearSearchBtn) clearSearchBtn.classList.add('d-none');
+                }
+                if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = '';
+                if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = '';
+                if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = '';
+                if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = '';
+                if (document.getElementById('gh_patient_address')) document.getElementById('gh_patient_address').value = '';
+                if (document.getElementById('gh_patient_gender')) document.getElementById('gh_patient_gender').value = '';
+
+                if (selectedBanner) {
+                    selectedBanner.classList.add('d-none');
+                    selectedBanner.classList.remove('d-flex');
+                }
+                if (searchContainer) {
+                    searchContainer.classList.remove('d-none');
+                }
+                if (quickSearchInput) {
+                    setTimeout(() => quickSearchInput.focus(), 100);
+                }
+            };
 
             function configurePeopleList(config) {
                 const typeSelect = document.getElementById(config.typeSelectId);
@@ -318,28 +479,66 @@
 
         function openBeneficiaryModalWithBed(bedId, bedLabel) {
             const modalEl = document.getElementById('guestHouseBeneficiaryModal');
-            if (!modalEl) return;
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.show();
+            if (!modalEl) {
+                console.error('guestHouseBeneficiaryModal not found');
+                return;
+            }
 
-            setTimeout(() => {
-                const bedBtn = modalEl.querySelector(`.modal-bed-square[data-bed-id="${bedId}"]`);
-                if (bedBtn) {
-                    selectModalBed(bedBtn);
-                } else {
-                    const input = document.getElementById('modalBedInput');
-                    if (input) input.value = bedId;
-                    ['modalBedNotice', 'modalBedNoticeTop'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.classList.remove('d-none');
-                    });
-                    ['modalBedNoticeLabel', 'modalBedNoticeTopLabel'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.textContent = bedLabel;
-                    });
-                }
-            }, 250);
+            const openModals = Array.from(document.querySelectorAll('.modal.show')).filter(m => m !== modalEl);
+            let shownOnce = false;
+
+            function showTargetModal() {
+                if (shownOnce) return;
+                shownOnce = true;
+
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+
+                setTimeout(() => {
+                    const bedBtn = modalEl.querySelector(`.modal-bed-square[data-bed-id="${bedId}"]`);
+                    if (bedBtn) {
+                        selectModalBed(bedBtn);
+                    } else {
+                        const input = document.getElementById('modalBedInput');
+                        if (input) input.value = bedId;
+                        ['modalBedNotice', 'modalBedNoticeTop'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.classList.remove('d-none');
+                        });
+                        ['modalBedNoticeLabel', 'modalBedNoticeTopLabel'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.textContent = bedLabel;
+                        });
+                    }
+                }, 200);
+            }
+
+            if (openModals.length > 0) {
+                let hiddenCount = 0;
+                openModals.forEach(m => {
+                    const bsInst = bootstrap.Modal.getInstance(m) || bootstrap.Modal.getOrCreateInstance(m);
+                    if (bsInst) {
+                        const handler = function () {
+                            m.removeEventListener('hidden.bs.modal', handler);
+                            hiddenCount++;
+                            if (hiddenCount >= openModals.length) {
+                                showTargetModal();
+                            }
+                        };
+                        m.addEventListener('hidden.bs.modal', handler);
+                        bsInst.hide();
+                    } else {
+                        hiddenCount++;
+                    }
+                });
+                setTimeout(showTargetModal, 350);
+            } else {
+                showTargetModal();
+            }
         }
+        window.openBeneficiaryModalWithBed = openBeneficiaryModalWithBed;
+        window.selectModalBed = selectModalBed;
+        window.clearModalBedSelection = clearModalBedSelection;
 
         function toggleTreatmentDocs(type) {
             const chemoContainer = document.getElementById('chemo-card-container');
@@ -575,7 +774,10 @@
             </div>
         </div>
         @php
-            $isGhManager = auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدير دار الضيافة', 'مدير المؤسسة بالكامل', 'إدارة']) || ((int)$guest_house->manager_id === (int)auth()->id());
+            $isGhManager = auth()->user()?->hasRole(['admin', 'super_admin', 'manager', 'مدراء دار الضيافه', 'مدير دار الضيافة', 'مدير دار ضيافة كفر الشيخ', 'مدير دار ضيافة طنطا', 'مدير المؤسسة بالكامل', 'إدارة'])
+                || ((int)($guest_house->manager_user_id ?? $guest_house->manager_id ?? 0) === (int)auth()->id())
+                || (auth()->user() && auth()->user()->hasPermission("guest_houses.manage.{$guest_house->id}"))
+                || (auth()->user() && auth()->user()->hasPermission('manage_guest_house'));
         @endphp
         <div class="d-flex flex-wrap gap-2">
             @if(request()->user()?->hasPermission('beneficiaries.view') || request()->user()?->hasPermission('beneficiaries.create') || $isGhManager)
@@ -680,26 +882,26 @@
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="gh-metric-card h-100 border border-primary border-opacity-25" style="background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);">
-                <div class="gh-metric-icon bg-primary bg-opacity-15 text-primary">
-                    <i class="bi bi-moon-stars-fill"></i>
+            <div class="gh-metric-card h-100">
+                <div class="gh-metric-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-moon-stars"></i>
                 </div>
-                <div class="text-muted small fw-bold">الليالي خلال الشهر</div>
-                <h4 class="fw-bold mb-0 text-primary">{{ number_format($monthlyNightsCount) }}</h4>
-                <div class="small text-primary-emphasis mt-1">
-                    <i class="bi bi-check2-circle me-1"></i>ليلة إقامة فعلية
+                <div class="text-muted small">الليالي خلال الشهر</div>
+                <h4 class="fw-bold mb-0">{{ number_format($monthlyNightsCount) }}</h4>
+                <div class="small text-muted mt-1">
+                    <i class="bi bi-check2-circle text-success me-1"></i>ليلة إقامة فعلية
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="gh-metric-card h-100 border border-warning border-opacity-25" style="background: linear-gradient(180deg, #ffffff 0%, #fffcf5 100%);">
-                <div class="gh-metric-icon bg-warning bg-opacity-15 text-warning-emphasis">
-                    <i class="bi bi-person-hearts"></i>
+            <div class="gh-metric-card h-100">
+                <div class="gh-metric-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-people"></i>
                 </div>
-                <div class="text-muted small fw-bold">المستفيدون خلال الشهر</div>
-                <h4 class="fw-bold mb-0 text-dark">{{ number_format($monthlyBeneficiariesCount) }}</h4>
-                <div class="small text-warning-emphasis mt-1">
-                    <i class="bi bi-people-fill me-1"></i>نزيل خلال الفترة
+                <div class="text-muted small">المستفيدون خلال الشهر</div>
+                <h4 class="fw-bold mb-0">{{ number_format($monthlyBeneficiariesCount) }}</h4>
+                <div class="small text-muted mt-1">
+                    <i class="bi bi-person-check text-info me-1"></i>نزيل خلال الفترة
                 </div>
             </div>
         </div>

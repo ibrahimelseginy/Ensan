@@ -13,6 +13,7 @@ use App\Models\Delegate;
 use App\Models\Beneficiary;
 use App\Models\TravelRoute;
 use App\Models\ChangeRequest;
+use App\Models\GuestHouse;
 use App\Services\DonationService;
 use App\Http\Requests\StoreDonationRequest;
 use App\Http\Requests\UpdateDonationRequest;
@@ -111,11 +112,12 @@ final class DonationWebController extends Controller
             : collect();
 
         $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
+        $receiptGuestHouses = GuestHouse::where('status', 'active')->orderBy('name')->get();
 
         return view('donations.index', compact(
             'cashTotal', 'cashCount', 'inKindTotal', 'inKindCount',
             'channelMetrics', 'todayByChannel', 'inKindToday',
-            'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries', 'allDonors'
+            'receiptDonors', 'receiptProjects', 'allFamilyMembers', 'receiptTreasuries', 'allDonors', 'receiptGuestHouses'
         ));
     }
 
@@ -244,11 +246,12 @@ final class DonationWebController extends Controller
             ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
             : collect();
         $receiptCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
+        $receiptGuestHouses = GuestHouse::where('status', 'active')->orderBy('name')->get();
 
         return view('donations.cash', compact(
             'cashDonations', 'totalAmount', 'totalCount', 'channelMetrics', 'todayByChannel',
             'q', 'month', 'year', 'channel', 'projectId', 'campaignId',
-            'allDonors', 'receiptDonors', 'receiptProjects', 'receiptCampaigns', 'allFamilyMembers', 'receiptTreasuries'
+            'allDonors', 'receiptDonors', 'receiptProjects', 'receiptCampaigns', 'receiptGuestHouses', 'allFamilyMembers', 'receiptTreasuries'
         ));
     }
 
@@ -366,7 +369,7 @@ final class DonationWebController extends Controller
             ->get();
         $projects    = Project::orderBy('name')->get();
         $allFamilyMembers = \App\Models\BeneficiaryFamilyMember::with('beneficiary')
-            ->where('active', true)
+            ->where(fn ($q) => $q->whereNull('active')->orWhere('active', true)->orWhere('active', 1))
             ->orderBy('full_name')
             ->get();
         $warehouses  = Warehouse::when(Schema::hasColumn('warehouses', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
@@ -376,16 +379,18 @@ final class DonationWebController extends Controller
         }
         $items         = \App\Models\Item::when(Schema::hasColumn('items', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         $activeCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
+        $activeGuestHouses = GuestHouse::where('status', 'active')->orderBy('name')->get();
 
         $selectedDonorId = old('donor_id', request('donor_id'));
-        $selectedDonor = $selectedDonorId ? Donor::with(['sponsoredBeneficiary', 'sponsoredBeneficiaries'])->find($selectedDonorId) : null;
+        $selectedDonor = $selectedDonorId ? Donor::find($selectedDonorId) : null;
+        $selectedDonorProfile = $selectedDonor ? $selectedDonor->getSponsorshipProfile() : null;
 
         $selectedBeneficiaryId = old('beneficiary_id', request('beneficiary_id'));
         $selectedBeneficiary = $selectedBeneficiaryId ? Beneficiary::find($selectedBeneficiaryId) : null;
 
         return view('donations.create', compact(
-            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items', 'activeCampaigns',
-            'selectedDonor', 'selectedBeneficiary'
+            'donors', 'projects', 'allFamilyMembers', 'warehouses', 'treasuries', 'items', 'activeCampaigns', 'activeGuestHouses',
+            'selectedDonor', 'selectedDonorProfile', 'selectedBeneficiary'
         ));
     }
 
@@ -403,7 +408,7 @@ final class DonationWebController extends Controller
 
     public function show(Donation $donation): View
     {
-        $donation->load(['donor', 'project', 'campaign', 'warehouse', 'delegate', 'route', 'familyMembers.beneficiary']);
+        $donation->load(['donor', 'project', 'campaign', 'warehouse', 'delegate', 'route', 'familyMembers.beneficiary', 'createdBy', 'user']);
         return view('donations.show', compact('donation'));
     }
 

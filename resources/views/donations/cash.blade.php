@@ -307,11 +307,8 @@
     </div>
     <div class="d-flex align-items-center gap-2">
         <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="window.EnsanPrintPreview ? window.EnsanPrintPreview.open('#cashDonationsFeed', {title: 'كشف التبرعات النقدية والإلكترونية'}) : window.print()">
-            <i class="bi bi-printer me-1"></i> طباعة الكشف
+            <i class="bi bi-printer me-1"></i> معاينة الكشف
         </button>
-        <a href="{{ route('donations.export', array_merge(request()->query(), ['type' => 'cash'])) }}" data-no-loader download class="btn btn-sm btn-outline-light rounded-pill px-3">
-            <i class="bi bi-download me-1"></i> تصدير CSV
-        </a>
     </div>
 </div>
 
@@ -466,8 +463,8 @@
     <div class="panel-header-box">
         <div class="d-flex align-items-center gap-2">
             <input type="checkbox" id="selectAllCash" onclick="toggleAll('cash-check', this.checked)" class="form-check-input mt-0" style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
-            <div class="rounded-circle bg-success bg-opacity-20 text-success p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                <i class="bi bi-cash-coin fs-5"></i>
+            <div class="rounded-circle p-2 d-flex align-items-center justify-content-center shadow-xs" style="width: 40px; height: 40px; background-color: #059669 !important; color: #ffffff !important;">
+                <i class="bi bi-cash-coin fs-5 text-white" style="color: #ffffff !important;"></i>
             </div>
             <div>
                 <h5 class="fw-bold mb-0 text-white">كشف التبرعات النقدية والإلكترونية</h5>
@@ -551,6 +548,16 @@
                             @if($d->purpose_label)
                                 <span>•</span>
                                 <span class="badge bg-white bg-opacity-10 text-white rounded-pill px-2">{{ $d->purpose_label }}</span>
+                            @endif
+                            @php
+                                $recordedUser = $d->createdBy ?? $d->user;
+                            @endphp
+                            @if($recordedUser)
+                                <span>•</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size: 0.75rem; font-weight: 600;" title="المستخدم الذي قام بتسجيل التبرع">
+                                    <i class="bi bi-person-check-fill"></i>
+                                    <span>تسجيل: {{ $recordedUser->name }}</span>
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -707,7 +714,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">المشروع</label>
                         <select name="project_id" class="form-select">
                             <option value="">— اختر مشروع (اختياري) —</option>
@@ -717,12 +724,22 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold text-primary"><i class="bi bi-megaphone-fill me-1"></i> التبرع للحملات النشطة</label>
                         <select name="campaign_id" class="form-select border-primary">
-                            <option value="">— اختر حملة نشطة للتبرع لها —</option>
+                            <option value="">— اختر حملة نشطة —</option>
                             @foreach(($receiptCampaigns ?? []) as $campItem)
                                 <option value="{{ $campItem->id }}">{{ $campItem->name }} (المستهدف: {{ number_format($campItem->target_amount ?: $campItem->goal_amount, 0) }} ج.م)</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-success"><i class="bi bi-hospital me-1"></i> دار الضيافة</label>
+                        <select name="guest_house_id" class="form-select border-success">
+                            <option value="">— اختر دار ضيافة (اختياري) —</option>
+                            @foreach(($receiptGuestHouses ?? \App\Models\GuestHouse::where('status', 'active')->orderBy('name')->get()) as $ghItem)
+                                <option value="{{ $ghItem->id }}">{{ $ghItem->name }}</option>
                             @endforeach
                         </select>
                     </div>

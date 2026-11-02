@@ -456,6 +456,16 @@
                     </div>
 
                     <div class="col-md-6">
+                        <label class="form-label fw-bold text-success"><i class="bi bi-hospital me-1"></i> دار الضيافة</label>
+                        <select name="guest_house_id" class="form-select border-success">
+                            <option value="">— اختر دار ضيافة (اختياري) —</option>
+                            @foreach(($receiptGuestHouses ?? \App\Models\GuestHouse::where('status', 'active')->orderBy('name')->get()) as $ghItem)
+                                <option value="{{ $ghItem->id }}">{{ $ghItem->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
                         <label class="form-label fw-bold">وذلك قيمة (نوع التخصيص)</label>
                         <select name="purpose" id="quickPurposeSelect" class="form-select" required>
                             <option value="">— اختر —</option>

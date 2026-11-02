@@ -21,6 +21,7 @@ use App\Models\GuestHouseBed;
 use App\Models\GuestHouseStay;
 use App\Models\GuestHouseCustody;
 use App\Models\GuestHouseMeal;
+use App\Models\GuestHouseMealServing;
 use App\Services\GuestHouseService;
 use App\Services\DonationService;
 use App\Services\ExpenseService;
@@ -793,19 +794,28 @@ final class GuestHouseWebController extends Controller
         return back()->with('success', 'تم صرف الصنف وتحديث رصيد المخزون.');
     }
 
-    public function departStay(GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse
+    public function departStay(Request $request, GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse
     {
         abort_unless((int) $stay->guest_house_id === (int) $guest_house->id, 404);
         if ($stay->status !== 'resident') {
             return back()->with('error', 'هذه الحالة غير مقيمة حاليًا.');
         }
+
+        $departedAt = $request->filled('departed_at')
+            ? \Carbon\Carbon::parse($request->input('departed_at'))
+            : now();
+
+        $notes = $request->input('departure_notes', 'مغادرة الحالة وإخلاء السرير');
+
         $stay->update([
             'status' => 'departed',
             'is_temporary_out' => false,
-            'departed_at' => now(),
-            'departure_notes' => 'مغادرة الحالة وإخلاء السرير',
+            'departed_at' => $departedAt,
+            'departure_notes' => $notes,
         ]);
-        return back()->with('success', 'تم تسجيل مغادرة الحالة وإخلاء السرير بنجاح.');
+
+        $days = $stay->actual_days;
+        return back()->with('success', "تم تسجيل مغادرة الحالة وإخلاء السرير بنجاح (مدة الإقامة الفعلية المحتسبة: {$days} أيام).");
     }
 
     public function temporaryDepartStay(GuestHouse $guest_house, GuestHouseStay $stay): RedirectResponse
@@ -970,7 +980,7 @@ final class GuestHouseWebController extends Controller
                 $bServing = $servingsInput[$beneficiaryId] ?? [];
                 
                 $companionName = !empty($bServing['companion_name']) ? trim((string)$bServing['companion_name']) : null;
-                $hasRealCompanion = GuestHouseMealServing::isRealCompanion($companionName);
+                $hasRealCompanion = \App\Models\GuestHouseMealServing::isRealCompanion($companionName);
 
                 $pMeals = isset($bServing['patient_meals_count']) ? (int)$bServing['patient_meals_count'] : ($received ? 1 : 0);
                 // وجبة المرافق تُحتسب فقط في حال وجود مرافق حقيقي (ليس فارغاً أو 'لا يوجد' أو 'بدون مرافق')

@@ -257,16 +257,16 @@ class InternalChatController extends Controller
         // Dispatch notifications in background
         $this->dispatchNotifications($msg, $currentUser, $receiverId, $targetType, $visibleToUsers, $attachmentType);
 
-        // Check if an automated intelligent reply from Anis AI bot should be generated
+        // Anis AI bot interacts exclusively in his dedicated assistant section for each employee, never posting into the general team public channel
         $botMessage = null;
-        if (empty($receiverId) && !empty($msgText)) {
-            $botReplyText = $this->generateBotReply($msgText, $currentUser);
-            if ($botReplyText) {
-                $botUser = $this->resolveBotUser();
-                if ($botUser) {
+        if (!empty($receiverId) && !empty($msgText)) {
+            $botUser = $this->resolveBotUser();
+            if ($botUser && (int)$receiverId === (int)$botUser->id) {
+                $botReplyText = $this->generateBotReply($msgText, $currentUser);
+                if ($botReplyText) {
                     $botMessage = InternalMessage::create([
                         'sender_id' => $botUser->id,
-                        'receiver_id' => null,
+                        'receiver_id' => $currentUserId,
                         'is_bot' => true,
                         'target_type' => 'all',
                         'message' => $botReplyText,
@@ -319,7 +319,7 @@ class InternalChatController extends Controller
         if ($isBot) {
             $senderName = 'أنيس | رفيق العمل 🌿';
             $senderInitial = 'أ';
-            $avatar = asset('images/heart-icon.png');
+            $avatar = asset('images/anees-avatar.jpg');
         } else {
             $senderName = $sender ? $sender->name : 'موظف';
             $senderInitial = $sender ? mb_strtoupper(mb_substr($sender->name, 0, 1)) : 'M';
@@ -378,6 +378,7 @@ class InternalChatController extends Controller
             'time' => $m->created_at->format('H:i'),
             'date' => $m->created_at->translatedFormat('d M'),
             'read_at' => $m->read_at ? $m->read_at->format('H:i') : null,
+            'is_ibrahim' => ($m->sender_id === 8 || str_contains(mb_strtolower((string)$senderName), 'ابراهيم') || str_contains(mb_strtolower((string)$senderName), 'إبراهيم')),
         ];
     }
 
@@ -464,33 +465,76 @@ class InternalChatController extends Controller
                    "فريق العمل جاهز لمساندة الحالات على مدار الساعة! 💪 هل تود تفاصيل عن قسم معين؟";
         }
 
-        // 3. Guest House (Dar Al Diyafa)
+        // 3. Donations & Finance
+        if (str_contains($norm, 'تبرع') || str_contains($norm, 'تبرعات') || str_contains($norm, 'نقدي') || str_contains($norm, 'كاش') || str_contains($norm, 'عيني')) {
+            $cashUrl = route('donations.cash');
+            $inKindUrl = route('donations.in-kind');
+            return "💰 **إدارة التبرعات في نظام إنسان:**\n" .
+                   "• يمكنك متابعة وتسجيل التبرعات النقدية والسندات عبر: [التبرعات النقدية]({$cashUrl})\n" .
+                   "• أو تسجيل التبرعات العينية وتوزيعها عبر: [التبرعات العينية]({$inKindUrl})\n" .
+                   "جاهز لمساعدتك في أي استفسار مالي أو توجيه داخل النظام 🌿";
+        }
+
+        // 4. Guest House (Dar Al Diyafa)
         if (str_contains($norm, 'ضيافه') || str_contains($norm, 'حجز') || str_contains($norm, 'فندق') || str_contains($norm, 'سكن')) {
+            $guestHouseUrl = route('guest-houses.index');
             return "🏨 **معلومات دار ضيافة إنسان لمرضى الأورام:**\n" .
                    "• فرع كفر الشيخ (بجوار معهد الأورام): 0473131335 / 01016649593\n" .
                    "• فرع الغربية (طنطا - شارع المديرية): 0403299166 / 01026017236\n" .
                    "• الخط الساخن الموحد: 01006090616\n" .
-                   "• الإقامة والوجبات المجانية متاحة لجميع المرضى القادمين من خارج المحافظة، ورابط الحجز الإلكتروني: ensaneg.com/diyafa";
+                   "• يمكنك استعراض الغرف وتسكين الحالات مباشرة عبر: [سجل دور الضيافة]({$guestHouseUrl})\n" .
+                   "الإقامة والوجبات مجانية تماماً لأهالينا المرضى 🤍";
         }
 
-        // 4. Beneficiaries & Cases
-        if (str_contains($norm, 'حالات') || str_contains($norm, 'مستفيد') || str_contains($norm, 'بعثاء الامل')) {
+        // 5. Beneficiaries & Cases
+        if (str_contains($norm, 'حالات') || str_contains($norm, 'مستفيد') || str_contains($norm, 'بعثاء الامل') || str_contains($norm, 'ايتام') || str_contains($norm, 'زاد')) {
             $count = Beneficiary::count();
+            $beneficiaryUrl = route('beneficiaries.index');
+            $newBeneficiaryUrl = route('beneficiaries.create');
             return "👥 **شؤون الحالات والمستفيدين:**\n" .
-                   "• إجمالي الحالات المسجلة بقاعدة البيانات: " . number_format($count) . " حالة.\n" .
-                   "• يمكنك مراجعة وتحديث بيانات أي حالة، إضافة أفراد الأسرة، أو توجيه زيارة بحث اجتماعي ميدانية عبر قسم المستفيدين من القائمة الجانبية.";
+                   "• إجمالي الحالات المسجلة: " . number_format($count) . " حالة.\n" .
+                   "• استعراض وبحث الحالات: [سجل المستفيدين]({$beneficiaryUrl})\n" .
+                   "• تسجيل حالة وبحث اجتماعي جديد: [إضافة مستفيد جديد]({$newBeneficiaryUrl})";
         }
 
-        // 5. Complaints
+        // 6. Complaints
         if (str_contains($norm, 'شكاو') || str_contains($norm, 'شكوي') || str_contains($norm, 'اقتراح')) {
             $count = Complaint::whereIn('status', ['pending', 'in_progress', 'open'])->count();
+            $complaintsUrl = route('complaints.index');
             return "⚠️ **متابعة الشكاوى والاقتراحات:**\n" .
-                   "• يوجد حالياً " . number_format($count) . " شكوى جاري العمل على حلها والتحقق من تفاصيلها.\n" .
-                   "• يمكن للزملاء الاطلاع على الشكاوى المسندة إليهم عبر بوابة الشكاوى، ويتم إرسال إشعار فوري لأي تحديث يطرأ على الحالة.";
+                   "• يوجد حالياً " . number_format($count) . " شكوى جاري العمل على حلها.\n" .
+                   "• يمكنك متابعة الشكاوى والرد عليها عبر: [بوابة الشكاوى]({$complaintsUrl})";
+        }
+
+        // 7. Warehouses & Inventory
+        if (str_contains($norm, 'مخزن') || str_contains($norm, 'مخازن') || str_contains($norm, 'اصناف') || str_contains($norm, 'مستودع') || str_contains($norm, 'عهده')) {
+            $warehousesUrl = route('warehouses.index');
+            $itemsUrl = route('items.index');
+            return "📦 **المستودعات وإدارة المخزون:**\n" .
+                   "• متابعة المخازن والمستودعات: [سجل المخازن]({$warehousesUrl})\n" .
+                   "• إدارة دليل الأصناف والعهد: [دليل الأصناف]({$itemsUrl})";
+        }
+
+        // 8. Finance, Treasuries & Expenses
+        if (str_contains($norm, 'خزينه') || str_contains($norm, 'خزائن') || str_contains($norm, 'مصروف') || str_contains($norm, 'مصاريف') || str_contains($norm, 'مالي') || str_contains($norm, 'حسابات')) {
+            $treasuryUrl = route('treasuries.index');
+            $expensesUrl = route('expenses.index');
+            return "💵 **الحسابات والخزائن المالية:**\n" .
+                   "• متابعة أرصدة الخزائن والبنوك: [شاشة الخزائن]({$treasuryUrl})\n" .
+                   "• تسجيل ومراجعة أذون الصرف: [سندات المصروفات]({$expensesUrl})";
+        }
+
+        // 9. HR, Attendance & Payrolls
+        if (str_contains($norm, 'حضور') || str_contains($norm, 'انصراف') || str_contains($norm, 'مرتب') || str_contains($norm, 'رواتب') || str_contains($norm, 'موظف') || str_contains($norm, 'دوام')) {
+            $attUrl = route('employee-attendance.index');
+            $payrollUrl = route('payrolls.index');
+            return "⏰ **الموارد البشرية وشؤون الموظفين:**\n" .
+                   "• تسجيل ومتابعة الحضور والانصراف: [شاشة البصمة والدوام]({$attUrl})\n" .
+                   "• استعراض مسيرات الرواتب: [كشوف المرتبات والأجور]({$payrollUrl})";
         }
 
         // Default assistant reply
-        return "أهلاً بك يا {$userName} 🌿 أنا **أنيس**، رفيق العمل في مؤسسة إنسان. أنا متواجد دائماً لمساعدتك في استخراج الإحصائيات، متابعة الشكاوى وطلبات التعديل، أو التنسيق مع الفريق. كيف يمكنني مساندتك اليوم؟";
+        return "أهلاً بك يا {$userName} 🌿 أنا **أنيس**، وكيل نظام إنسان الذكي (AI Agent). يمكنك سؤالي عن أي صفحة أو معلومة في النظام بالصوت أو الشات وسأقوم بإرشادك ونقلك إليها فوراً. كيف يمكنني مساندتك الآن؟";
     }
 
     /**
@@ -500,14 +544,22 @@ class InternalChatController extends Controller
     {
         try {
             $previewText = !empty($msg->message)
-                ? mb_substr($msg->message, 0, 100)
+                ? mb_substr($msg->message, 0, 160)
                 : ($attachmentType === 'image' ? '📷 صورة مرفقة' : ($attachmentType === 'sticker' ? '✨ استيكر' : '📎 ملف مرفق'));
 
             $senderName = $currentUser?->name ?? 'موظف';
+            $currentUserId = $currentUser?->id;
+
+            $isEngIbrahim = ($currentUserId === 8)
+                || str_contains(mb_strtolower((string)$currentUser?->name), 'ابراهيم')
+                || str_contains(mb_strtolower((string)$currentUser?->name), 'إبراهيم')
+                || str_contains(mb_strtolower((string)$currentUser?->email), 'ibrahim')
+                || ($currentUser?->hasRole('مدير المؤسسة بالكامل') ?? false);
 
             if ($receiverId) {
+                $title = $isEngIbrahim ? '📩 رسالة خاصة من م. إبراهيم السجيني' : 'رسالة خاصة جديدة من ' . $senderName;
                 MobileNotification::create([
-                    'title' => 'رسالة خاصة جديدة من ' . $senderName,
+                    'title' => $title,
                     'body' => $previewText,
                     'category' => 'محادثات',
                     'target_audience' => 'user',
@@ -517,11 +569,11 @@ class InternalChatController extends Controller
                     'sent_at' => now(),
                 ]);
             } elseif ($targetType === 'only' && !empty($visibleToUsers)) {
-                $currentUserId = $currentUser?->id;
+                $title = $isEngIbrahim ? '📌 توجيه مباشر لك من م. إبراهيم السجيني' : 'رسالة موجهة لك من ' . $senderName;
                 foreach ($visibleToUsers as $vUserId) {
-                    if ($vUserId !== $currentUserId) {
+                    if ((int)$vUserId !== (int)$currentUserId) {
                         MobileNotification::create([
-                            'title' => 'رسالة موجهة لك من ' . $senderName,
+                            'title' => $title,
                             'body' => $previewText,
                             'category' => 'محادثات',
                             'target_audience' => 'user',
@@ -532,9 +584,32 @@ class InternalChatController extends Controller
                         ]);
                     }
                 }
+            } elseif (empty($receiverId) && ($targetType === 'all' || empty($targetType))) {
+                // Public channel message: When sent by Eng. Ibrahim, immediately notify all active employees on the system!
+                if ($isEngIbrahim) {
+                    $allUsers = User::where('id', '!=', $currentUserId)
+                        ->where(function ($q) {
+                            $q->where('active', 1)->orWhereNull('active');
+                        })
+                        ->get(['id', 'name']);
+
+                    $title = '📢 تحديث وتوجيه عام من م. إبراهيم السجيني';
+                    foreach ($allUsers as $u) {
+                        MobileNotification::create([
+                            'title' => $title,
+                            'body' => $previewText,
+                            'category' => 'تحديثات',
+                            'target_audience' => $u->name,
+                            'target_type' => 'user',
+                            'target_user_id' => $u->id,
+                            'is_sent' => true,
+                            'sent_at' => now(),
+                        ]);
+                    }
+                }
             }
         } catch (\Throwable $e) {
-            // Silently ignore notification dispatch errors to never block message delivery
+            Log::error("Failed to dispatch chat notifications: " . $e->getMessage());
         }
     }
 }

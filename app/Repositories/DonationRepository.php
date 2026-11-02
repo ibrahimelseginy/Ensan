@@ -23,7 +23,7 @@ final readonly class DonationRepository
         $guestHouseId = $filters['guest_house_id'] ?? null;
         $channel      = $filters['channel'] ?? null;
 
-        return Donation::with(['donor', 'project', 'campaign', 'warehouse'])
+        return Donation::with(['donor', 'project', 'campaign', 'warehouse', 'createdBy', 'user'])
             ->when($type, fn($qr) => $qr->where('type', $type))
             ->when($projectId, fn($qr) => $qr->where('project_id', $projectId))
             ->when($campaignId, fn($qr) => $qr->where('campaign_id', $campaignId))

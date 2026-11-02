@@ -103,8 +103,30 @@ final class ChangeRequestWebController extends Controller
         $visitsByName = $fieldVisits->keyBy('patient_name');
         $visitsByPhone = $fieldVisits->whereNotNull('phone')->keyBy(fn($v) => preg_replace('/[^0-9]/', '', (string)$v->phone));
 
+        $requestsLookup = $requests->getCollection()->mapWithKeys(function ($r) {
+            $p = is_array($r->payload) ? ($r->payload['data'] ?? $r->payload) : [];
+            return [
+                $r->id => [
+                    'id' => $r->id,
+                    'model_type' => $r->model_type,
+                    'model_basename' => class_basename($r->model_type),
+                    'action' => $r->action,
+                    'status' => $r->status,
+                    'rejection_reason' => $r->rejection_reason,
+                    'user_name' => $r->user?->name ?? '—',
+                    'user_id' => $r->user_id,
+                    'payload' => $p,
+                    'update_url' => route('change-requests.update-payload', $r),
+                    'create_form_url' => ($r->model_type === \App\Models\Beneficiary::class && $r->action === 'create')
+                        ? route('beneficiaries.create', ['change_request_id' => $r->id])
+                        : null,
+                ]
+            ];
+        })->toArray();
+
         return view('change_requests.index', compact(
             'requests',
+            'requestsLookup',
             'permissionsMap',
             'beneficiariesMap',
             'sponsorsMap',
@@ -620,6 +642,126 @@ final class ChangeRequestWebController extends Controller
 
         $changeRequest->update($data);
         return back()->with('success', 'تم تعديل السجل بنجاح');
+    }
+
+    public function updatePayload(Request $request, ChangeRequest $changeRequest)
+    {
+        $user = $request->user();
+        $isAdmin = $user && ($user->hasRole(['admin', 'super_admin']) || $user->hasPermission('manage_change_requests'));
+        $isOwner = $user && (int)$changeRequest->user_id === (int)$user->id;
+
+        if (!$isAdmin && !$isOwner) {
+            abort(403, 'غير مصرح بتعديل هذا الطلب.');
+        }
+
+        // If non-admin, cannot edit approved or cancelled requests
+        if (!$isAdmin && !in_array($changeRequest->status, ['pending', 'rejected'], true)) {
+            return back()->with('error', 'لا يمكن تعديل طلب تم اعتماده أو إلغاؤه.');
+        }
+
+        $fields = $request->input('fields', []);
+        if (empty($fields)) {
+            $fields = $request->except(['_token', '_method', 'action_type', 'resubmit_notes']);
+        }
+
+        // Update payload
+        $payload = $changeRequest->payload;
+        $isWrapped = is_array($payload) && (isset($payload['__is_wrapped']) || isset($payload['diff']));
+
+        if ($isWrapped) {
+            $data = $payload['data'] ?? [];
+            foreach ($fields as $key => $val) {
+                $data[$key] = $val;
+                if (isset($payload['diff'][$key])) {
+                    $payload['diff'][$key]['to'] = $val;
+                }
+            }
+            $payload['data'] = $data;
+        } else {
+            $payload = array_merge(is_array($payload) ? $payload : [], $fields);
+        }
+        $changeRequest->payload = $payload;
+
+        $actionType = $request->input('action_type', 'save');
+
+        // 1. Immediate approval if requested by admin
+        if ($actionType === 'approve') {
+            if (!$isAdmin) {
+                abort(403, 'الموافقة مسموحة للمدير فقط.');
+            }
+            $changeRequest->status = 'pending';
+            $changeRequest->save();
+            return $this->approve($changeRequest);
+        }
+
+        // 2. Resubmission (e.g. employee resubmitting a rejected case)
+        if ($actionType === 'resubmit' || $changeRequest->status === 'rejected') {
+            $notes = $request->input('resubmit_notes');
+            $changeRequest->status = 'pending';
+            if ($notes) {
+                $prev = $changeRequest->rejection_reason ? " (سابقاً: {$changeRequest->rejection_reason})" : '';
+                $changeRequest->rejection_reason = "ملاحظة التعديل: {$notes}{$prev}";
+            } else {
+                $changeRequest->rejection_reason = null;
+            }
+            $changeRequest->reviewer_id = null;
+            $changeRequest->save();
+
+            $this->notifyAdminsOnResubmit($changeRequest);
+
+            return back()->with('success', 'تم تعديل البيانات وإعادة تقديم الطلب للموافقة بنجاح.');
+        }
+
+        // 3. Regular save
+        $changeRequest->save();
+        return back()->with('success', 'تم حفظ التعديلات على بيانات الطلب بنجاح.');
+    }
+
+    public function editAndApprove(Request $request, ChangeRequest $changeRequest)
+    {
+        $request->merge(['action_type' => 'approve']);
+        return $this->updatePayload($request, $changeRequest);
+    }
+
+    public function resubmit(Request $request, ChangeRequest $changeRequest)
+    {
+        $request->merge(['action_type' => 'resubmit']);
+        return $this->updatePayload($request, $changeRequest);
+    }
+
+    private function notifyAdminsOnResubmit(ChangeRequest $changeRequest): void
+    {
+        try {
+            $modelBasename = class_basename($changeRequest->model_type);
+            $modelAr = match($modelBasename) {
+                'Beneficiary' => 'حالة / مستفيد',
+                'Donation' => 'تبرع',
+                'Expense' => 'مصروف',
+                'Leave' => 'إجازة',
+                'Donor' => 'متبرع',
+                default => $modelBasename
+            };
+
+            $pData = is_array($changeRequest->payload) ? ($changeRequest->payload['data'] ?? $changeRequest->payload) : [];
+            $itemName = trim((string)($changeRequest->subject?->full_name ?? ($changeRequest->subject?->name ?? ($pData['full_name'] ?? ($pData['name'] ?? '')))));
+            $itemDesc = $itemName !== '' ? " ({$itemName})" : '';
+            $employeeName = $changeRequest->user?->name ?? 'الموظف';
+
+            $adminIds = \App\Models\User::role(['admin', 'super_admin'])->pluck('id');
+            foreach ($adminIds as $adminId) {
+                \App\Models\MobileNotification::create([
+                    'title' => "إعادة تقديم طلب {$modelAr} بعد التعديل",
+                    'body' => "قام {$employeeName} بتعديل بيانات وإعادة تقديم طلب #{$changeRequest->id}{$itemDesc} للمراجعة والموافقة.",
+                    'category' => \App\Models\MobileNotification::CATEGORY_GENERAL,
+                    'target_type' => 'user',
+                    'target_user_id' => $adminId,
+                    'is_sent' => true,
+                    'sent_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to notify admins on resubmit: ' . $e->getMessage());
+        }
     }
 
     public function destroy(ChangeRequest $changeRequest)

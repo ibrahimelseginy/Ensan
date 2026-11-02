@@ -138,9 +138,8 @@
     <tr>
       <td style="width: 32%; text-align: right;">
         <div style="font-weight: bold; font-size: 9.5px; color: #334155;">جمهورية مصر العربية</div>
-        <div style="font-weight: bold; font-size: 9.5px; color: #334155;">وزارة التضامن الاجتماعي</div>
         <div style="font-weight: bold; font-size: 11px; color: #047857;">مؤسسة إنسان الخيرية</div>
-        <div style="font-size: 8px; color: #64748b;">مشهرة برقم رسمي للعمل التنموي والخيري</div>
+        <div style="font-weight: bold; font-size: 8.5px; color: #475569;">المشهرة برقم 63 لسنة 2017م</div>
       </td>
       <td style="width: 36%;" class="report-title-box">
         <div class="report-title">{{ $reportTitle ?? 'كشف بيانات المتبرعين' }}</div>

@@ -51,7 +51,15 @@ final readonly class BeneficiaryService
         $relationData = Arr::only($data, $relationKeys);
         $modelData = Arr::except($data, $relationKeys);
 
-        $this->mirrorFamilyMembersToLegacyJson($modelData, $relationData);
+        // Auto-calculate patient age or birth date if provided
+        if (!empty($data['patient_birth_date']) && (!isset($modelData['patient_age']) || $modelData['patient_age'] === '' || $modelData['patient_age'] === null)) {
+            $computedPatientAge = (int) \Carbon\Carbon::parse($data['patient_birth_date'])->age;
+            $modelData['patient_age'] = $computedPatientAge;
+        } elseif (!empty($modelData['patient_age']) && empty($data['patient_birth_date']) && (int)$modelData['patient_age'] > 0) {
+            $data['patient_birth_date'] = \Carbon\Carbon::now()->subYears((int) $modelData['patient_age'])->startOfYear()->format('Y-m-d');
+            $relationData['patient_birth_date'] = $data['patient_birth_date'];
+        }
+
         $relationData = array_merge($relationData, Arr::only($modelData, [
             'patient_name', 'patient_age', 'patient_code', 'monthly_sponsorship_amount', 'notes_cases',
         ]));
@@ -93,7 +101,15 @@ final readonly class BeneficiaryService
         $relationData = Arr::only($data, $relationKeys);
         $modelData = Arr::except($data, $relationKeys);
 
-        $this->mirrorFamilyMembersToLegacyJson($modelData, $relationData);
+        // Auto-calculate patient age or birth date if provided
+        if (!empty($data['patient_birth_date']) && (!isset($modelData['patient_age']) || $modelData['patient_age'] === '' || $modelData['patient_age'] === null)) {
+            $computedPatientAge = (int) \Carbon\Carbon::parse($data['patient_birth_date'])->age;
+            $modelData['patient_age'] = $computedPatientAge;
+        } elseif (!empty($modelData['patient_age']) && empty($data['patient_birth_date']) && (int)$modelData['patient_age'] > 0) {
+            $data['patient_birth_date'] = \Carbon\Carbon::now()->subYears((int) $modelData['patient_age'])->startOfYear()->format('Y-m-d');
+            $relationData['patient_birth_date'] = $data['patient_birth_date'];
+        }
+
         $relationData = array_merge($relationData, Arr::only($modelData, [
             'patient_name', 'patient_age', 'patient_code', 'monthly_sponsorship_amount', 'notes_cases',
         ]));
@@ -234,11 +250,30 @@ final readonly class BeneficiaryService
             ]);
         }
 
+        $patientBirth = $data['patient_birth_date'] ?? null;
+        $patientAge = $data['patient_age'] ?? null;
+
+        if (!empty($patientBirth) && ($patientAge === null || $patientAge === '')) {
+            $patientAge = (int) \Carbon\Carbon::parse($patientBirth)->age;
+        } elseif (!empty($patientAge) && empty($patientBirth) && (int)$patientAge > 0) {
+            $patientBirth = \Carbon\Carbon::now()->subYears((int)$patientAge)->startOfYear()->format('Y-m-d');
+        }
+
+        if (($data['patient_relationship'] ?? '') === 'patient') {
+            if (empty($patientBirth) && !empty($beneficiary->birth_date)) {
+                $patientBirth = $beneficiary->birth_date->format('Y-m-d');
+                $patientAge = $beneficiary->age;
+            }
+            if (empty($name)) {
+                $name = $beneficiary->full_name;
+            }
+        }
+
         $payload = [
             'relationship' => $data['patient_relationship'] ?? 'patient',
             'full_name' => $name,
-            'birth_date' => $data['patient_birth_date'] ?? null,
-            'age' => $data['patient_age'] ?? null,
+            'birth_date' => $patientBirth,
+            'age' => $patientAge,
             'code' => $code ?: $member?->code,
             'phone' => $data['patient_phone'] ?? null,
             'backup_phone' => $data['patient_backup_phone'] ?? null,
@@ -253,6 +288,10 @@ final readonly class BeneficiaryService
             $member->update($payload);
         } else {
             $beneficiary->familyMembers()->create($payload);
+        }
+
+        if ($patientAge !== null && $beneficiary->patient_age != $patientAge) {
+            $beneficiary->updateQuietly(['patient_age' => $patientAge]);
         }
     }
 

@@ -31,7 +31,11 @@ final class BeneficiaryFamilyMember extends Model
             $end = $this->death_date ?? now();
             return (int) \Carbon\Carbon::parse($this->birth_date)->diffInYears($end);
         }
-        return $value;
+        if ($value !== null) {
+            $elapsed = $this->created_at ? (int) $this->created_at->diffInYears(now()) : 0;
+            return (int) $value + $elapsed;
+        }
+        return null;
     }
 
     protected static function booted(): void
@@ -43,6 +47,22 @@ final class BeneficiaryFamilyMember extends Model
         static::saving(function (BeneficiaryFamilyMember $member): void {
             if ($member->code) {
                 $member->code = self::normalizeCode($member->code);
+            }
+
+            // Sync birth_date and age dynamically from elapsed years
+            if (!empty($member->birth_date)) {
+                $end = $member->death_date ?? now();
+                $member->age = (int) \Carbon\Carbon::parse($member->birth_date)->diffInYears($end);
+            } elseif (!empty($member->age) && (int) $member->age > 0) {
+                $member->birth_date = \Carbon\Carbon::now()->subYears((int) $member->age)->startOfYear()->format('Y-m-d');
+            }
+        });
+
+        static::saved(function (BeneficiaryFamilyMember $member): void {
+            if ($member->is_patient && $member->beneficiary_id && $member->age !== null) {
+                \App\Models\Beneficiary::whereKey($member->beneficiary_id)->update([
+                    'patient_age' => $member->age,
+                ]);
             }
         });
     }

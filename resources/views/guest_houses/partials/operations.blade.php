@@ -311,7 +311,7 @@
                                             <div class="modal-body p-3">
                                                 <p class="text-muted small mb-3">{{ $isMattress ? 'المرتبة الإضافية متاحة' : 'السرير متاح' }} حالياً للحجز. اختر الإجراء المطلوب:</p>
                                                 <div class="d-grid gap-2">
-                                                    <button type="button" class="btn btn-primary fw-bold py-2" data-bs-dismiss="modal" onclick="openBeneficiaryModalWithBed('{{ $bed->id }}', '{{ $wing->name }} — {{ $isMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }}')">
+                                                    <button type="button" class="btn btn-primary fw-bold py-2" onclick="openBeneficiaryModalWithBed('{{ $bed->id }}', '{{ $wing->name }} — {{ $isMattress ? 'مرتبة' : 'سرير' }} {{ $bed->number }}')">
                                                         <i class="bi bi-person-plus-fill me-1"></i> تسكين مريض (جديد أو مسجل مسبقاً)
                                                     </button>
                                                     <form method="POST" action="{{ route('guest-houses.beds.status', [$guest_house, $bed]) }}">
@@ -410,6 +410,11 @@
                             <td>
                                 <div>{{ $stay->arrival_date?->format('Y-m-d') }}</div>
                                 <div class="small text-muted">{{ $stay->expected_days ? $stay->expected_days . ' أيام مقررة' : 'غير محدد' }}</div>
+                                <div class="mt-0.5">
+                                    <span class="badge bg-light text-primary border" style="font-size: 0.72rem;">
+                                        حتى الآن: {{ $stay->actual_days }} يوم
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1 fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#residentStayModal_{{ $stay->id }}" title="عرض البيانات الطبية، المرافق، وتفاصيل الإقامة">
@@ -627,6 +632,11 @@
                             <td>
                                 <div>{{ $stay->departed_at?->format('Y-m-d') }}</div>
                                 <div class="small text-muted font-monospace">{{ $stay->departed_at?->format('H:i') }}</div>
+                                <div class="mt-1">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" title="المدة الفعلية المحتسبة">
+                                        الإقامة الفعلية: {{ $stay->actual_days }} يوم
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1 text-dark" data-bs-toggle="modal" data-bs-target="#departedStayModal_{{ $stay->id }}">
@@ -650,7 +660,8 @@
                                                         <div class="col-sm-6 col-md-4"><strong>تاريخ الوصول:</strong> {{ $stay->arrival_date?->format('Y-m-d') }}</div>
                                                         <div class="col-sm-6 col-md-4"><strong>تاريخ المغادرة:</strong> {{ $stay->departed_at?->format('Y-m-d H:i') }}</div>
                                                         <div class="col-sm-6 col-md-4"><strong>الجناح والسرير:</strong> {{ $stay->bed?->wing?->name ?: '—' }} / سرير {{ $stay->bed?->number ?: '—' }}</div>
-                                                        <div class="col-sm-6 col-md-4"><strong>مدة الإقامة المقررة:</strong> {{ $stay->expected_days ?: '—' }} يوم</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>المدة المقررة أولاً:</strong> {{ $stay->expected_days ?: '—' }} يوم</div>
+                                                        <div class="col-sm-6 col-md-4"><strong>مدة الإقامة الفعلية المحتسبة:</strong> <span class="badge bg-success text-white px-2.5 py-1 fw-bold fs-6">{{ $stay->actual_days }} يوم</span></div>
                                                     </div>
                                                 </div>
 

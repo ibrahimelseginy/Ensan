@@ -233,9 +233,8 @@
         <div class="ensan-report-header">
             <div style="text-align: right; line-height: 1.45;">
                 <div style="font-size: 13px; font-weight: 800; color: #1e293b;">جمهورية مصر العربية</div>
-                <div style="font-size: 12px; font-weight: 700; color: #334155;">وزارة التضامن الاجتماعي</div>
                 <div style="font-size: 18px; font-weight: 900; color: #047857; margin-top: 2px;">مؤسسة إنسان الخيرية</div>
-                <div style="font-size: 11px; font-weight: 600; color: #64748b;">مشهرة برقم رسمي للعمل الخيري والتنموي</div>
+                <div style="font-size: 12px; font-weight: 700; color: #475569;">المشهرة برقم 63 لسنة 2017م</div>
             </div>
 
             <div style="text-align: center; padding: 0 10px;">

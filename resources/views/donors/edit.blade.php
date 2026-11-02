@@ -109,7 +109,7 @@
               <option value="project" @selected($donor->allocation_type === 'project')>مشروع</option>
               <option value="guest_house" @selected($donor->allocation_type === 'guest_house')>دار الضيافة</option>
               <option value="campaign" @selected($donor->allocation_type === 'campaign')>حملة</option>
-              <option value="sponsorship" @selected($donor->allocation_type === 'sponsorship')>كفالة</option>
+              <option value="sponsorship" @selected($donor->allocation_type === 'sponsorship' || (!$donor->allocation_type && ($donor->sponsorship_monthly_amount > 0 || $donor->sponsoredBeneficiaries->isNotEmpty() || $donor->sponsoredFamilyMembers->isNotEmpty())))>كفالة</option>
               <option value="sadaqa_jariya" @selected($donor->allocation_type === 'sadaqa_jariya')>صدقة جارية</option>
             </select>
           </div>
@@ -146,7 +146,7 @@
             <label class="form-label">نوع الكفالة</label>
             <select id="edSponsorshipKind" class="form-select">
               <option value="none">—</option>
-              <option value="monthly_sponsor" @selected($donor->sponsorship_type === 'monthly_sponsor')>كفالة شهرية</option>
+              <option value="monthly_sponsor" @selected($donor->sponsorship_type === 'monthly_sponsor' || (!$donor->sponsorship_type && ($donor->sponsorship_monthly_amount > 0 || $donor->sponsoredBeneficiaries->isNotEmpty() || $donor->sponsoredFamilyMembers->isNotEmpty())))>كفالة شهرية</option>
             </select>
           </div>
           <div class="col-md-6 ed-alloc ed-alloc-sponsorship" style="display:none">
@@ -172,7 +172,7 @@
               data-placeholder="ابحث باسم الطفل أو كود الحالة..." multiple>
               @foreach($familyMembers as $member)
                 <option value="{{ $member->id }}" @selected(in_array((int) $member->id, $selectedSponsoredBeneficiaries, true))>
-                  {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary->full_name }} — {{ $member->code }}
+                  {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary?->full_name ?? 'الأسرة' }} — {{ $member->code }}
                 </option>
               @endforeach
             </select>
@@ -192,7 +192,7 @@
             @error('monthly_allocation_target')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
           <input type="hidden" name="sponsorship_type" id="edSponsorshipTypeHidden"
-            value="{{ $donor->sponsorship_type ?? 'none' }}">
+            value="{{ ($donor->sponsorship_type && $donor->sponsorship_type !== 'none') ? $donor->sponsorship_type : (($donor->sponsorship_monthly_amount > 0 || $donor->sponsoredBeneficiaries->isNotEmpty() || $donor->sponsoredFamilyMembers->isNotEmpty()) ? 'monthly_sponsor' : 'none') }}">
         </div>
         <div class="mt-3">
           <button class="btn btn-primary">حفظ</button>

@@ -43,6 +43,7 @@ final class Donation extends Model
         'allocation_note',
         'beneficiary_id',
         'beneficiary_allocations',
+        'split_allocations',
         'paid_months',
         'received_at',
         'created_by',
@@ -61,7 +62,8 @@ final class Donation extends Model
         'estimated_value' => 'decimal:2',
         'quantity' => 'decimal:2',
         'paid_months' => 'array',
-        'beneficiary_allocations' => 'array'
+        'beneficiary_allocations' => 'array',
+        'split_allocations' => 'array'
     ];
 
     public function donationable()
@@ -237,7 +239,7 @@ final class Donation extends Model
             'sadaqat' => 'صدقات',
             'zakat_maal' => 'زكاة مال',
             'sadaqa_jariya' => 'صدقات جارية',
-            default => 'غير محدد',
+            default => (string) ($this->purpose ?: 'غير محدد'),
         };
     }
 

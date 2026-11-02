@@ -44,13 +44,39 @@ final readonly class GuestHouseService
 
     public function getHouseStats(GuestHouse $house): array
     {
-        $activeDonations = Donation::where('guest_house_id', $house->id)
+        $activeDonations = Donation::where(function ($q) use ($house) {
+                $q->where('guest_house_id', $house->id)
+                  ->orWhere('split_allocations', 'like', '%"type":"guest_house"%"target_id":' . $house->id . '%')
+                  ->orWhere('split_allocations', 'like', '%"target_id":' . $house->id . '%"type":"guest_house"%');
+            })
             ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
         $activeExpenses = Expense::where('guest_house_id', $house->id)
             ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
 
-        $cashSum       = (float) (clone $activeDonations)->where('type', 'cash')->sum('amount');
-        $inKindSum     = (float) (clone $activeDonations)->where('type', 'in_kind')->sum('estimated_value');
+        $donationsList = (clone $activeDonations)->get();
+        $cashSum   = 0.0;
+        $inKindSum = 0.0;
+        foreach ($donationsList as $d) {
+            if (!empty($d->split_allocations) && is_array($d->split_allocations)) {
+                $ghAlloc = 0.0;
+                foreach ($d->split_allocations as $sp) {
+                    if (($sp['type'] ?? '') === 'guest_house' && (int)($sp['target_id'] ?? 0) === (int)$house->id) {
+                        $ghAlloc += (float)($sp['amount'] ?? 0);
+                    }
+                }
+                if ($d->type === 'cash') {
+                    $cashSum += ($ghAlloc > 0 ? $ghAlloc : (float)$d->amount);
+                } else {
+                    $inKindSum += ($ghAlloc > 0 ? $ghAlloc : (float)$d->estimated_value);
+                }
+            } else {
+                if ($d->type === 'cash') {
+                    $cashSum += (float)$d->amount;
+                } else {
+                    $inKindSum += (float)$d->estimated_value;
+                }
+            }
+        }
         $expensesTotal = (float) (clone $activeExpenses)->sum('amount');
         
         $donationsTotal = $cashSum + $inKindSum;

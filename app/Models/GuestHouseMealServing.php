@@ -92,6 +92,11 @@ final class GuestHouseMealServing extends Model
         return $this->belongsTo(GuestHouseMeal::class, 'guest_house_meal_id');
     }
 
+    public function guestHouseMeal(): BelongsTo
+    {
+        return $this->belongsTo(GuestHouseMeal::class, 'guest_house_meal_id');
+    }
+
     public function beneficiary(): BelongsTo
     {
         return $this->belongsTo(Beneficiary::class, 'beneficiary_id');

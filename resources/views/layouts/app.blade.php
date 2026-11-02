@@ -537,17 +537,23 @@
 
       .btn-check:checked + .btn-outline-success,
       .btn-check:checked + .btn-success,
+      .btn-outline-success:hover,
+      .btn-outline-success:focus,
       .btn-outline-success:active,
       .btn-outline-success.active {
           background-color: var(--success, #10b981) !important;
           border-color: var(--success, #10b981) !important;
           color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
       }
       .btn-check:checked + .btn-outline-success *,
       .btn-check:checked + .btn-success *,
+      .btn-outline-success:hover *,
+      .btn-outline-success:focus *,
       .btn-outline-success:active *,
       .btn-outline-success.active * {
           color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
       }
 
       .btn-check:checked + .btn-outline-primary,
@@ -3175,12 +3181,13 @@
 
         {{-- Center: Search --}}
         <div class="d-none d-lg-flex flex-grow-1 justify-content-center px-5">
-            <form action="{{ route('reports.index') }}" method="GET" class="search-wrapper-elite">
-              <div class="position-relative">
-                <input type="text" class="form-control search-input-elite" name="q" placeholder="ابحث عن تقارير، متبرعين، أو مهام...">
-                <button type="submit" class="btn border-0 position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <form action="{{ route('reports.index') }}" method="GET" class="search-wrapper-elite position-relative" style="width: 100%; max-width: 480px;">
+              <div class="position-relative w-100">
+                <input type="text" class="form-control search-input-elite ensan-global-search-input" name="q" placeholder="بحث شامل: كود، اسم، هاتف (حالة، متبرع، موظف)..." autocomplete="off">
+                <button type="submit" class="btn border-0 position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;" title="بحث شامل">
                     <i class="bi bi-search text-primary"></i>
                 </button>
+                <div class="global-search-dropdown shadow-lg d-none"></div>
               </div>
             </form>
         </div>
@@ -4480,10 +4487,15 @@
         // Background Heartbeat Worker:
         // Modern browsers throttle window.setInterval in background tabs.
         // A dedicated Web Worker runs on an independent background thread and is NEVER throttled.
+        window.loadAppNotifications = load;
+        window.addEventListener('ensan-notif-refresh', function () {
+          load();
+        });
+
         var startBackgroundHeartbeat = function () {
           try {
             var workerBlob = new Blob([
-              'var timer = setInterval(function() { postMessage("tick"); }, 25000);\n'
+              'var timer = setInterval(function() { postMessage("tick"); }, 10000);\n'
             ], { type: 'application/javascript' });
             var workerUrl = URL.createObjectURL(workerBlob);
             var bgWorker = new Worker(workerUrl);
@@ -4493,7 +4505,7 @@
               }
             };
           } catch (e) {
-            window.setInterval(load, 25000);
+            window.setInterval(load, 10000);
           }
         };
         startBackgroundHeartbeat();
@@ -5314,8 +5326,9 @@
           <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">إغلاق</button>
         </div>
       </div>
-    </div>
   </div>
+
+
 
   <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -5454,6 +5467,7 @@
   </script>
 
   @include('components.internal-chat-widget')
+  @include('layouts.partials.global_search_script')
 
   @yield('scripts')
 </body>

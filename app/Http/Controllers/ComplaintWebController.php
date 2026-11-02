@@ -28,6 +28,10 @@ final class ComplaintWebController extends Controller
             $query->where('status', $status);
         }
 
+        if ($source = $request->input('source_type')) {
+            $query->where('source_type', $source);
+        }
+
         $complaints = $query->orderByDesc('id')->paginate(20)->withQueryString(); 
 
         // Add pending check for each complaint
@@ -60,7 +64,7 @@ final class ComplaintWebController extends Controller
         ];
         $data = $request->validate([
             'tracking_code' => 'nullable|string|max:30',
-            'source_type' => 'required|in:donor,beneficiary,employee',
+            'source_type' => 'required|in:donor,beneficiary,employee,website',
             'source_id' => 'nullable|integer',
             'complainant_name' => 'nullable|string|max:255',
             'complainant_phone' => 'nullable|string|max:50',
@@ -220,5 +224,36 @@ final class ComplaintWebController extends Controller
         }
 
         return redirect()->route('complaints.index'); 
+    }
+
+    public function reply(Request $request, Complaint $complaint)
+    {
+        $validated = $request->validate([
+            'reply' => 'required|string',
+            'status' => 'nullable|in:open,in_progress,resolved,closed',
+        ], [
+            'reply.required' => 'يرجى كتابة نص الرد على الشكوى.',
+        ]);
+
+        $status = $validated['status'] ?? 'resolved';
+        $replyText = trim($validated['reply']);
+
+        $user = auth()->user();
+        $authorName = $user ? $user->name : 'إدارة المؤسسة';
+        $timestamp = now()->format('Y-m-d H:i');
+
+        $formattedReply = "رد الإدارة بواسطة ({$authorName}) بتاريخ {$timestamp}:\n" . $replyText;
+        if (!empty($complaint->resolution)) {
+            $formattedReply = $complaint->resolution . "\n\n--------------------\n" . $formattedReply;
+        }
+
+        $complaint->resolution = $formattedReply;
+        $complaint->status = $status;
+        if (in_array($status, ['resolved', 'closed'])) {
+            $complaint->resolved_at = now();
+        }
+        $complaint->save();
+
+        return redirect()->back()->with('success', 'تم حفظ وإرسال الرد على الشكوى بنجاح.');
     }
 }

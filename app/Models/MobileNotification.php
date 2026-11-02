@@ -32,6 +32,11 @@ final class MobileNotification extends Model
         'sent_at'
     ];
 
+    protected $casts = [
+        'is_sent' => 'boolean',
+        'sent_at' => 'datetime',
+    ];
+
     public function targetUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'target_user_id');
