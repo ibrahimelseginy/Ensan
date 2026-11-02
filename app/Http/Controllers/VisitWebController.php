@@ -71,61 +71,8 @@ final class VisitWebController extends Controller
         $caseApplication = null;
         if ($request->filled('application_id')) {
             $caseApplication = \App\Models\MobileCaseApplication::find($request->application_id);
-            if ($caseApplication && !$selectedBeneficiary) {
-                if ($caseApplication->beneficiary_id) {
-                    $selectedBeneficiary = Beneficiary::with('familyMembers')->find($caseApplication->beneficiary_id);
-                } else {
-                    // Create or find matching beneficiary automatically to link cleanly
-                    $matchedBen = Beneficiary::where('national_id', $caseApplication->applicant_id_number)
-                        ->orWhere('phone', $caseApplication->applicant_phone)
-                        ->first();
-
-                    if (!$matchedBen) {
-                        $targetProjectId = null;
-                        if ($caseApplication->case_type === 'zad') {
-                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%زاد%')->first())->id;
-                        } elseif ($caseApplication->case_type === 'midrar') {
-                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%مدرار%')->first())->id;
-                        } elseif ($caseApplication->case_type === 'hope') {
-                            $targetProjectId = optional(\App\Models\Project::where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%أورام%')->first())->id;
-                        }
-
-                        $matchedBen = Beneficiary::create([
-                            'full_name' => $caseApplication->applicant_name,
-                            'patient_name' => $caseApplication->applicant_name,
-                            'mother_name' => $caseApplication->mother_name ?: $caseApplication->applicant_name,
-                            'guardian_name' => $caseApplication->submitter_name,
-                            'deceased_husband_name' => $caseApplication->deceased_husband_name,
-                            'source_name' => $caseApplication->source_name,
-                            'reference_number' => $caseApplication->reference_number,
-                            'children_count' => $caseApplication->children_count,
-                            'family_members_count' => $caseApplication->family_members_count,
-                            'transit_details' => $caseApplication->transit_details,
-                            'death_details' => $caseApplication->death_details,
-                            'income_aid_sources' => $caseApplication->income_aid_sources,
-                            'expenses_debts_details' => $caseApplication->expenses_debts_details,
-                            'zad_details' => $caseApplication->zad_details,
-                            'need_type' => $caseApplication->need_type,
-                            'guide_name' => $caseApplication->guide_name,
-                            'guide_phone' => $caseApplication->guide_phone,
-                            'social_status_description' => $caseApplication->social_status_description,
-                            'midrar_details' => $caseApplication->midrar_details,
-                            'hospital_name' => $caseApplication->hospital_name,
-                            'tumor_location' => $caseApplication->tumor_location,
-                            'treatment_protocol' => $caseApplication->treatment_protocol,
-                            'tumor_details' => $caseApplication->tumor_details,
-                            'project_id' => $targetProjectId,
-                            'national_id' => $caseApplication->applicant_id_number,
-                            'phone' => $caseApplication->applicant_phone,
-                            'backup_phone' => $caseApplication->backup_phone,
-                            'address' => trim(($caseApplication->governorate ? $caseApplication->governorate . ' - ' : '') . ($caseApplication->city ? $caseApplication->city . ' - ' : '') . $caseApplication->address),
-                            'status' => 'under_review',
-                        ]);
-                    }
-                    $selectedBeneficiary = $matchedBen;
-                    $caseApplication->update(['beneficiary_id' => $matchedBen->id]);
-                    $beneficiaries = Beneficiary::orderBy('full_name')->get();
-                }
+            if ($caseApplication && $caseApplication->beneficiary_id && !$selectedBeneficiary) {
+                $selectedBeneficiary = Beneficiary::with('familyMembers')->find($caseApplication->beneficiary_id);
             }
         }
 
@@ -180,6 +127,11 @@ final class VisitWebController extends Controller
             }
         }
 
+        $validated['status'] = 'awaiting_discussion';
+        if ($request->filled('application_id')) {
+            $validated['case_application_id'] = $request->application_id;
+        }
+
         $visit = FieldVisit::create($validated);
 
         // Record attachments
@@ -216,7 +168,7 @@ final class VisitWebController extends Controller
             }
         }
 
-        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح وتحويل حالة البحث إلى (تم البحث).');
+        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح، والحالة الآن (في انتظار المناقشة) والقرار النهائي.');
     }
 
     public function show(FieldVisit $visit)
@@ -244,6 +196,7 @@ final class VisitWebController extends Controller
 
             $reason = $request->input('rejection_reason');
             $visit->update([
+                'status' => 'rejected',
                 'recommendation' => 'rejected',
                 'recommendation_notes' => ($visit->recommendation_notes ? $visit->recommendation_notes . "\n" : '') . "تم الرفض النهائي من الإدارة: {$reason}",
             ]);
@@ -256,6 +209,7 @@ final class VisitWebController extends Controller
             }
 
             $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
+                ->orWhere('id', $visit->case_application_id)
                 ->orWhere('applicant_id_number', $visit->national_id)
                 ->first();
             if ($caseApp) {
@@ -296,8 +250,17 @@ final class VisitWebController extends Controller
         $fullNotes = trim(($visit->notes ?? '') . $medicineDetails . $inKindDetails . $approvalNotes);
 
         $beneficiary = $visit->beneficiary;
+        if (!$beneficiary && !empty($visit->national_id)) {
+            $beneficiary = Beneficiary::where('national_id', $visit->national_id)->first();
+        }
+        if (!$beneficiary && !empty($visit->phone)) {
+            $beneficiary = Beneficiary::where('phone', $visit->phone)->first();
+        }
+
         if (!$beneficiary) {
+            $newCode = Beneficiary::generateNextCode();
             $beneficiary = Beneficiary::create([
+                'code' => $newCode,
                 'full_name' => $visit->guardian_name ?: ($visit->patient_name ?: 'حالة معتمدة'),
                 'patient_name' => $visit->patient_name,
                 'national_id' => $visit->national_id,
@@ -307,10 +270,15 @@ final class VisitWebController extends Controller
                 'status' => 'accepted',
                 'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: null,
                 'notes_cases' => $fullNotes,
+                'created_by' => $user->id,
             ]);
             $visit->update(['beneficiary_id' => $beneficiary->id]);
         } else {
+            if (empty($beneficiary->code)) {
+                $beneficiary->code = Beneficiary::generateNextCode();
+            }
             $beneficiary->update([
+                'code' => $beneficiary->code,
                 'project_id' => $project->id,
                 'status' => 'accepted',
                 'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: $beneficiary->monthly_sponsorship_amount,
@@ -318,13 +286,38 @@ final class VisitWebController extends Controller
             ]);
         }
 
+        // Copy family members to beneficiary_family_members
+        if (!empty($visit->family_members) && is_array($visit->family_members)) {
+            foreach ($visit->family_members as $idx => $fm) {
+                $mName = $fm['name'] ?? null;
+                if ($mName) {
+                    $exists = $beneficiary->familyMembers()->where('full_name', $mName)->exists();
+                    if (!$exists) {
+                        $beneficiary->familyMembers()->create([
+                            'code' => $beneficiary->code . '-' . ($idx + 1),
+                            'full_name' => $mName,
+                            'relationship' => $fm['relation'] ?? ($fm['relationship'] ?? 'فرد أسرة'),
+                            'age' => isset($fm['age']) ? (int)$fm['age'] : null,
+                            'education_level' => $fm['education'] ?? null,
+                            'social_status' => $fm['social_status'] ?? null,
+                            'job' => $fm['job'] ?? null,
+                            'health_status' => $fm['health'] ?? null,
+                            'active' => true,
+                        ]);
+                    }
+                }
+            }
+        }
+
         $visit->update([
+            'beneficiary_id' => $beneficiary->id,
             'recommendation' => 'approved',
-            'status' => 'completed',
-            'recommendation_notes' => "تم الاعتماد النهائي للحالة بمشروع ({$project->name}) بواسطة " . ($user->name ?? 'الإدارة'),
+            'status' => 'accepted',
+            'recommendation_notes' => "تم قبول واعتماد البحث بمشروع ({$project->name}) وتحويل الحالة لمستفيد نشط برمز [{$beneficiary->code}] بواسطة " . ($user->name ?? 'الإدارة'),
         ]);
 
         $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
+            ->orWhere('id', $visit->case_application_id)
             ->orWhere('applicant_id_number', $visit->national_id)
             ->first();
         if ($caseApp) {
@@ -338,14 +331,14 @@ final class VisitWebController extends Controller
             \App\Models\Notification::create([
                 'user_id' => $project->manager_id,
                 'title' => 'اعتماد حالة جديدة في المشروع',
-                'message' => "تم الاعتماد النهائي للحالة: {$beneficiary->full_name} في مشروع ({$project->name}) بعد انتهاء البحث الميداني.",
+                'message' => "تم قبول واعتماد الحالة: {$beneficiary->full_name} في مشروع ({$project->name}) وتحويلها لمستفيد بالكود [{$beneficiary->code}].",
                 'type' => 'project_case_approved',
                 'data' => ['beneficiary_id' => $beneficiary->id, 'project_id' => $project->id, 'visit_id' => $visit->id],
                 'is_read' => false,
             ]);
         }
 
-        return back()->with('success', "تم الاعتماد النهائي للحالة بنجاح وإلحاقها بمشروع ({$project->name}).");
+        return back()->with('success', "تم قبول واعتماد البحث بنجاح، وتحويل الحالة آلياً إلى مستفيد نشط بالكود [{$beneficiary->code}] في مشروع ({$project->name}).");
     }
 
     public function edit(FieldVisit $visit)

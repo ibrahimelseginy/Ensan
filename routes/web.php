@@ -433,6 +433,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('beneficiaries/{beneficiary}/sponsors/{donor}', [BeneficiaryWebController::class, 'detachSponsor'])->name('beneficiaries.detach-sponsor');
         Route::post('beneficiaries/{beneficiary}/direct-aid', [BeneficiaryWebController::class, 'recordDirectAid'])->name('beneficiaries.record-direct-aid');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
+
+        // --- Psychological Support Hub ---
+        Route::get('psychological-support', [\App\Http\Controllers\PsychologicalSupportController::class, 'index'])->name('psychological-support.index');
+        Route::post('beneficiaries/{beneficiary}/psychological-support', [\App\Http\Controllers\PsychologicalSupportController::class, 'store'])->name('psychological-support.store');
+        Route::get('beneficiaries/{beneficiary}/psychological-support/modal', [\App\Http\Controllers\PsychologicalSupportController::class, 'showModal'])->name('psychological-support.modal');
+
+        // --- Collaborations & Partnerships Directory ---
+        Route::resource('collaborations', \App\Http\Controllers\CollaborationController::class);
     });
 
     // --- Finance & Accounting ---

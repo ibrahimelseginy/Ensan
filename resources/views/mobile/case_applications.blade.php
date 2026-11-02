@@ -510,11 +510,17 @@
                             </div>
                         @endif
 
-                        <!-- Direct Field Visit Link if Approved -->
-                        @if(in_array($app->status, ['approved', 'completed', 'accepted']))
+                        <!-- Direct Field Visit Link -->
+                        @if($app->field_visit_id)
                             <div class="mb-2">
-                                <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn case-btn-visit w-100 fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center gap-1.5">
-                                    <i class="bi bi-file-earmark-check-fill"></i> تحويل إلى استمارة البحث الاجتماعي الميداني
+                                <a href="{{ route('visits.show', $app->field_visit_id) }}" class="btn btn-outline-success w-100 fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center gap-1.5">
+                                    <i class="bi bi-file-earmark-medical-fill"></i> استمارة البحث الميداني (#{{ $app->field_visit_id }})
+                                </a>
+                            </div>
+                        @else
+                            <div class="mb-2">
+                                <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn btn-success w-100 fw-bold py-2 shadow-xs d-flex align-items-center justify-content-center gap-1.5" style="background: linear-gradient(135deg, #10b981, #059669); border: none; color: white;">
+                                    <i class="bi bi-file-earmark-plus-fill"></i> استمارة البحث الاجتماعي الميداني
                                 </a>
                             </div>
                         @endif
@@ -580,6 +586,17 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
+                                @if($app->field_visit_id)
+                                    <a href="{{ route('visits.show', $app->field_visit_id) }}" class="btn btn-success btn-sm rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" title="عرض استمارة البحث الميداني">
+                                        <i class="bi bi-file-earmark-medical-fill"></i>
+                                        <span>استمارة البحث الميداني (#{{ $app->field_visit_id }})</span>
+                                    </a>
+                                @else
+                                    <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn btn-success btn-sm rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" style="background: linear-gradient(135deg, #10b981, #059669); border: none; color: white;" title="فتح استمارة البحث الميداني">
+                                        <i class="bi bi-file-earmark-plus-fill"></i>
+                                        <span>استمارة البحث الاجتماعي الميداني</span>
+                                    </a>
+                                @endif
                                 <a href="{{ route('mobile.case-applications.print', $app->id) }}?autoprint=1" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3.5 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" title="طباعة الاستمارة الرسمية A4 أو الحفظ كـ PDF">
                                     <i class="bi bi-printer-fill"></i>
                                     <span>طباعة الاستمارة الرسمية (A4)</span>

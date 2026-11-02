@@ -144,8 +144,8 @@
       <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg me-1"></i> إلغاء
       </a>
-      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-success fw-bold px-4 shadow-sm">
-        <i class="bi bi-shield-check me-1"></i> تم الاعتماد من الباحث
+      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-primary fw-bold px-4 shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
+        <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
       </button>
     </div>
   </div>
@@ -634,8 +634,8 @@
         <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary px-3">
           إلغاء
         </a>
-        <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
-          <i class="bi bi-shield-check me-1"></i> تم الاعتماد من الباحث
+        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
+          <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
         </button>
       </div>
     </div>

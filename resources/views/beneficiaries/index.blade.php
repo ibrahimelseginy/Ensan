@@ -540,6 +540,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end beneficiary-action-menu">
                             <li><a class="dropdown-item" href="{{ route('beneficiaries.show', $b) }}"><i class="bi bi-eye text-primary action-icon"></i><span class="action-label">عرض</span></a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ route('beneficiaries.show', $b) }}#psychologicalSupportSection"><i class="bi bi-heart-pulse-fill text-danger action-icon"></i><span class="action-label">الدعم النفسي</span></a></li>
                             
                             @if($isManagerUser)
                                 <li><a class="dropdown-item text-warning" href="{{ route('beneficiaries.edit', $b) }}"><i class="bi bi-pencil text-warning action-icon"></i><span class="action-label">تعديل</span></a></li>

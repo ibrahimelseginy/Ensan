@@ -261,7 +261,7 @@ final class CampaignWebController extends Controller
 
         $data['status'] = 'new';
         if (empty($data['code'])) {
-            $data['code'] = 'BEN-' . strtoupper(Str::random(6));
+            $data['code'] = \App\Models\Beneficiary::generateNextCode();
         }
 
         DB::transaction(function () use ($campaign, $data, $allocatedBeneficiaryIds, $sponsorIds): void {

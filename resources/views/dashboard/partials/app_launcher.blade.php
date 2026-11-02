@@ -739,6 +739,28 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
+        {{-- 3.6 دليل الشراكات والتعاونات --}}
+        @if($u)
+        <a href="{{ route('collaborations.index') }}" class="ensan-app-card" data-category="operations admin" data-title="الشراكات والتعاونات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات خصومات collaborations partnerships">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
+                <i class="bi bi-handshake-fill"></i>
+            </div>
+            <div class="ensan-app-title">التعاونات والشراكات</div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دليل الجهات</span>
+        </a>
+        @endif
+
+        {{-- 3.7 الدعم النفسي (بعثاء الأمل) --}}
+        @if($u)
+        <a href="{{ route('psychological-support.index') }}" class="ensan-app-card" data-category="operations health" data-title="الدعم النفسي" data-keywords="دعم نفسي بعثاء الامل مرضى اورام تقارير شهرية psychological support">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e); box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.45);">
+                <i class="bi bi-heart-pulse-fill"></i>
+            </div>
+            <div class="ensan-app-title">الدعم النفسي</div>
+            <span class="ensan-app-badge badge-direct" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.2);"><i class="bi bi-calendar2-heart-fill"></i> متابعة شهرية</span>
+        </a>
+        @endif
+
         {{-- 4. اللوجيستك (Popup) --}}
         @if($u && ($u->hasPermission('manage_logistics') || $u->hasPermission('delegates.view') || $u->hasPermission('travel_routes.view') || $u->hasPermission('trips.view') || $u->hasPermission('kafr_el_sheikh_deliveries.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppLogistics" data-category="operations" data-title="اللوجيستك" data-keywords="مناديب خطوط سير رحلات كفر الشيخ طنطا logistics">

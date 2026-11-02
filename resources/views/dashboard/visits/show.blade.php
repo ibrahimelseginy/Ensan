@@ -16,18 +16,38 @@
           <span class="fs-6 fw-normal text-muted font-monospace">(#{{ $visit->id }})</span>
         </h3>
       </div>
-      <p class="text-muted small mb-0 mt-1">
-        المستفيد: <strong>{{ $visit->beneficiary?->full_name ?? $visit->patient_name }}</strong> — تاريخ البحث: {{ $visit->visit_date?->format('Y/m/d') }}
-      </p>
+      <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+        <span class="text-muted small">
+          المستفيد: <strong>{{ $visit->beneficiary?->full_name ?? $visit->patient_name }}</strong> — تاريخ البحث: {{ $visit->visit_date?->format('Y/m/d') }}
+        </span>
+        @if($visit->status === 'awaiting_discussion')
+          <span class="badge bg-warning text-dark px-2.5 py-1.5 rounded-pill shadow-xs">
+            <i class="bi bi-hourglass-split me-1"></i> في انتظار المناقشة والقرار
+          </span>
+        @elseif(in_array($visit->status, ['accepted', 'completed']) && $visit->recommendation === 'approved')
+          <span class="badge bg-success px-2.5 py-1.5 rounded-pill shadow-xs">
+            <i class="bi bi-check-circle-fill me-1"></i> تم قبول واعتماد البحث {{ $visit->beneficiary ? '(' . $visit->beneficiary->code . ')' : '' }}
+          </span>
+        @elseif($visit->status === 'rejected' || $visit->recommendation === 'rejected')
+          <span class="badge bg-danger px-2.5 py-1.5 rounded-pill shadow-xs">
+            <i class="bi bi-x-circle-fill me-1"></i> تم الرفض
+          </span>
+        @endif
+      </div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-2">
       @if(!empty($authorizedForFinalApproval))
-        <button type="button" class="btn btn-success fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#finalApprovalModal">
-          <i class="bi bi-patch-check-fill me-1"></i> الاعتماد النهائي للحالة
+        <button type="button" class="btn btn-success fw-bold shadow-sm d-inline-flex align-items-center gap-1.5 px-3 py-2" onclick="openApprovalModal('accepted')">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>تم قبول واعتماد البحث</span>
+        </button>
+        <button type="button" class="btn btn-outline-danger fw-bold shadow-sm d-inline-flex align-items-center gap-1.5 px-3 py-2" onclick="openApprovalModal('rejected')">
+          <i class="bi bi-x-circle-fill"></i>
+          <span>تم الرفض</span>
         </button>
       @endif
       <a href="{{ route('visits.print', $visit) }}" target="_blank" class="btn btn-outline-primary fw-bold">
-        <i class="bi bi-printer me-1"></i> طباعة الاستمارة الرسمية
+        <i class="bi bi-printer me-1"></i> طباعة الاستمارة
       </a>
       <a href="{{ route('visits.edit', $visit) }}" class="btn btn-outline-warning fw-bold">
         <i class="bi bi-pencil-square me-1"></i> تعديل
@@ -447,6 +467,18 @@
 </div>
 
 <script>
+function openApprovalModal(val) {
+  const modalEl = document.getElementById('finalApprovalModal');
+  if (!modalEl) return;
+  const radio = val === 'rejected' ? document.getElementById('decisionReject') : document.getElementById('decisionAccept');
+  if (radio) {
+    radio.checked = true;
+    toggleFinalDecision(val);
+  }
+  const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modal.show();
+}
+
 function toggleFinalDecision(val) {
   const rej = document.getElementById('rejectionSection');
   const acc = document.getElementById('acceptanceSection');

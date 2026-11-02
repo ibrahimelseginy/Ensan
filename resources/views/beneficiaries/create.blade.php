@@ -79,7 +79,7 @@
         <div class="form-section-title"><i class="bi bi-person-vcard"></i><span>بيانات ولي الأمر / المعيل</span></div>
         <div class="alert alert-primary py-2"><i class="bi bi-info-circle me-1"></i> الاسم الرئيسي هو اسم ولي الأمر، أما الزوج أو الزوجة والأطفال والمريض فلهم ملفات مستقلة بالأسفل.</div>
         <div class="row g-3">
-          <div class="col-md-3"><label class="form-label">كود المستفيد</label><input name="code" value="{{ old('code') }}" class="form-control @error('code') is-invalid @enderror" placeholder="يُترك فارغًا للتوليد التلقائي">@error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+          <div class="col-md-3"><label class="form-label">كود المستفيد</label><input name="code" value="{{ old('code') }}" class="form-control font-monospace @error('code') is-invalid @enderror" placeholder="توليد تلقائي (مثال: B26110001)">@error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
           <div class="col-md-3"><label class="form-label form-label-required">اسم ولي الأمر بالكامل</label><input name="full_name" value="{{ old('full_name') }}" class="form-control @error('full_name') is-invalid @enderror" required placeholder="اسم ولي الأمر أو المعيل">@error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
           <div class="col-md-3">
             <label class="form-label">الرقم القومي</label>

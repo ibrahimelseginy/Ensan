@@ -66,7 +66,7 @@ final readonly class BeneficiaryService
 
         $modelData['status'] = $modelData['status'] ?? 'new';
         if (empty($modelData['code'])) {
-            $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
+            $modelData['code'] = Beneficiary::generateNextCode();
         }
         if (auth()->check() && empty($modelData['created_by'])) {
             $modelData['created_by'] = auth()->id();
@@ -121,7 +121,7 @@ final readonly class BeneficiaryService
 
         // Auto-generate code if missing
         if (empty($modelData['code']) && empty($beneficiary->code)) {
-            $modelData['code'] = 'BEN-' . strtoupper(Str::random(6));
+            $modelData['code'] = Beneficiary::generateNextCode();
         }
         if (auth()->check() && empty($modelData['updated_by'])) {
             $modelData['updated_by'] = auth()->id();
