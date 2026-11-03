@@ -32,7 +32,7 @@ final class DonorWebController extends Controller
 
     public function index(Request $request): View
     {
-        $filters = $request->only(['q', 'type', 'classification', 'active']);
+        $filters = $request->only(['q', 'type', 'classification', 'active', 'donation_status']);
         $donors  = $this->donorService->searchDonors($filters, 12);
 
         $donorIds = $donors->pluck('id');
@@ -75,13 +75,14 @@ final class DonorWebController extends Controller
         $type           = $filters['type'] ?? '';
         $classification = $filters['classification'] ?? '';
         $active         = $filters['active'] ?? '';
+        $donationStatus = $filters['donation_status'] ?? '';
 
         return view('donors.index', compact(
             'donors', 'donStats', 'totals', 'allDonors', 
             'selectedDonor', 'donationsHistory', 'selectedDonorId', 
             'warehouses', 'paidThisMonth', 'projects', 'campaigns', 
             'guestHouses', 'beneficiaries',
-            'q', 'type', 'classification', 'active'
+            'q', 'type', 'classification', 'active', 'donationStatus'
         ));
     }
 
@@ -153,10 +154,14 @@ final class DonorWebController extends Controller
                 }
             }
 
-            return redirect()->route('donations.create', $params);
+            return redirect()->route('donations.create', $params)->with('success', "تم إضافة المتبرع ({$donor->name}) بنجاح. يمكنك الآن إتمام تسجيل التبرع.");
+        }
+
+        if ($request->input('return_to') === 'donors.index') {
+            return redirect()->route('donors.index')->with('success', "تم إضافة المتبرع ({$donor->name}) بنجاح. المتبرع مسجل الآن بدون تبرعات بعد.");
         }
         
-        return redirect()->route('donors.show', $donor);
+        return redirect()->route('donors.show', $donor)->with('success', "تم إضافة المتبرع ({$donor->name}) بنجاح.");
     }
 
     public function show(Donor $donor): View|RedirectResponse

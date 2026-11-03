@@ -319,8 +319,14 @@
         <div class="hero-greeting">إدارة الموارد ❤️</div>
         <h1 class="hero-title">المتبرعون</h1>
         <p class="hero-subtitle">عرض وإدارة قاعدة بيانات المتبرعين وسجل تبرعاتهم</p>
-        <div class="hero-actions d-flex gap-2">
-            <a href="{{ route('donations.create') }}" class="btn btn-sm rounded-pill px-4">
+        <div class="hero-actions d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickAddDonorModal">
+                <i class="bi bi-person-plus-fill me-1"></i> إضافة متبرع جديد
+            </button>
+            <a href="{{ route('donors.create') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="bi bi-sliders me-1"></i> نموذج مفصل
+            </a>
+            <a href="{{ route('donations.create') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
                 <i class="bi bi-plus-lg me-1"></i> إضافة تبرع
             </a>
         </div>
@@ -330,16 +336,16 @@
 
 {{-- Stats Row --}}
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3 animate-slide-up animate-delay-1">
-        <a href="{{ route('donors.index') }}" class="stat-card stat-info text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-1">
+        <a href="{{ route('donors.index') }}" class="stat-card stat-info text-decoration-none d-block {{ empty($active) && empty($classification) && empty($donationStatus) ? 'active-filter' : '' }}">
             <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             <div class="stat-label">إجمالي المتبرعين</div>
             <div class="stat-value">{{ number_format($totals['all']) }}</div>
             <i class="bi bi-people-fill stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg-3 animate-slide-up animate-delay-2">
-        <a href="{{ route('donors.index', ['active' => '1']) }}" class="stat-card stat-success text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-2">
+        <a href="{{ route('donors.index', ['active' => '1']) }}" class="stat-card stat-success text-decoration-none d-block {{ ($active ?? '') === '1' ? 'active-filter' : '' }}">
             <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-label">متبرع نشط</div>
             <div class="stat-value">{{ number_format($totals['active']) }}</div>
@@ -347,20 +353,29 @@
             <i class="bi bi-check-circle-fill stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg-3 animate-slide-up animate-delay-3">
-        <a href="{{ route('donors.index', ['classification' => 'recurring']) }}" class="stat-card stat-purple text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-3">
+        <a href="{{ route('donors.index', ['classification' => 'recurring']) }}" class="stat-card stat-purple text-decoration-none d-block {{ ($classification ?? '') === 'recurring' ? 'active-filter' : '' }}">
             <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
             <div class="stat-label">النوع: متكرر</div>
             <div class="stat-value">{{ number_format($totals['recurring']) }}</div>
             <i class="bi bi-arrow-repeat stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg-3 animate-slide-up animate-delay-4">
-        <a href="{{ route('donors.index', ['classification' => 'one_time']) }}" class="stat-card stat-warning text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-4">
+        <a href="{{ route('donors.index', ['classification' => 'one_time']) }}" class="stat-card stat-warning text-decoration-none d-block {{ ($classification ?? '') === 'one_time' ? 'active-filter' : '' }}">
             <div class="stat-icon"><i class="bi bi-1-circle-fill"></i></div>
             <div class="stat-label">النوع: مرة واحدة</div>
             <div class="stat-value">{{ number_format($totals['one_time']) }}</div>
             <i class="bi bi-1-circle-fill stat-bg-icon"></i>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-5">
+        <a href="{{ route('donors.index', ['donation_status' => 'never']) }}" class="stat-card text-decoration-none d-block {{ ($donationStatus ?? '') === 'never' ? 'active-filter border-warning' : '' }}" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.05) 100%); border: 1px solid rgba(245, 158, 11, 0.3);">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.18); color: #d97706;"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-label" style="color: #b45309; font-weight: 700;">لم يتبرع بعد (جديد)</div>
+            <div class="stat-value" style="color: #d97706;">{{ number_format($totals['never_donated'] ?? 0) }}</div>
+            <div class="stat-trend" style="color: #b45309;"><i class="bi bi-clock-history"></i> مضاف بدون تبرع</div>
+            <i class="bi bi-hourglass-split stat-bg-icon" style="color: rgba(245, 158, 11, 0.1);"></i>
         </a>
     </div>
 </div>
@@ -431,7 +446,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="col-xl-2 col-lg-4 col-md-4">
                 <label class="form-label fw-bold small text-uppercase text-muted">تصنيف التبرع</label>
                 <select name="classification" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
                     <option value="">الكل</option>
@@ -440,12 +455,21 @@
                 </select>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="col-xl-2 col-lg-4 col-md-4">
                 <label class="form-label fw-bold small text-uppercase text-muted">الحالة</label>
                 <select name="active" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
                     <option value="">الكل</option>
                     <option value="1" @selected(($active ?? '')==='1')>نشط</option>
                     <option value="0" @selected(($active ?? '')==='0')>غير نشط</option>
+                </select>
+            </div>
+
+            <div class="col-xl-2 col-lg-4 col-md-4">
+                <label class="form-label fw-bold small text-uppercase text-muted">سجل التبرع</label>
+                <select name="donation_status" class="form-select" onchange="this.form.submit()" style="height: 44px; border-radius: 10px;">
+                    <option value="">الكل</option>
+                    <option value="never" @selected(($donationStatus ?? '')==='never')>⏳ لم يتبرع بعد (جديد)</option>
+                    <option value="donated" @selected(($donationStatus ?? '')==='donated')>✅ سبق له التبرع</option>
                 </select>
             </div>
         </div>
@@ -480,9 +504,14 @@
 
 <div class="row g-3">
 @foreach($donors as $donor)
-  @php $st = $donStats->get($donor->id); @endphp
+  @php 
+    $st = $donStats->get($donor->id); 
+    $hasDonated = ($st && (int)$st->count > 0 && (float)$st->total > 0);
+    $isNew = $donor->created_at ? $donor->created_at->diffInDays(now()) <= 30 : false;
+  @endphp
   <div class="col-md-6 col-lg-4">
-    <div class="kpi-card p-4 h-100 position-relative {{ $donor->classification==='recurring' ? 'kpi-primary' : 'kpi-info' }}">
+    <div class="kpi-card p-4 h-100 position-relative {{ $donor->classification==='recurring' ? 'kpi-primary' : 'kpi-info' }}"
+         style="{{ !$hasDonated ? 'border-top: 4px solid #f59e0b !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);' : '' }}">
       <div class="d-flex justify-content-between align-items-start mb-3">
           <div class="d-flex align-items-center gap-3">
              <input type="checkbox" class="form-check-input donor-check" value="{{ $donor->id }}"
@@ -505,14 +534,24 @@
                   <i class="bi {{ $donor->type === 'individual' ? 'bi-person' : 'bi-building' }} fs-3"></i>
                 </div>
                  @if($donor->active)
-                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-white rounded-circle"></span>
+                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-white rounded-circle" title="نشط"></span>
                  @else
-                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-danger border border-white rounded-circle"></span>
+                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-danger border border-white rounded-circle" title="غير نشط"></span>
                  @endif
              </div>
              <div>
-                <h5 class="fw-bold mb-1 text-dark">
+                <h5 class="fw-bold mb-1 text-dark d-flex align-items-center flex-wrap gap-1">
                     <a href="{{ route('donors.show',$donor) }}" class="text-decoration-none text-dark stretched-link-custom">{{ $donor->name }}</a>
+                    @if(!$hasDonated)
+                        <span class="badge bg-warning text-dark border border-warning rounded-pill px-2 py-0.5" style="font-size: 0.72rem; font-weight: 700;">
+                            <i class="bi bi-hourglass-split"></i> لم يتبرع بعد
+                        </span>
+                        @if($isNew)
+                            <span class="badge bg-info-subtle text-info border border-info rounded-pill px-1.5 py-0.5" style="font-size: 0.7rem;">
+                                جديد
+                            </span>
+                        @endif
+                    @endif
                 </h5>
                 <div class="text-muted small">
                     <span class="font-monospace text-primary fw-bold">{{ $donor->display_code }}</span>
@@ -561,21 +600,35 @@
           @endif
       </div>
 
-      <div class="row g-2 mb-3 mt-2 text-center">
-          @php $st = $donStats->get($donor->id); @endphp
-          <div class="col-6">
-              <div class="bg-light rounded p-2">
-                  <div class="small text-muted mb-1">إجمالي التبرعات</div>
-                  <div class="fw-bold text-dark">{{ $st ? number_format($st->total, 0) : '0' }}</div>
+      @if(!$hasDonated)
+          <div class="alert alert-warning py-2 px-3 mb-3 mt-2 rounded-3 border-warning border-opacity-50 small d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                  <div>
+                      <div class="fw-bold text-dark">لم يسجل أي تبرع حتى الآن</div>
+                      <div class="text-muted" style="font-size: 0.76rem;">
+                          {{ $isNew ? 'متبرع جديد مضاف مؤخراً' : 'سجل جديد بانتظار أول تبرع' }}
+                      </div>
+                  </div>
+              </div>
+              <span class="badge bg-warning text-dark px-2 py-1">مضاف جديد</span>
+          </div>
+      @else
+          <div class="row g-2 mb-3 mt-2 text-center">
+              <div class="col-6">
+                  <div class="bg-light rounded p-2">
+                      <div class="small text-muted mb-1">إجمالي التبرعات</div>
+                      <div class="fw-bold text-dark">{{ number_format($st->total, 0) }}</div>
+                  </div>
+              </div>
+              <div class="col-6">
+                  <div class="bg-light rounded p-2">
+                      <div class="small text-muted mb-1">عدد المرات</div>
+                      <div class="fw-bold text-dark">{{ $st->count }}</div>
+                  </div>
               </div>
           </div>
-          <div class="col-6">
-              <div class="bg-light rounded p-2">
-                  <div class="small text-muted mb-1">عدد المرات</div>
-                  <div class="fw-bold text-dark">{{ $st ? $st->count : 0 }}</div>
-              </div>
-          </div>
-      </div>
+      @endif
 
       <div class="d-flex align-items-center justify-content-between pt-2 border-top">
            <div class="text-muted small">
@@ -584,9 +637,15 @@
                 <span class="mx-1">•</span> <i class="bi bi-card-heading me-1 text-primary"></i> <span dir="ltr" class="font-monospace">{{ $donor->national_id }}</span>
               @endif
            </div>
-           <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3" style="position: relative; z-index: 1;">
-              <i class="bi bi-plus-lg me-1"></i> تبرع
-           </a>
+           @if(!$hasDonated)
+               <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" style="position: relative; z-index: 1;">
+                  <i class="bi bi-plus-circle me-1"></i> تسجيل أول تبرع
+               </a>
+           @else
+               <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3" style="position: relative; z-index: 1;">
+                  <i class="bi bi-plus-lg me-1"></i> تبرع
+               </a>
+           @endif
       </div>
     </div>
   </div>
@@ -666,6 +725,98 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">تراجع</button>
                 <button type="submit" class="btn btn-warning" id="cancelModalBtn">إرسال الطلب</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Quick Add Donor Modal --}}
+<div class="modal fade" id="quickAddDonorModal" tabindex="-1" aria-labelledby="quickAddDonorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form method="POST" action="{{ route('donors.store') }}" class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            @csrf
+            <input type="hidden" name="return_to" value="donors.index">
+            <input type="hidden" name="active" value="1">
+
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-person-plus-fill fs-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="quickAddDonorModalLabel">إضافة متبرع جديد</h5>
+                        <p class="mb-0 text-white text-opacity-80 small">سيتم حفظ المتبرع ويظهر فوراً في القائمة بصفة (مضاف جديد - لم يتبرع بعد)</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">اسم المتبرع بالكامل (ثلاثي على الأقل) <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control form-control-lg" placeholder="مثال: محمد أحمد علي محمود" required pattern="^(\S+\s+){2,}\S+.*$" title="يرجى إدخال اسم ثلاثي على الأقل (3 كلمات مفصولة بمسافات)">
+                        <div class="form-text">يجب أن يكون الاسم ثلاثياً على الأقل ومميزاً.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">نوع المتبرع <span class="text-danger">*</span></label>
+                        <select name="type" class="form-select form-select-lg" required>
+                            <option value="individual" selected>فرد</option>
+                            <option value="organization">مؤسسة / جهة / شركة</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">رقم الهاتف <span class="badge bg-primary-subtle text-primary">مستحسن</span></label>
+                        <input type="tel" name="phone" class="form-control" dir="ltr" placeholder="مثال: 01012345678" pattern="^(01[0125][0-9]{8})$" title="رقم هاتف مصري يبدأ بـ 010 أو 011 أو 012 أو 015">
+                        <div class="form-text">لتسهيل التواصل وإرسال إيصالات التبرع.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">الرقم القومي (اختياري)</label>
+                        <input type="text" name="national_id" class="form-control font-monospace" maxlength="14" placeholder="14 رقم قومي" pattern="^[0-9]{14}$" title="14 رقم قومي">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">تصنيف المتبرع</label>
+                        <select name="classification" class="form-select" id="quickClassification" onchange="toggleQuickRecurring(this.value)">
+                            <option value="one_time" selected>تبرع عام / مرة واحدة</option>
+                            <option value="recurring">متبرع دوري / متكرر (شهري/سنوي)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="quickRecurringCycleDiv" style="display:none;">
+                        <label class="form-label fw-bold">دورة التكرار</label>
+                        <select name="recurring_cycle" id="quickRecurringCycle" class="form-select">
+                            <option value="monthly" selected>شهري</option>
+                            <option value="yearly">سنوي</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">العنوان / المنطقة</label>
+                        <input type="text" name="address" class="form-control" placeholder="مثال: كفر الشيخ - دسوق أو طنطا...">
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 mt-3 mb-0 rounded-3 small d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                    <div>
+                        بمجرد حفظ المتبرع، سيظهر أمام اسمه تنبيه <strong>لم يتبرع بعد (مضاف جديد)</strong> مع زر مباشر لـ <strong>تسجيل أول تبرع</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between align-items-center bg-light px-4 py-3">
+                <a href="{{ route('donors.create') }}" class="btn btn-link text-decoration-none text-muted p-0 small">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> فتح صفحة الإضافة الكاملة (تخصيص الكفالات واليتامى)
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4" style="background: #059669; border-color: #059669;">
+                        <i class="bi bi-check-lg me-1"></i> حفظ وإضافة المتبرع
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -1041,6 +1192,13 @@
             container.appendChild(input);
         });
         form.submit();
+    }
+
+    function toggleQuickRecurring(val) {
+        const div = document.getElementById('quickRecurringCycleDiv');
+        if (div) {
+            div.style.display = (val === 'recurring') ? 'block' : 'none';
+        }
     }
 </script>
 @endsection

@@ -45,6 +45,11 @@
                         class="badge {{ $donor->active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
                         {{ $donor->active ? 'نشط' : 'غير نشط' }}
                     </span>
+                    @if($history->isEmpty())
+                        <span class="badge bg-warning text-dark border border-warning px-2.5 py-1 fw-bold">
+                            <i class="bi bi-hourglass-split me-1"></i> لم يتبرع بعد (مضاف جديد)
+                        </span>
+                    @endif
                     @if($effectiveMonthlyAmount > 0)
                         <span class="badge bg-success text-white border border-success px-2.5 py-1 fw-bold shadow-sm">
                             <i class="bi bi-heart-pulse-fill me-1"></i>كفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
@@ -426,7 +431,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">لا توجد تبرعات مسجلة لهذا المتبرع حتى الآن</td>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-gift text-warning display-4 mb-3 d-inline-block"></i>
+                                    <h5 class="fw-bold text-dark">هذا المتبرع مضاف جديد ولم يسجل أي تبرع حتى الآن</h5>
+                                    <p class="text-muted small">يمكنك تسجيل تبرع جديد له بالضغط على الزر أدناه</p>
+                                    <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-success fw-bold rounded-pill px-4 mt-2">
+                                        <i class="bi bi-plus-lg me-1"></i> تسجيل أول تبرع للمتبرع
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

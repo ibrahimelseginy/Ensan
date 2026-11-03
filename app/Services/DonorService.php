@@ -28,6 +28,7 @@ final readonly class DonorService
         $type           = $filters['type'] ?? null;
         $classification = $filters['classification'] ?? null;
         $active         = $filters['active'] ?? null;
+        $donationStatus = $filters['donation_status'] ?? null;
 
         $query = Donor::query()
             ->when($q !== '', function ($query) use ($q) {
@@ -58,6 +59,8 @@ final readonly class DonorService
             ->when($type, fn($query, $t) => $query->where('type', $t))
             ->when($classification, fn($query, $c) => $query->where('classification', $c))
             ->when(!is_null($active) && $active !== '', fn($query, $a) => $query->where('active', (bool)$a))
+            ->when($donationStatus === 'never', fn($query) => $query->whereDoesntHave('donations', fn($d) => $d->where('status', '!=', 'cancelled')))
+            ->when($donationStatus === 'donated', fn($query) => $query->whereHas('donations', fn($d) => $d->where('status', '!=', 'cancelled')))
             ->orderByDesc('id');
 
         $paginator = $query->paginate($perPage)->withQueryString();
@@ -259,10 +262,11 @@ final readonly class DonorService
     public function getGlobalStats(): array
     {
         return [
-            'all'       => Donor::count(),
-            'active'    => Donor::where('active', true)->count(),
-            'recurring' => Donor::where('classification', 'recurring')->count(),
-            'one_time'  => Donor::where('classification', 'one_time')->count(),
+            'all'           => Donor::count(),
+            'active'        => Donor::where('active', true)->count(),
+            'recurring'     => Donor::where('classification', 'recurring')->count(),
+            'one_time'      => Donor::where('classification', 'one_time')->count(),
+            'never_donated' => Donor::whereDoesntHave('donations', fn($q) => $q->where('status', '!=', 'cancelled'))->count(),
         ];
     }
 
