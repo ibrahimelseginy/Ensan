@@ -914,13 +914,20 @@
           $actualId = (int)($aData['beneficiary_id'] ?? $bId);
           $bModel = \App\Models\Beneficiary::find($actualId);
           if ($bModel) {
+              $mId = !empty($aData['family_member_id']) ? (int)$aData['family_member_id'] : null;
+              $mModel = $mId ? \App\Models\BeneficiaryFamilyMember::find($mId) : null;
+              $displayName = $mModel ? $mModel->full_name . ' (أسرة: ' . $bModel->full_name . ')' : $bModel->full_name;
+              $displayCode = $mModel?->code ?: ($bModel->code ?? ('BEN-' . $bModel->id));
+              $displayPhone = $mModel?->phone ?: $bModel->phone;
               $initialAllocations[] = [
                   'id' => $bModel->id,
-                  'code' => $bModel->code ?? ('BEN-' . $bModel->id),
-                  'name' => $bModel->full_name,
-                  'phone' => $bModel->phone,
+                  'code' => $displayCode,
+                  'name' => $displayName,
+                  'phone' => $displayPhone,
                   'amount' => $aData['amount'] ?? '',
                   'notes' => $aData['notes'] ?? '',
+                  'family_member_id' => $mId,
+                  'matched_member_id' => $mId,
               ];
           }
       }
@@ -932,6 +939,8 @@
           'phone' => $selectedBeneficiary->phone,
           'amount' => old('amount', ''),
           'notes' => old('allocation_note', ''),
+          'family_member_id' => null,
+          'matched_member_id' => null,
       ];
   }
 
@@ -1050,11 +1059,16 @@ $(function () {
   $('#sponsoredMembersSelect').select2({theme:'bootstrap-5',dir:'rtl',width:'100%',placeholder:'اختر واحدًا أو أكثر...'});
 
   // Multi-Beneficiary Allocation Logic
+  let allocRowCounter = 0;
   function addBeneficiaryRow(item) {
     if (!item || !item.id) return;
 
+    const bId = item.id;
+    const mId = item.matched_member_id || item.family_member_id || null;
+    const rowKey = mId ? `${bId}_${mId}` : `${bId}`;
+
     // Check if already in list
-    const existing = $(`.allocated-case-row[data-id="${item.id}"]`);
+    const existing = $(`.allocated-case-row[data-row-key="${rowKey}"]`);
     if (existing.length > 0) {
       existing.find('.case-amount-input').focus();
       existing.addClass('border-success').css('transition', 'all 0.3s');
@@ -1062,7 +1076,8 @@ $(function () {
       return;
     }
 
-    const bId = item.id;
+    allocRowCounter++;
+    const rowIdx = allocRowCounter;
     const bCode = item.code || ('BEN-' + bId);
     const bName = item.name || item.full_name || item.text || ('مستفيد #' + bId);
     const bPhone = item.phone || '';
@@ -1070,7 +1085,7 @@ $(function () {
     const bNotes = item.notes || '';
 
     const rowHtml = `
-      <div class="allocated-case-row p-2.5 mb-2 rounded-3 border bg-white shadow-xs" data-id="${bId}">
+      <div class="allocated-case-row p-2.5 mb-2 rounded-3 border bg-white shadow-xs" data-id="${bId}" data-member-id="${mId || ''}" data-row-key="${rowKey}">
         <div class="row g-2 align-items-center">
           <div class="col-md-5 d-flex align-items-center gap-2">
             <span class="badge bg-success font-monospace px-2.5 py-1.5">${bCode}</span>
@@ -1078,17 +1093,19 @@ $(function () {
               <span class="fw-bold text-dark d-block text-truncate" title="${bName}">${bName}</span>
               ${bPhone ? `<span class="text-muted small font-monospace"><i class="bi bi-telephone me-1"></i>${bPhone}</span>` : ''}
             </div>
-            <input type="hidden" name="beneficiary_allocations[${bId}][beneficiary_id]" value="${bId}">
+            <input type="hidden" name="beneficiary_allocations[${rowIdx}][beneficiary_id]" value="${bId}">
+            ${mId ? `<input type="hidden" name="beneficiary_allocations[${rowIdx}][family_member_id]" value="${mId}">` : ''}
+            ${mId ? `<input type="hidden" name="family_member_ids[]" class="case-family-member-input" value="${mId}">` : ''}
           </div>
           <div class="col-md-3">
             <div class="input-group input-group-sm">
               <span class="input-group-text bg-light text-muted">المبلغ</span>
-              <input type="number" step="any" min="0" name="beneficiary_allocations[${bId}][amount]" class="form-control fw-bold text-success text-center case-amount-input" placeholder="0.00" value="${bAmt}">
+              <input type="number" step="any" min="0" name="beneficiary_allocations[${rowIdx}][amount]" class="form-control fw-bold text-success text-center case-amount-input" placeholder="0.00" value="${bAmt}">
               <span class="input-group-text bg-light text-muted">ج.م</span>
             </div>
           </div>
           <div class="col-md-3">
-            <input type="text" name="beneficiary_allocations[${bId}][notes]" class="form-control form-control-sm" placeholder="ملاحظة خاصة بالحالة..." value="${bNotes}">
+            <input type="text" name="beneficiary_allocations[${rowIdx}][notes]" class="form-control form-control-sm" placeholder="ملاحظة خاصة بالحالة..." value="${bNotes}">
           </div>
           <div class="col-md-1 text-end">
             <button type="button" class="btn btn-sm btn-outline-danger remove-case-btn py-1 px-2" title="إزالة هذه الحالة">
@@ -1102,12 +1119,33 @@ $(function () {
     $('#allocatedCasesList').append(rowHtml);
     updateAllocatedCasesSummary();
 
-    const newRow = $(`.allocated-case-row[data-id="${bId}"]`);
+    if (mId && $('#sponsoredMembersSelect').length) {
+      const select = $('#sponsoredMembersSelect');
+      const curVals = select.val() || [];
+      const mIdStr = String(mId);
+      if (!curVals.includes(mIdStr)) {
+        if (!select.find(`option[value="${mIdStr}"]`).length) {
+          select.append(new Option(bName, mIdStr, true, true));
+        }
+        curVals.push(mIdStr);
+        select.val(curVals).trigger('change');
+      }
+    }
+
+    const newRow = $(`.allocated-case-row[data-row-key="${rowKey}"]`);
     newRow.find('.case-amount-input').focus();
   }
 
   $(document).on('click', '.remove-case-btn', function() {
-    $(this).closest('.allocated-case-row').remove();
+    const row = $(this).closest('.allocated-case-row');
+    const memberId = row.find('.case-family-member-input').val();
+    if (memberId && $('#sponsoredMembersSelect').length) {
+      const select = $('#sponsoredMembersSelect');
+      let curVals = select.val() || [];
+      curVals = curVals.filter(v => String(v) !== String(memberId));
+      select.val(curVals).trigger('change');
+    }
+    row.remove();
     updateAllocatedCasesSummary();
   });
 
@@ -1154,25 +1192,13 @@ $(function () {
     const data = e.params.data;
     addBeneficiaryRow({
       id: data.id,
-      code: data.code || ('BEN-' + data.id),
+      code: data.member_code ? data.member_code : (data.code || ('BEN-' + data.id)),
       name: data.full_name || data.text,
       phone: data.phone || '',
       amount: '',
-      notes: data.notes || ''
+      notes: data.notes || '',
+      matched_member_id: data.matched_member_id || null
     });
-
-    if (data.matched_member_id && $('#sponsoredMembersSelect').length) {
-      const select = $('#sponsoredMembersSelect');
-      const curVals = select.val() || [];
-      const mIdStr = String(data.matched_member_id);
-      if (!curVals.includes(mIdStr)) {
-        if (!select.find(`option[value="${mIdStr}"]`).length) {
-          select.append(new Option(data.full_name, mIdStr, true, true));
-        }
-        curVals.push(mIdStr);
-        select.val(curVals).trigger('change');
-      }
-    }
 
     $(this).val(null).trigger('change');
   });
@@ -1817,12 +1843,23 @@ $(function () {
       const selected = oldMemberIds.includes(String(member.id));
       select.append(new Option(label, member.id, selected, selected));
     });
+
+    // Also preserve/add any members that were already chosen from allocated case rows
+    $('.case-family-member-input').each(function() {
+      const mId = String($(this).val());
+      if (mId && !select.find(`option[value="${mId}"]`).length) {
+        const row = $(this).closest('.allocated-case-row');
+        const name = row.find('.text-truncate').text().trim() || ('ملف #' + mId);
+        select.append(new Option(name, mId, true, true));
+      }
+    });
+
     select.trigger('change');
     $('#sponsoredMembersLabel').text(purpose === 'kafalat_awram' ? 'اختر مرضى الأورام المكفولين' : 'اختر الأطفال المكفولين');
 
     const warning = $('#noSponsoredMembers');
-    if (!members.length) {
-      warning.show().find('span').text(purpose === 'kafalat_awram' ? 'لا يوجد مرضى أورام مسجلين حالياً.' : 'لا يوجد أطفال مسجلين حالياً.');
+    if (!members.length && !$('.case-family-member-input').length) {
+      warning.show().find('span').text(purpose === 'kafalat_awram' ? 'لا يوجد مرضى أورام مسجلين حالياً للمتبرع، يمكنك اختيار الحالات من جدول التخصيص أعلاه.' : 'لا يوجد أطفال مسجلين حالياً للمتبرع، يمكنك اختيار الحالات من جدول التخصيص أعلاه.');
     } else {
       warning.hide();
     }

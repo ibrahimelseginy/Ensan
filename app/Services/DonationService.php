@@ -39,6 +39,52 @@ final readonly class DonationService
         )));
         unset($data['family_member_ids']);
 
+        if (empty($familyMemberIds) && in_array($data['purpose'] ?? '', ['kafalat_aytam', 'kafalat_awram'], true)) {
+            $allocations = (array) ($data['beneficiary_allocations'] ?? []);
+            $beneficiaryIds = [];
+            foreach ($allocations as $alloc) {
+                if (!empty($alloc['family_member_id'])) {
+                    $familyMemberIds[] = (int) $alloc['family_member_id'];
+                }
+                if (!empty($alloc['beneficiary_id'])) {
+                    $beneficiaryIds[] = (int) $alloc['beneficiary_id'];
+                }
+            }
+            if (!empty($data['beneficiary_id'])) {
+                $beneficiaryIds[] = (int) $data['beneficiary_id'];
+            }
+            if (!empty($data['beneficiary_ids']) && is_array($data['beneficiary_ids'])) {
+                foreach ($data['beneficiary_ids'] as $bId) {
+                    if (!empty($bId)) {
+                        $beneficiaryIds[] = (int) $bId;
+                    }
+                }
+            }
+            $beneficiaryIds = array_values(array_unique(array_filter($beneficiaryIds)));
+
+            if (empty($familyMemberIds) && !empty($beneficiaryIds)) {
+                $query = BeneficiaryFamilyMember::query()
+                    ->whereIn('beneficiary_id', $beneficiaryIds)
+                    ->where('active', true);
+
+                if (($data['purpose'] ?? '') === 'kafalat_awram') {
+                    $familyMemberIds = (clone $query)->where('is_patient', true)->pluck('id')->all();
+                    if (empty($familyMemberIds)) {
+                        $familyMemberIds = $query->pluck('id')->all();
+                    }
+                } else {
+                    $familyMemberIds = (clone $query)->where('is_patient', false)->where('relationship', 'child')->pluck('id')->all();
+                    if (empty($familyMemberIds)) {
+                        $familyMemberIds = (clone $query)->where('relationship', 'child')->pluck('id')->all();
+                    }
+                    if (empty($familyMemberIds)) {
+                        $familyMemberIds = $query->pluck('id')->all();
+                    }
+                }
+            }
+            $familyMemberIds = array_values(array_unique(array_filter($familyMemberIds)));
+        }
+
         // 1. Handle Inline Donor Creation
         if (empty($data['donor_id']) && !empty($data['new_donor_name'])) {
             $classification = $data['new_donor_classification'] ?? 'one_time';
@@ -162,29 +208,48 @@ final readonly class DonationService
         if (!empty($data['beneficiary_allocations']) && is_array($data['beneficiary_allocations'])) {
             $formattedAllocations = [];
             $allocBenIds = [];
+            $allocMemberIds = [];
             foreach ($data['beneficiary_allocations'] as $alloc) {
                 if (empty($alloc['beneficiary_id'])) continue;
                 $bId = (int)$alloc['beneficiary_id'];
+                $mId = !empty($alloc['family_member_id']) ? (int)$alloc['family_member_id'] : null;
                 $allocBenIds[] = $bId;
-                $formattedAllocations[$bId] = [
-                    'beneficiary_id' => $bId,
-                    'amount'         => !empty($alloc['amount']) ? (float)$alloc['amount'] : 0,
-                    'notes'          => !empty($alloc['notes']) ? (string)$alloc['notes'] : null,
+                if ($mId) {
+                    $allocMemberIds[] = $mId;
+                }
+                $formattedAllocations[] = [
+                    'beneficiary_id'   => $bId,
+                    'family_member_id' => $mId,
+                    'amount'           => !empty($alloc['amount']) ? (float)$alloc['amount'] : 0,
+                    'notes'            => !empty($alloc['notes']) ? (string)$alloc['notes'] : null,
                 ];
             }
 
             if (!empty($formattedAllocations)) {
-                $bens = Beneficiary::whereIn('id', array_keys($formattedAllocations))->get()->keyBy('id');
+                $bens = Beneficiary::whereIn('id', array_unique($allocBenIds))->get()->keyBy('id');
+                $members = !empty($allocMemberIds)
+                    ? BeneficiaryFamilyMember::whereIn('id', array_unique($allocMemberIds))->get()->keyBy('id')
+                    : collect();
+
                 $finalAllocations = [];
-                foreach ($formattedAllocations as $bId => $item) {
+                foreach ($formattedAllocations as $item) {
+                    $bId = $item['beneficiary_id'];
+                    $mId = $item['family_member_id'];
                     $ben = $bens->get($bId);
+                    $member = $mId ? $members->get($mId) : null;
+
+                    $displayName = $member ? $member->full_name . ' (أسرة: ' . ($ben?->full_name ?? '') . ')' : ($ben?->full_name ?? ('مستفيد #' . $bId));
+                    $displayCode = $member?->code ?: ($ben?->code ?: ('BEN-' . $bId));
+                    $displayPhone = $member?->phone ?: $ben?->phone;
+
                     $finalAllocations[] = [
-                        'beneficiary_id' => $bId,
-                        'name'           => $ben?->full_name ?? ('مستفيد #' . $bId),
-                        'code'           => $ben?->code ?? ('BEN-' . $bId),
-                        'phone'          => $ben?->phone,
-                        'amount'         => $item['amount'],
-                        'notes'          => $item['notes'],
+                        'beneficiary_id'   => $bId,
+                        'family_member_id' => $mId,
+                        'name'             => $displayName,
+                        'code'             => $displayCode,
+                        'phone'            => $displayPhone,
+                        'amount'           => $item['amount'],
+                        'notes'            => $item['notes'],
                     ];
                 }
                 $data['beneficiary_allocations'] = $finalAllocations;

@@ -55,6 +55,7 @@ final class StoreDonationRequest extends FormRequest
             'beneficiary_id'           => 'nullable|exists:beneficiaries,id',
             'beneficiary_allocations'  => 'nullable|array',
             'beneficiary_allocations.*.beneficiary_id' => 'required_with:beneficiary_allocations|exists:beneficiaries,id',
+            'beneficiary_allocations.*.family_member_id' => 'nullable|exists:beneficiary_family_members,id',
             'beneficiary_allocations.*.amount'         => 'nullable|numeric|min:0',
             'beneficiary_allocations.*.notes'          => 'nullable|string',
             'split_allocations'        => 'nullable|array',
@@ -92,16 +93,31 @@ final class StoreDonationRequest extends FormRequest
             ],
             'family_member_ids'        => [
                 'nullable',
-                Rule::requiredIf(fn (): bool => in_array($this->input('purpose'), ['kafalat_aytam', 'kafalat_awram'], true)),
+                Rule::requiredIf(function (): bool {
+                    $purpose = (string) $this->input('purpose');
+                    if (! in_array($purpose, ['kafalat_aytam', 'kafalat_awram'], true)) {
+                        return false;
+                    }
+
+                    $hasAllocations = ! empty(array_filter((array) $this->input('beneficiary_allocations', [])));
+                    $hasBeneficiary = $this->filled('beneficiary_id') || ! empty(array_filter((array) $this->input('beneficiary_ids', [])));
+
+                    return ! $hasAllocations && ! $hasBeneficiary;
+                }),
                 'array',
-                'min:1',
+                Rule::when(
+                    fn (): bool => in_array($this->input('purpose'), ['kafalat_aytam', 'kafalat_awram'], true)
+                        && empty(array_filter((array) $this->input('beneficiary_allocations', [])))
+                        && ! $this->filled('beneficiary_id')
+                        && empty(array_filter((array) $this->input('beneficiary_ids', []))),
+                    ['min:1']
+                ),
             ],
             'family_member_ids.*'      => [
                 'integer',
                 'distinct',
                 'exists:beneficiary_family_members,id',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $donorId = $this->integer('donor_id');
                     $purpose = (string) $this->input('purpose');
 
                     $member = \App\Models\BeneficiaryFamilyMember::query()
@@ -114,12 +130,12 @@ final class StoreDonationRequest extends FormRequest
                         return;
                     }
 
-                    if ($purpose === 'kafalat_aytam' && ($member->is_patient || $member->relationship !== 'child')) {
+                    if ($purpose === 'kafalat_aytam' && $member->is_patient && ! in_array($member->relationship, ['child', 'son', 'daughter', 'orphan', 'ابن', 'ابنة', 'طفل', 'يتيم'], true)) {
                         $fail('كفالات الأيتام تقبل ملفات الأطفال المكفولين فقط.');
                     }
 
-                    if ($purpose === 'kafalat_awram' && ! $member->is_patient) {
-                        $fail('كفالات الأورام تقبل ملفات المرضى المكفولين فقط.');
+                    if ($purpose === 'kafalat_awram' && ! $member->is_patient && ! in_array($member->relationship, ['patient', 'child', 'son', 'daughter', 'orphan', 'ابن', 'ابنة', 'طفل', 'مريض'], true)) {
+                        $fail('كفالات الأورام تقبل ملفات المرضى والأطفال المكفولين فقط.');
                     }
                 },
             ],
@@ -155,7 +171,7 @@ final class StoreDonationRequest extends FormRequest
             'family_member_id.exists'           => 'ملف فرد الأسرة المختار غير موجود.',
             'purpose.required'                  => 'اختر بند «وذلك قيمة» للإيصال.',
             'purpose.in'                        => 'بند «وذلك قيمة» المختار غير صحيح.',
-            'family_member_ids.required'        => 'اختر طفلًا أو مريضًا واحدًا على الأقل من الملفات المكفولة للمتبرع.',
+            'family_member_ids.required'        => 'اختر طفلًا أو مريضًا واحدًا على الأقل من الملفات المكفولة للمتبرع أو حدد حالات في جدول التخصيص.',
             'family_member_ids.min'             => 'اختر ملفًا واحدًا على الأقل.',
         ];
     }
@@ -166,5 +182,64 @@ final class StoreDonationRequest extends FormRequest
             'add_to_inventory' => $this->boolean('add_to_inventory'),
             'new_donor_code' => Donor::normalizeCode($this->input('new_donor_code')),
         ]);
+
+        $purpose = (string) $this->input('purpose');
+        if (in_array($purpose, ['kafalat_aytam', 'kafalat_awram'], true)) {
+            $memberIds = array_values(array_filter(array_map('intval', (array) $this->input('family_member_ids', []))));
+
+            // 1. Extract any family_member_id from beneficiary_allocations
+            $allocations = (array) $this->input('beneficiary_allocations', []);
+            $beneficiaryIds = [];
+            foreach ($allocations as $alloc) {
+                if (!empty($alloc['family_member_id'])) {
+                    $memberIds[] = (int) $alloc['family_member_id'];
+                }
+                if (!empty($alloc['beneficiary_id'])) {
+                    $beneficiaryIds[] = (int) $alloc['beneficiary_id'];
+                }
+            }
+
+            // 2. Also check direct beneficiary_id and beneficiary_ids
+            if ($this->filled('beneficiary_id')) {
+                $beneficiaryIds[] = (int) $this->input('beneficiary_id');
+            }
+            if ($this->filled('beneficiary_ids')) {
+                foreach ((array) $this->input('beneficiary_ids') as $bId) {
+                    if (!empty($bId)) {
+                        $beneficiaryIds[] = (int) $bId;
+                    }
+                }
+            }
+            $beneficiaryIds = array_values(array_unique(array_filter($beneficiaryIds)));
+
+            // 3. If no memberIds were provided directly, auto-resolve from beneficiary IDs
+            if (empty($memberIds) && !empty($beneficiaryIds)) {
+                $query = \App\Models\BeneficiaryFamilyMember::query()
+                    ->whereIn('beneficiary_id', $beneficiaryIds)
+                    ->where('active', true);
+
+                if ($purpose === 'kafalat_awram') {
+                    $resolved = (clone $query)->where('is_patient', true)->pluck('id')->all();
+                    if (empty($resolved)) {
+                        $resolved = $query->pluck('id')->all();
+                    }
+                } else {
+                    $resolved = (clone $query)->where('is_patient', false)->where('relationship', 'child')->pluck('id')->all();
+                    if (empty($resolved)) {
+                        $resolved = (clone $query)->where('relationship', 'child')->pluck('id')->all();
+                    }
+                    if (empty($resolved)) {
+                        $resolved = $query->pluck('id')->all();
+                    }
+                }
+
+                $memberIds = array_merge($memberIds, $resolved);
+            }
+
+            $memberIds = array_values(array_unique(array_filter($memberIds)));
+            if (!empty($memberIds)) {
+                $this->merge(['family_member_ids' => $memberIds]);
+            }
+        }
     }
 }
