@@ -743,7 +743,7 @@ body.theme-dark .launcher-cat-btn.active,
         @if($u)
         <a href="{{ route('collaborations.index') }}" class="ensan-app-card" data-category="operations admin" data-title="الشراكات والتعاونات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات خصومات collaborations partnerships">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
-                <i class="bi bi-handshake-fill"></i>
+                <i class="bi bi-diagram-3-fill"></i>
             </div>
             <div class="ensan-app-title">التعاونات والشراكات</div>
             <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دليل الجهات</span>
@@ -827,16 +827,6 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
-        {{-- 10. الشراكات والعضويات (Popup) --}}
-        @if($u && ($u->hasPermission('manage_specialized_services') || $u->hasPermission('school_collaborations.view') || $u->hasPermission('memberships.view') || $u->hasPermission('oncology_medicine_reps.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="hr" data-title="الشراكات والعضوية" data-keywords="مدارس جامعات عضويات اشتراكات أدوية أورام partnerships">
-            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0891b2, #06b6d4); box-shadow: 0 10px 20px -5px rgba(8, 145, 178, 0.45);">
-                <i class="bi bi-diagram-3-fill"></i>
-            </div>
-            <div class="ensan-app-title">الشراكات والعضوية</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 3 خدمات <i class="bi bi-chevron-down"></i></span>
-        </div>
-        @endif
 
         {{-- 11. الاستقبال وخدمة العملاء --}}
         @if($u && $u->hasPermission('reception.view'))

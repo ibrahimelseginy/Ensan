@@ -10,7 +10,7 @@
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <div class="p-2 rounded-3 text-white" style="background: linear-gradient(135deg, #0d9488, #14b8a6);">
-                    <i class="bi bi-handshake-fill fs-4"></i>
+                    <i class="bi bi-diagram-3-fill fs-4"></i>
                 </div>
                 <div>
                     <h3 class="fw-bold mb-0 text-slate-800">دليل الشراكات والتعاونات</h3>
@@ -19,6 +19,26 @@
             </div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
+            @php $cu = auth()->user(); @endphp
+            @if($cu && ($cu->hasPermission('school_collaborations.view') || $cu->hasPermission('memberships.view') || $cu->hasPermission('oncology_medicine_reps.view')))
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 shadow-sm px-3 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-layers-fill"></i>
+                    <span>أقسام مرتبطة</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    @if($cu->hasPermission('school_collaborations.view'))
+                    <li><a class="dropdown-item py-2" href="{{ route('school-collaborations.index') }}"><i class="bi bi-building text-primary me-2"></i> بروتوكولات المدارس والجامعات</a></li>
+                    @endif
+                    @if($cu->hasPermission('memberships.view'))
+                    <li><a class="dropdown-item py-2" href="{{ route('memberships.index') }}"><i class="bi bi-card-checklist text-success me-2"></i> العضويات والاشتراكات</a></li>
+                    @endif
+                    @if($cu->hasPermission('oncology_medicine_reps.view'))
+                    <li><a class="dropdown-item py-2" href="{{ route('oncology-medicine-reps.index') }}"><i class="bi bi-capsule text-danger me-2"></i> مندوبو أدوية الأورام</a></li>
+                    @endif
+                </ul>
+            </div>
+            @endif
             <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#createCollaborationModal">
                 <i class="bi bi-plus-circle-fill"></i>
                 <span>إضافة تعاون / جهة جديدة</span>
