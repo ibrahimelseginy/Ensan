@@ -416,6 +416,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('beneficiary-family-members.detach-sponsor');
         Route::patch('beneficiary-family-members/{familyMember}/sponsorship', [BeneficiaryFamilyMemberWebController::class, 'updateSponsorship'])
             ->name('beneficiary-family-members.update-sponsorship');
+        Route::post('beneficiary-family-members/{familyMember}/psychological-support', [PsychologicalSupportController::class, 'storeMember'])
+            ->name('beneficiary-family-members.psychological-support.store');
         Route::post('beneficiary-family-members/{familyMember}/assessments/entry', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeEntry'])
             ->name('child-assessments.store-entry');
         Route::post('beneficiary-family-members/{familyMember}/assessments/monthly', [\App\Http\Controllers\ChildAssessmentWebController::class, 'storeMonthly'])

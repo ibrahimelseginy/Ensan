@@ -14,10 +14,11 @@ final class BeneficiaryFamilyMemberWebController extends Controller
 {
     public function show(BeneficiaryFamilyMember $familyMember): View
     {
-        $familyMember->load(['beneficiary.project', 'sponsors']);
+        $familyMember->load(['beneficiary.project', 'sponsors', 'psychologicalSupportReports.creator']);
         $allDonors = Donor::orderBy('name')->get(['id', 'name', 'code', 'phone']);
+        $psychReports = $familyMember->psychologicalSupportReports;
 
-        return view('beneficiaries.family-members.show', compact('familyMember', 'allDonors'));
+        return view('beneficiaries.family-members.show', compact('familyMember', 'allDonors', 'psychReports'));
     }
 
     public function attachSponsor(Request $request, BeneficiaryFamilyMember $familyMember): RedirectResponse

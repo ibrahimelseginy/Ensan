@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
+use App\Models\BeneficiaryFamilyMember;
 use App\Models\PsychologicalSupportReport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,17 +17,25 @@ final class PsychologicalSupportController extends Controller
     {
         $currentMonth = $request->input('month', now()->format('Y-m'));
 
-        $query = PsychologicalSupportReport::with(['beneficiary', 'creator'])
+        $query = PsychologicalSupportReport::with(['beneficiary', 'familyMember', 'creator'])
             ->where('report_month', $currentMonth)
             ->latest();
 
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->whereHas('beneficiary', function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
-            })->orWhere('volunteer_name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('beneficiary', function ($bq) use ($search) {
+                    $bq->where('full_name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                })
+                ->orWhereHas('familyMember', function ($fq) use ($search) {
+                    $fq->where('full_name', 'like', "%{$search}%")
+                      ->orWhere('code', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                })
+                ->orWhere('volunteer_name', 'like', "%{$search}%");
+            });
         }
 
         $reports = $query->paginate(20)->withQueryString();
@@ -59,6 +68,53 @@ final class PsychologicalSupportController extends Controller
             'nutrition_diet' => 'nullable|string',
             'general_notes' => 'nullable|string',
             'supporter_opinion' => 'nullable|string',
+            'family_member_id' => 'nullable|exists:beneficiary_family_members,id',
+        ], [
+            'volunteer_name.required' => 'يرجى كتابة اسم المتطوع ثلاثي.',
+            'psychological_state.required' => 'يرجى تحديد الحالة النفسية للمريض.',
+            'rating.required' => 'يرجى تحديد تقييم الحالة النفسية من 1 إلى 5.',
+        ]);
+
+        $reportMonth = $validated['report_month'];
+        $familyMemberId = !empty($validated['family_member_id']) ? (int) $validated['family_member_id'] : null;
+
+        $matchCriteria = [
+            'beneficiary_id' => $beneficiary->id,
+            'report_month' => $reportMonth,
+        ];
+        if ($familyMemberId) {
+            $matchCriteria['family_member_id'] = $familyMemberId;
+        }
+
+        $report = PsychologicalSupportReport::updateOrCreate(
+            $matchCriteria,
+            array_merge($validated, [
+                'beneficiary_id' => $beneficiary->id,
+                'family_member_id' => $familyMemberId,
+                'user_id' => auth()->id(),
+                'created_by' => auth()->id(),
+            ])
+        );
+
+        $name = $familyMemberId && $report->familyMember ? $report->familyMember->full_name : $beneficiary->full_name;
+
+        return back()->with('success', "تم توثيق تقرير الدعم النفسي لشهر [{$reportMonth}] للحالة [{$name}] بنجاح.");
+    }
+
+    public function storeMember(Request $request, BeneficiaryFamilyMember $familyMember): RedirectResponse
+    {
+        $validated = $request->validate([
+            'report_month' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'volunteer_name' => 'required|string|max:191',
+            'medical_condition' => 'nullable|string|max:255',
+            'treatment_stage' => 'nullable|string|max:255',
+            'call_condition' => 'nullable|string',
+            'psychological_state' => 'required|string|in:ممتاز,كويس,راضي,حزين,يشعر بالضجر',
+            'rating' => 'required|integer|min:1|max:5',
+            'needs_improvement' => 'nullable|string',
+            'nutrition_diet' => 'nullable|string',
+            'general_notes' => 'nullable|string',
+            'supporter_opinion' => 'nullable|string',
         ], [
             'volunteer_name.required' => 'يرجى كتابة اسم المتطوع ثلاثي.',
             'psychological_state.required' => 'يرجى تحديد الحالة النفسية للمريض.',
@@ -69,16 +125,18 @@ final class PsychologicalSupportController extends Controller
 
         $report = PsychologicalSupportReport::updateOrCreate(
             [
-                'beneficiary_id' => $beneficiary->id,
+                'family_member_id' => $familyMember->id,
                 'report_month' => $reportMonth,
             ],
             array_merge($validated, [
+                'beneficiary_id' => $familyMember->beneficiary_id,
+                'family_member_id' => $familyMember->id,
                 'user_id' => auth()->id(),
                 'created_by' => auth()->id(),
             ])
         );
 
-        return back()->with('success', "تم توثيق تقرير الدعم النفسي لشهر [{$reportMonth}] للحالة [{$beneficiary->full_name}] بنجاح.");
+        return back()->with('success', "تم توثيق تقرير الدعم النفسي لشهر [{$reportMonth}] للحالة المريضة [{$familyMember->full_name}] بنجاح.");
     }
 
     public function showModal(Beneficiary $beneficiary): \Illuminate\Http\JsonResponse

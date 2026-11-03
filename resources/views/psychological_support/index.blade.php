@@ -97,14 +97,29 @@
                             @endphp
                             <tr>
                                 <td class="ps-4">
-                                    <div class="fw-bold text-dark">{{ $b ? $b->full_name : 'غير محدد' }}</div>
+                                    @php
+                                        $patientName = $report->familyMember ? $report->familyMember->full_name : ($b ? $b->full_name : 'غير محدد');
+                                        $patientCode = $report->familyMember ? $report->familyMember->code : ($b ? $b->code : '-');
+                                        $patientPhone = $report->familyMember && $report->familyMember->phone ? $report->familyMember->phone : ($b ? $b->phone : null);
+                                    @endphp
+                                    <div class="fw-bold text-dark">{{ $patientName }}</div>
                                     <div class="small text-muted font-monospace">
-                                        <span class="badge bg-light text-dark border">{{ $b ? $b->code : '-' }}</span>
-                                        @if($b && $b->phone)
-                                            <span class="ms-1">{{ $b->phone }}</span>
+                                        <span class="badge bg-light text-dark border">{{ $patientCode }}</span>
+                                        @if($report->familyMember)
+                                            <span class="badge bg-info-subtle text-info border border-info ms-1">{{ $report->familyMember->relationship_label }}</span>
+                                            @if($b)
+                                                <span class="text-muted ms-1" style="font-size: 0.75rem;">(أسرة: {{ $b->full_name }})</span>
+                                            @endif
+                                        @endif
+                                        @if($patientPhone)
+                                            <span class="ms-1">{{ $patientPhone }}</span>
                                         @endif
                                     </div>
-                                    @if($b && $b->tumor_location)
+                                    @if($report->familyMember && $report->familyMember->case_details)
+                                        <div class="text-muted extra-small" style="font-size: 0.75rem;">
+                                            <i class="bi bi-activity text-danger me-0.5"></i>{{ $report->familyMember->case_details }}
+                                        </div>
+                                    @elseif($b && $b->tumor_location)
                                         <div class="text-muted extra-small" style="font-size: 0.75rem;">
                                             <i class="bi bi-activity text-danger me-0.5"></i>{{ $b->tumor_location }}
                                         </div>
@@ -158,7 +173,11 @@
                                     <div class="extra-small text-muted">{{ $report->created_at ? $report->created_at->format('h:i A') : '' }}</div>
                                 </td>
                                 <td class="pe-4 text-center">
-                                    @if($b)
+                                    @if($report->familyMember)
+                                        <a href="{{ route('beneficiary-family-members.show', $report->familyMember) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="عرض ملف الحالة المريضة">
+                                            <i class="bi bi-heart-pulse-fill me-1"></i> ملف الحالة
+                                        </a>
+                                    @elseif($b)
                                         <a href="{{ route('beneficiaries.show', $b) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="عرض ملف الحالة">
                                             <i class="bi bi-folder-fill me-1"></i> الملف
                                         </a>

@@ -95,6 +95,11 @@ final class BeneficiaryFamilyMember extends Model
             ->withTimestamps();
     }
 
+    public function psychologicalSupportReports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PsychologicalSupportReport::class, 'family_member_id')->latest('report_month');
+    }
+
     public function assessments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ChildAssessment::class, 'family_member_id')->latest('assessment_date');

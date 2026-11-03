@@ -11,6 +11,7 @@ final class PsychologicalSupportReport extends Model
 {
     protected $fillable = [
         'beneficiary_id',
+        'family_member_id',
         'user_id',
         'volunteer_name',
         'report_month',
@@ -33,6 +34,11 @@ final class PsychologicalSupportReport extends Model
     public function beneficiary(): BelongsTo
     {
         return $this->belongsTo(Beneficiary::class);
+    }
+
+    public function familyMember(): BelongsTo
+    {
+        return $this->belongsTo(BeneficiaryFamilyMember::class, 'family_member_id');
     }
 
     public function user(): BelongsTo
