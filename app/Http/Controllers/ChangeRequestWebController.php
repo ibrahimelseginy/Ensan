@@ -189,9 +189,38 @@ final class ChangeRequestWebController extends Controller
                 if (empty($executionData['created_by']) && !empty($changeRequest->user_id)) {
                     $executionData['created_by'] = $changeRequest->user_id;
                 }
-                $instance = $modelClass::create($executionData);
-                // Save the newly created model ID
-                $changeRequest->model_id = $instance->id;
+
+                $instance = null;
+                if (!empty($changeRequest->model_id)) {
+                    $instance = $modelClass::find($changeRequest->model_id);
+                }
+
+                if (!$instance && $modelClass === \App\Models\Beneficiary::class && !empty($executionData['full_name'])) {
+                    $normalized = \App\Rules\UniqueBeneficiaryName::normalize((string) $executionData['full_name']);
+                    $existingId = \App\Rules\UniqueBeneficiaryName::existingBeneficiaryId($normalized);
+                    if ($existingId) {
+                        $instance = \App\Models\Beneficiary::find($existingId);
+                        if ($instance) {
+                            $changeRequest->model_id = $instance->id;
+                        }
+                    }
+                }
+
+                if (!$instance && $modelClass === \App\Models\Donor::class && !empty($executionData['name'])) {
+                    $existingDonor = \App\Models\Donor::where('name', trim((string)$executionData['name']))->first();
+                    if ($existingDonor) {
+                        $instance = $existingDonor;
+                        $changeRequest->model_id = $instance->id;
+                    }
+                }
+
+                if ($instance) {
+                    $instance->update($executionData);
+                } else {
+                    $instance = $modelClass::create($executionData);
+                    // Save the newly created model ID
+                    $changeRequest->model_id = $instance->id;
+                }
                 
                 // Special handling for Donations postCreate if needed
                 if ($modelClass === 'App\Models\Donation') {
