@@ -955,6 +955,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('guest-houses/{guest_house}/stays/{stay}/return', [GuestHouseWebController::class, 'returnStay'])->name('guest-houses.stays.return');
         Route::post('guest-houses/{guest_house}/bookings/{booking}/decision', [GuestHouseWebController::class, 'decideBooking'])->name('guest-houses.bookings.decision');
         Route::post('guest-houses/{guest_house}/mobile-cases/{application}/decision', [GuestHouseWebController::class, 'decideMobileCase'])->name('guest-houses.mobile-cases.decision');
+        Route::post('guest-houses/{guest_house}/petty-cash/expenses', [GuestHouseWebController::class, 'storePettyExpense'])->name('guest-houses.petty-cash.expenses.store');
+        Route::post('guest-houses/{guest_house}/petty-cash/replenish', [GuestHouseWebController::class, 'replenishPettyCash'])->name('guest-houses.petty-cash.replenish');
+        Route::post('guest-houses/{guest_house}/assets', [GuestHouseWebController::class, 'storeAsset'])->name('guest-houses.assets.store');
+        Route::patch('guest-houses/{guest_house}/assets/{asset}/status', [GuestHouseWebController::class, 'updateAssetStatus'])->name('guest-houses.assets.status');
+        Route::post('guest-houses/{guest_house}/assets/{asset}/maintenances', [GuestHouseWebController::class, 'storeAssetMaintenance'])->name('guest-houses.assets.maintenances.store');
+        Route::post('guest-houses/{guest_house}/support-tickets', [GuestHouseWebController::class, 'storeSupportTicket'])->name('guest-houses.support-tickets.store');
+        Route::patch('guest-houses/{guest_house}/support-tickets/{ticket}/status', [GuestHouseWebController::class, 'updateSupportTicketStatus'])->name('guest-houses.support-tickets.status');
     });
 
     // Ramadan Campaign

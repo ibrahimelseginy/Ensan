@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class GuestHouseCustody extends Model
 {
-    protected $fillable = ['guest_house_id', 'name', 'type', 'treasury_id', 'warehouse_id', 'is_active', 'notes'];
+    protected $fillable = ['guest_house_id', 'name', 'type', 'category', 'treasury_id', 'warehouse_id', 'is_active', 'notes'];
     protected $casts = ['is_active' => 'boolean'];
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
@@ -14,4 +14,14 @@ final class GuestHouseCustody extends Model
     public function warehouse() { return $this->belongsTo(Warehouse::class); }
     public function item() { return $this->belongsTo(Item::class); }
     public function user() { return $this->belongsTo(User::class); }
+
+    public function getCategoryLabelAttribute(): string
+    {
+        return match ($this->category) {
+            'food' => 'عهدة مواد غذائية ومؤن',
+            'equipment' => 'عهدة أجهزة ومعدات',
+            default => 'عهدة عامة',
+        };
+    }
 }
+

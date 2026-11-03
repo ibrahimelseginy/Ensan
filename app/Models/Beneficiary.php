@@ -178,8 +178,12 @@ final class Beneficiary extends Model
             if (empty($beneficiary->classification)) {
                 $beneficiary->classification = 'A';
             }
-            if (!empty($beneficiary->guest_house_id) && (empty($beneficiary->code) || !str_starts_with($beneficiary->code, 'G-'))) {
-                $beneficiary->code = self::nextGuestCode();
+            if (empty($beneficiary->code)) {
+                if (!empty($beneficiary->guest_house_id)) {
+                    $beneficiary->code = self::nextGuestCode();
+                } else {
+                    $beneficiary->code = self::generateNextCode();
+                }
             }
         });
 
@@ -187,8 +191,12 @@ final class Beneficiary extends Model
             if (empty($beneficiary->updated_by) && auth()->check()) {
                 $beneficiary->updated_by = auth()->id();
             }
-            if (!empty($beneficiary->guest_house_id) && (empty($beneficiary->code) || !str_starts_with($beneficiary->code, 'G-'))) {
-                $beneficiary->code = self::nextGuestCode();
+            if (empty($beneficiary->code)) {
+                if (!empty($beneficiary->guest_house_id)) {
+                    $beneficiary->code = self::nextGuestCode();
+                } else {
+                    $beneficiary->code = self::generateNextCode();
+                }
             }
         });
     }

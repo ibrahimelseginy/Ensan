@@ -22,6 +22,11 @@ use App\Models\GuestHouseStay;
 use App\Models\GuestHouseCustody;
 use App\Models\GuestHouseMeal;
 use App\Models\GuestHouseMealServing;
+use App\Models\GuestHouseAsset;
+use App\Models\GuestHouseAssetMaintenance;
+use App\Models\GuestHouseSupportTicket;
+use App\Models\Expense;
+use App\Models\TreasuryTransaction;
 use App\Services\GuestHouseService;
 use App\Services\DonationService;
 use App\Services\ExpenseService;
@@ -189,6 +194,32 @@ final class GuestHouseWebController extends Controller
                 });
             })->latest()->limit(50)->get();
 
+        $guestHouseAssets = $guest_house->assets()->with(['wing', 'maintenances.createdBy', 'createdBy'])->get();
+        $assetStats = [
+            'total' => $guestHouseAssets->count(),
+            'working' => $guestHouseAssets->where('status', 'working')->count(),
+            'needs_maintenance' => $guestHouseAssets->where('status', 'needs_maintenance')->count(),
+            'out_of_service' => $guestHouseAssets->whereIn('status', ['out_of_service', 'scrapped'])->count(),
+        ];
+
+        $guestHouseTickets = $guest_house->supportTickets()->with(['beneficiary', 'stay.wing', 'assignedTo', 'createdBy'])->latest()->limit(50)->get();
+        $ticketStats = [
+            'total' => $guest_house->supportTickets()->count(),
+            'open' => $guest_house->supportTickets()->whereIn('status', ['open', 'in_progress'])->count(),
+            'emergency' => $guest_house->supportTickets()->where('priority', 'emergency')->where('status', 'open')->count(),
+            'resolved' => $guest_house->supportTickets()->where('status', 'resolved')->count(),
+        ];
+
+        $pettyCashCustodies = $guestHouseCustodies->where('type', 'financial');
+        $foodCustodies = $guestHouseCustodies->where(function ($c) {
+            return $c->type === 'in_kind' && ($c->category === 'food' || str_contains(mb_strtolower((string)$c->name), 'غذائ') || str_contains(mb_strtolower((string)$c->name), 'وجب') || str_contains(mb_strtolower((string)$c->name), 'مطبخ'));
+        });
+        $pettyCashExpenses = Expense::where('guest_house_id', $guest_house->id)
+            ->with(['treasury', 'user'])
+            ->latest('expense_date')
+            ->limit(30)
+            ->get();
+
         return view('guest_houses.show', array_merge(compact(
             'guest_house',
             'volunteers',
@@ -221,6 +252,13 @@ final class GuestHouseWebController extends Controller
             ,'totalCapacityBeds'
             ,'pendingBookings'
             ,'pendingMobileCases'
+            ,'guestHouseAssets'
+            ,'assetStats'
+            ,'guestHouseTickets'
+            ,'ticketStats'
+            ,'pettyCashCustodies'
+            ,'foodCustodies'
+            ,'pettyCashExpenses'
         ), $stats));
     }
 
@@ -1271,4 +1309,259 @@ final class GuestHouseWebController extends Controller
             ->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
             ->exists();
     }
+
+    public function storePettyExpense(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $data = $request->validate([
+            'custody_id' => 'required|exists:guest_house_custodies,id',
+            'name' => 'required|string|max:200',
+            'amount' => 'required|numeric|min:0.5',
+            'expense_date' => 'required|date',
+            'notes' => 'nullable|string|max:1000',
+            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:10240',
+        ]);
+
+        $custody = GuestHouseCustody::whereKey($data['custody_id'])
+            ->where('guest_house_id', $guest_house->id)
+            ->where('type', 'financial')
+            ->firstOrFail();
+
+        $treasury = Treasury::findOrFail($custody->treasury_id);
+        if ((float) $treasury->current_balance < (float) $data['amount']) {
+            return back()->withInput()->with('error', 'الرصيد المتبقي في العهدة النثرية غير كافٍ. المتاح حالياً: ' . number_format((float) $treasury->current_balance, 2) . ' ج.م');
+        }
+
+        $invoicePath = null;
+        if ($request->hasFile('invoice_file')) {
+            $invoicePath = app(\App\Services\ImageUploadService::class)->uploadImage(
+                $request->file('invoice_file'),
+                'guest_houses/expenses'
+            );
+        }
+
+        DB::transaction(function () use ($guest_house, $treasury, $data, $invoicePath): void {
+            $this->expenseService->createExpense([
+                'name' => $data['name'],
+                'amount' => (float) $data['amount'],
+                'expense_date' => $data['expense_date'],
+                'treasury_id' => $treasury->id,
+                'guest_house_id' => $guest_house->id,
+                'notes' => $data['notes'] ?? null,
+                'invoice_path' => $invoicePath,
+            ]);
+        });
+
+        return back()->with('success', 'تم تسجيل المصروف وخصمه من العهدة النثرية للدار بنجاح.');
+    }
+
+    public function replenishPettyCash(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $data = $request->validate([
+            'custody_id' => 'required|exists:guest_house_custodies,id',
+            'source_treasury_id' => 'required|exists:treasuries,id',
+            'amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $custody = GuestHouseCustody::whereKey($data['custody_id'])
+            ->where('guest_house_id', $guest_house->id)
+            ->where('type', 'financial')
+            ->firstOrFail();
+
+        $sourceTreasury = Treasury::findOrFail($data['source_treasury_id']);
+        $destTreasury = Treasury::findOrFail($custody->treasury_id);
+
+        if ((float) $sourceTreasury->current_balance < (float) $data['amount']) {
+            return back()->with('error', 'الرصيد في الخزينة الرئيسية المحددة غير كافٍ لتغذية عهدة الدار.');
+        }
+
+        DB::transaction(function () use ($guest_house, $custody, $sourceTreasury, $destTreasury, $data): void {
+            $sourceTreasury->decrement('current_balance', (float) $data['amount']);
+            $destTreasury->increment('current_balance', (float) $data['amount']);
+
+            TreasuryTransaction::create([
+                'treasury_id' => $sourceTreasury->id,
+                'type' => 'out',
+                'amount' => (float) $data['amount'],
+                'currency' => $sourceTreasury->currency ?: 'EGP',
+                'description' => "تغذية واستعاضة عهدة مالية لدار الضيافة: {$guest_house->name} ({$custody->name})",
+                'transaction_date' => now()->toDateString(),
+                'created_by' => auth()->id(),
+            ]);
+
+            TreasuryTransaction::create([
+                'treasury_id' => $destTreasury->id,
+                'type' => 'in',
+                'amount' => (float) $data['amount'],
+                'currency' => $destTreasury->currency ?: 'EGP',
+                'description' => "استلام استعاضة عهدة من: {$sourceTreasury->name} - " . ($data['notes'] ?? ''),
+                'transaction_date' => now()->toDateString(),
+                'created_by' => auth()->id(),
+            ]);
+        });
+
+        return back()->with('success', 'تمت استعاضة وتغذية العهدة المالية للدار بنجاح وزيادة الرصيد المتاح.');
+    }
+
+    public function storeAsset(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:150',
+            'category' => 'required|in:electrical,medical,furniture,other',
+            'guest_house_wing_id' => 'nullable|exists:guest_house_wings,id',
+            'location' => 'nullable|string|max:150',
+            'status' => 'required|in:working,needs_maintenance,out_of_service,scrapped',
+            'serial_number' => 'nullable|string|max:100',
+            'purchase_date' => 'nullable|date',
+            'warranty_until' => 'nullable|date',
+            'cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $prefix = match ($data['category']) {
+            'electrical' => 'EL',
+            'medical' => 'MED',
+            'furniture' => 'FUR',
+            default => 'AST',
+        };
+        $count = $guest_house->assets()->where('category', $data['category'])->count() + 1;
+        $data['code'] = "GH-{$guest_house->id}-{$prefix}-" . sprintf('%03d', $count);
+        $data['created_by'] = auth()->id();
+
+        $guest_house->assets()->create($data);
+
+        return back()->with('success', 'تمت إضافة الجهاز / المعدة لعهدة الدار بنجاح.');
+    }
+
+    public function updateAssetStatus(Request $request, GuestHouse $guest_house, GuestHouseAsset $asset): RedirectResponse
+    {
+        abort_unless((int) $asset->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'status' => 'required|in:working,needs_maintenance,out_of_service,scrapped',
+            'location' => 'nullable|string|max:150',
+            'guest_house_wing_id' => 'nullable|exists:guest_house_wings,id',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $asset->update($data);
+
+        return back()->with('success', 'تم تحديث حالة وموقع الجهاز بنجاح.');
+    }
+
+    public function storeAssetMaintenance(Request $request, GuestHouse $guest_house, GuestHouseAsset $asset): RedirectResponse
+    {
+        abort_unless((int) $asset->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'maintenance_date' => 'required|date',
+            'issue_description' => 'required|string|max:1000',
+            'cost' => 'nullable|numeric|min:0',
+            'technician_name' => 'nullable|string|max:150',
+            'technician_phone' => 'nullable|string|max:50',
+            'status' => 'required|in:pending,in_progress,completed',
+            'completion_notes' => 'nullable|string|max:1000',
+            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:10240',
+            'deduct_from_custody_id' => 'nullable|exists:guest_house_custodies,id',
+        ]);
+
+        $invoicePath = null;
+        if ($request->hasFile('invoice_file')) {
+            $invoicePath = app(\App\Services\ImageUploadService::class)->uploadImage(
+                $request->file('invoice_file'),
+                'guest_houses/maintenances'
+            );
+        }
+
+        $cost = (float) ($data['cost'] ?? 0);
+
+        DB::transaction(function () use ($guest_house, $asset, $data, $cost, $invoicePath): void {
+            $asset->maintenances()->create([
+                'maintenance_date' => $data['maintenance_date'],
+                'issue_description' => $data['issue_description'],
+                'cost' => $cost,
+                'technician_name' => $data['technician_name'] ?? null,
+                'technician_phone' => $data['technician_phone'] ?? null,
+                'invoice_path' => $invoicePath,
+                'status' => $data['status'],
+                'completion_notes' => $data['completion_notes'] ?? null,
+                'created_by' => auth()->id(),
+            ]);
+
+            if ($data['status'] === 'completed') {
+                $asset->update(['status' => 'working']);
+            } elseif ($data['status'] === 'in_progress' || $data['status'] === 'pending') {
+                $asset->update(['status' => 'needs_maintenance']);
+            }
+
+            if (!empty($data['deduct_from_custody_id']) && $cost > 0) {
+                $custody = GuestHouseCustody::whereKey($data['deduct_from_custody_id'])
+                    ->where('guest_house_id', $guest_house->id)
+                    ->where('type', 'financial')
+                    ->first();
+                if ($custody && $custody->treasury_id) {
+                    $this->expenseService->createExpense([
+                        'name' => "صيانة جهاز ({$asset->name}) - {$data['issue_description']}",
+                        'amount' => $cost,
+                        'expense_date' => $data['maintenance_date'],
+                        'treasury_id' => $custody->treasury_id,
+                        'guest_house_id' => $guest_house->id,
+                        'notes' => "خصم تلقائي مقابل صيانة جهاز {$asset->name}",
+                        'invoice_path' => $invoicePath,
+                    ]);
+                }
+            }
+        });
+
+        return back()->with('success', 'تم تسجيل بلاغ / عملية صيانة الجهاز وتحديث حالته بنجاح.');
+    }
+
+    public function storeSupportTicket(Request $request, GuestHouse $guest_house): RedirectResponse
+    {
+        $data = $request->validate([
+            'caller_name' => 'required|string|max:150',
+            'caller_phone' => 'nullable|string|max:50',
+            'caller_type' => 'required|in:resident,companion,prospective_patient,hospital,donor,other',
+            'category' => 'required|in:inquiry,medical_followup,emergency,resident_service,complaint,satisfaction_survey',
+            'priority' => 'required|in:normal,urgent,emergency',
+            'direction' => 'required|in:incoming,outgoing,in_person',
+            'subject' => 'required|string|max:200',
+            'details' => 'nullable|string|max:2000',
+            'action_taken' => 'nullable|string|max:2000',
+            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
+            'guest_house_stay_id' => 'nullable|exists:guest_house_stays,id',
+            'status' => 'required|in:open,in_progress,resolved,cancelled',
+            'satisfaction_rating' => 'nullable|integer|min:1|max:5',
+        ]);
+
+        $data['created_by'] = auth()->id();
+        $data['assigned_to'] = auth()->id();
+        if ($data['status'] === 'resolved') {
+            $data['resolved_at'] = now();
+        }
+
+        $guest_house->supportTickets()->create($data);
+
+        return back()->with('success', 'تم تسجيل تذكرة / مكالمة التواصل والدعم بنجاح.');
+    }
+
+    public function updateSupportTicketStatus(Request $request, GuestHouse $guest_house, GuestHouseSupportTicket $ticket): RedirectResponse
+    {
+        abort_unless((int) $ticket->guest_house_id === (int) $guest_house->id, 404);
+
+        $data = $request->validate([
+            'status' => 'required|in:open,in_progress,resolved,cancelled',
+            'action_taken' => 'nullable|string|max:2000',
+            'satisfaction_rating' => 'nullable|integer|min:1|max:5',
+        ]);
+
+        if ($data['status'] === 'resolved' && !$ticket->resolved_at) {
+            $data['resolved_at'] = now();
+        }
+
+        $ticket->update($data);
+
+        return back()->with('success', 'تم تحديث حالة تذكرة / بلاغ الدعم بنجاح.');
+    }
 }
+

@@ -11,4 +11,6 @@ final class GuestHouseWing extends Model
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
     public function beds() { return $this->hasMany(GuestHouseBed::class)->orderByRaw('CAST(number AS UNSIGNED) ASC, id ASC'); }
+    public function assets() { return $this->hasMany(GuestHouseAsset::class); }
 }
+

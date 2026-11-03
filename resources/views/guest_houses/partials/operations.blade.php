@@ -30,15 +30,68 @@
             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#guestHouseCustodyModal"><i class="bi bi-safe me-1"></i> إضافة عهدة</button>
             <button class="btn btn-success btn-sm text-white" data-bs-toggle="modal" data-bs-target="#guestHouseSupplyModal"><i class="bi bi-box-arrow-in-down me-1"></i> توريد للمخزون</button>
             <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#guestHouseIssueModal"><i class="bi bi-box-arrow-up me-1"></i> صرف من المخزون</button>
+            <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddPettyExpense"><i class="bi bi-cash-coin me-1"></i> تسجيل مصروف نثري</button>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddAsset"><i class="bi bi-cpu me-1"></i> إضافة جهاز/معدة</button>
+            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddSupportTicket"><i class="bi bi-headset me-1"></i> مكالمة / دعم</button>
+        </div>
+    </div>
+
+    {{-- Top KPI Cards for Guest House 4 Pillars --}}
+    @php
+        $totalPettyCashBalance = $pettyCashCustodies->sum(fn($c) => (float)($c->treasury?->current_balance ?? 0));
+        $brokenAssetsCount = ($assetStats['needs_maintenance'] ?? 0) + ($assetStats['out_of_service'] ?? 0);
+        $lowFoodStockCount = $guestHouseInventory->filter(function($stock) {
+            return (float)$stock->stock <= 5;
+        })->count();
+        $openTicketsCount = ($ticketStats['open'] ?? 0) + ($ticketStats['emergency'] ?? 0);
+    @endphp
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="p-2.5 px-3 rounded-3 border bg-light-subtle d-flex align-items-center justify-content-between shadow-xs h-100">
+                <div>
+                    <div class="text-muted small fw-semibold">رصيد النقدية المتاح بالدار</div>
+                    <div class="fs-6 fw-bold text-success">{{ number_format($totalPettyCashBalance, 2) }} ج.م</div>
+                </div>
+                <div class="fs-4 text-success opacity-75"><i class="bi bi-cash-coin"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-2.5 px-3 rounded-3 border bg-light-subtle d-flex align-items-center justify-content-between shadow-xs h-100">
+                <div>
+                    <div class="text-muted small fw-semibold">أجهزة تحتاج صيانة / معطلة</div>
+                    <div class="fs-6 fw-bold {{ $brokenAssetsCount > 0 ? 'text-danger' : 'text-secondary' }}">{{ $brokenAssetsCount }} جهاز</div>
+                </div>
+                <div class="fs-4 {{ $brokenAssetsCount > 0 ? 'text-danger' : 'text-secondary' }} opacity-75"><i class="bi bi-tools"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-2.5 px-3 rounded-3 border bg-light-subtle d-flex align-items-center justify-content-between shadow-xs h-100">
+                <div>
+                    <div class="text-muted small fw-semibold">نواقص المواد الغذائية</div>
+                    <div class="fs-6 fw-bold {{ $lowFoodStockCount > 0 ? 'text-warning-emphasis' : 'text-success' }}">{{ $lowFoodStockCount }} صنف</div>
+                </div>
+                <div class="fs-4 {{ $lowFoodStockCount > 0 ? 'text-warning' : 'text-success' }} opacity-75"><i class="bi bi-cart-x"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-2.5 px-3 rounded-3 border bg-light-subtle d-flex align-items-center justify-content-between shadow-xs h-100">
+                <div>
+                    <div class="text-muted small fw-semibold">طلبات دعم ومكالمات مفتوحة</div>
+                    <div class="fs-6 fw-bold {{ $openTicketsCount > 0 ? 'text-primary' : 'text-secondary' }}">{{ $openTicketsCount }} بلاغ / مكالمة</div>
+                </div>
+                <div class="fs-4 text-primary opacity-75"><i class="bi bi-headset"></i></div>
+            </div>
         </div>
     </div>
 
     <ul class="nav nav-tabs gh-ops-tabs mb-3" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#gh-beds-pane">الأجنحة والأسِرّة</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-residents-pane">المقيمون والمغادرون</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-requests-pane">طلبات جديدة <span class="badge bg-danger">{{ $pendingBookings->count() + $pendingMobileCases->count() }}</span></button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-meals-pane">الوجبات</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-custody-pane">العهدة والمخزون</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#gh-beds-pane"><i class="bi bi-grid-3x3-gap me-1"></i> الأجنحة والأسِرّة</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-residents-pane"><i class="bi bi-people me-1"></i> المقيمون والمغادرون</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-requests-pane"><i class="bi bi-inbox me-1"></i> طلبات جديدة <span class="badge bg-danger">{{ $pendingBookings->count() + $pendingMobileCases->count() }}</span></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-meals-pane"><i class="bi bi-egg-fried me-1"></i> الوجبات والعهدة الغذائية @if($lowFoodStockCount > 0)<span class="badge bg-warning text-dark">{{ $lowFoodStockCount }}</span>@endif</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-petty-cash-pane"><i class="bi bi-cash-stack me-1"></i> العهدة المالية (النثريات)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-assets-pane"><i class="bi bi-cpu me-1"></i> عهدة الأجهزة والمعدات @if($brokenAssetsCount > 0)<span class="badge bg-danger">{{ $brokenAssetsCount }}</span>@endif</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gh-support-callcenter-pane"><i class="bi bi-headset me-1"></i> التواصل والدعم والكول سنتر @if($openTicketsCount > 0)<span class="badge bg-danger">{{ $openTicketsCount }}</span>@endif</button></li>
     </ul>
 
     <div class="tab-content">
@@ -1155,77 +1208,636 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- ========================================================
+                     المحور الأول: العهدة الغذائية والمؤن (Food & Nutrition Custody)
+                     ======================================================== --}}
+                <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-1 text-primary">
+                                <i class="bi bi-basket3-fill me-1"></i> العهدة الغذائية ومخزون المؤن والمطبخ
+                            </h6>
+                            <small class="text-muted">متابعة الأصناف التموينية، الألبان، المعلبات، والخضروات وربطها باستهلاك وجبات النزلاء اليومية</small>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-success text-white fw-bold" data-bs-toggle="modal" data-bs-target="#guestHouseSupplyModal">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> توريد مواد غذائية
+                            </button>
+                            <button class="btn btn-sm btn-info text-white fw-bold" data-bs-toggle="modal" data-bs-target="#guestHouseIssueModal">
+                                <i class="bi bi-box-arrow-up me-1"></i> صرف لمطبخ الدار
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Low Stock Smart Alert Strip --}}
+                    @php
+                        $lowStockItems = $guestHouseInventory->filter(fn($stock) => (float)$stock->stock <= 5);
+                    @endphp
+                    @if($lowStockItems->isNotEmpty())
+                        <div class="alert alert-warning border-warning-subtle shadow-xs d-flex align-items-start gap-3 py-2.5 px-3 mb-3">
+                            <div class="fs-4 text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                            <div class="flex-grow-1">
+                                <strong class="d-block text-warning-emphasis mb-1">تنبيه ذكي: أصناف قاربت على النفاد (حد إعادة الطلب)</strong>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($lowStockItems as $lItem)
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                            {{ $lItem->item?->name }}: متبقي {{ number_format((float)$lItem->stock, 1) }} {{ $lItem->item?->unit }} فقط!
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Categories Guide Pills --}}
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-md-4">
+                            <div class="p-2 rounded-3 border bg-light d-flex align-items-center gap-2">
+                                <span class="fs-5">🌾</span>
+                                <div>
+                                    <strong class="d-block">مواد جافة وتموينية</strong>
+                                    <span class="text-muted">أرز، مكرونة، سكر، زيت، شاي، بقوليات</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2 rounded-3 border bg-light d-flex align-items-center gap-2">
+                                <span class="fs-5">🧀</span>
+                                <div>
+                                    <strong class="d-block">ألبان وجبن ومعلبات</strong>
+                                    <span class="text-muted">جبنة، زبادي، حليب، تونة، فول</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2 rounded-3 border bg-light d-flex align-items-center gap-2">
+                                <span class="fs-5">🥩</span>
+                                <div>
+                                    <strong class="d-block">طازج وخضروات ولحوم</strong>
+                                    <span class="text-muted">مستلزمات الطهي وإعداد الوجبات الفورية</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Food Inventory Table --}}
+                    <div class="row g-3">
+                        <div class="col-lg-7">
+                            <div class="border rounded-3 bg-white p-3 shadow-xs h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-boxes me-1 text-primary"></i> أرصدة المؤن والمواد الغذائية بالمخزن</h6>
+                                    <span class="badge bg-primary-subtle text-primary font-monospace">{{ $guestHouseInventory->count() }} صنف مسجل</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-light small">
+                                            <tr>
+                                                <th>الصنف الغذائي</th>
+                                                <th>المخزن / العهدة</th>
+                                                <th class="text-center">الرصيد المتاح</th>
+                                                <th class="text-center">الحالة</th>
+                                                <th class="text-end">إجراء سريع</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($guestHouseInventory as $stock)
+                                                @php
+                                                    $qty = (float)$stock->stock;
+                                                    $isLow = $qty <= 5;
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $stock->item?->name }}</strong>
+                                                        <span class="text-muted small">({{ $stock->item?->unit }})</span>
+                                                    </td>
+                                                    <td><span class="text-muted small">{{ $stock->warehouse?->name ?: 'مخزن الدار' }}</span></td>
+                                                    <td class="text-center font-monospace fw-bold {{ $isLow ? 'text-danger' : 'text-success' }}">
+                                                        {{ number_format($qty, 2) }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if($isLow)
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">منخفض</span>
+                                                        @else
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle small">متوفر</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-xs btn-outline-info rounded-pill py-0 px-2" data-bs-toggle="modal" data-bs-target="#guestHouseIssueModal" title="صرف للوجبات">
+                                                            صرف
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted py-3">لا توجد مواد غذائية مسجلة بمخزون الدار حالياً.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="border rounded-3 bg-white p-3 shadow-xs h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-1 text-primary"></i> آخر حركات التوريد والصرف</h6>
+                                    <span class="badge bg-secondary-subtle text-secondary small">آخر 15 حركة</span>
+                                </div>
+                                <div class="table-responsive" style="max-height: 260px; overflow-y:auto;">
+                                    <table class="table table-sm align-middle small mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>التاريخ</th>
+                                                <th>الصنف</th>
+                                                <th>النوع</th>
+                                                <th class="text-end">الكمية</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($inventoryLogs->take(15) as $log)
+                                                <tr>
+                                                    <td class="text-muted font-monospace">{{ $log->transaction_date ? \Carbon\Carbon::parse($log->transaction_date)->format('m-d') : '—' }}</td>
+                                                    <td>{{ $log->item?->name }}</td>
+                                                    <td>
+                                                        <span class="badge {{ $log->type === 'in' ? 'bg-success' : 'bg-danger' }}">
+                                                            {{ $log->type === 'in' ? 'توريد' : 'صرف' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end fw-bold {{ $log->type === 'in' ? 'text-success' : 'text-danger' }} font-monospace">
+                                                        {{ $log->type === 'in' ? '+' : '-' }}{{ number_format((float)$log->quantity, 2) }}
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-3">لا توجد حركات مسجلة.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="tab-pane fade" id="gh-custody-pane">
+        {{-- ========================================================
+             المحور الثاني: العهدة المالية والمصروفات النثرية (Petty Cash Custody)
+             ======================================================== --}}
+        <div class="tab-pane fade" id="gh-petty-cash-pane">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                <div>
+                    <h6 class="fw-bold mb-1 text-primary"><i class="bi bi-cash-stack me-1"></i> الخزينة النثرية والعهدة المالية للدار (Petty Cash)</h6>
+                    <small class="text-muted">إدارة المصروفات اليومية الصغيرة والنثرية الفورية مع إرفاق الإيصالات وطلب استعاضة العهدة بشفافية تامة</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success btn-sm text-white fw-bold px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#modalAddPettyExpense">
+                        <i class="bi bi-plus-circle me-1"></i> تسجيل مصروف نثري فوري
+                    </button>
+                    <button class="btn btn-warning btn-sm fw-bold px-3 shadow-xs text-dark" data-bs-toggle="modal" data-bs-target="#modalReplenishPettyCash">
+                        <i class="bi bi-arrow-repeat me-1"></i> طلب استعاضة العهدة
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> طباعة كشف العهدة
+                    </button>
+                </div>
+            </div>
+
+            {{-- Petty Cash Stat Badges --}}
             <div class="row g-3 mb-4">
-                @forelse($guestHouseCustodies as $custody)
+                @forelse($pettyCashCustodies as $custody)
+                    @php
+                        $cBalance = (float)($custody->treasury?->current_balance ?? 0);
+                        $isLowPetty = $cBalance < 1000;
+                    @endphp
                     <div class="col-md-4">
-                        <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>{{ $custody->name }}</strong>
-                                <span class="badge {{ $custody->type === 'financial' ? 'bg-success' : 'bg-info' }}">
-                                    {{ $custody->type === 'financial' ? 'عهدة مالية' : 'عهدة عينية' }}
+                        <div class="border rounded-3 p-3 bg-white shadow-xs h-100 border-start border-4 {{ $isLowPetty ? 'border-warning' : 'border-success' }}">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="fs-6">{{ $custody->name }}</strong>
+                                <span class="badge {{ $isLowPetty ? 'bg-warning text-dark' : 'bg-success' }}">
+                                    {{ $isLowPetty ? '⚠️ تحتاج استعاضة' : '🟢 رصيد كافٍ' }}
                                 </span>
                             </div>
-                            <div class="small text-muted mt-2">{{ $custody->treasury?->name ?: $custody->warehouse?->name }}</div>
-                            @if($custody->treasury)
-                                <div class="fw-bold mt-1 text-success fs-5">{{ number_format((float)$custody->treasury->current_balance, 2) }} {{ $custody->treasury->currency }}</div>
-                            @endif
+                            <div class="small text-muted mb-1">{{ $custody->treasury?->name ?: 'خزينة العهدة النثرية' }}</div>
+                            <div class="fs-4 fw-bold {{ $isLowPetty ? 'text-warning-emphasis' : 'text-success' }} font-monospace">
+                                {{ number_format($cBalance, 2) }} {{ $custody->treasury?->currency ?? 'ج.م' }}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small">
+                                <span class="text-muted">الرصيد المتاح للصرف</span>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalReplenishPettyCash">
+                                    + تغذية العهدة
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @empty
-                    <div class="col-12 text-center text-muted py-3">لم تتم إضافة عهدة للدار بعد. استخدم زر "إضافة عهدة" أعلاه.</div>
+                    <div class="col-12">
+                        <div class="alert alert-info py-3 text-center">
+                            لم يتم ربط خزينة عهدة مالية بعد للدار. 
+                            <button class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#guestHouseCustodyModal">
+                                + إضافة عهدة مالية الآن
+                            </button>
+                        </div>
+                    </div>
                 @endforelse
             </div>
 
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <h6 class="fw-bold mb-2"><i class="bi bi-boxes me-1 text-primary"></i> رصيد المخزون العيني المتاح بالدار</h6>
-                    <div class="table-responsive border rounded-3 bg-white">
-                        <table class="table mb-0 align-middle">
-                            <thead class="table-light"><tr><th>الصنف</th><th>المخزن</th><th>الرصيد المتبقي</th></tr></thead>
-                            <tbody>
-                            @forelse($guestHouseInventory as $stock)
-                                <tr>
-                                    <td><strong>{{ $stock->item?->name }}</strong></td>
-                                    <td><span class="text-muted small">{{ $stock->warehouse?->name }}</span></td>
-                                    <td class="fw-bold text-success">{{ number_format((float)$stock->stock, 2) }} {{ $stock->item?->unit }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="3" class="text-center text-muted py-3">لا توجد أصناف في مخزون الدار حالياً.</td></tr>
-                            @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+            {{-- Quick Category Shortcuts --}}
+            <div class="p-3 bg-light rounded-3 border mb-4">
+                <div class="fw-bold mb-2 small text-secondary"><i class="bi bi-tag me-1"></i> بنود الصرف النثري السريع:</div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-cart3 text-success me-1"></i> شراء خضروات ومواد طازجة</span>
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-heart-pulse text-danger me-1"></i> طوارئ مريض وعلاجية</span>
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-stars text-info me-1"></i> أدوات نظافة ومطهرات</span>
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-wrench text-warning me-1"></i> صيانة سريعة للأجهزة</span>
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-taxi-front text-primary me-1"></i> مواصلات وانتقالات مرضى</span>
+                </div>
+            </div>
+
+            {{-- Petty Expenses Table --}}
+            <div class="border rounded-3 bg-white p-3 shadow-xs">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-receipt me-1 text-primary"></i> سجل المصروفات النثرية والفواتير المسجلة</h6>
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace">{{ $pettyCashExpenses->count() }} فاتورة مسجلة</span>
                 </div>
 
-                <div class="col-lg-6">
-                    <h6 class="fw-bold mb-2"><i class="bi bi-clock-history me-1 text-primary"></i> سجل حركة المخزون (الوارد والمنصرف)</h6>
-                    <div class="table-responsive border rounded-3 bg-white" style="max-height: 280px; overflow-y:auto;">
-                        <table class="table mb-0 align-middle small">
-                            <thead class="table-light"><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th></tr></thead>
-                            <tbody>
-                            @forelse($inventoryLogs ?? [] as $log)
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ</th>
+                                <th>بند المصروف / البيان</th>
+                                <th>الخزينة المنصرف منها</th>
+                                <th class="text-center">المبلغ</th>
+                                <th class="text-center">الإيصال / الفاتورة</th>
+                                <th>المسؤول</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pettyCashExpenses as $exp)
                                 <tr>
-                                    <td>{{ $log->transaction_date ? \Carbon\Carbon::parse($log->transaction_date)->format('m-d') : '—' }}</td>
-                                    <td>{{ $log->item?->name }}</td>
+                                    <td class="text-muted font-monospace small">{{ $loop->iteration }}</td>
+                                    <td class="font-monospace small">{{ $exp->expense_date ? \Carbon\Carbon::parse($exp->expense_date)->format('Y-m-d') : '—' }}</td>
                                     <td>
-                                        <span class="badge {{ $log->type === 'in' ? 'bg-success' : 'bg-danger' }}">
-                                            {{ $log->type === 'in' ? 'وارد' : 'منصرف' }}
+                                        <strong>{{ $exp->title }}</strong>
+                                        @if($exp->notes)
+                                            <div class="text-muted small">{{ $exp->notes }}</div>
+                                        @endif
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ $exp->treasury?->name ?: 'الخزينة النثرية' }}</span></td>
+                                    <td class="text-center font-monospace fw-bold text-danger fs-6">
+                                        {{ number_format((float)$exp->amount, 2) }} {{ $exp->currency ?? 'ج.م' }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if($exp->receipt)
+                                            <a href="{{ asset('storage/' . $exp->receipt) }}" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-2">
+                                                <i class="bi bi-file-earmark-image me-1"></i> عرض الفاتورة
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">بدون مرفق</span>
+                                        @endif
+                                    </td>
+                                    <td class="small text-muted">{{ $exp->user?->name ?: '—' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        لم يتم تسجيل أي مصروفات نثرية بعد. انقر على "تسجيل مصروف نثري فوري" للبدء.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================================
+             المحور الثالث: عهدة الأجهزة والمعدات (Equipment & Appliances Custody)
+             ======================================================== --}}
+        <div class="tab-pane fade" id="gh-assets-pane">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                <div>
+                    <h6 class="fw-bold mb-1 text-primary"><i class="bi bi-cpu me-1"></i> عهدة الأجهزة والمعدات وسجل الصيانة الدوري</h6>
+                    <small class="text-muted">حصر الأجهزة الكهربائية والطبية، توزيعها بالغرف والأجنحة، تتبع الحالة وسجل بلاغات الأعطال</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#modalAddAsset">
+                        <i class="bi bi-plus-circle me-1"></i> إضافة جهاز / معدة جديدة
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> طباعة كشف العهدة
+                    </button>
+                </div>
+            </div>
+
+            {{-- Asset Stats Cards --}}
+            <div class="row g-2 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">إجمالي الأجهزة</div>
+                            <div class="fs-5 fw-bold text-dark font-monospace">{{ $assetStats['total'] }} جهاز</div>
+                        </div>
+                        <div class="fs-4 text-primary opacity-75"><i class="bi bi-boxes"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">تعمل بكفاءة</div>
+                            <div class="fs-5 fw-bold text-success font-monospace">{{ $assetStats['working'] }} جهاز</div>
+                        </div>
+                        <div class="fs-4 text-success opacity-75"><i class="bi bi-check-circle-fill"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">تحتاج صيانة دورية</div>
+                            <div class="fs-5 fw-bold text-warning font-monospace">{{ $assetStats['needs_maintenance'] }} جهاز</div>
+                        </div>
+                        <div class="fs-4 text-warning opacity-75"><i class="bi bi-wrench-adjustable"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">معطل / خارج الخدمة</div>
+                            <div class="fs-5 fw-bold text-danger font-monospace">{{ $assetStats['out_of_service'] }} جهاز</div>
+                        </div>
+                        <div class="fs-4 text-danger opacity-75"><i class="bi bi-x-octagon-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Category Filter Pills --}}
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 asset-filter-btn active" onclick="filterAssets('all', this)">
+                    الكل ({{ $guestHouseAssets->count() }})
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 asset-filter-btn" onclick="filterAssets('medical', this)">
+                    🩺 أجهزة طبية ومساعدة ({{ $guestHouseAssets->where('category', 'medical')->count() }})
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 asset-filter-btn" onclick="filterAssets('electrical', this)">
+                    ⚡ كهربائية ومنزلية ({{ $guestHouseAssets->where('category', 'electrical')->count() }})
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 asset-filter-btn" onclick="filterAssets('facility', this)">
+                    🏢 تجهيزات ومرافق ({{ $guestHouseAssets->where('category', 'facility')->count() }})
+                </button>
+            </div>
+
+            {{-- Assets Table --}}
+            <div class="border rounded-3 bg-white p-3 shadow-xs">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="ghAssetsTable">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>كود الجهاز</th>
+                                <th>اسم الجهاز والمواصفات</th>
+                                <th>التصنيف</th>
+                                <th>الموقع والتوزيع</th>
+                                <th class="text-center">الحالة التشغيلية</th>
+                                <th>الضمان والتوريد</th>
+                                <th class="text-end">إجراءات وصيانة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($guestHouseAssets as $asset)
+                                <tr class="asset-row" data-category="{{ $asset->category }}">
+                                    <td>
+                                        <span class="badge bg-light text-dark border font-monospace">{{ $asset->code ?: 'AS-'.$asset->id }}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="d-block">{{ $asset->name }}</strong>
+                                        @if($asset->brand_model)
+                                            <span class="text-muted small">{{ $asset->brand_model }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ $asset->category_label }}</span>
+                                    </td>
+                                    <td>
+                                        <div><i class="bi bi-geo-alt text-primary me-1"></i>{{ $asset->wing?->name ?: 'الدار العامة' }}</div>
+                                        @if($asset->location_details)
+                                            <span class="text-muted small">{{ $asset->location_details }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $asset->status_badge_class }} py-1 px-2.5">
+                                            {{ $asset->status_label }}
                                         </span>
                                     </td>
-                                    <td class="fw-bold {{ $log->type === 'in' ? 'text-success' : 'text-danger' }}">
-                                        {{ $log->type === 'in' ? '+' : '-' }}{{ number_format((float)$log->quantity, 2) }}
+                                    <td class="small text-muted font-monospace">
+                                        <div>توريد: {{ $asset->purchase_date?->format('Y-m-d') ?: '—' }}</div>
+                                        @if($asset->warranty_until)
+                                            <div class="text-info">ضمان: {{ $asset->warranty_until->format('Y-m-d') }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            <button type="button" class="btn btn-xs btn-outline-warning text-dark rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#modalAddAssetMaintenance_{{ $asset->id }}" title="تسجيل بلاغ عطل أو صيانة">
+                                                <i class="bi bi-tools me-1"></i> صيانة
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#modalEditAssetStatus_{{ $asset->id }}" title="تعديل الحالة">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#modalAssetHistory_{{ $asset->id }}" title="سجل الصيانات">
+                                                <i class="bi bi-clock-history"></i> ({{ $asset->maintenances->count() }})
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="text-center text-muted py-3">لا توجد حركات مسجلة.</td></tr>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        لم يتم تسجيل أي أجهزة بعد. انقر على "إضافة جهاز / معدة جديدة" للبدء.
+                                    </td>
+                                </tr>
                             @endforelse
-                            </tbody>
-                        </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================================
+             المحور الرابع: مركز التواصل والدعم والكول سنتر (Call Center & Support)
+             ======================================================== --}}
+        <div class="tab-pane fade" id="gh-support-callcenter-pane">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                <div>
+                    <h6 class="fw-bold mb-1 text-primary"><i class="bi bi-headset me-1"></i> مركز التواصل والدعم اللوجستي والكول سنتر</h6>
+                    <small class="text-muted">سجل المكالمات الواردة والصادرة، بلاغات الطوارئ والإسعاف، وطلبات النزلاء واستبيانات الرضا</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary btn-sm fw-bold px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#modalAddSupportTicket">
+                        <i class="bi bi-telephone-plus me-1"></i> تسجيل مكالمة / طلب دعم
+                    </button>
+                    <button class="btn btn-danger btn-sm fw-bold px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#modalAddSupportTicketEmergency">
+                        <i class="bi bi-ambulance me-1"></i> بلاغ طوارئ وإسعاف عاجل
+                    </button>
+                </div>
+            </div>
+
+            {{-- Support Stats --}}
+            <div class="row g-2 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">إجمالي المكالمات والبلاغات</div>
+                            <div class="fs-5 fw-bold text-dark font-monospace">{{ $ticketStats['total'] }}</div>
+                        </div>
+                        <div class="fs-4 text-primary opacity-75"><i class="bi bi-telephone-inbound"></i></div>
                     </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">طلبات قيد المتابعة</div>
+                            <div class="fs-5 fw-bold text-warning font-monospace">{{ $ticketStats['open'] }}</div>
+                        </div>
+                        <div class="fs-4 text-warning opacity-75"><i class="bi bi-hourglass-split"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">طوارئ طبية وإسعاف</div>
+                            <div class="fs-5 fw-bold text-danger font-monospace">{{ $ticketStats['emergency'] }}</div>
+                        </div>
+                        <div class="fs-4 text-danger opacity-75"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-2.5 px-3 rounded-3 border bg-white shadow-2xs d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small">طلبات تم حلها</div>
+                            <div class="fs-5 fw-bold text-success font-monospace">{{ $ticketStats['resolved'] }}</div>
+                        </div>
+                        <div class="fs-4 text-success opacity-75"><i class="bi bi-check-all"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Quick WhatsApp Share Card --}}
+            <div class="p-3 rounded-3 border bg-light-subtle mb-4 shadow-2xs">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fs-2 text-success"><i class="bi bi-whatsapp"></i></div>
+                        <div>
+                            <strong class="d-block text-success">التواصل السريع وإرسال بيانات الدار للنزيل أو المرافق</strong>
+                            <small class="text-muted">إرسال عنوان الدار وموقع Google Maps وتفاصيل الاستقبال عبر الواتساب بنقرة واحدة</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select id="waQuickSelectPhone" class="form-select form-select-sm" style="min-width: 200px;">
+                            <option value="">— اختر نزيلاً حالياً بالدار —</option>
+                            @foreach($residentStays as $stay)
+                                @if($stay->beneficiary?->phone)
+                                    <option value="{{ $stay->beneficiary->phone }}">{{ $stay->beneficiary->full_name }} ({{ $stay->beneficiary->phone }})</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <input id="waQuickCustomPhone" type="text" class="form-control form-control-sm" placeholder="أو اكتب رقم الهاتف..." style="max-width: 170px;">
+                        <button type="button" class="btn btn-sm btn-success fw-bold px-3" onclick="sendWhatsAppHouseLocation()">
+                            <i class="bi bi-send-fill me-1"></i> إرسال عبر واتساب
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Support Tickets & Call Center Table --}}
+            <div class="border rounded-3 bg-white p-3 shadow-xs">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-1 text-primary"></i> سجل البلاغات ومكالمات الكول سنتر</h6>
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace">{{ $guestHouseTickets->count() }} تذكرة مسجلة</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ والوقت</th>
+                                <th>المتصل / النزيل</th>
+                                <th class="text-center">الاتجاه</th>
+                                <th>القسم والتصنيف</th>
+                                <th class="text-center">الأولوية</th>
+                                <th>الموضوع والتفاصيل</th>
+                                <th class="text-center">الحالة</th>
+                                <th class="text-end">الإجراء والمتابعة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($guestHouseTickets as $ticket)
+                                <tr>
+                                    <td class="text-muted font-monospace small">{{ $loop->iteration }}</td>
+                                    <td class="font-monospace small">
+                                        {{ $ticket->created_at ? $ticket->created_at->format('m-d H:i') : '—' }}
+                                    </td>
+                                    <td>
+                                        <strong>{{ $ticket->caller_name ?: ($ticket->beneficiary?->full_name ?: 'نزيل الدار') }}</strong>
+                                        @if($ticket->caller_phone)
+                                            <div class="d-flex align-items-center gap-1 mt-1 small">
+                                                <span class="text-muted font-monospace">{{ $ticket->caller_phone }}</span>
+                                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $ticket->caller_phone) }}" target="_blank" class="text-success text-decoration-none" title="محادثة واتساب">
+                                                    <i class="bi bi-whatsapp"></i>
+                                                </a>
+                                                <a href="tel:{{ $ticket->caller_phone }}" class="text-primary text-decoration-none" title="اتصال">
+                                                    <i class="bi bi-telephone"></i>
+                                                </a>
+                                            </div>
+                                        @endif
+                                        <span class="badge bg-light text-secondary border small mt-1">{{ $ticket->caller_type_label }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $ticket->direction === 'inbound' ? 'bg-primary-subtle text-primary' : 'bg-info-subtle text-info' }}">
+                                            {{ $ticket->direction === 'inbound' ? '📞 وارد' : '📲 صادر' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ $ticket->category_label }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $ticket->priority_badge_class }}">
+                                            {{ $ticket->priority_label }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="d-block">{{ $ticket->subject }}</strong>
+                                        <span class="text-muted small">{{ Str::limit($ticket->details, 60) }}</span>
+                                        @if($ticket->action_taken)
+                                            <div class="text-success small mt-1"><i class="bi bi-check2 me-1"></i>{{ Str::limit($ticket->action_taken, 50) }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $ticket->status_badge_class }}">
+                                            {{ $ticket->status_label }}
+                                        </span>
+                                        @if($ticket->satisfaction_rating)
+                                            <div class="text-warning small mt-1">{{ str_repeat('⭐', $ticket->satisfaction_rating) }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#modalEditTicket_{{ $ticket->id }}" title="تعديل الحالة وتسجيل الإجراء">
+                                            <i class="bi bi-pencil-square me-1"></i> متابعة
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        لم يتم تسجيل أي مكالمات أو بلاغات دعم بعد. انقر على "تسجيل مكالمة / طلب دعم" للبدء.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1294,6 +1906,48 @@
             if (inkBox) inkBox.classList.remove('d-none');
         }
     }
+
+    function filterAssets(cat, btn) {
+        document.querySelectorAll('.asset-filter-btn').forEach(b => {
+            b.classList.remove('active', 'btn-dark');
+            b.classList.add('btn-outline-secondary');
+        });
+        btn.classList.add('active', 'btn-dark');
+        btn.classList.remove('btn-outline-secondary');
+
+        const rows = document.querySelectorAll('#ghAssetsTable .asset-row');
+        rows.forEach(r => {
+            if (cat === 'all' || r.getAttribute('data-category') === cat) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    function sendWhatsAppHouseLocation() {
+        const selectPhone = document.getElementById('waQuickSelectPhone').value;
+        const customPhone = document.getElementById('waQuickCustomPhone').value;
+        const rawPhone = customPhone || selectPhone || '';
+        let phone = rawPhone.replace(/[^0-9]/g, '');
+
+        if (!phone) {
+            alert('يرجى اختيار نزيل أو إدخال رقم هاتف المستلم أولاً.');
+            return;
+        }
+
+        if (phone.startsWith('01')) {
+            phone = '2' + phone;
+        }
+
+        const houseName = @json($guest_house->name);
+        const houseAddress = @json($guest_house->address ?: 'مقر دار الضيافة');
+        const housePhone = @json($guest_house->phone ?: '');
+        const message = `مرحباً بكم، تفاصيل وإرشادات دار الضيافة (${houseName}):\n📍 العنوان: ${houseAddress}\n📞 هاتف الدار: ${housePhone}\nنتمنى لكم الشفاء العاجل ونسعد باستقبالكم دائماً.`;
+
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    }
 </script>
 
 {{-- Modal: إضافة جناح وأسِرّة (للإدارة ومدير الدار) --}}
@@ -1334,11 +1988,24 @@
                 <label class="form-label form-label-required">اسم العهدة</label>
                 <input name="name" class="form-control mb-2" required placeholder="مثال: عهدة مواد غذائية، عهدة نقدية">
 
-                <label class="form-label form-label-required">نوع العهدة</label>
-                <select name="type" id="gh_custody_type" class="form-select mb-2" required onchange="toggleCustodyTypeFields(this.value)">
-                    <option value="financial">عهدة مالية</option>
-                    <option value="in_kind">عهدة عينية (مخزون أصناف)</option>
-                </select>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label form-label-required">نوع العهدة</label>
+                        <select name="type" id="gh_custody_type" class="form-select" required onchange="toggleCustodyTypeFields(this.value)">
+                            <option value="financial">عهدة مالية</option>
+                            <option value="in_kind">عهدة عينية (مخزون)</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">تصنيف العهدة</label>
+                        <select name="category" class="form-select">
+                            <option value="general">عامة</option>
+                            <option value="food">غذائية ومؤن</option>
+                            <option value="equipment">أجهزة ومعدات</option>
+                            <option value="medical">طبية وإسعافية</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div id="gh_custody_financial_box">
                     <label class="form-label">الخزينة المرتبطة (للعهدة المالية)</label>
@@ -1632,5 +2299,661 @@
             </div>
         </div>
     @endforeach
+@endforeach
+
+{{-- ======================================================
+     Modal: تسجيل مصروف نثري فوري (Petty Cash Expense)
+     ====================================================== --}}
+<div class="modal fade" id="modalAddPettyExpense" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow border-0" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.petty-cash.expenses.store', $guest_house) }}">
+            @csrf
+            <div class="modal-header bg-success text-white py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-cash-coin me-1"></i> تسجيل مصروف نثري فوري من عهدة الدار
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">بند المصروف / البيان <span class="text-danger">*</span></label>
+                    <input name="title" class="form-control" placeholder="مثال: شراء خضروات طازجة لإعداد وجبة الغداء" required>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">المبلغ (ج.م) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.5" min="1" name="amount" class="form-control font-monospace" placeholder="مثال: 150" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">تاريخ الصرف <span class="text-danger">*</span></label>
+                        <input type="date" name="expense_date" value="{{ now()->toDateString() }}" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">تصنيف المصروف</label>
+                        <select name="category" class="form-select">
+                            <option value="food">🥦 شراء مواد غذائية وطازجة</option>
+                            <option value="medical_emergency">💊 طوارئ علاجية وإسعافية</option>
+                            <option value="cleaning">🧹 أدوات نظافة ومطهرات</option>
+                            <option value="maintenance">🔧 صيانة سريعة وأعطال</option>
+                            <option value="transportation">🚕 مواصلات وانتقالات نزلاء</option>
+                            <option value="general">📦 نثريات وضيافة عامة</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">الخزينة النثرية المنصرف منها <span class="text-danger">*</span></label>
+                        <select name="treasury_id" class="form-select" required>
+                            @foreach($pettyCashCustodies as $pCustody)
+                                @if($pCustody->treasury)
+                                    <option value="{{ $pCustody->treasury_id }}">
+                                        {{ $pCustody->name }} (رصيد: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)
+                                    </option>
+                                @endif
+                            @endforeach
+                            @if($pettyCashCustodies->isEmpty())
+                                @foreach($guestHouseExpenseTreasuries as $tr)
+                                    <option value="{{ $tr->id }}">{{ $tr->name }} ({{ number_format((float)$tr->current_balance, 2) }} ج.م)</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small"><i class="bi bi-camera me-1"></i> صورة الإيصال أو الفاتورة (مستحسن للتوثيق)</label>
+                    <input type="file" name="receipt" class="form-control form-control-sm" accept="image/*,.pdf">
+                    <div class="form-text small">يمكنك التقاط صورة الفاتورة مباشرة من الهاتف أو رفع ملف PDF.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold small">ملاحظات إضافية</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="أي تفاصيل أو ملاحظات بخصوص عملية الشراء..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-success btn-sm fw-bold px-3">
+                    <i class="bi bi-check-lg me-1"></i> تسجيل وخصم من العهدة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ======================================================
+     Modal: استعاضة وتغذية العهدة النثرية (Petty Cash Replenish)
+     ====================================================== --}}
+<div class="modal fade" id="modalReplenishPettyCash" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.petty-cash.replenish', $guest_house) }}">
+            @csrf
+            <div class="modal-header bg-warning text-dark py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-arrow-repeat me-1"></i> استعاضة وتغذية العهدة النثرية
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="bi bi-info-circle me-1"></i> يتم تحويل رصيد نقدي من الخزينة الرئيسية أو البنكية لتغذية صندوق العهدة النثرية بالدار.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">خزينة العهدة النثرية المستلمة (الدار) <span class="text-danger">*</span></label>
+                    <select name="target_treasury_id" class="form-select" required>
+                        @foreach($pettyCashCustodies as $pCustody)
+                            @if($pCustody->treasury)
+                                <option value="{{ $pCustody->treasury_id }}">{{ $pCustody->name }} (رصيد حالي: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)</option>
+                            @endif
+                        @endforeach
+                        @if($pettyCashCustodies->isEmpty())
+                            @foreach($guestHouseExpenseTreasuries as $tr)
+                                <option value="{{ $tr->id }}">{{ $tr->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">الخزينة المحول منها (المصدر الرئيسي) <span class="text-danger">*</span></label>
+                    <select name="source_treasury_id" class="form-select" required>
+                        <option value="">— اختر الخزينة المصدر —</option>
+                        @foreach($guestHouseDonationTreasuries as $srcTr)
+                            <option value="{{ $srcTr->id }}">{{ $srcTr->name }} (الرصيد المتاح: {{ number_format((float)$srcTr->current_balance, 2) }} {{ $srcTr->currency }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">مبلغ التغذية / الاستعاضة (ج.م) <span class="text-danger">*</span></label>
+                    <input type="number" step="1" min="10" name="amount" class="form-control font-monospace" placeholder="مثال: 5000" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold small">البيان وملاحظات الاستعاضة</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="مثال: استعاضة شهرية لمصروفات دار الضيافة بموجب فواتير شهر ..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-warning btn-sm fw-bold px-3 text-dark">
+                    <i class="bi bi-check-lg me-1"></i> تأكيد التحويل وتغذية الصندوق
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ======================================================
+     Modal: إضافة جهاز أو معدة جديدة للدار (Add Asset)
+     ====================================================== --}}
+<div class="modal fade" id="modalAddAsset" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.assets.store', $guest_house) }}">
+            @csrf
+            <div class="modal-header bg-primary text-white py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-cpu me-1"></i> تسجيل جهاز أو معدة جديدة بعهدة دار الضيافة
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-bold small">اسم الجهاز أو المعدة <span class="text-danger">*</span></label>
+                        <input name="name" class="form-control" placeholder="مثال: مولد أكسجين طبي 10 لتر، غسالة ملابس 12 كيلو، تكييف سبليت..." required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold small">التصنيف الأساسي <span class="text-danger">*</span></label>
+                        <select name="category" class="form-select" required>
+                            <option value="medical">🩺 جهاز طبي ومساعد (أكسجين، كراسي، قياس، سراير)</option>
+                            <option value="electrical">⚡ كهربائي ومنزلي (تكييف، ثلاجة، غسالة، شاشة، سخان)</option>
+                            <option value="facility">🏢 تجهيزات ومرافق (أثاث، مواتير، كاميرات)</option>
+                            <option value="other">📦 أخرى</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">كود الجهاز / السيريال</label>
+                        <input name="code" class="form-control font-monospace" placeholder="مثال: MED-01 أو اتركه للتوليد التلقائي">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">الماركة والموديل</label>
+                        <input name="brand_model" class="form-control" placeholder="مثال: شارب 2.25 حصان / فيليبس">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">الحالة التشغيلية الأولية</label>
+                        <select name="status" class="form-select">
+                            <option value="working">🟢 يعمل بكفاءة وجاهز</option>
+                            <option value="needs_maintenance">🟡 يحتاج فحص أو صيانة دورية</option>
+                            <option value="out_of_service">🔴 خارج الخدمة / معطل</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">الجناح التابع له</label>
+                        <select name="guest_house_wing_id" class="form-select">
+                            <option value="">— عهدة عامة بالدار (غير مقيد بجناح) —</option>
+                            @foreach($guestHouseWings as $wing)
+                                <option value="{{ $wing->id }}">{{ $wing->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">تفاصيل الموقع الدقيق</label>
+                        <input name="location_details" class="form-control" placeholder="مثال: غرفة 2، المطبخ الرئيسي، مكتب الاستقبال، الصالة">
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">تاريخ التوريد أو الشراء</label>
+                        <input type="date" name="purchase_date" value="{{ now()->toDateString() }}" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">انتهاء فترة الضمان</label>
+                        <input type="date" name="warranty_until" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">القيمة التقديرية (ج.م)</label>
+                        <input type="number" step="1" name="estimated_cost" class="form-control font-monospace" placeholder="مثال: 15000">
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold small">ملاحظات ومصدر الجهاز (شراء / تبرع عيني)</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="مثال: تبرع عيني من فاعل خير أو شراء من ميزانية الدار"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">
+                    <i class="bi bi-check-lg me-1"></i> حفظ الجهاز بعهدة الدار
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ======================================================
+     Modal: تسجيل مكالمة أو بلاغ دعم (Support Ticket / Call)
+     ====================================================== --}}
+<div class="modal fade" id="modalAddSupportTicket" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.support-tickets.store', $guest_house) }}">
+            @csrf
+            <div class="modal-header bg-primary text-white py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-headset me-1"></i> تسجيل مكالمة أو طلب دعم / بلاغ بدار الضيافة
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">اتجاه الاتصال <span class="text-danger">*</span></label>
+                        <select name="direction" class="form-select" required>
+                            <option value="inbound">📞 مكالمة واردة من النزيل / الجهة</option>
+                            <option value="outbound">📲 اتصال صادر من الدار للمتابعة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">صفة المتصل <span class="text-danger">*</span></label>
+                        <select name="caller_type" class="form-select" required>
+                            <option value="resident">نزيل مقيم حالياً بالدار</option>
+                            <option value="companion">مرافق نزيل</option>
+                            <option value="prospective_patient">مريض قادم يستفسر عن حجز</option>
+                            <option value="hospital">جهة طبية / مستشفى أو معهد أورام</option>
+                            <option value="donor">متبرع أو داعم</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">ربط بنزيل مقيم (اختياري)</label>
+                        <select name="beneficiary_id" class="form-select">
+                            <option value="">— غير مرتبط بنزيل محدد —</option>
+                            @foreach($residentStays as $stay)
+                                <option value="{{ $stay->beneficiary_id }}">{{ $stay->beneficiary->full_name }} ({{ $stay->bed?->wing?->name }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">اسم المتصل / صاحب البلاغ <span class="text-danger">*</span></label>
+                        <input name="caller_name" class="form-control" placeholder="مثال: أحمد محمود" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">رقم الهاتف <span class="text-danger">*</span></label>
+                        <input name="caller_phone" class="form-control font-monospace" placeholder="مثال: 01012345678" required>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">قسم البلاغ / التصنيف <span class="text-danger">*</span></label>
+                        <select name="category" class="form-select" required>
+                            <option value="inquiry">📞 استفسارات الحجز ومواعيد الوصول وإرشادات الطريق</option>
+                            <option value="treatment_followup">🏥 متابعة تلقي جلسات الكيماوي/الإشعاعي بالمستشفى</option>
+                            <option value="resident_request">🛎️ طلبات ودعم النزلاء (كرسي متحرك، تمريض، وجبة خاصة)</option>
+                            <option value="emergency">🚨 طوارئ طبية وطلب سيارة إسعاف أو تحويل عاجل</option>
+                            <option value="feedback">⭐ استبيان وتقييم رضا ومغادرة</option>
+                            <option value="general">ℹ️ استفسارات عامة ومواعيد الدار</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">مستوى الأولوية <span class="text-danger">*</span></label>
+                        <select name="priority" class="form-select" required>
+                            <option value="normal">🟢 عادي (متابعة عادية)</option>
+                            <option value="high">🟡 هام (يحتاج استجابة سريعة)</option>
+                            <option value="emergency">🔴 طوارئ وإسعاف عاجل</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">موضوع المكالمة / الطلب <span class="text-danger">*</span></label>
+                    <input name="subject" class="form-control" placeholder="مثال: طلب كرسي متحرك للحالة لنقلها للمستشفى غداً" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">تفاصيل المكالمة والطلب</label>
+                    <textarea name="details" class="form-control" rows="2" placeholder="اكتب تفاصيل المحادثة أو الطلب بالتفصيل..."></textarea>
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">الإجراء الأولي المتخذ</label>
+                        <input name="action_taken" class="form-control" placeholder="مثال: تم إبلاغ المشرف وتجهيز الكرسي المتحرك">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">الحالة الأولية</label>
+                        <select name="status" class="form-select">
+                            <option value="open">⏳ قيد المتابعة والحل</option>
+                            <option value="resolved">✅ تم الحل فوراً أثناء المكالمة</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">
+                    <i class="bi bi-check-lg me-1"></i> حفظ البلاغ في السجل
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Emergency Quick Shortcut --}}
+<div class="modal fade" id="modalAddSupportTicketEmergency" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.support-tickets.store', $guest_house) }}">
+            @csrf
+            <input type="hidden" name="direction" value="inbound">
+            <input type="hidden" name="category" value="emergency">
+            <input type="hidden" name="priority" value="emergency">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title fw-bold">
+                    <i class="bi bi-ambulance me-1"></i> بلاغ طوارئ طبية وإسعاف عاجل
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="alert alert-danger py-2 small mb-3">
+                    🚨 تسجيل حالة طوارئ عاجلة للمريض لطلب الإسعاف أو النقل الفوري للمستشفى.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">النزيل أو المريض <span class="text-danger">*</span></label>
+                    <select name="beneficiary_id" class="form-select" required>
+                        <option value="">— اختر النزيل المقيم —</option>
+                        @foreach($residentStays as $stay)
+                            <option value="{{ $stay->beneficiary_id }}">{{ $stay->beneficiary->full_name }} ({{ $stay->bed?->wing?->name }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">اسم المبلغ</label>
+                        <input name="caller_name" class="form-control" placeholder="اسم المرافق أو المشرف" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold small">هاتف التواصل</label>
+                        <input name="caller_phone" class="form-control font-monospace" placeholder="رقم الهاتف" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">وصف الحالة الطارئة <span class="text-danger">*</span></label>
+                    <input name="subject" class="form-control" placeholder="مثال: ضيق تنفس حاد وانخفاض أكسجين أو نزيف" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">التفاصيل والإجراء الفوري المتخذ</label>
+                    <textarea name="details" class="form-control" rows="2" placeholder="مثال: تم الاتصال بهيئة الإسعاف رقم 123 ووضع المريض على مولد الأكسجين"></textarea>
+                </div>
+                <input type="hidden" name="caller_type" value="resident">
+                <input type="hidden" name="status" value="open">
+            </div>
+            <div class="modal-footer py-2 d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-danger btn-sm fw-bold px-3">
+                    <i class="bi bi-broadcast me-1"></i> تسجيل بلاغ الطوارئ فوراً
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ======================================================
+     Modals: Individual Asset Actions (Status, Maintenance, History)
+     ====================================================== --}}
+@foreach($guestHouseAssets as $asset)
+    {{-- Modal: Edit Asset Status --}}
+    <div class="modal fade" id="modalEditAssetStatus_{{ $asset->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.assets.status', [$guest_house, $asset]) }}">
+                @csrf
+                @method('PATCH')
+                <div class="modal-header bg-secondary text-white py-2">
+                    <h6 class="modal-title fw-bold">
+                        <i class="bi bi-arrow-repeat me-1"></i> تعديل حالة: {{ $asset->name }}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3 text-start">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">الحالة التشغيلية للجهاز <span class="text-danger">*</span></label>
+                        <select name="status" class="form-select">
+                            <option value="working" @selected($asset->status === 'working')>🟢 يعمل بكفاءة</option>
+                            <option value="needs_maintenance" @selected($asset->status === 'needs_maintenance')>🟡 يحتاج صيانة / فحص</option>
+                            <option value="out_of_service" @selected($asset->status === 'out_of_service')>🔴 خارج الخدمة / معطل</option>
+                            <option value="scrapped" @selected($asset->status === 'scrapped')>⚪ كهنة / تم التكهين</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small">ملاحظات الحالة</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات سبب التغيير...">{{ $asset->notes }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold">حفظ الحالة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal: Add Asset Maintenance --}}
+    <div class="modal fade" id="modalAddAssetMaintenance_{{ $asset->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content shadow border-0" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.assets.maintenances.store', [$guest_house, $asset]) }}">
+                @csrf
+                <div class="modal-header bg-warning text-dark py-2">
+                    <h6 class="modal-title fw-bold">
+                        <i class="bi bi-tools me-1"></i> تسجيل صيانة / بلاغ عطل — {{ $asset->name }}
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">نوع الصيانة <span class="text-danger">*</span></label>
+                            <select name="maintenance_type" class="form-select" required>
+                                <option value="repair">🔧 إصلاح عطل مفاجئ</option>
+                                <option value="periodic">🔄 صيانة وفحص دوري</option>
+                                <option value="inspection">🔍 معاينة وتشخيص فني</option>
+                                <option value="replacement">⚙️ استبدال قطع غيار</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">تاريخ الصيانة <span class="text-danger">*</span></label>
+                            <input type="date" name="maintenance_date" value="{{ now()->toDateString() }}" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">وصف العطل أو أعمال الصيانة <span class="text-danger">*</span></label>
+                        <textarea name="issue_description" class="form-control" rows="2" placeholder="اكتب تفاصيل العطل وما تم إصلاحه..." required></textarea>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">تكلفة الصيانة (ج.م)</label>
+                            <input type="number" step="0.5" min="0" name="cost" class="form-control font-monospace" placeholder="مثال: 350">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">الفني أو مركز الصيانة</label>
+                            <input name="technician_name" class="form-control" placeholder="اسم الفني / ورشة الصيانة">
+                        </div>
+                    </div>
+
+                    {{-- Deduct from petty cash option --}}
+                    <div class="p-2 border rounded-3 bg-light-subtle mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="deduct_from_custody" value="1" id="deductCustody_{{ $asset->id }}">
+                            <label class="form-check-label fw-bold small text-success" for="deductCustody_{{ $asset->id }}">
+                                💰 خصم تكلفة الصيانة فوراً من الخزينة النثرية للدار
+                            </label>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label small text-muted mb-0">اختر خزينة العهدة للخصم:</label>
+                            <select name="treasury_id" class="form-select form-select-sm">
+                                @foreach($pettyCashCustodies as $pCustody)
+                                    @if($pCustody->treasury)
+                                        <option value="{{ $pCustody->treasury_id }}">{{ $pCustody->name }} (رصيد: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">حالة الجهاز بعد الصيانة</label>
+                            <select name="new_status" class="form-select">
+                                <option value="working">🟢 يعمل بكفاءة (تم الإصلاح)</option>
+                                <option value="needs_maintenance">🟡 ما زال يحتاج متابعة</option>
+                                <option value="out_of_service">🔴 خارج الخدمة / غير قابل للإصلاح</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">فاتورة أو إيصال الصيانة</label>
+                            <input type="file" name="invoice" class="form-control form-control-sm" accept="image/*,.pdf">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning btn-sm fw-bold px-3 text-dark">
+                        <i class="bi bi-check-lg me-1"></i> تسجيل الصيانة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal: Asset History --}}
+    <div class="modal fade" id="modalAssetHistory_{{ $asset->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow border-0">
+                <div class="modal-header bg-info text-white py-2">
+                    <h6 class="modal-title fw-bold">
+                        <i class="bi bi-clock-history me-1"></i> سجل صيانة وإصلاحات: {{ $asset->name }} ({{ $asset->code ?: 'AS-'.$asset->id }})
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="d-flex flex-wrap gap-2 mb-3 p-2 bg-light rounded-3">
+                        <span class="badge bg-white text-dark border">الموقع: {{ $asset->wing?->name ?: 'الدار' }} ({{ $asset->location_details ?: '—' }})</span>
+                        <span class="badge bg-white text-dark border">إجمالي أعمال الصيانة: {{ $asset->maintenances->count() }}</span>
+                        <span class="badge bg-white text-success border fw-bold">إجمالي التكلفة: {{ number_format((float)$asset->maintenances->sum('cost'), 2) }} ج.م</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead class="table-light small">
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>النوع</th>
+                                    <th>وصف العطل والإصلاح</th>
+                                    <th>الفني / الورشة</th>
+                                    <th class="text-center">التكلفة</th>
+                                    <th class="text-center">الفاتورة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($asset->maintenances as $m)
+                                    <tr>
+                                        <td class="font-monospace small">{{ $m->maintenance_date ? $m->maintenance_date->format('Y-m-d') : '—' }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ $m->maintenance_type_label }}</span></td>
+                                        <td class="small">{{ $m->issue_description }}</td>
+                                        <td class="small text-muted">{{ $m->technician_name ?: '—' }}</td>
+                                        <td class="text-center font-monospace fw-bold text-danger">{{ number_format((float)$m->cost, 2) }}</td>
+                                        <td class="text-center">
+                                            @if($m->invoice_url)
+                                                <a href="{{ $m->invoice_url }}" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-2">
+                                                    عرض
+                                                </a>
+                                            @else
+                                                <span class="text-muted small">—</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">لا توجد أعمال صيانة سابقة مسجلة لهذا الجهاز.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
+{{-- ======================================================
+     Modals: Individual Support Ticket Actions
+     ====================================================== --}}
+@foreach($guestHouseTickets as $ticket)
+    <div class="modal fade" id="modalEditTicket_{{ $ticket->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content shadow border-0" method="POST" action="{{ route('guest-houses.support-tickets.status', [$guest_house, $ticket]) }}">
+                @csrf
+                @method('PATCH')
+                <div class="modal-header bg-primary text-white py-2">
+                    <h6 class="modal-title fw-bold">
+                        <i class="bi bi-pencil-square me-1"></i> متابعة البلاغ #{{ $ticket->id }} — {{ $ticket->caller_name }}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="p-2 border rounded-3 bg-light mb-3 small">
+                        <div><strong>الموضوع:</strong> {{ $ticket->subject }}</div>
+                        <div class="text-muted mt-1">{{ $ticket->details }}</div>
+                        @if($ticket->caller_phone)
+                            <div class="mt-1 font-monospace">📞 {{ $ticket->caller_phone }}</div>
+                        @endif
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">حالة الطلب <span class="text-danger">*</span></label>
+                            <select name="status" class="form-select">
+                                <option value="open" @selected($ticket->status === 'open')>⏳ قيد المتابعة (مفتوح)</option>
+                                <option value="in_progress" @selected($ticket->status === 'in_progress')>⚙️ جارٍ التنفيذ</option>
+                                <option value="resolved" @selected($ticket->status === 'resolved')>✅ تم الحل بنجاح</option>
+                                <option value="closed" @selected($ticket->status === 'closed')>🔒 مغلق</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">تقييم رضا النزيل (استبيان)</label>
+                            <select name="satisfaction_rating" class="form-select">
+                                <option value="">— بدون تقييم —</option>
+                                <option value="5" @selected($ticket->satisfaction_rating == 5)>⭐⭐⭐⭐⭐ ممتاز (5/5)</option>
+                                <option value="4" @selected($ticket->satisfaction_rating == 4)>⭐⭐⭐⭐ جيد جداً (4/5)</option>
+                                <option value="3" @selected($ticket->satisfaction_rating == 3)>⭐⭐⭐ مقبول (3/5)</option>
+                                <option value="2" @selected($ticket->satisfaction_rating == 2)>⭐⭐ ضعيف (2/5)</option>
+                                <option value="1" @selected($ticket->satisfaction_rating == 1)>⭐ غير راضٍ تماماً (1/5)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">الإجراء المتخذ <span class="text-danger">*</span></label>
+                        <input name="action_taken" class="form-control" value="{{ $ticket->action_taken }}" placeholder="اكتب ما تم اتخاذه لحل هذا الطلب..." required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small">ملاحظات الحل والإغلاق</label>
+                        <textarea name="resolution_notes" class="form-control" rows="2" placeholder="ملاحظات إضافية حول التجاوب أو رأي النزيل...">{{ $ticket->resolution_notes }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">
+                        <i class="bi bi-check-lg me-1"></i> حفظ وتحديث التذكرة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endforeach
 @endpush

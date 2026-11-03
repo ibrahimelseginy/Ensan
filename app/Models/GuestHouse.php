@@ -62,4 +62,7 @@ final class GuestHouse extends Model
     public function stays() { return $this->hasMany(GuestHouseStay::class); }
     public function custodies() { return $this->hasMany(GuestHouseCustody::class); }
     public function meals() { return $this->hasMany(GuestHouseMeal::class); }
+    public function assets() { return $this->hasMany(GuestHouseAsset::class)->latest(); }
+    public function supportTickets() { return $this->hasMany(GuestHouseSupportTicket::class)->latest(); }
 }
+
