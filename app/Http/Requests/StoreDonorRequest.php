@@ -38,7 +38,7 @@ final class StoreDonorRequest extends FormRequest
             'address'                    => 'nullable|string|max:500',
             'classification'             => 'required|in:one_time,recurring',
             'recurring_cycle'            => 'nullable|required_if:classification,recurring|in:monthly,yearly',
-            'monthly_donation_day'       => 'nullable|required_if:recurring_cycle,monthly|integer|min:1|max:31',
+            'monthly_donation_day'       => 'nullable|integer|min:1|max:31',
             'active'                     => 'boolean',
             'sponsorship_type'           => 'nullable|in:none,monthly_sponsor,sadaqa_jariya',
             'sponsored_beneficiary_id'   => 'nullable|exists:beneficiaries,id',
@@ -77,7 +77,20 @@ final class StoreDonorRequest extends FormRequest
                 : [],
         ]);
 
-        if (! $isMonthly) {
+        if ($isMonthly) {
+            $day = $this->input('monthly_donation_day');
+            $this->merge([
+                'monthly_donation_day' => ($day !== null && $day !== '') ? (int) $day : 1,
+            ]);
+
+            $beneficiaryIds = array_filter((array) $this->input('sponsored_beneficiary_ids', []));
+            $familyMemberIds = array_filter((array) $this->input('sponsored_family_member_ids', []));
+            if (empty($beneficiaryIds) && empty($familyMemberIds) && ! $this->filled('monthly_allocation_target')) {
+                $this->merge([
+                    'monthly_allocation_target' => 'تبرع شهري عام',
+                ]);
+            }
+        } else {
             $this->merge([
                 'monthly_allocation_target' => null,
                 'monthly_donation_day' => null,

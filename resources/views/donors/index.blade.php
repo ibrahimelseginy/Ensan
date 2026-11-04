@@ -785,12 +785,17 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6" id="quickRecurringCycleDiv" style="display:none;">
+                    <div class="col-md-3" id="quickRecurringCycleDiv" style="display:none;">
                         <label class="form-label fw-bold">دورة التكرار</label>
-                        <select name="recurring_cycle" id="quickRecurringCycle" class="form-select">
+                        <select name="recurring_cycle" id="quickRecurringCycle" class="form-select" onchange="toggleQuickCycle(this.value)">
                             <option value="monthly" selected>شهري</option>
                             <option value="yearly">سنوي</option>
                         </select>
+                    </div>
+
+                    <div class="col-md-3" id="quickMonthlyDayDiv" style="display:none;">
+                        <label class="form-label fw-bold">يوم التبرع الشهري</label>
+                        <input type="number" name="monthly_donation_day" id="quickMonthlyDay" class="form-control" min="1" max="31" value="1" placeholder="1 - 31">
                     </div>
 
                     <div class="col-12">
@@ -1195,9 +1200,23 @@
     }
 
     function toggleQuickRecurring(val) {
-        const div = document.getElementById('quickRecurringCycleDiv');
-        if (div) {
-            div.style.display = (val === 'recurring') ? 'block' : 'none';
+        const cycleDiv = document.getElementById('quickRecurringCycleDiv');
+        const dayDiv = document.getElementById('quickMonthlyDayDiv');
+        const isRecurring = (val === 'recurring');
+        if (cycleDiv) {
+            cycleDiv.style.display = isRecurring ? 'block' : 'none';
+        }
+        if (dayDiv) {
+            const cycleVal = document.getElementById('quickRecurringCycle')?.value || 'monthly';
+            dayDiv.style.display = (isRecurring && cycleVal === 'monthly') ? 'block' : 'none';
+        }
+    }
+
+    function toggleQuickCycle(cycleVal) {
+        const dayDiv = document.getElementById('quickMonthlyDayDiv');
+        const classificationVal = document.getElementById('quickClassification')?.value;
+        if (dayDiv) {
+            dayDiv.style.display = (classificationVal === 'recurring' && cycleVal === 'monthly') ? 'block' : 'none';
         }
     }
 </script>
