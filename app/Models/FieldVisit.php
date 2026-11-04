@@ -14,6 +14,7 @@ final class FieldVisit extends Model
 
     protected $fillable = [
         'beneficiary_id',
+        'case_application_id',
         'researcher_id',
         'visit_date',
         'status',
@@ -106,6 +107,11 @@ final class FieldVisit extends Model
         return $this->belongsTo(Beneficiary::class);
     }
 
+    public function caseApplication()
+    {
+        return $this->belongsTo(MobileCaseApplication::class, 'case_application_id');
+    }
+
     public function researcher()
     {
         return $this->belongsTo(User::class, 'researcher_id');
@@ -141,9 +147,12 @@ final class FieldVisit extends Model
     {
         return match($this->status) {
             'scheduled' => 'مجدولة',
+            'awaiting_discussion' => 'في انتظار المناقشة',
             'completed' => 'تمت الزيارة والبحث',
+            'accepted' => 'تم قبول واعتماد البحث',
+            'rejected' => 'تم الرفض',
             'cancelled' => 'ملغاة',
-            default => $this->status,
+            default => $this->status ?: 'في انتظار المناقشة',
         };
     }
 
@@ -151,9 +160,12 @@ final class FieldVisit extends Model
     {
         return match($this->status) {
             'scheduled' => 'primary',
-            'completed' => 'success',
-            'cancelled' => 'danger',
-            default => 'secondary',
+            'awaiting_discussion' => 'warning',
+            'completed' => 'info',
+            'accepted' => 'success',
+            'rejected' => 'danger',
+            'cancelled' => 'secondary',
+            default => 'warning',
         };
     }
 

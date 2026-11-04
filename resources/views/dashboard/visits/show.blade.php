@@ -98,6 +98,110 @@
     </div>
   </div>
 
+  {{-- ══════════════════════════════════════════════════════════════════════ --}}
+  {{-- لوحة اتخاذ القرار النهائي للمناقشة والاعتماد (المرحلة 3 والمرحلة 4) --}}
+  {{-- ══════════════════════════════════════════════════════════════════════ --}}
+  @if($visit->status === 'awaiting_discussion' || (empty($visit->beneficiary_id) && $visit->status !== 'rejected'))
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border border-warning" style="border-width: 2px !important;">
+      <div class="card-header bg-warning bg-opacity-25 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning text-dark fs-6 px-3 py-1.5 rounded-pill shadow-xs fw-bold">
+            <i class="bi bi-hourglass-split me-1"></i> المرحلة 3: في انتظار المناقشة والقرار النهائي
+          </span>
+          <span class="text-muted small">تم إنهاء البحث الميداني وهو جاهز للعرض على اللجنة أو المدير لاتخاذ القرار الرسمي</span>
+        </div>
+        <div class="small fw-bold text-dark">
+          توصية الباحث: <span class="badge bg-info text-dark">{{ $visit->recommendation_label }}</span>
+        </div>
+      </div>
+      <div class="card-body p-4 bg-light bg-opacity-50">
+        <div class="row g-3">
+          <!-- الخيار الأول: قبول واعتماد البحث (مربع أخضر كبير) -->
+          <div class="col-md-6">
+            <div class="card h-100 border-success shadow-sm text-center p-3" style="border-width: 2px; border-radius: 14px; background: #ffffff; cursor: pointer; transition: transform 0.2s;" onclick="openApprovalModal('accepted')">
+              <div class="card-body py-3">
+                <div class="text-success mb-2">
+                  <i class="bi bi-check-circle-fill display-5"></i>
+                </div>
+                <h4 class="fw-bold text-success mb-2">✅ تم قبول واعتماد البحث</h4>
+                <p class="text-muted small mb-3">
+                  تحديد المشروع الملحق به (زاد للأيتام، كفالات الأورام، مدرار، مساعدات...) ومبلغ الكفالة.
+                  <br>
+                  <strong class="text-dark">تحويل فوري وتلقائي لمستفيد رسمي وتوليد كود رسمي ونقل الأسرة دون إعادة إدخال.</strong>
+                </p>
+                <button type="button" class="btn btn-success fw-bold px-4 py-2 rounded-pill shadow-sm" onclick="openApprovalModal('accepted')">
+                  <i class="bi bi-person-check-fill me-1"></i> اعتماد وتحويل تلقائي لمستفيد
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- الخيار الثاني: رفض الحالة (مربع أحمر كبير) -->
+          <div class="col-md-6">
+            <div class="card h-100 border-danger shadow-sm text-center p-3" style="border-width: 2px; border-radius: 14px; background: #ffffff; cursor: pointer; transition: transform 0.2s;" onclick="openApprovalModal('rejected')">
+              <div class="card-body py-3">
+                <div class="text-danger mb-2">
+                  <i class="bi bi-x-circle-fill display-5"></i>
+                </div>
+                <h4 class="fw-bold text-danger mb-2">❌ تم الرفض</h4>
+                <p class="text-muted small mb-3">
+                  عدم مطابقة الشروط أو عدم الاستحقاق، مع تسجيل سبب الرفض الإجباري وإشعار الإدارة.
+                </p>
+                <button type="button" class="btn btn-outline-danger fw-bold px-4 py-2 rounded-pill shadow-sm" onclick="openApprovalModal('rejected')">
+                  <i class="bi bi-slash-circle me-1"></i> تسجيل سبب الرفض
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  @elseif($visit->status === 'accepted' || ($visit->beneficiary && $visit->recommendation === 'approved'))
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border border-success" style="border-width: 2px !important;">
+      <div class="card-body p-4 bg-success bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-3 bg-success text-white rounded-circle">
+            <i class="bi bi-check-circle-fill fs-2"></i>
+          </div>
+          <div>
+            <h5 class="fw-bolder text-success mb-1">
+              ✅ تم قبول واعتماد البحث وتحويل الحالة لمستفيد رسمي
+            </h5>
+            <div class="text-muted small">
+              كود المستفيد الرسمي: <span class="badge bg-success font-monospace fs-6">{{ $visit->beneficiary?->code ?: ('BEN-'.$visit->beneficiary_id) }}</span>
+              @if($visit->beneficiary?->project)
+                — المشروع: <strong>{{ $visit->beneficiary->project->name }}</strong>
+              @endif
+              @if($visit->beneficiary?->monthly_sponsorship_amount)
+                — الكفالة الشهرية: <strong>{{ number_format((float)$visit->beneficiary->monthly_sponsorship_amount, 2) }} ج.م</strong>
+              @endif
+              @if($visit->beneficiary?->in_kind_notes)
+                — مساعدة عينية: <strong>{{ $visit->beneficiary->in_kind_notes }}</strong>
+              @endif
+            </div>
+          </div>
+        </div>
+        @if($visit->beneficiary)
+          <a href="{{ route('beneficiaries.show', $visit->beneficiary) }}" class="btn btn-success fw-bold px-4 py-2 shadow-sm rounded-pill">
+            <i class="bi bi-person-badge me-1"></i> فتح ملف المستفيد الرسمي
+          </a>
+        @endif
+      </div>
+    </div>
+  @elseif($visit->status === 'rejected')
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border border-danger" style="border-width: 2px !important;">
+      <div class="card-body p-4 bg-danger bg-opacity-10 d-flex align-items-center gap-3">
+        <div class="p-3 bg-danger text-white rounded-circle">
+          <i class="bi bi-x-circle-fill fs-2"></i>
+        </div>
+        <div>
+          <h5 class="fw-bolder text-danger mb-1">❌ تم رفض الحالة</h5>
+          <div class="text-dark"><strong>سبب الرفض المسجل:</strong> {{ $visit->rejection_reason ?: 'لم يتم تسجيل سبب تفصيلي' }}</div>
+        </div>
+      </div>
+    </div>
+  @endif
+
   <div class="row g-4">
     <!-- بيانات الحالة والباحث -->
     <div class="col-lg-6">

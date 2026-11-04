@@ -45,8 +45,10 @@ final class VisitWebController extends Controller
 
         $stats = [
             'total' => FieldVisit::count(),
+            'awaiting_discussion' => FieldVisit::where('status', 'awaiting_discussion')->count(),
+            'accepted' => FieldVisit::where('status', 'accepted')->count(),
             'upcoming' => FieldVisit::where('status', 'scheduled')->whereDate('visit_date', '>=', today())->count(),
-            'completed_month' => FieldVisit::where('status', 'completed')->whereMonth('visit_date', today()->month)->count(),
+            'completed_month' => FieldVisit::whereIn('status', ['completed', 'accepted'])->whereMonth('visit_date', today()->month)->count(),
             'needs_review' => FieldVisit::where('recommendation', 'needs_review')->count(),
             'cancer_cases' => FieldVisit::where('has_cancer_patient', true)->count(),
             'normal_cases' => FieldVisit::where('has_cancer_patient', false)->count(),
@@ -128,8 +130,9 @@ final class VisitWebController extends Controller
         }
 
         $validated['status'] = 'awaiting_discussion';
-        if ($request->filled('application_id')) {
-            $validated['case_application_id'] = $request->application_id;
+        $appId = $request->input('case_application_id') ?: $request->input('application_id');
+        if (!empty($appId)) {
+            $validated['case_application_id'] = $appId;
         }
 
         $visit = FieldVisit::create($validated);
@@ -157,18 +160,18 @@ final class VisitWebController extends Controller
         }
 
         // Link with Case Application if provided
-        if ($request->filled('application_id')) {
-            $caseApp = \App\Models\MobileCaseApplication::find($request->application_id);
+        if (!empty($validated['case_application_id'])) {
+            $caseApp = \App\Models\MobileCaseApplication::find($validated['case_application_id']);
             if ($caseApp) {
                 $caseApp->update([
-                    'status' => 'completed',
+                    'status' => 'under_research',
                     'field_visit_id' => $visit->id,
                     'beneficiary_id' => $visit->beneficiary_id,
                 ]);
             }
         }
 
-        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح، والحالة الآن (في انتظار المناقشة) والقرار النهائي.');
+        return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح، والحالة الآن [في انتظار المناقشة] من لجنة الحالات والإدارة.');
     }
 
     public function show(FieldVisit $visit)
@@ -183,7 +186,14 @@ final class VisitWebController extends Controller
     public function finalApproval(Request $request, FieldVisit $visit)
     {
         $user = auth()->user();
-        $isAuthorized = $user && ($user->hasRole(['admin', 'super_admin', 'manager']) || (int)$user->id === 2 || str_contains(strtolower((string)$user->name), 'salma') || str_contains((string)$user->email, 'ghanemsalma'));
+        $isAuthorized = $user && (
+            $user->hasRole(['admin', 'super_admin', 'manager', 'social_research_manager']) ||
+            $user->hasPermission('visits.edit') ||
+            $user->hasPermission('beneficiaries.create') ||
+            (int)$user->id === 2 ||
+            str_contains(strtolower((string)$user->name), 'salma') ||
+            str_contains((string)$user->email, 'ghanemsalma')
+        );
         abort_unless($isAuthorized, 403, 'غير مصرح لك بالاعتماد النهائي للحالات بعد البحث الميداني.');
 
         $decision = $request->input('decision');
@@ -194,7 +204,7 @@ final class VisitWebController extends Controller
                 'rejection_reason.required' => 'يرجى كتابة سبب الرفض إجبارياً.',
             ]);
 
-            $reason = $request->input('rejection_reason');
+            $reason = (string) $request->input('rejection_reason');
             $visit->update([
                 'status' => 'rejected',
                 'recommendation' => 'rejected',
@@ -210,7 +220,11 @@ final class VisitWebController extends Controller
 
             $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
                 ->orWhere('id', $visit->case_application_id)
-                ->orWhere('applicant_id_number', $visit->national_id)
+                ->orWhere(function ($q) use ($visit) {
+                    if (!empty($visit->national_id)) {
+                        $q->where('applicant_id_number', $visit->national_id);
+                    }
+                })
                 ->first();
             if ($caseApp) {
                 $caseApp->update([
@@ -257,20 +271,49 @@ final class VisitWebController extends Controller
             $beneficiary = Beneficiary::where('phone', $visit->phone)->first();
         }
 
+        $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
+            ->orWhere('id', $visit->case_application_id)
+            ->orWhere(function ($q) use ($visit) {
+                if (!empty($visit->national_id)) {
+                    $q->where('applicant_id_number', $visit->national_id);
+                }
+            })
+            ->first();
+
+        $patientName = $visit->patient_name ?: ($caseApp?->applicant_name ?: null);
+        $guardianName = $visit->guardian_name ?: ($caseApp?->applicant_name ?: $patientName);
+        $fullName = $guardianName ?: ($patientName ?: 'مستفيد جديد');
+
         if (!$beneficiary) {
             $newCode = Beneficiary::generateNextCode();
             $beneficiary = Beneficiary::create([
                 'code' => $newCode,
-                'full_name' => $visit->guardian_name ?: ($visit->patient_name ?: 'حالة معتمدة'),
-                'patient_name' => $visit->patient_name,
-                'national_id' => $visit->national_id,
-                'phone' => $visit->phone,
-                'address' => $visit->address,
+                'full_name' => $fullName,
+                'patient_name' => $patientName,
+                'guardian_name' => $guardianName,
+                'national_id' => $visit->national_id ?: $caseApp?->applicant_id_number,
+                'phone' => $visit->phone ?: $caseApp?->applicant_phone,
+                'backup_phone' => $caseApp?->backup_phone,
+                'address' => $visit->address ?: $caseApp?->address,
                 'project_id' => $project->id,
                 'status' => 'accepted',
                 'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: null,
                 'notes_cases' => $fullNotes,
                 'created_by' => $user->id,
+                'mother_name' => $caseApp?->mother_name,
+                'deceased_husband_name' => $caseApp?->deceased_husband_name,
+                'transit_details' => $caseApp?->transit_details,
+                'death_details' => $caseApp?->death_details,
+                'income_aid_sources' => $caseApp?->income_aid_sources,
+                'expenses_debts_details' => $caseApp?->expenses_debts_details,
+                'hospital_name' => $visit->hospital_name ?: $caseApp?->hospital_name,
+                'tumor_location' => $visit->tumor_location ?: $caseApp?->tumor_location,
+                'treatment_protocol' => $visit->treatment_protocol ?: $caseApp?->treatment_protocol,
+                'family_members_data' => $visit->family_members,
+                'assistance_type' => $request->filled('monthly_sponsorship_amount') ? 'كفالة نقدية شهرية' : ($request->filled('in_kind_notes') ? 'مساعدة عينية' : 'رعاية عامة'),
+                'collection_method' => 'cash',
+                'collection_day' => 1,
+                'classification' => 'A',
             ]);
             $visit->update(['beneficiary_id' => $beneficiary->id]);
         } else {
@@ -283,6 +326,7 @@ final class VisitWebController extends Controller
                 'status' => 'accepted',
                 'monthly_sponsorship_amount' => $request->input('monthly_sponsorship_amount') ?: $beneficiary->monthly_sponsorship_amount,
                 'notes_cases' => trim(($beneficiary->notes_cases ?? '') . "\n" . $medicineDetails . $inKindDetails . $approvalNotes),
+                'family_members_data' => $visit->family_members ?: $beneficiary->family_members_data,
             ]);
         }
 
@@ -293,19 +337,37 @@ final class VisitWebController extends Controller
                 if ($mName) {
                     $exists = $beneficiary->familyMembers()->where('full_name', $mName)->exists();
                     if (!$exists) {
+                        $isChild = in_array(strtolower((string)($fm['relation'] ?? '')), ['child', 'son', 'daughter', 'orphan', 'ابن', 'ابنة', 'طفل', 'يتيم'], true);
+                        $isPat = $visit->has_cancer_patient && ($mName === $visit->patient_name || in_array(strtolower((string)($fm['relation'] ?? '')), ['patient', 'مريض', 'مريضة'], true));
                         $beneficiary->familyMembers()->create([
                             'code' => $beneficiary->code . '-' . ($idx + 1),
                             'full_name' => $mName,
-                            'relationship' => $fm['relation'] ?? ($fm['relationship'] ?? 'فرد أسرة'),
+                            'relationship' => $fm['relation'] ?? ($fm['relationship'] ?? ($isChild ? 'child' : ($isPat ? 'patient' : 'family_member'))),
                             'age' => isset($fm['age']) ? (int)$fm['age'] : null,
                             'education_level' => $fm['education'] ?? null,
                             'social_status' => $fm['social_status'] ?? null,
                             'job' => $fm['job'] ?? null,
                             'health_status' => $fm['health'] ?? null,
+                            'is_patient' => $isPat,
                             'active' => true,
                         ]);
                     }
                 }
+            }
+        }
+
+        // If cancer patient exists and not in family_members, add them
+        if ($visit->has_cancer_patient && !empty($visit->patient_name)) {
+            $patientExists = $beneficiary->familyMembers()->where('full_name', $visit->patient_name)->exists();
+            if (!$patientExists) {
+                $beneficiary->familyMembers()->create([
+                    'code' => $beneficiary->code . '-P1',
+                    'full_name' => $visit->patient_name,
+                    'relationship' => 'patient',
+                    'is_patient' => true,
+                    'active' => true,
+                    'case_details' => ($visit->tumor_location ? "ورم: {$visit->tumor_location}" : '') . ($visit->hospital_name ? " | مستشفى: {$visit->hospital_name}" : ''),
+                ]);
             }
         }
 
@@ -316,10 +378,6 @@ final class VisitWebController extends Controller
             'recommendation_notes' => "تم قبول واعتماد البحث بمشروع ({$project->name}) وتحويل الحالة لمستفيد نشط برمز [{$beneficiary->code}] بواسطة " . ($user->name ?? 'الإدارة'),
         ]);
 
-        $caseApp = \App\Models\MobileCaseApplication::where('field_visit_id', $visit->id)
-            ->orWhere('id', $visit->case_application_id)
-            ->orWhere('applicant_id_number', $visit->national_id)
-            ->first();
         if ($caseApp) {
             $caseApp->update([
                 'status' => 'approved',
@@ -403,9 +461,16 @@ final class VisitWebController extends Controller
             $validated['condition_photos'] = $existing;
         }
 
+        if ($request->filled('application_id') && empty($visit->case_application_id)) {
+            $validated['case_application_id'] = $request->input('application_id');
+        }
+        if (empty($visit->status) || in_array($visit->status, ['completed', 'under_research'], true)) {
+            $validated['status'] = 'awaiting_discussion';
+        }
+
         $visit->update($validated);
 
-        return redirect()->route('visits.show', $visit)->with('success', 'تم تحديث استمارة البحث بنجاح.');
+        return redirect()->route('visits.show', $visit)->with('success', 'تم تحديث استمارة البحث بنجاح، والحالة (في انتظار المناقشة).');
     }
 
     public function print(FieldVisit $visit)
@@ -423,10 +488,12 @@ final class VisitWebController extends Controller
     private function validateVisitData(Request $request, ?int $visitId = null): array
     {
         return $request->validate([
-            'beneficiary_id' => 'required|exists:beneficiaries,id',
+            'beneficiary_id' => 'nullable|exists:beneficiaries,id',
+            'case_application_id' => 'nullable|exists:mobile_case_applications,id',
+            'application_id' => 'nullable|exists:mobile_case_applications,id',
             'researcher_id' => 'required|exists:users,id',
             'visit_date' => 'required|date',
-            'status' => 'required|in:scheduled,completed,cancelled',
+            'status' => 'nullable|string|in:scheduled,completed,cancelled,awaiting_discussion,under_research,accepted,rejected',
             'recommendation' => 'nullable|in:approve,reject,needs_review',
             'report' => 'nullable|string',
 

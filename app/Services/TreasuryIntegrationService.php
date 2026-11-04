@@ -148,7 +148,7 @@ class TreasuryIntegrationService
                 'currency' => $expense->currency ?? 'EGP',
                 'description' => "مصروف - {$expense->description}",
                 'reference' => "EXP-{$expense->id}",
-                'transaction_date' => $expense->expense_date ?? now(),
+                'transaction_date' => $expense->paid_at ?? $expense->expense_date ?? now(),
                 'created_by' => auth()->id(),
                 'expense_id' => $expense->id
             ]);
@@ -509,7 +509,7 @@ class TreasuryIntegrationService
         );
 
         $entry = JournalEntry::create([
-            'date' => $expense->expense_date ?? now(),
+            'date' => $expense->paid_at ?? $expense->expense_date ?? now(),
             'description' => "مصروف - " . ($expense->description ?? ''),
             'reference' => "EXP-{$expense->id}",
             'entry_type' => 'expense',

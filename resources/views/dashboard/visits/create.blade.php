@@ -137,6 +137,9 @@
           <i class="bi bi-arrow-right fs-6"></i>
         </a>
         <h3 class="mb-0 fw-bolder text-dark">استمارة بحث ميداني واجتماعي</h3>
+        <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill shadow-xs fw-bold">
+          <i class="bi bi-hourglass-split me-1"></i> المرحلة 2: استمارة البحث الميداني
+        </span>
       </div>
       <p class="text-muted small mb-0 mt-1">مؤسسة إنسان الخيرية — استمارة البحث الاجتماعي وبحث مرضى الأورام</p>
     </div>
@@ -144,8 +147,8 @@
       <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg me-1"></i> إلغاء
       </a>
-      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-primary fw-bold px-4 shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
-        <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
+      <button type="button" onclick="document.getElementById('researchForm').submit()" class="btn btn-warning fw-bold px-4 shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+        <i class="bi bi-hourglass-split me-1"></i> 💾 حفظ وإنهاء البحث الميداني (تحويل إلى: في انتظار المناقشة)
       </button>
     </div>
   </div>
@@ -197,9 +200,9 @@
       <div class="research-card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label fw-bold">ربط بملف المستفيد (إن وجد) <span class="text-danger">*</span></label>
-            <select name="beneficiary_id" id="beneficiarySelect" class="form-select" required>
-              <option value="">-- اختر المستفيد أو الحالة --</option>
+            <label class="form-label fw-bold">ربط بملف مستفيد مسجل مسبقاً <span class="badge bg-secondary-subtle text-secondary fw-normal">اختياري</span></label>
+            <select name="beneficiary_id" id="beneficiarySelect" class="form-select">
+              <option value="">-- بدون ربط مسبق (حالة جديدة من البحث المبدئي) --</option>
               @foreach($beneficiaries as $ben)
                 <option value="{{ $ben->id }}"
                   data-name="{{ $ben->full_name ?? $ben->name }}"
@@ -211,6 +214,7 @@
                 </option>
               @endforeach
             </select>
+            <div class="form-text small text-muted">اتركه فارغاً إذا كانت الحالة جديدة، وسيتم إنشاء المستفيد وتوليد الكود تلقائياً فور اعتماد البحث.</div>
           </div>
 
           <div class="col-md-4">
@@ -233,9 +237,10 @@
           </div>
 
           <div class="col-md-2">
-            <label class="form-label fw-bold">حالة الزيارة</label>
-            <select name="status" class="form-select">
-              <option value="completed" @selected(old('status', 'completed') === 'completed')>تمت الزيارة والبحث</option>
+            <label class="form-label fw-bold">حالة البحث الميداني</label>
+            <select name="status" class="form-select bg-warning-subtle fw-bold text-dark">
+              <option value="awaiting_discussion" @selected(old('status', 'awaiting_discussion') === 'awaiting_discussion')>⏳ في انتظار المناقشة</option>
+              <option value="completed" @selected(old('status') === 'completed')>تمت الزيارة والبحث</option>
               <option value="scheduled" @selected(old('status') === 'scheduled')>مجدولة</option>
               <option value="cancelled" @selected(old('status') === 'cancelled')>ملغاة</option>
             </select>
@@ -464,7 +469,7 @@
 
           <div class="col-12">
             <label class="form-label">سبب الدين</label>
-            <input type="text" name="debt_reason" value="{{ old('debt_reason') }}" class="form-control" placeholder="علاج، زواج، سداد إيجار، تجهيزات...">
+            <input type="text" name="debt_reason" value="{{ old('debt_reason', $caseApplication?->expenses_debts_details) }}" class="form-control" placeholder="علاج، زواج، سداد إيجار، تجهيزات...">
           </div>
 
           <div class="col-md-6">
@@ -481,7 +486,7 @@
             <label class="form-label">
               <span class="official-notice-yellow">وصف الحالة الاجتماعية للأسرة ، وظروف الأسرة ، ووضع البيت ( محتاج سقف / ترميم / بنى ) :</span>
             </label>
-            <textarea name="home_and_social_condition" class="form-control" rows="3" placeholder="وصف كامل لحالة السكن والأسقف، الجدران، الفرش، مستوى المعيشة...">{{ old('home_and_social_condition') }}</textarea>
+            <textarea name="home_and_social_condition" class="form-control" rows="3" placeholder="وصف كامل لحالة السكن والأسقف، الجدران، الفرش، مستوى المعيشة...">{{ old('home_and_social_condition', $caseApplication?->social_status_description) }}</textarea>
           </div>
 
           <div class="col-12 mt-3 pt-3 border-top">
@@ -543,12 +548,12 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label fw-bold">اسم المستشفى المتلقى بها العلاج</label>
-            <input type="text" name="hospital_name" value="{{ old('hospital_name') }}" class="form-control" placeholder="مثال: مركز أورام كفر الشيخ، معهد الأورام بطنطا...">
+            <input type="text" name="hospital_name" value="{{ old('hospital_name', $caseApplication?->hospital_name) }}" class="form-control" placeholder="مثال: مركز أورام كفر الشيخ، معهد الأورام بطنطا...">
           </div>
 
           <div class="col-md-6">
             <label class="form-label fw-bold">مكان الورم بالجسم</label>
-            <input type="text" name="tumor_location" value="{{ old('tumor_location') }}" class="form-control" placeholder="مثال: الثدي، القولون، الرئة، العظام...">
+            <input type="text" name="tumor_location" value="{{ old('tumor_location', $caseApplication?->tumor_location) }}" class="form-control" placeholder="مثال: الثدي، القولون، الرئة، العظام...">
           </div>
 
           <div class="col-md-3">
@@ -634,8 +639,8 @@
         <a href="{{ route('visits.index') }}" class="btn btn-outline-secondary px-3">
           إلغاء
         </a>
-        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
-          <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
+        <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+          <i class="bi bi-hourglass-split me-1"></i> 💾 حفظ وإنهاء البحث الميداني (تحويل إلى: في انتظار المناقشة)
         </button>
       </div>
     </div>

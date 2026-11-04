@@ -215,8 +215,8 @@ final class GuestHouseWebController extends Controller
             return $c->type === 'in_kind' && ($c->category === 'food' || str_contains(mb_strtolower((string)$c->name), 'غذائ') || str_contains(mb_strtolower((string)$c->name), 'وجب') || str_contains(mb_strtolower((string)$c->name), 'مطبخ'));
         });
         $pettyCashExpenses = Expense::where('guest_house_id', $guest_house->id)
-            ->with(['treasury', 'user'])
-            ->latest('expense_date')
+            ->with(['treasury', 'creator'])
+            ->latest('id')
             ->limit(30)
             ->get();
 
@@ -1341,13 +1341,15 @@ final class GuestHouseWebController extends Controller
 
         DB::transaction(function () use ($guest_house, $treasury, $data, $invoicePath): void {
             $this->expenseService->createExpense([
-                'name' => $data['name'],
+                'type' => 'operational',
+                'category' => 'guest_house',
+                'description' => $data['name'] . (!empty($data['notes']) ? ' — ' . $data['notes'] : ''),
                 'amount' => (float) $data['amount'],
-                'expense_date' => $data['expense_date'],
+                'paid_at' => $data['expense_date'],
                 'treasury_id' => $treasury->id,
                 'guest_house_id' => $guest_house->id,
-                'notes' => $data['notes'] ?? null,
-                'invoice_path' => $invoicePath,
+                'attachment_path' => $invoicePath,
+                'created_by' => auth()->id(),
             ]);
         });
 
@@ -1501,13 +1503,15 @@ final class GuestHouseWebController extends Controller
                     ->first();
                 if ($custody && $custody->treasury_id) {
                     $this->expenseService->createExpense([
-                        'name' => "صيانة جهاز ({$asset->name}) - {$data['issue_description']}",
+                        'type' => 'operational',
+                        'category' => 'maintenance',
+                        'description' => "صيانة جهاز ({$asset->name}) - {$data['issue_description']}",
                         'amount' => $cost,
-                        'expense_date' => $data['maintenance_date'],
+                        'paid_at' => $data['maintenance_date'] ?? now(),
                         'treasury_id' => $custody->treasury_id,
                         'guest_house_id' => $guest_house->id,
-                        'notes' => "خصم تلقائي مقابل صيانة جهاز {$asset->name}",
-                        'invoice_path' => $invoicePath,
+                        'attachment_path' => $invoicePath,
+                        'created_by' => auth()->id(),
                     ]);
                 }
             }

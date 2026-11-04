@@ -1481,10 +1481,10 @@
                             @forelse($pettyCashExpenses as $exp)
                                 <tr>
                                     <td class="text-muted font-monospace small">{{ $loop->iteration }}</td>
-                                    <td class="font-monospace small">{{ $exp->expense_date ? \Carbon\Carbon::parse($exp->expense_date)->format('Y-m-d') : '—' }}</td>
+                                    <td class="font-monospace small">{{ $exp->paid_at ? \Carbon\Carbon::parse($exp->paid_at)->format('Y-m-d') : ($exp->created_at ? $exp->created_at->format('Y-m-d') : '—') }}</td>
                                     <td>
-                                        <strong>{{ $exp->title }}</strong>
-                                        @if($exp->notes)
+                                        <strong>{{ $exp->description ?: ($exp->title ?: 'مصروف دار الضيافة') }}</strong>
+                                        @if($exp->notes && $exp->notes !== $exp->description)
                                             <div class="text-muted small">{{ $exp->notes }}</div>
                                         @endif
                                     </td>
@@ -1493,15 +1493,18 @@
                                         {{ number_format((float)$exp->amount, 2) }} {{ $exp->currency ?? 'ج.م' }}
                                     </td>
                                     <td class="text-center">
-                                        @if($exp->receipt)
-                                            <a href="{{ asset('storage/' . $exp->receipt) }}" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-2">
+                                        @php
+                                            $attachment = $exp->attachment_path ?: $exp->receipt;
+                                        @endphp
+                                        @if($attachment)
+                                            <a href="{{ asset('storage/' . $attachment) }}" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-2">
                                                 <i class="bi bi-file-earmark-image me-1"></i> عرض الفاتورة
                                             </a>
                                         @else
                                             <span class="text-muted small">بدون مرفق</span>
                                         @endif
                                     </td>
-                                    <td class="small text-muted">{{ $exp->user?->name ?: '—' }}</td>
+                                    <td class="small text-muted">{{ $exp->creator?->name ?: ($exp->user?->name ?: '—') }}</td>
                                 </tr>
                             @empty
                                 <tr>

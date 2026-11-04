@@ -63,8 +63,8 @@
     </div>
     <div class="col-md-2 col-sm-6">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-4 border-warning">
-        <div class="text-muted small fw-bold">تحتاج مراجعة</div>
-        <div class="h3 fw-bolder mb-0 text-warning font-monospace">{{ $stats['needs_review'] ?? 0 }}</div>
+        <div class="text-muted small fw-bold">في انتظار المناقشة</div>
+        <div class="h3 fw-bolder mb-0 text-warning font-monospace">{{ $stats['awaiting_discussion'] ?? 0 }}</div>
       </div>
     </div>
   </div>
@@ -91,6 +91,9 @@
         <div class="col-md-3">
           <select name="status" class="form-select" onchange="this.form.submit()">
             <option value="">-- كل الحالات --</option>
+            <option value="awaiting_discussion" @selected(request('status') === 'awaiting_discussion')>⏳ في انتظار المناقشة</option>
+            <option value="accepted" @selected(request('status') === 'accepted')>✅ تم قبول واعتماد البحث</option>
+            <option value="rejected" @selected(request('status') === 'rejected')>❌ تم الرفض</option>
             <option value="completed" @selected(request('status') === 'completed')>تمت الزيارة والبحث</option>
             <option value="scheduled" @selected(request('status') === 'scheduled')>مجدولة</option>
             <option value="cancelled" @selected(request('status') === 'cancelled')>ملغاة</option>
@@ -170,7 +173,15 @@
                     <span class="text-danger fw-bold">-{{ number_format($visit->total_expenses, 0) }}</span>
                   </td>
                   <td>
-                    <span class="badge bg-{{ $visit->status_color }}">{{ $visit->status_label }}</span>
+                    @if($visit->status === 'awaiting_discussion')
+                      <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> في انتظار المناقشة</span>
+                    @elseif($visit->status === 'accepted')
+                      <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> مقبول ومعتمد</span>
+                    @elseif($visit->status === 'rejected')
+                      <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> مرفوض</span>
+                    @else
+                      <span class="badge bg-{{ $visit->status_color }}">{{ $visit->status_label }}</span>
+                    @endif
                   </td>
                   <td>
                     <span class="small fw-semibold">{{ $visit->recommendation_label }}</span>

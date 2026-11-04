@@ -137,6 +137,19 @@
           <i class="bi bi-arrow-right fs-6"></i>
         </a>
         <h3 class="mb-0 fw-bolder text-dark">تعديل استمارة البحث الميداني (#{{ $visit->id }})</h3>
+        @if($visit->status === 'awaiting_discussion')
+          <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill shadow-xs fw-bold">
+            <i class="bi bi-hourglass-split me-1"></i> في انتظار المناقشة
+          </span>
+        @elseif($visit->status === 'accepted')
+          <span class="badge bg-success px-3 py-1.5 rounded-pill shadow-xs fw-bold">
+            <i class="bi bi-check-circle-fill me-1"></i> تم قبول واعتماد البحث
+          </span>
+        @elseif($visit->status === 'rejected')
+          <span class="badge bg-danger px-3 py-1.5 rounded-pill shadow-xs fw-bold">
+            <i class="bi bi-x-circle-fill me-1"></i> تم الرفض
+          </span>
+        @endif
       </div>
       <p class="text-muted small mb-0 mt-1">
         المستفيد: <strong>{{ $visit->beneficiary?->full_name ?? $visit->patient_name }}</strong> — تاريخ البحث: {{ $visit->visit_date?->format('Y/m/d') }}
@@ -146,8 +159,8 @@
       <a href="{{ route('visits.print', $visit) }}" target="_blank" class="btn btn-outline-primary">
         <i class="bi bi-printer me-1"></i> طباعة الاستمارة الرسمية
       </a>
-      <button type="button" onclick="document.getElementById('researchEditForm').submit()" class="btn btn-primary fw-bold px-4 shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
-        <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
+      <button type="button" onclick="document.getElementById('researchEditForm').submit()" class="btn btn-warning fw-bold px-4 shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+        <i class="bi bi-hourglass-split me-1"></i> 💾 حفظ التعديلات (في انتظار المناقشة)
       </button>
     </div>
   </div>
@@ -176,9 +189,9 @@
       <div class="research-card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label fw-bold">ربط بملف المستفيد <span class="text-danger">*</span></label>
-            <select name="beneficiary_id" id="beneficiarySelect" class="form-select" required>
-              <option value="">-- اختر المستفيد أو الحالة --</option>
+            <label class="form-label fw-bold">ربط بملف المستفيد <span class="badge bg-secondary-subtle text-secondary fw-normal">اختياري</span></label>
+            <select name="beneficiary_id" id="beneficiarySelect" class="form-select">
+              <option value="">-- بدون ربط مسبق (حالة جديدة قيد البحث الميداني) --</option>
               @foreach($beneficiaries as $ben)
                 <option value="{{ $ben->id }}"
                   data-name="{{ $ben->full_name ?? $ben->name }}"
@@ -212,8 +225,11 @@
           </div>
 
           <div class="col-md-2">
-            <label class="form-label fw-bold">حالة الزيارة</label>
-            <select name="status" class="form-select">
+            <label class="form-label fw-bold">حالة البحث الميداني</label>
+            <select name="status" class="form-select bg-warning-subtle fw-bold text-dark">
+              <option value="awaiting_discussion" @selected(old('status', $visit->status) === 'awaiting_discussion')>⏳ في انتظار المناقشة</option>
+              <option value="accepted" @selected(old('status', $visit->status) === 'accepted')>✅ تم قبول واعتماد البحث</option>
+              <option value="rejected" @selected(old('status', $visit->status) === 'rejected')>❌ تم الرفض</option>
               <option value="completed" @selected(old('status', $visit->status) === 'completed')>تمت الزيارة والبحث</option>
               <option value="scheduled" @selected(old('status', $visit->status) === 'scheduled')>مجدولة</option>
               <option value="cancelled" @selected(old('status', $visit->status) === 'cancelled')>ملغاة</option>
@@ -636,8 +652,8 @@
         <a href="{{ route('visits.show', $visit) }}" class="btn btn-outline-secondary px-3">
           إلغاء
         </a>
-        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm" style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none;">
-          <i class="bi bi-hourglass-split me-1"></i> حفظ الاستمارة (في انتظار المناقشة)
+        <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+          <i class="bi bi-hourglass-split me-1"></i> 💾 حفظ التعديلات (في انتظار المناقشة)
         </button>
       </div>
     </div>

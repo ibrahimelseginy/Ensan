@@ -779,12 +779,36 @@
                                                     </select>
                                                 </div>
 
+                                                <!-- مستطيل وزر فتح استمارة البحث الميداني للحالة -->
+                                                <div class="col-12 {{ in_array($app->status, ['approved', 'completed', 'تم البحث', 'accepted']) ? '' : 'd-none' }}" id="visitDirectBox{{ $app->id }}">
+                                                    <div class="p-3.5 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-30 shadow-xs mb-1">
+                                                        <div class="d-flex align-items-center gap-2 mb-2.5">
+                                                            <span class="badge bg-success p-2 rounded-circle"><i class="bi bi-clipboard2-check-fill text-white fs-6"></i></span>
+                                                            <div>
+                                                                <strong class="text-success d-block fs-7">تم اعتماد البحث المبدئي (جاهز للنزول الميداني)</strong>
+                                                                <small class="text-muted">الاستمارة معبأة تلقائياً برقم الطلب #{{ $app->id }} وكافة بيانات الحالة</small>
+                                                            </div>
+                                                        </div>
+                                                        @if($app->field_visit_id)
+                                                            <a href="{{ route('visits.show', $app->field_visit_id) }}" class="btn btn-success w-100 fw-bold py-2.5 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2">
+                                                                <i class="bi bi-file-earmark-medical-fill fs-5"></i>
+                                                                <span>📋 فتح استمارة البحث الميداني للحالة (#{{ $app->field_visit_id }})</span>
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('visits.create', ['application_id' => $app->id]) }}" class="btn btn-success w-100 fw-bold py-2.5 rounded-pill shadow-xs d-flex align-items-center justify-content-center gap-2">
+                                                                <i class="bi bi-clipboard2-check-fill fs-5"></i>
+                                                                <span>📋 فتح استمارة البحث الميداني للحالة</span>
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
                                                 <div class="col-12">
-                                                    <div class="p-3 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-25">
+                                                    <div class="p-2.5 rounded-3 bg-light border">
                                                         <div class="form-check">
-                                                            <input class="form-check-input cursor-pointer" type="checkbox" name="start_visit" value="1" id="startVisit{{ $app->id }}">
-                                                            <label class="form-check-label fw-bold small text-success cursor-pointer" for="startVisit{{ $app->id }}">
-                                                                التحويل فوراً إلى استمارة البحث الميداني بعد الحفظ
+                                                            <input class="form-check-input cursor-pointer" type="checkbox" name="start_visit" value="1" id="startVisit{{ $app->id }}" {{ in_array($app->status, ['approved', 'completed', 'تم البحث', 'accepted']) ? 'checked' : '' }}>
+                                                            <label class="form-check-label fw-bold small text-dark cursor-pointer" for="startVisit{{ $app->id }}">
+                                                                تحويل مباشر إلى استمارة البحث الميداني فور حفظ القرار
                                                             </label>
                                                         </div>
                                                     </div>
@@ -1291,13 +1315,24 @@ function toggleRejectionBox(appId) {
     const select = document.getElementById('statusSelect' + appId);
     const box = document.getElementById('rejectionReasonBox' + appId);
     const input = document.getElementById('rejectionInput' + appId);
-    if (!select || !box || !input) return;
+    const visitBox = document.getElementById('visitDirectBox' + appId);
+    const startVisitCheck = document.getElementById('startVisit' + appId);
+    if (!select) return;
+
     if (select.value === 'rejected') {
-        box.classList.remove('d-none');
-        input.setAttribute('required', 'required');
+        if (box) box.classList.remove('d-none');
+        if (input) input.setAttribute('required', 'required');
+        if (visitBox) visitBox.classList.add('d-none');
+        if (startVisitCheck) startVisitCheck.checked = false;
+    } else if (select.value === 'approved' || select.value === 'completed') {
+        if (box) box.classList.add('d-none');
+        if (input) input.removeAttribute('required');
+        if (visitBox) visitBox.classList.remove('d-none');
+        if (startVisitCheck) startVisitCheck.checked = true;
     } else {
-        box.classList.add('d-none');
-        input.removeAttribute('required');
+        if (box) box.classList.add('d-none');
+        if (input) input.removeAttribute('required');
+        if (visitBox) visitBox.classList.add('d-none');
     }
 }
 
