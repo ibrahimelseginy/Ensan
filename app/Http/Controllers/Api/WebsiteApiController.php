@@ -1275,11 +1275,11 @@ final class WebsiteApiController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
             'area_of_interest' => 'nullable|string',
             'message' => 'nullable|string',
-            // File required, max 5MB (5120 KB), allowed types: pdf, doc, docx
-            'cv' => 'required|file|mimes:pdf,doc,docx|max:5120',
+            // File optional, max 5MB (5120 KB), allowed types: pdf, doc, docx
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             // Detailed Profile Fields
             'address' => 'nullable|string',
             'current_address' => 'nullable|string',
@@ -1290,7 +1290,7 @@ final class WebsiteApiController extends Controller
             'faculty' => 'nullable|string',
             'university' => 'nullable|string',
             'current_job' => 'nullable|string',
-            'previous_experience' => 'nullable|string', // Changed to string as likely text input
+            'previous_experience' => 'nullable',
             'skills' => 'nullable|string',
             'goal' => 'nullable|string',
             'expectations' => 'nullable|string',
@@ -1298,39 +1298,57 @@ final class WebsiteApiController extends Controller
         ]);
 
         try {
-            // 1. Ensure the uploaded CV file is physically stored on the server BEFORE saving path in DB
+            // 1. Upload CV file if provided
             if ($request->hasFile('cv')) {
-                // 3. Store the file using Laravel storage
                 $cvPath = $request->file('cv')->store('cvs', 'public');
 
                 if (!$cvPath) {
                     throw new \Exception('Failed to store CV file physically on the server.');
                 }
 
-                // 4. Save the returned path (e.g., cvs/hashedfilename.pdf) into the data array
                 $data['cv_path'] = $cvPath;
             } else {
-                throw new \Exception('CV file is missing from the request.');
+                $data['cv_path'] = null;
             }
 
-            // Remove 'cv' from data to avoid mass assignment issues if cv isn't in fillable safely
+            // Remove 'cv' from data to avoid mass assignment issues
             unset($data['cv']);
 
-            // Insert database record only after file has successfully been stored
+            // Database schema requires email, set fallback if omitted
+            if (empty($data['email'])) {
+                $cleanPhone = preg_replace('/[^0-9]/', '', (string)($data['phone'] ?? ''));
+                $data['email'] = !empty($cleanPhone) ? "volunteer-{$cleanPhone}@ensaneg.com" : 'volunteer-' . uniqid() . '@ensaneg.com';
+            }
+
+            // Convert previous_experience to boolean (0/1) for database
+            if (isset($data['previous_experience'])) {
+                $val = strtolower(trim((string)$data['previous_experience']));
+                $data['previous_experience'] = in_array($val, ['1', 'true', 'yes', 'on', 'نعم'], true) ? 1 : 0;
+            }
+
+            // Fill area_of_interest if missing
+            if (empty($data['area_of_interest'])) {
+                $data['area_of_interest'] = $data['expectations'] ?? $data['skills'] ?? $data['goal'] ?? 'عام';
+            }
+
+            // Insert database record
             $volunteerRequest = WebVolunteerRequest::create($data);
 
-            return response()->json(['message' => 'تم استلام طلب التطوع بنجاح، سنقوم بالتواصل معك قريباً']);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم استلام طلب التطوع بنجاح، سنقوم بالتواصل معك قريباً',
+                'data' => $volunteerRequest
+            ]);
 
         } catch (\Exception $e) {
-            // 6. Log upload errors using Laravel logs
-            \Illuminate\Support\Facades\Log::error('Volunteer CV Upload Error: ' . $e->getMessage(), [
+            \Illuminate\Support\Facades\Log::error('Volunteer Submission Error: ' . $e->getMessage(), [
                 'request' => $request->except(['cv']),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // 5. If file upload fails: Do NOT insert database record, return proper error message.
             return response()->json([
-                'message' => 'حدث خطأ أثناء رفع السيرة الذاتية، يرجى المحاولة مرة أخرى.',
+                'status' => 'error',
+                'message' => 'حدث خطأ أثناء إرسال طلب التطوع، يرجى المحاولة مرة أخرى.',
                 'error' => $e->getMessage()
             ], 500);
         }
