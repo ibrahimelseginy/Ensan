@@ -500,8 +500,8 @@
                                         <label class="form-label">كود المستفيد</label>
                                         <input name="code" class="form-control @error('code') is-invalid @enderror"
                                             value="{{ old('code') }}"
-                                            placeholder="مثال: A-101 (يترك فارغاً للتوليد التلقائي)">
-                                        <div class="form-help-text">يترك فارغاً وسيتم إنشاؤه تلقائياً</div>
+                                            placeholder="توليد تلقائي (مثال: B26114821) أو أدخل كود مخصص">
+                                        <div class="form-help-text">يترك فارغاً للتوليد التلقائي بصيغة B2611xxxx</div>
                                         @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">

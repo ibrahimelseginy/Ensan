@@ -45,15 +45,11 @@ final class Beneficiary extends Model
     public static function generateNextCode(): string
     {
         $prefix = 'B' . date('y') . date('m'); // e.g. B2611
-        for ($i = 0; $i < 100; $i++) {
-            $rand = mt_rand(1000, 9999);
-            $candidate = $prefix . $rand;
-            if (!self::where('code', $candidate)->exists()) {
-                return $candidate;
-            }
-        }
-        $count = self::where('code', 'like', $prefix . '%')->count() + 1;
-        return $prefix . sprintf('%04d', $count);
+        do {
+            $candidate = $prefix . mt_rand(1000, 9999);
+        } while (self::where('code', $candidate)->exists());
+
+        return $candidate;
     }
 
     public function psychologicalSupportReports(): \Illuminate\Database\Eloquent\Relations\HasMany
