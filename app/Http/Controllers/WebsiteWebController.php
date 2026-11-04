@@ -359,9 +359,10 @@ final class WebsiteWebController extends Controller
     // --- Volunteer Requests & Content ---
     public function volunteerRequests()
     {
-        $requests = WebVolunteerRequest::orderByDesc('created_at')->get();
+        $requests = WebVolunteerRequest::with('project')->orderByDesc('created_at')->get();
+        $projects = \App\Models\Project::orderBy('name')->get();
         $settings = \App\Models\WebSetting::all()->pluck('value', 'key');
-        return view('website.volunteer_requests', compact('requests', 'settings'));
+        return view('website.volunteer_requests', compact('requests', 'projects', 'settings'));
     }
 
     public function updateVolunteerContent(Request $request)
@@ -409,11 +410,34 @@ final class WebsiteWebController extends Controller
     public function updateVolunteerRequestStatus(Request $request, WebVolunteerRequest $volunteerRequest)
     {
         $data = $request->validate([
-            'status' => 'required|in:new,contacted,accepted,rejected'
+            'status' => 'required|in:new,contacted,interview,accepted,rejected',
+            'assigned_project_id' => 'nullable|exists:projects,id',
+            'assigned_project_name' => 'nullable|string|max:191',
+            'interview_date' => 'nullable|date',
+            'interview_location' => 'nullable|string|max:255',
+            'response_notes' => 'nullable|string|max:2000',
         ]);
 
+        if (!empty($data['assigned_project_id'])) {
+            $proj = \App\Models\Project::find($data['assigned_project_id']);
+            if ($proj) {
+                $data['assigned_project_name'] = $proj->name;
+            }
+        } elseif ($data['status'] !== 'accepted') {
+            $data['assigned_project_id'] = null;
+            $data['assigned_project_name'] = null;
+        }
+
+        if ($data['status'] !== 'interview') {
+            $data['interview_date'] = null;
+            $data['interview_location'] = null;
+        }
+
+        $data['reviewed_at'] = now();
+        $data['reviewed_by'] = auth()->id();
+
         $volunteerRequest->update($data);
-        return back()->with('success', 'تم تحديث حالة الطلب بنجاح');
+        return back()->with('success', 'تم حفظ قرار طلب التطوع وتحديث الحالة بنجاح');
     }
 
     public function destroyVolunteerRequest(WebVolunteerRequest $volunteerRequest)

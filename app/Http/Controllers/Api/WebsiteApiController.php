@@ -1336,7 +1336,8 @@ final class WebsiteApiController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'تم استلام طلب التطوع بنجاح، سنقوم بالتواصل معك قريباً',
+                'message' => 'تم استلام طلب التطوع بنجاح، يمكنك متابعة حالة طلبك برقمك القومي أو كود المتابعة',
+                'tracking_code' => $volunteerRequest->tracking_code,
                 'data' => $volunteerRequest
             ]);
 
@@ -3521,6 +3522,105 @@ final class WebsiteApiController extends Controller
         }
 
         return response()->json($payload);
+    }
+
+    /**
+     * Track volunteer request by National ID, Phone, or Tracking Code
+     */
+    public function trackVolunteerRequest(string $query)
+    {
+        $q = trim(ltrim(trim($query), '#'));
+        if ($q === '') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'يرجى إدخال الرقم القومي أو رقم الهاتف أو كود المتابعة للاستعلام.'
+            ], 400);
+        }
+
+        // Clean digits
+        $cleanDigits = preg_replace('/[^0-9]/', '', $q);
+
+        $volunteer = null;
+
+        // 1. By National ID (14 digits)
+        if (strlen($cleanDigits) === 14) {
+            $volunteer = \App\Models\WebVolunteerRequest::with('project')
+                ->where('national_id', $cleanDigits)
+                ->orWhere('national_id', $q)
+                ->latest('id')
+                ->first();
+        }
+
+        // 2. By Phone number
+        if (!$volunteer && strlen($cleanDigits) >= 9 && strlen($cleanDigits) <= 12) {
+            $normalizedPhone = ltrim(preg_replace('/^20/', '', $cleanDigits), '0');
+            $volunteer = \App\Models\WebVolunteerRequest::with('project')
+                ->where(function ($sub) use ($q, $cleanDigits, $normalizedPhone) {
+                    $sub->where('phone', $q)
+                        ->orWhereRaw("REPLACE(REPLACE(phone, ' ', ''), '-', '') LIKE ?", ["%{$cleanDigits}%"])
+                        ->orWhereRaw("REPLACE(REPLACE(phone, ' ', ''), '-', '') LIKE ?", ["%{$normalizedPhone}%"]);
+                })
+                ->latest('id')
+                ->first();
+        }
+
+        // 3. By Tracking code (e.g. VOL-...)
+        if (!$volunteer) {
+            $volunteer = \App\Models\WebVolunteerRequest::with('project')
+                ->where('tracking_code', strtoupper($q))
+                ->first();
+        }
+
+        // 4. By ID directly
+        if (!$volunteer && ctype_digit($q) && strlen($q) <= 8) {
+            $volunteer = \App\Models\WebVolunteerRequest::with('project')->find((int) $q);
+        }
+
+        if (!$volunteer) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'لم يتم العثور على طلب تطوع مسجل بالبيانات المدخلة. يرجى التأكد من الرقم القومي أو رقم الهاتف.'
+            ], 404);
+        }
+
+        $statusLabels = [
+            'new' => 'قيد المراجعة والدراسة',
+            'contacted' => 'تم التواصل الأولي',
+            'interview' => 'تم تحديد موعد مقابلة شخصية',
+            'accepted' => 'تهانينا! تم قبول طلبك وتعيينك بمشروع',
+            'rejected' => 'نعتذر لعدم القبول حالياً',
+        ];
+
+        $statusColors = [
+            'new' => 'primary',
+            'contacted' => 'info',
+            'interview' => 'warning',
+            'accepted' => 'success',
+            'rejected' => 'danger',
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $volunteer->id,
+                'name' => $volunteer->name,
+                'tracking_code' => $volunteer->tracking_code,
+                'status' => $volunteer->status,
+                'status_label' => $statusLabels[$volunteer->status] ?? 'قيد المراجعة',
+                'status_color' => $statusColors[$volunteer->status] ?? 'primary',
+                'created_at' => $volunteer->created_at?->format('Y-m-d'),
+                'area_of_interest' => $volunteer->area_of_interest,
+                // Assigned Project info
+                'assigned_project' => $volunteer->effective_project_name,
+                'assigned_project_id' => $volunteer->assigned_project_id,
+                // Interview info
+                'interview_date' => $volunteer->interview_date?->format('Y-m-d h:i A'),
+                'interview_date_raw' => $volunteer->interview_date?->toIso8601String(),
+                'interview_location' => $volunteer->interview_location,
+                // Management response notes
+                'response_notes' => $volunteer->response_notes,
+            ]
+        ]);
     }
 
     // ─── Case Applications — Admin Management ────────────────────────────────

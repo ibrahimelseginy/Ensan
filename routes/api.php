@@ -94,6 +94,7 @@ Route::prefix('v1')->group(function () {
         Route::get('website/contact', [WebsiteApiController::class, 'contactPage']);
 
         Route::post('website/volunteer', [WebsiteApiController::class, 'submitVolunteer'])->middleware('throttle:submissions');
+        Route::get('website/volunteer/track/{query}', [WebsiteApiController::class, 'trackVolunteerRequest'])->middleware('throttle:heavy-ops');
         Route::post('website/contact', [WebsiteApiController::class, 'submitContact'])->middleware('throttle:submissions');
         Route::post('website/room-booking', [WebsiteApiController::class, 'submitRoomBooking'])->middleware('throttle:submissions');
         Route::post('website/subscribe', [WebsiteApiController::class, 'submitSubscription'])->middleware('throttle:submissions');

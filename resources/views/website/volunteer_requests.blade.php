@@ -39,8 +39,9 @@
                     @php
                         $statusMap = [
                             'new' => ['label' => 'طلب جديد', 'color' => 'primary'],
-                            'contacted' => ['label' => 'تم التواصل', 'color' => 'warning'],
-                            'accepted' => ['label' => 'مقبول', 'color' => 'success'],
+                            'contacted' => ['label' => 'تم التواصل', 'color' => 'info'],
+                            'interview' => ['label' => 'مقابلة شخصية', 'color' => 'warning'],
+                            'accepted' => ['label' => 'مقبول بمشروع', 'color' => 'success'],
                             'rejected' => ['label' => 'مرفوض', 'color' => 'danger'],
                         ];
                         $currStatus = $statusMap[$request->status] ?? ['label' => $request->status, 'color' => 'primary'];
@@ -62,6 +63,15 @@
                                 <div class="x-small text-primary fw-bold text-truncate mt-1">
                                     <i class="bi bi-briefcase me-1"></i> {{ $request->current_job ?? 'باحث عن عمل' }}
                                 </div>
+                                @if($request->status === 'accepted' && $request->effective_project_name)
+                                    <div class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 x-small fw-bold border border-success border-opacity-25 text-truncate d-inline-block mt-1" style="max-width: 170px;" title="{{ $request->effective_project_name }}">
+                                        <i class="bi bi-diagram-3-fill me-1"></i> {{ $request->effective_project_name }}
+                                    </div>
+                                @elseif($request->status === 'interview' && $request->interview_date)
+                                    <div class="badge bg-warning bg-opacity-10 text-warning-emphasis rounded-pill px-2 py-1 x-small fw-bold border border-warning border-opacity-25 text-truncate d-inline-block mt-1" title="موعد المقابلة">
+                                        <i class="bi bi-calendar-event me-1"></i> {{ $request->interview_date->format('d/m h:i A') }}
+                                    </div>
+                                @endif
                                 <div class="x-small text-muted-theme d-flex align-items-center gap-1 mt-1 opacity-75">
                                     <i class="bi bi-calendar3"></i> {{ $request->created_at->translatedFormat('d M Y') }}
                                 </div>
@@ -327,12 +337,80 @@
                                     </div>
                                     @if($request->message)
                                     <div class="col-12 x-small border-top pt-3 italic text-muted">
-                                        <label class="text-muted fw-bold d-block mb-1 not-italic">ملاحظات إضافية</label>
+                                        <label class="text-muted fw-bold d-block mb-1 not-italic">ملاحظات إضافية من المتطوع</label>
                                         {{ $request->message }}
                                     </div>
                                     @endif
                                 </div>
                             </div>
+                        </section>
+
+                        {{-- Decision & Response Section --}}
+                        <section class="mt-4">
+                            <h6 class="fw-bold text-success mb-3 border-bottom pb-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-shield-check"></i> لوحة قرار الإدارة والرد على المتطوع
+                            </h6>
+                            <form action="{{ route('website.volunteer-requests.update-status', $request->id) }}" method="POST" class="p-4 bg-light rounded-4 border">
+                                @csrf
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">حالة الطلب والقرار <span class="text-danger">*</span></label>
+                                        <select name="status" class="form-select status-selector rounded-3" data-target="{{ $request->id }}" required onchange="handleVolunteerStatusChange(this, '{{ $request->id }}')">
+                                            <option value="new" @selected($request->status === 'new')>طلب جديد (قيد المراجعة)</option>
+                                            <option value="contacted" @selected($request->status === 'contacted')>تم التواصل هاتفياً</option>
+                                            <option value="interview" @selected($request->status === 'interview')>تحديد موعد مقابلة شخصية</option>
+                                            <option value="accepted" @selected($request->status === 'accepted')>قبول المتطوع وتعيين بمشروع</option>
+                                            <option value="rejected" @selected($request->status === 'rejected')>اعتذار / رفض الطلب</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">كود المتابعة للمتطوع</label>
+                                        <input type="text" class="form-control bg-white font-monospace text-primary fw-bold rounded-3" readonly value="{{ $request->tracking_code ?? ('VOL-' . date('Y') . '-' . str_pad((string)$request->id, 5, '0', STR_PAD_LEFT)) }}">
+                                    </div>
+
+                                    {{-- Interview section (shown if status is interview) --}}
+                                    <div class="col-md-6 interview-group-{{ $request->id }}" style="{{ $request->status === 'interview' ? '' : 'display: none;' }}">
+                                        <label class="form-label small fw-bold text-warning-emphasis"><i class="bi bi-calendar-event me-1"></i> موعد المقابلة الشخصية</label>
+                                        <input type="datetime-local" name="interview_date" class="form-control rounded-3" value="{{ $request->interview_date ? $request->interview_date->format('Y-m-d\TH:i') : '' }}">
+                                        <div class="form-text">يظهر هذا الموعد للمتطوع عند استعلامه عن الطلب.</div>
+                                    </div>
+
+                                    <div class="col-md-6 interview-group-{{ $request->id }}" style="{{ $request->status === 'interview' ? '' : 'display: none;' }}">
+                                        <label class="form-label small fw-bold text-warning-emphasis"><i class="bi bi-geo-alt me-1"></i> مكان أو رابط المقابلة</label>
+                                        <input type="text" name="interview_location" class="form-control rounded-3" placeholder="مثال: مقر الجمعية - كفر الشيخ أو عبر زووم" value="{{ $request->interview_location }}">
+                                    </div>
+
+                                    {{-- Project Assignment section (shown if status is accepted) --}}
+                                    <div class="col-md-6 project-group-{{ $request->id }}" style="{{ $request->status === 'accepted' ? '' : 'display: none;' }}">
+                                        <label class="form-label small fw-bold text-success"><i class="bi bi-diagram-3 me-1"></i> المشروع المخصص للمتطوع</label>
+                                        <select name="assigned_project_id" class="form-select rounded-3">
+                                            <option value="">— اختر من مشاريع الجمعية —</option>
+                                            @foreach($projects as $p)
+                                                <option value="{{ $p->id }}" @selected($request->assigned_project_id == $p->id)>{{ $p->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 project-group-{{ $request->id }}" style="{{ $request->status === 'accepted' ? '' : 'display: none;' }}">
+                                        <label class="form-label small fw-bold text-success"><i class="bi bi-pencil me-1"></i> أو اكتب اسم مشروع/مبادرة يدوياً</label>
+                                        <input type="text" name="assigned_project_name" class="form-control rounded-3" placeholder="مثال: حملة إفطار صائم / مبادرة الكسوة" value="{{ $request->assigned_project_name }}">
+                                    </div>
+
+                                    {{-- Response Notes & Instructions --}}
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold"><i class="bi bi-chat-left-text me-1"></i> ملاحظات وتوجيهات للمتطوع (تظهر له مباشرة في الموقع)</label>
+                                        <textarea name="response_notes" rows="2" class="form-control rounded-3" placeholder="اكتب التعليمات التي يراها المتطوع عند الاستعلام (مثال: نرجو التواجد بمقر الجمعية يوم الأحد لبدء التوزيع، أو تفاصيل المبادرة)">{{ $request->response_notes }}</textarea>
+                                        <div class="form-text">هذه الملاحظات تظهر فوراً للمتطوع على موقع إنسان عند إدخال رقمه القومي أو هاتفه أو كود المتابعة.</div>
+                                    </div>
+
+                                    <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                                        <button type="submit" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+                                            <i class="bi bi-check2-circle me-1"></i> حفظ القرار وتحديث الطلب
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
                         </section>
                     </div>
                 </div>
@@ -352,6 +430,14 @@
 </div>
 
 <script>
+    function handleVolunteerStatusChange(selectElem, reqId) {
+        const val = selectElem.value;
+        const interviewGroups = document.querySelectorAll('.interview-group-' + reqId);
+        const projectGroups = document.querySelectorAll('.project-group-' + reqId);
+        interviewGroups.forEach(el => el.style.display = (val === 'interview') ? '' : 'none');
+        projectGroups.forEach(el => el.style.display = (val === 'accepted') ? '' : 'none');
+    }
+
     function previewHero(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
