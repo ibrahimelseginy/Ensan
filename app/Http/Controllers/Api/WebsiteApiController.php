@@ -3576,19 +3576,34 @@ final class WebsiteApiController extends Controller
             $volunteer = \App\Models\WebVolunteerRequest::with('project')->find((int) $q);
         }
 
+        // 5. By Name (search in full name or partial name)
+        if (!$volunteer && mb_strlen($q) >= 2) {
+            $normalizedQuery = preg_replace('/[أإآ]/u', 'ا', $q);
+            $normalizedQuery = preg_replace('/[ة]/u', 'ه', $normalizedQuery);
+            $normalizedQuery = preg_replace('/[ى]/u', 'ي', $normalizedQuery);
+
+            $volunteer = \App\Models\WebVolunteerRequest::with('project')
+                ->where(function ($sub) use ($q, $normalizedQuery) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(name, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا'), 'ة', 'ه'), 'ى', 'ي') LIKE ?", ["%{$normalizedQuery}%"]);
+                })
+                ->latest('id')
+                ->first();
+        }
+
         if (!$volunteer) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'لم يتم العثور على طلب تطوع مسجل بالبيانات المدخلة. يرجى التأكد من الرقم القومي أو رقم الهاتف.'
+                'message' => 'لم يتم العثور على طلب تطوع مسجل بهذا الاسم أو رقم الهاتف. يرجى التأكد من كتابة الاسم أو الرقم بشكل صحيح.'
             ], 404);
         }
 
         $statusLabels = [
-            'new' => 'قيد المراجعة والدراسة',
+            'new' => 'طلبك قيد المراجعة والدراسة',
             'contacted' => 'تم التواصل الأولي',
             'interview' => 'تم تحديد موعد مقابلة شخصية',
             'accepted' => 'تهانينا! تم قبول طلبك وتعيينك بمشروع',
-            'rejected' => 'نعتذر لعدم القبول حالياً',
+            'rejected' => 'نعتذر عن عدم قبول الطلب حالياً',
         ];
 
         $statusColors = [
@@ -3604,12 +3619,22 @@ final class WebsiteApiController extends Controller
             'data' => [
                 'id' => $volunteer->id,
                 'name' => $volunteer->name,
+                'phone' => $volunteer->phone,
+                'national_id' => $volunteer->national_id,
                 'tracking_code' => $volunteer->tracking_code,
                 'status' => $volunteer->status,
                 'status_label' => $statusLabels[$volunteer->status] ?? 'قيد المراجعة',
                 'status_color' => $statusColors[$volunteer->status] ?? 'primary',
                 'created_at' => $volunteer->created_at?->format('Y-m-d'),
                 'area_of_interest' => $volunteer->area_of_interest,
+                'address' => $volunteer->address,
+                'current_address' => $volunteer->current_address,
+                'university' => $volunteer->university,
+                'faculty' => $volunteer->faculty,
+                'education_level' => $volunteer->education_level,
+                'current_job' => $volunteer->current_job,
+                'skills' => $volunteer->skills,
+                'volunteer_hours' => $volunteer->volunteer_hours,
                 // Assigned Project info
                 'assigned_project' => $volunteer->effective_project_name,
                 'assigned_project_id' => $volunteer->assigned_project_id,
