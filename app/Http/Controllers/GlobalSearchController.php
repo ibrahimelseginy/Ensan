@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ArabicSearchHelper;
 use App\Models\Beneficiary;
 use App\Models\Donation;
 use App\Models\Donor;
+use App\Models\MobileCaseApplication;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,18 +28,24 @@ final class GlobalSearchController extends Controller
 
         $results = [
             'beneficiaries' => [],
+            'case_applications' => [],
             'donors' => [],
             'employees' => [],
             'volunteers' => [],
             'donations' => [],
         ];
 
-        // 1. Beneficiaries / الحالات والمستفيدون
+        // 1. Beneficiaries / الحالات والمستفيدون (وأفراد الأسرة)
         $cleanQ = str_replace(
             ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
             ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
             $q
         );
+
+        $variants = ArabicSearchHelper::getVariants($q);
+        if (empty($variants)) {
+            $variants = [$q];
+        }
 
         $beneficiariesQuery = Beneficiary::query();
         if (preg_match('/^\d{2}$/', $cleanQ)) {
@@ -57,21 +65,33 @@ final class GlobalSearchController extends Controller
                   ->orWhere('full_name', 'like', "%{$q}%");
             });
         } else {
-            $beneficiariesQuery->where(function ($w) use ($q, $cleanQ) {
-                $w->where('full_name', 'like', "%{$q}%")
-                  ->orWhere('code', 'like', "%{$cleanQ}%")
+            $beneficiariesQuery->where(function ($w) use ($q, $cleanQ, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('full_name', 'like', "%{$v}%")
+                      ->orWhere('patient_name', 'like', "%{$v}%")
+                      ->orWhere('guardian_name', 'like', "%{$v}%");
+                }
+                $w->orWhere('code', 'like', "%{$cleanQ}%")
                   ->orWhere('phone', 'like', "%{$cleanQ}%")
                   ->orWhere('backup_phone', 'like', "%{$cleanQ}%")
                   ->orWhere('national_id', 'like', "%{$cleanQ}%")
-                  ->orWhere('patient_name', 'like', "%{$q}%")
                   ->orWhere('patient_code', 'like', "%{$cleanQ}%")
-                  ->orWhere('guardian_name', 'like', "%{$q}%");
+                  ->orWhereHas('familyMembers', function ($fm) use ($cleanQ, $variants) {
+                      $fm->where(function ($sub) use ($cleanQ, $variants) {
+                          foreach ($variants as $v) {
+                              $sub->orWhere('full_name', 'like', "%{$v}%");
+                          }
+                          $sub->orWhere('national_id', 'like', "%{$cleanQ}%")
+                              ->orWhere('code', 'like', "%{$cleanQ}%")
+                              ->orWhere('phone', 'like', "%{$cleanQ}%");
+                      });
+                  });
             });
         }
 
         $beneficiaries = $beneficiariesQuery
             ->select(['id', 'code', 'full_name', 'phone', 'national_id', 'assistance_type', 'status'])
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         foreach ($beneficiaries as $b) {
@@ -90,6 +110,44 @@ final class GlobalSearchController extends Controller
                 'badge' => 'حالة / مستفيد',
                 'badge_class' => 'bg-danger-subtle text-danger',
                 'icon' => 'bi-heart-pulse-fill',
+            ];
+        }
+
+        // 1b. Initial Research & Case Applications / طلبات الأبحاث والحالات المتقدمة
+        $caseApps = MobileCaseApplication::query()
+            ->where(function ($w) use ($q, $cleanQ, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('applicant_name', 'like', "%{$v}%")
+                      ->orWhere('submitter_name', 'like', "%{$v}%")
+                      ->orWhere('mother_name', 'like', "%{$v}%")
+                      ->orWhere('deceased_husband_name', 'like', "%{$v}%");
+                }
+                $w->orWhere('applicant_id_number', 'like', "%{$cleanQ}%")
+                  ->orWhere('applicant_phone', 'like', "%{$cleanQ}%")
+                  ->orWhere('backup_phone', 'like', "%{$cleanQ}%")
+                  ->orWhere('submitter_phone', 'like', "%{$cleanQ}%")
+                  ->orWhere('reference_number', 'like', "%{$cleanQ}%");
+            })
+            ->latest('created_at')
+            ->limit(6)
+            ->get();
+
+        foreach ($caseApps as $app) {
+            $subParts = [];
+            if ($app->applicant_phone) $subParts[] = 'هاتف: ' . $app->applicant_phone;
+            if ($app->applicant_id_number) $subParts[] = 'رقم قومي: ' . $app->applicant_id_number;
+            $subParts[] = $app->status_label;
+
+            $searchParam = $app->applicant_id_number ?: ($app->applicant_phone ?: $app->applicant_name);
+            $results['case_applications'][] = [
+                'id' => $app->id,
+                'title' => $app->applicant_name,
+                'code' => $app->reference_number ?: ('APP-' . $app->id),
+                'subtitle' => implode(' • ', $subParts),
+                'url' => route('case-applications.index', ['q' => $searchParam]),
+                'badge' => 'طلب بحث (' . $app->status_label . ')',
+                'badge_class' => 'bg-warning-subtle text-warning-emphasis',
+                'icon' => 'bi-clipboard2-pulse-fill',
             ];
         }
 
@@ -218,7 +276,7 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        $totalCount = count($results['beneficiaries']) + count($results['donors']) + count($results['employees']) + count($results['volunteers']) + count($results['donations']);
+        $totalCount = count($results['beneficiaries']) + count($results['case_applications']) + count($results['donors']) + count($results['employees']) + count($results['volunteers']) + count($results['donations']);
 
         return response()->json([
             'query' => $q,
@@ -231,6 +289,14 @@ final class GlobalSearchController extends Controller
                     'color' => 'text-danger',
                     'count' => count($results['beneficiaries']),
                     'items' => $results['beneficiaries'],
+                ],
+                [
+                    'key' => 'case_applications',
+                    'title' => 'طلبات البحث المبدئي والأبحاث',
+                    'icon' => 'bi-clipboard2-pulse-fill',
+                    'color' => 'text-warning',
+                    'count' => count($results['case_applications']),
+                    'items' => $results['case_applications'],
                 ],
                 [
                     'key' => 'donors',
