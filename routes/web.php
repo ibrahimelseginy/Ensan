@@ -461,7 +461,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('treasuries/dashboard', [TreasuryController::class, 'dashboard'])->name('treasuries.dashboard');
             Route::get('treasuries/sync-accounts', [TreasuryController::class, 'syncAccounts'])->name('treasuries.syncAccounts');
             Route::get('treasuries/export', [TreasuryController::class, 'export'])->name('treasuries.export');
+            Route::post('treasuries/{treasury}/adjust-totals', [TreasuryController::class, 'adjustTotals'])->name('treasuries.adjustTotals');
             Route::post('treasuries/{treasury}/transactions', [TreasuryController::class, 'addTransaction'])->name('treasuries.addTransaction');
+            Route::put('treasuries/{treasury}/transactions/{transaction}', [TreasuryController::class, 'updateTransaction'])->name('treasuries.updateTransaction');
+            Route::delete('treasuries/{treasury}/transactions/{transaction}', [TreasuryController::class, 'deleteTransaction'])->name('treasuries.deleteTransaction');
             Route::resource('treasuries', TreasuryController::class);
         });
 

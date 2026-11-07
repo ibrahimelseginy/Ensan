@@ -110,11 +110,6 @@ final class TreasuryController extends Controller
     public function update(UpdateTreasuryRequest $request, Treasury $treasury): RedirectResponse
     {
         $data = $request->validated();
-        if (isset($data['current_balance']) && (float) $data['current_balance'] !== (float) $treasury->current_balance) {
-            $newBalance = (float) $data['current_balance'];
-            $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
-            $data['opening_balance'] = $newBalance - $netTransactions;
-        }
 
         $executor = function () use ($treasury, $data) {
             $data['is_active'] = request()->boolean('is_active');
@@ -122,11 +117,14 @@ final class TreasuryController extends Controller
             return $treasury;
         };
 
+        $payloadForLog = $data;
+        unset($payloadForLog['total_in'], $payloadForLog['total_out']);
+
         $result = ChangeRequestService::handleRequest(
             Treasury::class,
             $treasury->id,
             'update',
-            $data,
+            $payloadForLog,
             $executor,
             true
         );
@@ -138,6 +136,53 @@ final class TreasuryController extends Controller
 
         return redirect()->route('treasuries.show', $treasury)
             ->with('success', 'تم تحديث الخزينة بنجاح');
+    }
+
+    public function adjustTotals(\Illuminate\Http\Request $request, Treasury $treasury): RedirectResponse
+    {
+        $validated = $request->validate([
+            'current_balance' => 'nullable|numeric',
+            'total_in'        => 'nullable|numeric|min:0',
+            'total_out'       => 'nullable|numeric|min:0',
+        ]);
+
+        $targetIn      = array_key_exists('total_in', $validated) && $validated['total_in'] !== null && $validated['total_in'] !== '' ? (float) $validated['total_in'] : null;
+        $targetOut     = array_key_exists('total_out', $validated) && $validated['total_out'] !== null && $validated['total_out'] !== '' ? (float) $validated['total_out'] : null;
+        $targetBalance = array_key_exists('current_balance', $validated) && $validated['current_balance'] !== null && $validated['current_balance'] !== '' ? (float) $validated['current_balance'] : null;
+
+        $this->treasuryService->syncManualTotals($treasury, $targetIn, $targetOut, $targetBalance, (int) auth()->id());
+
+        return redirect()->route('treasuries.show', $treasury)
+            ->with('success', 'تم تعديل أرصدة الوارد والصادر والرصيد الحالي للخزينة بنجاح');
+    }
+
+    public function updateTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
+    {
+        abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
+
+        $validated = $request->validate([
+            'type'             => 'required|in:in,out',
+            'amount'           => 'required|numeric|min:0.01',
+            'description'      => 'required|string|max:500',
+            'transaction_date' => 'required|date',
+        ]);
+
+        $recalculateBalance = $request->boolean('recalculate_balance', true);
+        $this->treasuryService->updateTransaction($treasury, $transaction, $validated, $recalculateBalance);
+
+        return redirect()->route('treasuries.show', $treasury)
+            ->with('success', 'تم تعديل الحركة المالية بنجاح');
+    }
+
+    public function deleteTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
+    {
+        abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
+
+        $recalculateBalance = $request->boolean('recalculate_balance', true);
+        $this->treasuryService->deleteTransaction($treasury, $transaction, $recalculateBalance);
+
+        return redirect()->route('treasuries.show', $treasury)
+            ->with('success', 'تم حذف الحركة المالية بنجاح');
     }
 
     public function destroy(Treasury $treasury): RedirectResponse

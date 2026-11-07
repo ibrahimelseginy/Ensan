@@ -77,21 +77,30 @@
     {{-- Statistics --}}
     <div class="row mb-4 animate-slide-up">
         <div class="col-md-3">
-            <div class="summary-panel text-center">
+            <div class="summary-panel text-center position-relative">
+                <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 start-0 m-2 p-1" title="تعديل الرصيد الحالي يدوياً" onclick="openAdjustTotalsModal('balance')">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
                 <h6 class="text-muted mb-2 small">الرصيد الحالي</h6>
                 <h3 class="text-primary mb-0 fw-bold">{{ number_format($treasury->current_balance, 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }}</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-panel text-center">
+            <div class="summary-panel text-center position-relative">
+                <button type="button" class="btn btn-sm btn-link text-success position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الوارد يدوياً" onclick="openAdjustTotalsModal('in')">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
                 <h6 class="text-muted mb-2 small">إجمالي الوارد</h6>
                 <h3 class="text-success mb-0 fw-bold">{{ number_format($stats['total_in'], 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }}</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-panel text-center">
+            <div class="summary-panel text-center position-relative">
+                <button type="button" class="btn btn-sm btn-link text-danger position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الصادر يدوياً" onclick="openAdjustTotalsModal('out')">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
                 <h6 class="text-muted mb-2 small">إجمالي الصادر</h6>
                 <h3 class="text-danger mb-0 fw-bold">{{ number_format($stats['total_out'], 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }}</small>
@@ -113,6 +122,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 section-title"><i class="bi bi-clock-history me-2"></i>آخر الحركات</h5>
                     <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="openAdjustTotalsModal('in')">
+                            <i class="bi bi-sliders me-1"></i> تعديل الصادر والوارد يدوياً
+                        </button>
                         <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="previewTreasuryStatement()">
                             <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
                         </button>
@@ -129,6 +141,7 @@
                                 <th>النوع</th>
                                 <th>المبلغ</th>
                                 <th>الوصف</th>
+                                <th class="text-center" style="width: 110px;">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -144,10 +157,36 @@
                                 </td>
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
                                 <td class="text-muted">{{ $transaction->description }}</td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary py-0 px-2"
+                                            title="تعديل الحركة"
+                                            onclick='openEditTransactionModal(@json([
+                                                "id" => $transaction->id,
+                                                "url" => route("treasuries.updateTransaction", [$treasury, $transaction]),
+                                                "type" => $transaction->type,
+                                                "amount" => (float) $transaction->amount,
+                                                "description" => $transaction->description,
+                                                "transaction_date" => $transaction->transaction_date->format("Y-m-d"),
+                                            ]))'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form action="{{ route('treasuries.deleteTransaction', [$treasury, $transaction]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الحركة المالية؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="recalculate_balance" value="1">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="حذف الحركة">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-5">
+                                <td colspan="5" class="text-center text-muted py-5">
                                     <i class="bi bi-folder-x fa-3x mb-3 d-block opacity-25"></i>
                                     لا توجد حركات مالية متاحة حالياً
                                 </td>
@@ -234,6 +273,10 @@
                             </form>
                         </div>
                     @else
+                        <button type="button" class="btn btn-success rounded-pill shadow-sm py-2 hover-lift fw-bold w-100" onclick="openAdjustTotalsModal('in')">
+                            <i class="bi bi-sliders me-1"></i> تعديل الصادر والوارد والرصيد
+                        </button>
+
                         <a href="{{ route('treasuries.edit', $treasury) }}" class="btn btn-light text-primary rounded-pill shadow-sm py-2 hover-lift fw-bold">
                             <i class="bi bi-pencil me-1"></i> تعديل بيانات الخزينة
                         </a>
@@ -360,7 +403,153 @@
     </table>
 </div>
 
+{{-- Modal: Direct Manual Adjustment of Total In, Total Out, and Current Balance --}}
+<div class="modal fade no-print" id="adjustTreasuryTotalsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="{{ route('treasuries.adjustTotals', $treasury) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            @csrf
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-sliders text-primary me-2"></i>تعديل الوارد والصادر والرصيد يدوياً
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-success">إجمالي الوارد (+)</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" name="total_in" id="adjustTotalInInput" class="form-control fw-bold" value="{{ (float) $stats['total_in'] }}" required>
+                        <span class="input-group-text text-success fw-bold">{{ $treasury->currency }}</span>
+                    </div>
+                    <small class="text-muted">اكتب القيمة الجديدة لإجمالي الوارد (أو 0 لتصفير الوارد)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-danger">إجمالي الصادر (-)</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" name="total_out" id="adjustTotalOutInput" class="form-control fw-bold" value="{{ (float) $stats['total_out'] }}" required>
+                        <span class="input-group-text text-danger fw-bold">{{ $treasury->currency }}</span>
+                    </div>
+                    <small class="text-muted">اكتب القيمة الجديدة لإجمالي الصادر (أو 0 لتصفير الصادر)</small>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-primary">الرصيد الحالي الصافي</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" name="current_balance" id="adjustCurrentBalanceInput" class="form-control fw-bold" value="{{ (float) $treasury->current_balance }}" required>
+                        <span class="input-group-text text-primary fw-bold">{{ $treasury->currency }}</span>
+                    </div>
+                    <small class="text-muted">يمكنك تحديد الرصيد الحالي يدوياً أو الضغط على زر الحساب التلقائي أدناه</small>
+                </div>
+
+                <div class="text-end mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="calcNetBalanceFromInAndOut()">
+                        <i class="bi bi-calculator me-1"></i> حساب الرصيد الصافي = (الوارد - الصادر)
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i> حفظ التعديلات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal: Edit Individual Treasury Transaction --}}
+<div class="modal fade no-print" id="editTreasuryTransactionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form id="editTreasuryTransactionForm" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+            @csrf
+            @method('PUT')
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-pencil-square text-primary me-2"></i>تعديل الحركة المالية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">نوع الحركة</label>
+                    <select name="type" id="editTxType" class="form-select" required>
+                        <option value="in">وارد (إيداع)</option>
+                        <option value="out">صادر (سحب)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">المبلغ</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0.01" name="amount" id="editTxAmount" class="form-control fw-bold" required>
+                        <span class="input-group-text">{{ $treasury->currency }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">التاريخ</label>
+                    <input type="date" name="transaction_date" id="editTxDate" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">الوصف / البيان</label>
+                    <textarea name="description" id="editTxDescription" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="form-check">
+                    <input type="hidden" name="recalculate_balance" value="0">
+                    <input class="form-check-input" type="checkbox" name="recalculate_balance" id="editTxRecalc" value="1" checked>
+                    <label class="form-check-label small" for="editTxRecalc">
+                        تحديث الرصيد الحالي للخزينة تلقائياً بفرق التعديل
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i> حفظ تعديل الحركة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openAdjustTotalsModal(focusField) {
+        var modalEl = document.getElementById('adjustTreasuryTotalsModal');
+        if (!modalEl || typeof bootstrap === 'undefined') return;
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+        setTimeout(function () {
+            var targetId = focusField === 'in'
+                ? 'adjustTotalInInput'
+                : (focusField === 'out' ? 'adjustTotalOutInput' : 'adjustCurrentBalanceInput');
+            var input = document.getElementById(targetId);
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 250);
+    }
+
+    function calcNetBalanceFromInAndOut() {
+        var inVal = parseFloat(document.getElementById('adjustTotalInInput')?.value || '0') || 0;
+        var outVal = parseFloat(document.getElementById('adjustTotalOutInput')?.value || '0') || 0;
+        var balInput = document.getElementById('adjustCurrentBalanceInput');
+        if (balInput) {
+            balInput.value = (inVal - outVal).toFixed(2);
+        }
+    }
+
+    function openEditTransactionModal(tx) {
+        var form = document.getElementById('editTreasuryTransactionForm');
+        var modalEl = document.getElementById('editTreasuryTransactionModal');
+        if (!form || !modalEl || typeof bootstrap === 'undefined') return;
+        form.action = tx.url;
+        document.getElementById('editTxType').value = tx.type || 'in';
+        document.getElementById('editTxAmount').value = tx.amount || '';
+        document.getElementById('editTxDate').value = tx.transaction_date || '';
+        document.getElementById('editTxDescription').value = tx.description || '';
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
     function previewTreasuryStatement() {
         if (window.EnsanPrintPreview) {
             window.EnsanPrintPreview.open('#printableTreasuryStatement', {

@@ -36,13 +36,175 @@ final readonly class TreasuryService
 
     public function updateTreasury(Treasury $treasury, array $data): bool
     {
-        if (isset($data['current_balance']) && (float) $data['current_balance'] !== (float) $treasury->current_balance) {
-            $newBalance = (float) $data['current_balance'];
+        $hasTotalIn  = array_key_exists('total_in', $data) && $data['total_in'] !== null && $data['total_in'] !== '';
+        $hasTotalOut = array_key_exists('total_out', $data) && $data['total_out'] !== null && $data['total_out'] !== '';
+        $hasBalance  = array_key_exists('current_balance', $data) && $data['current_balance'] !== null && $data['current_balance'] !== '';
+
+        $targetIn      = $hasTotalIn ? (float) $data['total_in'] : null;
+        $targetOut     = $hasTotalOut ? (float) $data['total_out'] : null;
+        $targetBalance = $hasBalance ? (float) $data['current_balance'] : null;
+
+        unset($data['total_in'], $data['total_out']);
+
+        if ($targetIn !== null || $targetOut !== null) {
+            $this->syncManualTotals($treasury, $targetIn, $targetOut, $targetBalance, (int) (auth()->id() ?: 1));
+            $data['opening_balance'] = $treasury->opening_balance;
+            $data['current_balance'] = $treasury->current_balance;
+        } elseif ($targetBalance !== null && $targetBalance !== (float) $treasury->current_balance) {
             $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
-            $data['opening_balance'] = $newBalance - $netTransactions;
+            $data['opening_balance'] = $targetBalance - $netTransactions;
         }
 
         return $this->treasuryRepository->update($treasury, $data);
+    }
+
+    public function syncManualTotals(
+        Treasury $treasury,
+        ?float $targetTotalIn,
+        ?float $targetTotalOut,
+        ?float $targetCurrentBalance,
+        ?int $userId = null
+    ): void {
+        if ($targetTotalIn !== null) {
+            $this->syncTransactionTypeTotal($treasury, 'in', max(0.0, $targetTotalIn), $userId);
+        }
+
+        if ($targetTotalOut !== null) {
+            $this->syncTransactionTypeTotal($treasury, 'out', max(0.0, $targetTotalOut), $userId);
+        }
+
+        $newIn  = (float) $treasury->getTotalIn();
+        $newOut = (float) $treasury->getTotalOut();
+
+        if ($targetCurrentBalance !== null) {
+            $treasury->current_balance = $targetCurrentBalance;
+            $treasury->opening_balance = $targetCurrentBalance - ($newIn - $newOut);
+            $treasury->save();
+        } else {
+            $treasury->updateBalance();
+        }
+    }
+
+    private function syncTransactionTypeTotal(Treasury $treasury, string $type, float $targetTotal, ?int $userId = null): void
+    {
+        $currentTotal = (float) $treasury->transactions()->where('type', $type)->sum('amount');
+        if (abs($targetTotal - $currentTotal) < 0.005) {
+            return;
+        }
+
+        if ($targetTotal <= 0.0) {
+            $treasury->transactions()->where('type', $type)->delete();
+            return;
+        }
+
+        $transactions = $treasury->transactions()
+            ->where('type', $type)
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id')
+            ->get();
+
+        if ($transactions->isEmpty()) {
+            TreasuryTransaction::create([
+                'treasury_id'      => $treasury->id,
+                'type'             => $type,
+                'amount'           => $targetTotal,
+                'currency'         => $treasury->currency,
+                'description'      => $type === 'in' ? 'رصيد وارد (تعديل يدوي)' : 'رصيد صادر (تعديل يدوي)',
+                'transaction_date' => now()->toDateString(),
+                'created_by'       => $userId ?: auth()->id(),
+            ]);
+            return;
+        }
+
+        if ($transactions->count() === 1) {
+            $first = $transactions->first();
+            $first->amount = $targetTotal;
+            $first->save();
+            return;
+        }
+
+        if ($targetTotal > $currentTotal) {
+            $diff = round($targetTotal - $currentTotal, 2);
+            TreasuryTransaction::create([
+                'treasury_id'      => $treasury->id,
+                'type'             => $type,
+                'amount'           => $diff,
+                'currency'         => $treasury->currency,
+                'description'      => $type === 'in' ? 'تسوية وارد (تعديل يدوي)' : 'تسوية صادر (تعديل يدوي)',
+                'transaction_date' => now()->toDateString(),
+                'created_by'       => $userId ?: auth()->id(),
+            ]);
+            return;
+        }
+
+        // $targetTotal < $currentTotal across multiple transactions: reduce from newest first
+        $toReduce = round($currentTotal - $targetTotal, 2);
+        foreach ($transactions as $tx) {
+            if ($toReduce <= 0.004) {
+                break;
+            }
+            $txAmount = (float) $tx->amount;
+            if ($txAmount <= $toReduce + 0.004) {
+                $toReduce = round($toReduce - $txAmount, 2);
+                $tx->delete();
+            } else {
+                $tx->amount = round($txAmount - $toReduce, 2);
+                $tx->save();
+                $toReduce = 0.0;
+            }
+        }
+    }
+
+    public function updateTransaction(
+        Treasury $treasury,
+        TreasuryTransaction $transaction,
+        array $data,
+        bool $recalculateBalance = true
+    ): TreasuryTransaction {
+        $oldType   = (string) $transaction->type;
+        $oldAmount = (float) $transaction->amount;
+        $oldEffect = $oldType === 'in' ? $oldAmount : -$oldAmount;
+
+        $transaction->update([
+            'type'             => $data['type'],
+            'amount'           => (float) $data['amount'],
+            'description'      => $data['description'],
+            'transaction_date' => $data['transaction_date'],
+        ]);
+
+        $newType   = (string) $transaction->type;
+        $newAmount = (float) $transaction->amount;
+        $newEffect = $newType === 'in' ? $newAmount : -$newAmount;
+
+        if ($recalculateBalance) {
+            $treasury->current_balance = (float) $treasury->current_balance - $oldEffect + $newEffect;
+        }
+
+        $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+        $treasury->opening_balance = (float) $treasury->current_balance - $netTransactions;
+        $treasury->save();
+
+        return $transaction;
+    }
+
+    public function deleteTransaction(
+        Treasury $treasury,
+        TreasuryTransaction $transaction,
+        bool $recalculateBalance = true
+    ): void {
+        $oldType   = (string) $transaction->type;
+        $oldAmount = (float) $transaction->amount;
+        $oldEffect = $oldType === 'in' ? $oldAmount : -$oldAmount;
+
+        $transaction->delete();
+
+        if ($recalculateBalance) {
+            $treasury->current_balance = (float) $treasury->current_balance - $oldEffect;
+        }
+
+        $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+        $treasury->opening_balance = (float) $treasury->current_balance - $netTransactions;
+        $treasury->save();
     }
 
     public function deleteTreasury(Treasury $treasury): bool

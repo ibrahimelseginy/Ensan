@@ -74,7 +74,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">الرصيد الحالي</label>
+                                <label class="form-label fw-bold text-primary">الرصيد الحالي</label>
                                 <div class="input-group">
                                     <input type="number" step="0.01" name="current_balance" class="form-control @error('current_balance') is-invalid @enderror" 
                                            value="{{ old('current_balance', $treasury->current_balance) }}">
@@ -83,7 +83,35 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <small class="text-muted">يمكنك تعديل الرصيد الحالي مباشرة أو من خلال الحركات المالية</small>
+                                <small class="text-muted">يمكنك تعديل الرصيد الحالي مباشرة يدوياً</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-success">إجمالي الوارد (تعديل يدوي)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" name="total_in" class="form-control @error('total_in') is-invalid @enderror"
+                                           value="{{ old('total_in', $treasury->getTotalIn()) }}">
+                                    <span class="input-group-text text-success fw-bold">{{ $treasury->currency }}</span>
+                                    @error('total_in')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <small class="text-muted">تعديل إجمالي الوارد للخزينة مباشرة (اكتب 0 لتصفير الوارد)</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">إجمالي الصادر (تعديل يدوي)</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" name="total_out" class="form-control @error('total_out') is-invalid @enderror"
+                                           value="{{ old('total_out', $treasury->getTotalOut()) }}">
+                                    <span class="input-group-text text-danger fw-bold">{{ $treasury->currency }}</span>
+                                    @error('total_out')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <small class="text-muted">تعديل إجمالي الصادر للخزينة مباشرة (اكتب 0 لتصفير الصادر)</small>
                             </div>
                         </div>
 
