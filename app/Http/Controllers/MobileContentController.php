@@ -494,28 +494,12 @@ final class MobileContentController extends Controller
         }
 
         if ($search) {
-            $cleanSearch = str_replace(
-                ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
-                ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-                trim((string) $search)
+            \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                $query,
+                (string) $search,
+                ['applicant_name', 'submitter_name', 'mother_name', 'deceased_husband_name', 'guide_name', 'address', 'city'],
+                ['applicant_phone', 'backup_phone', 'applicant_id_number', 'submitter_phone', 'guide_phone', 'reference_number']
             );
-            $variants = \App\Helpers\ArabicSearchHelper::getVariants((string) $search);
-            if (empty($variants)) {
-                $variants = [(string) $search];
-            }
-            $query->where(function ($q) use ($search, $cleanSearch, $variants) {
-                foreach ($variants as $v) {
-                    $q->orWhere('applicant_name', 'like', "%{$v}%")
-                      ->orWhere('submitter_name', 'like', "%{$v}%")
-                      ->orWhere('mother_name', 'like', "%{$v}%")
-                      ->orWhere('deceased_husband_name', 'like', "%{$v}%");
-                }
-                $q->orWhere('applicant_phone', 'like', "%{$cleanSearch}%")
-                  ->orWhere('backup_phone', 'like', "%{$cleanSearch}%")
-                  ->orWhere('applicant_id_number', 'like', "%{$cleanSearch}%")
-                  ->orWhere('submitter_phone', 'like', "%{$cleanSearch}%")
-                  ->orWhere('reference_number', 'like', "%{$cleanSearch}%");
-            });
         }
 
         $sourceCounts = [

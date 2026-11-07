@@ -43,61 +43,76 @@ final readonly class DonationRepository
             ->when($year, fn($qr) => $qr->whereYear('received_at', $year))
             ->when($q !== '', function ($qr) use ($q) {
                 $parsed = ArabicSearchHelper::parseQuery($q);
-                $variants = $parsed['variants'];
                 $codes = $parsed['codes'];
                 $numbers = $parsed['numbers'];
+                $cleanQ = $parsed['raw'];
 
-                $qr->where(function ($w) use ($variants, $codes, $numbers, $q) {
-                    $w->whereHas('donor', function ($d) use ($variants, $codes, $numbers, $q) {
-                        $d->where(function ($sub) use ($variants, $codes, $numbers, $q) {
-                            foreach ($variants as $var) {
-                                $sub->orWhere('name', 'like', "%{$var}%")
-                                    ->orWhere('code', 'like', "%{$var}%")
-                                    ->orWhere('phone', 'like', "%{$var}%")
-                                    ->orWhere('national_id', 'like', "%{$var}%");
-                            }
-                            foreach ($codes as $c) {
-                                $sub->orWhere('code', 'like', "%{$c}%");
-                            }
+                $qr->where(function ($w) use ($codes, $numbers, $cleanQ) {
+                    $w->whereHas('donor', function ($d) use ($cleanQ, $numbers) {
+                        $d->where(function ($sub) use ($cleanQ, $numbers) {
+                            ArabicSearchHelper::applySmartSearch(
+                                $sub,
+                                $cleanQ,
+                                ['name'],
+                                ['code', 'phone', 'national_id']
+                            );
                             foreach ($numbers as $num) {
-                                $sub->orWhere('phone', 'like', "%{$num}%")
-                                    ->orWhere('national_id', 'like', "%{$num}%")
-                                    ->orWhere('id', (int)$num);
+                                if (strlen($num) <= 7) {
+                                    $sub->orWhere('id', (int) $num);
+                                }
                             }
-                            $sub->orWhere('national_id', 'like', "%{$q}%");
                         });
                     })
-                    ->orWhereHas('familyMembers', function ($fm) use ($numbers, $q) {
-                        foreach ($numbers as $num) {
-                            $fm->orWhere('national_id', 'like', "%{$num}%");
-                        }
-                        $fm->orWhere('national_id', 'like', "%{$q}%");
+                    ->orWhereHas('beneficiary', function ($b) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch(
+                            $b,
+                            $cleanQ,
+                            ['full_name', 'patient_name', 'guardian_name'],
+                            ['code', 'patient_code', 'national_id', 'phone']
+                        );
                     })
-                    ->orWhereHas('donor.sponsoredBeneficiaries', function ($sb) use ($numbers, $q) {
-                        foreach ($numbers as $num) {
-                            $sb->orWhere('national_id', 'like', "%{$num}%");
-                        }
-                        $sb->orWhere('national_id', 'like', "%{$q}%");
+                    ->orWhereHas('familyMembers', function ($fm) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch(
+                            $fm,
+                            $cleanQ,
+                            ['full_name'],
+                            ['code', 'national_id', 'phone']
+                        );
                     })
-                    ->orWhere('receipt_number', 'like', "%{$q}%");
+                    ->orWhereHas('donor.sponsoredBeneficiaries', function ($sb) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch(
+                            $sb,
+                            $cleanQ,
+                            ['full_name'],
+                            ['code', 'national_id', 'phone']
+                        );
+                    })
+                    ->orWhere('receipt_number', 'like', "%{$cleanQ}%")
+                    ->orWhere('operation_number', 'like', "%{$cleanQ}%");
 
                     foreach ($codes as $c) {
-                        $w->orWhere('receipt_number', 'like', "%{$c}%");
+                        $w->orWhere('receipt_number', 'like', "%{$c}%")
+                          ->orWhere('operation_number', 'like', "%{$c}%");
                     }
 
-                    $w->orWhereHas('project', function ($p) use ($variants) {
-                        $p->where(function ($sub) use ($variants) {
-                            foreach ($variants as $var) {
-                                $sub->orWhere('name', 'like', "%{$var}%");
-                            }
-                        });
+                    $w->orWhereHas('project', function ($p) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch($p, $cleanQ, ['name'], ['code']);
                     })
-                    ->orWhereHas('campaign', fn($c) => $c->where('name', 'like', "%{$q}%"))
-                    ->orWhereHas('warehouse', fn($wh) => $wh->where('name', 'like', "%{$q}%"));
+                    ->orWhereHas('campaign', function ($c) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch($c, $cleanQ, ['name'], []);
+                    })
+                    ->orWhereHas('warehouse', function ($wh) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch($wh, $cleanQ, ['name'], []);
+                    });
 
                     foreach ($numbers as $num) {
-                        $w->orWhere('id', (int)$num)
-                          ->orWhere('receipt_number', 'like', "%{$num}%");
+                        if (strlen($num) <= 7) {
+                            $w->orWhere('id', (int) $num);
+                        }
+                        if (strlen($num) >= 2) {
+                            $w->orWhere('receipt_number', 'like', "%{$num}%")
+                              ->orWhere('operation_number', 'like', "%{$num}%");
+                        }
                     }
                 });
             })

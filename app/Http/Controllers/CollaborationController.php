@@ -42,25 +42,12 @@ final class CollaborationController extends Controller
 
         $searchTerm = $request->filled('search') ? trim((string) $request->search) : ($request->filled('q') ? trim((string) $request->q) : '');
         if ($searchTerm !== '') {
-            $variants = \App\Helpers\ArabicSearchHelper::getVariants($searchTerm);
-            if (empty($variants)) {
-                $variants = [$searchTerm];
-            }
-            $query->where(function ($q) use ($searchTerm, $variants) {
-                foreach ($variants as $v) {
-                    $q->orWhere('name', 'like', "%{$v}%")
-                      ->orWhere('specialty', 'like', "%{$v}%")
-                      ->orWhere('service_provided', 'like', "%{$v}%")
-                      ->orWhere('contact_person', 'like', "%{$v}%")
-                      ->orWhere('address', 'like', "%{$v}%")
-                      ->orWhere('city', 'like', "%{$v}%")
-                      ->orWhere('category', 'like', "%{$v}%")
-                      ->orWhere('notes', 'like', "%{$v}%");
-                }
-                $q->orWhere('phone', 'like', "%{$searchTerm}%")
-                  ->orWhere('phone_alt', 'like', "%{$searchTerm}%")
-                  ->orWhere('contact_person_phone', 'like', "%{$searchTerm}%");
-            });
+            \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                $query,
+                $searchTerm,
+                ['name', 'specialty', 'service_provided', 'contact_person', 'address', 'city', 'category', 'notes'],
+                ['phone', 'phone_alt', 'contact_person_phone']
+            );
         }
 
         $collaborations = $query->paginate(24)->withQueryString();

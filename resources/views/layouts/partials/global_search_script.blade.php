@@ -122,7 +122,9 @@ body.theme-dark .global-search-item.active {
         const safeText = escapeHtml(text);
         const safeQ = escapeHtml(q).trim();
         if (!safeQ) return safeText;
-        const regex = new RegExp(`(${safeQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        const words = safeQ.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        if (!words.length) return safeText;
+        const regex = new RegExp(`(${words.join('|')})`, 'gi');
         return safeText.replace(regex, '<span class="bg-warning-subtle text-dark fw-bold px-0.5 rounded">$1</span>');
       }
 
@@ -159,7 +161,7 @@ body.theme-dark .global-search-item.active {
             dropdown.innerHTML = `
               <div class="p-3.5 text-center text-muted small">
                 <i class="bi bi-search fs-5 d-block mb-1 text-secondary opacity-50"></i>
-                <div>لم نجد أي حالة أو متبرع أو موظف مطابق لـ "<strong>${escapeHtml(q)}</strong>"</div>
+                <div>لم نجد أي نتيجة مطابقة لـ "<strong>${escapeHtml(q)}</strong>"</div>
                 <div class="mt-2">
                   <a href="${data ? data.reports_url : '{{ route("reports.index") }}?q=' + encodeURIComponent(q)}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
                     البحث الموسع في التقارير العامة &larr;
@@ -254,11 +256,32 @@ body.theme-dark .global-search-item.active {
         }
       });
 
+      // Prevent parent form from blindly redirecting away to /reports on Enter or button click
+      const parentForm = input.closest('form');
+      if (parentForm && !parentForm.dataset.globalSearchBound) {
+        parentForm.dataset.globalSearchBound = '1';
+        parentForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const items = dropdown.querySelectorAll('.global-search-item');
+          if (activeItemIndex >= 0 && items[activeItemIndex]) {
+            window.location.href = items[activeItemIndex].getAttribute('href');
+          } else if (items.length === 1) {
+            window.location.href = items[0].getAttribute('href');
+          } else if (input.value.trim().length >= 2) {
+            performSearch(input.value);
+          }
+        });
+      }
+
       // Keyboard navigation
       input.addEventListener('keydown', function(e) {
         const items = dropdown.querySelectorAll('.global-search-item');
         if (!items.length || dropdown.classList.contains('d-none')) {
           if (e.key === 'Escape') closeDropdown();
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (this.value.trim().length >= 2) performSearch(this.value);
+          }
           return;
         }
 
@@ -271,9 +294,11 @@ body.theme-dark .global-search-item.active {
           activeItemIndex = (activeItemIndex - 1 + items.length) % items.length;
           updateActiveItem(items);
         } else if (e.key === 'Enter') {
+          e.preventDefault();
           if (activeItemIndex >= 0 && items[activeItemIndex]) {
-            e.preventDefault();
             items[activeItemIndex].click();
+          } else if (items.length >= 1) {
+            items[0].click();
           }
         } else if (e.key === 'Escape') {
           closeDropdown();

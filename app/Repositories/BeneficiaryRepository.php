@@ -82,19 +82,23 @@ final readonly class BeneficiaryRepository
                     return;
                 }
 
-                // البحث الشامل العادي بالاسم، الكود، الهاتف، أو الرقم القومي
-                $qr->where(function ($w) use ($cleanQ, $rawQ) {
-                    $w->where('full_name', 'like', '%' . $rawQ . '%')
-                      ->orWhere('code', 'like', '%' . $cleanQ . '%')
-                      ->orWhere('phone', 'like', '%' . $cleanQ . '%')
-                      ->orWhere('national_id', 'like', '%' . $cleanQ . '%')
-                      ->orWhere('visa_card_number', 'like', '%' . $cleanQ . '%')
-                      ->orWhere('patient_code', 'like', '%' . $cleanQ . '%')
-                      ->orWhere('patient_name', 'like', '%' . $rawQ . '%')
-                      ->orWhere('guardian_name', 'like', '%' . $rawQ . '%')
-                      ->orWhereHas('familyMembers', fn ($members) => $members
-                          ->where('full_name', 'like', '%' . $rawQ . '%')
-                          ->orWhere('code', 'like', '%' . $cleanQ . '%'));
+                // البحث الشامل الذكي بالاسم (ومطابقة الكلمات المتعددة والحروف المتشابهة)، الكود، الهاتف، أو الرقم القومي، وأفراد الأسرة
+                $qr->where(function ($w) use ($cleanQ) {
+                    \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                        $w,
+                        $cleanQ,
+                        ['full_name', 'patient_name', 'guardian_name', 'mother_name', 'deceased_husband_name', 'address'],
+                        ['code', 'patient_code', 'national_id', 'phone', 'backup_phone', 'visa_card_number', 'reference_number']
+                    );
+
+                    $w->orWhereHas('familyMembers', function ($members) use ($cleanQ) {
+                        \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                            $members,
+                            $cleanQ,
+                            ['full_name'],
+                            ['code', 'national_id', 'phone']
+                        );
+                    });
                 });
             })
             ->when($status, fn($qr) => $qr->where('status', $status))

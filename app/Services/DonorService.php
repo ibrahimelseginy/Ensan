@@ -33,27 +33,20 @@ final readonly class DonorService
         $query = Donor::query()
             ->when($q !== '', function ($query) use ($q) {
                 $parsed = ArabicSearchHelper::parseQuery($q);
-                $variants = $parsed['variants'];
-                $codes = $parsed['codes'];
                 $numbers = $parsed['numbers'];
 
-                $query->where(function ($w) use ($variants, $codes, $numbers, $q) {
-                    foreach ($variants as $var) {
-                        $w->orWhere('name', 'like', "%{$var}%")
-                          ->orWhere('code', 'like', "%{$var}%")
-                          ->orWhere('phone', 'like', "%{$var}%")
-                          ->orWhere('national_id', 'like', "%{$var}%");
-                    }
-                    foreach ($codes as $c) {
-                        $w->orWhere('code', 'like', "%{$c}%");
-                    }
+                $query->where(function ($w) use ($q, $numbers) {
+                    ArabicSearchHelper::applySmartSearch(
+                        $w,
+                        $q,
+                        ['name', 'address', 'notes'],
+                        ['code', 'phone', 'national_id']
+                    );
                     foreach ($numbers as $num) {
-                        $w->orWhere('id', (int)$num)
-                          ->orWhere('phone', 'like', "%{$num}%")
-                          ->orWhere('code', 'like', "%{$num}%")
-                          ->orWhere('national_id', 'like', "%{$num}%");
+                        if (strlen($num) <= 7) {
+                            $w->orWhere('id', (int) $num);
+                        }
                     }
-                    $w->orWhere('national_id', 'like', "%{$q}%");
                 });
             })
             ->when($type, fn($query, $t) => $query->where('type', $t))

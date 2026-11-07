@@ -8,11 +8,15 @@ use App\Helpers\ArabicSearchHelper;
 use App\Models\Beneficiary;
 use App\Models\Campaign;
 use App\Models\Collaboration;
+use App\Models\Complaint;
 use App\Models\Donation;
 use App\Models\Donor;
+use App\Models\FieldVisit;
 use App\Models\GuestHouse;
 use App\Models\MobileCaseApplication;
 use App\Models\Project;
+use App\Models\SchoolCollaboration;
+use App\Models\Treasury;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,35 +34,36 @@ final class GlobalSearchController extends Controller
             ]);
         }
 
+        $parsed = ArabicSearchHelper::parseQuery($q);
+        $cleanQ = $parsed['raw'];
+        $variants = $parsed['variants'];
+        $words = $parsed['words'];
+        $numbers = $parsed['numbers'];
+
         $results = [
             'beneficiaries' => [],
             'case_applications' => [],
             'collaborations' => [],
+            'projects' => [],
             'donors' => [],
             'employees' => [],
             'volunteers' => [],
             'donations' => [],
-            'projects' => [],
+            'complaints' => [],
         ];
 
         // 1. Beneficiaries / الحالات والمستفيدون (وأفراد الأسرة)
-        $cleanQ = str_replace(
-            ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            $q
-        );
+        $beneficiariesQuery = Beneficiary::query()->with([
+            'familyMembers' => fn ($fm) => $fm->where(fn ($sq) => $sq->whereNull('active')->orWhere('active', true)->orWhere('active', 1)),
+        ]);
 
-        $variants = ArabicSearchHelper::getVariants($q);
-        if (empty($variants)) {
-            $variants = [$q];
-        }
-
-        $beneficiariesQuery = Beneficiary::query();
         if (preg_match('/^\d{2}$/', $cleanQ)) {
             $beneficiariesQuery->where(function ($w) use ($cleanQ, $q) {
                 $w->where('code', 'like', "{$cleanQ}%")
                   ->orWhere('code', 'like', "G-{$cleanQ}%")
+                  ->orWhere('code', 'like', "B{$cleanQ}%")
                   ->orWhere('patient_code', 'like', "{$cleanQ}%")
+                  ->orWhereHas('familyMembers', fn ($m) => $m->where('code', 'like', "{$cleanQ}%")->orWhere('code', 'like', "B{$cleanQ}%"))
                   ->orWhere('full_name', 'like', "%{$q}%");
             });
         } elseif (preg_match('/^(?:19|20)(\d{2})$/', $cleanQ, $matches)) {
@@ -66,37 +71,35 @@ final class GlobalSearchController extends Controller
             $beneficiariesQuery->where(function ($w) use ($yr, $cleanQ, $q) {
                 $w->where('code', 'like', "{$yr}%")
                   ->orWhere('code', 'like', "G-{$yr}%")
+                  ->orWhere('code', 'like', "B{$yr}%")
                   ->orWhere('code', 'like', "%{$cleanQ}%")
                   ->orWhere('patient_code', 'like', "{$yr}%")
+                  ->orWhereHas('familyMembers', fn ($m) => $m->where('code', 'like', "{$yr}%")->orWhere('code', 'like', "B{$yr}%"))
                   ->orWhere('full_name', 'like', "%{$q}%");
             });
         } else {
-            $beneficiariesQuery->where(function ($w) use ($q, $cleanQ, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('full_name', 'like', "%{$v}%")
-                      ->orWhere('patient_name', 'like', "%{$v}%")
-                      ->orWhere('guardian_name', 'like', "%{$v}%");
-                }
-                $w->orWhere('code', 'like', "%{$cleanQ}%")
-                  ->orWhere('phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('backup_phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('national_id', 'like', "%{$cleanQ}%")
-                  ->orWhere('patient_code', 'like', "%{$cleanQ}%")
-                  ->orWhereHas('familyMembers', function ($fm) use ($cleanQ, $variants) {
-                      $fm->where(function ($sub) use ($cleanQ, $variants) {
-                          foreach ($variants as $v) {
-                              $sub->orWhere('full_name', 'like', "%{$v}%");
-                          }
-                          $sub->orWhere('national_id', 'like', "%{$cleanQ}%")
-                              ->orWhere('code', 'like', "%{$cleanQ}%")
-                              ->orWhere('phone', 'like', "%{$cleanQ}%");
-                      });
-                  });
+            $beneficiariesQuery->where(function ($w) use ($cleanQ, $variants, $words, $numbers) {
+                ArabicSearchHelper::applySmartSearch(
+                    $w,
+                    $cleanQ,
+                    ['full_name', 'patient_name', 'guardian_name', 'mother_name', 'deceased_husband_name', 'address'],
+                    ['code', 'patient_code', 'national_id', 'phone', 'backup_phone', 'visa_card_number', 'reference_number']
+                );
+
+                // Also search inside familyMembers (children, patients, spouses)
+                $w->orWhereHas('familyMembers', function ($fm) use ($cleanQ) {
+                    ArabicSearchHelper::applySmartSearch(
+                        $fm,
+                        $cleanQ,
+                        ['full_name'],
+                        ['code', 'national_id', 'phone']
+                    );
+                });
             });
         }
 
         $beneficiaries = $beneficiariesQuery
-            ->select(['id', 'code', 'full_name', 'phone', 'national_id', 'assistance_type', 'status'])
+            ->select(['id', 'code', 'full_name', 'patient_name', 'phone', 'national_id', 'assistance_type', 'status'])
             ->limit(6)
             ->get();
 
@@ -107,9 +110,32 @@ final class GlobalSearchController extends Controller
             if ($b->national_id) $subParts[] = 'رقم قومي: ' . $b->national_id;
             if ($b->assistance_type) $subParts[] = $b->assistance_type;
 
+            // Check if a family member matched specifically
+            $matchedMemberTitle = null;
+            if ($b->relationLoaded('familyMembers') && $b->familyMembers->isNotEmpty()) {
+                foreach ($b->familyMembers as $m) {
+                    $mNorm = ArabicSearchHelper::normalize((string) $m->full_name);
+                    $qNorm = ArabicSearchHelper::normalize($cleanQ);
+                    if (
+                        ($qNorm !== '' && mb_stripos($mNorm, $qNorm) !== false)
+                        || ($m->national_id && stripos((string) $m->national_id, $cleanQ) !== false)
+                        || ($m->code && stripos((string) $m->code, $cleanQ) !== false)
+                    ) {
+                        $matchedMemberTitle = $m->full_name . ' (أسرة: ' . $b->full_name . ')';
+                        if ($m->national_id && !$b->national_id) {
+                            $subParts[] = 'قومي الفرد: ' . $m->national_id;
+                        }
+                        if ($m->code) {
+                            $codeStr = $m->code;
+                        }
+                        break;
+                    }
+                }
+            }
+
             $results['beneficiaries'][] = [
                 'id' => $b->id,
-                'title' => $b->full_name,
+                'title' => $matchedMemberTitle ?: $b->full_name,
                 'code' => $codeStr,
                 'subtitle' => implode(' • ', $subParts),
                 'url' => route('beneficiaries.show', $b),
@@ -119,24 +145,16 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 1b. Initial Research & Case Applications / طلبات الأبحاث والحالات المتقدمة
-        $caseApps = MobileCaseApplication::query()
-            ->where(function ($w) use ($q, $cleanQ, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('applicant_name', 'like', "%{$v}%")
-                      ->orWhere('submitter_name', 'like', "%{$v}%")
-                      ->orWhere('mother_name', 'like', "%{$v}%")
-                      ->orWhere('deceased_husband_name', 'like', "%{$v}%");
-                }
-                $w->orWhere('applicant_id_number', 'like', "%{$cleanQ}%")
-                  ->orWhere('applicant_phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('backup_phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('submitter_phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('reference_number', 'like', "%{$cleanQ}%");
-            })
-            ->latest('created_at')
-            ->limit(6)
-            ->get();
+        // 2. Initial Research & Case Applications + Field Visits / طلبات البحث المبدئي والأبحاث الميدانية
+        $caseAppsQuery = MobileCaseApplication::query();
+        ArabicSearchHelper::applySmartSearch(
+            $caseAppsQuery,
+            $cleanQ,
+            ['applicant_name', 'submitter_name', 'mother_name', 'deceased_husband_name', 'guide_name', 'address', 'city'],
+            ['applicant_id_number', 'applicant_phone', 'backup_phone', 'submitter_phone', 'guide_phone', 'reference_number']
+        );
+
+        $caseApps = $caseAppsQuery->latest('created_at')->limit(6)->get();
 
         foreach ($caseApps as $app) {
             $subParts = [];
@@ -157,24 +175,44 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 1c. Collaborations & Partnerships / التعاونات والشراكات والشركات المتعاقدة
-        $collabs = Collaboration::query()
-            ->where(function ($w) use ($q, $cleanQ, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('name', 'like', "%{$v}%")
-                      ->orWhere('specialty', 'like', "%{$v}%")
-                      ->orWhere('service_provided', 'like', "%{$v}%")
-                      ->orWhere('contact_person', 'like', "%{$v}%")
-                      ->orWhere('category', 'like', "%{$v}%")
-                      ->orWhere('city', 'like', "%{$v}%")
-                      ->orWhere('address', 'like', "%{$v}%");
-                }
-                $w->orWhere('phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('phone_alt', 'like', "%{$cleanQ}%")
-                  ->orWhere('contact_person_phone', 'like', "%{$cleanQ}%");
-            })
-            ->limit(6)
-            ->get();
+        // Field Visits / استمارات البحث الميداني
+        $visitsQuery = FieldVisit::query();
+        ArabicSearchHelper::applySmartSearch(
+            $visitsQuery,
+            $cleanQ,
+            ['patient_name', 'guardian_name', 'address', 'case_guide'],
+            ['national_id', 'phone', 'researcher_phone']
+        );
+        $visits = $visitsQuery->latest('id')->limit(4)->get();
+
+        foreach ($visits as $visit) {
+            $vName = $visit->patient_name ?: ($visit->guardian_name ?: ('بحث ميداني #' . $visit->id));
+            $subParts = [];
+            if ($visit->phone) $subParts[] = 'هاتف: ' . $visit->phone;
+            if ($visit->national_id) $subParts[] = 'رقم قومي: ' . $visit->national_id;
+            if ($visit->address) $subParts[] = $visit->address;
+
+            $results['case_applications'][] = [
+                'id' => 'fv-' . $visit->id,
+                'title' => $vName,
+                'code' => 'VST-' . $visit->id,
+                'subtitle' => implode(' • ', $subParts),
+                'url' => route('visits.show', $visit),
+                'badge' => 'بحث ميداني',
+                'badge_class' => 'bg-info-subtle text-info',
+                'icon' => 'bi-clipboard-check-fill',
+            ];
+        }
+
+        // 3. Collaborations & Partnerships / التعاونات والشراكات والشركات المتعاقدة
+        $collabsQuery = Collaboration::query();
+        ArabicSearchHelper::applySmartSearch(
+            $collabsQuery,
+            $cleanQ,
+            ['name', 'specialty', 'service_provided', 'contact_person', 'category', 'city', 'address', 'notes'],
+            ['phone', 'phone_alt', 'contact_person_phone']
+        );
+        $collabs = $collabsQuery->limit(6)->get();
 
         foreach ($collabs as $col) {
             $subParts = [];
@@ -195,19 +233,36 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 1d. Projects, Campaigns & Guest Houses / المشاريع والحملات ودور الضيافة
-        $projects = Project::query()
-            ->where(function ($w) use ($q, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('name', 'like', "%{$v}%")
-                      ->orWhere('description', 'like', "%{$v}%");
-                }
-                $w->orWhere('code', 'like', "%{$q}%");
-            })
-            ->limit(4)
-            ->get();
+        // School Collaborations / تعاونات المدارس والمكتبات
+        $schoolCollabsQuery = SchoolCollaboration::query();
+        ArabicSearchHelper::applySmartSearch(
+            $schoolCollabsQuery,
+            $cleanQ,
+            ['shop_name', 'address', 'campaign', 'notes'],
+            ['phone']
+        );
+        foreach ($schoolCollabsQuery->limit(3)->get() as $sc) {
+            $subParts = [];
+            if ($sc->phone) $subParts[] = 'هاتف: ' . $sc->phone;
+            if ($sc->address) $subParts[] = $sc->address;
+            if ($sc->discount) $subParts[] = 'خصم: ' . $sc->discount;
 
-        foreach ($projects as $proj) {
+            $results['collaborations'][] = [
+                'id' => 'sc-' . $sc->id,
+                'title' => $sc->shop_name,
+                'code' => 'SCH-' . $sc->id,
+                'subtitle' => implode(' • ', $subParts),
+                'url' => route('school-collaborations.index', ['q' => $sc->shop_name]),
+                'badge' => 'تعاون مدارس',
+                'badge_class' => 'bg-success-subtle text-success',
+                'icon' => 'bi-shop',
+            ];
+        }
+
+        // 4. Projects, Campaigns & Guest Houses / المشاريع والحملات ودور الضيافة
+        $projectsQuery = Project::query();
+        ArabicSearchHelper::applySmartSearch($projectsQuery, $cleanQ, ['name', 'description'], ['code']);
+        foreach ($projectsQuery->limit(4)->get() as $proj) {
             $results['projects'][] = [
                 'id' => $proj->id,
                 'title' => $proj->name,
@@ -220,18 +275,11 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        $campaigns = Campaign::query()
-            ->where(function ($w) use ($q, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('name', 'like', "%{$v}%");
-                }
-            })
-            ->limit(3)
-            ->get();
-
-        foreach ($campaigns as $camp) {
+        $campaignsQuery = Campaign::query();
+        ArabicSearchHelper::applySmartSearch($campaignsQuery, $cleanQ, ['name'], []);
+        foreach ($campaignsQuery->limit(3)->get() as $camp) {
             $results['projects'][] = [
-                'id' => $camp->id,
+                'id' => 'cmp-' . $camp->id,
                 'title' => $camp->name,
                 'code' => 'CMP-' . $camp->id,
                 'subtitle' => 'حملة خيرية',
@@ -242,19 +290,11 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        $guestHouses = GuestHouse::query()
-            ->where(function ($w) use ($q, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('name', 'like', "%{$v}%")
-                      ->orWhere('location', 'like', "%{$v}%");
-                }
-            })
-            ->limit(3)
-            ->get();
-
-        foreach ($guestHouses as $gh) {
+        $guestHousesQuery = GuestHouse::query();
+        ArabicSearchHelper::applySmartSearch($guestHousesQuery, $cleanQ, ['name', 'location'], []);
+        foreach ($guestHousesQuery->limit(3)->get() as $gh) {
             $results['projects'][] = [
-                'id' => $gh->id,
+                'id' => 'gh-' . $gh->id,
                 'title' => $gh->name,
                 'code' => 'GH-' . $gh->id,
                 'subtitle' => $gh->location ?: 'دار ضيافة',
@@ -265,26 +305,25 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 2. Donors / المتبرعون
-        $donors = Donor::query()
-            ->where(function ($w) use ($q, $cleanQ, $variants) {
-                foreach ($variants as $v) {
-                    $w->orWhere('name', 'like', "%{$v}%");
-                }
-                $w->orWhere('code', 'like', "%{$cleanQ}%")
-                  ->orWhere('phone', 'like', "%{$cleanQ}%")
-                  ->orWhere('national_id', 'like', "%{$cleanQ}%");
-            })
+        // 5. Donors / المتبرعون
+        $donorsQuery = Donor::query();
+        ArabicSearchHelper::applySmartSearch(
+            $donorsQuery,
+            $cleanQ,
+            ['name', 'address', 'notes'],
+            ['code', 'phone', 'national_id']
+        );
+        $donors = $donorsQuery
             ->select(['id', 'code', 'name', 'phone', 'classification', 'sponsorship_monthly_amount'])
-            ->limit(5)
+            ->limit(6)
             ->get();
 
         foreach ($donors as $d) {
-            $codeStr = $d->code ?: ('D-' . str_pad((string)$d->id, 5, '0', STR_PAD_LEFT));
+            $codeStr = $d->code ?: ('D-' . str_pad((string) $d->id, 5, '0', STR_PAD_LEFT));
             $subParts = [];
             if ($d->phone) $subParts[] = 'هاتف: ' . $d->phone;
             if ($d->classification === 'recurring') {
-                $subParts[] = 'متبرع شهري' . ($d->sponsorship_monthly_amount > 0 ? ' (' . number_format((float)$d->sponsorship_monthly_amount) . ' ج.م)' : '');
+                $subParts[] = 'متبرع شهري' . ($d->sponsorship_monthly_amount > 0 ? ' (' . number_format((float) $d->sponsorship_monthly_amount) . ' ج.م)' : '');
             } else {
                 $subParts[] = 'متبرع عام';
             }
@@ -303,19 +342,18 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 3. Staff / Employees (الموظفون وفريق العمل)
-        $employees = User::query()
+        // 6. Staff / Employees (الموظفون وفريق العمل)
+        $employeesQuery = User::query()
             ->where(function ($w) {
                 $w->where('is_volunteer', false)->orWhereNull('is_volunteer');
-            })
-            ->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('phone', 'like', "%{$q}%")
-                  ->orWhere('email', 'like', "%{$q}%")
-                  ->orWhere('code', 'like', "%{$q}%")
-                  ->orWhere('job_title', 'like', "%{$q}%")
-                  ->orWhere('department', 'like', "%{$q}%");
-            })
+            });
+        ArabicSearchHelper::applySmartSearch(
+            $employeesQuery,
+            $cleanQ,
+            ['name', 'job_title', 'department'],
+            ['phone', 'email', 'code']
+        );
+        $employees = $employeesQuery
             ->select(['id', 'code', 'name', 'phone', 'job_title', 'department', 'role'])
             ->limit(5)
             ->get();
@@ -338,14 +376,15 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 4. Volunteers (المتطوعون)
-        $volunteers = User::query()
-            ->where('is_volunteer', true)
-            ->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('phone', 'like', "%{$q}%")
-                  ->orWhere('code', 'like', "%{$q}%");
-            })
+        // 7. Volunteers (المتطوعون)
+        $volunteersQuery = User::query()->where('is_volunteer', true);
+        ArabicSearchHelper::applySmartSearch(
+            $volunteersQuery,
+            $cleanQ,
+            ['name', 'city'],
+            ['phone', 'code']
+        );
+        $volunteers = $volunteersQuery
             ->select(['id', 'code', 'name', 'phone', 'city', 'volunteer_hours'])
             ->limit(5)
             ->get();
@@ -368,27 +407,74 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        // 5. Donations & Receipts (إيصالات وتبرعات)
+        // 8. Donations & Treasuries (إيصالات التبرع والخزائن)
         $donations = Donation::query()
             ->with(['donor:id,name'])
-            ->where(function ($w) use ($q) {
-                $w->where('receipt_number', 'like', "%{$q}%")
-                  ->orWhere('operation_number', 'like', "%{$q}%");
+            ->where(function ($w) use ($cleanQ, $numbers) {
+                $w->where('receipt_number', 'like', "%{$cleanQ}%")
+                  ->orWhere('operation_number', 'like', "%{$cleanQ}%");
+                foreach ($numbers as $num) {
+                    if (strlen($num) >= 2) {
+                        $w->orWhere('receipt_number', 'like', "%{$num}%")
+                          ->orWhere('operation_number', 'like', "%{$num}%");
+                    }
+                }
             })
-            ->select(['id', 'receipt_number', 'donor_id', 'amount', 'type', 'created_at', 'status'])
+            ->select(['id', 'receipt_number', 'operation_number', 'donor_id', 'amount', 'type', 'created_at', 'status'])
             ->limit(4)
             ->get();
 
         foreach ($donations as $dn) {
+            $recCode = $dn->receipt_number ?: ($dn->operation_number ?: $dn->id);
             $results['donations'][] = [
                 'id' => $dn->id,
-                'title' => 'إيصال #' . ($dn->receipt_number ?: $dn->id),
-                'code' => 'REC-' . ($dn->receipt_number ?: $dn->id),
-                'subtitle' => 'المبلغ: ' . number_format((float)$dn->amount, 2) . ' ج.م • المتبرع: ' . ($dn->donor?->name ?? 'فاعل خير'),
+                'title' => 'إيصال / عملية #' . $recCode,
+                'code' => 'REC-' . $recCode,
+                'subtitle' => 'المبلغ: ' . number_format((float) $dn->amount, 2) . ' ج.م • المتبرع: ' . ($dn->donor?->name ?? 'فاعل خير'),
                 'url' => route('donations.show', $dn),
                 'badge' => 'إيصال تبرع',
                 'badge_class' => 'bg-info-subtle text-info',
                 'icon' => 'bi-receipt',
+            ];
+        }
+
+        $treasuriesQuery = Treasury::query();
+        ArabicSearchHelper::applySmartSearch($treasuriesQuery, $cleanQ, ['name', 'location', 'description'], ['code']);
+        foreach ($treasuriesQuery->limit(3)->get() as $tr) {
+            $results['donations'][] = [
+                'id' => 'tr-' . $tr->id,
+                'title' => $tr->name,
+                'code' => $tr->code ?: ('TR-' . $tr->id),
+                'subtitle' => 'الرصيد: ' . number_format((float) $tr->current_balance, 2) . ' ' . $tr->currency,
+                'url' => route('treasuries.show', $tr),
+                'badge' => 'خزينة / عهدة',
+                'badge_class' => 'bg-success-subtle text-success',
+                'icon' => 'bi-safe2-fill',
+            ];
+        }
+
+        // 9. Complaints / الشكاوى والمقترحات
+        $complaintsQuery = Complaint::query();
+        ArabicSearchHelper::applySmartSearch(
+            $complaintsQuery,
+            $cleanQ,
+            ['complainant_name', 'subject', 'message'],
+            ['tracking_code', 'complainant_phone']
+        );
+        foreach ($complaintsQuery->latest('id')->limit(3)->get() as $comp) {
+            $subParts = [];
+            if ($comp->complainant_phone) $subParts[] = 'هاتف: ' . $comp->complainant_phone;
+            if ($comp->subject) $subParts[] = $comp->subject;
+
+            $results['complaints'][] = [
+                'id' => $comp->id,
+                'title' => $comp->complainant_name ?: ('شكوى #' . $comp->tracking_code),
+                'code' => $comp->tracking_code ?: ('CMP-' . $comp->id),
+                'subtitle' => implode(' • ', $subParts),
+                'url' => route('complaints.index', ['q' => $comp->tracking_code ?: $comp->complainant_name]),
+                'badge' => 'شكوى / مقترح',
+                'badge_class' => 'bg-secondary-subtle text-secondary',
+                'icon' => 'bi-chat-dots-fill',
             ];
         }
 
@@ -399,7 +485,8 @@ final class GlobalSearchController extends Controller
             + count($results['donors'])
             + count($results['employees'])
             + count($results['volunteers'])
-            + count($results['donations']);
+            + count($results['donations'])
+            + count($results['complaints']);
 
         return response()->json([
             'query' => $q,
@@ -415,7 +502,7 @@ final class GlobalSearchController extends Controller
                 ],
                 [
                     'key' => 'case_applications',
-                    'title' => 'طلبات البحث المبدئي والأبحاث',
+                    'title' => 'طلبات البحث المبدئي والأبحاث الميدانية',
                     'icon' => 'bi-clipboard2-pulse-fill',
                     'color' => 'text-warning',
                     'count' => count($results['case_applications']),
@@ -463,11 +550,19 @@ final class GlobalSearchController extends Controller
                 ],
                 [
                     'key' => 'donations',
-                    'title' => 'إيصالات التبرع',
+                    'title' => 'الإيصالات والخزائن',
                     'icon' => 'bi-receipt',
                     'color' => 'text-info',
                     'count' => count($results['donations']),
                     'items' => $results['donations'],
+                ],
+                [
+                    'key' => 'complaints',
+                    'title' => 'الشكاوى والمقترحات',
+                    'icon' => 'bi-chat-dots-fill',
+                    'color' => 'text-secondary',
+                    'count' => count($results['complaints']),
+                    'items' => $results['complaints'],
                 ],
             ],
             'reports_url' => route('reports.index', ['q' => $q]),

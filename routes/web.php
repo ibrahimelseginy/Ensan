@@ -298,13 +298,14 @@ Route::middleware(['auth'])->group(function () {
         if (mb_strlen($q) < 2) {
             return response()->json([]);
         }
-        $results = \App\Models\Donor::query()
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('code', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhere('national_id', 'like', "%{$q}%");
-            })
+        $donorQuery = \App\Models\Donor::query();
+        \App\Helpers\ArabicSearchHelper::applySmartSearch(
+            $donorQuery,
+            $q,
+            ['name'],
+            ['code', 'phone', 'national_id']
+        );
+        $results = $donorQuery
             ->limit(25)
             ->get()
             ->map(function ($d) {
