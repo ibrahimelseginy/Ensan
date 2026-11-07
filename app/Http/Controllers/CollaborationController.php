@@ -40,16 +40,26 @@ final class CollaborationController extends Controller
             $query->where('city', 'like', "%{$request->city}%");
         }
 
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('specialty', 'like', "%{$search}%")
-                  ->orWhere('service_provided', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%");
+        $searchTerm = $request->filled('search') ? trim((string) $request->search) : ($request->filled('q') ? trim((string) $request->q) : '');
+        if ($searchTerm !== '') {
+            $variants = \App\Helpers\ArabicSearchHelper::getVariants($searchTerm);
+            if (empty($variants)) {
+                $variants = [$searchTerm];
+            }
+            $query->where(function ($q) use ($searchTerm, $variants) {
+                foreach ($variants as $v) {
+                    $q->orWhere('name', 'like', "%{$v}%")
+                      ->orWhere('specialty', 'like', "%{$v}%")
+                      ->orWhere('service_provided', 'like', "%{$v}%")
+                      ->orWhere('contact_person', 'like', "%{$v}%")
+                      ->orWhere('address', 'like', "%{$v}%")
+                      ->orWhere('city', 'like', "%{$v}%")
+                      ->orWhere('category', 'like', "%{$v}%")
+                      ->orWhere('notes', 'like', "%{$v}%");
+                }
+                $q->orWhere('phone', 'like', "%{$searchTerm}%")
+                  ->orWhere('phone_alt', 'like', "%{$searchTerm}%")
+                  ->orWhere('contact_person_phone', 'like', "%{$searchTerm}%");
             });
         }
 

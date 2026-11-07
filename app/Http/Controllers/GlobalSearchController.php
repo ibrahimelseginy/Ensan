@@ -6,9 +6,13 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ArabicSearchHelper;
 use App\Models\Beneficiary;
+use App\Models\Campaign;
+use App\Models\Collaboration;
 use App\Models\Donation;
 use App\Models\Donor;
+use App\Models\GuestHouse;
 use App\Models\MobileCaseApplication;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,10 +33,12 @@ final class GlobalSearchController extends Controller
         $results = [
             'beneficiaries' => [],
             'case_applications' => [],
+            'collaborations' => [],
             'donors' => [],
             'employees' => [],
             'volunteers' => [],
             'donations' => [],
+            'projects' => [],
         ];
 
         // 1. Beneficiaries / الحالات والمستفيدون (وأفراد الأسرة)
@@ -151,13 +157,123 @@ final class GlobalSearchController extends Controller
             ];
         }
 
+        // 1c. Collaborations & Partnerships / التعاونات والشراكات والشركات المتعاقدة
+        $collabs = Collaboration::query()
+            ->where(function ($w) use ($q, $cleanQ, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('name', 'like', "%{$v}%")
+                      ->orWhere('specialty', 'like', "%{$v}%")
+                      ->orWhere('service_provided', 'like', "%{$v}%")
+                      ->orWhere('contact_person', 'like', "%{$v}%")
+                      ->orWhere('category', 'like', "%{$v}%")
+                      ->orWhere('city', 'like', "%{$v}%")
+                      ->orWhere('address', 'like', "%{$v}%");
+                }
+                $w->orWhere('phone', 'like', "%{$cleanQ}%")
+                  ->orWhere('phone_alt', 'like', "%{$cleanQ}%")
+                  ->orWhere('contact_person_phone', 'like', "%{$cleanQ}%");
+            })
+            ->limit(6)
+            ->get();
+
+        foreach ($collabs as $col) {
+            $subParts = [];
+            if ($col->category) $subParts[] = $col->category;
+            if ($col->specialty) $subParts[] = $col->specialty;
+            if ($col->phone) $subParts[] = 'هاتف: ' . $col->phone;
+            elseif ($col->contact_person_phone) $subParts[] = 'هاتف: ' . $col->contact_person_phone;
+
+            $results['collaborations'][] = [
+                'id' => $col->id,
+                'title' => $col->name,
+                'code' => 'COL-' . $col->id,
+                'subtitle' => implode(' • ', $subParts),
+                'url' => route('collaborations.index', ['search' => $col->name]),
+                'badge' => 'شراكة وتعاون',
+                'badge_class' => 'bg-success-subtle text-success',
+                'icon' => $col->category_icon ?: 'bi-diagram-3-fill',
+            ];
+        }
+
+        // 1d. Projects, Campaigns & Guest Houses / المشاريع والحملات ودور الضيافة
+        $projects = Project::query()
+            ->where(function ($w) use ($q, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('name', 'like', "%{$v}%")
+                      ->orWhere('description', 'like', "%{$v}%");
+                }
+                $w->orWhere('code', 'like', "%{$q}%");
+            })
+            ->limit(4)
+            ->get();
+
+        foreach ($projects as $proj) {
+            $results['projects'][] = [
+                'id' => $proj->id,
+                'title' => $proj->name,
+                'code' => $proj->code ?: ('PRJ-' . $proj->id),
+                'subtitle' => 'مشروع خيري',
+                'url' => route('projects.show', $proj),
+                'badge' => 'مشروع',
+                'badge_class' => 'bg-primary-subtle text-primary',
+                'icon' => 'bi-kanban-fill',
+            ];
+        }
+
+        $campaigns = Campaign::query()
+            ->where(function ($w) use ($q, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('name', 'like', "%{$v}%");
+                }
+            })
+            ->limit(3)
+            ->get();
+
+        foreach ($campaigns as $camp) {
+            $results['projects'][] = [
+                'id' => $camp->id,
+                'title' => $camp->name,
+                'code' => 'CMP-' . $camp->id,
+                'subtitle' => 'حملة خيرية',
+                'url' => route('campaigns.show', $camp),
+                'badge' => 'حملة',
+                'badge_class' => 'bg-info-subtle text-info',
+                'icon' => 'bi-megaphone-fill',
+            ];
+        }
+
+        $guestHouses = GuestHouse::query()
+            ->where(function ($w) use ($q, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('name', 'like', "%{$v}%")
+                      ->orWhere('location', 'like', "%{$v}%");
+                }
+            })
+            ->limit(3)
+            ->get();
+
+        foreach ($guestHouses as $gh) {
+            $results['projects'][] = [
+                'id' => $gh->id,
+                'title' => $gh->name,
+                'code' => 'GH-' . $gh->id,
+                'subtitle' => $gh->location ?: 'دار ضيافة',
+                'url' => route('guest-houses.show', $gh),
+                'badge' => 'دار ضيافة',
+                'badge_class' => 'bg-danger-subtle text-danger',
+                'icon' => 'bi-house-heart-fill',
+            ];
+        }
+
         // 2. Donors / المتبرعون
         $donors = Donor::query()
-            ->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('code', 'like', "%{$q}%")
-                  ->orWhere('phone', 'like', "%{$q}%")
-                  ->orWhere('national_id', 'like', "%{$q}%");
+            ->where(function ($w) use ($q, $cleanQ, $variants) {
+                foreach ($variants as $v) {
+                    $w->orWhere('name', 'like', "%{$v}%");
+                }
+                $w->orWhere('code', 'like', "%{$cleanQ}%")
+                  ->orWhere('phone', 'like', "%{$cleanQ}%")
+                  ->orWhere('national_id', 'like', "%{$cleanQ}%");
             })
             ->select(['id', 'code', 'name', 'phone', 'classification', 'sponsorship_monthly_amount'])
             ->limit(5)
@@ -276,7 +392,14 @@ final class GlobalSearchController extends Controller
             ];
         }
 
-        $totalCount = count($results['beneficiaries']) + count($results['case_applications']) + count($results['donors']) + count($results['employees']) + count($results['volunteers']) + count($results['donations']);
+        $totalCount = count($results['beneficiaries'])
+            + count($results['case_applications'])
+            + count($results['collaborations'])
+            + count($results['projects'])
+            + count($results['donors'])
+            + count($results['employees'])
+            + count($results['volunteers'])
+            + count($results['donations']);
 
         return response()->json([
             'query' => $q,
@@ -297,6 +420,22 @@ final class GlobalSearchController extends Controller
                     'color' => 'text-warning',
                     'count' => count($results['case_applications']),
                     'items' => $results['case_applications'],
+                ],
+                [
+                    'key' => 'collaborations',
+                    'title' => 'التعاونات والشراكات والشركات',
+                    'icon' => 'bi-diagram-3-fill',
+                    'color' => 'text-success',
+                    'count' => count($results['collaborations']),
+                    'items' => $results['collaborations'],
+                ],
+                [
+                    'key' => 'projects',
+                    'title' => 'المشاريع والحملات ودور الضيافة',
+                    'icon' => 'bi-kanban-fill',
+                    'color' => 'text-primary',
+                    'count' => count($results['projects']),
+                    'items' => $results['projects'],
                 ],
                 [
                     'key' => 'donors',
