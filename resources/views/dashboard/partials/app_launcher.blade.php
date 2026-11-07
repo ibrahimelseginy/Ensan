@@ -674,7 +674,7 @@ body.theme-dark .launcher-cat-btn.active,
     <div class="ensan-apps-grid" id="ensanAppsGrid">
 
         {{-- 0. المؤشرات والتحليلات (Dashboard Analytics & KPIs) --}}
-        @if($u && $u->hasPermission('dashboard.view'))
+        @if($u && $u->hasPermission('dashboard.analytics'))
         <a href="{{ route('dashboard.analytics') }}" class="ensan-app-card" data-category="finance" data-title="المؤشرات والتحليلات" data-keywords="مؤشرات إحصائيات مستهدف مالي تحليلات رسوم بيانية تقارير analytics dashboard">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.45);">
                 <i class="bi bi-speedometer2"></i>
@@ -718,7 +718,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3.2 استيراد الإكسيل والبيانات الذكي (Excel & CSV Hub) --}}
-        @if($u)
+        @if($u && $u->hasPermission('data_import.view'))
         <a href="{{ route('data-import.index') }}" class="ensan-app-card" data-category="operations finance digital admin" data-title="استيراد الإكسيل Excel Hub" data-keywords="استيراد اكسيل شيت ملفات رفع توزيع ذكي بيانات excel csv import hub مخصص حالات تبرعات متبرعين">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #107c41, #1f9a55); box-shadow: 0 10px 20px -5px rgba(16, 124, 65, 0.45);">
                 <i class="bi bi-file-earmark-spreadsheet-fill"></i>
@@ -729,7 +729,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3.5 التقديمات (Applications & Preliminary Research) --}}
-        @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+        @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSubmissions" data-category="operations digital" data-title="التقديمات" data-keywords="تقديمات طلبات حالات بحث مبدئي زاد مدرار أورام استمارات submissions applications">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0284c7, #06b6d4); box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.45);">
                 <i class="bi bi-file-earmark-text-fill"></i>
@@ -740,7 +740,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3.6 دليل الشراكات والتعاونات --}}
-        @if($u)
+        @if($u && $u->hasPermission('collaborations.view'))
         <a href="{{ route('collaborations.index') }}" class="ensan-app-card" data-category="operations admin" data-title="الشراكات والتعاونات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات خصومات collaborations partnerships">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-diagram-3-fill"></i>
@@ -751,7 +751,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3.7 الدعم النفسي (بعثاء الأمل) --}}
-        @if($u)
+        @if($u && $u->hasPermission('psychological_support.view'))
         <a href="{{ route('psychological-support.index') }}" class="ensan-app-card" data-category="operations health" data-title="الدعم النفسي" data-keywords="دعم نفسي بعثاء الامل مرضى اورام تقارير شهرية psychological support">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e); box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.45);">
                 <i class="bi bi-heart-pulse-fill"></i>
@@ -773,7 +773,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 5. الموارد البشرية HR (Popup) --}}
-        @if($u && ($u->hasRole('hr') || $u->hasPermission('volunteers.view') || $u->hasPermission('users.view') || $u->hasPermission('hr.evaluations') || $u->hasPermission('payrolls.view') || $u->hasPermission('tasks.view')))
+        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'tasks.view', 'view_own_tasks', 'website.volunteer_requests.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.45);">
                 <i class="bi bi-person-lines-fill"></i>
@@ -806,7 +806,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 8. إدارة المشاريع --}}
-        @if($u && !$u->hasRole('hr') && !$u->hasRole('marketer') && ($u->hasPermission('projects.view') || $u->hasPermission('manage_project')))
+        @if($u && ($u->hasPermission('projects.view') || $u->hasPermission('manage_project')))
         <a href="{{ route('projects.index') }}" class="ensan-app-card" data-category="operations" data-title="إدارة المشاريع" data-keywords="مشاريع إعمار آبار تنموية projects">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.45);">
                 <i class="bi bi-kanban-fill"></i>
@@ -827,6 +827,16 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
+        {{-- 10. العضويات والبروتوكولات (Popup) --}}
+        @if($u && ($u->hasPermission('school_collaborations.view') || $u->hasPermission('memberships.view') || $u->hasPermission('oncology_medicine_reps.view')))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="operations admin" data-title="العضويات والبروتوكولات" data-keywords="بروتوكولات مدارس جامعات عضويات اشتراكات مناديب أدوية أورام memberships">
+            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0891b2, #06b6d4); box-shadow: 0 10px 20px -5px rgba(8, 145, 178, 0.45);">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+            <div class="ensan-app-title">العضويات والبروتوكولات</div>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 3 خدمات <i class="bi bi-chevron-down"></i></span>
+        </div>
+        @endif
 
         {{-- 11. الاستقبال وخدمة العملاء --}}
         @if($u && $u->hasPermission('reception.view'))
@@ -862,7 +872,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 12. الزيارات الميدانية --}}
-        @if($u && $u->hasPermission('beneficiaries.view'))
+        @if($u && ($u->hasPermission('visits.view') || $u->hasPermission('beneficiaries.view')))
         <a href="{{ route('visits.index') }}" class="ensan-app-card" data-category="operations" data-title="الزيارات الميدانية" data-keywords="زيارات باحثين فحص ميداني visits">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #db2777, #ec4899); box-shadow: 0 10px 20px -5px rgba(219, 39, 119, 0.45);">
                 <i class="bi bi-geo-alt-fill"></i>
@@ -873,7 +883,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 13. الموقع الإلكتروني (Popup) --}}
-        @if($u && ($u->hasPermission('website.view') || $u->hasPermission('website.settings.view_edit') || $u->hasPermission('website.headquarters.view') || $u->hasPermission('website.partners.view') || $u->hasPermission('website.board.view') || $u->hasPermission('website.content.view_edit')))
+        @if($u && ($u->hasPermission('website.view') || $u->hasPermission('website.settings.view_edit') || $u->hasPermission('website.headquarters.view') || $u->hasPermission('website.partners.view') || $u->hasPermission('website.board.view') || $u->hasPermission('website.content.view_edit') || $u->hasPermission('website.campaigns_content.view_edit') || $u->hasPermission('website.donation_page.view_edit') || $u->hasPermission('website.donation_settings.view_edit') || $u->hasPermission('website.accounts.view') || $u->hasPermission('website.donation_accounts.view') || $u->hasPermission('website.contact_messages.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppWebsite" data-category="digital" data-title="الموقع الإلكتروني" data-keywords="موقع إعدادات شركاء مجلس أمناء تبرعات صفحات website">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #4338ca, #6366f1); box-shadow: 0 10px 20px -5px rgba(67, 56, 202, 0.45);">
                 <i class="bi bi-globe2"></i>
@@ -884,7 +894,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 14. تطبيق الموبايل (Popup) --}}
-        @if($u && ($u->hasPermission('mobile.view') || $u->hasPermission('mobile.home_content.view_edit') || $u->hasPermission('mobile.news.view') || $u->hasPermission('mobile.volunteer_requests.view')))
+        @if($u && ($u->hasPermission('mobile.view') || $u->hasPermission('mobile.home_content.view_edit') || $u->hasPermission('mobile.news.view') || $u->hasPermission('mobile.volunteer_requests.view') || $u->hasPermission('mobile.bookings.view') || $u->hasPermission('mobile.donations.view') || $u->hasPermission('mobile.donors.view') || $u->hasPermission('mobile.notifications.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppMobile" data-category="digital" data-title="تطبيق الموبايل" data-keywords="تطبيق موبايل إشعارات حجوزات تبرعات mobile app">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #c026d3, #d946ef); box-shadow: 0 10px 20px -5px rgba(192, 38, 211, 0.45);">
                 <i class="bi bi-phone-fill"></i>
@@ -895,7 +905,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('users.view') || $u->hasPermission('audits.view') || $u->hasPermission('manage_change_requests') || $u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('audits.view') || $u->hasPermission('manage_change_requests') || $u->hasRole(['admin', 'super_admin', 'manager'])))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
@@ -917,6 +927,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 18. معلومات المطور (Developer Profile) --}}
+        @if($u && $u->hasRole(['admin', 'super_admin', 'manager']))
         <a href="{{ route('developer.info') }}" class="ensan-app-card" data-category="admin" data-title="معلومات المطور" data-keywords="مطور ابراهيم السجيني برمجة تواصل واتساب دعم فني developer ibrahim elseginy 01556592017">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #1e40af, #3b82f6); box-shadow: 0 10px 20px -5px rgba(30, 64, 175, 0.45);">
                 <i class="bi bi-code-slash"></i>
@@ -924,6 +935,7 @@ body.theme-dark .launcher-cat-btn.active,
             <div class="ensan-app-title">معلومات المطور</div>
             <span class="ensan-app-badge badge-direct" style="background: rgba(37, 211, 102, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);"><i class="bi bi-person-badge"></i> @Ibrahim Elseginy</span>
         </a>
+        @endif
 
     </div>
 
@@ -1157,7 +1169,7 @@ body.theme-dark .launcher-cat-btn.active,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u && ($u->hasRole('hr') || $u->hasPermission('hr.evaluations')))
+                    @if($u && $u->hasPermission('hr.evaluations'))
                     <a href="{{ route('hr.evaluations') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-speedometer2"></i>
@@ -1183,6 +1195,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && $u->hasPermission(['employee_attendance.view', 'employee_attendance.view_own']))
                     <a href="{{ route('employee-attendance.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-clock-history"></i>
@@ -1193,7 +1206,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission(['employee_tasks.view', 'employee_tasks.view_own']))
                     <a href="{{ route('employee-tasks.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-check2-circle"></i>
@@ -1204,7 +1219,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission(['leaves.view', 'leaves.manage']))
                     <a href="{{ route('leaves.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-calendar-x"></i>
@@ -1215,6 +1232,7 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
                     @if($u && $u->hasPermission('payrolls.view'))
                     <a href="{{ route('payrolls.index') }}" class="ensan-sub-tile">
@@ -1240,7 +1258,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission(['volunteer_attendance.view', 'volunteer_attendance.view_own']))
                     <a href="{{ route('volunteer-attendance.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-clock"></i>
@@ -1251,7 +1271,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission(['volunteer_hours.view', 'log_volunteer_hours']))
                     <a href="{{ route('volunteer-hours.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-secondary-subtle text-secondary">
                             <i class="bi bi-hourglass-split"></i>
@@ -1262,7 +1284,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission(['volunteer_tasks.view', 'tasks.view', 'view_own_tasks']))
                     <a href="{{ route('tasks.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-list-task"></i>
@@ -1270,6 +1294,19 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">مهام التطوع</div>
                             <small class="text-muted">تكليفات الفرق التطوعية</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
+                    @if($u && $u->hasPermission('website.volunteer_requests.view'))
+                    <a href="{{ route('website.volunteer-requests.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">طلبات التطوع (الموقع)</div>
+                            <small class="text-muted">استمارات التطوع الواردة من الموقع</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
@@ -1322,6 +1359,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && $u->hasPermission('expenses.view'))
                     <a href="{{ route('expenses.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-arrow-up-right-circle"></i>
@@ -1332,7 +1370,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && ($u->hasPermission('revenues.view') || $u->hasPermission('accounts.view')))
                     <a href="{{ route('revenues.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-arrow-down-left-circle"></i>
@@ -1343,7 +1383,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission('journal_entries.view'))
                     <a href="{{ route('journal-entries.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-journal-text"></i>
@@ -1354,6 +1396,7 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
                     @if($u && $u->hasPermission('closures.view'))
                     <a href="{{ route('closures.index') }}" class="ensan-sub-tile">
@@ -1761,6 +1804,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && $u->hasPermission('website.contact_messages.view'))
                     <a href="{{ route('website.contact-messages.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-envelope"></i>
@@ -1771,7 +1815,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && ($u->hasPermission('website.view') || $u->hasPermission('website.settings.view_edit')))
                     <a href="{{ route('website.pages.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-secondary-subtle text-secondary">
                             <i class="bi bi-file-earmark-text"></i>
@@ -1804,6 +1850,7 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -2020,6 +2067,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && $u->hasPermission('data_import.view'))
                     <a href="{{ route('data-import.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-file-earmark-spreadsheet-fill"></i>
@@ -2030,6 +2078,7 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -2040,11 +2089,29 @@ body.theme-dark .launcher-cat-btn.active,
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('ensanAppSearch');
-    const cards = document.querySelectorAll('#ensanAppsGrid .ensan-app-card');
     const catButtons = document.querySelectorAll('.launcher-cat-btn');
     const emptyState = document.getElementById('launcherEmptyState');
     const clearBtn = document.getElementById('clearSearchBtn');
 
+    // Sync sub-modal tile counts with parent cards and remove empty modal cards
+    document.querySelectorAll('#ensanAppsGrid .ensan-app-card[data-bs-target]').forEach(card => {
+        const targetSelector = card.getAttribute('data-bs-target');
+        if (!targetSelector) return;
+        const modalEl = document.querySelector(targetSelector);
+        if (!modalEl) return;
+        const tilesCount = modalEl.querySelectorAll('.ensan-sub-tile').length;
+        if (tilesCount === 0) {
+            card.remove();
+            return;
+        }
+        const badgeEl = card.querySelector('.badge-sub');
+        if (badgeEl) {
+            const label = (tilesCount >= 3 && tilesCount <= 10) ? 'خدمات' : 'خدمة';
+            badgeEl.innerHTML = `<i class="bi bi-layers-fill"></i> ${tilesCount} ${label} <i class="bi bi-chevron-down"></i>`;
+        }
+    });
+
+    const cards = document.querySelectorAll('#ensanAppsGrid .ensan-app-card');
     let activeCategory = 'all';
 
     function applyFilter() {
@@ -2109,7 +2176,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (cats.includes(cat)) count++;
             });
             const badge = document.getElementById('catCount' + cat.charAt(0).toUpperCase() + cat.slice(1));
-            if (badge) badge.textContent = count;
+            if (badge) {
+                badge.textContent = count;
+                const btn = badge.closest('.launcher-cat-btn');
+                if (btn) {
+                    btn.style.display = count > 0 ? '' : 'none';
+                }
+            }
         });
     }
 

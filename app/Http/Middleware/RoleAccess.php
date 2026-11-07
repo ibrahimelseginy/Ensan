@@ -40,8 +40,8 @@ class RoleAccess
         $resource = str_replace('-', '_', $resourceRaw);
 
         // Special resource mapping
-        if ($resource === 'payrolls') {
-            $resource = 'payroll';
+        if ($resource === 'payroll') {
+            $resource = 'payrolls';
         }
         if ($resource === 'closures') {
             $resource = 'financial_closures';
@@ -146,10 +146,15 @@ class RoleAccess
             'workspaces',
             'expenses',
             'payroll',
+            'payrolls',
+            'leaves',
             'reports',
             'donors',
             'donations',
             'beneficiaries',
+            'collaborations',
+            'psychological_support',
+            'data_import',
             'travel_routes',
             'trips',
             'volunteers',
@@ -179,11 +184,6 @@ class RoleAccess
             abort(403);
         }
 
-        // Payroll manage check
-        // if ($resource === 'payroll') {
-        //     $permissionKey = 'payroll.manage';
-        // }
-
         // Special override for Finance role (Accountant)
         if ($user->roles->contains('key', 'finance')) {
             // Full access: Financial records and Users
@@ -194,25 +194,6 @@ class RoleAccess
             if (in_array($resource, ['donations', 'warehouses', 'items', 'beneficiaries', 'complaints']) && $suffix === 'view') {
                 return $next($request);
             }
-        }
-
-        // Special override: Allow HR to access all HR related resources
-        $hrResources = [
-            'users', 
-            'employee_attendance', 
-            'leaves', 
-            'employee_tasks', 
-            'payroll', 
-            'payrolls', // handling both just in case
-            'volunteers', 
-            'volunteer_attendance', 
-            'volunteer_tasks', 
-            'volunteer_hours', 
-            'hr', // for evaluations
-            'tasks'
-        ];
-        if (in_array($resource, $hrResources) && $user->roles->contains('key', 'hr')) {
-            return $next($request);
         }
 
         // Allow user to view their own profile

@@ -33,6 +33,23 @@ final readonly class RoleService
 
     public function syncEntityPermissions(): void
     {
+        $corePermissions = [
+            ['key' => 'dashboard.analytics', 'name' => 'عرض المؤشرات والتحليلات'],
+            ['key' => 'data_import.view', 'name' => 'استيراد ملفات الإكسيل (Excel Hub)'],
+            ['key' => 'collaborations.view', 'name' => 'عرض دليل التعاونات والشراكات'],
+            ['key' => 'collaborations.create', 'name' => 'إضافة جهة في دليل الشراكات'],
+            ['key' => 'collaborations.edit', 'name' => 'تعديل جهة في دليل الشراكات'],
+            ['key' => 'collaborations.delete', 'name' => 'حذف جهة من دليل الشراكات'],
+            ['key' => 'psychological_support.view', 'name' => 'عرض متابعات الدعم النفسي'],
+            ['key' => 'psychological_support.create', 'name' => 'إضافة متابعة دعم نفسي'],
+        ];
+        foreach ($corePermissions as $perm) {
+            \App\Models\Permission::updateOrCreate(
+                ['key' => $perm['key']],
+                ['name' => $perm['name']]
+            );
+        }
+
         // 1. Projects (excludes guest house scope)
         $projects = \App\Models\Project::all();
         $validProjectIds = $projects->pluck('id')->toArray();
@@ -190,7 +207,10 @@ final readonly class RoleService
     private function getGroupLabels(): array
     {
         return [
-            'dashboard'              => 'لوحة التحكم',
+            'dashboard'              => 'لوحة التحكم والمؤشرات',
+            'data_import'            => 'استيراد البيانات (Excel Hub)',
+            'collaborations'         => 'دليل التعاونات والشراكات',
+            'psychological_support'  => 'الدعم النفسي (بعثاء الأمل)',
             'donors'                 => 'المتبرعون',
             'donations'              => 'التبرعات',
             'beneficiaries'          => 'المستفيدون',
@@ -219,6 +239,7 @@ final readonly class RoleService
             'campaigns'              => 'الحملات (عام)',
             'campaigns_specific'     => 'إدارة الحملات المحددة (حملة بعينها)',
             'payroll'                => 'الرواتب',
+            'payrolls'               => 'الرواتب',
             'guest_houses'           => 'دار الضيافة (عام)',
             'guest_houses_specific'  => 'إدارة دور الضيافة المحددة (دار بعينها)',
             'workspaces'             => 'مساحات العمل',
@@ -245,6 +266,22 @@ final readonly class RoleService
             'ramadan_iftars'         => 'إفطارات رمضان',
             'change_requests'        => 'طلبات المراجعة',
             'revenues'               => 'الإيرادات والتحليل',
+            'treasuries'             => 'الخزائن النقدية',
+            'view_own_tasks'         => 'المهام العامة',
+            'log_volunteer_hours'    => 'ساعات التطوع',
+            'manage_employees'       => 'الموظفين',
+            'manage_volunteers_hr'   => 'المتطوعين',
+            'manage_payrolls'        => 'الرواتب',
+            'manage_finance'         => 'دليل الحسابات',
+            'manage_logistics'       => 'اللوجيستك - المناديب',
+            'manage_project'         => 'المشاريع (عام)',
+            'manage_project_volunteers' => 'المشاريع (عام)',
+            'assist_project_management' => 'المشاريع (عام)',
+            'manage_campaign'        => 'الحملات (عام)',
+            'manage_ramadan'         => 'الحملات (عام)',
+            'manage_guest_house'     => 'دار الضيافة (عام)',
+            'manage_specialized_services' => 'دليل التعاونات والشراكات',
+            'manage_change_requests' => 'طلبات المراجعة',
         ];
     }
 

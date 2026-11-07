@@ -342,11 +342,13 @@ Route::middleware(['auth'])->group(function () {
     // --- Core Dashboard ---
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('dashboard', [DashboardWebController::class, 'index'])->name('dashboard.index');
+    });
+    Route::middleware('permission:dashboard.analytics')->group(function () {
         Route::get('dashboard/analytics', [DashboardWebController::class, 'analytics'])->name('dashboard.analytics');
     });
 
     // --- Smart Data Import (Excel / CSV) ---
-    Route::prefix('data-import')->name('data-import.')->group(function () {
+    Route::middleware('permission:data_import.view')->prefix('data-import')->name('data-import.')->group(function () {
         Route::get('/', [\App\Http\Controllers\DataImportWebController::class, 'index'])->name('index');
         Route::get('template/{section}', [\App\Http\Controllers\DataImportWebController::class, 'downloadTemplate'])->name('template');
         Route::post('preview', [\App\Http\Controllers\DataImportWebController::class, 'preview'])->name('preview');
@@ -435,13 +437,17 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('beneficiaries/{beneficiary}/sponsors/{donor}', [BeneficiaryWebController::class, 'detachSponsor'])->name('beneficiaries.detach-sponsor');
         Route::post('beneficiaries/{beneficiary}/direct-aid', [BeneficiaryWebController::class, 'recordDirectAid'])->name('beneficiaries.record-direct-aid');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
+    });
 
-        // --- Psychological Support Hub ---
+    // --- Psychological Support Hub ---
+    Route::middleware('permission:psychological_support.view|beneficiaries.view')->group(function () {
         Route::get('psychological-support', [\App\Http\Controllers\PsychologicalSupportController::class, 'index'])->name('psychological-support.index');
         Route::post('beneficiaries/{beneficiary}/psychological-support', [\App\Http\Controllers\PsychologicalSupportController::class, 'store'])->name('psychological-support.store');
         Route::get('beneficiaries/{beneficiary}/psychological-support/modal', [\App\Http\Controllers\PsychologicalSupportController::class, 'showModal'])->name('psychological-support.modal');
+    });
 
-        // --- Collaborations & Partnerships Directory ---
+    // --- Collaborations & Partnerships Directory ---
+    Route::middleware('permission:collaborations.view|manage_specialized_services')->group(function () {
         Route::resource('collaborations', \App\Http\Controllers\CollaborationController::class);
     });
 
@@ -479,26 +485,44 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // --- HR & Volunteers ---
-    Route::middleware('permission:manage_volunteers_hr')->group(function () {
+    // --- HR & Volunteers (Granular Permissions) ---
+    Route::middleware('permission:hr.evaluations|manage_employees|manage_volunteers_hr')->group(function () {
         Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
-        
+        Route::get('hr/evaluations', [HrEvaluationWebController::class, 'index'])->name('hr.evaluations');
+    });
+
+    Route::middleware('permission:volunteers.view|manage_volunteers_hr')->group(function () {
         Route::get('volunteers/reports', [VolunteerWebController::class, 'reports'])->name('volunteers.reports');
         Route::resource('volunteers', VolunteerWebController::class);
-        Route::resource('volunteer-hours', VolunteerHourWebController::class);
-        Route::resource('volunteer-attendance', VolunteerAttendanceWebController::class);
-        Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
+    });
 
-        Route::get('hr/evaluations', [HrEvaluationWebController::class, 'index'])->name('hr.evaluations');
+    Route::middleware('permission:volunteer_hours.view|log_volunteer_hours|volunteer_hours.create')->group(function () {
+        Route::resource('volunteer-hours', VolunteerHourWebController::class);
+    });
+
+    Route::middleware('permission:volunteer_attendance.view|volunteer_attendance.view_own|volunteer_attendance.create')->group(function () {
+        Route::resource('volunteer-attendance', VolunteerAttendanceWebController::class);
+    });
+
+    Route::middleware('permission:volunteer_tasks.view|tasks.view|view_own_tasks')->group(function () {
+        Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
+    });
+
+    Route::middleware('permission:employee_attendance.view|employee_attendance.view_own|employee_attendance.create')->group(function () {
         Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
         Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
         Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
+    });
+
+    Route::middleware('permission:employee_tasks.view|employee_tasks.view_own|employee_tasks.create')->group(function () {
         Route::post('employee-tasks/{employee_task}/status', [EmployeeTaskWebController::class, 'updateStatus'])->name('employee-tasks.update-status');
         Route::post('employee-tasks/{employee_task}/attachments', [EmployeeTaskWebController::class, 'uploadAttachment'])->name('employee-tasks.upload-attachment');
         Route::get('employee-tasks/{employee_task}/attachments/{attachment}', [EmployeeTaskWebController::class, 'downloadAttachment'])->name('employee-tasks.download-attachment');
         Route::resource('employee-tasks', EmployeeTaskWebController::class);
-        
+    });
+
+    Route::middleware('permission:leaves.view|leaves.manage|leaves.create')->group(function () {
         Route::post('leaves/bulk-destroy', [\App\Http\Controllers\LeaveWebController::class, 'bulkDestroy'])->name('leaves.bulk-destroy');
         Route::resource('leaves', \App\Http\Controllers\LeaveWebController::class)->parameters(['leaves' => 'leave']);
     });

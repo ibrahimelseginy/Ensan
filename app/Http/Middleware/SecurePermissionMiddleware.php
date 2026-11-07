@@ -14,16 +14,21 @@ class SecurePermissionMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $permission): Response
+    public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
         if (!auth()->check()) {
             return redirect()->route('login');
         }
 
-        if (!Gate::allows($permission)) {
-            abort(403, 'Unauthorized action.');
+        foreach ($permissions as $permGroup) {
+            foreach (explode('|', $permGroup) as $perm) {
+                $perm = trim($perm);
+                if ($perm !== '' && Gate::allows($perm)) {
+                    return $next($request);
+                }
+            }
         }
 
-        return $next($request);
+        abort(403, 'ليس لديك صلاحية للوصول إلى هذه الصفحة.');
     }
 }

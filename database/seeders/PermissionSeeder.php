@@ -14,6 +14,14 @@ class PermissionSeeder extends Seeder
             // لوحة التحكم
             // ═══════════════════════════════════════
             ['key' => 'dashboard.view', 'name' => 'عرض لوحة التحكم'],
+            ['key' => 'dashboard.analytics', 'name' => 'عرض المؤشرات والتحليلات'],
+            ['key' => 'data_import.view', 'name' => 'استيراد ملفات الإكسيل (Excel Hub)'],
+            ['key' => 'collaborations.view', 'name' => 'عرض دليل التعاونات والشراكات'],
+            ['key' => 'collaborations.create', 'name' => 'إضافة جهة في دليل الشراكات'],
+            ['key' => 'collaborations.edit', 'name' => 'تعديل جهة في دليل الشراكات'],
+            ['key' => 'collaborations.delete', 'name' => 'حذف جهة من دليل الشراكات'],
+            ['key' => 'psychological_support.view', 'name' => 'عرض متابعات الدعم النفسي'],
+            ['key' => 'psychological_support.create', 'name' => 'إضافة متابعة دعم نفسي'],
 
             // ═══════════════════════════════════════
             // الموظفين والمستخدمين
