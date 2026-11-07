@@ -109,7 +109,13 @@ final class TreasuryController extends Controller
 
     public function update(UpdateTreasuryRequest $request, Treasury $treasury): RedirectResponse
     {
-        $data     = $request->validated();
+        $data = $request->validated();
+        if (isset($data['current_balance']) && (float) $data['current_balance'] !== (float) $treasury->current_balance) {
+            $newBalance = (float) $data['current_balance'];
+            $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+            $data['opening_balance'] = $newBalance - $netTransactions;
+        }
+
         $executor = function () use ($treasury, $data) {
             $data['is_active'] = request()->boolean('is_active');
             $this->treasuryService->updateTreasury($treasury, $data);

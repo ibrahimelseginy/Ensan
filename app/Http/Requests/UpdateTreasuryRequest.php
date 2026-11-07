@@ -23,6 +23,7 @@ final class UpdateTreasuryRequest extends FormRequest
             'manager_id'      => 'nullable|exists:users,id',
             'location'        => 'nullable|string',
             'currency'        => 'required|string|max:10',
+            'current_balance' => 'nullable|numeric',
             'is_active'       => 'boolean'
         ];
     }

@@ -75,10 +75,15 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">الرصيد الحالي</label>
-                                <input type="text" class="form-control" 
-                                       value="{{ number_format($treasury->current_balance, 2) }} {{ $treasury->currency }}" 
-                                       disabled>
-                                <small class="text-muted">لا يمكن تعديل الرصيد مباشرة، استخدم الحركات</small>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="current_balance" class="form-control @error('current_balance') is-invalid @enderror" 
+                                           value="{{ old('current_balance', $treasury->current_balance) }}">
+                                    <span class="input-group-text">{{ $treasury->currency }}</span>
+                                    @error('current_balance')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <small class="text-muted">يمكنك تعديل الرصيد الحالي مباشرة أو من خلال الحركات المالية</small>
                             </div>
                         </div>
 

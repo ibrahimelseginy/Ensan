@@ -36,6 +36,12 @@ final readonly class TreasuryService
 
     public function updateTreasury(Treasury $treasury, array $data): bool
     {
+        if (isset($data['current_balance']) && (float) $data['current_balance'] !== (float) $treasury->current_balance) {
+            $newBalance = (float) $data['current_balance'];
+            $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+            $data['opening_balance'] = $newBalance - $netTransactions;
+        }
+
         return $this->treasuryRepository->update($treasury, $data);
     }
 
