@@ -1,7 +1,44 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-4">
+<style>
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm;
+        }
+        body * {
+            visibility: hidden;
+        }
+        .no-print,
+        .alert,
+        nav,
+        header,
+        footer,
+        .sidebar,
+        #universalPrintPreviewModal {
+            display: none !important;
+        }
+        #printableTreasuryStatement,
+        #printableTreasuryStatement * {
+            visibility: visible !important;
+        }
+        #printableTreasuryStatement {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4 no-print">
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-safe me-2"></i>{{ $treasury->name }}</h2>
@@ -30,7 +67,7 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show no-print" role="alert">
             <i class="bi bi-check-circle me-2"></i>
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -76,10 +113,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 section-title"><i class="bi bi-clock-history me-2"></i>آخر الحركات</h5>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="EnsanPrintPreview.open('.table-responsive', {title: 'كشف حساب الخزينة — {{ $treasury->name }}'})">
+                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="previewTreasuryStatement()">
                             <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
                         </button>
-                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="window.print()">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="printTreasuryStatement()">
                             <i class="bi bi-printer me-1"></i> طباعة كشف حساب
                         </button>
                     </div>
@@ -240,6 +277,113 @@
         </div>
     </div>
 </div>
+
+{{-- Official Printable Treasury Statement (Single-Page A4 Layout) --}}
+<div id="printableTreasuryStatement" class="d-none" data-printable>
+    {{-- Metadata Strip --}}
+    <table class="table table-bordered mb-2" style="width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 8px !important;">
+        <tbody>
+            <tr>
+                <td style="background-color: #f8fafc !important; font-weight: 700; width: 14%; padding: 5px 8px;">اسم الخزينة</td>
+                <td style="font-weight: 800; width: 22%; padding: 5px 8px;">{{ $treasury->name }}</td>
+                <td style="background-color: #f8fafc !important; font-weight: 700; width: 12%; padding: 5px 8px;">كود الخزينة</td>
+                <td style="font-family: monospace; font-weight: 700; width: 16%; padding: 5px 8px;">{{ $treasury->code }}</td>
+                <td style="background-color: #f8fafc !important; font-weight: 700; width: 14%; padding: 5px 8px;">المدير / الموقع</td>
+                <td style="width: 22%; padding: 5px 8px;">{{ $treasury->manager->name ?? 'غير محدد' }} — {{ $treasury->location ?? 'غير محدد' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- Financial Summary Strip (4 Horizontal Cells in 1 Row) --}}
+    <table class="table table-bordered text-center mb-2" style="width: 100%; border-collapse: collapse; margin-bottom: 10px !important;">
+        <thead>
+            <tr>
+                <th style="background-color: #f1f5f9 !important; color: #0f172a !important; width: 25%; padding: 5px; font-size: 11px;">الرصيد الافتتاحي</th>
+                <th style="background-color: #ecfdf5 !important; color: #047857 !important; width: 25%; padding: 5px; font-size: 11px;">إجمالي الوارد (+)</th>
+                <th style="background-color: #fef2f2 !important; color: #dc2626 !important; width: 25%; padding: 5px; font-size: 11px;">إجمالي الصادر (-)</th>
+                <th style="background-color: #eff6ff !important; color: #1d4ed8 !important; width: 25%; padding: 5px; font-size: 11px;">الرصيد الحالي الصافي</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="font-weight: 800; font-size: 13px; padding: 6px;">{{ number_format($treasury->opening_balance, 2) }} <small>{{ $treasury->currency }}</small></td>
+                <td class="text-success" style="font-weight: 800; font-size: 13px; padding: 6px; color: #047857 !important;">{{ number_format($stats['total_in'], 2) }} <small>{{ $treasury->currency }}</small></td>
+                <td class="text-danger" style="font-weight: 800; font-size: 13px; padding: 6px; color: #dc2626 !important;">{{ number_format($stats['total_out'], 2) }} <small>{{ $treasury->currency }}</small></td>
+                <td class="text-primary" style="font-weight: 800; font-size: 13px; padding: 6px; color: #1d4ed8 !important;">{{ number_format($treasury->current_balance, 2) }} <small>{{ $treasury->currency }}</small></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- Transactions Table --}}
+    <table class="table table-bordered align-middle mb-0" style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+        <thead>
+            <tr>
+                <th style="width: 6%; text-align: center;">#</th>
+                <th style="width: 15%; text-align: center;">التاريخ</th>
+                <th style="width: 13%; text-align: center;">نوع الحركة</th>
+                <th style="width: 20%; text-align: center;">المبلغ</th>
+                <th style="width: 32%; text-align: right;">البيان / الوصف</th>
+                <th style="width: 14%; text-align: center;">المسجل بواسطة</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($recentTransactions as $index => $transaction)
+            <tr>
+                <td style="text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                <td style="text-align: center; font-family: monospace;">{{ $transaction->transaction_date->format('Y-m-d') }}</td>
+                <td style="text-align: center; font-weight: 700;">
+                    @if($transaction->type === 'in')
+                        <span style="color: #047857 !important; font-weight: 700;">وارد (إيداع)</span>
+                    @else
+                        <span style="color: #dc2626 !important; font-weight: 700;">صادر (سحب)</span>
+                    @endif
+                </td>
+                <td style="text-align: center; font-weight: 800; font-family: monospace;">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
+                <td style="text-align: right;">{{ $transaction->description }}</td>
+                <td style="text-align: center;">{{ $transaction->createdBy->name ?? 'النظام' }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 14px;">لا توجد حركات مالية مسجلة</td>
+            </tr>
+            @endforelse
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" style="text-align: right; font-weight: 800; background-color: #f1f5f9 !important;">إجمالي الحركات ({{ $stats['total_transactions'] }} حركة) — الرصيد الصافي النهائي:</td>
+                <td style="text-align: center; font-weight: 800; font-family: monospace; background-color: #f1f5f9 !important; color: #047857 !important;">{{ number_format($treasury->current_balance, 2) }} {{ $treasury->currency }}</td>
+                <td colspan="2" style="text-align: center; font-size: 10.5px; background-color: #f1f5f9 !important;">
+                    وارد: {{ number_format($stats['total_in'], 2) }} | صادر: {{ number_format($stats['total_out'], 2) }}
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    function previewTreasuryStatement() {
+        if (window.EnsanPrintPreview) {
+            window.EnsanPrintPreview.open('#printableTreasuryStatement', {
+                title: 'كشف حساب الخزينة — {{ $treasury->name }} ({{ $treasury->code }})'
+            });
+        } else {
+            window.print();
+        }
+    }
+
+    function printTreasuryStatement() {
+        if (window.EnsanPrintPreview) {
+            window.EnsanPrintPreview.open('#printableTreasuryStatement', {
+                title: 'كشف حساب الخزينة — {{ $treasury->name }} ({{ $treasury->code }})'
+            });
+            setTimeout(function () {
+                window.EnsanPrintPreview.executePrint();
+            }, 250);
+        } else {
+            window.print();
+        }
+    }
+</script>
 @endsection
 
 
