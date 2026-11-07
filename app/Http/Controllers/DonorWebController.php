@@ -64,7 +64,8 @@ final class DonorWebController extends Controller
         }
 
         $warehouses = Warehouse::orderBy('name')->get();
-        $projects   = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))
+        $projects   = Project::query()
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->where(fn($q) => $q->where('name', 'not like', '%ضياف%')->where('name', 'not like', '%دار الضيا%')->where('name', 'not like', '%Guest%'))
             ->orderBy('name')->get();
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
@@ -95,7 +96,8 @@ final class DonorWebController extends Controller
             ->with('beneficiary')
             ->orderBy('full_name')
             ->get();
-        $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))
+        $projects      = Project::query()
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
         return view('donors.create', compact('beneficiaries', 'familyMembers', 'projects'));
     }
@@ -195,7 +197,9 @@ final class DonorWebController extends Controller
             ->with('beneficiary')
             ->orderBy('full_name')
             ->get();
-        $projects      = Project::where(fn($q) => $q->where('name', 'like', '%بعثاء%')->orWhere('name', 'like', '%زاد%')->orWhere('name', 'like', '%مدرار%')->orWhere('name', 'like', '%كسو%'))->orderBy('name')->get();
+        $projects      = Project::query()
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
+            ->orderBy('name')->get();
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
         $guestHouses   = GuestHouse::orderBy('name')->get();
         

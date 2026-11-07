@@ -51,11 +51,7 @@ final class BeneficiaryWebController extends Controller
         $stats         = $this->beneficiaryService->getDashboardStats();
 
         $projects = Project::query()
-            ->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%')
-            )
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
 
         $campaigns = Campaign::orderByDesc('season_year')->orderBy('name')->get();
@@ -110,11 +106,8 @@ final class BeneficiaryWebController extends Controller
             }
         }
 
-        $projects = Project::query()->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%')
-            )
+        $projects = Project::query()
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
 
         return view('beneficiaries.create', compact(
@@ -483,11 +476,8 @@ final class BeneficiaryWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المستفيد لديه طلب مراجعة حالياً');
         }
 
-        $projects = Project::query()->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%')
-            )
+        $projects = Project::query()
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
 
         $beneficiary->load(['familyMembers.sponsors']);

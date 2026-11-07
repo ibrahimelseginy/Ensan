@@ -78,11 +78,7 @@ final class InventoryTransactionWebController extends Controller
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
         
         $projects = Project::query()
-            ->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%')
-            )
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
 
         $campaigns   = Campaign::orderByDesc('season_year')->orderBy('name')->get();
@@ -134,11 +130,7 @@ final class InventoryTransactionWebController extends Controller
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
         
         $projects = Project::query()
-            ->where(fn($q) => $q->where('name', 'like', '%بعثاء%')
-                ->orWhere('name', 'like', '%زاد%')
-                ->orWhere('name', 'like', '%مدرار%')
-                ->orWhere('name', 'like', '%كسو%')
-            )
+            ->where(fn($q) => $q->whereNull('status')->orWhere('status', '!=', 'archived'))
             ->orderBy('name')->get();
 
         $campaigns = Campaign::orderByDesc('season_year')->orderBy('name')->get();
