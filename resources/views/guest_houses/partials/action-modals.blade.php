@@ -456,13 +456,10 @@
                                 </select>
                             </div>
                             <div class="col-md-6 guest-house-donation-cash-field">
-                                <label class="form-label form-label-required">رقم الإيصال</label>
-                                <input id="guest-house-donation-receipt" name="receipt_number" class="form-control @error('receipt_number') is-invalid @enderror" value="{{ old('receipt_number') }}">
+                                <label class="form-label form-label-required" id="guest-house-receipt-label">رقم الإيصال</label>
+                                <input id="guest-house-donation-receipt" name="receipt_number" class="form-control @error('receipt_number') is-invalid @enderror" value="{{ old('receipt_number', old('operation_number')) }}" placeholder="مثال: 06501">
+                                <input type="hidden" name="operation_number" id="guest-house-operation-number" value="{{ old('operation_number', old('receipt_number')) }}">
                                 @error('receipt_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-md-6 guest-house-donation-cash-field guest-house-digital-field d-none">
-                                <label class="form-label">رقم العملية / المرجع</label>
-                                <input name="operation_number" class="form-control" value="{{ old('operation_number') }}" placeholder="رقم المعاملة أو التحويل">
                             </div>
                             <div class="col-md-6 guest-house-donation-cash-field guest-house-digital-field d-none">
                                 <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>

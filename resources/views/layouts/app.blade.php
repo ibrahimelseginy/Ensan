@@ -5466,6 +5466,279 @@
   })();
   </script>
 
+  <script>
+  // Universal Donation Channel ("رقم العملية" vs "رقم الإيصال") & International Phone Validator
+  (function() {
+      const GLOBAL_COUNTRY_RULES = {
+          'EG': { label: '🇪🇬 +20 مصر', name: 'مصر', dial: '20', min: 10, max: 10, allowZero: true, placeholder: '01012345678', regex: /^(1[0125][0-9]{8})$/ },
+          'SA': { label: '🇸🇦 +966 السعودية', name: 'السعودية', dial: '966', min: 9, max: 9, allowZero: true, placeholder: '512345678', regex: /^(5[0-9]{8})$/ },
+          'AE': { label: '🇦🇪 +971 الإمارات', name: 'الإمارات', dial: '971', min: 9, max: 9, allowZero: true, placeholder: '501234567', regex: /^(5[0-9]{8})$/ },
+          'KW': { label: '🇰🇼 +965 الكويت', name: 'الكويت', dial: '965', min: 8, max: 8, allowZero: false, placeholder: '51234567' },
+          'QA': { label: '🇶🇦 +974 قطر', name: 'قطر', dial: '974', min: 8, max: 8, allowZero: false, placeholder: '33123456' },
+          'BH': { label: '🇧🇭 +973 البحرين', name: 'البحرين', dial: '973', min: 8, max: 8, allowZero: false, placeholder: '36123456' },
+          'OM': { label: '🇴🇲 +968 عُمان', name: 'سلطنة عُمان', dial: '968', min: 8, max: 8, allowZero: false, placeholder: '92123456' },
+          'JO': { label: '🇯🇴 +962 الأردن', name: 'الأردن', dial: '962', min: 9, max: 9, allowZero: true, placeholder: '791234567' },
+          'PS': { label: '🇵🇸 +970 فلسطين', name: 'فلسطين', dial: '970', min: 9, max: 9, allowZero: true, placeholder: '591234567' },
+          'LB': { label: '🇱🇧 +961 لبنان', name: 'لبنان', dial: '961', min: 7, max: 8, allowZero: true, placeholder: '71123456' },
+          'SY': { label: '🇸🇾 +963 سوريا', name: 'سوريا', dial: '963', min: 9, max: 9, allowZero: true, placeholder: '931234567' },
+          'IQ': { label: '🇮🇶 +964 العراق', name: 'العراق', dial: '964', min: 10, max: 10, allowZero: true, placeholder: '7712345678' },
+          'YE': { label: '🇾🇪 +967 اليمن', name: 'اليمن', dial: '967', min: 9, max: 9, allowZero: true, placeholder: '771234567' },
+          'LY': { label: '🇱🇾 +218 ليبيا', name: 'ليبيا', dial: '218', min: 9, max: 9, allowZero: true, placeholder: '911234567' },
+          'SD': { label: '🇸🇩 +249 السودان', name: 'السودان', dial: '249', min: 9, max: 9, allowZero: true, placeholder: '911234567' },
+          'TN': { label: '🇹🇳 +216 تونس', name: 'تونس', dial: '216', min: 8, max: 8, allowZero: false, placeholder: '20123456' },
+          'DZ': { label: '🇩🇿 +213 الجزائر', name: 'الجزائر', dial: '213', min: 9, max: 9, allowZero: true, placeholder: '551234567' },
+          'MA': { label: '🇲🇦 +212 المغرب', name: 'المغرب', dial: '212', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+          'MR': { label: '🇲🇷 +222 موريتانيا', name: 'موريتانيا', dial: '222', min: 8, max: 8, allowZero: false, placeholder: '22123456' },
+          'SO': { label: '🇸🇴 +252 الصومال', name: 'الصومال', dial: '252', min: 8, max: 9, allowZero: true, placeholder: '611234567' },
+          'DJ': { label: '🇩🇯 +253 جيبوتي', name: 'جيبوتي', dial: '253', min: 8, max: 8, allowZero: false, placeholder: '77123456' },
+          'KM': { label: '🇰🇲 +269 جزر القمر', name: 'جزر القمر', dial: '269', min: 7, max: 7, allowZero: false, placeholder: '3212345' },
+          'TR': { label: '🇹🇷 +90 تركيا', name: 'تركيا', dial: '90', min: 10, max: 10, allowZero: true, placeholder: '5321234567' },
+          'US': { label: '🇺🇸 +1 أمريكا/كندا', name: 'أمريكا / كندا', dial: '1', min: 10, max: 10, allowZero: false, placeholder: '2025550125' },
+          'GB': { label: '🇬🇧 +44 بريطانيا', name: 'بريطانيا', dial: '44', min: 10, max: 10, allowZero: true, placeholder: '7700900077' },
+          'DE': { label: '🇩🇪 +49 ألمانيا', name: 'ألمانيا', dial: '49', min: 10, max: 11, allowZero: true, placeholder: '15123456789' },
+          'FR': { label: '🇫🇷 +33 فرنسا', name: 'فرنسا', dial: '33', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+          'IT': { label: '🇮🇹 +39 إيطاليا', name: 'إيطاليا', dial: '39', min: 9, max: 10, allowZero: false, placeholder: '3123456789' },
+          'ES': { label: '🇪🇸 +34 إسبانيا', name: 'إسبانيا', dial: '34', min: 9, max: 9, allowZero: false, placeholder: '612345678' },
+          'NL': { label: '🇳🇱 +31 هولندا', name: 'هولندا', dial: '31', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+          'SE': { label: '🇸🇪 +46 السويد', name: 'السويد', dial: '46', min: 9, max: 9, allowZero: true, placeholder: '701234567' },
+          'CH': { label: '🇨🇭 +41 سويسرا', name: 'سويسرا', dial: '41', min: 9, max: 9, allowZero: true, placeholder: '781234567' },
+          'AT': { label: '🇦🇹 +43 النمسا', name: 'النمسا', dial: '43', min: 10, max: 11, allowZero: true, placeholder: '6641234567' },
+          'BE': { label: '🇧🇪 +32 بلجيكا', name: 'بلجيكا', dial: '32', min: 9, max: 9, allowZero: true, placeholder: '470123456' },
+          'AU': { label: '🇦🇺 +61 أستراليا', name: 'أستراليا', dial: '61', min: 9, max: 9, allowZero: true, placeholder: '412345678' },
+          'NZ': { label: '🇳🇿 +64 نيوزيلندا', name: 'نيوزيلندا', dial: '64', min: 8, max: 9, allowZero: true, placeholder: '211234567' },
+          'MY': { label: '🇲🇾 +60 ماليزيا', name: 'ماليزيا', dial: '60', min: 9, max: 10, allowZero: true, placeholder: '123456789' },
+          'ID': { label: '🇮🇩 +62 إندونيسيا', name: 'إندونيسيا', dial: '62', min: 9, max: 12, allowZero: true, placeholder: '8123456789' },
+          'IN': { label: '🇮🇳 +91 الهند', name: 'الهند', dial: '91', min: 10, max: 10, allowZero: true, placeholder: '9876543210' },
+          'PK': { label: '🇵🇰 +92 باكستان', name: 'باكستان', dial: '92', min: 10, max: 10, allowZero: true, placeholder: '3001234567' },
+          'CN': { label: '🇨🇳 +86 الصين', name: 'الصين', dial: '86', min: 11, max: 11, allowZero: false, placeholder: '13800138000' },
+          'RU': { label: '🇷🇺 +7 روسيا', name: 'روسيا', dial: '7', min: 10, max: 10, allowZero: false, placeholder: '9123456789' },
+          'BR': { label: '🇧🇷 +55 البرازيل', name: 'البرازيل', dial: '55', min: 10, max: 11, allowZero: false, placeholder: '11912345678' },
+          'ZA': { label: '🇿🇦 +27 جنوب أفريقيا', name: 'جنوب أفريقيا', dial: '27', min: 9, max: 9, allowZero: true, placeholder: '821234567' }
+      };
+
+      // 1. Dynamic "رقم العملية" vs "رقم الإيصال" switcher across all donation forms
+      function syncDonationChannelReceiptLabel(selectEl) {
+          if (!selectEl) return;
+          const form = selectEl.closest('form');
+          if (!form) return;
+
+          const receiptInput = form.querySelector('input[name="receipt_number"]');
+          if (!receiptInput) return;
+
+          const ch = selectEl.value;
+          const isDigital = ['instapay', 'vodafone_cash', 'bank_transfer'].includes(ch);
+
+          // Find the label inside the same column/wrapper as receiptInput
+          const wrapper = receiptInput.closest('.col-md-3, .col-md-4, .col-md-6, .col-12, .mb-3') || receiptInput.parentElement;
+          const label = wrapper ? wrapper.querySelector('label.form-label') : null;
+
+          if (label) {
+              const reqStar = label.querySelector('.text-danger');
+              label.textContent = isDigital ? 'رقم العملية ' : 'رقم الإيصال ';
+              if (reqStar) {
+                  label.appendChild(reqStar);
+              }
+          }
+
+          receiptInput.setAttribute('placeholder', isDigital ? 'رقم عملية إنستا باي / فودافون كاش' : 'مثال: 06501');
+
+          const opInput = form.querySelector('input[name="operation_number"]');
+          if (opInput) {
+              opInput.value = receiptInput.value;
+          }
+      }
+
+      // 2. Universal International Phone Input Enhancer & Validator
+      function enhancePhoneInput(phoneInput) {
+          if (!phoneInput || phoneInput.dataset.intlEnhanced === '1' || phoneInput.id === 'newDonorPhone') return;
+          phoneInput.dataset.intlEnhanced = '1';
+          phoneInput.removeAttribute('pattern');
+
+          const isNewDonorField = phoneInput.name === 'new_donor_phone';
+          const countryFieldName = isNewDonorField ? 'new_donor_phone_country' : 'phone_country';
+
+          const colWrapper = phoneInput.closest('.col-md-6, .col-md-4, .col-md-3, .col-12') || phoneInput.parentElement;
+          const labelEl = colWrapper ? colWrapper.querySelector('label.form-label') : null;
+
+          // Create live digit counter badge on label
+          let badgeEl = null;
+          if (labelEl) {
+              labelEl.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+              badgeEl = document.createElement('span');
+              badgeEl.className = 'badge bg-secondary-subtle text-secondary font-monospace ms-1';
+              badgeEl.style.fontSize = '0.72rem';
+              badgeEl.textContent = '11 رقم';
+              labelEl.appendChild(badgeEl);
+          }
+
+          // Detect existing country code if value starts with +
+          let initialCountry = 'EG';
+          let rawVal = (phoneInput.value || '').trim();
+          if (rawVal.startsWith('+')) {
+              const strippedPlus = rawVal.slice(1);
+              for (const [code, rule] of Object.entries(GLOBAL_COUNTRY_RULES)) {
+                  if (strippedPlus.startsWith(rule.dial)) {
+                      initialCountry = code;
+                      phoneInput.value = strippedPlus.slice(rule.dial.length);
+                      break;
+                  }
+              }
+          }
+
+          // Build input-group with country select
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'input-group';
+          groupDiv.setAttribute('dir', 'ltr');
+
+          const selectEl = document.createElement('select');
+          selectEl.name = countryFieldName;
+          selectEl.className = 'form-select bg-light fw-bold';
+          selectEl.style.maxWidth = '145px';
+          selectEl.style.fontSize = '0.84rem';
+
+          for (const [code, rule] of Object.entries(GLOBAL_COUNTRY_RULES)) {
+              const opt = document.createElement('option');
+              opt.value = code;
+              opt.textContent = rule.label;
+              if (code === initialCountry) opt.selected = true;
+              selectEl.appendChild(opt);
+          }
+
+          phoneInput.parentNode.insertBefore(groupDiv, phoneInput);
+          groupDiv.appendChild(selectEl);
+          groupDiv.appendChild(phoneInput);
+
+          // Create or reuse helper text element
+          let hintEl = colWrapper ? colWrapper.querySelector('.form-text') : null;
+          if (!hintEl && colWrapper) {
+              hintEl = document.createElement('div');
+              hintEl.className = 'form-text small text-muted mt-1';
+              groupDiv.insertAdjacentElement('afterend', hintEl);
+          }
+
+          function validatePhone() {
+              const countryCode = selectEl.value || 'EG';
+              const rule = GLOBAL_COUNTRY_RULES[countryCode] || GLOBAL_COUNTRY_RULES['EG'];
+
+              let val = String(phoneInput.value || '')
+                  .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                  .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                  .replace(/[^0-9]/g, '');
+
+              const startsWithZero = val.startsWith('0');
+              const allowedMax = (rule.allowZero && startsWithZero) ? (rule.max + 1) : rule.max;
+
+              if (val.length > allowedMax) {
+                  val = val.slice(0, allowedMax);
+              }
+              if (phoneInput.value !== val) {
+                  phoneInput.value = val;
+              }
+
+              phoneInput.setAttribute('maxlength', String(rule.allowZero ? (rule.max + 1) : rule.max));
+              phoneInput.setAttribute('placeholder', rule.placeholder || '');
+
+              const nationalDigits = (rule.allowZero && startsWithZero) ? val.slice(1) : val;
+              const expectedDesc = rule.min === rule.max
+                  ? (rule.allowZero ? `${rule.min} أرقام (أو ${rule.max + 1} بالصفر)` : `${rule.min} أرقام`)
+                  : `من ${rule.min} إلى ${rule.max} أرقام`;
+
+              if (phoneInput.disabled || (!phoneInput.required && val.length === 0)) {
+                  phoneInput.setCustomValidity('');
+                  phoneInput.classList.remove('is-valid', 'is-invalid');
+                  if (badgeEl) {
+                      badgeEl.className = 'badge bg-secondary-subtle text-secondary font-monospace ms-1';
+                      badgeEl.textContent = `${val.length} / ${allowedMax} رقم`;
+                  }
+                  if (hintEl) {
+                      hintEl.className = 'form-text small text-muted mt-1';
+                      hintEl.textContent = `${rule.name} (+${rule.dial}): مطلوب ${expectedDesc}.`;
+                  }
+                  return;
+              }
+
+              if (val.length === 0 && phoneInput.required) {
+                  phoneInput.setCustomValidity(`يرجى إدخال رقم الهاتف لدولة ${rule.name} (${expectedDesc})`);
+                  phoneInput.classList.remove('is-valid', 'is-invalid');
+                  if (badgeEl) {
+                      badgeEl.className = 'badge bg-secondary-subtle text-secondary font-monospace ms-1';
+                      badgeEl.textContent = `0 / ${allowedMax} رقم`;
+                  }
+                  if (hintEl) {
+                      hintEl.className = 'form-text small text-muted mt-1';
+                      hintEl.textContent = `${rule.name} (+${rule.dial}): مطلوب ${expectedDesc}.`;
+                  }
+                  return;
+              }
+
+              const lenValid = nationalDigits.length >= rule.min && nationalDigits.length <= rule.max;
+              const regexValid = !rule.regex || rule.regex.test(nationalDigits);
+
+              if (lenValid && regexValid) {
+                  phoneInput.setCustomValidity('');
+                  phoneInput.classList.remove('is-invalid');
+                  phoneInput.classList.add('is-valid');
+                  if (badgeEl) {
+                      badgeEl.className = 'badge bg-success-subtle text-success font-monospace ms-1';
+                      badgeEl.textContent = `${val.length} / ${allowedMax} ✓`;
+                  }
+                  if (hintEl) {
+                      hintEl.className = 'form-text small text-success fw-semibold mt-1';
+                      hintEl.textContent = `✓ رقم صحيح ومطابق لدولة ${rule.name} (+${rule.dial})`;
+                  }
+              } else {
+                  const errMsg = !lenValid
+                      ? `رقم الهاتف لدولة ${rule.name} (+${rule.dial}) يجب أن يكون ${expectedDesc} (المدخل حالياً: ${val.length})`
+                      : `بداية رقم الهاتف غير صحيحة لدولة ${rule.name} (+${rule.dial})`;
+                  phoneInput.setCustomValidity(errMsg);
+                  phoneInput.classList.remove('is-valid');
+                  phoneInput.classList.add('is-invalid');
+                  if (badgeEl) {
+                      badgeEl.className = 'badge bg-danger-subtle text-danger font-monospace ms-1';
+                      badgeEl.textContent = `${val.length} / ${allowedMax}`;
+                  }
+                  if (hintEl) {
+                      hintEl.className = 'form-text small text-danger mt-1';
+                      hintEl.textContent = errMsg;
+                  }
+              }
+          }
+
+          selectEl.addEventListener('change', validatePhone);
+          phoneInput.addEventListener('input', validatePhone);
+          phoneInput.addEventListener('change', validatePhone);
+          phoneInput.addEventListener('blur', validatePhone);
+          validatePhone();
+      }
+
+      function initGlobalDonationAndPhoneEnhancements() {
+          document.querySelectorAll('select[name="cash_channel"]').forEach(syncDonationChannelReceiptLabel);
+          document.querySelectorAll('input[name="phone"], input[name="new_donor_phone"]').forEach(enhancePhoneInput);
+      }
+
+      document.addEventListener('change', function(e) {
+          if (e.target && e.target.matches('select[name="cash_channel"]')) {
+              syncDonationChannelReceiptLabel(e.target);
+          }
+      });
+
+      document.addEventListener('input', function(e) {
+          if (e.target && e.target.matches('input[name="receipt_number"]')) {
+              const form = e.target.closest('form');
+              const opInput = form ? form.querySelector('input[name="operation_number"]') : null;
+              if (opInput) opInput.value = e.target.value;
+          }
+      });
+
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initGlobalDonationAndPhoneEnhancements);
+      } else {
+          initGlobalDonationAndPhoneEnhancements();
+      }
+      document.addEventListener('shown.bs.modal', initGlobalDonationAndPhoneEnhancements);
+  })();
+  </script>
+
   @include('components.internal-chat-widget')
   @include('layouts.partials.global_search_script')
 

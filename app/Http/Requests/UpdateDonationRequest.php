@@ -18,9 +18,10 @@ final class UpdateDonationRequest extends FormRequest
         $donationId = $this->route('donation')?->id;
         
         return [
-            'type'            => 'sometimes|in:cash,in_kind',
-            'cash_channel'    => 'nullable|in:cash,instapay,vodafone_cash,delegate',
-            'amount'          => 'nullable|numeric|min:0.01',
+            'type'             => 'sometimes|in:cash,in_kind',
+            'cash_channel'     => 'nullable|in:cash,instapay,vodafone_cash,bank_transfer,delegate',
+            'operation_number' => 'nullable|string|max:191',
+            'amount'           => 'nullable|numeric|min:0.01',
             'currency'        => 'nullable|string',
             'receipt_number'  => 'nullable|string|max:64|unique:donations,receipt_number,' . ($donationId ?? ''),
             'estimated_value' => 'nullable|numeric|min:0.01',

@@ -110,6 +110,7 @@ final readonly class DonorService
         $modelData = Arr::except($data, [
             'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
             'sponsored_family_member_ids', 'sync_sponsored_family_members',
+            'phone_country', '_phone_national',
         ]);
 
         $this->applySponsorshipDefaults($modelData);
@@ -162,6 +163,7 @@ final readonly class DonorService
         $modelData = Arr::except($data, [
             'code', 'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
             'sponsored_family_member_ids', 'sync_sponsored_family_members',
+            'phone_country', '_phone_national',
         ]);
 
         if (empty($donor->code)) {

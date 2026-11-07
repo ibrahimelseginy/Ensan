@@ -768,8 +768,8 @@
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">رقم الهاتف <span class="badge bg-primary-subtle text-primary">مستحسن</span></label>
-                        <input type="tel" name="phone" class="form-control" dir="ltr" placeholder="مثال: 01012345678" pattern="^(01[0125][0-9]{8})$" title="رقم هاتف مصري يبدأ بـ 010 أو 011 أو 012 أو 015">
-                        <div class="form-text">لتسهيل التواصل وإرسال إيصالات التبرع.</div>
+                        <input type="tel" name="phone" class="form-control" dir="ltr" placeholder="مثال: 01012345678">
+                        <div class="form-text">اختر الدولة وأدخل الرقم بالمفتاح الصحيح.</div>
                     </div>
 
                     <div class="col-md-6">

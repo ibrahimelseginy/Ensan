@@ -308,12 +308,27 @@ final class StoreDonationRequest extends FormRequest
             }
         }
 
+        $cashChannel = (string) $this->input('cash_channel', 'cash');
+        $isDigitalChannel = in_array($cashChannel, ['instapay', 'vodafone_cash', 'bank_transfer'], true);
+        $receiptNum = is_string($this->input('receipt_number')) ? trim($this->input('receipt_number')) : $this->input('receipt_number');
+        $opNum = is_string($this->input('operation_number')) ? trim($this->input('operation_number')) : $this->input('operation_number');
+
+        if ($isDigitalChannel) {
+            if (($receiptNum === null || $receiptNum === '') && $opNum !== null && $opNum !== '') {
+                $receiptNum = $opNum;
+            } elseif (($opNum === null || $opNum === '') && $receiptNum !== null && $receiptNum !== '') {
+                $opNum = $receiptNum;
+            }
+        }
+
         $this->merge([
             'add_to_inventory' => $this->boolean('add_to_inventory'),
             'new_donor_code' => Donor::normalizeCode($this->input('new_donor_code')),
             'new_donor_phone_country' => $countryCode,
             'new_donor_phone' => $normalizedPhone,
             '_new_donor_phone_national' => $nationalDigits,
+            'receipt_number' => $receiptNum,
+            'operation_number' => $opNum,
         ]);
 
         $purpose = (string) $this->input('purpose');

@@ -32,7 +32,38 @@ final class StoreDonorRequest extends FormRequest
                 },
             ],
             'type'                       => 'required|in:individual,organization',
-            'phone'                      => 'nullable|string|max:20',
+            'phone_country'              => 'nullable|string|in:' . implode(',', array_keys(StoreDonationRequest::COUNTRY_PHONE_RULES)),
+            'phone'                      => [
+                'nullable',
+                'string',
+                'max:25',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+                    $countryCode = strtoupper((string) $this->input('phone_country', 'EG'));
+                    $rule = StoreDonationRequest::COUNTRY_PHONE_RULES[$countryCode] ?? StoreDonationRequest::COUNTRY_PHONE_RULES['EG'];
+                    $national = (string) $this->input('_phone_national', '');
+
+                    if (!preg_match('/^[0-9]+$/', $national)) {
+                        $fail("رقم الهاتف لدولة {$rule['name']} (+{$rule['dial']}) يجب أن يحتوي على أرقام فقط.");
+                        return;
+                    }
+
+                    $len = strlen($national);
+                    if ($len < $rule['min'] || $len > $rule['max']) {
+                        $expectedText = $rule['min'] === $rule['max']
+                            ? "{$rule['min']} أرقام" . (!empty($rule['allow_zero']) ? " (أو " . ($rule['max'] + 1) . " بالصفر الابتدائي)" : "")
+                            : "من {$rule['min']} إلى {$rule['max']} أرقام";
+                        $fail("رقم الهاتف لدولة {$rule['name']} (+{$rule['dial']}) غير مكتمل أو غير صحيح: يجب أن يتكون من {$expectedText}.");
+                        return;
+                    }
+
+                    if (!empty($rule['regex']) && !preg_match($rule['regex'], $national)) {
+                        $fail("بداية رقم الهاتف غير صحيحة لدولة {$rule['name']} (+{$rule['dial']}).");
+                    }
+                },
+            ],
             'national_id'                => 'nullable|string|max:20',
             'email'                      => 'nullable|email',
             'address'                    => 'nullable|string|max:500',
@@ -56,12 +87,59 @@ final class StoreDonorRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $rawPhone = $this->input('phone');
+        $countryCode = strtoupper((string) $this->input('phone_country', 'EG'));
+        if (!isset(StoreDonationRequest::COUNTRY_PHONE_RULES[$countryCode])) {
+            $countryCode = 'EG';
+        }
+        $rule = StoreDonationRequest::COUNTRY_PHONE_RULES[$countryCode];
+
+        $normalizedPhone = $rawPhone;
+        $nationalDigits = '';
+
+        if (is_string($rawPhone) && trim($rawPhone) !== '') {
+            $digits = strtr(trim($rawPhone), [
+                '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+                '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+                '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+                '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            ]);
+            $digits = preg_replace('/[\s\-\(\)]+/', '', $digits);
+            if (str_starts_with($digits, '+')) {
+                $digits = substr($digits, 1);
+            } elseif (str_starts_with($digits, '00')) {
+                $digits = substr($digits, 2);
+            }
+
+            $dial = $rule['dial'];
+            if (str_starts_with($digits, $dial) && strlen($digits) > $rule['max']) {
+                $digits = substr($digits, strlen($dial));
+            }
+
+            if (!empty($rule['allow_zero']) && str_starts_with($digits, '0') && strlen($digits) === ($rule['max'] + 1)) {
+                $digits = substr($digits, 1);
+            } elseif ($countryCode === 'EG' && str_starts_with($digits, '0')) {
+                $digits = substr($digits, 1);
+            }
+
+            $nationalDigits = $digits;
+
+            if ($countryCode === 'EG') {
+                $normalizedPhone = '0' . $nationalDigits;
+            } else {
+                $normalizedPhone = '+' . $dial . $nationalDigits;
+            }
+        }
+
         $isMonthly = $this->input('classification') === 'recurring'
             && $this->input('recurring_cycle') === 'monthly';
 
         $this->merge([
             'name' => is_string($this->input('name')) ? preg_replace('/\s+/u', ' ', trim($this->input('name'))) : $this->input('name'),
             'code' => Donor::normalizeCode($this->input('code')),
+            'phone_country' => $countryCode,
+            'phone' => $normalizedPhone,
+            '_phone_national' => $nationalDigits,
             'active' => $this->has('active') ? $this->boolean('active') : true,
             'sponsorship_type' => $isMonthly ? 'monthly_sponsor' : ($this->input('sponsorship_type') ?: 'none'),
             'sync_sponsored_beneficiaries' => $this->boolean('sync_sponsored_beneficiaries'),

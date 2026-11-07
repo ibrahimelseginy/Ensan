@@ -576,12 +576,9 @@
             </select>
           </div>
           <div class="col-md-3 cash-only">
-            <label class="form-label form-label-required">رقم الإيصال</label>
-            <input name="receipt_number" value="{{ old('receipt_number') }}" class="form-control" required placeholder="مثال: 06501">
-          </div>
-          <div class="col-md-3 cash-only digital-pay-fields" style="display:none">
-            <label class="form-label">رقم العملية / المرجع</label>
-            <input name="operation_number" id="operationNumberInput" value="{{ old('operation_number') }}" class="form-control" placeholder="رقم المعاملة أو التحويل">
+            <label class="form-label form-label-required" id="receiptOrOperationLabel">رقم الإيصال</label>
+            <input name="receipt_number" id="receiptNumberInput" value="{{ old('receipt_number', old('operation_number')) }}" class="form-control" required placeholder="مثال: 06501">
+            <input type="hidden" name="operation_number" id="operationNumberInput" value="{{ old('operation_number', old('receipt_number')) }}">
           </div>
           <div class="col-md-3 cash-only digital-pay-fields" style="display:none">
             <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>
@@ -2059,7 +2056,13 @@ $(function () {
     const ch = $('#cashChannelSelect').val();
     const isDigital = ['instapay', 'vodafone_cash', 'bank_transfer'].includes(ch);
     $('.digital-pay-fields').toggle(isDigital);
+    $('#receiptOrOperationLabel').text(isDigital ? 'رقم العملية / المرجع' : 'رقم الإيصال');
+    $('#receiptNumberInput').attr('placeholder', isDigital ? 'رقم عملية التحويل (انستا باي / فودافون كاش)' : 'مثال: 06501');
   }
+
+  $('#receiptNumberInput').on('input change', function() {
+    $('#operationNumberInput').val($(this).val());
+  });
 
   // Paid Months Logic & Live Next Due Date Calculation
   $(document).on('click', '.month-pill-checkbox', function(e) {

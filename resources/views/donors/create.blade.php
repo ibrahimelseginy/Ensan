@@ -57,8 +57,7 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">الهاتف</label>
-            <input type="tel" pattern="^(01[0125][0-9]{8})$" title="رقم هاتف مصري يبدأ بـ 010, 011, 012, 015"
-              inputmode="numeric" name="phone" class="form-control @error('phone') is-invalid @enderror"
+            <input type="tel" inputmode="numeric" dir="ltr" name="phone" class="form-control @error('phone') is-invalid @enderror"
               value="{{ old('phone') }}" required>
             @error('phone')
               <div class="invalid-feedback">{{ $message }}</div>
