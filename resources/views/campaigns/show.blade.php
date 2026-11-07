@@ -837,7 +837,7 @@
     @if(request()->user()?->hasPermission('donations.view'))
         <div class="modal fade" id="campaignDonationModal" tabindex="-1" aria-labelledby="campaignDonationModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                <form class="modal-content" method="POST" action="{{ route('campaigns.storeDonation', $campaign) }}">
+                <form class="modal-content" method="POST" action="{{ route('campaigns.storeDonation', $campaign) }}" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="form_context" value="campaign_donation">
                     <div class="modal-header">
@@ -943,6 +943,17 @@
                                         value="{{ old('received_at', now()->toDateString()) }}">
                                     @error('received_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-required">بند الإيصال (وذلك قيمة)</label>
+                                    <select name="purpose" class="form-select @error('purpose') is-invalid @enderror" required>
+                                        <option value="sadaqat" @selected(old('purpose', 'sadaqat') === 'sadaqat')>صدقات عامة</option>
+                                        <option value="zakat_maal" @selected(old('purpose') === 'zakat_maal')>زكاة مال</option>
+                                        <option value="sadaqa_jariya" @selected(old('purpose') === 'sadaqa_jariya')>صدقة جارية</option>
+                                        <option value="kafalat_awram" @selected(old('purpose') === 'kafalat_awram')>كفالات أورام</option>
+                                        <option value="kafalat_aytam" @selected(old('purpose') === 'kafalat_aytam')>كفالات أيتام</option>
+                                    </select>
+                                    @error('purpose')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
 
                                 <div class="col-md-6 campaign-donation-cash-field">
                                     <label class="form-label form-label-required">المبلغ</label>
@@ -963,16 +974,22 @@
                                         <option value="cash" @selected(old('cash_channel', 'cash') === 'cash')>نقدي</option>
                                         <option value="instapay" @selected(old('cash_channel') === 'instapay')>إنستا باي</option>
                                         <option value="vodafone_cash" @selected(old('cash_channel') === 'vodafone_cash')>فودافون كاش</option>
+                                        <option value="bank_transfer" @selected(old('cash_channel') === 'bank_transfer')>تحويل بنكي</option>
                                         <option value="delegate" @selected(old('cash_channel') === 'delegate')>مندوب</option>
                                     </select>
                                     @error('cash_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6 campaign-donation-cash-field">
-                                    <label class="form-label form-label-required">رقم الإيصال</label>
+                                    <label class="form-label form-label-required" id="campaign-receipt-label">رقم الإيصال</label>
                                     <input id="campaign-donation-receipt" name="receipt_number"
                                         class="form-control @error('receipt_number') is-invalid @enderror"
-                                        value="{{ old('receipt_number') }}" placeholder="مثال: RC-2026-000123">
+                                        value="{{ old('receipt_number', old('operation_number')) }}" placeholder="مثال: RC-2026-000123">
+                                    <input type="hidden" name="operation_number" id="campaign-operation-number" value="{{ old('operation_number', old('receipt_number')) }}">
                                     @error('receipt_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6 campaign-donation-cash-field campaign-digital-field d-none">
+                                    <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>
+                                    <input type="file" name="transfer_receipt" class="form-control" accept="image/*,.pdf">
                                 </div>
                                 <div class="col-md-6 campaign-donation-cash-field">
                                     <label class="form-label form-label-required">الخزينة</label>
@@ -1496,7 +1513,37 @@
                     const field = document.getElementById(id);
                     if (field) field.required = !isCash;
                 });
+                updateCampaignChannelFields();
             }
+
+            const campaignChannelSelect = document.getElementById('campaign-donation-cash-channel');
+            const campaignReceiptLabel = document.getElementById('campaign-receipt-label');
+            const campaignReceiptInput = document.getElementById('campaign-donation-receipt');
+            const campaignOpInput = document.getElementById('campaign-operation-number');
+            const campaignDigitalFields = document.querySelectorAll('.campaign-digital-field');
+
+            function updateCampaignChannelFields() {
+                const isCash = !donationType || donationType.value === 'cash';
+                const ch = campaignChannelSelect ? campaignChannelSelect.value : 'cash';
+                const isDigital = isCash && (ch === 'instapay' || ch === 'vodafone_cash' || ch === 'bank_transfer');
+                if (campaignReceiptLabel) {
+                    campaignReceiptLabel.innerHTML = isDigital
+                        ? '<i class="bi bi-hash text-primary me-1"></i> رقم العملية'
+                        : 'رقم الإيصال';
+                }
+                if (campaignReceiptInput) {
+                    campaignReceiptInput.placeholder = isDigital ? 'أدخل رقم العملية المرجعي...' : 'مثال: RC-2026-000123';
+                }
+                campaignDigitalFields.forEach(function (el) {
+                    el.classList.toggle('d-none', !isDigital);
+                    el.querySelectorAll('input').forEach(function (inp) { inp.disabled = !isDigital; });
+                });
+            }
+
+            campaignChannelSelect?.addEventListener('change', updateCampaignChannelFields);
+            campaignReceiptInput?.addEventListener('input', function () {
+                if (campaignOpInput) campaignOpInput.value = this.value;
+            });
 
             donationType?.addEventListener('change', updateDonationType);
             updateDonationType();

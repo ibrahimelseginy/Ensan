@@ -1,7 +1,7 @@
 @if(request()->user()?->hasPermission('donations.view'))
     <div class="modal fade" id="projectDonationModal" tabindex="-1" aria-labelledby="projectDonationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <form class="modal-content" method="POST" action="{{ route('projects.storeDonation', $project) }}">
+            <form class="modal-content" method="POST" action="{{ route('projects.storeDonation', $project) }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="form_context" value="project_donation">
                 <div class="modal-header">
@@ -112,6 +112,17 @@
                                     value="{{ old('received_at', now()->toDateString()) }}">
                                 @error('received_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label form-label-required">بند الإيصال (وذلك قيمة)</label>
+                                <select name="purpose" class="form-select @error('purpose') is-invalid @enderror" required>
+                                    <option value="sadaqat" @selected(old('purpose', 'sadaqat') === 'sadaqat')>صدقات عامة</option>
+                                    <option value="zakat_maal" @selected(old('purpose') === 'zakat_maal')>زكاة مال</option>
+                                    <option value="sadaqa_jariya" @selected(old('purpose') === 'sadaqa_jariya')>صدقة جارية</option>
+                                    <option value="kafalat_awram" @selected(old('purpose') === 'kafalat_awram')>كفالات أورام</option>
+                                    <option value="kafalat_aytam" @selected(old('purpose') === 'kafalat_aytam')>كفالات أيتام</option>
+                                </select>
+                                @error('purpose')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                             <div class="col-md-6 project-donation-cash-field">
                                 <label class="form-label form-label-required">المبلغ</label>
                                 <div class="input-group">
@@ -131,16 +142,22 @@
                                     <option value="cash" @selected(old('cash_channel', 'cash') === 'cash')>نقدي</option>
                                     <option value="instapay" @selected(old('cash_channel') === 'instapay')>إنستاباي</option>
                                     <option value="vodafone_cash" @selected(old('cash_channel') === 'vodafone_cash')>فودافون كاش</option>
+                                    <option value="bank_transfer" @selected(old('cash_channel') === 'bank_transfer')>تحويل بنكي</option>
                                     <option value="delegate" @selected(old('cash_channel') === 'delegate')>مندوب</option>
                                 </select>
                                 @error('cash_channel')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6 project-donation-cash-field">
-                                <label class="form-label form-label-required">رقم الإيصال</label>
+                                <label class="form-label form-label-required" id="project-receipt-label">رقم الإيصال</label>
                                 <input id="project-donation-receipt" name="receipt_number"
                                     class="form-control @error('receipt_number') is-invalid @enderror"
-                                    value="{{ old('receipt_number') }}" placeholder="REC-0001">
+                                    value="{{ old('receipt_number', old('operation_number')) }}" placeholder="REC-0001">
+                                <input type="hidden" name="operation_number" id="project-operation-number" value="{{ old('operation_number', old('receipt_number')) }}">
                                 @error('receipt_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6 project-donation-cash-field project-digital-field d-none">
+                                <label class="form-label"><i class="bi bi-paperclip me-1"></i> إرفاق صورة التحويل</label>
+                                <input type="file" name="transfer_receipt" class="form-control" accept="image/*,.pdf">
                             </div>
                             <div class="col-md-6 project-donation-cash-field">
                                 <label class="form-label form-label-required">الخزينة المستلمة</label>

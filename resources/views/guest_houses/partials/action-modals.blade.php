@@ -437,6 +437,17 @@
                                 <label class="form-label">تاريخ الاستلام</label>
                                 <input type="date" name="received_at" class="form-control" value="{{ old('received_at', now()->toDateString()) }}">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label form-label-required">بند الإيصال (وذلك قيمة)</label>
+                                <select name="purpose" class="form-select @error('purpose') is-invalid @enderror" required>
+                                    <option value="sadaqat" @selected(old('purpose', 'sadaqat') === 'sadaqat')>صدقات عامة</option>
+                                    <option value="zakat_maal" @selected(old('purpose') === 'zakat_maal')>زكاة مال</option>
+                                    <option value="sadaqa_jariya" @selected(old('purpose') === 'sadaqa_jariya')>صدقة جارية</option>
+                                    <option value="kafalat_awram" @selected(old('purpose') === 'kafalat_awram')>كفالات أورام</option>
+                                    <option value="kafalat_aytam" @selected(old('purpose') === 'kafalat_aytam')>كفالات أيتام</option>
+                                </select>
+                                @error('purpose')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                             <div class="col-md-6 guest-house-donation-cash-field">
                                 <label class="form-label form-label-required">المبلغ</label>
                                 <div class="input-group">

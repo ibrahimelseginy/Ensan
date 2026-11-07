@@ -181,6 +181,14 @@ final class StoreDonationRequest extends FormRequest
                         return false;
                     }
 
+                    $isEntityModal = $this->filled('guest_house_id')
+                        || $this->filled('project_id')
+                        || $this->filled('campaign_id')
+                        || in_array((string) $this->input('form_context'), ['guest_house_donation', 'project_donation', 'campaign_donation'], true);
+                    if ($isEntityModal) {
+                        return false;
+                    }
+
                     $hasAllocations = ! empty(array_filter((array) $this->input('beneficiary_allocations', [])));
                     $hasBeneficiary = $this->filled('beneficiary_id') || ! empty(array_filter((array) $this->input('beneficiary_ids', [])));
 
@@ -189,6 +197,10 @@ final class StoreDonationRequest extends FormRequest
                 'array',
                 Rule::when(
                     fn (): bool => in_array($this->input('purpose'), ['kafalat_aytam', 'kafalat_awram'], true)
+                        && ! $this->filled('guest_house_id')
+                        && ! $this->filled('project_id')
+                        && ! $this->filled('campaign_id')
+                        && ! in_array((string) $this->input('form_context'), ['guest_house_donation', 'project_donation', 'campaign_donation'], true)
                         && empty(array_filter((array) $this->input('beneficiary_allocations', [])))
                         && ! $this->filled('beneficiary_id')
                         && empty(array_filter((array) $this->input('beneficiary_ids', []))),
@@ -321,7 +333,13 @@ final class StoreDonationRequest extends FormRequest
             }
         }
 
+        $purposeInput = is_string($this->input('purpose')) ? trim($this->input('purpose')) : '';
+        if ($purposeInput === '') {
+            $purposeInput = 'sadaqat';
+        }
+
         $this->merge([
+            'purpose' => $purposeInput,
             'add_to_inventory' => $this->boolean('add_to_inventory'),
             'new_donor_code' => Donor::normalizeCode($this->input('new_donor_code')),
             'new_donor_phone_country' => $countryCode,

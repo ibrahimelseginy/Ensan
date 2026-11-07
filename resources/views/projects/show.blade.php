@@ -2276,7 +2276,37 @@
                     const field = document.getElementById(id);
                     if (field) field.required = !isCash;
                 });
+                updateProjectChannelFields();
             }
+
+            const projectChannelSelect = document.getElementById('project-donation-cash-channel');
+            const projectReceiptLabel = document.getElementById('project-receipt-label');
+            const projectReceiptInput = document.getElementById('project-donation-receipt');
+            const projectOpInput = document.getElementById('project-operation-number');
+            const projectDigitalFields = document.querySelectorAll('.project-digital-field');
+
+            function updateProjectChannelFields() {
+                const isCash = !donationType || donationType.value === 'cash';
+                const ch = projectChannelSelect ? projectChannelSelect.value : 'cash';
+                const isDigital = isCash && (ch === 'instapay' || ch === 'vodafone_cash' || ch === 'bank_transfer');
+                if (projectReceiptLabel) {
+                    projectReceiptLabel.innerHTML = isDigital
+                        ? '<i class="bi bi-hash text-primary me-1"></i> رقم العملية'
+                        : 'رقم الإيصال';
+                }
+                if (projectReceiptInput) {
+                    projectReceiptInput.placeholder = isDigital ? 'أدخل رقم العملية المرجعي...' : 'REC-0001';
+                }
+                projectDigitalFields.forEach(function (el) {
+                    el.classList.toggle('d-none', !isDigital);
+                    el.querySelectorAll('input').forEach(function (inp) { inp.disabled = !isDigital; });
+                });
+            }
+
+            projectChannelSelect?.addEventListener('change', updateProjectChannelFields);
+            projectReceiptInput?.addEventListener('input', function () {
+                if (projectOpInput) projectOpInput.value = this.value;
+            });
 
             donationType?.addEventListener('change', updateDonationType);
             updateDonationType();
