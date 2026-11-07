@@ -10,6 +10,56 @@ use Illuminate\Validation\Rule;
 
 final class StoreDonationRequest extends FormRequest
 {
+    /**
+     * Country phone digit length rules (national digits without leading zero, plus optional leading zero support).
+     */
+    public const COUNTRY_PHONE_RULES = [
+        'EG' => ['name' => 'مصر', 'dial' => '20', 'min' => 10, 'max' => 10, 'allow_zero' => true, 'regex' => '/^(1[0125][0-9]{8})$/'],
+        'SA' => ['name' => 'السعودية', 'dial' => '966', 'min' => 9, 'max' => 9, 'allow_zero' => true, 'regex' => '/^(5[0-9]{8})$/'],
+        'AE' => ['name' => 'الإمارات', 'dial' => '971', 'min' => 9, 'max' => 9, 'allow_zero' => true, 'regex' => '/^(5[0-9]{8})$/'],
+        'KW' => ['name' => 'الكويت', 'dial' => '965', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'QA' => ['name' => 'قطر', 'dial' => '974', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'BH' => ['name' => 'البحرين', 'dial' => '973', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'OM' => ['name' => 'سلطنة عُمان', 'dial' => '968', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'JO' => ['name' => 'الأردن', 'dial' => '962', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'PS' => ['name' => 'فلسطين', 'dial' => '970', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'LB' => ['name' => 'لبنان', 'dial' => '961', 'min' => 7, 'max' => 8, 'allow_zero' => true],
+        'SY' => ['name' => 'سوريا', 'dial' => '963', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'IQ' => ['name' => 'العراق', 'dial' => '964', 'min' => 10, 'max' => 10, 'allow_zero' => true],
+        'YE' => ['name' => 'اليمن', 'dial' => '967', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'LY' => ['name' => 'ليبيا', 'dial' => '218', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'SD' => ['name' => 'السودان', 'dial' => '249', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'TN' => ['name' => 'تونس', 'dial' => '216', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'DZ' => ['name' => 'الجزائر', 'dial' => '213', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'MA' => ['name' => 'المغرب', 'dial' => '212', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'MR' => ['name' => 'موريتانيا', 'dial' => '222', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'SO' => ['name' => 'الصومال', 'dial' => '252', 'min' => 8, 'max' => 9, 'allow_zero' => true],
+        'DJ' => ['name' => 'جيبوتي', 'dial' => '253', 'min' => 8, 'max' => 8, 'allow_zero' => false],
+        'KM' => ['name' => 'جزر القمر', 'dial' => '269', 'min' => 7, 'max' => 7, 'allow_zero' => false],
+        'TR' => ['name' => 'تركيا', 'dial' => '90', 'min' => 10, 'max' => 10, 'allow_zero' => true],
+        'US' => ['name' => 'أمريكا / كندا', 'dial' => '1', 'min' => 10, 'max' => 10, 'allow_zero' => false],
+        'GB' => ['name' => 'بريطانيا', 'dial' => '44', 'min' => 10, 'max' => 10, 'allow_zero' => true],
+        'DE' => ['name' => 'ألمانيا', 'dial' => '49', 'min' => 10, 'max' => 11, 'allow_zero' => true],
+        'FR' => ['name' => 'فرنسا', 'dial' => '33', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'IT' => ['name' => 'إيطاليا', 'dial' => '39', 'min' => 9, 'max' => 10, 'allow_zero' => false],
+        'ES' => ['name' => 'إسبانيا', 'dial' => '34', 'min' => 9, 'max' => 9, 'allow_zero' => false],
+        'NL' => ['name' => 'هولندا', 'dial' => '31', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'SE' => ['name' => 'السويد', 'dial' => '46', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'CH' => ['name' => 'سويسرا', 'dial' => '41', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'AT' => ['name' => 'النمسا', 'dial' => '43', 'min' => 10, 'max' => 11, 'allow_zero' => true],
+        'BE' => ['name' => 'بلجيكا', 'dial' => '32', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'AU' => ['name' => 'أستراليا', 'dial' => '61', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+        'NZ' => ['name' => 'نيوزيلندا', 'dial' => '64', 'min' => 8, 'max' => 9, 'allow_zero' => true],
+        'MY' => ['name' => 'ماليزيا', 'dial' => '60', 'min' => 9, 'max' => 10, 'allow_zero' => true],
+        'ID' => ['name' => 'إندونيسيا', 'dial' => '62', 'min' => 9, 'max' => 12, 'allow_zero' => true],
+        'IN' => ['name' => 'الهند', 'dial' => '91', 'min' => 10, 'max' => 10, 'allow_zero' => true],
+        'PK' => ['name' => 'باكستان', 'dial' => '92', 'min' => 10, 'max' => 10, 'allow_zero' => true],
+        'CN' => ['name' => 'الصين', 'dial' => '86', 'min' => 11, 'max' => 11, 'allow_zero' => false],
+        'RU' => ['name' => 'روسيا', 'dial' => '7', 'min' => 10, 'max' => 10, 'allow_zero' => false],
+        'BR' => ['name' => 'البرازيل', 'dial' => '55', 'min' => 10, 'max' => 11, 'allow_zero' => false],
+        'ZA' => ['name' => 'جنوب أفريقيا', 'dial' => '27', 'min' => 9, 'max' => 9, 'allow_zero' => true],
+    ];
+
     public function authorize(): bool
     {
         return true;
@@ -21,7 +71,39 @@ final class StoreDonationRequest extends FormRequest
             'donor_id'                 => 'nullable|exists:donors,id|required_without:new_donor_name',
             'new_donor_code'           => 'nullable|string|max:191|regex:/^[A-Z0-9_-]+$/|unique:donors,code',
             'new_donor_name'           => 'nullable|required_without:donor_id|string|min:3|unique:donors,name|regex:/^[\p{L}\s\.]+$/u',
-            'new_donor_phone'          => 'nullable|required_with:new_donor_name|string|unique:donors,phone|regex:/^(01[0125][0-9]{8})$/',
+            'new_donor_phone_country'  => 'nullable|string|in:' . implode(',', array_keys(self::COUNTRY_PHONE_RULES)),
+            'new_donor_phone'          => [
+                'nullable',
+                'required_with:new_donor_name',
+                'string',
+                'unique:donors,phone',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+                    $countryCode = strtoupper((string) $this->input('new_donor_phone_country', 'EG'));
+                    $rule = self::COUNTRY_PHONE_RULES[$countryCode] ?? self::COUNTRY_PHONE_RULES['EG'];
+                    $national = (string) $this->input('_new_donor_phone_national', '');
+
+                    if (!preg_match('/^[0-9]+$/', $national)) {
+                        $fail("رقم الهاتف لدولة {$rule['name']} (+{$rule['dial']}) يجب أن يحتوي على أرقام فقط.");
+                        return;
+                    }
+
+                    $len = strlen($national);
+                    if ($len < $rule['min'] || $len > $rule['max']) {
+                        $expectedText = $rule['min'] === $rule['max']
+                            ? "{$rule['min']} أرقام" . (!empty($rule['allow_zero']) ? " (أو " . ($rule['max'] + 1) . " بالصفر الابتدائي)" : "")
+                            : "من {$rule['min']} إلى {$rule['max']} أرقام";
+                        $fail("رقم الهاتف لدولة {$rule['name']} (+{$rule['dial']}) غير مكتمل أو غير صحيح: يجب أن يتكون من {$expectedText}.");
+                        return;
+                    }
+
+                    if (!empty($rule['regex']) && !preg_match($rule['regex'], $national)) {
+                        $fail("بداية رقم الهاتف غير صحيحة لدولة {$rule['name']} (+{$rule['dial']}).");
+                    }
+                },
+            ],
             'new_donor_address'        => 'nullable|string',
             'new_donor_classification' => 'nullable|in:one_time,recurring',
             'new_donor_cycle'          => 'nullable|in:monthly,yearly',
@@ -178,9 +260,60 @@ final class StoreDonationRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $rawPhone = $this->input('new_donor_phone');
+        $countryCode = strtoupper((string) $this->input('new_donor_phone_country', 'EG'));
+        if (!isset(self::COUNTRY_PHONE_RULES[$countryCode])) {
+            $countryCode = 'EG';
+        }
+        $rule = self::COUNTRY_PHONE_RULES[$countryCode];
+
+        $normalizedPhone = $rawPhone;
+        $nationalDigits = '';
+
+        if (is_string($rawPhone) && trim($rawPhone) !== '') {
+            // Convert Arabic-Indic digits to ASCII and strip whitespace/dashes
+            $digits = strtr(trim($rawPhone), [
+                '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+                '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+                '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+                '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            ]);
+            $digits = preg_replace('/[\s\-\(\)]+/', '', $digits);
+            if (str_starts_with($digits, '+')) {
+                $digits = substr($digits, 1);
+            } elseif (str_starts_with($digits, '00')) {
+                $digits = substr($digits, 2);
+            }
+
+            // Strip country dial code if user pasted full international number
+            $dial = $rule['dial'];
+            if (str_starts_with($digits, $dial) && strlen($digits) > $rule['max']) {
+                $digits = substr($digits, strlen($dial));
+            }
+
+            // Strip optional leading local zero if country allows it
+            if (!empty($rule['allow_zero']) && str_starts_with($digits, '0') && strlen($digits) === ($rule['max'] + 1)) {
+                $digits = substr($digits, 1);
+            } elseif ($countryCode === 'EG' && str_starts_with($digits, '0')) {
+                $digits = substr($digits, 1);
+            }
+
+            $nationalDigits = $digits;
+
+            // Format stored phone: keep 01xxxxxxxxx for Egypt, +<dial><national> for international
+            if ($countryCode === 'EG') {
+                $normalizedPhone = '0' . $nationalDigits;
+            } else {
+                $normalizedPhone = '+' . $dial . $nationalDigits;
+            }
+        }
+
         $this->merge([
             'add_to_inventory' => $this->boolean('add_to_inventory'),
             'new_donor_code' => Donor::normalizeCode($this->input('new_donor_code')),
+            'new_donor_phone_country' => $countryCode,
+            'new_donor_phone' => $normalizedPhone,
+            '_new_donor_phone_national' => $nationalDigits,
         ]);
 
         $purpose = (string) $this->input('purpose');

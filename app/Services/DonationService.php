@@ -109,6 +109,8 @@ final readonly class DonationService
             $data['new_donor_code'],
             $data['new_donor_name'],
             $data['new_donor_phone'],
+            $data['new_donor_phone_country'],
+            $data['_new_donor_phone_national'],
             $data['new_donor_national_id'],
             $data['new_donor_address'],
             $data['new_donor_classification'],

@@ -459,13 +459,66 @@
               <label class="form-label form-label-required">اسم المتبرع</label>
               <input name="new_donor_name" id="newDonorName" value="{{ old('new_donor_name') }}" class="form-control" placeholder="الاسم ثلاثي أو ثنائي">
             </div>
-            <div class="col-md-3">
-              <label class="form-label form-label-required">رقم الهاتف</label>
-              <input name="new_donor_phone" id="newDonorPhone" value="{{ old('new_donor_phone') }}" class="form-control" placeholder="01xxxxxxxxx">
+            <div class="col-md-4">
+              <label class="form-label form-label-required d-flex justify-content-between align-items-center">
+                <span>رقم الهاتف (الدولة والرقم)</span>
+                <span id="newDonorPhoneBadge" class="badge bg-secondary-subtle text-secondary font-monospace" style="font-size: 0.72rem;">11 رقم</span>
+              </label>
+              <div class="input-group" dir="ltr">
+                <select name="new_donor_phone_country" id="newDonorPhoneCountry" class="form-select bg-light fw-bold" style="max-width: 145px; font-size: 0.85rem;">
+                  <option value="EG" @selected(old('new_donor_phone_country', 'EG') === 'EG')>🇪🇬 +20 مصر</option>
+                  <option value="SA" @selected(old('new_donor_phone_country') === 'SA')>🇸🇦 +966 السعودية</option>
+                  <option value="AE" @selected(old('new_donor_phone_country') === 'AE')>🇦🇪 +971 الإمارات</option>
+                  <option value="KW" @selected(old('new_donor_phone_country') === 'KW')>🇰🇼 +965 الكويت</option>
+                  <option value="QA" @selected(old('new_donor_phone_country') === 'QA')>🇶🇦 +974 قطر</option>
+                  <option value="BH" @selected(old('new_donor_phone_country') === 'BH')>🇧🇭 +973 البحرين</option>
+                  <option value="OM" @selected(old('new_donor_phone_country') === 'OM')>🇴🇲 +968 عُمان</option>
+                  <option value="JO" @selected(old('new_donor_phone_country') === 'JO')>🇯🇴 +962 الأردن</option>
+                  <option value="PS" @selected(old('new_donor_phone_country') === 'PS')>🇵🇸 +970 فلسطين</option>
+                  <option value="LB" @selected(old('new_donor_phone_country') === 'LB')>🇱🇧 +961 لبنان</option>
+                  <option value="SY" @selected(old('new_donor_phone_country') === 'SY')>🇸🇾 +963 سوريا</option>
+                  <option value="IQ" @selected(old('new_donor_phone_country') === 'IQ')>🇮🇶 +964 العراق</option>
+                  <option value="YE" @selected(old('new_donor_phone_country') === 'YE')>🇾🇪 +967 اليمن</option>
+                  <option value="LY" @selected(old('new_donor_phone_country') === 'LY')>🇱🇾 +218 ليبيا</option>
+                  <option value="SD" @selected(old('new_donor_phone_country') === 'SD')>🇸🇩 +249 السودان</option>
+                  <option value="TN" @selected(old('new_donor_phone_country') === 'TN')>🇹🇳 +216 تونس</option>
+                  <option value="DZ" @selected(old('new_donor_phone_country') === 'DZ')>🇩🇿 +213 الجزائر</option>
+                  <option value="MA" @selected(old('new_donor_phone_country') === 'MA')>🇲🇦 +212 المغرب</option>
+                  <option value="MR" @selected(old('new_donor_phone_country') === 'MR')>🇲🇷 +222 موريتانيا</option>
+                  <option value="SO" @selected(old('new_donor_phone_country') === 'SO')>🇸🇴 +252 الصومال</option>
+                  <option value="DJ" @selected(old('new_donor_phone_country') === 'DJ')>🇩🇯 +253 جيبوتي</option>
+                  <option value="KM" @selected(old('new_donor_phone_country') === 'KM')>🇰🇲 +269 جزر القمر</option>
+                  <option value="TR" @selected(old('new_donor_phone_country') === 'TR')>🇹🇷 +90 تركيا</option>
+                  <option value="US" @selected(old('new_donor_phone_country') === 'US')>🇺🇸 +1 أمريكا/كندا</option>
+                  <option value="GB" @selected(old('new_donor_phone_country') === 'GB')>🇬🇧 +44 بريطانيا</option>
+                  <option value="DE" @selected(old('new_donor_phone_country') === 'DE')>🇩🇪 +49 ألمانيا</option>
+                  <option value="FR" @selected(old('new_donor_phone_country') === 'FR')>🇫🇷 +33 فرنسا</option>
+                  <option value="IT" @selected(old('new_donor_phone_country') === 'IT')>🇮🇹 +39 إيطاليا</option>
+                  <option value="ES" @selected(old('new_donor_phone_country') === 'ES')>🇪🇸 +34 إسبانيا</option>
+                  <option value="NL" @selected(old('new_donor_phone_country') === 'NL')>🇳🇱 +31 هولندا</option>
+                  <option value="SE" @selected(old('new_donor_phone_country') === 'SE')>🇸🇪 +46 السويد</option>
+                  <option value="CH" @selected(old('new_donor_phone_country') === 'CH')>🇨🇭 +41 سويسرا</option>
+                  <option value="AT" @selected(old('new_donor_phone_country') === 'AT')>🇦🇹 +43 النمسا</option>
+                  <option value="BE" @selected(old('new_donor_phone_country') === 'BE')>🇧🇪 +32 بلجيكا</option>
+                  <option value="AU" @selected(old('new_donor_phone_country') === 'AU')>🇦🇺 +61 أستراليا</option>
+                  <option value="NZ" @selected(old('new_donor_phone_country') === 'NZ')>🇳🇿 +64 نيوزيلندا</option>
+                  <option value="MY" @selected(old('new_donor_phone_country') === 'MY')>🇲🇾 +60 ماليزيا</option>
+                  <option value="ID" @selected(old('new_donor_phone_country') === 'ID')>🇮🇩 +62 إندونيسيا</option>
+                  <option value="IN" @selected(old('new_donor_phone_country') === 'IN')>🇮🇳 +91 الهند</option>
+                  <option value="PK" @selected(old('new_donor_phone_country') === 'PK')>🇵🇰 +92 باكستان</option>
+                  <option value="CN" @selected(old('new_donor_phone_country') === 'CN')>🇨🇳 +86 الصين</option>
+                  <option value="RU" @selected(old('new_donor_phone_country') === 'RU')>🇷🇺 +7 روسيا</option>
+                  <option value="BR" @selected(old('new_donor_phone_country') === 'BR')>🇧🇷 +55 البرازيل</option>
+                  <option value="ZA" @selected(old('new_donor_phone_country') === 'ZA')>🇿🇦 +27 جنوب أفريقيا</option>
+                </select>
+                <input name="new_donor_phone" id="newDonorPhone" type="tel" inputmode="numeric" dir="ltr" value="{{ old('new_donor_phone') }}" class="form-control font-monospace @error('new_donor_phone') is-invalid @enderror" placeholder="01012345678">
+              </div>
+              <div id="newDonorPhoneHint" class="form-text small text-muted mt-1">مصر (+20): أدخل 11 رقم بالصفر (01xxxxxxxxx) أو 10 أرقام بدون الصفر.</div>
+              @error('new_donor_phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
               <label class="form-label">العنوان / منين</label>
-              <input name="new_donor_address" value="{{ old('new_donor_address') }}" class="form-control" placeholder="المركز / القرية / المحافظة">
+              <input name="new_donor_address" value="{{ old('new_donor_address') }}" class="form-control" placeholder="المركز / المحافظة">
             </div>
 
             {{-- تصنيف المتبرع الجديد --}}
@@ -1474,6 +1527,139 @@ $(function () {
     });
   }
 
+  // International Country Phone Rules (National digits without leading 0 + optional leading 0)
+  const COUNTRY_PHONE_RULES = {
+    'EG': { name: 'مصر', dial: '+20', min: 10, max: 10, allowZero: true, placeholder: '01012345678', regex: /^(1[0125][0-9]{8})$/ },
+    'SA': { name: 'السعودية', dial: '+966', min: 9, max: 9, allowZero: true, placeholder: '512345678', regex: /^(5[0-9]{8})$/ },
+    'AE': { name: 'الإمارات', dial: '+971', min: 9, max: 9, allowZero: true, placeholder: '501234567', regex: /^(5[0-9]{8})$/ },
+    'KW': { name: 'الكويت', dial: '+965', min: 8, max: 8, allowZero: false, placeholder: '51234567' },
+    'QA': { name: 'قطر', dial: '+974', min: 8, max: 8, allowZero: false, placeholder: '33123456' },
+    'BH': { name: 'البحرين', dial: '+973', min: 8, max: 8, allowZero: false, placeholder: '36123456' },
+    'OM': { name: 'سلطنة عُمان', dial: '+968', min: 8, max: 8, allowZero: false, placeholder: '92123456' },
+    'JO': { name: 'الأردن', dial: '+962', min: 9, max: 9, allowZero: true, placeholder: '791234567' },
+    'PS': { name: 'فلسطين', dial: '+970', min: 9, max: 9, allowZero: true, placeholder: '591234567' },
+    'LB': { name: 'لبنان', dial: '+961', min: 7, max: 8, allowZero: true, placeholder: '71123456' },
+    'SY': { name: 'سوريا', dial: '+963', min: 9, max: 9, allowZero: true, placeholder: '931234567' },
+    'IQ': { name: 'العراق', dial: '+964', min: 10, max: 10, allowZero: true, placeholder: '7712345678' },
+    'YE': { name: 'اليمن', dial: '+967', min: 9, max: 9, allowZero: true, placeholder: '771234567' },
+    'LY': { name: 'ليبيا', dial: '+218', min: 9, max: 9, allowZero: true, placeholder: '911234567' },
+    'SD': { name: 'السودان', dial: '+249', min: 9, max: 9, allowZero: true, placeholder: '911234567' },
+    'TN': { name: 'تونس', dial: '+216', min: 8, max: 8, allowZero: false, placeholder: '20123456' },
+    'DZ': { name: 'الجزائر', dial: '+213', min: 9, max: 9, allowZero: true, placeholder: '551234567' },
+    'MA': { name: 'المغرب', dial: '+212', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+    'MR': { name: 'موريتانيا', dial: '+222', min: 8, max: 8, allowZero: false, placeholder: '22123456' },
+    'SO': { name: 'الصومال', dial: '+252', min: 8, max: 9, allowZero: true, placeholder: '611234567' },
+    'DJ': { name: 'جيبوتي', dial: '+253', min: 8, max: 8, allowZero: false, placeholder: '77123456' },
+    'KM': { name: 'جزر القمر', dial: '+269', min: 7, max: 7, allowZero: false, placeholder: '3212345' },
+    'TR': { name: 'تركيا', dial: '+90', min: 10, max: 10, allowZero: true, placeholder: '5321234567' },
+    'US': { name: 'أمريكا / كندا', dial: '+1', min: 10, max: 10, allowZero: false, placeholder: '2025550125' },
+    'GB': { name: 'بريطانيا', dial: '+44', min: 10, max: 10, allowZero: true, placeholder: '7700900077' },
+    'DE': { name: 'ألمانيا', dial: '+49', min: 10, max: 11, allowZero: true, placeholder: '15123456789' },
+    'FR': { name: 'فرنسا', dial: '+33', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+    'IT': { name: 'إيطاليا', dial: '+39', min: 9, max: 10, allowZero: false, placeholder: '3123456789' },
+    'ES': { name: 'إسبانيا', dial: '+34', min: 9, max: 9, allowZero: false, placeholder: '612345678' },
+    'NL': { name: 'هولندا', dial: '+31', min: 9, max: 9, allowZero: true, placeholder: '612345678' },
+    'SE': { name: 'السويد', dial: '+46', min: 9, max: 9, allowZero: true, placeholder: '701234567' },
+    'CH': { name: 'سويسرا', dial: '+41', min: 9, max: 9, allowZero: true, placeholder: '781234567' },
+    'AT': { name: 'النمسا', dial: '+43', min: 10, max: 11, allowZero: true, placeholder: '6641234567' },
+    'BE': { name: 'بلجيكا', dial: '+32', min: 9, max: 9, allowZero: true, placeholder: '470123456' },
+    'AU': { name: 'أستراليا', dial: '+61', min: 9, max: 9, allowZero: true, placeholder: '412345678' },
+    'NZ': { name: 'نيوزيلندا', dial: '+64', min: 8, max: 9, allowZero: true, placeholder: '211234567' },
+    'MY': { name: 'ماليزيا', dial: '+60', min: 9, max: 10, allowZero: true, placeholder: '123456789' },
+    'ID': { name: 'إندونيسيا', dial: '+62', min: 9, max: 12, allowZero: true, placeholder: '8123456789' },
+    'IN': { name: 'الهند', dial: '+91', min: 10, max: 10, allowZero: true, placeholder: '9876543210' },
+    'PK': { name: 'باكستان', dial: '+92', min: 10, max: 10, allowZero: true, placeholder: '3001234567' },
+    'CN': { name: 'الصين', dial: '+86', min: 11, max: 11, allowZero: false, placeholder: '13800138000' },
+    'RU': { name: 'روسيا', dial: '+7', min: 10, max: 10, allowZero: false, placeholder: '9123456789' },
+    'BR': { name: 'البرازيل', dial: '+55', min: 10, max: 11, allowZero: false, placeholder: '11912345678' },
+    'ZA': { name: 'جنوب أفريقيا', dial: '+27', min: 9, max: 9, allowZero: true, placeholder: '821234567' }
+  };
+
+  function normalizeArabicDigits(str) {
+    return String(str || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                            .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  }
+
+  function validateAndSyncNewDonorPhone() {
+    const registered = $('#donorTypeRegistered').is(':checked');
+    const phoneInput = document.getElementById('newDonorPhone');
+    const countrySelect = document.getElementById('newDonorPhoneCountry');
+    const hintEl = document.getElementById('newDonorPhoneHint');
+    const badgeEl = document.getElementById('newDonorPhoneBadge');
+
+    if (!phoneInput || !countrySelect) return;
+
+    const countryCode = countrySelect.value || 'EG';
+    const rule = COUNTRY_PHONE_RULES[countryCode] || COUNTRY_PHONE_RULES['EG'];
+
+    // Normalize digits only
+    let val = normalizeArabicDigits(phoneInput.value).replace(/[^0-9]/g, '');
+    const startsWithZero = val.startsWith('0');
+    const allowedMax = (rule.allowZero && startsWithZero) ? (rule.max + 1) : rule.max;
+    const allowedMin = (rule.allowZero && startsWithZero) ? (rule.min + 1) : rule.min;
+
+    if (val.length > allowedMax) {
+      val = val.slice(0, allowedMax);
+    }
+    if (phoneInput.value !== val) {
+      phoneInput.value = val;
+    }
+
+    phoneInput.setAttribute('maxlength', String(rule.allowZero ? (rule.max + 1) : rule.max));
+    phoneInput.setAttribute('placeholder', rule.placeholder || '');
+
+    const nationalDigits = (rule.allowZero && startsWithZero) ? val.slice(1) : val;
+    const expectedDesc = rule.min === rule.max
+      ? (rule.allowZero ? `${rule.min} أرقام (أو ${rule.max + 1} بالصفر)` : `${rule.min} أرقام`)
+      : `من ${rule.min} إلى ${rule.max} أرقام`;
+
+    if (registered || val.length === 0) {
+      phoneInput.setCustomValidity(registered ? '' : `يرجى إدخال رقم الهاتف لدولة ${rule.name} (${expectedDesc})`);
+      phoneInput.classList.remove('is-valid', 'is-invalid');
+      if (badgeEl) {
+        badgeEl.className = 'badge bg-secondary-subtle text-secondary font-monospace';
+        badgeEl.textContent = `${val.length} / ${allowedMax} رقم`;
+      }
+      if (hintEl) {
+        hintEl.className = 'form-text small text-muted mt-1';
+        hintEl.textContent = `${rule.name} (${rule.dial}): مطلوب ${expectedDesc}.`;
+      }
+      return;
+    }
+
+    const lenValid = nationalDigits.length >= rule.min && nationalDigits.length <= rule.max;
+    const regexValid = !rule.regex || rule.regex.test(nationalDigits);
+
+    if (lenValid && regexValid) {
+      phoneInput.setCustomValidity('');
+      phoneInput.classList.remove('is-invalid');
+      phoneInput.classList.add('is-valid');
+      if (badgeEl) {
+        badgeEl.className = 'badge bg-success-subtle text-success font-monospace';
+        badgeEl.textContent = `${val.length} / ${allowedMax} ✓`;
+      }
+      if (hintEl) {
+        hintEl.className = 'form-text small text-success fw-semibold mt-1';
+        hintEl.textContent = `✓ رقم صحيح ومطابق لدولة ${rule.name} (${rule.dial})`;
+      }
+    } else {
+      const errMsg = !lenValid
+        ? `رقم الهاتف لدولة ${rule.name} (${rule.dial}) يجب أن يكون ${expectedDesc} (المدخل حالياً: ${val.length})`
+        : `بداية رقم الهاتف غير صحيحة لدولة ${rule.name} (${rule.dial})`;
+      phoneInput.setCustomValidity(errMsg);
+      phoneInput.classList.remove('is-valid');
+      phoneInput.classList.add('is-invalid');
+      if (badgeEl) {
+        badgeEl.className = 'badge bg-danger-subtle text-danger font-monospace';
+        badgeEl.textContent = `${val.length} / ${allowedMax}`;
+      }
+      if (hintEl) {
+        hintEl.className = 'form-text small text-danger mt-1';
+        hintEl.textContent = errMsg;
+      }
+    }
+  }
+
   // Toggle Donor Mode (Registered vs New)
   function toggleDonorMode() {
     const registered = $('#donorTypeRegistered').is(':checked');
@@ -1482,9 +1668,13 @@ $(function () {
     $('#donorSelect').prop('disabled', !registered).prop('required', registered);
     $('#newDonorSection :input').prop('disabled', registered);
     $('#newDonorName,#newDonorPhone').prop('required', !registered);
+    validateAndSyncNewDonorPhone();
     updateDonorInfoBox();
     updateSponsoredMembers();
   }
+
+  $('#newDonorPhoneCountry').on('change', validateAndSyncNewDonorPhone);
+  $('#newDonorPhone').on('input change blur', validateAndSyncNewDonorPhone);
 
   // Toggle New Donor Classification
   $('#newDonorClassification').on('change', function() {
