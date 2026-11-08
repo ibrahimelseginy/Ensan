@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class RoleService
 {
-    private const PROTECTED_ROLE_KEYS = ['admin', 'manager'];
+    private const PROTECTED_ROLE_KEYS = ['admin'];
 
     public function __construct(
         private RoleRepository $roleRepository
@@ -176,17 +176,13 @@ final readonly class RoleService
     {
         if (in_array($role->key, self::PROTECTED_ROLE_KEYS, true)) {
             throw ValidationException::withMessages([
-                'role' => 'لا يمكن حذف دور أساسي في النظام.',
-            ]);
-        }
-
-        if ($role->users()->exists()) {
-            throw ValidationException::withMessages([
-                'role' => 'لا يمكن حذف دور مرتبط بمستخدمين. انقل المستخدمين إلى دور آخر أولاً.',
+                'role' => 'لا يمكن حذف دور المدير العام الأساسي في النظام.',
             ]);
         }
 
         $executor = function () use ($role) {
+            $role->users()->detach();
+            $role->permissions()->detach();
             return $this->roleRepository->delete($role);
         };
 

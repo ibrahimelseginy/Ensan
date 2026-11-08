@@ -25,6 +25,20 @@
                                     <i class="bi bi-pencil-square me-2"></i> تعديل الدور
                                 </a>
                             @endif
+                            @if(request()->user()?->hasPermission('roles.delete') && $role->key !== 'admin')
+                                @php
+                                    $showConfirmMsg = ($role->users_count ?? 0) > 0
+                                        ? "هذا الدور مرتبط بـ ({$role->users_count}) مستخدم. هل أنت متأكد من حذف الدور ({$role->name}) وإلغاء ربطه بالمستخدمين؟"
+                                        : "هل أنت متأكد من حذف الدور ({$role->name})؟";
+                                @endphp
+                                <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm(@js($showConfirmMsg))">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="bi bi-trash me-2"></i> حذف الدور
+                                    </button>
+                                </form>
+                            @endif
                             <a href="{{ route('roles.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-right me-2"></i> رجوع للقائمة
                             </a>

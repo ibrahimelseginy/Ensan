@@ -2,7 +2,7 @@
 @section('content')
     @php
         $currentUser = request()->user();
-        $protectedRoleKeys = ['admin', 'manager'];
+        $protectedRoleKeys = ['admin'];
     @endphp
 
     {{-- Premium Dashboard Hero --}}
@@ -79,13 +79,18 @@
                                             </a>
                                         @endif
                                         @if($currentUser?->hasPermission('roles.delete'))
-                                            @php $canDelete = !in_array($r->key, $protectedRoleKeys, true) && $r->users_count === 0; @endphp
+                                            @php
+                                                $canDelete = !in_array($r->key, $protectedRoleKeys, true);
+                                                $confirmMsg = $r->users_count > 0
+                                                    ? "هذا الدور مرتبط بـ ({$r->users_count}) مستخدم. هل أنت متأكد من حذف الدور ({$r->name}) وإلغاء ربطه بالمستخدمين؟"
+                                                    : "هل أنت متأكد من حذف الدور ({$r->name})؟";
+                                            @endphp
                                             <button type="button" class="btn btn-sm btn-outline-danger" @disabled(!$canDelete)
                                                 @if($canDelete)
-                                                    onclick="if(confirm('هل أنت متأكد من حذف هذا الدور؟')) document.getElementById('del-{{ $r->id }}').submit()"
-                                                    title="حذف"
+                                                    onclick="if(confirm(@js($confirmMsg))) document.getElementById('del-{{ $r->id }}').submit()"
+                                                    title="حذف الدور"
                                                 @else
-                                                    title="{{ in_array($r->key, $protectedRoleKeys, true) ? 'دور أساسي لا يمكن حذفه' : 'الدور مرتبط بمستخدمين' }}"
+                                                    title="دور المدير العام الأساسي لا يمكن حذفه"
                                                 @endif>
                                                 <i class="bi bi-trash"></i>
                                             </button>
