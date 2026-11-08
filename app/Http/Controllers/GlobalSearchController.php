@@ -191,8 +191,8 @@ final class GlobalSearchController extends Controller
                         ArabicSearchHelper::applySmartSearch(
                             $fm,
                             $cleanQ,
-                            ['full_name', 'school_type', 'health_status', 'notes'],
-                            ['code', 'national_id', 'phone']
+                            ['full_name', 'education_level', 'case_details'],
+                            ['code', 'national_id', 'phone', 'backup_phone']
                         );
                     });
 
@@ -201,7 +201,7 @@ final class GlobalSearchController extends Controller
                         ArabicSearchHelper::applySmartSearch(
                             $pp,
                             $cleanQ,
-                            ['companion_name', 'diagnosis', 'doctor_name', 'hospital_department'],
+                            ['companion_name', 'companion_address', 'medical_notes', 'treatment_type', 'medical_center', 'manager_notes'],
                             ['companion_phone', 'companion_national_id']
                         );
                     });
@@ -266,20 +266,20 @@ final class GlobalSearchController extends Controller
             ArabicSearchHelper::applySmartSearch(
                 $reassessQuery,
                 $cleanQ,
-                ['head_name', 'researcher_name', 'governorate', 'center', 'village', 'researcher_recommendation'],
-                ['national_id', 'phone']
+                ['patient_name', 'guardian_name', 'caregiver_name', 'current_diagnosis', 'current_hospital', 'researcher_name', 'researcher_recommendation', 'recommendation_reasons'],
+                []
             );
             foreach ($reassessQuery->latest('id')->limit(3)->get() as $ra) {
                 $targetBen = $ra->beneficiary;
                 if (!$targetBen) continue;
                 $results['beneficiaries'][] = [
                     'id' => 'ra-' . $ra->id,
-                    'title' => 'إعادة بحث: ' . ($ra->head_name ?: $targetBen->full_name),
+                    'title' => 'إعادة بحث: ' . ($ra->patient_name ?: ($ra->guardian_name ?: $targetBen->full_name)),
                     'code' => $targetBen->code ?: ('RA-' . $ra->id),
                     'subtitle' => implode(' • ', array_filter([
                         $ra->researcher_name ? 'الباحث: ' . $ra->researcher_name : null,
-                        $ra->phone ? 'هاتف: ' . $ra->phone : null,
-                        $ra->assessment_date ? $ra->assessment_date->format('Y-m-d') : null,
+                        $ra->current_hospital ? 'المستشفى: ' . $ra->current_hospital : null,
+                        $ra->reassessed_at ? $ra->reassessed_at->format('Y-m-d') : null,
                     ])),
                     'url' => route('beneficiaries.show', $targetBen),
                     'badge' => 'إعادة بحث 6 أشهر',
@@ -356,18 +356,18 @@ final class GlobalSearchController extends Controller
             ArabicSearchHelper::applySmartSearch(
                 $psychQuery,
                 $cleanQ,
-                ['supporter_name', 'notes', 'key_challenges', 'positive_developments', 'recommendations'],
-                ['month_year']
+                ['volunteer_name', 'medical_condition', 'treatment_stage', 'psychological_state', 'general_notes', 'supporter_opinion'],
+                ['report_month']
             );
             foreach ($psychQuery->latest('id')->limit(3)->get() as $ps) {
                 $targetName = $ps->familyMember?->full_name ?: ($ps->beneficiary?->full_name ?: ('دعم نفسي #' . $ps->id));
                 $results['case_applications'][] = [
                     'id' => 'ps-' . $ps->id,
                     'title' => 'تقرير دعم نفسي: ' . $targetName,
-                    'code' => $ps->month_year ?: ('PSY-' . $ps->id),
+                    'code' => $ps->report_month ?: ('PSY-' . $ps->id),
                     'subtitle' => implode(' • ', array_filter([
-                        $ps->supporter_name ? 'المتطوع/الأخصائي: ' . $ps->supporter_name : null,
-                        $ps->contact_type_label ?? null,
+                        $ps->volunteer_name ? 'المتطوع/الأخصائي: ' . $ps->volunteer_name : null,
+                        $ps->psychological_state ?? null,
                     ])),
                     'url' => $ps->beneficiary ? route('beneficiaries.show', $ps->beneficiary) : route('psychological-support.index'),
                     'badge' => 'دعم نفسي',
@@ -383,8 +383,8 @@ final class GlobalSearchController extends Controller
             ArabicSearchHelper::applySmartSearch(
                 $donorsQuery,
                 $cleanQ,
-                ['name', 'address', 'notes'],
-                ['code', 'phone', 'national_id']
+                ['name', 'address'],
+                ['code', 'phone', 'national_id', 'email']
             );
             $donors = $donorsQuery
                 ->select(['id', 'code', 'name', 'phone', 'national_id', 'classification', 'sponsorship_monthly_amount'])
@@ -443,7 +443,7 @@ final class GlobalSearchController extends Controller
                     ArabicSearchHelper::applySmartSearch(
                         $w,
                         $cleanQ,
-                        ['purpose', 'category', 'notes', 'description'],
+                        ['purpose', 'category', 'allocation_note'],
                         ['receipt_number', 'operation_number']
                     );
                     foreach ($numbers as $num) {
@@ -534,12 +534,12 @@ final class GlobalSearchController extends Controller
 
         $safeRun(function () use ($cleanQ, &$results) {
             $jeQuery = JournalEntry::query();
-            ArabicSearchHelper::applySmartSearch($jeQuery, $cleanQ, ['description'], ['reference_number']);
+            ArabicSearchHelper::applySmartSearch($jeQuery, $cleanQ, ['description', 'branch', 'gate', 'entry_type'], []);
             foreach ($jeQuery->latest('id')->limit(2)->get() as $je) {
                 $results['donations'][] = [
                     'id' => 'je-' . $je->id,
-                    'title' => $je->description ?: ('قيد يومية #' . ($je->reference_number ?: $je->id)),
-                    'code' => $je->reference_number ?: ('JE-' . $je->id),
+                    'title' => $je->description ?: ('قيد يومية #' . $je->id),
+                    'code' => 'JE-' . $je->id,
                     'subtitle' => 'قيد محاسبي يومي',
                     'url' => route('journal-entries.show', $je),
                     'badge' => 'قيد يومية',
@@ -569,7 +569,7 @@ final class GlobalSearchController extends Controller
 
         $safeRun(function () use ($cleanQ, &$results) {
             $campaignsQuery = Campaign::query();
-            ArabicSearchHelper::applySmartSearch($campaignsQuery, $cleanQ, ['name', 'description'], []);
+            ArabicSearchHelper::applySmartSearch($campaignsQuery, $cleanQ, ['name', 'season_title', 'category', 'website_content'], ['season_year']);
             foreach ($campaignsQuery->limit(4)->get() as $camp) {
                 $results['projects'][] = [
                     'id' => 'cmp-' . $camp->id,
