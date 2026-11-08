@@ -63,17 +63,12 @@ class AppServiceProvider extends ServiceProvider
             return null; // Fall through to other checks
         });
 
-        // منظومة البحث المبدئي واستقبال الحالات: إتاحة الوصول لمدراء المشاريع والباحثين الميدانيين ومسؤولي المستفيدين
+        // منظومة البحث المبدئي واستقبال الحالات: إتاحة الوصول لمن يملكون صلاحية التقديمات أو المدراء العامين
         \Illuminate\Support\Facades\Gate::define('mobile.case_applications.view', function ($user) {
-            if ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة', 'مدراء المشاريع', 'باحث ميداني', 'الاستقبال', 'مدير مشروع زاد', 'مدير مشروع مدرار', 'مدير مشروع بعثاء الأمل', 'مدير مشروع كسوة'])) {
+            if ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
                 return true;
             }
-            return $user->hasPermission('mobile.case_applications.view')
-                || $user->hasPermission('mobile.view')
-                || $user->hasPermission('beneficiaries.view')
-                || $user->hasPermission('beneficiaries.create')
-                || $user->hasPermission('visits.view')
-                || $user->hasPermission('visits.create');
+            return $user->hasPermission('mobile.case_applications.view');
         });
 
         $this->configureRateLimiting();

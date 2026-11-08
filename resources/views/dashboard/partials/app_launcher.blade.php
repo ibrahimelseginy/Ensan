@@ -685,7 +685,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 1. المتبرعون --}}
-        @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('donors.view'))
+        @if($u && $u->hasPermission('donors.view'))
         <a href="{{ route('donors.index') }}" class="ensan-app-card" data-category="finance" data-title="المتبرعون" data-keywords="متبرع تبرع donors كفلاء">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.45);">
                 <i class="bi bi-people-fill"></i>
@@ -696,7 +696,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 2. التبرعات --}}
-        @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('donations.view'))
+        @if($u && $u->hasPermission('donations.view'))
         <a href="{{ route('donations.index') }}" class="ensan-app-card" data-category="finance" data-title="التبرعات" data-keywords="تبرعات إيصالات كاش عيني donations">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.45);">
                 <i class="bi bi-gift-fill"></i>
@@ -707,7 +707,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3. المستفيدون --}}
-        @if($u && !$u->roles->contains('key', 'finance') && $u->hasPermission('beneficiaries.view'))
+        @if($u && $u->hasPermission('beneficiaries.view'))
         <a href="{{ route('beneficiaries.index') }}" class="ensan-app-card" data-category="operations" data-title="المستفيدون" data-keywords="مستفيد حالات أسر أيتام beneficiaries">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #e11d48, #f43f5e); box-shadow: 0 10px 20px -5px rgba(225, 29, 72, 0.45);">
                 <i class="bi bi-person-heart"></i>
@@ -729,7 +729,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 3.5 التقديمات (Applications & Preliminary Research) --}}
-        @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view')))
+        @if($u && $u->hasPermission('mobile.case_applications.view'))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSubmissions" data-category="operations digital" data-title="التقديمات" data-keywords="تقديمات طلبات حالات بحث مبدئي زاد مدرار أورام استمارات submissions applications">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0284c7, #06b6d4); box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.45);">
                 <i class="bi bi-file-earmark-text-fill"></i>
@@ -762,7 +762,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 4. اللوجيستك (Popup) --}}
-        @if($u && ($u->hasPermission('manage_logistics') || $u->hasPermission('delegates.view') || $u->hasPermission('travel_routes.view') || $u->hasPermission('trips.view') || $u->hasPermission('kafr_el_sheikh_deliveries.view')))
+        @if($u && $u->hasPermission(['manage_logistics', 'delegates.view', 'travel_routes.view', 'trips.view', 'kafr_el_sheikh_deliveries.view', 'kafr_el_sheikh_services.view', 'kafr_el_sheikh_brokers.view', 'tanta_workers.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppLogistics" data-category="operations" data-title="اللوجيستك" data-keywords="مناديب خطوط سير رحلات كفر الشيخ طنطا logistics">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #ea580c, #f97316); box-shadow: 0 10px 20px -5px rgba(234, 88, 12, 0.45);">
                 <i class="bi bi-signpost-2-fill"></i>
@@ -773,7 +773,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 5. الموارد البشرية HR (Popup) --}}
-        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'tasks.view', 'view_own_tasks', 'website.volunteer_requests.view']))
+        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'website.volunteer_requests.view', 'mobile.volunteer_requests.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.45);">
                 <i class="bi bi-person-lines-fill"></i>
@@ -784,7 +784,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 6. الحسابات والمالية (Popup) --}}
-        @if($u && ($u->hasPermission('treasuries.view') || $u->hasPermission('financial_closures.view') || $u->hasPermission('closures.view') || $u->hasPermission('accounts.view') || $u->hasPermission('expenses.view') || $u->hasPermission('revenues.view') || $u->hasPermission('journal_entries.view') || $u->roles->contains('key', 'finance')))
+        @if($u && $u->hasPermission(['treasuries.view', 'financial_closures.view', 'closures.view', 'accounts.view', 'expenses.view', 'revenues.view', 'journal_entries.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppFinance" data-category="finance" data-title="الحسابات والمالية" data-keywords="خزائن مصروفات إيرادات قيود إغلاق يوميات شجرة حسابات finance">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-calculator-fill"></i>
@@ -883,7 +883,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 13. الموقع الإلكتروني (Popup) --}}
-        @if($u && ($u->hasPermission('website.view') || $u->hasPermission('website.settings.view_edit') || $u->hasPermission('website.headquarters.view') || $u->hasPermission('website.partners.view') || $u->hasPermission('website.board.view') || $u->hasPermission('website.content.view_edit') || $u->hasPermission('website.campaigns_content.view_edit') || $u->hasPermission('website.donation_page.view_edit') || $u->hasPermission('website.donation_settings.view_edit') || $u->hasPermission('website.accounts.view') || $u->hasPermission('website.donation_accounts.view') || $u->hasPermission('website.contact_messages.view')))
+        @if($u && $u->hasPermission(['website.view', 'website.settings.view_edit', 'website.headquarters.view', 'website.partners.view', 'website.board.view', 'website.content.view_edit', 'website.campaigns_content.view_edit', 'website.volunteer_requests.view', 'website.donation_page.view_edit', 'website.donation_settings.view_edit', 'website.accounts.view', 'website.donation_accounts.view', 'website.contact_messages.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppWebsite" data-category="digital" data-title="الموقع الإلكتروني" data-keywords="موقع إعدادات شركاء مجلس أمناء تبرعات صفحات website">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #4338ca, #6366f1); box-shadow: 0 10px 20px -5px rgba(67, 56, 202, 0.45);">
                 <i class="bi bi-globe2"></i>
@@ -894,7 +894,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 14. تطبيق الموبايل (Popup) --}}
-        @if($u && ($u->hasPermission('mobile.view') || $u->hasPermission('mobile.home_content.view_edit') || $u->hasPermission('mobile.news.view') || $u->hasPermission('mobile.volunteer_requests.view') || $u->hasPermission('mobile.bookings.view') || $u->hasPermission('mobile.donations.view') || $u->hasPermission('mobile.donors.view') || $u->hasPermission('mobile.notifications.view')))
+        @if($u && $u->hasPermission(['mobile.view', 'mobile.home_content.view_edit', 'mobile.news.view', 'mobile.volunteer_requests.view', 'mobile.bookings.view', 'mobile.donations.view', 'mobile.donors.view', 'mobile.notifications.view', 'mobile.case_applications.view']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppMobile" data-category="digital" data-title="تطبيق الموبايل" data-keywords="تطبيق موبايل إشعارات حجوزات تبرعات mobile app">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #c026d3, #d946ef); box-shadow: 0 10px 20px -5px rgba(192, 38, 211, 0.45);">
                 <i class="bi bi-phone-fill"></i>
@@ -905,7 +905,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission('roles.view') || $u->hasPermission('audits.view') || $u->hasPermission('manage_change_requests') || $u->hasRole(['admin', 'super_admin', 'manager'])))
+        @if($u && ($u->hasPermission(['roles.view', 'audits.view', 'manage_change_requests', 'reports.view']) || $u->hasRole(['admin', 'super_admin', 'manager'])))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
@@ -916,7 +916,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 16. الشكاوى والمقترحات --}}
-        @if($u && ($u->hasPermission('complaints.view') || $u->hasPermission('complaints.create') || $u->roles->contains('key', 'finance')))
+        @if($u && $u->hasPermission(['complaints.view', 'complaints.create']))
         <a href="{{ route('complaints.index') }}" class="ensan-app-card" data-category="admin digital" data-title="الشكاوى والمقترحات" data-keywords="شكاوى مقترحات تتبع complaints">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.45);">
                 <i class="bi bi-chat-dots-fill"></i>
@@ -1109,7 +1109,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission('kafr_el_sheikh_deliveries.view'))
+                    @if($u && $u->hasPermission(['kafr_el_sheikh_deliveries.view', 'kafr_el_sheikh_services.view']))
                     <a href="{{ route('kafr-el-sheikh-services.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
                             <i class="bi bi-truck"></i>
@@ -1120,7 +1120,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
+                    @if($u && $u->hasPermission('kafr_el_sheikh_brokers.view'))
                     <a href="{{ route('kafr-el-sheikh-brokers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-secondary-subtle text-secondary">
                             <i class="bi bi-people"></i>
@@ -1133,7 +1135,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && ($u->hasPermission('manage_logistics') || $u->hasRole('admin')))
+                    @if($u && $u->hasPermission(['tanta_workers.view', 'manage_logistics']))
                     <a href="{{ route('tanta-workers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-purple-subtle text-purple">
                             <i class="bi bi-person-workspace"></i>
@@ -1286,7 +1288,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission(['volunteer_tasks.view', 'tasks.view', 'view_own_tasks']))
+                    @if($u && $u->hasPermission('volunteer_tasks.view'))
                     <a href="{{ route('tasks.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
                             <i class="bi bi-list-task"></i>
@@ -1385,7 +1387,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && ($u->hasPermission('revenues.view') || $u->hasPermission('accounts.view')))
+                    @if($u && $u->hasPermission('revenues.view'))
                     <a href="{{ route('revenues.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-arrow-down-left-circle"></i>
@@ -1752,7 +1754,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    @if($u && $u->hasPermission('mobile.case_applications.view'))
                     <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-clipboard2-check-fill"></i>
@@ -1888,7 +1890,7 @@ body.theme-dark .launcher-cat-btn.active,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u && ($u->hasPermission('mobile.case_applications.view') || $u->hasPermission('beneficiaries.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    @if($u && $u->hasPermission('mobile.case_applications.view'))
                     <a href="{{ route('mobile.case-applications.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-file-earmark-person-fill"></i>
