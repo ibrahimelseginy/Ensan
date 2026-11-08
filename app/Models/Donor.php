@@ -157,21 +157,61 @@ final class Donor extends Model
             ->latest('id')
             ->first();
 
+        // Extract previous per-beneficiary amounts and split allocations from last donation
+        $lastBenAmounts = [];
+        $lastBenNotes = [];
+        $lastSplits = [];
+        $lastSplitSum = 0.0;
+        if ($lastDonation) {
+            if (!empty($lastDonation->beneficiary_allocations) && is_array($lastDonation->beneficiary_allocations)) {
+                foreach ($lastDonation->beneficiary_allocations as $ba) {
+                    $bId = (int)($ba['beneficiary_id'] ?? 0);
+                    if ($bId > 0 && !empty($ba['amount']) && (float)$ba['amount'] > 0) {
+                        $lastBenAmounts[$bId] = (float)$ba['amount'];
+                    }
+                    if ($bId > 0 && !empty($ba['notes'])) {
+                        $lastBenNotes[$bId] = (string)$ba['notes'];
+                    }
+                }
+            }
+            if (!empty($lastDonation->split_allocations) && is_array($lastDonation->split_allocations)) {
+                $lastSplits = $lastDonation->split_allocations;
+                foreach ($lastSplits as $sp) {
+                    $spAmt = (float)($sp['amount'] ?? 0);
+                    if ($spAmt > 0) {
+                        $lastSplitSum += $spAmt;
+                    }
+                    if (($sp['type'] ?? '') === 'beneficiary' && !empty($sp['target_id']) && $spAmt > 0) {
+                        $bId = (int)$sp['target_id'];
+                        $lastBenAmounts[$bId] = $spAmt;
+                        if (!empty($sp['notes'])) {
+                            $lastBenNotes[$bId] = (string)$sp['notes'];
+                        }
+                    }
+                }
+            }
+        }
+
         // Monthly amount
         $monthlyAmount = (float) $this->sponsorship_monthly_amount;
         if ($monthlyAmount <= 0 && $lastDonation && (float)$lastDonation->amount > 0) {
             $monthlyAmount = (float) $lastDonation->amount;
+        }
+        if ($lastSplitSum > $monthlyAmount) {
+            $monthlyAmount = $lastSplitSum;
         }
 
         // Cases / Beneficiaries
         $cases = [];
         $addedBeneficiaryIds = [];
         foreach ($this->sponsoredBeneficiaries as $sb) {
-            $caseAmt = null;
-            if ($monthlyAmount > 0 && $this->sponsoredBeneficiaries->count() === 1) {
-                $caseAmt = $monthlyAmount;
-            } elseif ((float)($sb->monthly_sponsorship_amount ?? 0) > 0) {
-                $caseAmt = (float)$sb->monthly_sponsorship_amount;
+            $caseAmt = $lastBenAmounts[$sb->id] ?? null;
+            if ($caseAmt === null) {
+                if ($monthlyAmount > 0 && $this->sponsoredBeneficiaries->count() === 1 && empty($lastSplits)) {
+                    $caseAmt = $monthlyAmount;
+                } elseif ((float)($sb->monthly_sponsorship_amount ?? 0) > 0) {
+                    $caseAmt = (float)$sb->monthly_sponsorship_amount;
+                }
             }
             $cases[] = [
                 'id' => $sb->id,
@@ -180,7 +220,7 @@ final class Donor extends Model
                 'phone' => $sb->phone ?: '',
                 'type' => 'beneficiary',
                 'amount' => $caseAmt,
-                'notes' => 'كفالة حالة',
+                'notes' => $lastBenNotes[$sb->id] ?? 'كفالة حالة',
             ];
             $addedBeneficiaryIds[] = $sb->id;
         }
@@ -318,6 +358,7 @@ final class Donor extends Model
             'last_paid_month' => $lastPaidMonth,
             'last_channel' => $lastDonation?->cash_channel ?: 'cash',
             'sponsored_cases' => $cases,
+            'split_allocations' => $lastSplits,
         ];
     }
 }

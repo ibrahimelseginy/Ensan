@@ -118,7 +118,13 @@ final class StoreDonationRequest extends FormRequest
             'transfer_receipt'         => 'nullable|file|mimes:jpeg,png,jpg,pdf,webp|max:10240',
             'amount'                   => 'required_if:type,cash|nullable|numeric|min:0.01',
             'currency'                 => 'nullable|string',
-            'receipt_number'           => 'required_if:type,cash|nullable|string|max:64|unique:donations,receipt_number',
+            'receipt_number'           => [
+                'required_if:type,cash',
+                'nullable',
+                'string',
+                'max:64',
+                Rule::unique('donations', 'receipt_number')->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled')),
+            ],
             'purpose'                  => 'required|in:kafalat_aytam,kafalat_awram,sadaqat,zakat_maal,sadaqa_jariya',
             'estimated_value'          => 'required_if:type,in_kind|nullable|numeric|min:0.01',
             'project_id'               => 'nullable|exists:projects,id',
@@ -143,6 +149,8 @@ final class StoreDonationRequest extends FormRequest
             'split_allocations'        => 'nullable|array',
             'split_allocations.*.type' => 'required_with:split_allocations|in:project,campaign,guest_house,beneficiary,general',
             'split_allocations.*.target_id' => 'nullable',
+            'split_allocations.*.target_name' => 'nullable|string',
+            'split_allocations.*.family_member_id' => 'nullable|integer|exists:beneficiary_family_members,id',
             'split_allocations.*.purpose'   => 'nullable|string',
             'split_allocations.*.amount'    => 'required_with:split_allocations|numeric|min:0.01',
             'split_allocations.*.notes'     => 'nullable|string',
@@ -152,86 +160,15 @@ final class StoreDonationRequest extends FormRequest
                 'nullable',
                 'integer',
                 'exists:beneficiary_family_members,id',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! $value) {
-                        return;
-                    }
-
-                    $beneficiaryIds = array_values(array_filter(array_map(
-                        'intval',
-                        (array) $this->input('beneficiary_ids', [])
-                    )));
-                    if ($this->filled('beneficiary_id')) {
-                        $beneficiaryIds[] = $this->integer('beneficiary_id');
-                    }
-
-                    if (! \App\Models\BeneficiaryFamilyMember::query()
-                        ->whereKey($value)
-                        ->whereIn('beneficiary_id', array_unique($beneficiaryIds))
-                        ->exists()) {
-                        $fail('فرد الأسرة المختار لا يتبع المستفيدين المحددين.');
-                    }
-                },
             ],
             'family_member_ids'        => [
                 'nullable',
-                Rule::requiredIf(function (): bool {
-                    $purpose = (string) $this->input('purpose');
-                    if (! in_array($purpose, ['kafalat_aytam', 'kafalat_awram'], true)) {
-                        return false;
-                    }
-
-                    $isEntityModal = $this->filled('guest_house_id')
-                        || $this->filled('project_id')
-                        || $this->filled('campaign_id')
-                        || in_array((string) $this->input('form_context'), ['guest_house_donation', 'project_donation', 'campaign_donation'], true);
-                    if ($isEntityModal) {
-                        return false;
-                    }
-
-                    $hasAllocations = ! empty(array_filter((array) $this->input('beneficiary_allocations', [])));
-                    $hasBeneficiary = $this->filled('beneficiary_id') || ! empty(array_filter((array) $this->input('beneficiary_ids', [])));
-
-                    return ! $hasAllocations && ! $hasBeneficiary;
-                }),
                 'array',
-                Rule::when(
-                    fn (): bool => in_array($this->input('purpose'), ['kafalat_aytam', 'kafalat_awram'], true)
-                        && ! $this->filled('guest_house_id')
-                        && ! $this->filled('project_id')
-                        && ! $this->filled('campaign_id')
-                        && ! in_array((string) $this->input('form_context'), ['guest_house_donation', 'project_donation', 'campaign_donation'], true)
-                        && empty(array_filter((array) $this->input('beneficiary_allocations', [])))
-                        && ! $this->filled('beneficiary_id')
-                        && empty(array_filter((array) $this->input('beneficiary_ids', []))),
-                    ['min:1']
-                ),
             ],
             'family_member_ids.*'      => [
                 'integer',
                 'distinct',
                 'exists:beneficiary_family_members,id',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    $purpose = (string) $this->input('purpose');
-
-                    $member = \App\Models\BeneficiaryFamilyMember::query()
-                        ->whereKey((int) $value)
-                        ->where('active', true)
-                        ->first();
-
-                    if (! $member) {
-                        $fail('ملف الطفل أو المريض غير موجود أو غير نشط.');
-                        return;
-                    }
-
-                    if ($purpose === 'kafalat_aytam' && $member->is_patient && ! in_array($member->relationship, ['child', 'son', 'daughter', 'orphan', 'ابن', 'ابنة', 'طفل', 'يتيم'], true)) {
-                        $fail('كفالات الأيتام تقبل ملفات الأطفال المكفولين فقط.');
-                    }
-
-                    if ($purpose === 'kafalat_awram' && ! $member->is_patient && ! in_array($member->relationship, ['patient', 'child', 'son', 'daughter', 'orphan', 'ابن', 'ابنة', 'طفل', 'مريض'], true)) {
-                        $fail('كفالات الأورام تقبل ملفات المرضى والأطفال المكفولين فقط.');
-                    }
-                },
             ],
             'received_at'              => 'nullable|date'
         ];
@@ -320,10 +257,23 @@ final class StoreDonationRequest extends FormRequest
             }
         }
 
+        $normalizeAsciiDigits = static function ($val) {
+            if (!is_string($val) && !is_numeric($val)) {
+                return $val;
+            }
+            return strtr(trim((string) $val), [
+                '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+                '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+                '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+                '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+                '٫' => '.', '،' => '', ',' => '',
+            ]);
+        };
+
         $cashChannel = (string) $this->input('cash_channel', 'cash');
         $isDigitalChannel = in_array($cashChannel, ['instapay', 'vodafone_cash', 'bank_transfer'], true);
-        $receiptNum = is_string($this->input('receipt_number')) ? trim($this->input('receipt_number')) : $this->input('receipt_number');
-        $opNum = is_string($this->input('operation_number')) ? trim($this->input('operation_number')) : $this->input('operation_number');
+        $receiptNum = is_string($this->input('receipt_number')) ? $normalizeAsciiDigits($this->input('receipt_number')) : $this->input('receipt_number');
+        $opNum = is_string($this->input('operation_number')) ? $normalizeAsciiDigits($this->input('operation_number')) : $this->input('operation_number');
 
         if ($isDigitalChannel) {
             if (($receiptNum === null || $receiptNum === '') && $opNum !== null && $opNum !== '') {
@@ -333,12 +283,81 @@ final class StoreDonationRequest extends FormRequest
             }
         }
 
+        // Normalize and clean split_allocations
+        $rawSplits = $this->input('split_allocations');
+        $enableSplitFlag = $this->input('enable_split_donation');
+        $cleanedSplits = [];
+        $splitSum = 0.0;
+        if (is_array($rawSplits) && ($enableSplitFlag === null || (string) $enableSplitFlag !== '0')) {
+            foreach ($rawSplits as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $rowAmount = (float) $normalizeAsciiDigits($row['amount'] ?? 0);
+                if ($rowAmount <= 0) {
+                    continue;
+                }
+                $row['amount'] = $rowAmount;
+                $row['type'] = trim((string) ($row['type'] ?? 'general')) ?: 'general';
+                $row['purpose'] = trim((string) ($row['purpose'] ?? ''));
+                $row['target_id'] = isset($row['target_id']) && $row['target_id'] !== '' ? (int) $row['target_id'] : null;
+                $row['family_member_id'] = isset($row['family_member_id']) && $row['family_member_id'] !== '' ? (int) $row['family_member_id'] : null;
+                $cleanedSplits[] = $row;
+                $splitSum += $rowAmount;
+            }
+        }
+
+        // Normalize and clean beneficiary_allocations
+        $rawBenAllocs = $this->input('beneficiary_allocations');
+        $cleanedBenAllocs = [];
+        $benSum = 0.0;
+        if (is_array($rawBenAllocs)) {
+            foreach ($rawBenAllocs as $alloc) {
+                if (!is_array($alloc) || empty($alloc['beneficiary_id'])) {
+                    continue;
+                }
+                $allocAmountRaw = $alloc['amount'] ?? null;
+                $allocAmount = ($allocAmountRaw !== null && $allocAmountRaw !== '') ? (float) $normalizeAsciiDigits($allocAmountRaw) : null;
+                $alloc['beneficiary_id'] = (int) $alloc['beneficiary_id'];
+                $alloc['family_member_id'] = !empty($alloc['family_member_id']) ? (int) $alloc['family_member_id'] : null;
+                $alloc['amount'] = $allocAmount;
+                $cleanedBenAllocs[] = $alloc;
+                if ($allocAmount !== null && $allocAmount > 0) {
+                    $benSum += $allocAmount;
+                }
+            }
+        }
+
+        $rawAmount = $this->input('amount');
+        $normalizedAmount = ($rawAmount !== null && $rawAmount !== '') ? (float) $normalizeAsciiDigits($rawAmount) : null;
+
+        if (!empty($cleanedSplits) && $splitSum > 0) {
+            if ($normalizedAmount === null || $normalizedAmount <= 0 || $normalizedAmount < $splitSum) {
+                $normalizedAmount = round($splitSum, 2);
+            }
+        } elseif (!empty($cleanedBenAllocs) && $benSum > 0) {
+            if ($normalizedAmount === null || $normalizedAmount <= 0) {
+                $normalizedAmount = round($benSum, 2);
+            }
+        }
+
+        $rawEstValue = $this->input('estimated_value');
+        $normalizedEstValue = ($rawEstValue !== null && $rawEstValue !== '') ? (float) $normalizeAsciiDigits($rawEstValue) : $rawEstValue;
+
         $purposeInput = is_string($this->input('purpose')) ? trim($this->input('purpose')) : '';
+        if ($purposeInput === '' && !empty($cleanedSplits)) {
+            foreach ($cleanedSplits as $sRow) {
+                if (!empty($sRow['purpose'])) {
+                    $purposeInput = $sRow['purpose'];
+                    break;
+                }
+            }
+        }
         if ($purposeInput === '') {
             $purposeInput = 'sadaqat';
         }
 
-        $this->merge([
+        $mergeData = [
             'purpose' => $purposeInput,
             'add_to_inventory' => $this->boolean('add_to_inventory'),
             'new_donor_code' => Donor::normalizeCode($this->input('new_donor_code')),
@@ -347,21 +366,41 @@ final class StoreDonationRequest extends FormRequest
             '_new_donor_phone_national' => $nationalDigits,
             'receipt_number' => $receiptNum,
             'operation_number' => $opNum,
-        ]);
+            'split_allocations' => !empty($cleanedSplits) ? array_values($cleanedSplits) : null,
+            'beneficiary_allocations' => !empty($cleanedBenAllocs) ? array_values($cleanedBenAllocs) : null,
+        ];
+        if ($normalizedAmount !== null) {
+            $mergeData['amount'] = $normalizedAmount;
+        }
+        if ($normalizedEstValue !== null) {
+            $mergeData['estimated_value'] = $normalizedEstValue;
+        }
+
+        $this->merge($mergeData);
 
         $purpose = (string) $this->input('purpose');
-        if (in_array($purpose, ['kafalat_aytam', 'kafalat_awram'], true)) {
+        $hasSponsorshipSplit = collect($cleanedSplits)->contains(fn ($r) => in_array($r['purpose'] ?? '', ['kafalat_aytam', 'kafalat_awram'], true));
+        if (in_array($purpose, ['kafalat_aytam', 'kafalat_awram'], true) || $hasSponsorshipSplit) {
             $memberIds = array_values(array_filter(array_map('intval', (array) $this->input('family_member_ids', []))));
 
-            // 1. Extract any family_member_id from beneficiary_allocations
-            $allocations = (array) $this->input('beneficiary_allocations', []);
+            // 1. Extract any family_member_id / beneficiary_id from beneficiary_allocations & split_allocations
             $beneficiaryIds = [];
-            foreach ($allocations as $alloc) {
+            foreach ($cleanedBenAllocs as $alloc) {
                 if (!empty($alloc['family_member_id'])) {
                     $memberIds[] = (int) $alloc['family_member_id'];
                 }
                 if (!empty($alloc['beneficiary_id'])) {
                     $beneficiaryIds[] = (int) $alloc['beneficiary_id'];
+                }
+            }
+            foreach ($cleanedSplits as $sRow) {
+                if (($sRow['type'] ?? '') === 'beneficiary') {
+                    if (!empty($sRow['family_member_id'])) {
+                        $memberIds[] = (int) $sRow['family_member_id'];
+                    }
+                    if (!empty($sRow['target_id'])) {
+                        $beneficiaryIds[] = (int) $sRow['target_id'];
+                    }
                 }
             }
 

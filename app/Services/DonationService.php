@@ -127,17 +127,20 @@ final readonly class DonationService
             $firstProjectId = null;
             $firstCampaignId = null;
             $firstGuestHouseId = null;
+            $totalSplitAmount = 0.0;
 
             foreach ($data['split_allocations'] as $split) {
                 $type = $split['type'] ?? 'general';
                 $amt = !empty($split['amount']) ? (float)$split['amount'] : 0;
                 if ($amt <= 0) continue;
 
+                $totalSplitAmount += $amt;
                 $targetId = !empty($split['target_id']) ? (int)$split['target_id'] : null;
+                $familyMemberId = !empty($split['family_member_id']) ? (int)$split['family_member_id'] : null;
                 $purpose = !empty($split['purpose']) ? (string)$split['purpose'] : ($data['purpose'] ?? null);
                 $notes = !empty($split['notes']) ? (string)$split['notes'] : null;
 
-                $targetName = null;
+                $targetName = !empty($split['target_name']) ? (string)$split['target_name'] : null;
                 $typeLabel = match ($type) {
                     'project'     => 'مشروع',
                     'campaign'    => 'حملة نشطة',
@@ -148,42 +151,55 @@ final readonly class DonationService
 
                 if ($type === 'project' && $targetId) {
                     $proj = \App\Models\Project::find($targetId);
-                    $targetName = $proj?->name ?? ('مشروع #' . $targetId);
+                    $targetName = $proj?->name ?? $targetName ?? ('مشروع #' . $targetId);
                     if (!$firstProjectId) $firstProjectId = $targetId;
                 } elseif ($type === 'campaign' && $targetId) {
                     $camp = \App\Models\Campaign::find($targetId);
-                    $targetName = $camp?->name ?? ('حملة #' . $targetId);
+                    $targetName = $camp?->name ?? $targetName ?? ('حملة #' . $targetId);
                     if (!$firstCampaignId) $firstCampaignId = $targetId;
                 } elseif ($type === 'guest_house' && $targetId) {
                     $gh = \App\Models\GuestHouse::find($targetId);
-                    $targetName = $gh?->name ?? ('دار ضيافة #' . $targetId);
+                    $targetName = $gh?->name ?? $targetName ?? ('دار ضيافة #' . $targetId);
                     if (!$firstGuestHouseId) $firstGuestHouseId = $targetId;
                 } elseif ($type === 'beneficiary' && $targetId) {
                     $ben = Beneficiary::find($targetId);
-                    $targetName = $ben?->full_name ?? ('مستفيد #' . $targetId);
+                    $member = $familyMemberId ? BeneficiaryFamilyMember::find($familyMemberId) : null;
+                    $resolvedName = $member
+                        ? ($member->full_name . ' (أسرة: ' . ($ben?->full_name ?? '') . ')')
+                        : ($ben?->full_name ?? $targetName ?? ('مستفيد #' . $targetId));
+                    $targetName = $resolvedName;
                     $splitBenAllocations[] = [
-                        'beneficiary_id' => $targetId,
-                        'name'           => $ben?->full_name,
-                        'code'           => $ben?->code ?? ('BEN-' . $targetId),
-                        'phone'          => $ben?->phone,
-                        'amount'         => $amt,
-                        'notes'          => $notes,
+                        'beneficiary_id'   => $targetId,
+                        'family_member_id' => $familyMemberId,
+                        'name'             => $resolvedName,
+                        'code'             => $member?->code ?: ($ben?->code ?? ('BEN-' . $targetId)),
+                        'phone'            => $member?->phone ?: $ben?->phone,
+                        'amount'           => $amt,
+                        'notes'            => $notes,
                     ];
                 }
 
                 $formattedSplits[] = [
-                    'type'        => $type,
-                    'type_label'  => $typeLabel,
-                    'target_id'   => $targetId,
-                    'target_name' => $targetName,
-                    'purpose'     => $purpose,
-                    'amount'      => $amt,
-                    'notes'       => $notes,
+                    'type'             => $type,
+                    'type_label'       => $typeLabel,
+                    'target_id'        => $targetId,
+                    'family_member_id' => $familyMemberId,
+                    'target_name'      => $targetName,
+                    'purpose'          => $purpose,
+                    'amount'           => $amt,
+                    'notes'            => $notes,
                 ];
             }
 
             if (!empty($formattedSplits)) {
                 $data['split_allocations'] = $formattedSplits;
+
+                if (($data['type'] ?? 'cash') === 'cash' && $totalSplitAmount > 0) {
+                    $currentAmt = (float)($data['amount'] ?? 0);
+                    if ($currentAmt <= 0 || $currentAmt < $totalSplitAmount) {
+                        $data['amount'] = round($totalSplitAmount, 2);
+                    }
+                }
 
                 if (empty($data['project_id']) && $firstProjectId) {
                     $data['project_id'] = $firstProjectId;
@@ -195,8 +211,36 @@ final readonly class DonationService
                     $data['guest_house_id'] = $firstGuestHouseId;
                 }
 
-                if (!empty($splitBenAllocations) && empty($data['beneficiary_allocations'])) {
-                    $data['beneficiary_allocations'] = $splitBenAllocations;
+                if (!empty($splitBenAllocations)) {
+                    $existingAllocs = (!empty($data['beneficiary_allocations']) && is_array($data['beneficiary_allocations']))
+                        ? $data['beneficiary_allocations']
+                        : [];
+
+                    $mergedByKey = [];
+                    foreach ($existingAllocs as $ex) {
+                        if (empty($ex['beneficiary_id'])) continue;
+                        $k = (int)$ex['beneficiary_id'] . ':' . ((int)($ex['family_member_id'] ?? 0));
+                        $mergedByKey[$k] = $ex;
+                    }
+                    foreach ($splitBenAllocations as $spAlloc) {
+                        $k = (int)$spAlloc['beneficiary_id'] . ':' . ((int)($spAlloc['family_member_id'] ?? 0));
+                        $bOnlyKey = (int)$spAlloc['beneficiary_id'] . ':0';
+                        if (isset($mergedByKey[$k])) {
+                            if (empty($mergedByKey[$k]['amount']) || (float)$mergedByKey[$k]['amount'] <= 0) {
+                                $mergedByKey[$k]['amount'] = $spAlloc['amount'];
+                            }
+                            if (empty($mergedByKey[$k]['notes']) && !empty($spAlloc['notes'])) {
+                                $mergedByKey[$k]['notes'] = $spAlloc['notes'];
+                            }
+                        } elseif (isset($mergedByKey[$bOnlyKey]) && !empty($spAlloc['family_member_id'])) {
+                            unset($mergedByKey[$bOnlyKey]);
+                            $mergedByKey[$k] = $spAlloc;
+                        } else {
+                            $mergedByKey[$k] = $spAlloc;
+                        }
+                    }
+
+                    $data['beneficiary_allocations'] = array_values($mergedByKey);
                     if (empty($data['beneficiary_id'])) {
                         $data['beneficiary_id'] = $splitBenAllocations[0]['beneficiary_id'];
                     }

@@ -35,14 +35,40 @@ final readonly class ProjectService
 
     public function getProjectStats(Project $project): array
     {
-        $activeDonations = Donation::where('project_id', $project->id)
+        $activeDonations = Donation::where(function ($q) use ($project) {
+                $q->where('project_id', $project->id)
+                  ->orWhere('split_allocations', 'like', '%"type":"project"%"target_id":' . $project->id . '%')
+                  ->orWhere('split_allocations', 'like', '%"target_id":' . $project->id . '%"type":"project"%');
+            })
             ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
         $activeExpenses = Expense::where('project_id', $project->id)
             ->where(fn ($query) => $query->whereNull('status')->orWhere('status', '!=', 'cancelled'));
 
-        $donationsCount = (clone $activeDonations)->count();
-        $cashSum        = (float) (clone $activeDonations)->where('type', 'cash')->sum('amount');
-        $inKindSum      = (float) (clone $activeDonations)->where('type', 'in_kind')->sum('estimated_value');
+        $donationsList = (clone $activeDonations)->get();
+        $donationsCount = $donationsList->count();
+        $cashSum        = 0.0;
+        $inKindSum      = 0.0;
+        foreach ($donationsList as $d) {
+            if (!empty($d->split_allocations) && is_array($d->split_allocations)) {
+                $projAlloc = 0.0;
+                foreach ($d->split_allocations as $sp) {
+                    if (($sp['type'] ?? '') === 'project' && (int)($sp['target_id'] ?? 0) === (int)$project->id) {
+                        $projAlloc += (float)($sp['amount'] ?? 0);
+                    }
+                }
+                if ($d->type === 'cash') {
+                    $cashSum += ($projAlloc > 0 ? $projAlloc : ((int)$d->project_id === (int)$project->id ? (float)$d->amount : 0.0));
+                } else {
+                    $inKindSum += ($projAlloc > 0 ? $projAlloc : ((int)$d->project_id === (int)$project->id ? (float)$d->estimated_value : 0.0));
+                }
+            } else {
+                if ($d->type === 'cash') {
+                    $cashSum += (float)$d->amount;
+                } else {
+                    $inKindSum += (float)$d->estimated_value;
+                }
+            }
+        }
         $donationsTotal = $cashSum + $inKindSum;
         
         $expensesCount = (clone $activeExpenses)->count();

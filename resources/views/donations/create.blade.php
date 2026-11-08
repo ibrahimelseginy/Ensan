@@ -649,8 +649,8 @@
             <div class="form-text small text-muted">التبرع يخصص مباشرةً لحساب وإيرادات دار الضيافة.</div>
           </div>
           <div class="col-md-3">
-            <label class="form-label form-label-required">بند الإيصال (وذلك قيمة)</label>
-            <select name="purpose" id="donationPurpose" class="form-select" required>
+            <label class="form-label form-label-required" id="donationPurposeLabel">بند الإيصال (وذلك قيمة)</label>
+            <select name="purpose" id="donationPurpose" class="form-select">
               <option value="">— اختر —</option>
               <option value="kafalat_aytam" @selected(old('purpose', request('purpose'))==='kafalat_aytam')>كفالات أيتام</option>
               <option value="kafalat_awram" @selected(old('purpose', request('purpose'))==='kafalat_awram')>كفالات أورام</option>
@@ -662,6 +662,7 @@
 
           {{-- خيار تقسيم وتوزيع مبالغ التبرع على أكثر من جهة / بند --}}
           <div class="col-12">
+            <input type="hidden" name="enable_split_donation" id="enableSplitDonationInput" value="{{ !empty(old('split_allocations')) ? '1' : '0' }}">
             <div class="card border-success border-opacity-50 shadow-sm mb-2" style="background: rgba(240, 253, 244, 0.45);">
               <div class="card-header bg-white bg-opacity-75 py-2.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
@@ -997,7 +998,7 @@
   $projectsList = $projects->map(fn($p) => ['id' => $p->id, 'name' => $p->name])->values();
   $campaignsList = ($activeCampaigns ?? collect())->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values();
   $guestHousesList = ($activeGuestHouses ?? collect())->map(fn($g) => ['id' => $g->id, 'name' => $g->name])->values();
-  $oldSplits = old('split_allocations', []);
+  $oldSplits = array_values(array_filter((array) old('split_allocations', []), fn($r) => is_array($r)));
 @endphp
 <script>
 $(function () {
@@ -1200,10 +1201,10 @@ $(function () {
   });
 
   $(document).on('input change', '.case-amount-input', function() {
-    updateAllocatedCasesSummary();
+    updateAllocatedCasesSummary(true);
   });
 
-  function updateAllocatedCasesSummary() {
+  function updateAllocatedCasesSummary(autoSyncTotal = false) {
     let total = 0;
     let count = 0;
     $('.allocated-case-row').each(function() {
@@ -1221,6 +1222,13 @@ $(function () {
       $('#allocatedCountBadge').text(`${count} ${count === 1 ? 'حالة' : 'حالات'}`);
       $('#allocatedTotalAmount').text(total.toFixed(2) + ' ج.م');
       $('#emptyAllocatedNotice').hide();
+      if (autoSyncTotal && total > 0 && !$('#toggleSplitDonation').is(':checked')) {
+        const curDonationAmt = parseFloat($('#donationAmount').val()) || 0;
+        const hasOtherTarget = Boolean($('#donationGuestHouse').val() || $('#donationCampaign').val() || $('#donationProject').val());
+        if (!hasOtherTarget || curDonationAmt <= 0 || curDonationAmt < total) {
+          $('#donationAmount').val(total.toFixed(2));
+        }
+      }
     } else {
       $('#allocatedCasesSummary').attr('style', 'display: none !important;');
       $('#emptyAllocatedNotice').show();
@@ -1267,7 +1275,7 @@ $(function () {
   // ==========================================
   let splitRowCounter = 0;
 
-  function renderTargetOptions(type, selectedId) {
+  function renderTargetOptions(type, selectedId, selectedName = '', familyMemberId = '') {
     if (type === 'campaign') {
       let opts = '<option value="">— اختر حملة نشطة —</option>';
       availableCampaigns.forEach(c => {
@@ -1287,8 +1295,11 @@ $(function () {
       });
       return `<select class="form-select form-select-sm split-target-select">${opts}</select>`;
     } else if (type === 'beneficiary') {
-      let opt = selectedId ? `<option value="${selectedId}" selected>مستفيد #${selectedId}</option>` : '';
-      return `<select class="form-select form-select-sm split-beneficiary-select"><option value=""></option>${opt}</select>`;
+      const label = selectedName || (selectedId ? `مستفيد #${selectedId}` : '');
+      let opt = selectedId ? `<option value="${selectedId}" selected>${label}</option>` : '';
+      return `<select class="form-select form-select-sm split-beneficiary-select"><option value=""></option>${opt}</select>
+              <input type="hidden" class="split-target-name-hidden" value="${selectedName || ''}">
+              <input type="hidden" class="split-family-member-hidden" value="${familyMemberId || ''}">`;
     } else {
       return `<input type="text" class="form-control form-control-sm bg-light text-muted" value="عام (بدون تخصيص)" readonly><input type="hidden" class="split-target-hidden" value="">`;
     }
@@ -1298,6 +1309,8 @@ $(function () {
     const idx = splitRowCounter++;
     const type = item.type || 'campaign';
     const targetId = item.target_id || '';
+    const targetName = item.target_name || '';
+    const familyMemberId = item.family_member_id || '';
     const purpose = item.purpose || $('#donationPurpose').val() || 'sadaqat';
     const amount = item.amount !== undefined && item.amount !== null ? item.amount : '';
     const notes = item.notes || '';
@@ -1315,7 +1328,7 @@ $(function () {
         </td>
         <td style="min-width: 270px;">
           <div class="split-target-container" data-idx="${idx}">
-            ${renderTargetOptions(type, targetId)}
+            ${renderTargetOptions(type, targetId, targetName, familyMemberId)}
           </div>
         </td>
         <td style="width: 180px; min-width: 180px;">
@@ -1355,6 +1368,10 @@ $(function () {
       initSplitBeneficiarySelect2(newRow.find('.split-beneficiary-select'));
     }
 
+    if (!$('#toggleSplitDonation').is(':checked')) {
+      newRow.find(':input').prop('disabled', true);
+    }
+
     updateSplitAllocationsSummary();
     newRow.find('.split-amount-input').focus();
   }
@@ -1364,10 +1381,18 @@ $(function () {
     const container = row.find('.split-target-container');
     const select = container.find('select');
     const hidden = container.find('.split-target-hidden');
+    const nameHidden = container.find('.split-target-name-hidden');
+    const fmHidden = container.find('.split-family-member-hidden');
     if (select.length) {
       select.attr('name', `split_allocations[${idx}][target_id]`);
     } else if (hidden.length) {
       hidden.attr('name', `split_allocations[${idx}][target_id]`);
+    }
+    if (nameHidden.length) {
+      nameHidden.attr('name', `split_allocations[${idx}][target_name]`);
+    }
+    if (fmHidden.length) {
+      fmHidden.attr('name', `split_allocations[${idx}][family_member_id]`);
     }
   }
 
@@ -1388,13 +1413,26 @@ $(function () {
             results: data.map(function(item) {
               return {
                 id: item.id,
-                text: item.text || (item.full_name + ' — ' + (item.code || ('ID: ' + item.id)))
+                text: item.text || (item.full_name + ' — ' + (item.code || ('ID: ' + item.id))),
+                matched_member_id: item.matched_member_id || ''
               };
             })
           };
         },
         cache: true
       }
+    }).on('select2:select', function(e) {
+      const data = e.params.data || {};
+      const row = $(this).closest('tr.split-item-row');
+      row.find('.split-target-name-hidden').val(data.text || '');
+      row.find('.split-family-member-hidden').val(data.matched_member_id || '');
+      if (data.text && data.text.includes('المريض:')) {
+        row.find('.split-purpose-select').val('kafalat_awram');
+      }
+    }).on('select2:clear', function() {
+      const row = $(this).closest('tr.split-item-row');
+      row.find('.split-target-name-hidden').val('');
+      row.find('.split-family-member-hidden').val('');
     });
   }
 
@@ -1418,22 +1456,28 @@ $(function () {
     }
   });
 
+  $(document).on('change', '.split-purpose-select', function() {
+    if ($('#toggleSplitDonation').is(':checked') && !$('#donationPurpose').val()) {
+      $('#donationPurpose').val($(this).val());
+    }
+  });
+
   // Remove row handler
   $(document).on('click', '.remove-split-row-btn', function() {
     $(this).closest('tr.split-item-row').remove();
-    updateSplitAllocationsSummary();
+    updateSplitAllocationsSummary(true);
   });
 
   // Amount input handler
   $(document).on('input change', '.split-amount-input', function() {
-    updateSplitAllocationsSummary();
+    updateSplitAllocationsSummary(true);
   });
 
   $('#donationAmount').on('input change', function() {
-    updateSplitAllocationsSummary();
+    updateSplitAllocationsSummary(false);
   });
 
-  function updateSplitAllocationsSummary() {
+  function updateSplitAllocationsSummary(autoSyncTotal = false) {
     let total = 0;
     let count = 0;
     $('.split-amount-input').each(function() {
@@ -1452,6 +1496,10 @@ $(function () {
     } else {
       $('#emptySplitNotice').hide();
       $('#splitItemsTable').show();
+    }
+
+    if (autoSyncTotal && $('#toggleSplitDonation').is(':checked') && total > 0) {
+      $('#donationAmount').val(total.toFixed(2));
     }
 
     const donationAmt = parseFloat($('#donationAmount').val()) || 0;
@@ -1483,9 +1531,12 @@ $(function () {
   // Toggle Split Section Switch
   $('#toggleSplitDonation').on('change', function() {
     const isChecked = $(this).is(':checked');
+    $('#enableSplitDonationInput').val(isChecked ? '1' : '0');
     if (isChecked) {
       $('#splitDonationSection').slideDown(200);
+      $('#splitDonationSection').find(':input').prop('disabled', false);
       $('#btnAddSplitItemBtn').show();
+      $('#donationPurpose').prop('required', false);
       if ($('.split-item-row').length === 0) {
         const curCamp = $('#donationCampaign').val();
         const curProj = $('#donationProject').val();
@@ -1505,8 +1556,16 @@ $(function () {
           addSplitItemRow({ type: 'guest_house' });
         }
       }
+      if (!$('#donationPurpose').val()) {
+        const firstPurpose = $('.split-purpose-select').first().val();
+        if (firstPurpose) {
+          $('#donationPurpose').val(firstPurpose);
+        }
+      }
+      updateSplitAllocationsSummary(true);
     } else {
       $('#splitDonationSection').slideUp(200);
+      $('#splitDonationSection').find(':input').prop('disabled', true);
       $('#btnAddSplitItemBtn').hide();
     }
   });
@@ -1873,7 +1932,16 @@ $(function () {
       $('#cashChannelSelect').val(profile.last_channel).trigger('change');
     }
 
-    // 5. Insert sponsored cases into allocation table
+    // 5. Insert split allocations if last donation had multi-destination splits, otherwise sponsored cases
+    if (Array.isArray(profile.split_allocations) && profile.split_allocations.length > 0) {
+      $('#toggleSplitDonation').prop('checked', true).trigger('change');
+      $('#splitItemsBody').empty();
+      profile.split_allocations.forEach(function(sp) {
+        addSplitItemRow(sp);
+      });
+      updateSplitAllocationsSummary(true);
+    }
+
     if (Array.isArray(profile.sponsored_cases) && profile.sponsored_cases.length > 0) {
       profile.sponsored_cases.forEach(function(c) {
         addBeneficiaryRow({
@@ -1882,7 +1950,9 @@ $(function () {
           name: c.name,
           phone: c.phone || '',
           amount: c.amount || '',
-          notes: c.notes || 'كفالة دورية'
+          notes: c.notes || 'كفالة دورية',
+          family_member_id: c.family_member_id || null,
+          matched_member_id: c.family_member_id || null
         });
       });
     }
@@ -2206,6 +2276,58 @@ $(function () {
     } else {
       $('.year-months-section').hide();
       $(`.year-months-section[data-year="${yr}"]`).slideDown(150);
+    }
+  });
+
+  // Pre-submit synchronization & cleanup to guarantee smooth saving
+  $('#donationForm').on('submit', function() {
+    const isSplit = $('#toggleSplitDonation').is(':checked');
+    $('#enableSplitDonationInput').val(isSplit ? '1' : '0');
+
+    if (isSplit) {
+      let splitSum = 0;
+      let firstPurpose = '';
+      $('.split-item-row').each(function() {
+        const amtInput = $(this).find('.split-amount-input');
+        const normalizedAmt = parseFloat(normalizeArabicDigits(amtInput.val())) || 0;
+        if (normalizedAmt <= 0) {
+          // Disable empty split rows so they don't fail server validation
+          $(this).find(':input').prop('disabled', true);
+        } else {
+          amtInput.val(normalizedAmt);
+          splitSum += normalizedAmt;
+          if (!firstPurpose) {
+            firstPurpose = $(this).find('.split-purpose-select').val() || '';
+          }
+        }
+      });
+
+      if (splitSum > 0) {
+        const curAmt = parseFloat(normalizeArabicDigits($('#donationAmount').val())) || 0;
+        if (curAmt <= 0 || curAmt < splitSum) {
+          $('#donationAmount').val(splitSum.toFixed(2));
+        }
+      }
+      if (!$('#donationPurpose').val()) {
+        $('#donationPurpose').val(firstPurpose || 'sadaqat');
+      }
+    } else {
+      $('#splitDonationSection').find(':input').prop('disabled', true);
+      let caseSum = 0;
+      $('.case-amount-input').each(function() {
+        const cAmt = parseFloat(normalizeArabicDigits($(this).val())) || 0;
+        if (cAmt > 0) {
+          $(this).val(cAmt);
+          caseSum += cAmt;
+        }
+      });
+      const curAmt = parseFloat(normalizeArabicDigits($('#donationAmount').val())) || 0;
+      if (caseSum > 0 && curAmt <= 0) {
+        $('#donationAmount').val(caseSum.toFixed(2));
+      }
+      if (!$('#donationPurpose').val()) {
+        $('#donationPurpose').val( caseSum > 0 ? 'kafalat_aytam' : 'sadaqat' );
+      }
     }
   });
 
