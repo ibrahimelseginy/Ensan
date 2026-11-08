@@ -57,7 +57,7 @@
     @endphp
 
     {{-- Unified Hero Banner & Command Hub (Merged Block) --}}
-    <div class="dashboard-hero animate-slide-up mb-4 p-4 rounded-4 shadow-sm position-relative overflow-hidden">
+    <div class="dashboard-hero animate-slide-up mb-4 p-4 rounded-4 shadow-sm position-relative" style="overflow: visible !important; z-index: 20;">
         <style>
             .hero-search-wrap {
                 max-width: 440px;

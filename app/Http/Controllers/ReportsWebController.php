@@ -192,9 +192,15 @@ final class ReportsWebController extends Controller
         $applyDateFilter($donationsBase, 'created_at');
         if (!empty($q)) {
             $donationsBase->where(function ($w) use ($q) {
-                $w->where('receipt_number', 'like', "%{$q}%")
-                  ->orWhere('purpose', 'like', "%{$q}%")
-                  ->orWhereHas('donor', fn($d) => $d->where('name', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%"));
+                \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                    $w,
+                    $q,
+                    ['purpose', 'category', 'notes'],
+                    ['receipt_number', 'operation_number']
+                );
+                $w->orWhereHas('donor', function ($d) use ($q) {
+                    \App\Helpers\ArabicSearchHelper::applySmartSearch($d, $q, ['name'], ['code', 'phone', 'national_id']);
+                });
             });
         }
 
@@ -258,10 +264,12 @@ final class ReportsWebController extends Controller
                 });
             } else {
                 $beneficiariesBase->where(function ($w) use ($q, $cleanQ) {
-                    $w->where('full_name', 'like', "%{$q}%")
-                      ->orWhere('code', 'like', "%{$cleanQ}%")
-                      ->orWhere('national_id', 'like', "%{$cleanQ}%")
-                      ->orWhere('phone', 'like', "%{$cleanQ}%");
+                    \App\Helpers\ArabicSearchHelper::applySmartSearch(
+                        $w,
+                        $cleanQ,
+                        ['full_name', 'patient_name', 'guardian_name', 'address'],
+                        ['code', 'patient_code', 'national_id', 'phone', 'backup_phone']
+                    );
                 });
             }
         }

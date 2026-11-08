@@ -784,7 +784,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 6. الحسابات والمالية (Popup) --}}
-        @if($u && ($u->hasPermission('treasuries.view') || $u->hasPermission('closures.view') || $u->hasPermission('accounts.view') || $u->hasPermission('expenses.view') || $u->roles->contains('key', 'finance')))
+        @if($u && ($u->hasPermission('treasuries.view') || $u->hasPermission('financial_closures.view') || $u->hasPermission('closures.view') || $u->hasPermission('accounts.view') || $u->hasPermission('expenses.view') || $u->hasPermission('revenues.view') || $u->hasPermission('journal_entries.view') || $u->roles->contains('key', 'finance')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppFinance" data-category="finance" data-title="الحسابات والمالية" data-keywords="خزائن مصروفات إيرادات قيود إغلاق يوميات شجرة حسابات finance">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-calculator-fill"></i>
@@ -795,7 +795,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 7. إدارة المخازن (Popup) --}}
-        @if($u && ($u->hasPermission('inventory.view') || $u->hasPermission('items.view') || $u->hasPermission('suppliers.view') || $u->hasPermission('inventory_transactions.view')))
+        @if($u && ($u->hasPermission('warehouses.view') || $u->hasPermission('inventory.view') || $u->hasPermission('items.view') || $u->hasPermission('suppliers.view') || $u->hasPermission('inventory_transactions.view')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppInventory" data-category="operations" data-title="إدارة المخازن" data-keywords="مستودعات أصناف موردين حركات مخزون جرد inventory">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.45);">
                 <i class="bi bi-boxes"></i>
@@ -872,7 +872,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 12. الزيارات الميدانية --}}
-        @if($u && ($u->hasPermission('visits.view') || $u->hasPermission('beneficiaries.view')))
+        @if($u && $u->hasPermission('visits.view'))
         <a href="{{ route('visits.index') }}" class="ensan-app-card" data-category="operations" data-title="الزيارات الميدانية" data-keywords="زيارات باحثين فحص ميداني visits">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #db2777, #ec4899); box-shadow: 0 10px 20px -5px rgba(219, 39, 119, 0.45);">
                 <i class="bi bi-geo-alt-fill"></i>
@@ -1299,7 +1299,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission(['website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'volunteers.view', 'users.view', 'hr.evaluations', 'leaves.view', 'payrolls.view', 'employee_attendance.view']))
+                    @if($u && $u->hasPermission('website.volunteer_requests.view'))
                     <a href="{{ route('website.volunteer-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-person-plus"></i>
@@ -1310,6 +1310,9 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
+
+                    @if($u && $u->hasPermission('mobile.volunteer_requests.view'))
                     <a href="{{ route('mobile.volunteer-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-info-subtle text-info">
                             <i class="bi bi-phone"></i>
@@ -1408,7 +1411,7 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission('closures.view'))
+                    @if($u && $u->hasPermission(['financial_closures.view', 'closures.view']))
                     <a href="{{ route('closures.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-lock"></i>
@@ -1457,7 +1460,7 @@ body.theme-dark .launcher-cat-btn.active,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u && $u->hasPermission('inventory.view'))
+                    @if($u && $u->hasPermission(['warehouses.view', 'inventory.view']))
                     <a href="{{ route('warehouses.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
                             <i class="bi bi-building"></i>

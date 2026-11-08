@@ -117,15 +117,27 @@ body.theme-dark .global-search-item.active {
           .replace(/'/g, '&#039;');
       }
 
+      function buildArabicRegexPattern(word) {
+        return word
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          .replace(/[اأإآ]/g, '[اأإآ]')
+          .replace(/[هة]/g, '[هة]')
+          .replace(/[يىئ]/g, '[يىئ]');
+      }
+
       function highlightText(text, q) {
         if (!text || !q) return escapeHtml(text);
         const safeText = escapeHtml(text);
         const safeQ = escapeHtml(q).trim();
         if (!safeQ) return safeText;
-        const words = safeQ.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const words = safeQ.split(/\s+/).filter(Boolean).map(buildArabicRegexPattern);
         if (!words.length) return safeText;
-        const regex = new RegExp(`(${words.join('|')})`, 'gi');
-        return safeText.replace(regex, '<span class="bg-warning-subtle text-dark fw-bold px-0.5 rounded">$1</span>');
+        try {
+          const regex = new RegExp(`(${words.join('|')})`, 'gi');
+          return safeText.replace(regex, '<span class="bg-warning-subtle text-dark fw-bold px-0.5 rounded">$1</span>');
+        } catch (e) {
+          return safeText;
+        }
       }
 
       function closeDropdown() {
@@ -145,7 +157,7 @@ body.theme-dark .global-search-item.active {
         dropdown.innerHTML = `
           <div class="p-3 text-center text-muted small">
             <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span>
-            جاري البحث الشامل في الحالات والمتبرعين والموظفين...
+            جاري البحث الشامل في جميع أقسام وبيانات المنظومة...
           </div>
         `;
 
@@ -155,7 +167,10 @@ body.theme-dark .global-search-item.active {
             'Accept': 'application/json'
           }
         })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
         .then(data => {
           if (!data || data.total === 0) {
             dropdown.innerHTML = `
@@ -163,7 +178,7 @@ body.theme-dark .global-search-item.active {
                 <i class="bi bi-search fs-5 d-block mb-1 text-secondary opacity-50"></i>
                 <div>لم نجد أي نتيجة مطابقة لـ "<strong>${escapeHtml(q)}</strong>"</div>
                 <div class="mt-2">
-                  <a href="${data ? data.reports_url : '{{ route("reports.index") }}?q=' + encodeURIComponent(q)}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
+                  <a href="${data && data.reports_url ? data.reports_url : '{{ route("reports.index") }}?q=' + encodeURIComponent(q)}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
                     البحث الموسع في التقارير العامة &larr;
                   </a>
                 </div>
@@ -175,7 +190,7 @@ body.theme-dark .global-search-item.active {
           let html = `
             <div class="d-flex align-items-center justify-content-between p-2 px-3 border-bottom bg-light bg-opacity-75">
               <span class="small fw-bold text-dark">
-                <i class="bi bi-stars text-warning me-1"></i> نتائج البحث الشامل (${data.total})
+                <i class="bi bi-stars text-warning me-1"></i> نتائج البحث الشامل بالنظام (${data.total})
               </span>
               <a href="${data.reports_url}" class="small text-primary text-decoration-none fw-semibold">
                 عرض بالتقارير &larr;
@@ -195,7 +210,7 @@ body.theme-dark .global-search-item.active {
 
             cat.items.forEach(item => {
               html += `
-                <a href="${item.url}" class="global-search-item" data-url="${item.url}">
+                <div class="global-search-item" data-url="${escapeHtml(item.url)}" role="link" tabindex="0" onclick="window.location.href=this.dataset.url">
                   <div class="d-flex align-items-center gap-2.5 overflow-hidden">
                     <div class="search-avatar-wrap ${item.badge_class}">
                       <i class="bi ${item.icon}"></i>
@@ -211,10 +226,10 @@ body.theme-dark .global-search-item.active {
                     </div>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-2">
-                    ${item.action_url ? `<a href="${item.action_url}" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.72rem;" onclick="event.stopPropagation();">${item.action_label}</a>` : ''}
+                    ${item.action_url ? `<button type="button" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.72rem;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='${escapeHtml(item.action_url)}';">${escapeHtml(item.action_label)}</button>` : ''}
                     <i class="bi bi-chevron-left text-muted small opacity-50"></i>
                   </div>
-                </a>
+                </div>
               `;
             });
           });
@@ -264,9 +279,9 @@ body.theme-dark .global-search-item.active {
           e.preventDefault();
           const items = dropdown.querySelectorAll('.global-search-item');
           if (activeItemIndex >= 0 && items[activeItemIndex]) {
-            window.location.href = items[activeItemIndex].getAttribute('href');
+            window.location.href = items[activeItemIndex].dataset.url || items[activeItemIndex].getAttribute('href');
           } else if (items.length === 1) {
-            window.location.href = items[0].getAttribute('href');
+            window.location.href = items[0].dataset.url || items[0].getAttribute('href');
           } else if (input.value.trim().length >= 2) {
             performSearch(input.value);
           }
