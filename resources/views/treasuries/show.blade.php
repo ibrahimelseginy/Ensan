@@ -158,19 +158,22 @@
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
                                 <td class="text-muted">{{ $transaction->description }}</td>
                                 <td class="text-center">
+                                    @php
+                                        $editTxPayload = [
+                                            'id' => $transaction->id,
+                                            'url' => route('treasuries.updateTransaction', [$treasury, $transaction]),
+                                            'type' => $transaction->type,
+                                            'amount' => (float) $transaction->amount,
+                                            'description' => $transaction->description,
+                                            'transaction_date' => $transaction->transaction_date->format('Y-m-d'),
+                                        ];
+                                    @endphp
                                     <div class="d-inline-flex gap-1">
                                         <button
                                             type="button"
                                             class="btn btn-sm btn-outline-primary py-0 px-2"
                                             title="تعديل الحركة"
-                                            onclick='openEditTransactionModal(@json([
-                                                "id" => $transaction->id,
-                                                "url" => route("treasuries.updateTransaction", [$treasury, $transaction]),
-                                                "type" => $transaction->type,
-                                                "amount" => (float) $transaction->amount,
-                                                "description" => $transaction->description,
-                                                "transaction_date" => $transaction->transaction_date->format("Y-m-d"),
-                                            ]))'>
+                                            onclick='openEditTransactionModal(@json($editTxPayload))'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ route('treasuries.deleteTransaction', [$treasury, $transaction]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الحركة المالية؟')">

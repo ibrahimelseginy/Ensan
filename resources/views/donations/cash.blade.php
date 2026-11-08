@@ -829,17 +829,59 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(function() {
+        function normalizeArabicForSelect2(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+                .replace(/[أإآٱ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function arabicSelect2Matcher(params, data) {
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+            if (data.children && data.children.length > 0) {
+                var match = $.extend(true, {}, data);
+                for (var c = data.children.length - 1; c >= 0; c--) {
+                    var child = data.children[c];
+                    var matches = arabicSelect2Matcher(params, child);
+                    if (matches == null) {
+                        match.children.splice(c, 1);
+                    }
+                }
+                if (match.children.length > 0) {
+                    return match;
+                }
+                return arabicSelect2Matcher(params, match);
+            }
+            var termNorm = normalizeArabicForSelect2(params.term);
+            var textNorm = normalizeArabicForSelect2(data.text || '');
+            var words = termNorm.split(' ').filter(Boolean);
+            var allMatched = words.every(function(w) { return textNorm.indexOf(w) > -1; });
+            if (allMatched) {
+                return data;
+            }
+            return null;
+        }
+
         if (typeof $.fn.select2 !== 'undefined') {
             $('#quickCashDonationSearch').select2({
                 theme: 'bootstrap-5',
                 dir: 'rtl',
                 allowClear: true,
-                placeholder: 'الكل (اختر متبرع أو مشروع للبحث...)',
+                placeholder: 'الكل (اختر متبرع أو مشروع أو اكتب للبحث...)',
                 tags: true,
                 width: '100%',
+                matcher: arabicSelect2Matcher,
                 language: {
                     noResults: function() {
-                        return "لا توجد نتائج مطابقة — اضغط Enter للبحث بهذا النص";
+                        return "لا توجد نتائج مطابقة في القائمة — اضغط Enter للبحث الشامل بهذا النص";
                     },
                     removeAllItems: function() {
                         return "مسح الاختيار";

@@ -161,12 +161,23 @@ body.theme-dark .global-search-item.active {
           </div>
         `;
 
-        fetch(`{{ route('api.global.search') }}?q=${encodeURIComponent(q)}`, {
+        const primarySearchUrl = `/api/global-search?q=${encodeURIComponent(q)}`;
+        const fallbackSearchUrl = `{{ route('api.global.search') }}?q=${encodeURIComponent(q)}`;
+
+        fetch(primarySearchUrl, {
+          credentials: 'same-origin',
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json'
           }
         })
+        .catch(() => fetch(fallbackSearchUrl, {
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        }))
         .then(res => {
           if (!res.ok) throw new Error('HTTP ' + res.status);
           return res.json();

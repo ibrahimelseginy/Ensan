@@ -453,7 +453,8 @@ final class BeneficiaryWebController extends Controller
         $receiptNumber = 'AID-' . strtoupper(substr(uniqid(), -6)) . '-' . $beneficiary->id;
 
         $donation = Donation::create([
-            'source' => 'beneficiary_direct_aid',
+            'source' => 'dashboard',
+            'category' => 'beneficiary_direct_aid',
             'user_id' => auth()->id(),
             'beneficiary_id' => $beneficiary->id,
             'donor_id' => $donorId,

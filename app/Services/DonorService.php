@@ -39,9 +39,25 @@ final readonly class DonorService
                     ArabicSearchHelper::applySmartSearch(
                         $w,
                         $q,
-                        ['name', 'address', 'notes'],
-                        ['code', 'phone', 'national_id']
+                        ['name', 'address'],
+                        ['code', 'phone', 'national_id', 'email']
                     );
+                    $w->orWhereHas('sponsoredBeneficiaries', function ($sb) use ($q) {
+                        ArabicSearchHelper::applySmartSearch(
+                            $sb,
+                            $q,
+                            ['full_name', 'patient_name'],
+                            ['code', 'national_id', 'phone']
+                        );
+                    });
+                    $w->orWhereHas('sponsoredFamilyMembers', function ($sfm) use ($q) {
+                        ArabicSearchHelper::applySmartSearch(
+                            $sfm,
+                            $q,
+                            ['full_name'],
+                            ['code', 'national_id', 'phone']
+                        );
+                    });
                     foreach ($numbers as $num) {
                         if (strlen($num) <= 7) {
                             $w->orWhere('id', (int) $num);

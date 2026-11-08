@@ -96,14 +96,27 @@ final readonly class DonationRepository
                     }
 
                     $w->orWhereHas('project', function ($p) use ($cleanQ) {
-                        ArabicSearchHelper::applySmartSearch($p, $cleanQ, ['name'], ['code']);
+                        ArabicSearchHelper::applySmartSearch($p, $cleanQ, ['name', 'description'], []);
                     })
                     ->orWhereHas('campaign', function ($c) use ($cleanQ) {
-                        ArabicSearchHelper::applySmartSearch($c, $cleanQ, ['name'], []);
+                        ArabicSearchHelper::applySmartSearch($c, $cleanQ, ['name', 'season_title'], []);
+                    })
+                    ->orWhereHas('guestHouse', function ($gh) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch($gh, $cleanQ, ['name', 'governorate'], []);
                     })
                     ->orWhereHas('warehouse', function ($wh) use ($cleanQ) {
                         ArabicSearchHelper::applySmartSearch($wh, $cleanQ, ['name'], []);
+                    })
+                    ->orWhereHas('createdBy', function ($u) use ($cleanQ) {
+                        ArabicSearchHelper::applySmartSearch($u, $cleanQ, ['name'], []);
                     });
+
+                    ArabicSearchHelper::applySmartSearch(
+                        $w,
+                        $cleanQ,
+                        ['purpose', 'category', 'allocation_note'],
+                        ['receipt_number', 'operation_number']
+                    );
 
                     foreach ($numbers as $num) {
                         if (strlen($num) <= 7) {

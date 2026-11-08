@@ -195,7 +195,7 @@ final class ReportsWebController extends Controller
                 \App\Helpers\ArabicSearchHelper::applySmartSearch(
                     $w,
                     $q,
-                    ['purpose', 'category', 'notes'],
+                    ['purpose', 'category', 'allocation_note'],
                     ['receipt_number', 'operation_number']
                 );
                 $w->orWhereHas('donor', function ($d) use ($q) {
