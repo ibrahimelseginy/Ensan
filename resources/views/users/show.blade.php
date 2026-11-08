@@ -148,11 +148,15 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-4">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="text-muted small mb-1">رقم الهاتف</label>
                                 <div class="fw-medium fs-5"><a href="tel:{{ $user->phone }}" class="text-decoration-none text-dark">{{ $user->phone ?? '—' }}</a></div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="text-muted small mb-1">الرقم القومي</label>
+                                <div class="fw-medium fs-5 font-monospace">{{ $user->national_id ?: '—' }}</div>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="text-muted small mb-1">البريد الإلكتروني</label>
                                 <div class="d-flex align-items-center gap-2 mt-1">
                                     <span class="fw-medium">{{ $user->email }}</span>

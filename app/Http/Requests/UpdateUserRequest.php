@@ -22,6 +22,7 @@ final class UpdateUserRequest extends FormRequest
             'email'                 => 'sometimes|email|max:255|unique:users,email,' . ($userId ?? ''),
             'password'              => 'nullable|string|min:6',
             'phone'                 => 'nullable|string|max:20',
+            'national_id'           => 'nullable|string|max:25',
             'is_employee'           => 'nullable|boolean',
             'is_volunteer'          => 'nullable|boolean',
             'active'                => 'nullable|boolean',

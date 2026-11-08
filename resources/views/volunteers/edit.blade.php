@@ -24,10 +24,11 @@
                             name="password" class="form-control"></div>
                     <div class="col-md-6"><label class="form-label">الهاتف</label><input type="text" name="phone"
                             class="form-control" value="{{ $volunteer->phone }}"></div>
+                    <div class="col-md-6"><label class="form-label">الرقم القومي</label><input type="text" name="national_id"
+                            class="form-control font-monospace" maxlength="14" placeholder="14 رقم" value="{{ old('national_id', $volunteer->national_id) }}"></div>
 
                     <div class="col-md-6"><label class="form-label">الكلية</label><input type="text" name="college"
                             class="form-control" value="{{ old('college', $volunteer->college) }}"></div>
-                    </div>
                     <div class="col-md-6">
                         <label class="form-label">الصورة الشخصية</label>
                         <div class="d-flex align-items-center gap-3">

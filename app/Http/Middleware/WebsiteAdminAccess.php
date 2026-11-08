@@ -21,6 +21,12 @@ final class WebsiteAdminAccess
             abort_unless($hasAccess, 403);
             return $next($request);
         }
+        if ($section === 'volunteer-requests') {
+            $hasAccess = $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])
+                || $user->hasPermission(['website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'volunteers.view', 'users.view', 'hr.evaluations', 'leaves.view', 'payrolls.view', 'employee_attendance.view']);
+            abort_unless($hasAccess, 403);
+            return $next($request);
+        }
         $resource = [
             'complaints' => 'complaints',
             'donation-accounts' => 'website.donation_accounts',

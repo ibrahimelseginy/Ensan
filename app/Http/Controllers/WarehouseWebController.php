@@ -29,7 +29,11 @@ final class WarehouseWebController extends Controller
 
     public function create(): View
     {
-        return view('warehouses.create');
+        $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
+        $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
+        $employees   = \App\Models\User::where('active', true)->orderBy('name')->get(['id', 'name', 'department', 'job_title']);
+
+        return view('warehouses.create', compact('guestHouses', 'projects', 'employees'));
     }
 
     public function store(StoreWarehouseRequest $request): RedirectResponse
@@ -61,7 +65,11 @@ final class WarehouseWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المخزن لديه طلب مراجعة حالياً');
         }
 
-        return view('warehouses.edit', compact('warehouse'));
+        $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
+        $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
+        $employees   = \App\Models\User::where('active', true)->orderBy('name')->get(['id', 'name', 'department', 'job_title']);
+
+        return view('warehouses.edit', compact('warehouse', 'guestHouses', 'projects', 'employees'));
     }
 
     public function update(UpdateWarehouseRequest $request, Warehouse $warehouse): RedirectResponse

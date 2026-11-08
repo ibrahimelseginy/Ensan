@@ -33,6 +33,9 @@
             <div class="col-md-6"><label class="form-label">الهاتف</label><input type="text" name="phone"
                 class="form-control" placeholder="010xxxxxxxx" pattern="^[0-9٠-٩\+\-\s]+$" value="{{ old('phone') }}">
             </div>
+            <div class="col-md-6"><label class="form-label">الرقم القومي</label><input type="text" name="national_id"
+                class="form-control font-monospace" maxlength="14" placeholder="14 رقم" value="{{ old('national_id') }}">
+            </div>
 
             <div class="col-md-6"><label class="form-label">الكلية</label><input type="text" name="college"
                 class="form-control" value="{{ old('college') }}"></div>

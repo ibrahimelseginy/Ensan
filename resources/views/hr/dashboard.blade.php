@@ -110,13 +110,19 @@
                          <div class="badge bg-warning bg-opacity-10 text-warning">طلبات معلقة</div>
                     </div>
                     <div class="row text-center">
-                        <div class="col-6 border-end">
+                        <div class="col-4 border-end">
                             <div class="h3 fw-bold mb-0 text-dark">{{ $pendingLeaves }}</div>
                             <small class="text-muted d-block" style="font-size: 0.75rem;">إجازات</small>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4 border-end">
                              <div class="h3 fw-bold mb-0 text-dark">{{ $tasksPending }}</div>
                              <small class="text-muted d-block" style="font-size: 0.75rem;">مهام</small>
+                        </div>
+                        <div class="col-4">
+                             <a href="{{ route('website.volunteer-requests.index') }}" class="text-decoration-none">
+                                 <div class="h3 fw-bold mb-0 text-primary">{{ ($pendingWebVolunteerRequests ?? 0) + ($pendingMobileVolunteerRequests ?? 0) }}</div>
+                                 <small class="text-muted d-block" style="font-size: 0.75rem;">طلبات تطوع</small>
+                             </a>
                         </div>
                     </div>
                  </div>
@@ -190,31 +196,103 @@
 
     <!-- Quick Actions Grid -->
     <h5 class="fw-bold mb-3 animate-slide-up animate-delay-7">وصول سريع</h5>
-    <div class="row g-3 animate-slide-up animate-delay-8">
-         <div class="col-md-3 col-6">
+    <div class="row g-3 mb-4 animate-slide-up animate-delay-8">
+         <div class="col-md-2 col-6">
             <a href="{{ route('employee-tasks.create') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
                  <i class="bi bi-plus-circle-fill text-primary fs-3 mb-2"></i>
                  <div class="fw-bold">مهمة جديدة</div>
             </a>
          </div>
-         <div class="col-md-3 col-6">
+         <div class="col-md-2 col-6">
             <a href="{{ route('payrolls.create') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
                  <i class="bi bi-cash-stack text-success fs-3 mb-2"></i>
                  <div class="fw-bold">صرف راتب</div>
             </a>
          </div>
-         <div class="col-md-3 col-6">
+         <div class="col-md-2 col-6">
             <a href="{{ route('users.create') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
                  <i class="bi bi-person-plus-fill text-info fs-3 mb-2"></i>
                  <div class="fw-bold">إضافة موظف</div>
             </a>
          </div>
-         <div class="col-md-3 col-6">
+         <div class="col-md-2 col-6">
             <a href="{{ route('volunteers.create') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
                  <i class="bi bi-heart-fill text-danger fs-3 mb-2"></i>
                  <div class="fw-bold">إضافة متطوع</div>
             </a>
          </div>
+         <div class="col-md-2 col-6">
+            <a href="{{ route('website.volunteer-requests.index') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
+                 <i class="bi bi-person-Vcard-fill text-purple fs-3 mb-2"></i>
+                 <div class="fw-bold">طلبات التطوع (الموقع)</div>
+            </a>
+         </div>
+         <div class="col-md-2 col-6">
+            <a href="{{ route('mobile.volunteer-requests.index') }}" class="glass-card p-3 text-center text-decoration-none text-dark d-block hover-lift">
+                 <i class="bi bi-phone-fill text-warning fs-3 mb-2"></i>
+                 <div class="fw-bold">طلبات التطوع (التطبيق)</div>
+            </a>
+         </div>
+    </div>
+
+    {{-- Incoming Volunteer Requests Follow-up Table in HR --}}
+    <div class="glass-card p-4 mb-4 animate-slide-up animate-delay-8">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h5 class="fw-bold mb-1 text-dark"><i class="bi bi-person-hearts text-primary me-2"></i> متابعة طلبات التطوع الواردة (الموارد البشرية)</h5>
+                <small class="text-muted">أحدث استمارات التطوع الواردة للمتابعة والتواصل وتحديد المقابلات</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('website.volunteer-requests.index') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="bi bi-globe me-1"></i> كل طلبات الموقع ({{ $pendingWebVolunteerRequests ?? 0 }} قيد المتابعة)
+                </a>
+                <a href="{{ route('mobile.volunteer-requests.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                    <i class="bi bi-phone me-1"></i> طلبات التطبيق ({{ $pendingMobileVolunteerRequests ?? 0 }})
+                </a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th>كود المتابعة</th>
+                        <th>الاسم</th>
+                        <th>الهاتف</th>
+                        <th>الكلية / المؤهل</th>
+                        <th>مجال التطوع</th>
+                        <th>الحالة</th>
+                        <th>تاريخ التقديم</th>
+                        <th class="text-end">إجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentVolunteerRequests ?? [] as $vReq)
+                        <tr>
+                            <td class="font-monospace small">{{ $vReq->tracking_code ?? ('#'.$vReq->id) }}</td>
+                            <td class="fw-bold">{{ $vReq->name }}</td>
+                            <td class="font-monospace"><a href="tel:{{ $vReq->phone }}" class="text-decoration-none">{{ $vReq->phone }}</a></td>
+                            <td class="small">{{ $vReq->faculty ?: ($vReq->education_level ?: '—') }}</td>
+                            <td class="small">{{ $vReq->area_of_interest ?: '—' }}</td>
+                            <td>
+                                <span class="badge bg-{{ $vReq->status_color ?? 'primary' }}-subtle text-{{ $vReq->status_color ?? 'primary' }}">
+                                    {{ $vReq->status_label ?? $vReq->status }}
+                                </span>
+                            </td>
+                            <td class="small text-muted">{{ $vReq->created_at?->format('Y-m-d') }}</td>
+                            <td class="text-end">
+                                <a href="{{ route('website.volunteer-requests.index') }}" class="btn btn-sm btn-outline-primary">
+                                    متابعة الطلب
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">لا توجد طلبات تطوع واردة حالياً</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

@@ -22,6 +22,7 @@ final class UpdateVolunteerRequest extends FormRequest
             'email'           => 'sometimes|email|max:255|unique:users,email,' . ($volunteerId ?? ''),
             'password'        => 'nullable|string|min:6',
             'phone'           => 'nullable|string|max:20',
+            'national_id'     => 'nullable|string|max:25',
             'active'          => 'nullable|boolean',
             'college'         => 'nullable|string|max:255',
             'governorate'     => 'nullable|string|max:255',

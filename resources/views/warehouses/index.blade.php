@@ -57,6 +57,7 @@
                     <thead class="bg-transparent">
                         <tr>
                             <th class="border-0 p-3 ps-4">المخزن</th>
+                            <th class="border-0 p-3">القسم / الجهة التابعة</th>
                             <th class="border-0 p-3">الموقع</th>
                             <th class="border-0 p-3 text-center">عدد الحركات</th>
                             <th class="border-0 p-3 text-end pe-4">الإجراءات</th>
@@ -71,7 +72,28 @@
                                             style="width: 40px; height: 40px;">
                                             <i class="bi bi-building"></i>
                                         </div>
-                                        <div class="fw-bold text-body">{{ $w->name }}</div>
+                                        <div>
+                                            <div class="fw-bold text-body">{{ $w->name }}</div>
+                                            @if($w->manager)
+                                                <small class="text-muted"><i class="bi bi-person me-1"></i>{{ $w->manager->name }}</small>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-3">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @if($w->guestHouse)
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-house-heart me-1"></i>{{ $w->guestHouse->name }}</span>
+                                        @endif
+                                        @if($w->project)
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-kanban me-1"></i>{{ $w->project->name }}</span>
+                                        @endif
+                                        @if($w->department)
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ $w->department }}</span>
+                                        @endif
+                                        @if(!$w->guestHouse && !$w->project && !$w->department)
+                                            <span class="text-muted small">عام</span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="p-3 text-muted">

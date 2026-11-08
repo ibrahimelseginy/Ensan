@@ -110,16 +110,59 @@ final class GuestHouseWebController extends Controller
         $guestHouseBeneficiaries = Beneficiary::where('guest_house_id', $guest_house->id)
             ->orderBy('full_name')
             ->get(['id', 'full_name']);
-        $guestHouseWarehouses = Warehouse::when(
+        $custodyWarehouseIds = $guest_house->custodies()
+            ->where('is_active', true)
+            ->whereNotNull('warehouse_id')
+            ->pluck('warehouse_id')
+            ->all();
+
+        $baseWarehouseQuery = Warehouse::when(
             Schema::hasColumn('warehouses', 'is_active'),
             fn ($query) => $query->where('is_active', true)
-        )->orderBy('name')->get(['id', 'name']);
+        );
+
+        $linkedWarehouses = (clone $baseWarehouseQuery)
+            ->where(function ($q) use ($guest_house, $custodyWarehouseIds) {
+                if (Schema::hasColumn('warehouses', 'guest_house_id')) {
+                    $q->where('guest_house_id', $guest_house->id);
+                }
+                if (!empty($custodyWarehouseIds)) {
+                    $q->orWhereIn('id', $custodyWarehouseIds);
+                }
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        if ($linkedWarehouses->isEmpty()) {
+            // Fallback to name/location keyword match for this guest house (e.g. كفر الشيخ / طنطا / الزهراء)
+            $houseKeywords = array_filter([
+                str_contains($guest_house->name, 'كفر') ? 'كفر' : null,
+                str_contains($guest_house->name, 'طنطا') || str_contains($guest_house->name, 'غربي') ? 'طنطا' : null,
+                str_contains($guest_house->name, 'زهراء') || str_contains($guest_house->name, 'الزهراء') ? 'زهراء' : null,
+            ]);
+            if (!empty($houseKeywords)) {
+                $linkedWarehouses = (clone $baseWarehouseQuery)
+                    ->where(function ($q) use ($houseKeywords) {
+                        foreach ($houseKeywords as $kw) {
+                            $q->orWhere('name', 'like', "%{$kw}%")
+                              ->orWhere('location', 'like', "%{$kw}%");
+                        }
+                        if (Schema::hasColumn('warehouses', 'guest_house_id')) {
+                            $q->whereNull('guest_house_id');
+                        }
+                    })
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+            }
+        }
+
+        $guestHouseWarehouses = $linkedWarehouses->isNotEmpty()
+            ? $linkedWarehouses
+            : $baseWarehouseQuery->orderBy('name')->get(['id', 'name']);
         $guestHouseDonationTreasuries = Treasury::active()
-            ->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE, Treasury::TYPE_PETTY_CASH])
             ->orderBy('name')
             ->get();
         $guestHouseExpenseTreasuries = Treasury::active()
-            ->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
             ->orderBy('name')
             ->get();
         $guestHouseItems = Item::where('is_active', true)->orderBy('name')->get(['id', 'name', 'unit']);
@@ -1306,44 +1349,70 @@ final class GuestHouseWebController extends Controller
     {
         return $treasuryId > 0 && Treasury::active()
             ->whereKey($treasuryId)
-            ->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
             ->exists();
     }
 
     public function storePettyExpense(Request $request, GuestHouse $guest_house): RedirectResponse
     {
         $data = $request->validate([
-            'custody_id' => 'required|exists:guest_house_custodies,id',
-            'name' => 'required|string|max:200',
+            'treasury_id' => 'nullable|exists:treasuries,id',
+            'custody_id' => 'nullable|exists:guest_house_custodies,id',
+            'title' => 'nullable|string|max:200',
+            'name' => 'nullable|string|max:200',
+            'category' => 'nullable|string|max:100',
             'amount' => 'required|numeric|min:0.5',
             'expense_date' => 'required|date',
             'notes' => 'nullable|string|max:1000',
-            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:10240',
+            'receipt' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp|max:10240',
+            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp|max:10240',
         ]);
 
-        $custody = GuestHouseCustody::whereKey($data['custody_id'])
-            ->where('guest_house_id', $guest_house->id)
-            ->where('type', 'financial')
-            ->firstOrFail();
+        $expenseTitle = trim((string) ($data['title'] ?? $data['name'] ?? 'مصروف نثري لدار الضيافة'));
 
-        $treasury = Treasury::findOrFail($custody->treasury_id);
+        $treasury = null;
+        if (!empty($data['treasury_id'])) {
+            $treasury = Treasury::findOrFail($data['treasury_id']);
+        } elseif (!empty($data['custody_id'])) {
+            $custody = GuestHouseCustody::whereKey($data['custody_id'])
+                ->where('guest_house_id', $guest_house->id)
+                ->firstOrFail();
+            $treasury = Treasury::findOrFail($custody->treasury_id);
+        }
+
+        if (!$treasury) {
+            return back()->withInput()->with('error', 'يرجى اختيار الخزينة المنصرف منها.');
+        }
+
         if ((float) $treasury->current_balance < (float) $data['amount']) {
-            return back()->withInput()->with('error', 'الرصيد المتبقي في العهدة النثرية غير كافٍ. المتاح حالياً: ' . number_format((float) $treasury->current_balance, 2) . ' ج.م');
+            return back()->withInput()->with('error', 'الرصيد المتبقي في الخزينة المحددة غير كافٍ. المتاح حالياً: ' . number_format((float) $treasury->current_balance, 2) . ' ج.م');
         }
 
         $invoicePath = null;
-        if ($request->hasFile('invoice_file')) {
+        $uploadedFile = $request->file('receipt') ?? $request->file('invoice_file');
+        if ($uploadedFile) {
             $invoicePath = app(\App\Services\ImageUploadService::class)->uploadImage(
-                $request->file('invoice_file'),
+                $uploadedFile,
                 'guest_houses/expenses'
             );
         }
 
-        DB::transaction(function () use ($guest_house, $treasury, $data, $invoicePath): void {
+        $categoryLabels = [
+            'food' => 'شراء مواد غذائية وطازجة',
+            'medical_emergency' => 'طوارئ علاجية وإسعافية',
+            'cleaning' => 'أدوات نظافة ومطهرات',
+            'maintenance' => 'صيانة سريعة وأعطال',
+            'transportation' => 'مواصلات عامة',
+            'general' => 'نثريات وضيافة عامة',
+        ];
+        $categoryLabel = isset($data['category']) && isset($categoryLabels[$data['category']])
+            ? ' [' . $categoryLabels[$data['category']] . ']'
+            : '';
+
+        DB::transaction(function () use ($guest_house, $treasury, $data, $expenseTitle, $categoryLabel, $invoicePath): void {
             $this->expenseService->createExpense([
                 'type' => 'operational',
                 'category' => 'guest_house',
-                'description' => $data['name'] . (!empty($data['notes']) ? ' — ' . $data['notes'] : ''),
+                'description' => $expenseTitle . $categoryLabel . (!empty($data['notes']) ? ' — ' . $data['notes'] : ''),
                 'amount' => (float) $data['amount'],
                 'paid_at' => $data['expense_date'],
                 'treasury_id' => $treasury->id,
@@ -1353,31 +1422,43 @@ final class GuestHouseWebController extends Controller
             ]);
         });
 
-        return back()->with('success', 'تم تسجيل المصروف وخصمه من العهدة النثرية للدار بنجاح.');
+        return back()->with('success', 'تم تسجيل المصروف وخصمه من الخزينة (' . $treasury->name . ') بنجاح.');
     }
 
     public function replenishPettyCash(Request $request, GuestHouse $guest_house): RedirectResponse
     {
         $data = $request->validate([
-            'custody_id' => 'required|exists:guest_house_custodies,id',
+            'target_treasury_id' => 'nullable|exists:treasuries,id',
+            'custody_id' => 'nullable|exists:guest_house_custodies,id',
             'source_treasury_id' => 'required|exists:treasuries,id',
             'amount' => 'required|numeric|min:1',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $custody = GuestHouseCustody::whereKey($data['custody_id'])
-            ->where('guest_house_id', $guest_house->id)
-            ->where('type', 'financial')
-            ->firstOrFail();
-
-        $sourceTreasury = Treasury::findOrFail($data['source_treasury_id']);
-        $destTreasury = Treasury::findOrFail($custody->treasury_id);
-
-        if ((float) $sourceTreasury->current_balance < (float) $data['amount']) {
-            return back()->with('error', 'الرصيد في الخزينة الرئيسية المحددة غير كافٍ لتغذية عهدة الدار.');
+        $destTreasury = null;
+        $custodyName = $guest_house->name;
+        if (!empty($data['target_treasury_id'])) {
+            $destTreasury = Treasury::findOrFail($data['target_treasury_id']);
+            $custodyName = $destTreasury->name;
+        } elseif (!empty($data['custody_id'])) {
+            $custody = GuestHouseCustody::whereKey($data['custody_id'])
+                ->where('guest_house_id', $guest_house->id)
+                ->firstOrFail();
+            $destTreasury = Treasury::findOrFail($custody->treasury_id);
+            $custodyName = $custody->name;
         }
 
-        DB::transaction(function () use ($guest_house, $custody, $sourceTreasury, $destTreasury, $data): void {
+        if (!$destTreasury) {
+            return back()->with('error', 'يرجى تحديد الخزينة المستلمة للتغذية.');
+        }
+
+        $sourceTreasury = Treasury::findOrFail($data['source_treasury_id']);
+
+        if ((float) $sourceTreasury->current_balance < (float) $data['amount']) {
+            return back()->with('error', 'الرصيد في الخزينة المحددة غير كافٍ لتغذية عهدة الدار.');
+        }
+
+        DB::transaction(function () use ($guest_house, $custodyName, $sourceTreasury, $destTreasury, $data): void {
             $sourceTreasury->decrement('current_balance', (float) $data['amount']);
             $destTreasury->increment('current_balance', (float) $data['amount']);
 
@@ -1386,7 +1467,7 @@ final class GuestHouseWebController extends Controller
                 'type' => 'out',
                 'amount' => (float) $data['amount'],
                 'currency' => $sourceTreasury->currency ?: 'EGP',
-                'description' => "تغذية واستعاضة عهدة مالية لدار الضيافة: {$guest_house->name} ({$custody->name})",
+                'description' => "تغذية واستعاضة عهدة مالية لدار الضيافة: {$guest_house->name} ({$custodyName})",
                 'transaction_date' => now()->toDateString(),
                 'created_by' => auth()->id(),
             ]);

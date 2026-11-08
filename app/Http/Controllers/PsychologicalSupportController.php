@@ -139,6 +139,106 @@ final class PsychologicalSupportController extends Controller
         return back()->with('success', "تم توثيق تقرير الدعم النفسي لشهر [{$reportMonth}] للحالة المريضة [{$familyMember->full_name}] بنجاح.");
     }
 
+    public static function generatePublicToken(string $type, int $id): string
+    {
+        return substr(hash_hmac('sha256', "psych:{$type}:{$id}", (string) config('app.key')), 0, 24);
+    }
+
+    public static function getPublicUrl(string $type, int $id): string
+    {
+        return route('public.psychological-support.form', [
+            'type' => $type,
+            'id' => $id,
+            'token' => self::generatePublicToken($type, $id),
+        ]);
+    }
+
+    public function publicForm(string $type, int $id, string $token): View
+    {
+        abort_unless(in_array($type, ['beneficiary', 'member'], true), 404);
+        abort_unless(hash_equals(self::generatePublicToken($type, $id), $token), 403, 'رابط الاستمارة غير صالح.');
+
+        if ($type === 'member') {
+            $member = BeneficiaryFamilyMember::with('beneficiary')->findOrFail($id);
+            $beneficiary = $member->beneficiary;
+            $patientName = $member->full_name;
+            $patientCode = $member->code;
+            $medicalCondition = $member->case_details ?: ($beneficiary?->tumor_location ?? '');
+        } else {
+            $beneficiary = Beneficiary::with('familyMembers')->findOrFail($id);
+            $member = null;
+            $patientName = $beneficiary->patient_name ?: $beneficiary->full_name;
+            $patientCode = $beneficiary->code;
+            $medicalCondition = $beneficiary->tumor_location ?? '';
+        }
+
+        return view('psychological_support.public_form', compact(
+            'type',
+            'id',
+            'token',
+            'beneficiary',
+            'member',
+            'patientName',
+            'patientCode',
+            'medicalCondition'
+        ));
+    }
+
+    public function publicSubmit(Request $request, string $type, int $id, string $token): RedirectResponse
+    {
+        abort_unless(in_array($type, ['beneficiary', 'member'], true), 404);
+        abort_unless(hash_equals(self::generatePublicToken($type, $id), $token), 403, 'رابط الاستمارة غير صالح.');
+
+        $validated = $request->validate([
+            'report_month' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'volunteer_name' => 'required|string|max:191',
+            'medical_condition' => 'nullable|string|max:255',
+            'treatment_stage' => 'nullable|string|max:255',
+            'call_condition' => 'nullable|string',
+            'psychological_state' => 'required|string|in:ممتاز,كويس,راضي,حزين,يشعر بالضجر',
+            'rating' => 'required|integer|min:1|max:5',
+            'needs_improvement' => 'nullable|string',
+            'nutrition_diet' => 'nullable|string',
+            'general_notes' => 'nullable|string',
+            'supporter_opinion' => 'nullable|string',
+            'family_member_id' => 'nullable|exists:beneficiary_family_members,id',
+        ], [
+            'volunteer_name.required' => 'يرجى كتابة اسم المتطوع ثلاثي.',
+            'psychological_state.required' => 'يرجى تحديد الحالة النفسية للمريض.',
+            'rating.required' => 'يرجى تحديد تقييم الحالة النفسية من 1 إلى 5.',
+        ]);
+
+        if ($type === 'member') {
+            $member = BeneficiaryFamilyMember::findOrFail($id);
+            $beneficiaryId = $member->beneficiary_id;
+            $familyMemberId = $member->id;
+        } else {
+            $beneficiary = Beneficiary::findOrFail($id);
+            $beneficiaryId = $beneficiary->id;
+            $familyMemberId = !empty($validated['family_member_id']) ? (int) $validated['family_member_id'] : null;
+        }
+
+        $matchCriteria = [
+            'beneficiary_id' => $beneficiaryId,
+            'report_month' => $validated['report_month'],
+        ];
+        if ($familyMemberId) {
+            $matchCriteria['family_member_id'] = $familyMemberId;
+        }
+
+        PsychologicalSupportReport::updateOrCreate(
+            $matchCriteria,
+            array_merge($validated, [
+                'beneficiary_id' => $beneficiaryId,
+                'family_member_id' => $familyMemberId,
+                'user_id' => auth()->id(),
+                'created_by' => auth()->id(),
+            ])
+        );
+
+        return back()->with('submitted_success', 'تم تسجيل وتوثيق استمارة الدعم النفسي في النظام بنجاح. جزاكم الله خيراً!');
+    }
+
     public function showModal(Beneficiary $beneficiary): \Illuminate\Http\JsonResponse
     {
         $reports = $beneficiary->psychologicalSupportReports()->with('creator')->get();

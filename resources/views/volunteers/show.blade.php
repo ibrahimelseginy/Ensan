@@ -72,11 +72,15 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-4">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="text-muted small mb-1">رقم الهاتف</label>
                                 <div class="fw-medium fs-5">{{ $volunteer->phone ?? '—' }}</div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="text-muted small mb-1">الرقم القومي</label>
+                                <div class="fw-medium fs-5 font-monospace">{{ $volunteer->national_id ?: '—' }}</div>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="text-muted small mb-1">الكلية / التخصص</label>
                                 <div class="fw-medium fs-5">{{ $volunteer->college ?? '—' }}</div>
                             </div>

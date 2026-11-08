@@ -35,6 +35,47 @@
                             <label class="form-label fw-medium">الموقع</label>
                             <input type="text" name="location" class="form-control" placeholder="العنوان أو وصف المكان">
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">القسم التابع له (اختياري)</label>
+                            <input type="text" name="department" class="form-control" placeholder="مثال: اللوجستيات، دار الضيافة، الإغاثة">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">ربط بدار ضيافة (اختياري)</label>
+                            <select name="guest_house_id" class="form-select">
+                                <option value="">— مخزن عام / غير مرتبط بدار —</option>
+                                @foreach($guestHouses ?? [] as $gh)
+                                    <option value="{{ $gh->id }}">{{ $gh->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text small">يمكن ربط أكثر من مخزن بنفس الدار، وسيظهر للدار مخازنها فقط.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">ربط بمشروع (اختياري)</label>
+                            <select name="project_id" class="form-select">
+                                <option value="">— غير مرتبط بمشروع محدد —</option>
+                                @foreach($projects ?? [] as $proj)
+                                    <option value="{{ $proj->id }}">{{ $proj->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">أمين / مسؤول المخزن</label>
+                            <select name="manager_id" class="form-select">
+                                <option value="">— اختر المسؤول —</option>
+                                @foreach($employees ?? [] as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->name }} {{ $emp->job_title ? '('.$emp->job_title.')' : '' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">موظفون مصرح لهم بالتعامل على المخزن</label>
+                            <select name="assigned_user_ids[]" class="form-select" multiple size="4">
+                                @foreach($employees ?? [] as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->name }} {{ $emp->department ? ' - '.$emp->department : '' }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text small">اضغط Ctrl أو Cmd لتحديد أكثر من موظف.</div>
+                        </div>
                     </div>
 
                     <div class="mt-4 pt-3 border-top d-flex gap-2">

@@ -326,7 +326,56 @@ final class MobileContentController extends Controller
             'status' => $request->status,
             'admin_notes' => $request->admin_notes
         ]);
-        return back()->with('success', 'Status updated');
+
+        if (in_array($request->status, ['accepted', 'approved'], true)) {
+            $email = $volunteerRequest->email ?: ('mob_vol_' . $volunteerRequest->id . '@ensan.local');
+            $existingVolunteer = \App\Models\User::withTrashed()
+                ->where(function ($q) use ($volunteerRequest, $email) {
+                    $q->where('email', $email);
+                    if (!empty($volunteerRequest->phone)) {
+                        $q->orWhere('phone', $volunteerRequest->phone);
+                    }
+                    if (!empty($volunteerRequest->national_id) && \Illuminate\Support\Facades\Schema::hasColumn('users', 'national_id')) {
+                        $q->orWhere('national_id', $volunteerRequest->national_id);
+                    }
+                })
+                ->first();
+
+            if ($existingVolunteer) {
+                if ($existingVolunteer->trashed()) {
+                    $existingVolunteer->restore();
+                }
+                $existingVolunteer->update(array_filter([
+                    'is_volunteer' => true,
+                    'active' => true,
+                    'national_id' => $volunteerRequest->national_id ?: $existingVolunteer->national_id,
+                    'college' => $volunteerRequest->faculty ?: $existingVolunteer->college,
+                    'project_role' => $volunteerRequest->area_of_interest ?: $existingVolunteer->project_role,
+                ], fn ($v) => $v !== null));
+            } else {
+                \App\Models\User::create([
+                    'code' => \App\Models\User::nextVolunteerCode(),
+                    'name' => $volunteerRequest->name,
+                    'email' => $email,
+                    'password' => \Illuminate\Support\Facades\Hash::make($volunteerRequest->phone ?: '12345678'),
+                    'phone' => $volunteerRequest->phone,
+                    'national_id' => $volunteerRequest->national_id,
+                    'is_volunteer' => true,
+                    'is_employee' => false,
+                    'active' => true,
+                    'registration_source' => 'mobile_app',
+                    'college' => $volunteerRequest->faculty ?: $volunteerRequest->education_level,
+                    'governorate' => $volunteerRequest->address,
+                    'city' => $volunteerRequest->current_address,
+                    'project_role' => $volunteerRequest->area_of_interest,
+                    'volunteer_hours' => is_numeric($volunteerRequest->volunteer_hours) ? (float) $volunteerRequest->volunteer_hours : 0,
+                    'join_date' => now()->toDateString(),
+                    'id_card_image' => $volunteerRequest->id_card_path,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'تم تحديث حالة طلب التطوع بنجاح');
     }
 
     public function destroyVolunteerRequest(\App\Models\MobileVolunteerRequest $volunteerRequest)

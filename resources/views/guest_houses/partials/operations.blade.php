@@ -1453,7 +1453,7 @@
                     <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-heart-pulse text-danger me-1"></i> طوارئ مريض وعلاجية</span>
                     <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-stars text-info me-1"></i> أدوات نظافة ومطهرات</span>
                     <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-wrench text-warning me-1"></i> صيانة سريعة للأجهزة</span>
-                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-taxi-front text-primary me-1"></i> مواصلات وانتقالات مرضى</span>
+                    <span class="badge bg-white text-dark border px-3 py-2 shadow-2xs"><i class="bi bi-taxi-front text-primary me-1"></i> مواصلات عامة</span>
                 </div>
             </div>
 
@@ -2340,25 +2340,29 @@
                             <option value="medical_emergency">💊 طوارئ علاجية وإسعافية</option>
                             <option value="cleaning">🧹 أدوات نظافة ومطهرات</option>
                             <option value="maintenance">🔧 صيانة سريعة وأعطال</option>
-                            <option value="transportation">🚕 مواصلات وانتقالات نزلاء</option>
+                            <option value="transportation">🚕 مواصلات عامة</option>
                             <option value="general">📦 نثريات وضيافة عامة</option>
                         </select>
                     </div>
                     <div class="col-6">
-                        <label class="form-label fw-bold small">الخزينة النثرية المنصرف منها <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold small">الخزينة المنصرف منها <span class="text-danger">*</span></label>
                         <select name="treasury_id" class="form-select" required>
+                            @php
+                                $listedTreasuryIds = [];
+                            @endphp
                             @foreach($pettyCashCustodies as $pCustody)
                                 @if($pCustody->treasury)
+                                    @php $listedTreasuryIds[] = $pCustody->treasury_id; @endphp
                                     <option value="{{ $pCustody->treasury_id }}">
-                                        {{ $pCustody->name }} (رصيد: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)
+                                        {{ $pCustody->treasury->name }} — {{ $pCustody->name }} (رصيد: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)
                                     </option>
                                 @endif
                             @endforeach
-                            @if($pettyCashCustodies->isEmpty())
-                                @foreach($guestHouseExpenseTreasuries as $tr)
-                                    <option value="{{ $tr->id }}">{{ $tr->name }} ({{ number_format((float)$tr->current_balance, 2) }} ج.م)</option>
-                                @endforeach
-                            @endif
+                            @foreach($guestHouseExpenseTreasuries as $tr)
+                                @if(!in_array($tr->id, $listedTreasuryIds))
+                                    <option value="{{ $tr->id }}">{{ $tr->name }} (رصيد: {{ number_format((float)$tr->current_balance, 2) }} ج.م)</option>
+                                @endif
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -2402,16 +2406,18 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold small">خزينة العهدة النثرية المستلمة (الدار) <span class="text-danger">*</span></label>
                     <select name="target_treasury_id" class="form-select" required>
+                        @php $listedTargetTreasuryIds = []; @endphp
                         @foreach($pettyCashCustodies as $pCustody)
                             @if($pCustody->treasury)
-                                <option value="{{ $pCustody->treasury_id }}">{{ $pCustody->name }} (رصيد حالي: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)</option>
+                                @php $listedTargetTreasuryIds[] = $pCustody->treasury_id; @endphp
+                                <option value="{{ $pCustody->treasury_id }}">{{ $pCustody->treasury->name }} — {{ $pCustody->name }} (رصيد حالي: {{ number_format((float)$pCustody->treasury->current_balance, 2) }} ج.م)</option>
                             @endif
                         @endforeach
-                        @if($pettyCashCustodies->isEmpty())
-                            @foreach($guestHouseExpenseTreasuries as $tr)
-                                <option value="{{ $tr->id }}">{{ $tr->name }}</option>
-                            @endforeach
-                        @endif
+                        @foreach($guestHouseExpenseTreasuries as $tr)
+                            @if(!in_array($tr->id, $listedTargetTreasuryIds))
+                                <option value="{{ $tr->id }}">{{ $tr->name }} (رصيد حالي: {{ number_format((float)$tr->current_balance, 2) }} ج.م)</option>
+                            @endif
+                        @endforeach
                     </select>
                 </div>
                 <div class="mb-3">

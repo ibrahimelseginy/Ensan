@@ -74,8 +74,11 @@ final class HrDashboardWebController extends Controller
             $salaryTrendData[] = Payroll::where('month', $mStr)->sum('amount');
         }
 
-        // 6. Leaves Stats
-        $pendingLeaves = \App\Models\Leave::where('status', 'pending')->count(); 
+        // 6. Leaves & Volunteer Requests Stats
+        $pendingLeaves = \App\Models\Leave::where('status', 'pending')->count();
+        $pendingWebVolunteerRequests = \App\Models\WebVolunteerRequest::whereIn('status', ['new', 'contacted', 'interview'])->count();
+        $pendingMobileVolunteerRequests = \App\Models\MobileVolunteerRequest::whereIn('status', ['pending', 'new', 'contacted', 'interview'])->count();
+        $recentVolunteerRequests = \App\Models\WebVolunteerRequest::orderByDesc('created_at')->take(8)->get();
         
         // 7. AI Insights
         $insights = [];
@@ -104,7 +107,8 @@ final class HrDashboardWebController extends Controller
             'totalEmployees', 'totalVolunteers',
             'totalSalaries', 'employeesPaidCount',
             'salaryTrendLabels', 'salaryTrendData',
-            'pendingLeaves', 'topPerformers', 'attendanceRate', 'insights'
+            'pendingLeaves', 'pendingWebVolunteerRequests', 'pendingMobileVolunteerRequests', 'recentVolunteerRequests',
+            'topPerformers', 'attendanceRate', 'insights'
         ));
     }
 }

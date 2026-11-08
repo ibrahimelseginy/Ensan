@@ -334,6 +334,13 @@ final class BeneficiaryWebController extends Controller
         $allDonors = Donor::orderBy('name')->get(['id', 'name', 'code', 'phone']);
         $allProjects = Project::orderBy('name')->get(['id', 'name']);
 
+        $reassessments = \Illuminate\Support\Facades\Schema::hasTable('beneficiary_reassessments')
+            ? $beneficiary->reassessments()->with(['familyMember', 'creator'])->get()
+            : collect();
+        $psychReports = \Illuminate\Support\Facades\Schema::hasTable('psychological_support_reports')
+            ? $beneficiary->psychologicalSupportReports()->with(['familyMember', 'creator'])->get()
+            : collect();
+
         return view('beneficiaries.show', compact(
             'beneficiary',
             'isDup',
@@ -351,7 +358,9 @@ final class BeneficiaryWebController extends Controller
             'ramadanBags',
             'allBeneficiarySponsors',
             'allDonors',
-            'allProjects'
+            'allProjects',
+            'reassessments',
+            'psychReports'
         ));
     }
 

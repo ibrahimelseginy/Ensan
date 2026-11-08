@@ -14,7 +14,11 @@ final readonly class WarehouseRepository
 {
     public function paginate(int $perPage = 20): LengthAwarePaginator
     {
-        return Warehouse::withCount('transactions')->orderBy('name')->paginate($perPage);
+        return Warehouse::accessibleBy()
+            ->with(['guestHouse', 'project', 'manager'])
+            ->withCount('transactions')
+            ->orderBy('name')
+            ->paginate($perPage);
     }
 
     public function findById(int $id): ?Warehouse

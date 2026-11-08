@@ -67,6 +67,12 @@
       <a class="btn btn-outline-success" href="{{ route('visits.create', ['beneficiary_id' => $beneficiary->id]) }}" title="تسجيل استمارة بحث ميداني واجتماعي لهذه الحالة">
         <i class="bi bi-file-earmark-medical me-1"></i> استمارة بحث ميداني
       </a>
+      <button type="button" class="btn btn-teal text-white fw-bold" style="background:#0d9488;" data-bs-toggle="modal" data-bs-target="#reassessmentModal" title="إعادة بحث وتحديث دوري كل 6 أشهر مع الحفاظ على البيانات الأساسية">
+        <i class="bi bi-arrow-repeat me-1"></i> إعادة بحث (6 شهور)
+      </button>
+      <button type="button" class="btn btn-danger fw-bold" data-bs-toggle="modal" data-bs-target="#beneficiaryPsychSupportModal" title="توثيق ومشاركة استمارة الدعم النفسي الشهري">
+        <i class="bi bi-heart-pulse-fill me-1"></i> الدعم النفسي
+      </button>
       <a href="{{ route('beneficiaries.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-right me-1"></i> رجوع
       </a>
@@ -253,10 +259,16 @@
                     <div class="border-top pt-2">
                       <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-1">
                         <span class="small fw-bold text-dark"><i class="bi bi-person-heart text-success me-1"></i>كفلاء هذا الفرد:</span>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                          @php
+                            $memPsychShareUrl = \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('member', $member->id);
+                          @endphp
                           <a href="{{ route('beneficiary-family-members.show', $member) }}#psychologicalSupportSection" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill font-monospace" style="font-size: 0.75rem;" title="الدعم النفسي الشهري للحالة">
                             <i class="bi bi-heart-pulse-fill me-0.5"></i> الدعم النفسي
                           </a>
+                          <button type="button" class="btn btn-sm btn-light border text-danger py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ $memPsychShareUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع:\n{{ $memPsychShareUrl }}');" title="نسخ رابط استمارة الدعم النفسي لإرساله لمتطوع">
+                            <i class="bi bi-share-fill"></i> رابط للمتطوع
+                          </button>
                           <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 rounded-pill font-monospace" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#attachMemberSponsorModal{{ $member->id }}">
                             <i class="bi bi-plus-circle me-0.5"></i> ربط كافل
                           </button>
@@ -865,6 +877,170 @@
                   <i class="bi bi-box-seam me-1"></i> تسجيل مساعدة عينية أو كرتونة
                 </button>
               </div>
+            </div>
+          @endif
+        </div>
+      </div>
+
+      {{-- ── 6-Month Periodic Reassessment & Psychological Support Hub ── --}}
+      @php
+        $benPsychPublicUrl = \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('beneficiary', $beneficiary->id);
+        $benReassessPublicUrl = \App\Http\Controllers\BeneficiaryReassessmentController::getPublicUrl($beneficiary->id);
+        $latestReassessment = isset($reassessments) ? $reassessments->first() : null;
+      @endphp
+
+      {{-- 1. 6-Month Family & Patient Reassessment Card (استمارة إعادة بحث وتحديث بيانات الأسرة كل 6 أشهر) --}}
+      <div class="card mb-4 border-0 shadow-sm" id="reassessmentSection" style="border-radius: 16px; overflow: hidden; border-top: 4px solid #0d9488 !important;">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2.5">
+            <div class="p-2 rounded-3 text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: linear-gradient(135deg, #0d9488, #0f766e);">
+              <i class="bi bi-arrow-repeat fs-5"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold text-dark">سجل إعادة البحث وتحديث بيانات الأسرة (كل 6 أشهر — بعثاء الأمل)</h5>
+              <small class="text-muted">تحديث دوري للوضع الاجتماعي والطبي والاقتصادي للأسرة مع الحفاظ الكامل على البيانات الأساسية</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if($latestReassessment && $latestReassessment->next_reassessment_due_at)
+              <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1.5 rounded-pill font-monospace">
+                <i class="bi bi-calendar-check me-1"></i> التحديث القادم: {{ $latestReassessment->next_reassessment_due_at->format('Y-m-d') }}
+              </span>
+            @endif
+            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-bold" onclick="navigator.clipboard.writeText('{{ $benReassessPublicUrl }}'); alert('تم نسخ رابط استمارة إعادة البحث لإرساله للباحث/المتطوع:\n{{ $benReassessPublicUrl }}');">
+              <i class="bi bi-share-fill me-1"></i> مشاركة رابط الاستمارة
+            </button>
+            <button type="button" class="btn btn-sm text-white rounded-pill px-3 py-1.5 fw-bold shadow-sm" style="background:#0d9488;" data-bs-toggle="modal" data-bs-target="#reassessmentModal">
+              <i class="bi bi-plus-circle me-1"></i> تسجيل استمارة إعادة بحث جديدة
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-4 bg-light bg-opacity-50">
+          @if(isset($reassessments) && $reassessments->isNotEmpty())
+            <div class="row g-3">
+              @foreach($reassessments as $reassess)
+                <div class="col-12">
+                  <div class="card border-0 shadow-2xs rounded-3 p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom pb-2 mb-3">
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge text-white rounded-pill px-3 py-1 font-monospace" style="background:#0d9488;">
+                          <i class="bi bi-calendar-event me-1"></i> تاريخ التحديث: {{ $reassess->reassessed_at?->format('Y-m-d') ?? $reassess->created_at?->format('Y-m-d') }}
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-bold">
+                          التوصية: {{ $reassess->researcher_recommendation ?: 'غير محدد' }}
+                        </span>
+                        @if($reassess->condition_progress)
+                          <span class="badge bg-primary-subtle text-primary px-2.5 py-1 rounded-pill">
+                            تطور الحالة: {{ $reassess->condition_progress }}
+                          </span>
+                        @endif
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted"><i class="bi bi-person-check me-1"></i>الباحث: <strong>{{ $reassess->researcher_name ?: ($reassess->creator?->name ?? '—') }}</strong></small>
+                        <form action="{{ route('beneficiaries.reassessments.destroy', $reassess) }}" method="POST" onsubmit="return confirm('هل تريد حذف هذا السجل؟');" class="d-inline m-0">
+                          @csrf @method('DELETE')
+                          <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></button>
+                        </form>
+                      </div>
+                    </div>
+                    <div class="row g-2 small">
+                      <div class="col-md-3"><strong>المريض:</strong> {{ $reassess->patient_name ?: '—' }}</div>
+                      <div class="col-md-3"><strong>التشخيص الحالي:</strong> {{ $reassess->current_diagnosis ?: '—' }}</div>
+                      <div class="col-md-3"><strong>المرحلة / العلاج:</strong> {{ $reassess->diagnosis_stage ?: '—' }} ({{ $reassess->current_treatment_type ?: '—' }})</div>
+                      <div class="col-md-3"><strong>المستشفى:</strong> {{ $reassess->current_hospital ?: '—' }}</div>
+                      <div class="col-md-3"><strong>أفراد الأسرة الحاليين:</strong> {{ $reassess->current_family_count ?? '—' }}</div>
+                      <div class="col-md-3"><strong>دخل الأسرة الحالي:</strong> {{ $reassess->current_family_income !== null ? number_format((float)$reassess->current_family_income, 2).' ج.م' : '—' }}</div>
+                      <div class="col-md-3"><strong>تكلفة العلاج الشهرية:</strong> {{ $reassess->monthly_treatment_cost !== null ? number_format((float)$reassess->monthly_treatment_cost, 2).' ج.م' : '—' }}</div>
+                      <div class="col-md-3"><strong>المساعدة المطلوبة:</strong> <span class="text-success fw-bold">{{ $reassess->requested_monthly_aid !== null ? number_format((float)$reassess->requested_monthly_aid, 2).' ج.م' : '—' }}</span></div>
+                      @if(!empty($reassess->most_needed_support))
+                        <div class="col-md-6"><strong>الدعم الأكثر احتياجاً:</strong> {{ is_array($reassess->most_needed_support) ? implode('، ', $reassess->most_needed_support) : $reassess->most_needed_support }}</div>
+                      @endif
+                      @if($reassess->family_status_changes)
+                        <div class="col-md-6 text-danger"><strong>مستجدات الأسرة:</strong> {{ $reassess->family_status_changes }}</div>
+                      @endif
+                      @if($reassess->yearly_progress_summary)
+                        <div class="col-12 mt-1 pt-1 border-top"><strong>ملخص تطور الحالة:</strong> {{ $reassess->yearly_progress_summary }}</div>
+                      @endif
+                      @if($reassess->recommendation_reasons)
+                        <div class="col-12"><strong>مبررات التوصية:</strong> {{ $reassess->recommendation_reasons }}</div>
+                      @endif
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @else
+            <div class="text-center py-4">
+              <i class="bi bi-clipboard2-pulse fs-1 text-muted opacity-50 d-block mb-2"></i>
+              <h6 class="fw-bold text-dark mb-1">لا توجد استمارات إعادة بحث مسجلة بعد</h6>
+              <p class="text-muted small mb-3">يتم تحديث بيانات الأسرة والمريض كل 6 أشهر مع الاحتفاظ الكامل بالبيانات الأساسية للملف.</p>
+              <button type="button" class="btn btn-sm text-white rounded-pill px-4 fw-bold" style="background:#0d9488;" data-bs-toggle="modal" data-bs-target="#reassessmentModal">
+                <i class="bi bi-plus-circle me-1"></i> تسجيل أول استمارة إعادة بحث الآن
+              </button>
+            </div>
+          @endif
+        </div>
+      </div>
+
+      {{-- 2. Psychological Support Section on Beneficiary Profile (سجل الدعم النفسي الشهري ومشاركة الرابط للمتطوع) --}}
+      <div class="card mb-4 border-0 shadow-sm" id="psychologicalSupportSection" style="border-radius: 16px; overflow: hidden; border-top: 4px solid #ec4899 !important;">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2.5">
+            <div class="p-2 rounded-3 text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: linear-gradient(135deg, #ec4899, #f43f5e);">
+              <i class="bi bi-heart-pulse-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold text-dark">سجل تقارير الدعم النفسي الشهري</h5>
+              <small class="text-muted">متابعة الحالة النفسية والمعنوية شهرياً وإمكانية مشاركة الرابط للمتطوع ليملاها وتسمّع تلقائياً في السيستم</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold" onclick="navigator.clipboard.writeText('{{ $benPsychPublicUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع بنجاح:\n{{ $benPsychPublicUrl }}');">
+              <i class="bi bi-share-fill me-1"></i> نسخ رابط الاستمارة للمتطوع
+            </button>
+            <a href="https://wa.me/?text={{ urlencode('استمارة الدعم النفسي الشهري للحالة (' . $beneficiary->full_name . ' - كود ' . $beneficiary->code . '): ' . $benPsychPublicUrl) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold">
+              <i class="bi bi-whatsapp me-1"></i> إرسال واتساب للمتطوع
+            </a>
+            <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#beneficiaryPsychSupportModal">
+              <i class="bi bi-plus-circle me-1"></i> توثيق تقرير دعم نفسي
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-4 bg-light bg-opacity-50">
+          @if(isset($psychReports) && $psychReports->isNotEmpty())
+            <div class="row g-3">
+              @foreach($psychReports as $pReport)
+                <div class="col-12 col-md-6">
+                  <div class="card border-0 shadow-2xs rounded-3 p-3 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <span class="badge text-white rounded-pill px-2.5 py-1 font-monospace" style="background-color: #ec4899;">
+                          شهر {{ $pReport->report_month }}
+                        </span>
+                        <div class="fw-bold text-dark mt-1">
+                          <i class="bi bi-person-heart text-danger me-1"></i>المتطوع: {{ $pReport->volunteer_name ?: 'غير محدد' }}
+                        </div>
+                      </div>
+                      <div class="text-end">
+                        <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">{{ $pReport->psychological_state }}</span>
+                        <div class="text-warning small font-monospace mt-1">{{ str_repeat('★', (int)$pReport->rating) }}</div>
+                      </div>
+                    </div>
+                    @if($pReport->medical_condition || $pReport->treatment_stage)
+                      <div class="small text-muted border-top pt-2">
+                        {{ $pReport->medical_condition }} {{ $pReport->treatment_stage ? '— ' . $pReport->treatment_stage : '' }}
+                      </div>
+                    @endif
+                    @if($pReport->supporter_opinion)
+                      <div class="small text-dark mt-1"><strong>التوصية:</strong> {{ $pReport->supporter_opinion }}</div>
+                    @endif
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @else
+            <div class="text-center py-3 text-muted small">
+              لا توجد تقارير دعم نفسي مسجلة بعد. يمكنك توثيق التقرير الآن أو نسخ الرابط وإرساله للمتطوع المتابع للحالة.
             </div>
           @endif
         </div>
@@ -2004,6 +2180,135 @@ function toggleQuickUploadTarget(val) {
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+{{-- Modal: 6-Month Periodic Reassessment (استمارة إعادة بحث وتحديث بيانات الأسرة كل 6 أشهر) --}}
+<div class="modal fade" id="reassessmentModal" tabindex="-1" aria-hidden="true" dir="rtl">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <form action="{{ route('beneficiaries.reassessments.store', $beneficiary) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
+      @csrf
+      <div class="modal-header text-white px-4 py-3 border-0" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+        <div>
+          <h5 class="modal-title fw-bold mb-0 text-white"><i class="bi bi-arrow-repeat me-1"></i> استمارة إعادة بحث وتحديث بيانات الأسرة (كل 6 أشهر — بعثاء الأمل)</h5>
+          <small class="text-white-50">تحديث دوري للحالة ({{ $beneficiary->full_name }} — {{ $beneficiary->code }}) مع الاحتفاظ الكامل بالبيانات الأساسية</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-0 me-auto" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 bg-white">
+        @include('beneficiaries.partials.reassessment_form_fields', ['beneficiary' => $beneficiary])
+      </div>
+      <div class="modal-footer bg-light px-4 py-3 d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn text-white rounded-pill px-4 fw-bold shadow-sm" style="background:#0d9488;">
+          <i class="bi bi-check2-circle me-1"></i> حفظ وتوثيق استمارة إعادة البحث
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Modal: Beneficiary Psychological Support Report --}}
+<div class="modal fade" id="beneficiaryPsychSupportModal" tabindex="-1" aria-hidden="true" dir="rtl">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <form action="{{ route('psychological-support.store', $beneficiary) }}" method="POST">
+        @csrf
+        <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="p-2 rounded-3 text-white" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
+              <i class="bi bi-heart-pulse-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold text-dark mb-0">تقرير الدعم النفسي الشهري</h5>
+              <small class="text-muted">الحالة: <strong class="text-dark">{{ $beneficiary->full_name }}</strong> ({{ $beneficiary->code }})</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <span class="small text-muted"><i class="bi bi-share-fill text-danger me-1"></i> يمكنك إرسال الاستمارة كرابط للمتطوع ليملأها مباشرة:</span>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="navigator.clipboard.writeText('{{ $benPsychPublicUrl ?? '' }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع!');">
+              <i class="bi bi-clipboard me-1"></i> نسخ الرابط للمتطوع
+            </button>
+          </div>
+          <div class="row g-3">
+            @if($beneficiary->familyMembers->isNotEmpty())
+              <div class="col-12">
+                <label class="form-label small fw-bold">الفرد المريض داخل الأسرة (اختياري)</label>
+                <select name="family_member_id" class="form-select">
+                  <option value="">— الحالة الأساسية ({{ $beneficiary->full_name }}) —</option>
+                  @foreach($beneficiary->familyMembers as $fm)
+                    <option value="{{ $fm->id }}" @selected($fm->is_patient)>{{ $fm->full_name }} ({{ $fm->relationship_label }})</option>
+                  @endforeach
+                </select>
+              </div>
+            @endif
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">الشهر المستهدف <span class="text-danger">*</span></label>
+              <input type="month" name="report_month" class="form-control fw-bold font-monospace" value="{{ now()->format('Y-m') }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">اسم المتطوع ثلاثي <span class="text-danger">*</span></label>
+              <input type="text" name="volunteer_name" class="form-control" value="{{ auth()->user()->name ?? '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">الحالة الصحية / نوع الورم</label>
+              <input type="text" name="medical_condition" class="form-control" value="{{ $beneficiary->tumor_location }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">المرحلة العلاجية الحالية</label>
+              <input type="text" name="treatment_stage" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-danger">الحالة النفسية العامة للمريض <span class="text-danger">*</span></label>
+              <select name="psychological_state" class="form-select fw-bold" required>
+                <option value="ممتاز">ممتاز</option>
+                <option value="كويس" selected>كويس</option>
+                <option value="راضي">راضي</option>
+                <option value="حزين">حزين</option>
+                <option value="يشعر بالضجر">يشعر بالضجر</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-warning">التقييم (من 1 إلى 5) <span class="text-danger">*</span></label>
+              <select name="rating" class="form-select fw-bold font-monospace" required>
+                <option value="5" selected>★★★★★ (5)</option>
+                <option value="4">★★★★☆ (4)</option>
+                <option value="3">★★★☆☆ (3)</option>
+                <option value="2">★★☆☆☆ (2)</option>
+                <option value="1">★☆☆☆☆ (1)</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">ظروف وسياق المكالمة</label>
+              <textarea name="call_condition" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">النظام الغذائي والتغذية</label>
+              <textarea name="nutrition_diet" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">ما يحتاجه المريض لتحسين حالته النفسية</label>
+              <textarea name="needs_improvement" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">رأي مسؤول الدعم النفسي والتوصيات</label>
+              <textarea name="supporter_opinion" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">ملاحظات عامة</label>
+              <input type="text" name="general_notes" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light px-4 py-3">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-danger px-4 fw-bold">حفظ وتوثيق التقرير</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

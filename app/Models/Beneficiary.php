@@ -57,6 +57,11 @@ final class Beneficiary extends Model
         return $this->hasMany(PsychologicalSupportReport::class)->latest('report_month');
     }
 
+    public function reassessments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(BeneficiaryReassessment::class)->latest('reassessed_at')->latest('id');
+    }
+
     public function latestPsychologicalReport(): ?PsychologicalSupportReport
     {
         return $this->psychologicalSupportReports()->first();

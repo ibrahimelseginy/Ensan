@@ -1299,14 +1299,24 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission('website.volunteer_requests.view'))
+                    @if($u && $u->hasPermission(['website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'volunteers.view', 'users.view', 'hr.evaluations', 'leaves.view', 'payrolls.view', 'employee_attendance.view']))
                     <a href="{{ route('website.volunteer-requests.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-person-plus"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">طلبات التطوع (الموقع)</div>
-                            <small class="text-muted">استمارات التطوع الواردة من الموقع</small>
+                            <small class="text-muted">متابعة استمارات التطوع الواردة</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    <a href="{{ route('mobile.volunteer-requests.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
+                            <i class="bi bi-phone"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">طلبات التطوع (التطبيق)</div>
+                            <small class="text-muted">استمارات التطوع من الموبايل</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>

@@ -6,9 +6,15 @@
         <div class="hero-greeting">التطوع 🤝</div>
         <h1 class="hero-title">المتطوعون</h1>
         <p class="hero-subtitle">إدارة وتتبع فريق المتطوعين</p>
-        <div class="hero-actions d-flex gap-2">
+        <div class="hero-actions d-flex flex-wrap gap-2">
             <a href="{{ route('volunteers.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> إضافة متطوع
+            </a>
+            <a href="{{ route('website.volunteer-requests.index') }}" class="btn btn-sm btn-light text-success fw-bold rounded-pill px-4">
+                <i class="bi bi-inbox-fill me-1"></i> طلبات التطوع (الموقع)
+            </a>
+            <a href="{{ route('mobile.volunteer-requests.index') }}" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-4">
+                <i class="bi bi-phone me-1"></i> طلبات التطوع (التطبيق)
             </a>
         </div>
     </div>

@@ -51,6 +51,32 @@
                             </div>
                         </div>
 
+                        @if($warehouse->guestHouse || $warehouse->project || $warehouse->department)
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-warning-subtle rounded-circle p-2 me-3 text-warning">
+                                    <i class="bi bi-diagram-3 fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted small">القسم / الجهة التابعة</div>
+                                    <div class="fw-medium">
+                                        {{ collect([$warehouse->department, $warehouse->guestHouse?->name, $warehouse->project?->name])->filter()->implode(' — ') }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($warehouse->manager)
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-secondary-subtle rounded-circle p-2 me-3 text-secondary">
+                                    <i class="bi bi-person-badge fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="text-muted small">أمين / مسؤول المخزن</div>
+                                    <div class="fw-medium">{{ $warehouse->manager->name }}</div>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-success-subtle rounded-circle p-2 me-3 text-success">
                                 <i class="bi bi-box-seam fs-5"></i>

@@ -143,6 +143,7 @@ final class UserWebController extends Controller
                 'name',
                 'email',
                 'phone',
+                'national_id',
                 'department',
                 'job_title',
             ]);

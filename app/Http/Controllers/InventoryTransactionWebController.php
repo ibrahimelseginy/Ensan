@@ -64,7 +64,7 @@ final class InventoryTransactionWebController extends Controller
         $stats['delegateMonthly'] = $delegateMonthly;
         $stats['delegatesMap']     = $delegatesMap;
         
-        $warehouses = Warehouse::orderBy('name')->pluck('name', 'id');
+        $warehouses = Warehouse::accessibleBy()->orderBy('name')->pluck('name', 'id');
         $items      = Item::orderBy('name')->pluck('name', 'id');
 
         return view('inventory.index', compact('transactions', 'stats', 'warehouses', 'items'));
@@ -73,7 +73,7 @@ final class InventoryTransactionWebController extends Controller
     public function create(): View
     {
         $items         = Item::orderBy('name')->get();
-        $warehouses    = Warehouse::orderBy('name')->get();
+        $warehouses    = Warehouse::accessibleBy()->orderBy('name')->get();
         $donations     = Donation::with(['donor', 'delegate', 'route'])->orderByDesc('id')->limit(200)->get();
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
         

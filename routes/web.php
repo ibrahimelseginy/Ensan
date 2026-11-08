@@ -83,6 +83,20 @@ Route::post('apply-hope', [MobileContentController::class, 'applyHopeStore'])->m
 // التحقق الفوري من تكرار الرقم القومي
 Route::get('check-national-id', [MobileContentController::class, 'checkNationalId'])->name('check-national-id');
 
+// استمارة الدعم النفسي العامة للمتطوعين (رابط مشاركة مباشر بدون تسجيل دخول)
+Route::get('public/psychological-support/{type}/{id}/{token}', [\App\Http\Controllers\PsychologicalSupportController::class, 'publicForm'])
+    ->name('public.psychological-support.form');
+Route::post('public/psychological-support/{type}/{id}/{token}', [\App\Http\Controllers\PsychologicalSupportController::class, 'publicSubmit'])
+    ->middleware('throttle:heavy-ops')
+    ->name('public.psychological-support.submit');
+
+// استمارة إعادة البحث الدورية كل 6 أشهر (رابط مشاركة مباشر للباحث/المتطوع)
+Route::get('public/reassessment/{beneficiary}/{token}', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'publicForm'])
+    ->name('public.reassessment.form');
+Route::post('public/reassessment/{beneficiary}/{token}', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'publicSubmit'])
+    ->middleware('throttle:heavy-ops')
+    ->name('public.reassessment.submit');
+
 // Public files only. Private documents must never use this fallback.
 Route::get('storage/{path}', [\App\Http\Controllers\PublicStorageController::class, 'show'])
     ->where('path', '.*')->name('storage.fallback');
@@ -437,6 +451,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('beneficiaries/{beneficiary}/sponsors', [BeneficiaryWebController::class, 'attachSponsor'])->name('beneficiaries.attach-sponsor');
         Route::delete('beneficiaries/{beneficiary}/sponsors/{donor}', [BeneficiaryWebController::class, 'detachSponsor'])->name('beneficiaries.detach-sponsor');
         Route::post('beneficiaries/{beneficiary}/direct-aid', [BeneficiaryWebController::class, 'recordDirectAid'])->name('beneficiaries.record-direct-aid');
+        Route::post('beneficiaries/{beneficiary}/reassessments', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'store'])->name('beneficiaries.reassessments.store');
+        Route::delete('beneficiary-reassessments/{reassessment}', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'destroy'])->name('beneficiaries.reassessments.destroy');
         Route::resource('beneficiaries', BeneficiaryWebController::class);
     });
 
@@ -661,6 +677,22 @@ Route::middleware(['auth'])->group(function () {
             ->name('campaigns.storeExpense');
     });
 
+    // --- Website & Mobile Volunteer Requests (Accessible to HR & Website/Mobile Admins) ---
+    Route::middleware('permission:website.volunteer_requests.view|mobile.volunteer_requests.view|volunteers.view|users.view|hr.evaluations|leaves.view|payrolls.view|employee_attendance.view')->group(function () {
+        Route::get('admin/website/volunteer-requests', [WebsiteWebController::class, 'volunteerRequests'])->name('website.volunteer-requests.index');
+        Route::post('admin/website/volunteer-requests/content', [WebsiteWebController::class, 'updateVolunteerContent'])->name('website.volunteer-content.update');
+        Route::post('admin/website/volunteer-requests/{volunteerRequest}/status', [WebsiteWebController::class, 'updateVolunteerRequestStatus'])->name('website.volunteer-requests.update-status');
+        Route::delete('admin/website/volunteer-requests/{volunteerRequest}', [WebsiteWebController::class, 'destroyVolunteerRequest'])->name('website.volunteer-requests.destroy');
+        Route::get('admin/website/volunteer-requests/{volunteerRequest}/download-cv', [WebsiteWebController::class, 'downloadCV'])->name('website.volunteer-requests.cv');
+
+        Route::group(['prefix' => 'admin/mobile', 'as' => 'mobile.'], function () {
+            Route::get('/volunteer-requests', [MobileContentController::class, 'volunteerRequestsIndex'])->name('volunteer-requests.index');
+            Route::post('/volunteer-requests/{volunteerRequest}/status', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update');
+            Route::delete('/volunteer-requests/{volunteerRequest}', [MobileContentController::class, 'destroyVolunteerRequest'])->name('volunteer-requests.destroy');
+            Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.cv');
+        });
+    });
+
     // --- Website Management ---
     Route::middleware('permission:website.view')->group(function () {
         Route::middleware('permission:website.settings.view_edit')->group(function () {
@@ -742,14 +774,6 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('admin/website/subscriptions/{subscription}', [WebsiteWebController::class, 'destroySubscription'])->name('website.subscriptions.destroy');
         });
 
-        Route::middleware('permission:website.volunteer_requests.view')->group(function () {
-            Route::get('admin/website/volunteer-requests', [WebsiteWebController::class, 'volunteerRequests'])->name('website.volunteer-requests.index');
-            Route::post('admin/website/volunteer-requests/content', [WebsiteWebController::class, 'updateVolunteerContent'])->name('website.volunteer-content.update');
-            Route::post('admin/website/volunteer-requests/{volunteerRequest}/status', [WebsiteWebController::class, 'updateVolunteerRequestStatus'])->name('website.volunteer-requests.update-status');
-            Route::delete('admin/website/volunteer-requests/{volunteerRequest}', [WebsiteWebController::class, 'destroyVolunteerRequest'])->name('website.volunteer-requests.destroy');
-            Route::get('admin/website/volunteer-requests/{volunteerRequest}/download-cv', [WebsiteWebController::class, 'downloadCV'])->name('website.volunteer-requests.cv');
-        });
-
         Route::middleware('permission:website.guest_house_content.view_edit')->group(function () {
             Route::get('admin/website/guest-house', [WebsiteWebController::class, 'guestHouseContent'])->name('website.guest-house.content');
             Route::get('admin/website/guest-house/slider', [WebsiteWebController::class, 'guestHouseSlider'])->name('website.guest-house.slider');
@@ -828,13 +852,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/notifications', [MobileContentController::class, 'notificationStore'])->name('notifications.store');
                 Route::match(['POST', 'PUT'], '/notifications/{notification}', [MobileContentController::class, 'notificationUpdate'])->name('notifications.update');
                 Route::delete('/notifications/{notification}', [MobileContentController::class, 'notificationDestroy'])->name('notifications.destroy');
-            });
-
-            Route::middleware('permission:mobile.volunteer_requests.view')->group(function () {
-                Route::get('/volunteer-requests', [MobileContentController::class, 'volunteerRequestsIndex'])->name('volunteer-requests.index');
-                Route::post('/volunteer-requests/{volunteerRequest}/status', [MobileContentController::class, 'updateVolunteerRequestStatus'])->name('volunteer-requests.update');
-                Route::delete('/volunteer-requests/{volunteerRequest}', [MobileContentController::class, 'destroyVolunteerRequest'])->name('volunteer-requests.destroy');
-                Route::get('/volunteer-requests/{volunteerRequest}/download-cv', [MobileContentController::class, 'downloadVolunteerCV'])->name('volunteer-requests.cv');
             });
 
             Route::middleware('permission:mobile.donations.view')->group(function () {

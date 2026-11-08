@@ -173,15 +173,27 @@
                                     <div class="extra-small text-muted">{{ $report->created_at ? $report->created_at->format('h:i A') : '' }}</div>
                                 </td>
                                 <td class="pe-4 text-center">
-                                    @if($report->familyMember)
-                                        <a href="{{ route('beneficiary-family-members.show', $report->familyMember) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="عرض ملف الحالة المريضة">
-                                            <i class="bi bi-heart-pulse-fill me-1"></i> ملف الحالة
-                                        </a>
-                                    @elseif($b)
-                                        <a href="{{ route('beneficiaries.show', $b) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="عرض ملف الحالة">
-                                            <i class="bi bi-folder-fill me-1"></i> الملف
-                                        </a>
-                                    @endif
+                                    @php
+                                        $shareUrl = $report->familyMember
+                                            ? \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('member', $report->familyMember->id)
+                                            : ($b ? \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('beneficiary', $b->id) : null);
+                                    @endphp
+                                    <div class="d-inline-flex gap-1">
+                                        @if($shareUrl)
+                                            <button type="button" class="btn btn-sm btn-light border text-danger rounded-pill px-2.5" onclick="navigator.clipboard.writeText('{{ $shareUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع!');" title="نسخ رابط الاستمارة للمتطوع">
+                                                <i class="bi bi-share-fill"></i>
+                                            </button>
+                                        @endif
+                                        @if($report->familyMember)
+                                            <a href="{{ route('beneficiary-family-members.show', $report->familyMember) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="عرض ملف الحالة المريضة">
+                                                <i class="bi bi-heart-pulse-fill me-1"></i> ملف الحالة
+                                            </a>
+                                        @elseif($b)
+                                            <a href="{{ route('beneficiaries.show', $b) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="عرض ملف الحالة">
+                                                <i class="bi bi-folder-fill me-1"></i> الملف
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

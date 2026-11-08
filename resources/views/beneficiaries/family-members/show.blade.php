@@ -11,9 +11,18 @@
       </div>
     </div>
     <div class="d-flex gap-2 no-print flex-wrap">
+      @php
+        $memberPsychPublicUrl = \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('member', $familyMember->id);
+      @endphp
       <button type="button" class="btn btn-danger d-inline-flex align-items-center gap-1.5 shadow-sm" data-bs-toggle="modal" data-bs-target="#psychologicalSupportModal" title="توثيق ومتابعة تقرير الدعم النفسي الشهري للحالة">
         <i class="bi bi-heart-pulse-fill"></i> توثيق دعم نفسي
       </button>
+      <button type="button" class="btn btn-outline-danger d-inline-flex align-items-center gap-1.5" onclick="navigator.clipboard.writeText('{{ $memberPsychPublicUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع بنجاح:\n{{ $memberPsychPublicUrl }}');" title="نسخ رابط استمارة الدعم النفسي لإرساله لمتطوع">
+        <i class="bi bi-share-fill"></i> مشاركة استمارة الدعم النفسي للمتطوع
+      </button>
+      <a href="https://wa.me/?text={{ urlencode('استمارة الدعم النفسي الشهري للحالة (' . $familyMember->full_name . ' - كود ' . $familyMember->code . '): ' . $memberPsychPublicUrl) }}" target="_blank" class="btn btn-success d-inline-flex align-items-center gap-1" title="إرسال رابط الاستمارة عبر واتساب">
+        <i class="bi bi-whatsapp"></i>
+      </a>
       <button type="button" onclick="EnsanPrintPreview.open(null, {title: 'ملف الفرد المكفول — {{ $familyMember->full_name }}'})" class="btn btn-outline-info"><i class="bi bi-eye me-1"></i> معاينة قبل الطباعة</button>
       <button type="button" onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer me-1"></i> طباعة الملف</button>
       <a href="{{ route('beneficiaries.show', $familyMember->beneficiary) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-right me-1"></i> ملف ولي الأمر</a>
@@ -123,10 +132,16 @@
           <small class="text-muted">متابعة شهرية دورية للحالة النفسية والمعنوية والتغذية ونسبة التجاوب مع العلاج للحالة: <strong class="text-dark">{{ $familyMember->full_name }}</strong></small>
         </div>
       </div>
-      <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5 no-print" data-bs-toggle="modal" data-bs-target="#psychologicalSupportModal">
-        <i class="bi bi-plus-circle"></i>
-        <span>توثيق تقرير دعم نفسي</span>
-      </button>
+      <div class="d-flex gap-2 flex-wrap no-print">
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5" onclick="navigator.clipboard.writeText('{{ $memberPsychPublicUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع بنجاح!');">
+          <i class="bi bi-link-45deg"></i>
+          <span>نسخ رابط الاستمارة للمتطوع</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#psychologicalSupportModal">
+          <i class="bi bi-plus-circle"></i>
+          <span>توثيق تقرير دعم نفسي</span>
+        </button>
+      </div>
     </div>
 
     <div class="card-body p-4 bg-light bg-opacity-50">

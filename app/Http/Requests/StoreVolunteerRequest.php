@@ -20,6 +20,7 @@ final class StoreVolunteerRequest extends FormRequest
             'email'           => 'required|email|max:255|unique:users,email',
             'password'        => 'required|string|min:6',
             'phone'           => 'nullable|string|max:20',
+            'national_id'     => 'nullable|string|max:25',
             'active'          => 'nullable|boolean',
             'college'         => 'nullable|string|max:255',
             'governorate'     => 'nullable|string|max:255',

@@ -55,6 +55,8 @@
                     </script>
                     <div class="col-md-6"><label class="form-label">الهاتف</label><input name="phone" class="form-control"
                             value="{{ $user->phone }}"></div>
+                    <div class="col-md-6"><label class="form-label">الرقم القومي</label><input name="national_id" class="form-control font-monospace"
+                            maxlength="14" placeholder="14 رقم" value="{{ $user->national_id }}"></div>
                     <div class="col-md-6"><label class="form-label">القسم</label><input name="department"
                             class="form-control" value="{{ $user->department }}"></div>
                     <div class="col-md-6"><label class="form-label">المسمى الوظيفي</label><input name="job_title"
