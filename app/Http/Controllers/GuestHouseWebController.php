@@ -367,7 +367,16 @@ final class GuestHouseWebController extends Controller
 
             if ($existingBeneficiaryId && $existing = Beneficiary::find($existingBeneficiaryId)) {
                 $beneficiary = $existing;
-                $beneficiary->update(['guest_house_id' => $guest_house->id]);
+                $updateBenData = ['guest_house_id' => $guest_house->id];
+                foreach (['phone', 'national_id', 'address'] as $field) {
+                    if (!empty($data[$field])) {
+                        $updateBenData[$field] = $data[$field];
+                    }
+                }
+                if (empty($beneficiary->code) && !empty($data['code'])) {
+                    $updateBenData['code'] = $data['code'];
+                }
+                $beneficiary->update($updateBenData);
                 if (!empty($allocatedBeneficiaryIds)) {
                     $beneficiary->allocatedBeneficiaries()->syncWithoutDetaching($allocatedBeneficiaryIds);
                 }
@@ -401,15 +410,32 @@ final class GuestHouseWebController extends Controller
             }
 
             if ($bed) {
-                $guest_house->stays()->create([
-                    'beneficiary_id' => $beneficiary->id,
-                    'guest_house_bed_id' => $bed->id,
-                    'status' => 'resident',
-                    'arrival_date' => $arrivalDate,
-                    'expected_days' => $expectedDays,
-                    'admitted_at' => now(),
-                    'approved_by' => auth()->id(),
-                ]);
+                $existingOpenStay = $guest_house->stays()
+                    ->where('beneficiary_id', $beneficiary->id)
+                    ->whereIn('status', ['resident', 'pending'])
+                    ->latest('id')
+                    ->first();
+
+                if ($existingOpenStay) {
+                    $existingOpenStay->update([
+                        'guest_house_bed_id' => $bed->id,
+                        'status' => 'resident',
+                        'arrival_date' => $arrivalDate,
+                        'expected_days' => $expectedDays,
+                        'admitted_at' => $existingOpenStay->admitted_at ?? now(),
+                        'approved_by' => auth()->id(),
+                    ]);
+                } else {
+                    $guest_house->stays()->create([
+                        'beneficiary_id' => $beneficiary->id,
+                        'guest_house_bed_id' => $bed->id,
+                        'status' => 'resident',
+                        'arrival_date' => $arrivalDate,
+                        'expected_days' => $expectedDays,
+                        'admitted_at' => now(),
+                        'approved_by' => auth()->id(),
+                    ]);
+                }
                 $beneficiary->update(['status' => 'accepted']);
             }
         });

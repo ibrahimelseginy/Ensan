@@ -199,7 +199,13 @@
                 const patName = item.patient_name || item.full_name || '';
 
                 if (hiddenExistingId) hiddenExistingId.value = item.id;
-                if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = item.code || '';
+                const codeInputEl = document.getElementById('gh_patient_code');
+                if (codeInputEl) {
+                    codeInputEl.value = item.code || '';
+                    codeInputEl.readOnly = true;
+                    codeInputEl.classList.add('bg-light');
+                    codeInputEl.classList.remove('is-invalid');
+                }
                 if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = patName;
                 if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = item.national_id || '';
                 if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = item.phone || '';
@@ -272,7 +278,12 @@
                     quickSearchInput.value = '';
                     if (clearSearchBtn) clearSearchBtn.classList.add('d-none');
                 }
-                if (document.getElementById('gh_patient_code')) document.getElementById('gh_patient_code').value = '';
+                const codeInputEl = document.getElementById('gh_patient_code');
+                if (codeInputEl) {
+                    codeInputEl.value = '';
+                    codeInputEl.readOnly = false;
+                    codeInputEl.classList.remove('bg-light', 'is-invalid');
+                }
                 if (document.getElementById('gh_patient_name')) document.getElementById('gh_patient_name').value = '';
                 if (document.getElementById('gh_patient_nid')) document.getElementById('gh_patient_nid').value = '';
                 if (document.getElementById('gh_patient_phone')) document.getElementById('gh_patient_phone').value = '';
@@ -290,6 +301,28 @@
                     setTimeout(() => quickSearchInput.focus(), 100);
                 }
             };
+
+            // إذا تمت إعادة تحميل الصفحة مع وجود مستفيد مختار مسبقاً (old('existing_beneficiary_id'))
+            if (hiddenExistingId && hiddenExistingId.value) {
+                const codeInputEl = document.getElementById('gh_patient_code');
+                const patNameVal = document.getElementById('gh_patient_name')?.value || '';
+                const codeVal = codeInputEl?.value || ('BEN-' + hiddenExistingId.value);
+                if (codeInputEl) {
+                    codeInputEl.readOnly = true;
+                    codeInputEl.classList.add('bg-light');
+                }
+                const nameEl = document.getElementById('selectedBenFullName');
+                const codeEl = document.getElementById('selectedBenCodeBadge');
+                if (nameEl) nameEl.textContent = patNameVal;
+                if (codeEl) codeEl.textContent = codeVal;
+                if (selectedBanner) {
+                    selectedBanner.classList.remove('d-none');
+                    selectedBanner.classList.add('d-flex');
+                }
+                if (searchContainer) {
+                    searchContainer.classList.add('d-none');
+                }
+            }
 
             function configurePeopleList(config) {
                 const typeSelect = document.getElementById(config.typeSelectId);

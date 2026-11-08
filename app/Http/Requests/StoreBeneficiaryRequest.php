@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Beneficiary;
 use App\Rules\UniqueBeneficiaryName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -18,11 +19,19 @@ final class StoreBeneficiaryRequest extends FormRequest
     public function rules(): array
     {
         $hasExisting = $this->filled('existing_beneficiary_id');
+        $existingId = $hasExisting ? (int) $this->input('existing_beneficiary_id') : null;
         $isGuestHouse = $this->input('form_context') === 'guest_house_beneficiary' || $this->has('treatment_type') || $hasExisting;
 
         return [
             'existing_beneficiary_id'   => 'nullable|exists:beneficiaries,id',
-            'code'                      => 'nullable|string|max:50|unique:beneficiaries,code',
+            'code'                      => [
+                'nullable',
+                'string',
+                'max:50',
+                $existingId
+                    ? Rule::unique('beneficiaries', 'code')->ignore($existingId)
+                    : Rule::unique('beneficiaries', 'code'),
+            ],
             'classification'            => 'nullable|string|in:A,B,a,b',
             'full_name'                 => $hasExisting 
                                             ? 'nullable|string|max:255' 
@@ -122,24 +131,65 @@ final class StoreBeneficiaryRequest extends FormRequest
             ]);
         }
 
+        if (is_string($this->input('code'))) {
+            $this->merge([
+                'code' => trim($this->input('code')),
+            ]);
+        }
+
         if (! $this->filled('allocation_type')) {
             $this->merge(['allocated_beneficiary_ids' => []]);
         }
 
+        // في نموذج دار الضيافة: إذا أدخل الموظف كود أو رقم قومي أو اسم لمستفيد مسجل مسبقاً دون الضغط على قائمة البحث، يتم ربطه تلقائياً بالمستفيد المسجل
+        $isGuestHouseForm = $this->input('form_context') === 'guest_house_beneficiary' || $this->has('guest_house_bed_id');
+        if ($isGuestHouseForm && ! $this->filled('existing_beneficiary_id')) {
+            $matchedBeneficiary = null;
+            $codeInput = trim((string) $this->input('code', ''));
+            $nidInput = trim((string) $this->input('national_id', ''));
+            $nameInput = trim((string) $this->input('full_name', ''));
+
+            if ($codeInput !== '') {
+                $matchedBeneficiary = Beneficiary::query()
+                    ->where('code', $codeInput)
+                    ->orWhere('patient_code', $codeInput)
+                    ->first();
+            }
+
+            if (! $matchedBeneficiary && $nidInput !== '' && strlen($nidInput) >= 10) {
+                $matchedBeneficiary = Beneficiary::query()
+                    ->where('national_id', $nidInput)
+                    ->first();
+            }
+
+            if (! $matchedBeneficiary && $nameInput !== '') {
+                $matchedBeneficiary = Beneficiary::query()
+                    ->where('full_name', $nameInput)
+                    ->orWhere('patient_name', $nameInput)
+                    ->first();
+            }
+
+            if ($matchedBeneficiary) {
+                $this->merge([
+                    'existing_beneficiary_id' => $matchedBeneficiary->id,
+                ]);
+            }
+        }
     }
 
     public function messages(): array
     {
         return [
-            'project_id.prohibits'     => 'يمكن ربط المستفيد بجهة واحدة فقط.',
-            'campaign_id.prohibits'    => 'يمكن ربط المستفيد بجهة واحدة فقط.',
-            'guest_house_id.prohibits' => 'يمكن ربط المستفيد بجهة واحدة فقط.',
+            'code.unique'                        => 'كود المستفيد مسجل بالفعل لحالة أخرى.',
+            'project_id.prohibits'               => 'يمكن ربط المستفيد بجهة واحدة فقط.',
+            'campaign_id.prohibits'              => 'يمكن ربط المستفيد بجهة واحدة فقط.',
+            'guest_house_id.prohibits'           => 'يمكن ربط المستفيد بجهة واحدة فقط.',
             'allocated_beneficiary_ids.required' => 'يرجى اختيار المستفيد أو المستفيدين.',
             'allocated_beneficiary_ids.size'     => 'يجب اختيار مستفيد واحد فقط.',
             'allocated_beneficiary_ids.min'      => 'يجب اختيار مستفيدين على الأقل.',
-            'rejection_reason.required'           => 'سبب الرفض مطلوب عند نقل الحالة إلى مرفوض.',
-            'archived_reason.required'            => 'سبب الأرشفة مطلوب للحالات المؤرشفة.',
-            'family_members.max'                  => 'يمكن إضافة الزوج/الزوجة وحتى 5 أطفال.',
+            'rejection_reason.required'          => 'سبب الرفض مطلوب عند نقل الحالة إلى مرفوض.',
+            'archived_reason.required'           => 'سبب الأرشفة مطلوب للحالات المؤرشفة.',
+            'family_members.max'                 => 'يمكن إضافة الزوج/الزوجة وحتى 5 أطفال.',
         ];
     }
 }
