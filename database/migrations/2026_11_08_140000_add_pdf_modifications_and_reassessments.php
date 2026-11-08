@@ -19,16 +19,16 @@ return new class extends Migration
         if (Schema::hasTable('warehouses')) {
             Schema::table('warehouses', function (Blueprint $table) {
                 if (!Schema::hasColumn('warehouses', 'department')) {
-                    $table->string('department')->nullable()->after('type');
+                    $table->string('department')->nullable();
                 }
                 if (!Schema::hasColumn('warehouses', 'guest_house_id')) {
-                    $table->unsignedBigInteger('guest_house_id')->nullable()->after('department');
+                    $table->unsignedBigInteger('guest_house_id')->nullable();
                 }
                 if (!Schema::hasColumn('warehouses', 'project_id')) {
-                    $table->unsignedBigInteger('project_id')->nullable()->after('guest_house_id');
+                    $table->unsignedBigInteger('project_id')->nullable();
                 }
                 if (!Schema::hasColumn('warehouses', 'assigned_user_ids')) {
-                    $table->json('assigned_user_ids')->nullable()->after('manager_id');
+                    $table->json('assigned_user_ids')->nullable();
                 }
             });
         }
