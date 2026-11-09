@@ -445,7 +445,10 @@
                     <small class="text-muted">يمكنك تحديد الرصيد الحالي يدوياً أو الضغط على زر الحساب التلقائي أدناه</small>
                 </div>
 
-                <div class="text-end mt-2">
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="zeroAllTreasuryTotals()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> تصفير الكل (0.00)
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="calcNetBalanceFromInAndOut()">
                         <i class="bi bi-calculator me-1"></i> حساب الرصيد الصافي = (الوارد - الصادر)
                     </button>
@@ -539,6 +542,15 @@
         if (balInput) {
             balInput.value = (inVal - outVal).toFixed(2);
         }
+    }
+
+    function zeroAllTreasuryTotals() {
+        var inInput = document.getElementById('adjustTotalInInput');
+        var outInput = document.getElementById('adjustTotalOutInput');
+        var balInput = document.getElementById('adjustCurrentBalanceInput');
+        if (inInput) inInput.value = '0';
+        if (outInput) outInput.value = '0';
+        if (balInput) balInput.value = '0';
     }
 
     function openEditTransactionModal(tx) {
