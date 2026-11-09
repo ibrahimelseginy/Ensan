@@ -1557,7 +1557,7 @@
                                     + تغذية العهدة
                                 </button>
                                 @if($custody->treasury)
-                                    <form method="POST" action="{{ route('treasuries.adjust-totals', $custody->treasury) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تصفير خزينة ({{ $custody->treasury->name }}) يدوياً إلى 0.00؟');">
+                                    <form method="POST" action="{{ route('treasuries.adjustTotals', $custody->treasury) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تصفير خزينة ({{ $custody->treasury->name }}) يدوياً إلى 0.00؟');">
                                         @csrf
                                         <input type="hidden" name="zero_treasury" value="1">
                                         <input type="hidden" name="reason" value="تصفير خزينة دار الضيافة يدوياً ({{ $guest_house->name }})">
