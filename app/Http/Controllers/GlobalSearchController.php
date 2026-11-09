@@ -51,7 +51,7 @@ final class GlobalSearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $q = trim((string) $request->input('q', ''));
-        if (mb_strlen($q) < 2) {
+        if (mb_strlen($q) < 1) {
             return response()->json([
                 'query' => $q,
                 'total' => 0,
@@ -125,6 +125,30 @@ final class GlobalSearchController extends Controller
                 ['title' => 'الأدوار والصلاحيات', 'sub' => 'إدارة صلاحيات المستخدمين والأدوار الوظيفية', 'route' => 'roles.index', 'perm' => 'roles.view', 'icon' => 'bi-shield-lock-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'ادوار صلاحيات امان roles permissions'],
                 ['title' => 'مركز استيراد الإكسيل (Excel Hub)', 'sub' => 'رفع واستيراد شيتات البيانات الذكي', 'route' => 'data-import.index', 'perm' => 'data_import.view', 'icon' => 'bi-file-earmark-spreadsheet-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'اكسيل استيراد شيت excel import'],
                 ['title' => 'التقارير والإحصاءات الشاملة', 'sub' => 'تقارير التبرعات والمستفيدين والمخازن والمالية', 'route' => 'reports.index', 'perm' => 'reports.view', 'icon' => 'bi-bar-chart-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'تقارير احصائيات طباعة تصدير reports'],
+                ['title' => 'المؤشرات والتحليلات', 'sub' => 'مؤشرات الأداء والمستهدفات والرسوم البيانية', 'route' => 'dashboard.analytics', 'perm' => 'dashboard.analytics', 'icon' => 'bi-speedometer2', 'badge' => 'قسم بالنظام', 'keywords' => 'مؤشرات تحليلات مستهدف رسوم بيانية analytics kpi'],
+                ['title' => 'لوحة تحكم الموارد البشرية HR', 'sub' => 'تقييمات الموظفين ومؤشرات الأداء', 'route' => 'hr.evaluations', 'perm' => 'hr.evaluations', 'icon' => 'bi-award-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'تقييمات موظفين لوحة تحكم موارد بشرية hr evaluations'],
+                ['title' => 'مهام الموظفين', 'sub' => 'توزيع ومتابعة مهام فريق العمل', 'route' => 'employee-tasks.index', 'perm' => 'employee_tasks.view', 'icon' => 'bi-check2-circle', 'badge' => 'قسم بالنظام', 'keywords' => 'مهام موظفين تكليفات عمل employee tasks'],
+                ['title' => 'حضور المتطوعين', 'sub' => 'تسجيل ومتابعة حضور المتطوعين', 'route' => 'volunteer-attendance.index', 'perm' => 'volunteer_attendance.view', 'icon' => 'bi-clock', 'badge' => 'قسم بالنظام', 'keywords' => 'حضور متطوعين غياب تطوع'],
+                ['title' => 'ساعات التطوع', 'sub' => 'رصد واحتساب ساعات التطوع', 'route' => 'volunteer-hours.index', 'perm' => 'volunteer_hours.view', 'icon' => 'bi-hourglass-split', 'badge' => 'قسم بالنظام', 'keywords' => 'ساعات تطوع متطوعين'],
+                ['title' => 'مهام التطوع', 'sub' => 'تكليفات ومهام الفرق التطوعية', 'route' => 'tasks.index', 'perm' => 'volunteer_tasks.view', 'icon' => 'bi-list-task', 'badge' => 'قسم بالنظام', 'keywords' => 'مهام تطوع متطوعين'],
+                ['title' => 'طلبات التطوع (التطبيق)', 'sub' => 'استمارات التطوع الواردة من تطبيق الموبايل', 'route' => 'mobile.volunteer-requests.index', 'perm' => 'mobile.volunteer_requests.view', 'icon' => 'bi-phone', 'badge' => 'قسم بالنظام', 'keywords' => 'طلبات تطوع موبايل تطبيق'],
+                ['title' => 'القيود اليومية', 'sub' => 'سجل القيود المحاسبية المزدوجة', 'route' => 'journal-entries.index', 'perm' => 'journal_entries.view', 'icon' => 'bi-journal-text', 'badge' => 'قسم بالنظام', 'keywords' => 'قيود يومية محاسبة قيد'],
+                ['title' => 'إغلاق اليوميات والعهد المالية', 'sub' => 'تقفيل الخزائن واعتماد التسويات', 'route' => 'closures.index', 'perm' => 'closures.view', 'icon' => 'bi-lock-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'اغلاق يوميات تقفيل خزنة عهدة closures'],
+                ['title' => 'حركات المخزون (إضافة وصرف)', 'sub' => 'أذون الإضافة والصرف والتحويل المخزني', 'route' => 'inventory-transactions.index', 'perm' => 'inventory_transactions.view', 'icon' => 'bi-arrow-left-right', 'badge' => 'قسم بالنظام', 'keywords' => 'حركات مخزون اذون صرف اضافة مخزن'],
+                ['title' => 'شنط وكراتين رمضان', 'sub' => 'كشوف وتوزيع شنط رمضان', 'route' => 'ramadan-bags.index', 'perm' => 'ramadan_bags.view', 'icon' => 'bi-bag-heart-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'شنط رمضان كراتين توزيع'],
+                ['title' => 'إفطارات رمضان', 'sub' => 'وجبات ومطابخ إفطار الصائم', 'route' => 'ramadan-iftars.index', 'perm' => 'ramadan_iftars.view', 'icon' => 'bi-cup-hot-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'افطارات رمضان وجبات مطبخ'],
+                ['title' => 'بروتوكولات المدارس والجامعات', 'sub' => 'التعاونات والأنشطة التعليمية', 'route' => 'school-collaborations.index', 'perm' => 'school_collaborations.view', 'icon' => 'bi-building', 'badge' => 'قسم بالنظام', 'keywords' => 'مدارس جامعات بروتوكولات تعاون'],
+                ['title' => 'العضويات والاشتراكات', 'sub' => 'أعضاء الجمعية والجهات المشتركة', 'route' => 'memberships.index', 'perm' => 'memberships.view', 'icon' => 'bi-card-checklist', 'badge' => 'قسم بالنظام', 'keywords' => 'عضويات اشتراكات اعضاء'],
+                ['title' => 'مناديب أدوية الأورام', 'sub' => 'دليل مناديب وشركات أدوية الأورام', 'route' => 'oncology-medicine-reps.index', 'perm' => 'oncology_medicine_reps.view', 'icon' => 'bi-capsule', 'badge' => 'قسم بالنظام', 'keywords' => 'مناديب ادوية اورام شركات ادوية'],
+                ['title' => 'خطوط السير', 'sub' => 'مسارات التحصيل والتوزيع', 'route' => 'travel-routes.index', 'perm' => 'travel_routes.view', 'icon' => 'bi-geo', 'badge' => 'قسم بالنظام', 'keywords' => 'خطوط سير مسارات توزيع'],
+                ['title' => 'رحلات المناديب', 'sub' => 'جدول الرحلات والتحركات الميدانية', 'route' => 'trips.index', 'perm' => 'trips.view', 'icon' => 'bi-pin-map', 'badge' => 'قسم بالنظام', 'keywords' => 'رحلات مناديب تحرك توصيل'],
+                ['title' => 'توصيلات وخدمات كفر الشيخ', 'sub' => 'تسليمات وخدمات فرع كفر الشيخ', 'route' => 'kafr-el-sheikh-services.index', 'perm' => 'kafr_el_sheikh_deliveries.view', 'icon' => 'bi-truck', 'badge' => 'قسم بالنظام', 'keywords' => 'توصيلات خدمات كفر الشيخ'],
+                ['title' => 'سماسرة كفر الشيخ', 'sub' => 'دليل الوسطاء الميدانيين بكفر الشيخ', 'route' => 'kafr-el-sheikh-brokers.index', 'perm' => 'kafr_el_sheikh_brokers.view', 'icon' => 'bi-people', 'badge' => 'قسم بالنظام', 'keywords' => 'سماسرة وسطاء كفر الشيخ'],
+                ['title' => 'عمال طنطا', 'sub' => 'سجل عمال اليومية بفرع طنطا', 'route' => 'tanta-workers.index', 'perm' => 'tanta_workers.view', 'icon' => 'bi-person-workspace', 'badge' => 'قسم بالنظام', 'keywords' => 'عمال طنطا يومية'],
+                ['title' => 'إعدادات الموقع الإلكتروني', 'sub' => 'إدارة محتوى وصفحات وتبرعات الموقع', 'route' => 'website.settings.index', 'perm' => 'website.settings.view_edit', 'icon' => 'bi-globe2', 'badge' => 'قسم بالنظام', 'keywords' => 'موقع الكتروني اعدادات صفحات بانرات'],
+                ['title' => 'إدارة تطبيق الموبايل', 'sub' => 'محتوى وأخبار وإشعارات وتبرعات التطبيق', 'route' => 'mobile.home_content.index', 'perm' => 'mobile.home_content.view_edit', 'icon' => 'bi-phone-fill', 'badge' => 'قسم بالنظام', 'keywords' => 'تطبيق موبايل اشعارات اخبار'],
+                ['title' => 'سجل التدقيق والعمليات (Audits)', 'sub' => 'مراقبة حركات النظام والتعديلات', 'route' => 'audits.index', 'perm' => 'audits.view', 'icon' => 'bi-journal-check', 'badge' => 'قسم بالنظام', 'keywords' => 'سجل تدقيق عمليات مراقبة لوج audits logs'],
+                ['title' => 'طلبات التعديل والاعتماد', 'sub' => 'مراجعة واعتماد طلبات التعديل والحذف', 'route' => 'change-requests.index', 'perm' => 'manage_change_requests', 'icon' => 'bi-arrow-repeat', 'badge' => 'قسم بالنظام', 'keywords' => 'طلبات تعديل مراجعة اعتماد موافقة'],
             ];
 
             foreach ($pages as $p) {
@@ -144,7 +168,7 @@ final class GlobalSearchController extends Controller
                         'icon' => $p['icon'],
                     ];
                 }
-                if (count($results['system_pages']) >= 4) {
+                if (count($results['system_pages']) >= 8) {
                     break;
                 }
             }
@@ -549,6 +573,54 @@ final class GlobalSearchController extends Controller
             }
         });
 
+        $safeRun(function () use ($cleanQ, $numbers, &$results) {
+            $revQuery = \App\Models\Revenue::query();
+            $revQuery->where(function ($w) use ($cleanQ, $numbers) {
+                ArabicSearchHelper::applySmartSearch($w, $cleanQ, ['source', 'description', 'category', 'payment_method', 'notes'], ['reference_number']);
+                foreach ($numbers as $num) {
+                    if (strlen($num) >= 2) {
+                        $w->orWhere('amount', $num)->orWhere('reference_number', 'like', "%{$num}%");
+                    }
+                }
+            });
+            foreach ($revQuery->latest('id')->limit(3)->get() as $rev) {
+                $results['donations'][] = [
+                    'id' => 'rev-' . $rev->id,
+                    'title' => $rev->source ?: ($rev->description ?: ('إيراد #' . $rev->id)),
+                    'code' => $rev->reference_number ?: ('REV-' . $rev->id),
+                    'subtitle' => 'المبلغ: ' . number_format((float) $rev->amount, 2) . ' ج.م' . ($rev->category ? ' • ' . $rev->category : ''),
+                    'url' => route('revenues.index', ['q' => $rev->source ?: $rev->reference_number]),
+                    'badge' => 'سند إيراد',
+                    'badge_class' => 'bg-success-subtle text-success',
+                    'icon' => 'bi-arrow-down-left-circle-fill',
+                ];
+            }
+        });
+
+        $safeRun(function () use ($cleanQ, $numbers, &$results) {
+            $txQuery = \App\Models\TreasuryTransaction::query()->with('treasury:id,name,currency');
+            $txQuery->where(function ($w) use ($cleanQ, $numbers) {
+                ArabicSearchHelper::applySmartSearch($w, $cleanQ, ['description'], []);
+                foreach ($numbers as $num) {
+                    if (strlen($num) >= 2) {
+                        $w->orWhere('amount', $num);
+                    }
+                }
+            });
+            foreach ($txQuery->latest('id')->limit(3)->get() as $tx) {
+                $results['donations'][] = [
+                    'id' => 'ttx-' . $tx->id,
+                    'title' => $tx->description ?: ('حركة خزينة #' . $tx->id),
+                    'code' => 'TX-' . $tx->id,
+                    'subtitle' => ($tx->type === 'in' ? 'وارد: ' : 'صادر: ') . number_format((float) $tx->amount, 2) . ' • ' . ($tx->treasury?->name ?? 'خزينة'),
+                    'url' => $tx->treasury ? route('treasuries.show', $tx->treasury) : route('treasuries.index'),
+                    'badge' => $tx->type === 'in' ? 'حركة خزينة (وارد)' : 'حركة خزينة (صادر)',
+                    'badge_class' => $tx->type === 'in' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger',
+                    'icon' => 'bi-arrow-left-right',
+                ];
+            }
+        });
+
         // 5. Projects, Campaigns, Guest Houses, Workspaces & Ramadan / المشاريع والحملات ودور الضيافة ومساحات العمل
         $safeRun(function () use ($cleanQ, &$results) {
             $projectsQuery = Project::query();
@@ -724,6 +796,21 @@ final class GlobalSearchController extends Controller
                     'badge' => 'مهمة عمل',
                     'badge_class' => 'bg-warning-subtle text-warning-emphasis',
                     'icon' => 'bi-check2-square',
+                ];
+            }
+
+            $rolesQuery = \App\Models\Role::query();
+            ArabicSearchHelper::applySmartSearch($rolesQuery, $cleanQ, ['name', 'description'], ['key']);
+            foreach ($rolesQuery->limit(3)->get() as $role) {
+                $results['employees'][] = [
+                    'id' => 'role-' . $role->id,
+                    'title' => 'دور وصلاحية: ' . $role->name,
+                    'code' => $role->key,
+                    'subtitle' => $role->description ?: 'إدارة صلاحيات الدور الوظيفي',
+                    'url' => route('roles.show', $role),
+                    'badge' => 'دور وظيفي',
+                    'badge_class' => 'bg-secondary-subtle text-secondary',
+                    'icon' => 'bi-shield-lock-fill',
                 ];
             }
         });

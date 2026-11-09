@@ -146,9 +146,45 @@ body.theme-dark .global-search-item.active {
         activeItemIndex = -1;
       }
 
+      async function fetchGlobalSearchData(q) {
+        const encodedQ = encodeURIComponent(q);
+        const isPublicPrefix = window.location.pathname.indexOf('/public/') === 0 || window.location.pathname === '/public';
+        const candidateUrls = isPublicPrefix
+          ? [
+              `/public/api/global-search?q=${encodedQ}`,
+              `/api/global-search?q=${encodedQ}`,
+              `{{ route('api.global.search') }}?q=${encodedQ}`
+            ]
+          : [
+              `/api/global-search?q=${encodedQ}`,
+              `/public/api/global-search?q=${encodedQ}`,
+              `{{ route('api.global.search') }}?q=${encodedQ}`
+            ];
+
+        let lastError = null;
+        for (const url of candidateUrls) {
+          try {
+            const res = await fetch(url, {
+              credentials: 'same-origin',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+              }
+            });
+            if (res.ok) {
+              return await res.json();
+            }
+            lastError = new Error('HTTP ' + res.status);
+          } catch (e) {
+            lastError = e;
+          }
+        }
+        throw lastError || new Error('Search request failed');
+      }
+
       function performSearch(q) {
         q = q.trim();
-        if (q.length < 2) {
+        if (q.length < 1) {
           closeDropdown();
           return;
         }
@@ -161,27 +197,7 @@ body.theme-dark .global-search-item.active {
           </div>
         `;
 
-        const primarySearchUrl = `/api/global-search?q=${encodeURIComponent(q)}`;
-        const fallbackSearchUrl = `{{ route('api.global.search') }}?q=${encodeURIComponent(q)}`;
-
-        fetch(primarySearchUrl, {
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-          }
-        })
-        .catch(() => fetch(fallbackSearchUrl, {
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-          }
-        }))
-        .then(res => {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return res.json();
-        })
+        fetchGlobalSearchData(q)
         .then(data => {
           if (!data || data.total === 0) {
             dropdown.innerHTML = `
@@ -277,7 +293,7 @@ body.theme-dark .global-search-item.active {
 
       // Focus listener: re-search if input already has text
       input.addEventListener('focus', function() {
-        if (this.value.trim().length >= 2) {
+        if (this.value.trim().length >= 1) {
           performSearch(this.value);
         }
       });
@@ -293,7 +309,7 @@ body.theme-dark .global-search-item.active {
             window.location.href = items[activeItemIndex].dataset.url || items[activeItemIndex].getAttribute('href');
           } else if (items.length === 1) {
             window.location.href = items[0].dataset.url || items[0].getAttribute('href');
-          } else if (input.value.trim().length >= 2) {
+          } else if (input.value.trim().length >= 1) {
             performSearch(input.value);
           }
         });
@@ -306,7 +322,7 @@ body.theme-dark .global-search-item.active {
           if (e.key === 'Escape') closeDropdown();
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (this.value.trim().length >= 2) performSearch(this.value);
+            if (this.value.trim().length >= 1) performSearch(this.value);
           }
           return;
         }

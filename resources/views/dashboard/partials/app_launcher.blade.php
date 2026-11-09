@@ -2150,6 +2150,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // If the search input is also the Global Search input (.ensan-global-search-input)
+        // and the query doesn't match any section card title/keyword (e.g., searching for a person's name, phone, or code),
+        // keep the category cards visible so the dashboard doesn't collapse behind the global search dropdown.
+        const isGlobalSearchInput = searchInput && searchInput.classList.contains('ensan-global-search-input');
+        if (isGlobalSearchInput && query && visibleCount === 0) {
+            cards.forEach(card => {
+                const categories = (card.getAttribute('data-category') || '').split(' ');
+                const matchesCat = activeCategory === 'all' || categories.includes(activeCategory);
+                card.style.display = matchesCat ? 'flex' : 'none';
+                if (matchesCat) card.style.opacity = '1';
+            });
+            if (emptyState) {
+                emptyState.classList.add('d-none');
+            }
+            return;
+        }
+
         if (emptyState) {
             emptyState.classList.toggle('d-none', visibleCount > 0);
         }
