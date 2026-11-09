@@ -16,20 +16,18 @@ final readonly class GuestHouseRepository
         $status = $filters['status'] ?? null;
         $governorate = $filters['governorate'] ?? null;
         $user = auth()->user();
-        $isAdmin = $user && ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $user->hasPermission('guest_houses.view_all'));
+        $allowedHouseIds = ($user && method_exists($user, 'getAccessibleGuestHouseIds'))
+            ? $user->getAccessibleGuestHouseIds()
+            : null;
 
         return GuestHouse::query()
             ->with(['manager', 'wings'])
             ->withCount(['wings', 'beds', 'stays as resident_stays_count' => fn ($query) => $query->where('status', 'resident')])
-            ->when(!$isAdmin && $user, function ($qb) use ($user) {
-                $qb->where(function ($sub) use ($user) {
-                    $sub->where('manager_user_id', $user->id)
-                        ->orWhere('id', $user->guest_house_id)
-                        ->orWhereHas('volunteers', fn($v) => $v->where('users.id', $user->id));
-                });
-            })
+            ->when(is_array($allowedHouseIds), fn($qb) => $qb->whereIn('id', $allowedHouseIds ?: [0]))
             ->when($q !== '', function ($qb) use ($q) {
-                $qb->where('name', 'like', "%$q%")->orWhere('location', 'like', "%$q%");
+                $qb->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%$q%")->orWhere('location', 'like', "%$q%");
+                });
             })
             ->when($status, fn($qb) => $qb->where('status', $status))
             ->when($governorate, fn($qb) => $qb->where('governorate', $governorate))

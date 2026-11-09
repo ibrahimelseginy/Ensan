@@ -42,7 +42,7 @@ final class Item extends Model
         return $this->hasMany(InventoryTransaction::class);
     }
 
-    // Get current stock across all warehouses
+    // Get current stock across all warehouses (unified formula)
     public function getCurrentStock($warehouseId = null)
     {
         $query = $this->transactions()->where('status', 'approved');
@@ -51,10 +51,10 @@ final class Item extends Model
             $query->where('warehouse_id', $warehouseId);
         }
 
-        $inStock = (clone $query)->where('type', 'in')->sum('quantity');
-        $outStock = (clone $query)->where('type', 'out')->sum('quantity');
-
-        return $inStock - $outStock;
+        return (float) $query->selectRaw("SUM(CASE 
+            WHEN type IN ('in', 'stock_count_increase', 'transfer_in') THEN quantity 
+            WHEN type IN ('out', 'transfer', 'transfer_out', 'stock_count_shortage') THEN -quantity 
+            ELSE 0 END) as stock")->value('stock') ?? 0.0;
     }
 
     // Check if stock is low

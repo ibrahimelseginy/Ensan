@@ -153,6 +153,78 @@ final class Treasury extends Model
         return $this->transactions()->where('type', 'out')->sum('amount');
     }
 
+    /**
+     * تفصيل رصيد الخزينة إلى: (رصيد العهدة / التغذية) مقابل (رصيد التبرعات)
+     */
+    public function getBalanceBreakdownAttribute(): array
+    {
+        $inTransactions = $this->relationLoaded('transactions')
+            ? $this->transactions->where('type', 'in')
+            : $this->transactions()->where('type', 'in')->get(['id', 'amount', 'donation_id', 'description']);
+
+        $donationsIn = 0.0;
+        $custodyTxIn = 0.0;
+
+        foreach ($inTransactions as $tx) {
+            $amt = (float) ($tx->amount ?? 0);
+            if ($amt <= 0) {
+                continue;
+            }
+            $desc = (string) ($tx->description ?? '');
+            $isDonationTx = !empty($tx->donation_id)
+                || str_contains($desc, 'تبرع')
+                || str_contains($desc, 'كفالة')
+                || str_contains($desc, 'صدقة')
+                || str_contains($desc, 'زكاة');
+
+            if ($isDonationTx) {
+                $donationsIn += $amt;
+            } else {
+                $custodyTxIn += $amt;
+            }
+        }
+
+        if ($donationsIn <= 0.0) {
+            $directDonationsSum = (float) $this->donations()
+                ->where('type', 'cash')
+                ->where('status', '!=', 'cancelled')
+                ->sum('amount');
+            if ($directDonationsSum > 0 && $custodyTxIn >= $directDonationsSum) {
+                $donationsIn = $directDonationsSum;
+                $custodyTxIn = max(0.0, $custodyTxIn - $directDonationsSum);
+            }
+        }
+
+        $opening = max(0.0, (float) $this->opening_balance);
+        $custodyIn = $opening + $custodyTxIn;
+        $totalOut = (float) ($this->relationLoaded('transactions')
+            ? $this->transactions->where('type', 'out')->sum('amount')
+            : $this->getTotalOut());
+        $current = (float) $this->current_balance;
+
+        if ($current <= 0.0) {
+            $custodyBalance = 0.0;
+            $donationsBalance = 0.0;
+        } else {
+            // المصروفات تُخصم من العهدة أولاً، وما زاد يُخصم من التبرعات
+            $custodyAfterOut = max(0.0, $custodyIn - $totalOut);
+            $remainingOut = max(0.0, $totalOut - $custodyIn);
+            $donationsAfterOut = max(0.0, $donationsIn - $remainingOut);
+
+            $donationsBalance = min($current, round($donationsAfterOut, 2));
+            $custodyBalance = max(0.0, round($current - $donationsBalance, 2));
+        }
+
+        return [
+            'custody_in' => round($custodyIn, 2),
+            'donations_in' => round($donationsIn, 2),
+            'total_out' => round($totalOut, 2),
+            'custody_balance' => $custodyBalance,
+            'donations_balance' => $donationsBalance,
+            'current_balance' => round($current, 2),
+        ];
+    }
+
     public function updateBalance()
     {
         $totalIn = $this->getTotalIn();
@@ -261,5 +333,170 @@ final class Treasury extends Model
     public static function getTypesList()
     {
         return self::TYPES;
+    }
+
+    /**
+     * إرجاع الخزائن الخاصة بدار ضيافة محددة فقط (مع إنشاء خزينة للدار تلقائياً إن لم تكن موجودة)
+     */
+    public static function forGuestHouse(\App\Models\GuestHouse $guestHouse): \Illuminate\Database\Eloquent\Collection
+    {
+        $custodyTreasuryIds = $guestHouse->custodies()
+            ->whereNotNull('treasury_id')
+            ->pluck('treasury_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $ghName = trim((string) $guestHouse->name);
+        $ghLoc = trim((string) ($guestHouse->location ?? ''));
+
+        $cityKeywords = [];
+        foreach (['كفر الشيخ', 'كفرالشيخ', 'كفر', 'طنطا', 'القاهرة', 'الإسكندرية', 'المنصورة'] as $kw) {
+            if (str_contains($ghName, $kw) || str_contains($ghLoc, $kw)) {
+                $cityKeywords[] = $kw;
+                if ($kw === 'كفر الشيخ' || $kw === 'كفرالشيخ') {
+                    $cityKeywords[] = 'كفر';
+                }
+            }
+        }
+        $cityKeywords = array_values(array_unique($cityKeywords));
+
+        $matched = self::active()
+            ->where(function ($q) use ($custodyTreasuryIds, $guestHouse, $ghName, $cityKeywords) {
+                if (!empty($custodyTreasuryIds)) {
+                    $q->orWhereIn('id', $custodyTreasuryIds);
+                }
+                if (!empty($guestHouse->manager_user_id)) {
+                    $q->orWhere('manager_id', $guestHouse->manager_user_id);
+                }
+                if ($ghName !== '') {
+                    $q->orWhere('name', 'like', '%' . $ghName . '%');
+                }
+                foreach ($cityKeywords as $kw) {
+                    $q->orWhere(function ($sub) use ($kw) {
+                        $sub->where('name', 'like', '%' . $kw . '%')
+                            ->where(function ($sub2) {
+                                $sub2->where('name', 'like', '%ضياف%')
+                                    ->orWhere('name', 'like', '%دار%')
+                                    ->orWhere('type', self::TYPE_BRANCH)
+                                    ->orWhere('type', self::TYPE_PETTY_CASH);
+                            });
+                    });
+                }
+            })
+            ->orderBy('name')
+            ->get();
+
+        if ($matched->isEmpty() && !empty($cityKeywords)) {
+            $matched = self::active()
+                ->where(function ($q) use ($cityKeywords) {
+                    foreach ($cityKeywords as $kw) {
+                        $q->orWhere('name', 'like', '%' . $kw . '%')
+                          ->orWhere('location', 'like', '%' . $kw . '%');
+                    }
+                })
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($matched->isEmpty()) {
+            $code = 'GH-' . $guestHouse->id;
+            $created = self::firstOrCreate(
+                ['code' => $code],
+                [
+                    'name' => 'خزينة ' . ($ghName ?: ('دار الضيافة #' . $guestHouse->id)),
+                    'type' => self::TYPE_BRANCH,
+                    'description' => 'خزينة وعهدة خاصة بـ ' . $ghName,
+                    'manager_id' => $guestHouse->manager_user_id,
+                    'location' => $ghLoc ?: $ghName,
+                    'currency' => 'EGP',
+                    'opening_balance' => 0,
+                    'current_balance' => 0,
+                    'is_active' => true,
+                ]
+            );
+            return new \Illuminate\Database\Eloquent\Collection([$created]);
+        }
+
+        return $matched;
+    }
+
+    /**
+     * إرجاع خزينة الاستقبال فقط (مع إنشائها تلقائياً إن لم تكن موجودة)
+     */
+    public static function forReception(?\App\Models\User $user = null): \Illuminate\Database\Eloquent\Collection
+    {
+        $matched = self::active()
+            ->where(function ($q) use ($user) {
+                $q->where('name', 'like', '%استقبال%')
+                  ->orWhere('name', 'like', '%الاستقبال%')
+                  ->orWhere('code', 'like', 'REC%');
+                if ($user) {
+                    $q->orWhere('manager_id', $user->id);
+                }
+            })
+            ->orderBy('id')
+            ->get();
+
+        if ($matched->isEmpty()) {
+            $created = self::firstOrCreate(
+                ['code' => 'REC-MAIN'],
+                [
+                    'name' => 'خزينة الاستقبال',
+                    'type' => self::TYPE_PETTY_CASH,
+                    'description' => 'خزينة وعهدة خاصة بمكتب الاستقبال (عهدة وتبرعات ومصروفات الاستقبال)',
+                    'manager_id' => $user?->id,
+                    'location' => 'مقر المؤسسة - الاستقبال',
+                    'currency' => 'EGP',
+                    'opening_balance' => 0,
+                    'current_balance' => 0,
+                    'is_active' => true,
+                ]
+            );
+            return new \Illuminate\Database\Eloquent\Collection([$created]);
+        }
+
+        return $matched;
+    }
+
+    /**
+     * تصفية الخزائن المتاحة للموظف حسب دوره ومكانه (منع ظهور كل الخزائن لكل الموظفين)
+     */
+    public function scopeAccessibleForUser($query, ?\App\Models\User $user = null)
+    {
+        $user = $user ?: auth()->user();
+        if (!$user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $isGlobalFinanceOrAdmin = $user->email === 'admin@ensan.org'
+            || $user->hasRole(['admin', 'super_admin', 'manager', 'finance', 'accountant', 'financial_manager', 'مدير النظام', 'الحسابات', 'المالية']);
+
+        if ($isGlobalFinanceOrAdmin) {
+            return $query;
+        }
+
+        $allowedIds = self::where('manager_id', $user->id)->pluck('id')->all();
+
+        // Check if user is a Reception employee
+        if ($user->hasRole(['reception', 'receptionist', 'موظف استقبال', 'الاستقبال']) || $user->hasPermission('reception.view')) {
+            $recIds = self::forReception($user)->pluck('id')->all();
+            $allowedIds = array_merge($allowedIds, $recIds);
+        }
+
+        // Check if user is assigned to specific Guest Houses / Projects
+        $managedGh = \App\Models\GuestHouse::where('manager_user_id', $user->id)->get();
+        foreach ($managedGh as $gh) {
+            $allowedIds = array_merge($allowedIds, self::forGuestHouse($gh)->pluck('id')->all());
+        }
+
+        $allowedIds = array_values(array_unique(array_map('intval', $allowedIds)));
+
+        if (!empty($allowedIds)) {
+            return $query->whereIn('id', $allowedIds);
+        }
+
+        return $query->where('manager_id', $user->id);
     }
 }

@@ -75,42 +75,60 @@
     @endif
 
     {{-- Statistics --}}
-    <div class="row mb-4 animate-slide-up">
+    @php
+        $txBreakdown = $treasury->balance_breakdown;
+    @endphp
+    <div class="row g-3 mb-4 animate-slide-up">
         <div class="col-md-3">
-            <div class="summary-panel text-center position-relative">
+            <div class="summary-panel text-center position-relative h-100">
                 <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 start-0 m-2 p-1" title="تعديل الرصيد الحالي يدوياً" onclick="openAdjustTotalsModal('balance')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <h6 class="text-muted mb-2 small">الرصيد الحالي</h6>
-                <h3 class="text-primary mb-0 fw-bold">{{ number_format($treasury->current_balance, 2) }}</h3>
-                <small class="text-muted">{{ $treasury->currency }}</small>
+                <h6 class="text-muted mb-1 small">إجمالي الرصيد الحالي</h6>
+                <h3 class="text-primary mb-1 fw-bold font-monospace">{{ number_format($treasury->current_balance, 2) }}</h3>
+                <small class="text-muted d-block mb-2">{{ $treasury->currency }}</small>
+                <div class="d-flex justify-content-center gap-1 flex-wrap border-top pt-2">
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-monospace" title="صافي رصيد العهدة">عهدة: {{ number_format($txBreakdown['custody_balance'], 2) }}</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace" title="صافي رصيد التبرعات">تبرعات: {{ number_format($txBreakdown['donations_balance'], 2) }}</span>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-panel text-center position-relative">
+            <div class="summary-panel text-center position-relative h-100">
+                <h6 class="text-muted mb-1 small">تفصيل الخزينة (العهدة والتبرعات)</h6>
+                <div class="d-flex justify-content-around align-items-center my-2">
+                    <div>
+                        <div class="small text-info fw-bold"><i class="bi bi-wallet2 me-1"></i>العهدة</div>
+                        <div class="fw-bold font-monospace fs-5 text-dark">{{ number_format($txBreakdown['custody_balance'], 2) }}</div>
+                        <small class="text-muted" style="font-size: 0.72rem;">وارد: {{ number_format($txBreakdown['custody_in'], 0) }}</small>
+                    </div>
+                    <div class="vr"></div>
+                    <div>
+                        <div class="small text-success fw-bold"><i class="bi bi-heart-fill me-1"></i>التبرعات</div>
+                        <div class="fw-bold font-monospace fs-5 text-dark">{{ number_format($txBreakdown['donations_balance'], 2) }}</div>
+                        <small class="text-muted" style="font-size: 0.72rem;">وارد: {{ number_format($txBreakdown['donations_in'], 0) }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="summary-panel text-center position-relative h-100">
                 <button type="button" class="btn btn-sm btn-link text-success position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الوارد يدوياً" onclick="openAdjustTotalsModal('in')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
                 <h6 class="text-muted mb-2 small">إجمالي الوارد</h6>
-                <h3 class="text-success mb-0 fw-bold">{{ number_format($stats['total_in'], 2) }}</h3>
+                <h3 class="text-success mb-0 fw-bold font-monospace">{{ number_format($stats['total_in'], 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }}</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-panel text-center position-relative">
+            <div class="summary-panel text-center position-relative h-100">
                 <button type="button" class="btn btn-sm btn-link text-danger position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الصادر يدوياً" onclick="openAdjustTotalsModal('out')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
                 <h6 class="text-muted mb-2 small">إجمالي الصادر</h6>
-                <h3 class="text-danger mb-0 fw-bold">{{ number_format($stats['total_out'], 2) }}</h3>
-                <small class="text-muted">{{ $treasury->currency }}</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="summary-panel text-center">
-                <h6 class="text-muted mb-2 small">عدد الحركات</h6>
-                <h3 class="text-info mb-0 fw-bold">{{ $stats['total_transactions'] }}</h3>
-                <small class="text-muted">حركة</small>
+                <h3 class="text-danger mb-0 fw-bold font-monospace">{{ number_format($stats['total_out'], 2) }}</h3>
+                <small class="text-muted">{{ $treasury->currency }} ({{ $stats['total_transactions'] }} حركة)</small>
             </div>
         </div>
     </div>
@@ -121,7 +139,15 @@
             <div class="chart-container mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 section-title"><i class="bi bi-clock-history me-2"></i>آخر الحركات</h5>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form action="{{ route('treasuries.adjustTotals', $treasury) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد تصفير الرصيد الحالي لهذه الخزينة يدوياً إلى (0.00 ج.م)؟');">
+                            @csrf
+                            <input type="hidden" name="zero_treasury" value="1">
+                            <input type="hidden" name="zero_mode" value="balance_only">
+                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> تصفير الخزينة يدوياً (0.00)
+                            </button>
+                        </form>
                         <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="openAdjustTotalsModal('in')">
                             <i class="bi bi-sliders me-1"></i> تعديل الصادر والوارد يدوياً
                         </button>
@@ -158,22 +184,18 @@
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
                                 <td class="text-muted">{{ $transaction->description }}</td>
                                 <td class="text-center">
-                                    @php
-                                        $editTxPayload = [
-                                            'id' => $transaction->id,
-                                            'url' => route('treasuries.updateTransaction', [$treasury, $transaction]),
-                                            'type' => $transaction->type,
-                                            'amount' => (float) $transaction->amount,
-                                            'description' => $transaction->description,
-                                            'transaction_date' => $transaction->transaction_date->format('Y-m-d'),
-                                        ];
-                                    @endphp
                                     <div class="d-inline-flex gap-1">
                                         <button
                                             type="button"
                                             class="btn btn-sm btn-outline-primary py-0 px-2"
                                             title="تعديل الحركة"
-                                            onclick='openEditTransactionModal(@json($editTxPayload))'>
+                                            data-tx-id="{{ $transaction->id }}"
+                                            data-tx-url="{{ route('treasuries.updateTransaction', [$treasury, $transaction]) }}"
+                                            data-tx-type="{{ $transaction->type }}"
+                                            data-tx-amount="{{ (float) $transaction->amount }}"
+                                            data-tx-description="{{ e($transaction->description) }}"
+                                            data-tx-date="{{ $transaction->transaction_date->format('Y-m-d') }}"
+                                            onclick="openEditTransactionModalFromBtn(this)">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ route('treasuries.deleteTransaction', [$treasury, $transaction]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الحركة المالية؟')">
@@ -551,6 +573,18 @@
         if (inInput) inInput.value = '0';
         if (outInput) outInput.value = '0';
         if (balInput) balInput.value = '0';
+    }
+
+    function openEditTransactionModalFromBtn(btn) {
+        if (!btn) return;
+        openEditTransactionModal({
+            id: btn.getAttribute('data-tx-id'),
+            url: btn.getAttribute('data-tx-url'),
+            type: btn.getAttribute('data-tx-type'),
+            amount: btn.getAttribute('data-tx-amount'),
+            description: btn.getAttribute('data-tx-description'),
+            transaction_date: btn.getAttribute('data-tx-date'),
+        });
     }
 
     function openEditTransactionModal(tx) {

@@ -36,7 +36,8 @@ final class BeneficiaryReassessmentController extends Controller
         $data['reassessed_at'] = $reassessedAt->toDateString();
         $data['next_reassessment_due_at'] = $reassessedAt->copy()->addMonths(6)->toDateString();
 
-        BeneficiaryReassessment::create($data);
+        $reassessment = BeneficiaryReassessment::create($data);
+        $this->syncReassessmentEffects($beneficiary, $reassessment);
 
         return back()->with('success', 'تم حفظ استمارة إعادة البحث الدورية (تحديث الـ 6 أشهر) بنجاح مع الاحتفاظ بكامل البيانات الأساسية للأسرة.');
     }
@@ -66,9 +67,61 @@ final class BeneficiaryReassessmentController extends Controller
         $data['reassessed_at'] = $reassessedAt->toDateString();
         $data['next_reassessment_due_at'] = $reassessedAt->copy()->addMonths(6)->toDateString();
 
-        BeneficiaryReassessment::create($data);
+        $reassessment = BeneficiaryReassessment::create($data);
+        $this->syncReassessmentEffects($beneficiaryModel, $reassessment);
 
         return back()->with('submitted_success', 'تم تسجيل استمارة إعادة البحث وتحديث بيانات الـ 6 أشهر للأسرة في النظام بنجاح!');
+    }
+
+    private function syncReassessmentEffects(Beneficiary $beneficiary, BeneficiaryReassessment $reassessment): void
+    {
+        try {
+            $recommendation = trim((string) ($reassessment->researcher_recommendation ?? ''));
+            $updates = [];
+
+            if (!empty($reassessment->requested_monthly_aid) && (float) $reassessment->requested_monthly_aid > 0) {
+                if (in_array($recommendation, ['تعديل قيمة الدعم', 'زيادة قيمة الدعم', 'تخفيض قيمة الدعم'], true)) {
+                    $updates['monthly_sponsorship_amount'] = (float) $reassessment->requested_monthly_aid;
+                }
+            }
+
+            if (in_array($recommendation, ['إيقاف الدعم', 'أرشفة الحالة - تحسن الوضع', 'أرشفة الحالة'], true)) {
+                $updates['status'] = 'under_review';
+            }
+
+            if (!empty($updates)) {
+                $beneficiary->updateQuietly($updates);
+            }
+
+            // Notify project manager & admins about the reassessment outcome
+            $project = $beneficiary->project_id ? \App\Models\Project::withoutGlobalScopes()->find($beneficiary->project_id) : null;
+            $recipientIds = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('slug', ['super_admin', 'admin']))
+                ->orWhereIn('role', ['super_admin', 'admin'])
+                ->pluck('id')
+                ->all();
+
+            $managerId = $project?->manager_user_id ?? $project?->manager_id ?? null;
+            if ($managerId) {
+                $recipientIds[] = (int) $managerId;
+            }
+
+            foreach (array_unique(array_filter($recipientIds)) as $uid) {
+                \App\Models\Notification::create([
+                    'user_id' => $uid,
+                    'title' => 'تحديث استمارة إعادة البحث الدوري (6 أشهر)',
+                    'message' => "تم تسجيل إعادة بحث للحالة: {$beneficiary->full_name} — توصية الباحث: " . ($recommendation ?: 'مراجعة دورية'),
+                    'type' => 'beneficiary_reassessment',
+                    'data' => [
+                        'beneficiary_id' => $beneficiary->id,
+                        'reassessment_id' => $reassessment->id,
+                        'recommendation' => $recommendation,
+                    ],
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to sync reassessment effects: ' . $e->getMessage());
+        }
     }
 
     public function destroy(BeneficiaryReassessment $reassessment): RedirectResponse

@@ -502,154 +502,150 @@
     </form>
 </div>
 
-<div class="row g-3">
-@foreach($donors as $donor)
-  @php 
-    $st = $donStats->get($donor->id); 
-    $hasDonated = ($st && (int)$st->count > 0 && (float)$st->total > 0);
-    $isNew = $donor->created_at ? $donor->created_at->diffInDays(now()) <= 30 : false;
-  @endphp
-  <div class="col-md-6 col-lg-4">
-    <div class="kpi-card p-4 h-100 position-relative {{ $donor->classification==='recurring' ? 'kpi-primary' : 'kpi-info' }}"
-         style="{{ !$hasDonated ? 'border-top: 4px solid #f59e0b !important; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);' : '' }}">
-      <div class="d-flex justify-content-between align-items-start mb-3">
-          <div class="d-flex align-items-center gap-3">
-             <input type="checkbox" class="form-check-input donor-check" value="{{ $donor->id }}"
-                    data-id="{{ $donor->id }}"
-                    data-code="{{ $donor->display_code }}"
-                    data-name="{{ $donor->name }}"
-                    data-type="{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}"
-                    data-phone="{{ $donor->phone ?? '—' }}"
-                    data-national-id="{{ $donor->national_id ?? '—' }}"
-                    data-classification="{{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}"
-                    data-total="{{ $st ? $st->total : 0 }}"
-                    data-total-formatted="{{ $st ? number_format($st->total, 0) : '0' }}"
-                    data-count="{{ $st ? $st->count : 0 }}"
-                    data-active="{{ $donor->active ? 'نشط' : 'غير نشط' }}"
-                    onchange="updateDonorBulkBar()"
-                    onclick="event.stopPropagation(); updateDonorBulkBar();"
-                    style="cursor: pointer; width: 1.35rem; height: 1.35rem; z-index: 2;">
-             <div class="position-relative">
-                <div class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center text-primary" style="width: 56px; height: 56px;">
-                  <i class="bi {{ $donor->type === 'individual' ? 'bi-person' : 'bi-building' }} fs-3"></i>
-                </div>
-                 @if($donor->active)
-                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-white rounded-circle" title="نشط"></span>
-                 @else
-                 <span class="position-absolute bottom-0 start-100 translate-middle p-1 bg-danger border border-white rounded-circle" title="غير نشط"></span>
-                 @endif
-             </div>
-             <div>
-                <h5 class="fw-bold mb-1 text-dark d-flex align-items-center flex-wrap gap-1">
-                    <a href="{{ route('donors.show',$donor) }}" class="text-decoration-none text-dark stretched-link-custom">{{ $donor->name }}</a>
-                    @if(!$hasDonated)
-                        <span class="badge bg-warning text-dark border border-warning rounded-pill px-2 py-0.5" style="font-size: 0.72rem; font-weight: 700;">
-                            <i class="bi bi-hourglass-split"></i> لم يتبرع بعد
-                        </span>
-                        @if($isNew)
-                            <span class="badge bg-info-subtle text-info border border-info rounded-pill px-1.5 py-0.5" style="font-size: 0.7rem;">
-                                جديد
-                            </span>
-                        @endif
-                    @endif
-                </h5>
-                <div class="text-muted small">
-                    <span class="font-monospace text-primary fw-bold">{{ $donor->display_code }}</span>
-                    • {{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}
-                    • {{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}
-                </div>
-             </div>
-          </div>
-          @php
-              $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));
-          @endphp
-          @if(isset($donor->pendingRequest) && $donor->pendingRequest && !$isManagerUser)
-              <span class="badge bg-warning bg-opacity-10 text-warning d-flex align-items-center px-3 py-2 rounded-pill small">
-                  <i class="bi bi-hourglass-split me-1"></i> قيد المراجعة
-              </span>
-          @else
-              <div class="dropdown position-relative" style="z-index: 25;">
-                  <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="bi bi-three-dots-vertical"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end shadow border" style="z-index: 10060; min-width: 220px;">
-                      <li><a class="dropdown-item" href="{{ route('donors.show',$donor) }}"><i class="bi bi-eye me-2 opacity-50"></i>عرض الملف</a></li>
-                      <li><a class="dropdown-item text-info" href="{{ route('donors.show',$donor) }}?preview=1" target="_blank"><i class="bi bi-file-earmark-text me-2 text-info"></i>معاينة التقرير قبل الطباعة</a></li>
-                      
-                      @if(auth()->check())
-                          @if($isManagerUser)
-                              <li><a class="dropdown-item text-primary" href="{{ route('donors.edit',$donor) }}"><i class="bi bi-pencil me-2 opacity-50"></i>تعديل</a></li>
-                              <li><hr class="dropdown-divider"></li>
-                              <li>
-                                <button class="dropdown-item text-danger" onclick="openCancelModal('{{ route('donors.destroy',$donor) }}', false)">
-                                    <i class="bi bi-trash me-2 opacity-50"></i>حذف المتبرع
-                                </button>
-                              </li>
-                          @else
-                              <li><a class="dropdown-item text-warning" href="{{ route('donors.edit',$donor) }}"><i class="bi bi-pencil me-2 opacity-50"></i>طلب تعديل</a></li>
-                              <li><hr class="dropdown-divider"></li>
-                              <li>
-                                <button class="dropdown-item text-warning" onclick="openCancelModal('{{ route('donors.destroy',$donor) }}', true)">
-                                    <i class="bi bi-x-circle me-2 opacity-50"></i>طلب إلغاء
-                                </button>
-                              </li>
-                          @endif
-                      @endif
-                  </ul>
-              </div>
-          @endif
-      </div>
-
-      @if(!$hasDonated)
-          <div class="alert alert-warning py-2 px-3 mb-3 mt-2 rounded-3 border-warning border-opacity-50 small d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center gap-2">
-                  <i class="bi bi-hourglass-split text-warning fs-5"></i>
-                  <div>
-                      <div class="fw-bold text-dark">لم يسجل أي تبرع حتى الآن</div>
-                      <div class="text-muted" style="font-size: 0.76rem;">
-                          {{ $isNew ? 'متبرع جديد مضاف مؤخراً' : 'سجل جديد بانتظار أول تبرع' }}
-                      </div>
-                  </div>
-              </div>
-              <span class="badge bg-warning text-dark px-2 py-1">مضاف جديد</span>
-          </div>
-      @else
-          <div class="row g-2 mb-3 mt-2 text-center">
-              <div class="col-6">
-                  <div class="bg-light rounded p-2">
-                      <div class="small text-muted mb-1">إجمالي التبرعات</div>
-                      <div class="fw-bold text-dark">{{ number_format($st->total, 0) }}</div>
-                  </div>
-              </div>
-              <div class="col-6">
-                  <div class="bg-light rounded p-2">
-                      <div class="small text-muted mb-1">عدد المرات</div>
-                      <div class="fw-bold text-dark">{{ $st->count }}</div>
-                  </div>
-              </div>
-          </div>
-      @endif
-
-      <div class="d-flex align-items-center justify-content-between pt-2 border-top">
-           <div class="text-muted small">
-              <i class="bi bi-telephone me-1"></i> <span dir="ltr">{{ $donor->phone ?? '—' }}</span>
-              @if($donor->national_id)
-                <span class="mx-1">•</span> <i class="bi bi-card-heading me-1 text-primary"></i> <span dir="ltr" class="font-monospace">{{ $donor->national_id }}</span>
-              @endif
-           </div>
-           @if(!$hasDonated)
-               <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" style="position: relative; z-index: 1;">
-                  <i class="bi bi-plus-circle me-1"></i> تسجيل أول تبرع
-               </a>
-           @else
-               <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3" style="position: relative; z-index: 1;">
-                  <i class="bi bi-plus-lg me-1"></i> تبرع
-               </a>
-           @endif
-      </div>
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <input type="checkbox" class="form-check-input mt-0" onclick="toggleAllDonors(this.checked)" title="تحديد الكل" style="width: 1.2rem; height: 1.2rem; cursor: pointer;">
+      <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul text-primary me-1"></i> قائمة المتبرعين ({{ $donors->total() }} متبرع)</h6>
+    </div>
+    <div class="d-flex align-items-center gap-2 small text-muted">
+      <span>عرض في الصفحة:</span>
+      @foreach([30, 50, 100] as $pp)
+        <a href="{{ request()->fullUrlWithQuery(['per_page' => $pp]) }}" class="btn btn-sm {{ (int)request('per_page', 30) === $pp ? 'btn-primary' : 'btn-outline-secondary' }} rounded-pill px-2.5 py-0.5">{{ $pp }}</a>
+      @endforeach
     </div>
   </div>
-@endforeach
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light text-muted small">
+        <tr>
+          <th style="width: 42px;" class="ps-3"></th>
+          <th>الكود</th>
+          <th>اسم المتبرع</th>
+          <th>الهاتف / الرقم القومي</th>
+          <th>النوع والتصنيف</th>
+          <th>الكفالة والحالات المكفولة</th>
+          <th class="text-center">إجمالي التبرعات</th>
+          <th class="text-center">المرات</th>
+          <th class="text-end pe-4">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($donors as $donor)
+          @php
+            $st = $donStats->get($donor->id);
+            $hasDonated = ($st && (int)$st->count > 0 && (float)$st->total > 0);
+            $isNew = $donor->created_at ? $donor->created_at->diffInDays(now()) <= 30 : false;
+            $isManagerUser = auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager'));
+            $fmParentIds = $donor->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+            $directBens = $donor->sponsoredBeneficiaries->filter(fn($sb) => !in_array($sb->id, $fmParentIds, true) || ((float)($sb->pivot?->monthly_amount ?? 0) > 0));
+          @endphp
+          <tr style="{{ !$hasDonated ? 'background: rgba(245, 158, 11, 0.04);' : '' }}">
+            <td class="ps-3">
+              <input type="checkbox" class="form-check-input donor-check" value="{{ $donor->id }}"
+                     data-id="{{ $donor->id }}"
+                     data-code="{{ $donor->display_code }}"
+                     data-name="{{ $donor->name }}"
+                     data-type="{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}"
+                     data-phone="{{ $donor->phone ?? '—' }}"
+                     data-national-id="{{ $donor->national_id ?? '—' }}"
+                     data-classification="{{ $donor->classification==='recurring' ? 'متكرر' : 'مرة واحدة' }}"
+                     data-total="{{ $st ? $st->total : 0 }}"
+                     data-total-formatted="{{ $st ? number_format($st->total, 0) : '0' }}"
+                     data-count="{{ $st ? $st->count : 0 }}"
+                     data-active="{{ $donor->active ? 'نشط' : 'غير نشط' }}"
+                     onchange="updateDonorBulkBar()"
+                     onclick="event.stopPropagation(); updateDonorBulkBar();"
+                     style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
+            </td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary font-monospace px-2.5 py-1">{{ $donor->display_code }}</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="p-1.5 rounded-circle {{ $donor->active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}" title="{{ $donor->active ? 'نشط' : 'غير نشط' }}">
+                  <i class="bi {{ $donor->type === 'individual' ? 'bi-person-fill' : 'bi-building' }}"></i>
+                </span>
+                <div>
+                  <a href="{{ route('donors.show', $donor) }}" class="fw-bold text-dark text-decoration-none d-block">{{ $donor->name }}</a>
+                  @if(!$hasDonated)
+                    <span class="badge bg-warning text-dark rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">
+                      <i class="bi bi-hourglass-split"></i> لم يتبرع بعد {{ $isNew ? '(جديد)' : '' }}
+                    </span>
+                  @endif
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="small font-monospace" dir="ltr">{{ $donor->phone ?: '—' }}</div>
+              @if($donor->national_id)
+                <div class="text-muted font-monospace" style="font-size: 0.72rem;" dir="ltr">{{ $donor->national_id }}</div>
+              @endif
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ $donor->type === 'individual' ? 'فرد' : 'منظمة' }}</span>
+              <span class="badge {{ $donor->classification === 'recurring' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-info-subtle text-info-emphasis border border-info-subtle' }}">
+                {{ $donor->classification === 'recurring' ? 'متكرر' : 'مرة واحدة' }}
+              </span>
+            </td>
+            <td>
+              @if((float)($donor->sponsorship_monthly_amount ?? 0) > 0)
+                <div class="fw-bold text-success font-monospace small mb-1">
+                  {{ number_format((float)$donor->sponsorship_monthly_amount, 0) }} ج.م / شهرياً
+                </div>
+              @endif
+              <div class="d-flex flex-wrap gap-1">
+                @foreach($donor->sponsoredFamilyMembers as $fm)
+                  <a href="{{ route('beneficiary-family-members.show', $fm) }}" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none">
+                    👶 {{ $fm->full_name }} @if($fm->pivot?->monthly_amount > 0) ({{ number_format((float)$fm->pivot->monthly_amount, 0) }} ج) @endif
+                  </a>
+                @endforeach
+                @foreach($directBens as $sb)
+                  <a href="{{ route('beneficiaries.show', $sb) }}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none">
+                    🏠 {{ $sb->full_name }} @if($sb->pivot?->monthly_amount > 0) ({{ number_format((float)$sb->pivot->monthly_amount, 0) }} ج) @endif
+                  </a>
+                @endforeach
+                @if($donor->sponsoredFamilyMembers->isEmpty() && $directBens->isEmpty())
+                  <span class="text-muted small">{{ $donor->monthly_allocation_target ?: '—' }}</span>
+                @endif
+              </div>
+            </td>
+            <td class="text-center font-monospace fw-bold text-dark">
+              {{ $hasDonated ? number_format((float)$st->total, 0) . ' ج.م' : '0' }}
+            </td>
+            <td class="text-center font-monospace">
+              <span class="badge bg-light text-dark border">{{ $hasDonated ? $st->count : 0 }}</span>
+            </td>
+            <td class="text-end pe-4">
+              <div class="d-inline-flex align-items-center gap-1">
+                <a href="{{ route('donations.create', ['donor_id' => $donor->id]) }}" class="btn btn-sm {{ !$hasDonated ? 'btn-success' : 'btn-primary' }} rounded-pill px-2.5 fw-bold">
+                  <i class="bi bi-plus-lg"></i> تبرع
+                </a>
+                <a href="{{ route('donors.show', $donor) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="عرض الملف">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{{ route('donors.edit', $donor) }}" class="btn btn-sm btn-outline-primary rounded-pill px-2" title="تعديل">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                @if(auth()->check())
+                  <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="openCancelModal('{{ route('donors.destroy', $donor) }}', {{ $isManagerUser ? 'false' : 'true' }})" title="حذف">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                @endif
+              </div>
+            </td>
+          </tr>
+        @empty
+          <tr>
+            <td colspan="9" class="text-center py-5 text-muted">
+              <i class="bi bi-people fs-2 d-block mb-2 opacity-50"></i>
+              لا يوجد متبرعون مطابقون لمعايير البحث الحالية.
+            </td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {{-- Bulk Action Bar --}}
@@ -754,9 +750,9 @@
             <div class="modal-body p-4">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label fw-bold">اسم المتبرع بالكامل (ثلاثي على الأقل) <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-lg" placeholder="مثال: محمد أحمد علي محمود" required pattern="^(\S+\s+){2,}\S+.*$" title="يرجى إدخال اسم ثلاثي على الأقل (3 كلمات مفصولة بمسافات)">
-                        <div class="form-text">يجب أن يكون الاسم ثلاثياً على الأقل ومميزاً.</div>
+                        <label class="form-label fw-bold">اسم المتبرع بالكامل (ثنائي أو ثلاثي) <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control form-control-lg" placeholder="مثال: محمد أحمد" required pattern="^(\S+\s+){1,}\S+.*$" title="يرجى إدخال اسم ثنائي أو ثلاثي على الأقل (كلمتين أو أكثر مفصولة بمسافات)">
+                        <div class="form-text">يمكن أن يكون الاسم ثنائياً أو ثلاثياً بشرط أن يكون مميزاً.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">نوع المتبرع <span class="text-danger">*</span></label>

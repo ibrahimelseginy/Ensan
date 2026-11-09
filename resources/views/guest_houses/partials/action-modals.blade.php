@@ -109,9 +109,10 @@
                         <div class="form-section-title"><i class="bi bi-person-lines-fill"></i> <span>بيانات المريض (الحالة)</span></div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">كود المستفيد</label>
+                                <label class="form-label">كود المستفيد <span class="badge bg-success-subtle text-success small">يبقى ثابتاً للحالات المسجلة</span></label>
                                 <input name="code" id="gh_patient_code" class="form-control @error('code') is-invalid @enderror"
-                                    value="{{ old('code') }}" placeholder="يُنشأ تلقائيًا عند تركه فارغًا">
+                                    value="{{ old('code') }}" placeholder="يُنشأ تلقائيًا عند تركه فارغًا أو يُحفظ كود الحالة الأصلي">
+                                <div class="form-text small text-muted">عند اختيار مريض مسجل مسبقاً يتم الاحتفاظ بكوده الأساسي دون تغيير.</div>
                                 @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">

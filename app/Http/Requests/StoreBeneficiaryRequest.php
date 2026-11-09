@@ -141,38 +141,60 @@ final class StoreBeneficiaryRequest extends FormRequest
             $this->merge(['allocated_beneficiary_ids' => []]);
         }
 
-        // في نموذج دار الضيافة: إذا أدخل الموظف كود أو رقم قومي أو اسم لمستفيد مسجل مسبقاً دون الضغط على قائمة البحث، يتم ربطه تلقائياً بالمستفيد المسجل
-        $isGuestHouseForm = $this->input('form_context') === 'guest_house_beneficiary' || $this->has('guest_house_bed_id');
-        if ($isGuestHouseForm && ! $this->filled('existing_beneficiary_id')) {
-            $matchedBeneficiary = null;
-            $codeInput = trim((string) $this->input('code', ''));
-            $nidInput = trim((string) $this->input('national_id', ''));
-            $nameInput = trim((string) $this->input('full_name', ''));
+        // في نموذج دار الضيافة: الحفاظ التام على كود المستفيد الأصلي وعدم تغييره، ومنع تعارض الكود التلقائي
+        $isGuestHouseForm = $this->input('form_context') === 'guest_house_beneficiary' || $this->has('guest_house_bed_id') || $this->has('treatment_type');
+        if ($isGuestHouseForm) {
+            if (! $this->filled('existing_beneficiary_id')) {
+                $matchedBeneficiary = null;
+                $nidInput = trim((string) $this->input('national_id', ''));
+                $nameInput = trim((string) $this->input('full_name', ''));
+                $codeInput = trim((string) $this->input('code', ''));
 
-            if ($codeInput !== '') {
-                $matchedBeneficiary = Beneficiary::query()
-                    ->where('code', $codeInput)
-                    ->orWhere('patient_code', $codeInput)
-                    ->first();
-            }
+                if ($nidInput !== '' && strlen($nidInput) >= 10) {
+                    $matchedBeneficiary = Beneficiary::query()
+                        ->where('national_id', $nidInput)
+                        ->first();
+                }
 
-            if (! $matchedBeneficiary && $nidInput !== '' && strlen($nidInput) >= 10) {
-                $matchedBeneficiary = Beneficiary::query()
-                    ->where('national_id', $nidInput)
-                    ->first();
-            }
+                if (! $matchedBeneficiary && $nameInput !== '') {
+                    $matchedBeneficiary = Beneficiary::query()
+                        ->where('full_name', $nameInput)
+                        ->orWhere('patient_name', $nameInput)
+                        ->first();
+                    if (! $matchedBeneficiary) {
+                        $dupId = UniqueBeneficiaryName::existingBeneficiaryId(UniqueBeneficiaryName::normalize($nameInput));
+                        if ($dupId) {
+                            $matchedBeneficiary = Beneficiary::find($dupId);
+                        }
+                    }
+                }
 
-            if (! $matchedBeneficiary && $nameInput !== '') {
-                $matchedBeneficiary = Beneficiary::query()
-                    ->where('full_name', $nameInput)
-                    ->orWhere('patient_name', $nameInput)
-                    ->first();
-            }
+                if (! $matchedBeneficiary && $codeInput !== '' && ! str_starts_with($codeInput, 'G-')) {
+                    $matchedBeneficiary = Beneficiary::query()
+                        ->where('code', $codeInput)
+                        ->orWhere('patient_code', $codeInput)
+                        ->first();
+                }
 
-            if ($matchedBeneficiary) {
-                $this->merge([
-                    'existing_beneficiary_id' => $matchedBeneficiary->id,
-                ]);
+                if ($matchedBeneficiary) {
+                    $this->merge([
+                        'existing_beneficiary_id' => $matchedBeneficiary->id,
+                        'code' => $matchedBeneficiary->code ?: $codeInput,
+                    ]);
+                } elseif ($codeInput !== '' && Beneficiary::where('code', $codeInput)->exists()) {
+                    // إذا كان الكود التلقائي G-XXXXX محجوزاً بالفعل لحالة أخرى، يتم توليد الكود التالي المتاح تلقائياً
+                    $this->merge([
+                        'code' => Beneficiary::nextGuestCode(),
+                    ]);
+                }
+            } else {
+                $existingBen = Beneficiary::find((int) $this->input('existing_beneficiary_id'));
+                if ($existingBen && !empty($existingBen->code)) {
+                    // الحفاظ على كود المستفيد الأصلي كما هو دون أي تغيير عند دخوله نزيل بالدار
+                    $this->merge([
+                        'code' => $existingBen->code,
+                    ]);
+                }
             }
         }
     }

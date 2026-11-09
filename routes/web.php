@@ -1003,6 +1003,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('guest-houses/{guest_house}/beneficiaries/{beneficiary}/manager-notes', [GuestHouseWebController::class, 'saveManagerNotes'])
         ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.beneficiaries.saveNotes');
+    Route::post('guest-houses/{guest_house}/beneficiaries/{beneficiary}/update-companion', [GuestHouseWebController::class, 'updateCompanion'])
+        ->middleware(['permission:guest_houses.view'])
+        ->name('guest-houses.beneficiaries.update-companion');
     Route::post('guest-houses/{guest_house}/donations', [GuestHouseWebController::class, 'storeDonation'])
         ->middleware(['permission:guest_houses.view'])
         ->name('guest-houses.storeDonation');
@@ -1052,9 +1055,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('visits/{visit}/final-approval', [\App\Http\Controllers\VisitWebController::class, 'finalApproval'])->name('visits.final-approval');
         Route::resource('visits', \App\Http\Controllers\VisitWebController::class);
     });
-    Route::middleware('permission:reception.view')
-        ->resource('reception', \App\Http\Controllers\ReceptionWebController::class)
-        ->only(['index', 'store']);
+    Route::middleware('permission:reception.view')->group(function () {
+        Route::resource('reception', \App\Http\Controllers\ReceptionWebController::class)
+            ->only(['index', 'store']);
+        Route::post('reception/expenses', [\App\Http\Controllers\ReceptionWebController::class, 'storeExpense'])
+            ->name('reception.expenses.store');
+        Route::post('reception/custody-deposit', [\App\Http\Controllers\ReceptionWebController::class, 'storeCustodyDeposit'])
+            ->name('reception.custody.deposit');
+    });
     Route::resource('tasks', TaskWebController::class);
 
 });

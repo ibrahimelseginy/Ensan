@@ -245,10 +245,23 @@
                       <div class="col-6"><span class="text-muted">العمر:</span> {{ $member->birth_date ? $member->birth_date->age . ' سنة' : ($member->age ? $member->age . ' سنة' : '—') }}</div>
                       <div class="col-6"><span class="text-muted">الميلاد:</span> {{ optional($member->birth_date)->format('Y-m-d') ?? ($member->age ? \Carbon\Carbon::now()->subYears((int) $member->age)->format('Y') . ' (تقديري)' : '—') }}</div>
                       <div class="col-6"><span class="text-muted">التعليم:</span> {{ $member->education_level ?? '—' }}</div>
-                      <div class="col-6">
-                        <span class="text-muted">الكفالة:</span> 
-                        @if($member->sponsorship_amount && (float)$member->sponsorship_amount > 0)
-                          <span class="badge bg-success-subtle text-success border border-success fw-bold px-2 py-0.5">{{ number_format((float)$member->sponsorship_amount, 2) }} ج.م</span>
+                      @php
+                        $memReqAmt = (float) ($member->sponsorship_amount ?? 0);
+                        $memCovAmt = (float) $member->sponsors->sum(fn ($s) => (float) ($s->pivot->monthly_amount ?? 0));
+                        $memRemAmt = max(0.0, $memReqAmt - $memCovAmt);
+                      @endphp
+                      <div class="col-12">
+                        <span class="text-muted">الكفالة الشهرية للطفل:</span>
+                        @if($memReqAmt > 0 || $memCovAmt > 0)
+                          <div class="d-flex flex-wrap gap-1 mt-1">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">المطلوب: {{ number_format($memReqAmt > 0 ? $memReqAmt : $memCovAmt, 0) }} ج.م</span>
+                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1">المكفول: {{ number_format($memCovAmt, 0) }} ج.م</span>
+                            @if($memRemAmt > 0)
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">باقي الكفالة: {{ number_format($memRemAmt, 0) }} ج.م</span>
+                            @elseif($memReqAmt > 0)
+                              <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-circle me-0.5"></i> مكفول بالكامل</span>
+                            @endif
+                          </div>
                         @else
                           <span class="text-muted small">بدون كفالة خاصة</span>
                         @endif
@@ -326,10 +339,17 @@
                           </select>
                         </div>
 
-                        <div class="mb-3">
-                          <label class="form-label fw-bold text-dark mb-1">مبلغ الكفالة الشهري للطفل (ج.م)</label>
-                          <input type="number" step="0.01" min="0" name="monthly_amount" value="{{ $member->sponsorship_amount }}" class="form-control rounded-3" placeholder="مثال: 200 أو 1500">
-                          <div class="form-text text-muted small">سيتم تحديث مبلغ كفالة الطفل ويُضاف إلى إجمالي كفالات الأسرة.</div>
+                        <div class="row g-2 mb-3">
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark mb-1">مساهمة هذا الكافل شهرياً (ج.م) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" name="monthly_amount" value="{{ $memRemAmt > 0 ? $memRemAmt : $member->sponsorship_amount }}" class="form-control rounded-3 font-monospace" placeholder="مثال: 500">
+                            <div class="form-text text-muted small">المبلغ الذي يدفعه هذا المتبرع لصالح الطفل.</div>
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark mb-1">إجمالي الكفالة المطلوبة للطفل (ج.م)</label>
+                            <input type="number" step="0.01" min="0" name="required_sponsorship_amount" value="{{ $member->sponsorship_amount }}" class="form-control rounded-3 font-monospace" placeholder="مثال: 1500">
+                            <div class="form-text text-muted small">إجمالي احتياج الكفالة للطفل (لإظهار المتبقي إن كانت الكفالة جزئية).</div>
+                          </div>
                         </div>
 
                         <div class="mb-2">
@@ -537,13 +557,31 @@
                 </div>
 
                 {{-- Financial & Child Breakdown --}}
-                <div class="d-flex align-items-center justify-content-between bg-light rounded-3 p-2.5 my-2 border">
-                  <div>
-                    <span class="text-muted small">إجمالي الكفالة الشهرية للأسرة:</span>
-                    <strong class="text-success fs-6 font-monospace d-block">{{ number_format($beneficiary->total_family_sponsorship_amount, 2) }} ج.م</strong>
+                @php
+                  $reqFamilyTotal = $beneficiary->total_family_sponsorship_amount;
+                  $covFamilyTotal = $beneficiary->covered_family_sponsorship_amount;
+                  $remFamilyTotal = $beneficiary->remaining_family_sponsorship_amount;
+                @endphp
+                <div class="bg-light rounded-3 p-2.5 my-2 border">
+                  <div class="row g-2 align-items-center text-center text-md-start">
+                    <div class="col-4 border-end">
+                      <span class="text-muted small d-block">إجمالي الكفالة المطلوبة:</span>
+                      <strong class="text-primary fs-6 font-monospace">{{ number_format($reqFamilyTotal, 2) }} ج.م</strong>
+                    </div>
+                    <div class="col-4 border-end">
+                      <span class="text-muted small d-block">المكفول حالياً (من الكفلاء):</span>
+                      <strong class="text-success fs-6 font-monospace">{{ number_format($covFamilyTotal, 2) }} ج.م</strong>
+                    </div>
+                    <div class="col-4">
+                      <span class="text-muted small d-block">باقي الكفالة (غير مكفول):</span>
+                      <strong class="{{ $remFamilyTotal > 0 ? 'text-danger' : 'text-success' }} fs-6 font-monospace">
+                        {{ number_format($remFamilyTotal, 2) }} ج.م
+                      </strong>
+                    </div>
                   </div>
                   @if($beneficiary->sponsored_children_count_calculated > 0)
-                    <div class="text-end">
+                    <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-1">
+                      <span class="small text-muted">عدد الأفراد/الأطفال المشمولين بالكفالة داخل الأسرة:</span>
                       <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-bold">
                         <i class="bi bi-people-fill me-1"></i>{{ $beneficiary->sponsored_children_count_calculated }} أفراد/أطفال مكفولين
                       </span>
@@ -554,10 +592,18 @@
                 <div class="mt-2 pt-2 border-top small">
                   @if($allBeneficiarySponsors->isNotEmpty())
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <span class="text-muted">الكفلاء المعتمدون:</span>
+                      <span class="text-muted">الكفلاء المعتمدون وتوزيع مبالغهم:</span>
                       @foreach($allBeneficiarySponsors as $sp)
+                        @php
+                          $spDirectAmt = (float) ($beneficiary->sponsors->firstWhere('id', $sp->id)?->pivot?->monthly_amount ?? 0);
+                          $spMembersAmt = (float) $beneficiary->familyMembers->sum(fn ($fm) => (float) ($fm->sponsors->firstWhere('id', $sp->id)?->pivot?->monthly_amount ?? 0));
+                          $spTotalForThisBeneficiary = $spDirectAmt + $spMembersAmt;
+                        @endphp
                         <a href="{{ route('donors.show', $sp) }}" class="badge bg-success-subtle text-success text-decoration-none px-2.5 py-1.5 rounded-pill border border-success-subtle">
                           <i class="bi bi-person-heart me-1"></i>{{ $sp->name }} <span class="font-monospace opacity-75">({{ $sp->display_code }})</span>
+                          @if($spTotalForThisBeneficiary > 0)
+                            <span class="badge bg-success text-white ms-1">{{ number_format($spTotalForThisBeneficiary, 0) }} ج.م</span>
+                          @endif
                         </a>
                       @endforeach
                     </div>
@@ -1986,7 +2032,7 @@ function toggleQuickUploadTarget(val) {
 {{-- Modal: Quick Record Direct Aid / Assistance --}}
 <div class="modal fade" id="recordDirectAidModal" tabindex="-1" aria-labelledby="recordDirectAidModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <form action="{{ route('beneficiaries.record-direct-aid', $beneficiary) }}" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+    <form action="{{ route('beneficiaries.record-direct-aid', $beneficiary) }}" method="POST" enctype="multipart/form-data" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
       @csrf
       <div class="modal-header py-3 px-4 text-white border-0" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
         <div class="d-flex align-items-center gap-2">
@@ -2095,6 +2141,15 @@ function toggleQuickUploadTarget(val) {
             <div class="form-text small text-muted">في حال اختيار متبرع، سيتم ربطه تلقائياً ككافل في ملف الحالة إن لم يكن مرتبطاً مسبقاً.</div>
           </div>
 
+          {{-- Prescriptions / Invoices / Attachments --}}
+          <div class="col-12">
+            <label class="form-label fw-bold small text-dark mb-1">
+              <i class="bi bi-file-earmark-medical text-primary me-1"></i>إرفاق صور روشتات أو فواتير أو مستندات الصرف (اختياري)
+            </label>
+            <input type="file" name="attachments[]" class="form-control rounded-3" multiple accept="image/*,.pdf">
+            <div class="form-text small text-muted">يمكنك اختيار صورة أو أكثر (روشتة علاج، فاتورة أدوية، إيصال استلام) وسيتم حفظها في سجل المساعدة ومرفقات الحالة.</div>
+          </div>
+
           {{-- Notes --}}
           <div class="col-12">
             <label class="form-label fw-bold small text-dark mb-1">ملاحظات وبيان التسليم</label>
@@ -2162,9 +2217,17 @@ function toggleQuickUploadTarget(val) {
           </select>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-bold text-dark mb-1">قيمة الكفالة الشهرية (ج.م) <small class="text-muted">(اختياري للتحديث)</small></label>
-          <input type="number" step="0.01" min="0" name="monthly_amount" class="form-control rounded-3 font-monospace" placeholder="مثال: 500.00">
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark mb-1">مساهمة هذا الكفيل شهرياً (ج.م) <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" min="0" name="monthly_amount" value="{{ $beneficiary->remaining_family_sponsorship_amount > 0 ? $beneficiary->remaining_family_sponsorship_amount : '' }}" class="form-control rounded-3 font-monospace" placeholder="مثال: 500.00">
+            <div class="form-text small text-muted">المبلغ الذي يدفعه هذا المتبرع لصالح الحالة.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark mb-1">إجمالي الكفالة المطلوبة للحالة (ج.م)</label>
+            <input type="number" step="0.01" min="0" name="required_sponsorship_amount" value="{{ $beneficiary->monthly_sponsorship_amount }}" class="form-control rounded-3 font-monospace" placeholder="مثال: 1500.00">
+            <div class="form-text small text-muted">إجمالي ما تحتاجه الحالة (لحساب باقي الكفالة تلقائياً).</div>
+          </div>
         </div>
 
         <div class="mb-2">

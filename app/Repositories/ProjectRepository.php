@@ -15,8 +15,13 @@ final readonly class ProjectRepository
         $q      = $filters['q'] ?? null;
         $status = $filters['status'] ?? null;
         $fixed  = $filters['fixed'] ?? null;
+        $user   = auth()->user();
+        $allowedProjectIds = ($user && method_exists($user, 'getAccessibleProjectIds'))
+            ? $user->getAccessibleProjectIds()
+            : null;
 
         return Project::query()
+            ->when(is_array($allowedProjectIds), fn($qr) => $qr->whereIn('id', $allowedProjectIds ?: [0]))
             ->when($q, fn($qr) => $qr->where('name', 'like', '%' . $q . '%'))
             ->when($status, fn($qr) => $qr->where('status', $status))
             ->when($fixed !== null && $fixed !== '', fn($qr) => $qr->where('fixed', (bool) $fixed))

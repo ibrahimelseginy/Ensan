@@ -30,14 +30,14 @@
             <div class="form-text">كود ثابت لا يمكن تغييره بعد إنشاء المتبرع.</div>
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-bold">الاسم بالكامل (ثلاثي على الأقل) <span class="text-danger">*</span></label>
+            <label class="form-label fw-bold">الاسم بالكامل (ثنائي أو ثلاثي) <span class="text-danger">*</span></label>
             <input name="name" class="form-control @error('name') is-invalid @enderror"
               value="{{ old('name', $donor->name) }}"
-              placeholder="مثال: محمد أحمد علي"
-              pattern="^(\S+\s+){2,}\S+.*$"
-              title="يجب إدخال اسم ثلاثي على الأقل (3 كلمات مفصولة بمسافات)"
+              placeholder="مثال: محمد أحمد"
+              pattern="^(\S+\s+){1,}\S+.*$"
+              title="يجب إدخال اسم ثنائي أو ثلاثي على الأقل (كلمتين أو أكثر مفصولة بمسافات)"
               required>
-            <div class="form-text">يجب أن يكون الاسم ثلاثياً على الأقل ومميزاً غير مكرر.</div>
+            <div class="form-text">يمكن إدخال الاسم ثنائياً أو ثلاثياً بشرط أن يكون مميزاً غير مكرر.</div>
             @error('name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -160,27 +160,79 @@
           <input type="hidden" name="sync_sponsored_beneficiaries" value="1">
           <input type="hidden" name="sync_sponsored_family_members" value="1">
           <div class="col-12 ed-alloc ed-alloc-sponsorship" id="edSponsorshipBeneficiaryBox" style="display:none">
-            <label class="form-label fw-bold">الأطفال / الحالات المكفولة</label>
             @php
               $selectedSponsoredBeneficiaries = array_map(
                 'intval',
                 old('sponsored_family_member_ids', $donor->sponsoredFamilyMembers->modelKeys())
               );
+              $familyMemberParentIds = $donor->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+              $directSponsoredBeneficiaryIds = $donor->sponsoredBeneficiaries
+                ->filter(fn ($sb) => !in_array($sb->id, $familyMemberParentIds, true) || ((float)($sb->pivot?->monthly_amount ?? 0) > 0))
+                ->pluck('id')
+                ->all();
+              $selectedDirectBeneficiaries = array_map(
+                'intval',
+                old('sponsored_beneficiary_ids', $directSponsoredBeneficiaryIds)
+              );
+              $existingMemberAmounts = [];
+              foreach ($donor->sponsoredFamilyMembers as $fm) {
+                if ((float) ($fm->pivot?->monthly_amount ?? 0) > 0) {
+                  $existingMemberAmounts[$fm->id] = (float) $fm->pivot->monthly_amount;
+                }
+              }
+              $existingBenAmounts = [];
+              foreach ($donor->sponsoredBeneficiaries as $sb) {
+                if ((float) ($sb->pivot?->monthly_amount ?? 0) > 0) {
+                  $existingBenAmounts[$sb->id] = (float) $sb->pivot->monthly_amount;
+                }
+              }
             @endphp
-            <select name="sponsored_family_member_ids[]" id="edSponsorshipBeneficiaries" class="form-select"
-              data-placeholder="ابحث باسم الطفل أو كود الحالة..." multiple>
-              @foreach($familyMembers as $member)
-                <option value="{{ $member->id }}" @selected(in_array((int) $member->id, $selectedSponsoredBeneficiaries, true))>
-                  {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary?->full_name ?? 'الأسرة' }} — {{ $member->code }}
-                </option>
-              @endforeach
-            </select>
-            <div class="form-text">يمكن اختيار أي عدد من الأطفال أو الحالات بدون حد أقصى.</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold">الأطفال / أفراد الأسر المكفولون</label>
+                <select name="sponsored_family_member_ids[]" id="edSponsorshipBeneficiaries" class="form-select"
+                  data-placeholder="ابحث باسم الطفل أو كود الحالة..." multiple>
+                  @foreach($familyMembers as $member)
+                    <option value="{{ $member->id }}"
+                      data-default-amount="{{ (float) ($member->sponsorship_amount ?? 0) }}"
+                      data-label="{{ $member->full_name }} ({{ $member->code }})"
+                      @selected(in_array((int) $member->id, $selectedSponsoredBeneficiaries, true))>
+                      {{ $member->full_name }} — {{ $member->relationship_label }} — أسرة {{ $member->beneficiary?->full_name ?? 'الأسرة' }} — {{ $member->code }} @if($member->sponsorship_amount > 0) (كفالة مطلوبة: {{ number_format((float)$member->sponsorship_amount, 0) }} ج) @endif
+                    </option>
+                  @endforeach
+                </select>
+                <div class="form-text">اختر طفلاً أو أكثر لتخصيص مبلغ كفالة مستقل لكل طفل.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">أو ملفات الأسر / الحالات الكاملة المكفولة</label>
+                <select name="sponsored_beneficiary_ids[]" id="edSponsorshipFullFamilies" class="form-select"
+                  data-placeholder="ابحث باسم ولي الأمر أو كود الأسرة..." multiple>
+                  @foreach($beneficiaries as $ben)
+                    <option value="{{ $ben->id }}"
+                      data-default-amount="{{ (float) ($ben->monthly_sponsorship_amount ?? 0) }}"
+                      data-label="{{ $ben->full_name }} ({{ $ben->code }})"
+                      @selected(in_array((int) $ben->id, $selectedDirectBeneficiaries, true))>
+                      {{ $ben->full_name }} — {{ $ben->code }} @if($ben->monthly_sponsorship_amount > 0) (كفالة مطلوبة: {{ number_format((float)$ben->monthly_sponsorship_amount, 0) }} ج) @endif
+                    </option>
+                  @endforeach
+                </select>
+                <div class="form-text">اختر أسرة أو أكثر لتخصيص مبلغ الكفالة لكل حالة على حدة.</div>
+              </div>
+              <div class="col-12" id="edCaseAmountsBreakdownWrap" style="display:none;">
+                <div class="p-3 rounded-3 bg-light border border-success-subtle">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-success small"><i class="bi bi-calculator me-1"></i>توزيع مبالغ الكفالة على الحالات المختارة (حدد المبلغ الرايح لصالح كل حالة):</span>
+                    <span class="badge bg-success-subtle text-success border border-success font-monospace" id="edCaseAmountsAutoTotalBadge">الإجمالي المحسوب: 0 ج.م</span>
+                  </div>
+                  <div id="edCaseAmountsBreakdownRows" class="row g-2"></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="col-md-6 ed-alloc ed-alloc-sponsorship" style="display:none">
-            <label class="form-label">مبلغ الكفالة الشهري</label>
-            <input name="sponsorship_monthly_amount" class="form-control" value="{{ $donor->sponsorship_monthly_amount }}"
-              placeholder="مثال: 500.00">
+            <label class="form-label fw-bold">إجمالي مبلغ الكفالة الشهري (يُحسب تلقائياً من مجموع الحالات)</label>
+            <input name="sponsorship_monthly_amount" id="edSponsorshipMonthlyAmountInput" type="number" step="0.01" min="0" class="form-control fw-bold font-monospace" value="{{ $donor->sponsorship_monthly_amount }}"
+              placeholder="مثال: 800.00">
           </div>
           <div class="col-12 ed-alloc ed-alloc-sponsorship" style="display:none">
             <label class="form-label fw-bold">إذا لم تحدد طفلًا، اكتب التبرع الشهري موجهًا لإيه</label>
@@ -261,10 +313,91 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
     $(function () {
-      $('#edSponsorshipBeneficiaries').select2({
+      $('#edSponsorshipBeneficiaries, #edSponsorshipFullFamilies').select2({
         theme: 'bootstrap-5', width: '100%', dir: 'rtl',
-        placeholder: 'ابحث باسم الطفل أو كود الحالة...', closeOnSelect: false
+        closeOnSelect: false
       });
+
+      const savedMemberAmounts = @json(old('sponsorship_family_member_amounts', $existingMemberAmounts ?? []));
+      const savedBenAmounts = @json(old('sponsorship_beneficiary_amounts', $existingBenAmounts ?? []));
+
+      function renderEdCaseAmountsInputs() {
+        const container = $('#edCaseAmountsBreakdownRows');
+        const wrap = $('#edCaseAmountsBreakdownWrap');
+        container.find('input[data-case-key]').each(function () {
+          const k = $(this).attr('data-case-key');
+          const v = $(this).val();
+          if (k.startsWith('fm_')) {
+            savedMemberAmounts[k.replace('fm_', '')] = v;
+          } else if (k.startsWith('ben_')) {
+            savedBenAmounts[k.replace('ben_', '')] = v;
+          }
+        });
+
+        container.empty();
+        let count = 0;
+
+        $('#edSponsorshipBeneficiaries option:selected').each(function () {
+          count++;
+          const id = $(this).val();
+          const label = $(this).attr('data-label') || $(this).text().trim();
+          const defAmt = parseFloat($(this).attr('data-default-amount') || '0');
+          const curVal = (savedMemberAmounts[id] !== undefined && savedMemberAmounts[id] !== null && savedMemberAmounts[id] !== '')
+            ? savedMemberAmounts[id]
+            : (defAmt > 0 ? defAmt : '');
+          container.append(`
+            <div class="col-md-6">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white fw-bold text-truncate" style="max-width: 62%;" title="${label}">👶 ${label}</span>
+                <input type="number" step="0.01" min="0" name="sponsorship_family_member_amounts[${id}]"
+                  data-case-key="fm_${id}" class="form-control font-monospace ed-case-split-amount-input"
+                  placeholder="مبلغ الكفالة (مثال: 500)" value="${curVal}">
+                <span class="input-group-text">ج.م</span>
+              </div>
+            </div>
+          `);
+        });
+
+        $('#edSponsorshipFullFamilies option:selected').each(function () {
+          count++;
+          const id = $(this).val();
+          const label = $(this).attr('data-label') || $(this).text().trim();
+          const defAmt = parseFloat($(this).attr('data-default-amount') || '0');
+          const curVal = (savedBenAmounts[id] !== undefined && savedBenAmounts[id] !== null && savedBenAmounts[id] !== '')
+            ? savedBenAmounts[id]
+            : (defAmt > 0 ? defAmt : '');
+          container.append(`
+            <div class="col-md-6">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white fw-bold text-truncate" style="max-width: 62%;" title="${label}">🏠 ${label}</span>
+                <input type="number" step="0.01" min="0" name="sponsorship_beneficiary_amounts[${id}]"
+                  data-case-key="ben_${id}" class="form-control font-monospace ed-case-split-amount-input"
+                  placeholder="مبلغ الكفالة (مثال: 300)" value="${curVal}">
+                <span class="input-group-text">ج.م</span>
+              </div>
+            </div>
+          `);
+        });
+
+        wrap.toggle(count > 0);
+        recalcEdTotalCaseAmounts();
+      }
+
+      function recalcEdTotalCaseAmounts() {
+        let sum = 0;
+        $('.ed-case-split-amount-input').each(function () {
+          const v = parseFloat($(this).val() || '0');
+          if (!isNaN(v) && v > 0) sum += v;
+        });
+        $('#edCaseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
+        if (sum > 0) {
+          $('#edSponsorshipMonthlyAmountInput').val(sum.toFixed(2));
+        }
+      }
+
+      $(document).on('input', '.ed-case-split-amount-input', recalcEdTotalCaseAmounts);
+      $('#edSponsorshipBeneficiaries, #edSponsorshipFullFamilies').on('change', renderEdCaseAmountsInputs);
+      renderEdCaseAmountsInputs();
       window.dispatchEvent(new Event('donor-edit-ready'));
     });
   </script>

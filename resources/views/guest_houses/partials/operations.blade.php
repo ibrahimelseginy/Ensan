@@ -451,6 +451,104 @@
                                 @else
                                     <span class="text-muted small">بدون مرافق</span>
                                 @endif
+                                @if(!empty($patientProfile?->companion_history) && is_array($patientProfile->companion_history))
+                                    <div class="mt-1">
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle small" title="يوجد سجل مرافقين سابقين محفوظ">
+                                            <i class="bi bi-clock-history me-1"></i> {{ count($patientProfile->companion_history) }} مرافق سابق
+                                        </span>
+                                    </div>
+                                @endif
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-xs btn-outline-primary rounded-pill py-0 px-2" data-bs-toggle="modal" data-bs-target="#updateCompanionModal_{{ $stay->id }}" title="تحديث بيانات المرافق مع الاحتفاظ ببيانات المرافق السابق">
+                                        <i class="bi bi-person-gear me-1"></i> تحديث المرافق
+                                    </button>
+                                </div>
+
+                                {{-- Modal: تحديث بيانات المرافق مع حفظ المرافق السابق --}}
+                                <div class="modal fade" id="updateCompanionModal_{{ $stay->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <form class="modal-content shadow border-0" method="POST" enctype="multipart/form-data" action="{{ route('guest-houses.beneficiaries.update-companion', [$guest_house, $stay->beneficiary]) }}">
+                                            @csrf
+                                            <div class="modal-header bg-success text-white py-2">
+                                                <h6 class="modal-title fw-bold">
+                                                    <i class="bi bi-person-badge me-1"></i> تحديث بيانات المرافق للحالة: {{ $stay->beneficiary->full_name }} ({{ $stay->beneficiary->code ?? '—' }})
+                                                </h6>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-3 text-start">
+                                                <div class="alert alert-info py-2 small mb-3">
+                                                    <i class="bi bi-shield-check me-1"></i> عند تغيير اسم أو بيانات المرافق، يقوم النظام تلقائياً <strong>بأرشفة وحفظ بيانات المرافق السابق وصور بطاقته</strong> في سجل المرافقين السابقين للحالة دون حذفها.
+                                                </div>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">اسم المرافق الجديد / الحالي رباعي <span class="text-danger">*</span></label>
+                                                        <input name="companion_name" value="{{ $patientProfile?->companion_name }}" class="form-control" required placeholder="اسم المرافق كاملاً">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">صلة القرابة</label>
+                                                        <input name="companion_relation" value="{{ $patientProfile?->companion_relation }}" class="form-control" placeholder="مثال: زوج / زوجة / ابن / والد / أخ...">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">الرقم القومي للمرافق</label>
+                                                        <input name="companion_national_id" value="{{ $patientProfile?->companion_national_id }}" maxlength="14" class="form-control font-monospace" placeholder="14 رقم">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">موبايل المرافق</label>
+                                                        <input name="companion_phone" value="{{ $patientProfile?->companion_phone }}" class="form-control font-monospace" placeholder="01xxxxxxxxx">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-bold small">محل إقامة المرافق</label>
+                                                        <input name="companion_address" value="{{ $patientProfile?->companion_address }}" class="form-control" placeholder="المحافظة - المركز - العنوان">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small"><i class="bi bi-camera-fill text-primary me-1"></i> صورة بطاقة المرافق (وجه)</label>
+                                                        <input type="file" name="companion_id_front" accept="image/*" class="form-control form-control-sm">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small"><i class="bi bi-camera-fill text-primary me-1"></i> صورة بطاقة المرافق (ظهر)</label>
+                                                        <input type="file" name="companion_id_back" accept="image/*" class="form-control form-control-sm">
+                                                    </div>
+                                                </div>
+
+                                                @if(!empty($patientProfile?->companion_history) && is_array($patientProfile->companion_history))
+                                                    <div class="mt-3 pt-3 border-top">
+                                                        <h6 class="fw-bold text-secondary small mb-2"><i class="bi bi-clock-history me-1"></i> سجل المرافقين السابقين المحفوظين للحالة:</h6>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-bordered small mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>اسم المرافق السابق</th>
+                                                                        <th>القرابة</th>
+                                                                        <th>الرقم القومي</th>
+                                                                        <th>الهاتف</th>
+                                                                        <th>تاريخ الأرشفة</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach(array_reverse($patientProfile->companion_history) as $histComp)
+                                                                        <tr>
+                                                                            <td class="fw-bold">{{ $histComp['companion_name'] ?? '—' }}</td>
+                                                                            <td>{{ $histComp['companion_relation'] ?? '—' }}</td>
+                                                                            <td class="font-monospace">{{ $histComp['companion_national_id'] ?? '—' }}</td>
+                                                                            <td class="font-monospace">{{ $histComp['companion_phone'] ?? '—' }}</td>
+                                                                            <td class="text-muted font-monospace">{{ isset($histComp['archived_at']) ? \Carbon\Carbon::parse($histComp['archived_at'])->format('Y-m-d H:i') : '—' }}</td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="modal-footer py-2 d-flex justify-content-between">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                                                <button type="submit" class="btn btn-success btn-sm fw-bold px-3">
+                                                    <i class="bi bi-check-lg me-1"></i> حفظ بيانات المرافق (مع أرشفة السابق)
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 <span class="badge {{ $stay->is_temporary_out ? 'bg-warning-subtle text-warning border border-warning' : 'bg-primary-subtle text-primary border' }} px-2 py-1">
@@ -525,6 +623,20 @@
                                                         @endif
                                                     @else
                                                         <div class="text-muted small">لا يوجد مرافق مسجل مع الحالة في هذه الإقامة.</div>
+                                                    @endif
+                                                    @if(!empty($patientProfile?->companion_history) && is_array($patientProfile->companion_history))
+                                                        <div class="mt-2 pt-2 border-top">
+                                                            <strong class="small text-secondary d-block mb-1"><i class="bi bi-clock-history me-1"></i> سجل المرافقين السابقين للحالة ({{ count($patientProfile->companion_history) }}):</strong>
+                                                            <div class="d-flex flex-wrap gap-2">
+                                                                @foreach(array_reverse($patientProfile->companion_history) as $histComp)
+                                                                    <span class="badge bg-white text-dark border px-2 py-1">
+                                                                        {{ $histComp['companion_name'] ?? '—' }}
+                                                                        @if(!empty($histComp['companion_relation'])) ({{ $histComp['companion_relation'] }}) @endif
+                                                                        @if(!empty($histComp['companion_phone'])) — {{ $histComp['companion_phone'] }} @endif
+                                                                    </span>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
                                                     @endif
                                                 </div>
 
@@ -1412,6 +1524,7 @@
                     @php
                         $cBalance = (float)($custody->treasury?->current_balance ?? 0);
                         $isLowPetty = $cBalance < 1000;
+                        $cBreakdown = $custody->treasury ? $custody->treasury->balance_breakdown : ['custody_balance' => 0, 'donations_balance' => 0];
                     @endphp
                     <div class="col-md-4">
                         <div class="border rounded-3 p-3 bg-white shadow-xs h-100 border-start border-4 {{ $isLowPetty ? 'border-warning' : 'border-success' }}">
@@ -1425,11 +1538,34 @@
                             <div class="fs-4 fw-bold {{ $isLowPetty ? 'text-warning-emphasis' : 'text-success' }} font-monospace">
                                 {{ number_format($cBalance, 2) }} {{ $custody->treasury?->currency ?? 'ج.م' }}
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small">
-                                <span class="text-muted">الرصيد المتاح للصرف</span>
+                            <div class="row g-1 mt-2 pt-2 border-top small">
+                                <div class="col-6">
+                                    <div class="p-1.5 rounded-2 bg-warning-subtle border border-warning-subtle">
+                                        <span class="text-dark d-block" style="font-size: 0.7rem;">💼 فلوس العهدة</span>
+                                        <strong class="font-monospace text-dark">{{ number_format((float)($cBreakdown['custody_balance'] ?? 0), 2) }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-1.5 rounded-2 bg-success-subtle border border-success-subtle">
+                                        <span class="text-success-emphasis d-block" style="font-size: 0.7rem;">💚 فلوس التبرعات</span>
+                                        <strong class="font-monospace text-success">{{ number_format((float)($cBreakdown['donations_balance'] ?? 0), 2) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small flex-wrap gap-1">
                                 <button type="button" class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalReplenishPettyCash">
                                     + تغذية العهدة
                                 </button>
+                                @if($custody->treasury)
+                                    <form method="POST" action="{{ route('treasuries.adjust-totals', $custody->treasury) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تصفير خزينة ({{ $custody->treasury->name }}) يدوياً إلى 0.00؟');">
+                                        @csrf
+                                        <input type="hidden" name="zero_treasury" value="1">
+                                        <input type="hidden" name="reason" value="تصفير خزينة دار الضيافة يدوياً ({{ $guest_house->name }})">
+                                        <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill py-0 px-2">
+                                            <i class="bi bi-arrow-counterclockwise"></i> تصفير يدوياً (0.00)
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -1602,6 +1738,7 @@
                             <tr>
                                 <th>كود الجهاز</th>
                                 <th>اسم الجهاز والمواصفات</th>
+                                <th class="text-center">العدد</th>
                                 <th>التصنيف</th>
                                 <th>الموقع والتوزيع</th>
                                 <th class="text-center">الحالة التشغيلية</th>
@@ -1620,6 +1757,11 @@
                                         @if($asset->brand_model)
                                             <span class="text-muted small">{{ $asset->brand_model }}</span>
                                         @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2.5 py-1">
+                                            {{ max(1, (int)($asset->quantity ?? 1)) }}
+                                        </span>
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary-subtle text-secondary">{{ $asset->category_label }}</span>
@@ -1992,14 +2134,14 @@
                 <input name="name" class="form-control mb-2" required placeholder="مثال: عهدة مواد غذائية، عهدة نقدية">
 
                 <div class="row g-2 mb-2">
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="form-label form-label-required">نوع العهدة</label>
                         <select name="type" id="gh_custody_type" class="form-select" required onchange="toggleCustodyTypeFields(this.value)">
                             <option value="financial">عهدة مالية</option>
                             <option value="in_kind">عهدة عينية (مخزون)</option>
                         </select>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="form-label">تصنيف العهدة</label>
                         <select name="category" class="form-select">
                             <option value="general">عامة</option>
@@ -2007,6 +2149,10 @@
                             <option value="equipment">أجهزة ومعدات</option>
                             <option value="medical">طبية وإسعافية</option>
                         </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label">العدد / الكمية</label>
+                        <input type="number" min="1" name="quantity" value="1" class="form-control font-monospace" placeholder="1">
                     </div>
                 </div>
 
@@ -2031,18 +2177,27 @@
                     </select>
 
                     <div class="p-2 border rounded-3 bg-light mb-2">
-                        <span class="small fw-bold text-primary d-block mb-1"><i class="bi bi-plus-circle me-1"></i> رصيد افتتاحي (اختياري عند الإنشاء):</span>
-                        <div class="row g-2">
+                        <span class="small fw-bold text-primary d-block mb-1"><i class="bi bi-plus-circle me-1"></i> رصيد افتتاحي أو إضافة صنف جديد (اختياري عند الإنشاء):</span>
+                        <div class="row g-2 mb-2">
                             <div class="col-7">
-                                <select name="initial_item_id" class="form-select form-select-sm">
-                                    <option value="">— اختر الصنف —</option>
+                                <select name="initial_item_id" id="gh_custody_initial_item_select" class="form-select form-select-sm" onchange="document.getElementById('gh_custody_new_item_box').classList.toggle('d-none', this.value !== '__new__'); if(this.value === '__new__') this.value = '';">
+                                    <option value="">— اختر الصنف المسجل —</option>
+                                    <option value="__new__" class="fw-bold text-success">+ كتابة صنف جديد غير موجود بالقائمة...</option>
                                     @foreach($guestHouseItems as $item)
                                         <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->unit }})</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-5">
-                                <input type="number" step="0.001" min="0.001" name="initial_quantity" class="form-control form-control-sm" placeholder="الكمية">
+                                <input type="number" step="0.001" min="0.001" name="initial_quantity" class="form-control form-control-sm" placeholder="الكمية / العدد">
+                            </div>
+                        </div>
+                        <div id="gh_custody_new_item_box" class="row g-2 pt-1 border-top">
+                            <div class="col-8">
+                                <input type="text" name="new_initial_item_name" class="form-control form-control-sm" placeholder="أو اكتب اسم صنف جديد مباشرة (يُضاف للأصناف تلقائياً)...">
+                            </div>
+                            <div class="col-4">
+                                <input type="text" name="new_initial_item_unit" class="form-control form-control-sm" value="عدد" placeholder="الوحدة (كجم/عدد/كرتونة)">
                             </div>
                         </div>
                     </div>
@@ -2077,13 +2232,31 @@
                     @endforeach
                 </select>
 
-                <label class="form-label form-label-required">الصنف المراد توريده</label>
-                <select name="item_id" class="form-select mb-2" required>
-                    <option value="">— اختر الصنف —</option>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label form-label-required mb-0">الصنف المراد توريده</label>
+                    <button type="button" class="btn btn-xs btn-outline-success rounded-pill py-0 px-2" onclick="const box = document.getElementById('gh_supply_new_item_box'); box.classList.toggle('d-none'); const sel = document.getElementById('gh_supply_item_select'); if(!box.classList.contains('d-none')) { sel.value = ''; sel.required = false; document.getElementById('gh_supply_new_item_name').focus(); } else { sel.required = true; }">
+                        <i class="bi bi-plus-circle me-1"></i> كتابة صنف جديد غير موجود بالقائمة
+                    </button>
+                </div>
+                <select name="item_id" id="gh_supply_item_select" class="form-select mb-2" onchange="if(this.value === '__new__') { this.value = ''; this.required = false; document.getElementById('gh_supply_new_item_box').classList.remove('d-none'); document.getElementById('gh_supply_new_item_name').focus(); }">
+                    <option value="">— اختر الصنف من القائمة —</option>
+                    <option value="__new__" class="fw-bold text-success">+ كتابة صنف جديد يدوياً (يُضاف تلقائياً للأصناف)...</option>
                     @foreach($guestHouseItems as $item)
                         <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->unit }})</option>
                     @endforeach
                 </select>
+
+                <div id="gh_supply_new_item_box" class="p-2.5 border border-success border-opacity-50 rounded-3 bg-success-subtle mb-2 d-none">
+                    <div class="small fw-bold text-success-emphasis mb-1"><i class="bi bi-plus-square-fill me-1"></i> إضافة صنف جديد وتوريده فوراً للمخزن:</div>
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <input type="text" name="new_item_name" id="gh_supply_new_item_name" class="form-control form-control-sm" placeholder="اكتب اسم الصنف الجديد (مثال: جبنة فيتا / عدس / بطاطين)...">
+                        </div>
+                        <div class="col-4">
+                            <input type="text" name="new_item_unit" class="form-control form-control-sm" value="كجم" placeholder="الوحدة (كجم/عدد/كرتونة)">
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row g-2 mb-2">
                     <div class="col-6">
@@ -2424,7 +2597,7 @@
                     <label class="form-label fw-bold small">الخزينة المحول منها (المصدر الرئيسي) <span class="text-danger">*</span></label>
                     <select name="source_treasury_id" class="form-select" required>
                         <option value="">— اختر الخزينة المصدر —</option>
-                        @foreach($guestHouseDonationTreasuries as $srcTr)
+                        @foreach(($allSourceTreasuries ?? $guestHouseDonationTreasuries) as $srcTr)
                             <option value="{{ $srcTr->id }}">{{ $srcTr->name }} (الرصيد المتاح: {{ number_format((float)$srcTr->current_balance, 2) }} {{ $srcTr->currency }})</option>
                         @endforeach
                     </select>
@@ -2463,11 +2636,15 @@
             </div>
             <div class="modal-body p-3">
                 <div class="row g-2 mb-3">
-                    <div class="col-md-7">
+                    <div class="col-md-5">
                         <label class="form-label fw-bold small">اسم الجهاز أو المعدة <span class="text-danger">*</span></label>
                         <input name="name" class="form-control" placeholder="مثال: مولد أكسجين طبي 10 لتر، غسالة ملابس 12 كيلو، تكييف سبليت..." required>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">العدد / الكمية <span class="text-danger">*</span></label>
+                        <input type="number" min="1" name="quantity" value="1" class="form-control font-monospace" required placeholder="مثال: 1">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label fw-bold small">التصنيف الأساسي <span class="text-danger">*</span></label>
                         <select name="category" class="form-select" required>
                             <option value="medical">🩺 جهاز طبي ومساعد (أكسجين، كراسي، قياس، سراير)</option>

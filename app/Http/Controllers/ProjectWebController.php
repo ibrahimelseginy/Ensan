@@ -73,6 +73,14 @@ final class ProjectWebController extends Controller
 
     public function show(Project $project): View
     {
+        $user = request()->user();
+        if ($user && method_exists($user, 'getAccessibleProjectIds')) {
+            $allowedProjectIds = $user->getAccessibleProjectIds();
+            if (is_array($allowedProjectIds) && !in_array((int) $project->id, $allowedProjectIds, true)) {
+                abort(403, 'غير مصرح لك بالدخول إلى هذا المشروع.');
+            }
+        }
+
         $stats              = $this->projectService->getProjectStats($project);
         $volunteers         = User::where('is_volunteer', true)->orderBy('name')->get();
         $users              = User::orderBy('name')->get();

@@ -15,8 +15,35 @@ final class GuestHousePatientProfile extends Model
         'followup_card_path', 'referral_letter_path', 'medical_notes',
         'companion_name', 'companion_relation', 'companion_national_id',
         'companion_phone', 'companion_address', 'companion_id_front_path',
-        'companion_id_back_path', 'manager_notes',
+        'companion_id_back_path', 'companion_history', 'manager_notes',
     ];
+
+    protected $casts = [
+        'companion_history' => 'array',
+    ];
+
+    public function buildCompanionArchiveEntry(?string $reason = null): ?array
+    {
+        $oldName = trim((string) ($this->companion_name ?? ''));
+        if ($oldName === '' || !GuestHouseMealServing::isRealCompanion($oldName)) {
+            return null;
+        }
+
+        return [
+            'name' => $oldName,
+            'relation' => $this->companion_relation,
+            'national_id' => $this->companion_national_id,
+            'phone' => $this->companion_phone,
+            'address' => $this->companion_address,
+            'id_front_path' => $this->companion_id_front_path,
+            'id_back_path' => $this->companion_id_back_path,
+            'id_front_url' => $this->companion_id_front_url,
+            'id_back_url' => $this->companion_id_back_url,
+            'reason' => $reason,
+            'archived_at' => now()->format('Y-m-d H:i'),
+            'archived_by' => auth()->user()?->name ?? 'النظام',
+        ];
+    }
 
     public function getImageColumns(): array
     {

@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 final class GuestHouseCustody extends Model
 {
-    protected $fillable = ['guest_house_id', 'name', 'type', 'category', 'treasury_id', 'warehouse_id', 'is_active', 'notes'];
-    protected $casts = ['is_active' => 'boolean'];
+    protected $fillable = ['guest_house_id', 'name', 'quantity', 'type', 'category', 'treasury_id', 'warehouse_id', 'is_active', 'notes'];
+    protected $casts = ['is_active' => 'boolean', 'quantity' => 'integer'];
 
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
     public function treasury() { return $this->belongsTo(Treasury::class); }

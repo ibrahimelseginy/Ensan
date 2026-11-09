@@ -177,11 +177,45 @@ class User extends Authenticatable
         });
     }
 
+    public function isSuperAdmin(): bool
+    {
+        if ($this->hasRole(['admin', 'super_admin', 'مدير المؤسسة بالكامل'])) {
+            return true;
+        }
+
+        // If user has 'manager' or 'إدارة' role, only treat as full super-admin
+        // if that role has NOT been customized with specific permissions in /roles.
+        if ($this->hasRole(['manager', 'إدارة'])) {
+            $this->loadMissing('roles.permissions');
+            $managerRoles = $this->roles->filter(function ($role) {
+                return in_array(strtolower(trim((string) $role->key)), ['manager', 'إدارة'], true)
+                    || in_array(strtolower(trim((string) $role->name)), ['manager', 'إدارة'], true);
+            });
+
+            foreach ($managerRoles as $mRole) {
+                $nonDefaultPerms = $mRole->permissions->filter(fn($p) => strtolower((string) $p->key) !== 'dashboard.view');
+                if ($nonDefaultPerms->isEmpty()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function ensurePermissionsLoaded(): void
+    {
+        if (!isset($this->cachedPermissions)) {
+            $this->loadMissing('roles.permissions');
+            $this->cachedPermissions = $this->roles->flatMap(function ($role) {
+                return $role->permissions->pluck('key');
+            })->unique()->map(fn($k) => strtolower(trim((string) $k)))->values();
+        }
+    }
 
     public function hasPermission($key): bool
     {
-        // Bypass for admin, super_admin, and general managers (in Arabic and English)
-        if ($this->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
@@ -189,27 +223,257 @@ class User extends Authenticatable
             return false;
         }
 
-        // Load roles and permissions once and cache them on the model instance
-        // to avoid repeated DB hits within the same request.
-        if (!isset($this->cachedPermissions)) {
-            if (!$this->relationLoaded('roles')) {
-                $this->load('roles.permissions');
-            }
-            $this->cachedPermissions = $this->roles->flatMap(function ($role) {
-                return $role->permissions->pluck('key');
-            })->unique()->map(fn($k) => strtolower((string) $k));
-        }
+        $this->ensurePermissionsLoaded();
 
         if (is_iterable($key)) {
             foreach ($key as $k) {
-                if ($this->cachedPermissions->contains(strtolower((string) $k))) {
+                if ($this->checkSinglePermission(strtolower(trim((string) $k)))) {
                     return true;
                 }
             }
             return false;
         }
 
-        return $this->cachedPermissions->contains(strtolower((string) $key));
+        return $this->checkSinglePermission(strtolower(trim((string) $key)));
+    }
+
+    private function checkSinglePermission(string $k): bool
+    {
+        if ($k === '') {
+            return false;
+        }
+
+        if ($this->cachedPermissions->contains($k)) {
+            return true;
+        }
+
+        // 1. Entity-scoped and umbrella permissions for Projects, Campaigns, and Guest Houses
+        if ($k === 'projects.view') {
+            if ($this->project_id !== null) {
+                return true;
+            }
+            if ($this->cachedPermissions->contains('manage_project')
+                || $this->cachedPermissions->contains('manage_project_volunteers')
+                || $this->cachedPermissions->contains('assist_project_management')
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'projects.'))) {
+                return true;
+            }
+        }
+
+        if ($k === 'campaigns.view') {
+            if ($this->campaign_id !== null) {
+                return true;
+            }
+            if ($this->cachedPermissions->contains('manage_campaign')
+                || $this->cachedPermissions->contains('manage_ramadan')
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'campaigns.'))) {
+                return true;
+            }
+        }
+
+        if ($k === 'guest_houses.view') {
+            if ($this->guest_house_id !== null) {
+                return true;
+            }
+            if ($this->cachedPermissions->contains('manage_guest_house')
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'guest_houses.'))) {
+                return true;
+            }
+        }
+
+        // 2. If checking "<prefix>.view", any action permission on the exact same prefix
+        // (e.g. "<prefix>.create", "<prefix>.edit", "<prefix>.manage") implies "<prefix>.view"
+        if (str_ends_with($k, '.view')) {
+            $prefix = substr($k, 0, -5);
+            if ($prefix !== '' && $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, $prefix . '.'))) {
+                return true;
+            }
+        }
+
+        // 3. Umbrella permissions mapped strictly to their own domain's permissions
+        $umbrellaMap = [
+            'manage_employees' => [
+                'users.view', 'users.create', 'users.edit',
+                'employee_attendance.view', 'employee_tasks.view',
+                'leaves.view', 'leaves.manage', 'hr.evaluations',
+            ],
+            'manage_volunteers_hr' => [
+                'volunteers.view', 'volunteers.create', 'volunteers.edit',
+                'volunteer_attendance.view', 'volunteer_hours.view', 'volunteer_tasks.view',
+            ],
+            'manage_payrolls' => [
+                'payrolls.view', 'payrolls.create', 'payrolls.edit',
+            ],
+            'manage_finance' => [
+                'treasuries.view', 'accounts.view', 'expenses.view',
+                'revenues.view', 'journal_entries.view', 'financial_closures.view', 'closures.view',
+            ],
+            'manage_logistics' => [
+                'delegates.view', 'travel_routes.view', 'trips.view',
+                'kafr_el_sheikh_deliveries.view', 'kafr_el_sheikh_services.view',
+                'kafr_el_sheikh_brokers.view', 'tanta_workers.view',
+            ],
+            'manage_ramadan' => [
+                'ramadan_bags.view', 'ramadan_iftars.view', 'campaigns.view',
+            ],
+            'manage_specialized_services' => [
+                'collaborations.view', 'school_collaborations.view',
+                'memberships.view', 'oncology_medicine_reps.view', 'psychological_support.view',
+            ],
+            'manage_website' => [
+                'website.view', 'website.settings.view_edit', 'website.headquarters.view',
+                'website.partners.view', 'website.board.view', 'website.content.view_edit',
+                'website.campaigns_content.view_edit', 'website.volunteer_requests.view',
+                'website.donation_page.view_edit', 'website.donation_settings.view_edit',
+                'website.accounts.view', 'website.donation_accounts.view', 'website.contact_messages.view',
+            ],
+            'manage_mobile' => [
+                'mobile.view', 'mobile.home_content.view_edit', 'mobile.news.view',
+                'mobile.volunteer_requests.view', 'mobile.bookings.view', 'mobile.donations.view',
+                'mobile.donors.view', 'mobile.notifications.view', 'mobile.case_applications.view',
+            ],
+        ];
+
+        foreach ($umbrellaMap as $umbrellaKey => $impliedKeys) {
+            if (in_array($k, $impliedKeys, true) && $this->cachedPermissions->contains($umbrellaKey)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns null if user can access ALL projects, or an array of specific Project IDs.
+     */
+    public function getAccessibleProjectIds(): ?array
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        $this->ensurePermissionsLoaded();
+
+        if ($this->cachedPermissions->contains('manage_project')) {
+            return null;
+        }
+
+        $specificIds = [];
+        foreach ($this->cachedPermissions as $perm) {
+            if (preg_match('/^projects\.manage\.(\d+)$/', (string) $perm, $m)) {
+                $specificIds[] = (int) $m[1];
+            }
+        }
+
+        if ($this->project_id) {
+            $specificIds[] = (int) $this->project_id;
+        }
+
+        $managedIds = \App\Models\Project::where('manager_user_id', $this->id)
+            ->orWhere('deputy_user_id', $this->id)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+        $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
+
+        // If the user has specific project assignments/permissions, restrict them strictly to those projects
+        if (!empty($specificIds)) {
+            return $specificIds;
+        }
+
+        // Otherwise, if they have general projects.view, allow viewing all projects
+        if ($this->cachedPermissions->contains('projects.view')) {
+            return null;
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns null if user can access ALL campaigns, or an array of specific Campaign IDs.
+     */
+    public function getAccessibleCampaignIds(): ?array
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        $this->ensurePermissionsLoaded();
+
+        if ($this->cachedPermissions->contains('manage_campaign') || $this->cachedPermissions->contains('manage_ramadan')) {
+            return null;
+        }
+
+        $specificIds = [];
+        foreach ($this->cachedPermissions as $perm) {
+            if (preg_match('/^campaigns\.manage\.(\d+)$/', (string) $perm, $m)) {
+                $specificIds[] = (int) $m[1];
+            }
+        }
+
+        if ($this->campaign_id) {
+            $specificIds[] = (int) $this->campaign_id;
+        }
+
+        $managedIds = \App\Models\Campaign::where('manager_user_id', $this->id)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+        $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
+
+        if (!empty($specificIds)) {
+            return $specificIds;
+        }
+
+        if ($this->cachedPermissions->contains('campaigns.view')) {
+            return null;
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns null if user can access ALL guest houses, or an array of specific GuestHouse IDs.
+     */
+    public function getAccessibleGuestHouseIds(): ?array
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        $this->ensurePermissionsLoaded();
+
+        if ($this->cachedPermissions->contains('manage_guest_house') || $this->cachedPermissions->contains('guest_houses.view_all')) {
+            return null;
+        }
+
+        $specificIds = [];
+        foreach ($this->cachedPermissions as $perm) {
+            if (preg_match('/^guest_houses\.manage\.(\d+)$/', (string) $perm, $m)) {
+                $specificIds[] = (int) $m[1];
+            }
+        }
+
+        if ($this->guest_house_id) {
+            $specificIds[] = (int) $this->guest_house_id;
+        }
+
+        $managedIds = \App\Models\GuestHouse::where('manager_user_id', $this->id)
+            ->orWhereHas('volunteers', fn($v) => $v->where('users.id', $this->id))
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+        $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
+
+        if (!empty($specificIds)) {
+            return $specificIds;
+        }
+
+        if ($this->cachedPermissions->contains('guest_houses.view')) {
+            return null;
+        }
+
+        return [];
     }
     public function adjustLeaveBalance($days)
     {

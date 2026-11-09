@@ -1034,8 +1034,8 @@ final class MobileContentController extends Controller
     {
         try {
             $targetProjectId = $projectId ?? $app->project_id;
-            $project = $targetProjectId ? \App\Models\Project::find($targetProjectId) : null;
-            $managerId = $project?->manager_id;
+            $project = $targetProjectId ? \App\Models\Project::withoutGlobalScopes()->find($targetProjectId) : null;
+            $managerId = $project?->manager_user_id ?? $project?->manager_id;
             if ($managerId) {
                 \App\Models\Notification::create([
                     'user_id' => $managerId,
@@ -1102,6 +1102,45 @@ final class MobileContentController extends Controller
             $target->current_amount += $amount;
             $target->save();
             \Log::info("Mobile funding updated for project/campaign: {$target->name} (+{$amount})");
+        }
+
+        // 4. Sync verified mobile donation to core Donors & Donations ledger
+        try {
+            $donor = null;
+            $phone = trim((string) ($donation->donor_phone ?? ''));
+            $name = trim((string) ($donation->donor_name ?? '')) ?: 'متبرع عبر التطبيق';
+
+            if ($phone !== '') {
+                $donor = \App\Models\Donor::where('phone', $phone)->first();
+            }
+            if (!$donor) {
+                $donor = \App\Models\Donor::create([
+                    'name' => $name,
+                    'phone' => $phone ?: null,
+                    'type' => 'individual',
+                    'active' => true,
+                    'notes' => 'تم إنشاؤه تلقائياً من تبرعات تطبيق الموبايل',
+                ]);
+            }
+
+            $existingDonation = \App\Models\Donation::where('reference_no', 'MOB-DON-' . $donation->id)->first();
+            if (!$existingDonation && $amount > 0) {
+                \App\Models\Donation::create([
+                    'donor_id' => $donor->id,
+                    'type' => 'cash',
+                    'amount' => $amount,
+                    'currency' => 'EGP',
+                    'method' => $donation->payment_method ?: 'mobile_app',
+                    'status' => 'received',
+                    'received_at' => $donation->created_at ?? now(),
+                    'reference_no' => 'MOB-DON-' . $donation->id,
+                    'project_id' => $target instanceof \App\Models\Project ? $target->id : null,
+                    'campaign_id' => $target instanceof \App\Models\Campaign ? $target->id : null,
+                    'allocation_note' => 'تبرع موثق من تطبيق الموبايل: ' . $targetStr,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to sync verified MobileDonation to core Donations: ' . $e->getMessage());
         }
     }
 

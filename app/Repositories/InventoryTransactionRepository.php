@@ -73,6 +73,9 @@ final readonly class InventoryTransactionRepository
     {
         return (float) InventoryTransaction::where('item_id', $itemId)
             ->where('warehouse_id', $warehouseId)
+            ->where(function ($q) {
+                $q->where('status', 'approved')->orWhereNull('status');
+            })
             ->selectRaw("SUM(CASE 
                 WHEN type IN ('in', 'stock_count_increase', 'transfer_in') THEN quantity 
                 WHEN type IN ('out', 'transfer', 'transfer_out', 'stock_count_shortage') THEN -quantity 

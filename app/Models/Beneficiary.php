@@ -310,7 +310,12 @@ final class Beneficiary extends Model
 
     public function sponsors(): BelongsToMany
     {
-        return $this->belongsToMany(Donor::class, 'beneficiary_sponsors')->withTimestamps();
+        $relation = $this->belongsToMany(Donor::class, 'beneficiary_sponsors')->withTimestamps();
+        if (Donor::hasBeneficiarySponsorPivotColumns()) {
+            $relation->withPivot(['monthly_amount', 'notes']);
+        }
+
+        return $relation;
     }
 
     /**
@@ -324,11 +329,50 @@ final class Beneficiary extends Model
             ->whereNotNull('sponsorship_amount')
             ->sum(fn ($m) => (float) $m->sponsorship_amount);
 
+        $familyDirectReq = (float) ($this->monthly_sponsorship_amount ?? 0);
+
+        if ($membersSum > 0 && $familyDirectReq > $membersSum) {
+            return $familyDirectReq;
+        }
+
         if ($membersSum > 0) {
             return $membersSum;
         }
 
-        return (float) ($this->monthly_sponsorship_amount ?? 0);
+        return $familyDirectReq;
+    }
+
+    /**
+     * إجمالي المبلغ المكفول فعلياً من الكفلاء المرتبطين بالحالة أو أفراد الأسرة
+     */
+    public function getCoveredFamilySponsorshipAmountAttribute(): float
+    {
+        $familySponsorsSum = (float) $this->sponsors->sum(function ($donor) {
+            $pivotAmt = (float) ($donor->pivot?->monthly_amount ?? 0);
+            if ($pivotAmt > 0) {
+                return $pivotAmt;
+            }
+            return 0.0;
+        });
+
+        $membersSponsorsSum = (float) $this->familyMembers
+            ->where('active', true)
+            ->sum(function ($member) {
+                return (float) $member->sponsors->sum(fn ($d) => (float) ($d->pivot?->monthly_amount ?? 0));
+            });
+
+        return $familySponsorsSum + $membersSponsorsSum;
+    }
+
+    /**
+     * المبلغ المتبقي غير المكفول للحالة (باقي الكفالة المطلوبة)
+     */
+    public function getRemainingFamilySponsorshipAmountAttribute(): float
+    {
+        $required = $this->total_family_sponsorship_amount;
+        $covered = $this->covered_family_sponsorship_amount;
+
+        return max(0.0, $required - $covered);
     }
 
     /**
@@ -347,6 +391,20 @@ final class Beneficiary extends Model
         return $this->hasMany(Donation::class, 'beneficiary_id')
             ->where('status', '!=', 'cancelled')
             ->orderByDesc('received_at');
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'beneficiary_id')
+            ->where('status', '!=', 'cancelled')
+            ->orderByDesc('paid_at');
+    }
+
+    public function inventoryTransactions(): HasMany
+    {
+        return $this->hasMany(InventoryTransaction::class, 'beneficiary_id')
+            ->where('status', 'approved')
+            ->orderByDesc('transaction_date');
     }
 
     public function familyMembers(): HasMany
@@ -378,13 +436,19 @@ final class Beneficiary extends Model
             }
         }
 
-        return sprintf('G-%05d', $maxNum + 1);
+        $nextNum = $maxNum + 1;
+        do {
+            $candidate = sprintf('G-%05d', $nextNum);
+            $nextNum++;
+        } while (self::where('code', $candidate)->exists());
+
+        return $candidate;
     }
 
     public function getGuestCodeAttribute(): string
     {
-        if (!empty($this->code) && str_starts_with($this->code, 'G-')) {
-            return $this->code;
+        if (!empty($this->code)) {
+            return (string) $this->code;
         }
         return sprintf('G-%05d', $this->id);
     }

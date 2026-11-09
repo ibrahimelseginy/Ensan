@@ -31,8 +31,8 @@ final class UpdateDonorRequest extends FormRequest
                 Rule::unique('donors', 'name')->ignore($donorId),
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $parts = preg_split('/\s+/u', trim((string) $value), -1, PREG_SPLIT_NO_EMPTY);
-                    if (count($parts) < 3) {
-                        $fail('يجب أن يكون اسم المتبرع ثلاثياً على الأقل (مثال: محمد أحمد علي).');
+                    if (count($parts) < 2) {
+                        $fail('يجب أن يكون اسم المتبرع ثنائياً أو ثلاثياً على الأقل (مثال: محمد أحمد).');
                     }
                 },
             ],
@@ -80,9 +80,13 @@ final class UpdateDonorRequest extends FormRequest
             'sponsored_beneficiary_id'   => 'nullable|exists:beneficiaries,id',
             'sponsored_beneficiary_ids'  => 'nullable|array',
             'sponsored_beneficiary_ids.*'=> 'integer|distinct|exists:beneficiaries,id',
+            'sponsorship_beneficiary_amounts' => 'nullable|array',
+            'sponsorship_beneficiary_amounts.*' => 'nullable|numeric|min:0',
             'sync_sponsored_beneficiaries' => 'nullable|boolean',
             'sponsored_family_member_ids' => 'nullable|array',
             'sponsored_family_member_ids.*' => 'integer|distinct|exists:beneficiary_family_members,id',
+            'sponsorship_family_member_amounts' => 'nullable|array',
+            'sponsorship_family_member_amounts.*' => 'nullable|numeric|min:0',
             'sync_sponsored_family_members' => 'nullable|boolean',
             'monthly_allocation_target'  => 'nullable|string|max:500',
             'sponsorship_project_id'     => 'nullable|exists:projects,id',

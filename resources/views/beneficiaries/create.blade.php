@@ -69,7 +69,7 @@
       </div>
     @endif
 
-    <form method="POST" action="{{ route('beneficiaries.store') }}">
+    <form method="POST" action="{{ route('beneficiaries.store') }}" enctype="multipart/form-data">
       @csrf
       @if(isset($changeRequest))
         <input type="hidden" name="change_request_id" value="{{ $changeRequest->id }}">
@@ -238,6 +238,39 @@
         </div>
       </div>
 
+      <div class="form-section">
+        <div class="form-section-title d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-paperclip"></i>
+            <span>الأوراق والمستندات والصور المرفقة (تُحفظ مباشرة في خطوة واحدة)</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addBeneficiaryAttachmentRow()">
+            <i class="bi bi-plus-circle me-1"></i> إضافة مستند أو صورة أخرى
+          </button>
+        </div>
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-file-earmark-check me-1"></i> يمكنك رفع بطاقة الرقم القومي، شهادة الوفاة، التقارير الطبية، الروشتات، أو صور البحث الميداني هنا مباشرة ليتم حفظها مع ملف المستفيد في خطوة واحدة دون انتظار قبول الحالة أولاً.
+        </div>
+        <div id="beneficiaryAttachmentsContainer" class="row g-3">
+          <div class="col-md-6 attachment-item-row">
+            <div class="p-3 border rounded-3 bg-light">
+              <label class="form-label small fw-bold mb-1">عنوان المستند / الورقة (اختياري)</label>
+              <input type="text" name="attachment_titles[]" class="form-control form-control-sm mb-2" placeholder="مثال: صورة بطاقة الرقم القومي / تقرير طبي / بحث اجتماعي">
+              <label class="form-label small fw-bold mb-1">اختر الملف أو الصورة</label>
+              <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx">
+            </div>
+          </div>
+          <div class="col-md-6 attachment-item-row">
+            <div class="p-3 border rounded-3 bg-light">
+              <label class="form-label small fw-bold mb-1">عنوان المستند / الورقة (اختياري)</label>
+              <input type="text" name="attachment_titles[]" class="form-control form-control-sm mb-2" placeholder="مثال: شهادة الوفاة / شهادة الميلاد / روشتة">
+              <label class="form-label small fw-bold mb-1">اختر الملف أو الصورة</label>
+              <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="form-section"><div class="form-section-title"><i class="bi bi-pencil-square"></i><span>ملاحظات عامة</span></div><textarea name="notes" class="form-control" rows="3" placeholder="ملاحظات داخلية حول الأسرة والحالة">{{ old('notes') }}</textarea></div>
 
       <div class="d-flex gap-2 justify-content-end mt-4">
@@ -262,6 +295,25 @@
 
 @section('scripts')
 <script>
+function addBeneficiaryAttachmentRow() {
+  const container = document.getElementById('beneficiaryAttachmentsContainer');
+  if (!container) return;
+  const col = document.createElement('div');
+  col.className = 'col-md-6 attachment-item-row';
+  col.innerHTML = `
+    <div class="p-3 border rounded-3 bg-light position-relative">
+      <button type="button" class="btn btn-sm btn-link text-danger position-absolute top-0 start-0 m-1 p-1" onclick="this.closest('.attachment-item-row').remove()" title="حذف">
+        <i class="bi bi-trash"></i>
+      </button>
+      <label class="form-label small fw-bold mb-1">عنوان المستند / الورقة (اختياري)</label>
+      <input type="text" name="attachment_titles[]" class="form-control form-control-sm mb-2" placeholder="مثال: تقرير طبي / إيصال مرافق / صورة بحث">
+      <label class="form-label small fw-bold mb-1">اختر الملف أو الصورة</label>
+      <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx">
+    </div>
+  `;
+  container.appendChild(col);
+}
+
 function syncPatientFromBeneficiary() {
   const rel = document.getElementById('patient_relationship')?.value;
   if (rel === 'patient') {

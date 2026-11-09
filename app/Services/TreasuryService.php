@@ -73,16 +73,28 @@ final readonly class TreasuryService
             $this->syncTransactionTypeTotal($treasury, 'out', max(0.0, $targetTotalOut), $userId);
         }
 
-        $newIn  = (float) $treasury->getTotalIn();
-        $newOut = (float) $treasury->getTotalOut();
-
         if ($targetCurrentBalance !== null) {
-            $treasury->current_balance = $targetCurrentBalance;
-            $treasury->opening_balance = $targetCurrentBalance - ($newIn - $newOut);
-            $treasury->save();
-        } else {
             $treasury->updateBalance();
+            $currentComputed = (float) $treasury->current_balance;
+            $diff = round($targetCurrentBalance - $currentComputed, 2);
+
+            if (abs($diff) >= 0.01) {
+                TreasuryTransaction::create([
+                    'treasury_id'      => $treasury->id,
+                    'type'             => $diff > 0 ? 'in' : 'out',
+                    'amount'           => abs($diff),
+                    'currency'         => $treasury->currency ?? 'EGP',
+                    'description'      => abs($targetCurrentBalance) < 0.005
+                        ? 'تصفير رصيد الخزينة يدوياً (قيد تسوية جردية مع حفظ السجل التاريخي)'
+                        : ($diff > 0 ? 'تسوية جردية بالزيادة (تعديل رصيد الخزينة)' : 'تسوية جردية بالنقص (تعديل رصيد الخزينة)'),
+                    'reference'        => 'ADJ-BAL-' . now()->format('YmdHis'),
+                    'transaction_date' => now()->toDateString(),
+                    'created_by'       => $userId ?: auth()->id(),
+                ]);
+            }
         }
+
+        $treasury->updateBalance();
     }
 
     private function syncTransactionTypeTotal(Treasury $treasury, string $type, float $targetTotal, ?int $userId = null): void
@@ -92,67 +104,36 @@ final readonly class TreasuryService
             return;
         }
 
-        if ($targetTotal <= 0.0) {
-            $treasury->transactions()->where('type', $type)->delete();
-            return;
-        }
-
-        $transactions = $treasury->transactions()
-            ->where('type', $type)
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id')
-            ->get();
-
-        if ($transactions->isEmpty()) {
-            TreasuryTransaction::create([
-                'treasury_id'      => $treasury->id,
-                'type'             => $type,
-                'amount'           => $targetTotal,
-                'currency'         => $treasury->currency,
-                'description'      => $type === 'in' ? 'رصيد وارد (تعديل يدوي)' : 'رصيد صادر (تعديل يدوي)',
-                'transaction_date' => now()->toDateString(),
-                'created_by'       => $userId ?: auth()->id(),
-            ]);
-            return;
-        }
-
-        if ($transactions->count() === 1) {
-            $first = $transactions->first();
-            $first->amount = $targetTotal;
-            $first->save();
-            return;
-        }
-
         if ($targetTotal > $currentTotal) {
             $diff = round($targetTotal - $currentTotal, 2);
             TreasuryTransaction::create([
                 'treasury_id'      => $treasury->id,
                 'type'             => $type,
                 'amount'           => $diff,
-                'currency'         => $treasury->currency,
-                'description'      => $type === 'in' ? 'تسوية وارد (تعديل يدوي)' : 'تسوية صادر (تعديل يدوي)',
+                'currency'         => $treasury->currency ?? 'EGP',
+                'description'      => $type === 'in' ? 'تسوية وارد (قيد تسوية جردية)' : 'تسوية صادر (قيد تسوية جردية)',
+                'reference'        => 'ADJ-' . strtoupper($type) . '-' . now()->format('YmdHis'),
                 'transaction_date' => now()->toDateString(),
                 'created_by'       => $userId ?: auth()->id(),
             ]);
             return;
         }
 
-        // $targetTotal < $currentTotal across multiple transactions: reduce from newest first
-        $toReduce = round($currentTotal - $targetTotal, 2);
-        foreach ($transactions as $tx) {
-            if ($toReduce <= 0.004) {
-                break;
-            }
-            $txAmount = (float) $tx->amount;
-            if ($txAmount <= $toReduce + 0.004) {
-                $toReduce = round($toReduce - $txAmount, 2);
-                $tx->delete();
-            } else {
-                $tx->amount = round($txAmount - $toReduce, 2);
-                $tx->save();
-                $toReduce = 0.0;
-            }
-        }
+        // بدلاً من حذف الحركات التاريخية، يتم تسجيل حركة تسوية معاكسة تحفظ السجل المحاسبي
+        $diff = round($currentTotal - $targetTotal, 2);
+        $oppositeType = $type === 'in' ? 'out' : 'in';
+        TreasuryTransaction::create([
+            'treasury_id'      => $treasury->id,
+            'type'             => $oppositeType,
+            'amount'           => $diff,
+            'currency'         => $treasury->currency ?? 'EGP',
+            'description'      => $type === 'in'
+                ? 'تسوية تخفيض وارد (قيد عكسي مع حفظ السجل التاريخي)'
+                : 'تسوية تخفيض منصرف (قيد عكسي مع حفظ السجل التاريخي)',
+            'reference'        => 'REV-' . strtoupper($type) . '-' . now()->format('YmdHis'),
+            'transaction_date' => now()->toDateString(),
+            'created_by'       => $userId ?: auth()->id(),
+        ]);
     }
 
     public function updateTransaction(

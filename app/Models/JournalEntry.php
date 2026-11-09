@@ -10,7 +10,7 @@ final class JournalEntry extends Model
 {
     use \App\Traits\HashedRouteKey;
 
-    protected $fillable = ['date','branch','gate','entry_type','locked','description'];
+    protected $fillable = ['date','branch','gate','entry_type','locked','description','reference','created_by'];
 
     protected $casts = ['date' => 'date','locked' => 'boolean', 'period_locked' => 'boolean'];
 

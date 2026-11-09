@@ -102,9 +102,29 @@ final class Donor extends Model
         return $code;
     }
 
+    private static ?bool $hasBeneficiarySponsorPivotCols = null;
+
+    public static function hasBeneficiarySponsorPivotColumns(): bool
+    {
+        if (self::$hasBeneficiarySponsorPivotCols === null) {
+            try {
+                self::$hasBeneficiarySponsorPivotCols = \Illuminate\Support\Facades\Schema::hasColumn('beneficiary_sponsors', 'monthly_amount');
+            } catch (\Throwable $e) {
+                self::$hasBeneficiarySponsorPivotCols = false;
+            }
+        }
+
+        return self::$hasBeneficiarySponsorPivotCols;
+    }
+
     public function sponsoredBeneficiaries()
     {
-        return $this->belongsToMany(Beneficiary::class, 'beneficiary_sponsors')->withTimestamps();
+        $relation = $this->belongsToMany(Beneficiary::class, 'beneficiary_sponsors')->withTimestamps();
+        if (self::hasBeneficiarySponsorPivotColumns()) {
+            $relation->withPivot(['monthly_amount', 'notes']);
+        }
+
+        return $relation;
     }
 
     public function sponsoredBeneficiary()
@@ -203,59 +223,58 @@ final class Donor extends Model
 
         // Cases / Beneficiaries
         $cases = [];
-        $addedBeneficiaryIds = [];
+        $familyMemberParentIds = $this->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+
+        // 1. Add each sponsored family member with its exact allocated monthly_amount
+        foreach ($this->sponsoredFamilyMembers as $fm) {
+            $fmAmount = (float) ($fm->pivot->monthly_amount ?? 0);
+            if ($fmAmount <= 0 && $monthlyAmount > 0 && $this->sponsoredFamilyMembers->count() === 1 && $this->sponsoredBeneficiaries->count() <= 1 && empty($lastSplits)) {
+                $fmAmount = $monthlyAmount;
+            }
+
+            $cases[] = [
+                'id' => $fm->beneficiary_id,
+                'family_member_id' => $fm->id,
+                'code' => $fm->code ?: ($fm->beneficiary?->code ?: 'BEN-' . $fm->beneficiary_id),
+                'name' => $fm->full_name . ' (' . ($fm->relationship_label ?? 'فرد أسرة') . ' - أسرة ' . ($fm->beneficiary?->full_name ?? '') . ')',
+                'phone' => $fm->phone ?: ($fm->beneficiary?->phone ?: ''),
+                'type' => 'family_member',
+                'amount' => $fmAmount > 0 ? $fmAmount : null,
+                'required_amount' => (float) ($fm->sponsorship_amount ?? 0),
+                'notes' => $fm->pivot->notes ?? ('كفالة فرد: ' . $fm->full_name),
+            ];
+        }
+
+        // 2. Add sponsored beneficiaries (either direct family sponsorships or those with explicit pivot monthly_amount)
         foreach ($this->sponsoredBeneficiaries as $sb) {
-            $caseAmt = $lastBenAmounts[$sb->id] ?? null;
+            $pivotAmt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            $isOnlyParentOfSponsoredMember = in_array($sb->id, $familyMemberParentIds, true) && $pivotAmt <= 0 && !isset($lastBenAmounts[$sb->id]);
+            if ($isOnlyParentOfSponsoredMember) {
+                continue;
+            }
+
+            $caseAmt = $pivotAmt > 0 ? $pivotAmt : ($lastBenAmounts[$sb->id] ?? null);
             if ($caseAmt === null) {
-                if ($monthlyAmount > 0 && $this->sponsoredBeneficiaries->count() === 1 && empty($lastSplits)) {
+                if ($monthlyAmount > 0 && $this->sponsoredBeneficiaries->count() === 1 && $this->sponsoredFamilyMembers->isEmpty() && empty($lastSplits)) {
                     $caseAmt = $monthlyAmount;
-                } elseif ((float)($sb->monthly_sponsorship_amount ?? 0) > 0) {
-                    $caseAmt = (float)$sb->monthly_sponsorship_amount;
                 }
             }
             $cases[] = [
                 'id' => $sb->id,
+                'family_member_id' => null,
                 'code' => $sb->code ?: ('BEN-' . $sb->id),
                 'name' => $sb->full_name,
                 'phone' => $sb->phone ?: '',
                 'type' => 'beneficiary',
                 'amount' => $caseAmt,
-                'notes' => $lastBenNotes[$sb->id] ?? 'كفالة حالة',
+                'required_amount' => (float) ($sb->total_family_sponsorship_amount ?? $sb->monthly_sponsorship_amount ?? 0),
+                'notes' => ($sb->pivot?->notes ?? null) ?: ($lastBenNotes[$sb->id] ?? 'كفالة أسرة / حالة'),
             ];
-            $addedBeneficiaryIds[] = $sb->id;
         }
 
-        foreach ($this->sponsoredFamilyMembers as $fm) {
-            $fmAmount = (float)($fm->pivot->monthly_amount ?? 0);
-            if ($fmAmount <= 0 && $monthlyAmount > 0 && $this->sponsoredFamilyMembers->count() === 1 && empty($cases)) {
-                $fmAmount = $monthlyAmount;
-            } elseif ($fmAmount <= 0 && (float)($fm->sponsorship_amount ?? 0) > 0) {
-                $fmAmount = (float)$fm->sponsorship_amount;
-            }
-
-            if (in_array($fm->beneficiary_id, $addedBeneficiaryIds, true)) {
-                foreach ($cases as &$existingCase) {
-                    if ($existingCase['id'] == $fm->beneficiary_id) {
-                        $existingCase['name'] = $fm->full_name . ' (' . ($fm->relationship_label ?? 'فرد أسرة') . ')';
-                        if ($fmAmount > 0 && empty($existingCase['amount'])) {
-                            $existingCase['amount'] = $fmAmount;
-                        }
-                    }
-                }
-                unset($existingCase);
-            } else {
-                $cases[] = [
-                    'id' => $fm->beneficiary_id,
-                    'family_member_id' => $fm->id,
-                    'code' => $fm->code ?: ($fm->beneficiary?->code ?: 'BEN-' . $fm->beneficiary_id),
-                    'name' => $fm->full_name . ' (' . ($fm->relationship_label ?? 'فرد أسرة') . ' - أسرة ' . ($fm->beneficiary?->full_name ?? '') . ')',
-                    'phone' => $fm->phone ?: ($fm->beneficiary?->phone ?: ''),
-                    'type' => 'family_member',
-                    'amount' => $fmAmount > 0 ? $fmAmount : null,
-                    'notes' => 'كفالة فرد: ' . $fm->full_name,
-                ];
-                $addedBeneficiaryIds[] = $fm->beneficiary_id;
-            }
+        $allocatedCasesSum = collect($cases)->sum(fn ($c) => (float) ($c['amount'] ?? 0));
+        if ($allocatedCasesSum > 0 && ($monthlyAmount <= 0 || abs($monthlyAmount - $allocatedCasesSum) > 0.01)) {
+            $monthlyAmount = $allocatedCasesSum;
         }
 
         // If no cases directly bound on donor but last donation had beneficiary allocations, extract them

@@ -277,6 +277,10 @@ final class ChangeRequestWebController extends Controller
                         $instance->permissions()->sync($executionData['permissions']);
                     }
 
+                    if ($modelClass === 'App\Models\User' && isset($executionData['roles']) && is_array($executionData['roles'])) {
+                        $instance->roles()->sync($executionData['roles']);
+                    }
+
                     if ($modelClass === 'App\Models\Beneficiary') {
                         app(\App\Services\BeneficiaryService::class)->syncAssignments($instance, $executionData);
                     }

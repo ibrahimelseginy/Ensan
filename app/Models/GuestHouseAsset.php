@@ -14,6 +14,7 @@ final class GuestHouseAsset extends Model
         'guest_house_id',
         'guest_house_wing_id',
         'name',
+        'quantity',
         'code',
         'category',
         'location',
@@ -27,6 +28,7 @@ final class GuestHouseAsset extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'integer',
         'purchase_date' => 'date',
         'warranty_until' => 'date',
         'cost' => 'decimal:2',

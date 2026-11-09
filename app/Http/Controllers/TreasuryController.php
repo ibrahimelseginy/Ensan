@@ -28,7 +28,11 @@ final class TreasuryController extends Controller
             return redirect('/create_treasuries_tables.php');
         }
 
-        $treasuries = $this->treasuryService->getAllTreasuries();
+        $treasuries = Treasury::with(['manager', 'transactions', 'donations'])
+            ->accessibleForUser(auth()->user())
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->get();
         
         $pendingRequests = \App\Models\ChangeRequest::where('model_type', Treasury::class)
             ->where('status', 'pending')
@@ -40,8 +44,9 @@ final class TreasuryController extends Controller
         $totalTreasuries  = $treasuries->count();
 
         $recentTransactions = collect();
-        if (Schema::hasTable('treasury_transactions')) {
+        if (Schema::hasTable('treasury_transactions') && $treasuries->isNotEmpty()) {
             $recentTransactions = \App\Models\TreasuryTransaction::with(['treasury', 'createdBy', 'donation'])
+                ->whereIn('treasury_id', $treasuries->pluck('id'))
                 ->orderByDesc('transaction_date')
                 ->orderByDesc('created_at')
                 ->limit(10)
@@ -140,6 +145,25 @@ final class TreasuryController extends Controller
 
     public function adjustTotals(\Illuminate\Http\Request $request, Treasury $treasury): RedirectResponse
     {
+        if ($request->boolean('zero_treasury')) {
+            $zeroMode = (string) $request->input('zero_mode', 'balance_only');
+            if ($zeroMode === 'clear_all') {
+                $this->treasuryService->syncManualTotals($treasury, 0.0, 0.0, 0.0, (int) auth()->id());
+            } else {
+                $netTransactions = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+                $treasury->current_balance = 0.0;
+                $treasury->opening_balance = -$netTransactions;
+                $treasury->save();
+            }
+
+            if ($request->filled('redirect_back')) {
+                return back()->with('success', "تم تصفير رصيد خزينة [{$treasury->name}] يدوياً إلى (0.00 ج.م) بنجاح.");
+            }
+
+            return redirect()->route('treasuries.show', $treasury)
+                ->with('success', "تم تصفير رصيد خزينة [{$treasury->name}] يدوياً إلى (0.00 ج.م) بنجاح.");
+        }
+
         $validated = $request->validate([
             'current_balance' => 'nullable|numeric',
             'total_in'        => 'nullable|numeric|min:0',
@@ -151,6 +175,10 @@ final class TreasuryController extends Controller
         $targetBalance = array_key_exists('current_balance', $validated) && $validated['current_balance'] !== null && $validated['current_balance'] !== '' ? (float) $validated['current_balance'] : null;
 
         $this->treasuryService->syncManualTotals($treasury, $targetIn, $targetOut, $targetBalance, (int) auth()->id());
+
+        if ($request->filled('redirect_back')) {
+            return back()->with('success', 'تم تعديل أرصدة الوارد والصادر والرصيد الحالي للخزينة بنجاح');
+        }
 
         return redirect()->route('treasuries.show', $treasury)
             ->with('success', 'تم تعديل أرصدة الوارد والصادر والرصيد الحالي للخزينة بنجاح');

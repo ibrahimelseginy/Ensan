@@ -9,7 +9,7 @@ final class GuestHouseStay extends Model
     protected $fillable = [
         'guest_house_id', 'beneficiary_id', 'guest_house_bed_id', 'previous_stay_id',
         'source_type', 'source_id', 'status', 'is_temporary_out', 'temporary_out_at',
-        'arrival_date', 'expected_days', 'admitted_at', 'departed_at', 'notes', 'approved_by',
+        'arrival_date', 'expected_days', 'admitted_at', 'departed_at', 'notes', 'departure_notes', 'approved_by',
     ];
     protected $casts = [
         'arrival_date' => 'date',

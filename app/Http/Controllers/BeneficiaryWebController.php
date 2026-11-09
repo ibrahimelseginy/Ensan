@@ -152,10 +152,16 @@ final class BeneficiaryWebController extends Controller
             }
         }
 
-        $result = $this->beneficiaryService->createBeneficiary($request->validated());
+        $uploadedAttachments = $this->handleUploadedBeneficiaryAttachments($request);
+        $validatedData = $request->validated();
+        if (!empty($uploadedAttachments)) {
+            $validatedData['__uploaded_attachments'] = $uploadedAttachments;
+        }
+
+        $result = $this->beneficiaryService->createBeneficiary($validatedData);
 
         if ($result instanceof ChangeRequest) {
-            return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب إضافة المستفيد للموافقة.');
+            return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب إضافة المستفيد مع المرفقات للموافقة.');
         }
 
         return redirect()->route('beneficiaries.show', $result);
@@ -370,15 +376,19 @@ final class BeneficiaryWebController extends Controller
             'donor_id' => 'required|exists:donors,id',
             'family_member_id' => 'nullable|exists:beneficiary_family_members,id',
             'monthly_amount' => 'nullable|numeric|min:0',
+            'required_sponsorship_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:255',
         ]);
 
         $donorId = (int) $validated['donor_id'];
-        $amount = isset($validated['monthly_amount']) && $validated['monthly_amount'] !== '' ? (float)$validated['monthly_amount'] : null;
+        $amount = isset($validated['monthly_amount']) && $validated['monthly_amount'] !== '' ? (float) $validated['monthly_amount'] : null;
+        $requiredAmount = isset($validated['required_sponsorship_amount']) && $validated['required_sponsorship_amount'] !== ''
+            ? (float) $validated['required_sponsorship_amount']
+            : null;
         $notes = $validated['notes'] ?? null;
 
         if (!empty($validated['family_member_id'])) {
-            $member = $beneficiary->familyMembers()->find((int)$validated['family_member_id']);
+            $member = $beneficiary->familyMembers()->find((int) $validated['family_member_id']);
             if ($member) {
                 $member->sponsors()->syncWithoutDetaching([
                     $donorId => [
@@ -386,29 +396,90 @@ final class BeneficiaryWebController extends Controller
                         'notes' => $notes,
                     ]
                 ]);
-                if ($amount !== null && $amount > 0) {
+                if ($requiredAmount !== null && $requiredAmount > 0) {
+                    $member->update(['sponsorship_amount' => $requiredAmount]);
+                } elseif ($amount !== null && $amount > 0 && ((float) ($member->sponsorship_amount ?? 0)) <= 0) {
                     $member->update(['sponsorship_amount' => $amount]);
                 }
                 $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
+                $this->recalculateDonorMonthlySponsorship($donorId);
 
                 $amtText = $amount ? " بمبلغ كفالة [{$amount} ج.م]" : '';
-                return back()->with('success', "تم ربط الكفيل بالطفل/الفرد [{$member->full_name}]{$amtText} بنجاح، ويسمّع تلقائياً في إجمالي كفالات الأسرة.");
+                return back()->with('success', "تم ربط الكفيل بالطفل/الفرد [{$member->full_name}]{$amtText} بنجاح، ويسمّع تلقائياً في إجمالي كفالات الأسرة والمتبرع.");
             }
         }
 
-        $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
-        if ($amount !== null && $amount > 0) {
-            $beneficiary->update(['monthly_sponsorship_amount' => $amount]);
+        if (Donor::hasBeneficiarySponsorPivotColumns()) {
+            $beneficiary->sponsors()->syncWithoutDetaching([
+                $donorId => [
+                    'monthly_amount' => $amount,
+                    'notes' => $notes,
+                ]
+            ]);
+        } else {
+            $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
         }
 
-        return back()->with('success', 'تم ربط الكفيل بملف الأسرة بنجاح.');
+        if ($requiredAmount !== null && $requiredAmount > 0) {
+            $beneficiary->update([
+                'monthly_sponsorship_amount' => $requiredAmount,
+                'sponsorship_type' => $beneficiary->sponsorship_type ?: 'monthly_sponsor',
+            ]);
+        } elseif ($amount !== null && $amount > 0 && ((float) ($beneficiary->monthly_sponsorship_amount ?? 0)) <= 0) {
+            $beneficiary->update([
+                'monthly_sponsorship_amount' => $amount,
+                'sponsorship_type' => $beneficiary->sponsorship_type ?: 'monthly_sponsor',
+            ]);
+        }
+
+        $this->recalculateDonorMonthlySponsorship($donorId);
+
+        return back()->with('success', 'تم ربط الكفيل بملف الأسرة وتحديث توزيع الكفالة بنجاح.');
     }
 
     public function detachSponsor(Beneficiary $beneficiary, Donor $donor): RedirectResponse
     {
         $beneficiary->sponsors()->detach($donor->id);
+        $this->recalculateDonorMonthlySponsorship($donor->id);
 
         return back()->with('success', 'تم إلغاء ربط الكفيل بالحالة.');
+    }
+
+    public static function recalculateDonorMonthlySponsorship(int $donorId): void
+    {
+        $donor = Donor::with(['sponsoredBeneficiaries', 'sponsoredFamilyMembers'])->find($donorId);
+        if (!$donor) {
+            return;
+        }
+
+        $familyMemberParentIds = $donor->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+        $sum = 0.0;
+
+        foreach ($donor->sponsoredFamilyMembers as $fm) {
+            $amt = (float) ($fm->pivot?->monthly_amount ?? 0);
+            if ($amt > 0) {
+                $sum += $amt;
+            }
+        }
+
+        foreach ($donor->sponsoredBeneficiaries as $sb) {
+            $amt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            if ($amt > 0) {
+                $sum += $amt;
+            } elseif (!in_array($sb->id, $familyMemberParentIds, true) && $donor->sponsoredBeneficiaries->count() === 1 && $donor->sponsoredFamilyMembers->isEmpty()) {
+                $sum += (float) ($donor->sponsorship_monthly_amount ?? 0);
+            }
+        }
+
+        if ($sum > 0) {
+            $donor->update([
+                'sponsorship_monthly_amount' => round($sum, 2),
+                'classification' => 'recurring',
+                'recurring_cycle' => $donor->recurring_cycle ?: 'monthly',
+                'sponsorship_type' => 'monthly_sponsor',
+                'allocation_type' => 'sponsorship',
+            ]);
+        }
     }
 
     public function recordDirectAid(Request $request, Beneficiary $beneficiary): RedirectResponse
@@ -422,6 +493,9 @@ final class BeneficiaryWebController extends Controller
             'purpose' => 'nullable|string|max:255',
             'received_at' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
+            'receipt_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ]);
 
         $type = ($validated['aid_type'] ?? 'in_kind') === 'cash' ? 'cash' : 'in_kind';
@@ -429,17 +503,18 @@ final class BeneficiaryWebController extends Controller
         $receivedAt = !empty($validated['received_at']) ? Carbon::parse($validated['received_at']) : now();
         $donorId = !empty($validated['donor_id']) ? (int) $validated['donor_id'] : null;
 
-        // Resolve purpose safely without undefined array key errors
-        $purpose = null;
+        // Resolve purpose safely without exceeding column length
+        $rawPurpose = null;
         if (!empty($validated['purpose']) && $validated['purpose'] !== 'other') {
-            $purpose = $validated['purpose'];
+            $rawPurpose = $validated['purpose'];
         } elseif (!empty($validated['category_title'])) {
-            $purpose = $validated['category_title'];
+            $rawPurpose = $validated['category_title'];
         } elseif (!empty($validated['purpose'])) {
-            $purpose = $validated['purpose'];
+            $rawPurpose = $validated['purpose'];
         } else {
-            $purpose = $type === 'cash' ? 'sadaqat' : 'مساعدة عينية';
+            $rawPurpose = $type === 'cash' ? 'sadaqat' : 'مساعدة عينية';
         }
+        $safePurpose = mb_substr((string) $rawPurpose, 0, 40);
 
         // Project: if user selected "none" / empty, do not link to any project; if specified, link to that project; fallback to beneficiary's project
         $projectId = null;
@@ -452,32 +527,123 @@ final class BeneficiaryWebController extends Controller
 
         $receiptNumber = 'AID-' . strtoupper(substr(uniqid(), -6)) . '-' . $beneficiary->id;
 
-        $donation = Donation::create([
-            'source' => 'dashboard',
-            'category' => 'beneficiary_direct_aid',
-            'user_id' => auth()->id(),
+        // Handle uploaded prescriptions / invoices / receipts
+        $savedFiles = [];
+        if ($request->hasFile('receipt_image') && $request->file('receipt_image')->isValid()) {
+            $file = $request->file('receipt_image');
+            $path = $file->store('beneficiaries/direct_aid', 'public');
+            $savedFiles[] = [
+                'path' => $path,
+                'name' => $file->getClientOriginalName(),
+                'mime' => $file->getClientMimeType(),
+            ];
+        }
+        if ($request->hasFile('attachments')) {
+            foreach ((array) $request->file('attachments') as $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store('beneficiaries/direct_aid', 'public');
+                    $savedFiles[] = [
+                        'path' => $path,
+                        'name' => $file->getClientOriginalName(),
+                        'mime' => $file->getClientMimeType(),
+                    ];
+                }
+            }
+        }
+
+        $primaryReceiptPath = $savedFiles[0]['path'] ?? null;
+        $noteParts = array_filter([
+            !empty($validated['category_title']) ? $validated['category_title'] : $rawPurpose,
+            $validated['notes'] ?? null,
+        ]);
+        $allocationNote = !empty($noteParts) ? implode(' - ', array_unique($noteParts)) : 'تم تسجيل المساعدة مباشرة من ملف الحالة';
+
+        // If donor_id is null, ensure fallback institutional donor exists in case DB column is NOT NULL
+        if ($donorId === null) {
+            $fallbackDonor = Donor::where('code', 'D-00000')->orWhere('name', 'صرف مباشر من المؤسسة')->first();
+            if (!$fallbackDonor) {
+                $fallbackDonor = Donor::create([
+                    'code' => 'D-00000',
+                    'name' => 'صرف مباشر من المؤسسة',
+                    'type' => 'organization',
+                    'classification' => 'one_time',
+                    'active' => true,
+                ]);
+            }
+            $donorIdForInsert = $fallbackDonor->id;
+        } else {
+            $donorIdForInsert = $donorId;
+        }
+
+        $donationData = [
             'beneficiary_id' => $beneficiary->id,
-            'donor_id' => $donorId,
+            'donor_id' => $donorIdForInsert,
             'project_id' => $projectId,
-            'guest_house_id' => null, // Do not falsely attribute direct aid to guest house revenue
+            'guest_house_id' => null,
             'type' => $type,
             'cash_channel' => 'cash',
             'currency' => 'EGP',
             'amount' => $type === 'cash' ? $amount : 0,
             'estimated_value' => $type === 'in_kind' ? $amount : 0,
             'receipt_number' => $receiptNumber,
-            'purpose' => $purpose,
-            'allocation_note' => $validated['notes'] ?? (!empty($validated['category_title']) ? $validated['category_title'] : 'تم تسجيل المساعدة مباشرة من ملف الحالة'),
+            'purpose' => $safePurpose,
+            'allocation_note' => $allocationNote,
+            'transfer_receipt_path' => $primaryReceiptPath,
             'received_at' => $receivedAt,
-            'status' => 'completed',
+            'status' => 'active',
             'created_by' => auth()->id(),
-        ]);
+        ];
+
+        $donation = Donation::create($donationData);
+
+        // Save all uploaded prescriptions/invoices to Beneficiary attachments as well
+        foreach ($savedFiles as $idx => $fileMeta) {
+            $beneficiary->attachments()->create([
+                'path' => $fileMeta['path'],
+                'mime' => $fileMeta['mime'],
+                'title' => 'مرفق روشتة/فاتورة مساعدة (' . $receiptNumber . ')' . (count($savedFiles) > 1 ? ' #' . ($idx + 1) : '') . ' - ' . ($validated['category_title'] ?: $rawPurpose),
+            ]);
+        }
 
         if ($donorId && !$beneficiary->sponsors->contains($donorId)) {
             $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
         }
 
-        return back()->with('success', "تم تسجيل استلام المساعدة بنجاح برقم إيصال [{$receiptNumber}] وتم إدراجها فوراً في سجل الحالة.");
+        return back()->with('success', "تم تسجيل استلام المساعدة بنجاح برقم إيصال [{$receiptNumber}]" . (!empty($savedFiles) ? ' مع حفظ صور الروشتات/الفواتير المرفقة' : '') . ' وتم إدراجها فوراً في سجل الحالة.');
+    }
+
+    private function handleUploadedBeneficiaryAttachments(Request $request): array
+    {
+        $uploaded = [];
+        $titles = (array) $request->input('attachment_titles', []);
+
+        if ($request->hasFile('attachments')) {
+            foreach ((array) $request->file('attachments') as $idx => $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    $uploaded[] = [
+                        'path' => $path,
+                        'mime' => $file->getClientMimeType(),
+                        'title' => !empty($titles[$idx]) ? trim((string) $titles[$idx]) : pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                    ];
+                }
+            }
+        }
+
+        return $uploaded;
+    }
+
+    public function persistBeneficiaryAttachments(Beneficiary $beneficiary, array $uploadedAttachments): void
+    {
+        foreach ($uploadedAttachments as $att) {
+            if (!empty($att['path'])) {
+                $beneficiary->attachments()->create([
+                    'path' => $att['path'],
+                    'mime' => $att['mime'] ?? null,
+                    'title' => $att['title'] ?? 'مستند مرفق',
+                ]);
+            }
+        }
     }
 
     public function edit(Beneficiary $beneficiary): View|RedirectResponse
@@ -505,7 +671,13 @@ final class BeneficiaryWebController extends Controller
         }
 
         try {
-            $result = $this->beneficiaryService->updateBeneficiary($beneficiary, $request->validated());
+            $uploadedAttachments = $this->handleUploadedBeneficiaryAttachments($request);
+            $validatedData = $request->validated();
+            if (!empty($uploadedAttachments)) {
+                $validatedData['__uploaded_attachments'] = $uploadedAttachments;
+            }
+
+            $result = $this->beneficiaryService->updateBeneficiary($beneficiary, $validatedData);
 
             if ($result instanceof ChangeRequest) {
                 return redirect()->route('change-requests.index')->with('success', 'تم إرسال طلب تعديل المستفيد للموافقة.');

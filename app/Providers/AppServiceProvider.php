@@ -51,8 +51,8 @@ class AppServiceProvider extends ServiceProvider
 
 
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            // First, allow admins and general managers to bypass everything (Arabic and English)
-            if (method_exists($user, 'hasRole') && $user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
+            // First, allow super admins (and uncustomized general managers) to bypass everything
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
                 return true;
             }
 
@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
 
         // منظومة البحث المبدئي واستقبال الحالات: إتاحة الوصول لمن يملكون صلاحية التقديمات أو المدراء العامين
         \Illuminate\Support\Facades\Gate::define('mobile.case_applications.view', function ($user) {
-            if ($user->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة'])) {
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
                 return true;
             }
             return $user->hasPermission('mobile.case_applications.view');

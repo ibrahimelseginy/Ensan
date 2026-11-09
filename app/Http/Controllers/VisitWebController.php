@@ -94,7 +94,7 @@ final class VisitWebController extends Controller
 
         $validated['total_expenses'] = (float)($request->input('expense_rent', 0))
             + (float)($request->input('expense_tuition', 0))
-            + (float)($request->input('expense_food_weekly', 0))
+            + round((float)($request->input('expense_food_weekly', 0)) * 4.33, 2)
             + (float)($request->input('expense_transportation', 0))
             + (float)($request->input('expense_utilities', 0));
 
@@ -179,7 +179,11 @@ final class VisitWebController extends Controller
         $visit->load(['beneficiary', 'researcher']);
         $projects = \App\Models\Project::orderBy('name')->get();
         $user = auth()->user();
-        $authorizedForFinalApproval = $user && ($user->hasRole(['admin', 'super_admin', 'manager']) || (int)$user->id === 2 || str_contains(strtolower((string)$user->name), 'salma') || str_contains((string)$user->email, 'ghanemsalma'));
+        $authorizedForFinalApproval = $user && (
+            $user->hasRole(['admin', 'super_admin', 'manager', 'social_research_manager']) ||
+            $user->hasPermission('visits.edit') ||
+            $user->hasPermission('beneficiaries.create')
+        );
         return view('dashboard.visits.show', compact('visit', 'projects', 'authorizedForFinalApproval'));
     }
 
@@ -189,10 +193,7 @@ final class VisitWebController extends Controller
         $isAuthorized = $user && (
             $user->hasRole(['admin', 'super_admin', 'manager', 'social_research_manager']) ||
             $user->hasPermission('visits.edit') ||
-            $user->hasPermission('beneficiaries.create') ||
-            (int)$user->id === 2 ||
-            str_contains(strtolower((string)$user->name), 'salma') ||
-            str_contains((string)$user->email, 'ghanemsalma')
+            $user->hasPermission('beneficiaries.create')
         );
         abort_unless($isAuthorized, 403, 'غير مصرح لك بالاعتماد النهائي للحالات بعد البحث الميداني.');
 
@@ -205,11 +206,15 @@ final class VisitWebController extends Controller
             ]);
 
             $reason = (string) $request->input('rejection_reason');
-            $visit->update([
+            $updateRejectData = [
                 'status' => 'rejected',
-                'recommendation' => 'rejected',
-                'recommendation_notes' => ($visit->recommendation_notes ? $visit->recommendation_notes . "\n" : '') . "تم الرفض النهائي من الإدارة: {$reason}",
-            ]);
+                'recommendation' => 'reject',
+                'notes' => trim(($visit->notes ? $visit->notes . "\n" : '') . "تم الرفض النهائي من الإدارة: {$reason}"),
+            ];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('field_visits', 'recommendation_notes')) {
+                $updateRejectData['recommendation_notes'] = ($visit->recommendation_notes ? $visit->recommendation_notes . "\n" : '') . "تم الرفض النهائي من الإدارة: {$reason}";
+            }
+            $visit->update($updateRejectData);
 
             if ($visit->beneficiary) {
                 $visit->beneficiary->update([
@@ -310,7 +315,7 @@ final class VisitWebController extends Controller
                 'tumor_location' => $visit->tumor_location ?: $caseApp?->tumor_location,
                 'treatment_protocol' => $visit->treatment_protocol ?: $caseApp?->treatment_protocol,
                 'family_members_data' => $visit->family_members,
-                'assistance_type' => $request->filled('monthly_sponsorship_amount') ? 'كفالة نقدية شهرية' : ($request->filled('in_kind_notes') ? 'مساعدة عينية' : 'رعاية عامة'),
+                'assistance_type' => $request->filled('monthly_sponsorship_amount') ? 'monthly' : ($request->filled('in_kind_notes') ? 'in_kind' : 'financial'),
                 'collection_method' => 'cash',
                 'collection_day' => 1,
                 'classification' => 'A',
@@ -371,12 +376,15 @@ final class VisitWebController extends Controller
             }
         }
 
-        $visit->update([
+        $visitApproveData = [
             'beneficiary_id' => $beneficiary->id,
-            'recommendation' => 'approved',
+            'recommendation' => 'approve',
             'status' => 'accepted',
-            'recommendation_notes' => "تم قبول واعتماد البحث بمشروع ({$project->name}) وتحويل الحالة لمستفيد نشط برمز [{$beneficiary->code}] بواسطة " . ($user->name ?? 'الإدارة'),
-        ]);
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('field_visits', 'recommendation_notes')) {
+            $visitApproveData['recommendation_notes'] = "تم قبول واعتماد البحث بمشروع ({$project->name}) وتحويل الحالة لمستفيد نشط برمز [{$beneficiary->code}] بواسطة " . ($user->name ?? 'الإدارة');
+        }
+        $visit->update($visitApproveData);
 
         if ($caseApp) {
             $caseApp->update([
@@ -385,9 +393,10 @@ final class VisitWebController extends Controller
             ]);
         }
 
-        if ($project->manager_id) {
+        $managerUserId = $project->manager_user_id ?? $project->manager_id ?? null;
+        if ($managerUserId) {
             \App\Models\Notification::create([
-                'user_id' => $project->manager_id,
+                'user_id' => $managerUserId,
                 'title' => 'اعتماد حالة جديدة في المشروع',
                 'message' => "تم قبول واعتماد الحالة: {$beneficiary->full_name} في مشروع ({$project->name}) وتحويلها لمستفيد بالكود [{$beneficiary->code}].",
                 'type' => 'project_case_approved',
@@ -419,7 +428,7 @@ final class VisitWebController extends Controller
 
         $validated['total_expenses'] = (float)($request->input('expense_rent', 0))
             + (float)($request->input('expense_tuition', 0))
-            + (float)($request->input('expense_food_weekly', 0))
+            + round((float)($request->input('expense_food_weekly', 0)) * 4.33, 2)
             + (float)($request->input('expense_transportation', 0))
             + (float)($request->input('expense_utilities', 0));
 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -57,10 +57,30 @@
                         </div>
                     </div>
 
+                    @php
+                        $breakdown = $treasury->balance_breakdown;
+                    @endphp
                     <div class="mb-4">
-                        <div class="text-white opacity-50 small mb-1">الرصيد الحالي:</div>
-                        <div class="fw-bold text-white fs-3 mb-3">
+                        <div class="text-white opacity-50 small mb-1">إجمالي الرصيد الحالي بالخزينة:</div>
+                        <div class="fw-bold text-white fs-3 mb-2">
                             {{ number_format($treasury->current_balance, 2) }} <small class="fs-6 opacity-50">{{ $treasury->currency }}</small>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="p-2 rounded-3 border border-info border-opacity-25" style="background: rgba(56, 189, 248, 0.12);">
+                                    <div class="text-info x-small fw-bold mb-0.5"><i class="bi bi-wallet2 me-1"></i>فلوس العهدة:</div>
+                                    <div class="text-white fw-bold font-monospace small">{{ number_format($breakdown['custody_balance'], 2) }} <small class="opacity-75">{{ $treasury->currency }}</small></div>
+                                    <div class="text-white opacity-50" style="font-size: 0.68rem;">إجمالي وارد عهدة: {{ number_format($breakdown['custody_in'], 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 rounded-3 border border-success border-opacity-25" style="background: rgba(16, 185, 129, 0.12);">
+                                    <div class="text-success x-small fw-bold mb-0.5"><i class="bi bi-heart-fill me-1"></i>فلوس التبرعات:</div>
+                                    <div class="text-white fw-bold font-monospace small">{{ number_format($breakdown['donations_balance'], 2) }} <small class="opacity-75">{{ $treasury->currency }}</small></div>
+                                    <div class="text-white opacity-50" style="font-size: 0.68rem;">إجمالي وارد تبرعات: {{ number_format($breakdown['donations_in'], 0) }}</div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="row g-3">

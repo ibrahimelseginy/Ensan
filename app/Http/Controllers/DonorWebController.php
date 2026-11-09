@@ -32,8 +32,13 @@ final class DonorWebController extends Controller
 
     public function index(Request $request): View
     {
+        $perPage = (int) $request->get('per_page', 30);
+        if (!in_array($perPage, [20, 30, 50, 100], true)) {
+            $perPage = 30;
+        }
         $filters = $request->only(['q', 'type', 'classification', 'active', 'donation_status']);
-        $donors  = $this->donorService->searchDonors($filters, 12);
+        $donors  = $this->donorService->searchDonors($filters, $perPage);
+        $donors->getCollection()->loadMissing(['sponsoredBeneficiaries', 'sponsoredFamilyMembers.beneficiary']);
 
         $donorIds = $donors->pluck('id');
         $donStats = Donation::select('donor_id', DB::raw('COUNT(*) as count'), DB::raw('SUM(COALESCE(amount, estimated_value, 0)) as total'))

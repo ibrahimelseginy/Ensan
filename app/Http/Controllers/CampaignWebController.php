@@ -67,6 +67,14 @@ final class CampaignWebController extends Controller
 
     public function show(Campaign $campaign): View|RedirectResponse
     {
+        $user = request()->user();
+        if ($user && method_exists($user, 'getAccessibleCampaignIds')) {
+            $allowedCampaignIds = $user->getAccessibleCampaignIds();
+            if (is_array($allowedCampaignIds) && !in_array((int) $campaign->id, $allowedCampaignIds, true)) {
+                abort(403, 'غير مصرح لك بالدخول إلى هذه الحملة.');
+            }
+        }
+
         if ($this->hasPendingRequest($campaign)) {
             return redirect()->route('change-requests.index')->with('info', 'هذه الحملة لديها طلب مراجعة حالياً');
         }

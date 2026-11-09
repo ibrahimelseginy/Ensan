@@ -20,8 +20,13 @@ final readonly class CampaignRepository
         $q      = $filters['q'] ?? null;
         $status = $filters['status'] ?? null;
         $year   = $filters['season_year'] ?? null;
+        $user   = auth()->user();
+        $allowedCampaignIds = ($user && method_exists($user, 'getAccessibleCampaignIds'))
+            ? $user->getAccessibleCampaignIds()
+            : null;
 
         return Campaign::query()
+            ->when(is_array($allowedCampaignIds), fn($qr) => $qr->whereIn('id', $allowedCampaignIds ?: [0]))
             ->when($q, fn($qr) => $qr->where('name', 'like', '%' . $q . '%'))
             ->when($status, fn($qr) => $qr->where('status', $status))
             ->when($year, fn($qr) => $qr->where('season_year', $year))

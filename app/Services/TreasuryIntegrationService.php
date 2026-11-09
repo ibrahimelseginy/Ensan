@@ -711,8 +711,8 @@ class TreasuryIntegrationService
 
     protected function createReversalJournalEntry(Donation $donation, Treasury $treasury, $amount)
     {
-        $donationAccount = $this->getOrCreateAccount('401', 'Donations Revenue', 'revenue');
-        $treasuryAccount = $this->getOrCreateAccount($treasury->code ?? '101', $treasury->name, 'asset');
+        $donationAccount = $this->getOrCreateAccount('تبرعات نقدية', '4101', 'revenue');
+        $treasuryAccount = $this->getOrCreateAccount($treasury->name, $treasury->code ?? '1101', 'asset');
 
         $entry = JournalEntry::create([
             'date' => now(),

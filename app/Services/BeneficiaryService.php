@@ -47,6 +47,7 @@ final readonly class BeneficiaryService
         $relationKeys = [
             'allocated_beneficiary_ids', 'sponsor_ids', 'family_members',
             'patient_relationship', 'patient_birth_date', 'patient_phone', 'patient_backup_phone',
+            '__uploaded_attachments',
         ];
         $relationData = Arr::only($data, $relationKeys);
         $modelData = Arr::except($data, $relationKeys);
@@ -97,6 +98,7 @@ final readonly class BeneficiaryService
         $relationKeys = [
             'allocated_beneficiary_ids', 'sponsor_ids', 'family_members',
             'patient_relationship', 'patient_birth_date', 'patient_phone', 'patient_backup_phone',
+            '__uploaded_attachments',
         ];
         $relationData = Arr::only($data, $relationKeys);
         $modelData = Arr::except($data, $relationKeys);
@@ -167,6 +169,20 @@ final readonly class BeneficiaryService
 
         if (array_key_exists('patient_name', $data)) {
             $this->syncPatientMember($beneficiary, $data);
+        }
+
+        if (!empty($data['__uploaded_attachments']) && is_array($data['__uploaded_attachments'])) {
+            foreach ($data['__uploaded_attachments'] as $att) {
+                if (!empty($att['path'])) {
+                    $beneficiary->attachments()->firstOrCreate(
+                        ['path' => $att['path']],
+                        [
+                            'mime' => $att['mime'] ?? null,
+                            'title' => $att['title'] ?? 'مستند مرفق',
+                        ]
+                    );
+                }
+            }
         }
     }
 

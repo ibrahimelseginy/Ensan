@@ -26,11 +26,15 @@ final class BeneficiaryFamilyMemberWebController extends Controller
         $validated = $request->validate([
             'donor_id' => 'required|exists:donors,id',
             'monthly_amount' => 'nullable|numeric|min:0',
+            'required_sponsorship_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:255',
         ]);
 
         $donorId = (int) $validated['donor_id'];
-        $amount = isset($validated['monthly_amount']) && $validated['monthly_amount'] !== '' ? (float)$validated['monthly_amount'] : null;
+        $amount = isset($validated['monthly_amount']) && $validated['monthly_amount'] !== '' ? (float) $validated['monthly_amount'] : null;
+        $requiredAmount = isset($validated['required_sponsorship_amount']) && $validated['required_sponsorship_amount'] !== ''
+            ? (float) $validated['required_sponsorship_amount']
+            : null;
         $notes = $validated['notes'] ?? null;
 
         $familyMember->sponsors()->syncWithoutDetaching([
@@ -40,7 +44,9 @@ final class BeneficiaryFamilyMemberWebController extends Controller
             ]
         ]);
 
-        if ($amount !== null && $amount > 0) {
+        if ($requiredAmount !== null && $requiredAmount > 0) {
+            $familyMember->update(['sponsorship_amount' => $requiredAmount]);
+        } elseif ($amount !== null && $amount > 0 && ((float) ($familyMember->sponsorship_amount ?? 0)) <= 0) {
             $familyMember->update(['sponsorship_amount' => $amount]);
         }
 
@@ -49,12 +55,15 @@ final class BeneficiaryFamilyMemberWebController extends Controller
             $familyMember->beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
         }
 
-        return back()->with('success', "تم ربط الكفيل بالفرد [{$familyMember->full_name}] بنجاح وتحديث كفالته.");
+        BeneficiaryWebController::recalculateDonorMonthlySponsorship($donorId);
+
+        return back()->with('success', "تم ربط الكفيل بالفرد [{$familyMember->full_name}] بنجاح وتحديث توزيع الكفالة.");
     }
 
     public function detachSponsor(BeneficiaryFamilyMember $familyMember, Donor $donor): RedirectResponse
     {
         $familyMember->sponsors()->detach($donor->id);
+        BeneficiaryWebController::recalculateDonorMonthlySponsorship($donor->id);
 
         return back()->with('success', "تم إلغاء ربط الكفيل بالفرد [{$familyMember->full_name}].");
     }

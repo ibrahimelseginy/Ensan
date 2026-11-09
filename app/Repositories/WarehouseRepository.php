@@ -44,7 +44,10 @@ final readonly class WarehouseRepository
     public function getStock(int $warehouseId): Collection
     {
         return InventoryTransaction::where('warehouse_id', $warehouseId)
-            ->select('item_id', DB::raw("SUM(CASE WHEN type = 'in' THEN quantity WHEN type = 'out' THEN -quantity ELSE 0 END) as current_stock"))
+            ->where(function ($q) {
+                $q->where('status', 'approved')->orWhereNull('status');
+            })
+            ->select('item_id', DB::raw("SUM(CASE WHEN type IN ('in', 'stock_count_increase', 'transfer_in') THEN quantity WHEN type IN ('out', 'transfer', 'transfer_out', 'stock_count_shortage') THEN -quantity ELSE 0 END) as current_stock"))
             ->groupBy('item_id')
             ->having('current_stock', '>', 0)
             ->with('item')

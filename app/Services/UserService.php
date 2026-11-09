@@ -89,6 +89,7 @@ final readonly class UserService
         }
 
         $roles = $data['roles'] ?? null;
+        $payloadData = $data;
         unset($data['roles']);
 
         $currentUser = request()->user() ?? auth()->user();
@@ -143,11 +144,15 @@ final readonly class UserService
             return $user->refresh();
         };
 
+        if ($roles !== null) {
+            $payloadData['roles'] = array_values(array_map('intval', (array) $roles));
+        }
+
         return ChangeRequestService::handleRequest(
             User::class,
             $user->id,
             'update',
-            $data,
+            $payloadData,
             $executor
         );
     }

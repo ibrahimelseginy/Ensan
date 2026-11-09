@@ -20,7 +20,12 @@ final class TreasuryTransaction extends Model
         'created_by',
         'donation_id',
         'expense_id',
-        'journal_entry_id'
+        'payroll_id',
+        'journal_entry_id',
+        'status',
+        'cancelled_at',
+        'cancelled_by',
+        'cancellation_reason',
     ];
 
     protected $casts = [

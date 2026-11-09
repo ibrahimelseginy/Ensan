@@ -110,17 +110,31 @@ final readonly class DonorService
             $data['code'] = $this->nextDonorCode();
         }
 
-        $submittedBeneficiaryIds = $data['sponsored_beneficiary_ids']
-            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []);
+        $submittedBeneficiaryIds = $this->normaliseBeneficiaryIds($data['sponsored_beneficiary_ids']
+            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []));
         $sponsoredFamilyMemberIds = $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? []);
+        $beneficiaryAmounts = is_array($data['sponsorship_beneficiary_amounts'] ?? null) ? $data['sponsorship_beneficiary_amounts'] : [];
+        $familyMemberAmounts = is_array($data['sponsorship_family_member_amounts'] ?? null) ? $data['sponsorship_family_member_amounts'] : [];
         $sponsoredBeneficiaryIds = $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds);
         $syncSponsoredBeneficiaries = (bool) ($data['sync_sponsored_beneficiaries'] ?? false);
         $syncSponsoredFamilyMembers = (bool) ($data['sync_sponsored_family_members'] ?? false);
         $modelData = Arr::except($data, [
             'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
+            'sponsorship_beneficiary_amounts',
             'sponsored_family_member_ids', 'sync_sponsored_family_members',
+            'sponsorship_family_member_amounts',
             'phone_country', '_phone_national',
         ]);
+
+        $calculatedTotal = $this->calculateTotalFromCaseAmounts(
+            $submittedBeneficiaryIds,
+            $beneficiaryAmounts,
+            $sponsoredFamilyMemberIds,
+            $familyMemberAmounts
+        );
+        if ($calculatedTotal > 0) {
+            $modelData['sponsorship_monthly_amount'] = $calculatedTotal;
+        }
 
         $this->applySponsorshipDefaults($modelData);
         $modelData['sponsored_beneficiary_id'] = $sponsoredBeneficiaryIds[0] ?? null;
@@ -131,18 +145,31 @@ final readonly class DonorService
 
         $payload = array_merge($modelData, [
             'sponsored_beneficiary_ids' => $sponsoredBeneficiaryIds,
+            'direct_sponsored_beneficiary_ids' => $submittedBeneficiaryIds,
+            'sponsorship_beneficiary_amounts' => $beneficiaryAmounts,
             'sync_sponsored_beneficiaries' => $syncSponsoredBeneficiaries,
             'sponsored_family_member_ids' => $sponsoredFamilyMemberIds,
+            'sponsorship_family_member_amounts' => $familyMemberAmounts,
             'sync_sponsored_family_members' => $syncSponsoredFamilyMembers,
         ]);
 
-        $executor = function () use ($modelData, $sponsoredBeneficiaryIds, $syncSponsoredBeneficiaries, $sponsoredFamilyMemberIds, $syncSponsoredFamilyMembers) {
+        $executor = function () use (
+            $modelData,
+            $sponsoredBeneficiaryIds,
+            $submittedBeneficiaryIds,
+            $beneficiaryAmounts,
+            $syncSponsoredBeneficiaries,
+            $sponsoredFamilyMemberIds,
+            $familyMemberAmounts,
+            $syncSponsoredFamilyMembers
+        ) {
             $donor = $this->donorRepository->create($modelData);
-            if ($syncSponsoredBeneficiaries) {
-                $donor->sponsoredBeneficiaries()->sync($sponsoredBeneficiaryIds);
-            }
+            $totalMonthly = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
             if ($syncSponsoredFamilyMembers) {
-                $donor->sponsoredFamilyMembers()->sync($sponsoredFamilyMemberIds);
+                $this->syncFamilyMembersWithAmounts($donor, $sponsoredFamilyMemberIds, $familyMemberAmounts, $submittedBeneficiaryIds, $totalMonthly);
+            }
+            if ($syncSponsoredBeneficiaries) {
+                $this->syncBeneficiariesWithAmounts($donor, $sponsoredBeneficiaryIds, $submittedBeneficiaryIds, $beneficiaryAmounts, $sponsoredFamilyMemberIds, $totalMonthly);
             }
             return $donor;
         };
@@ -164,19 +191,33 @@ final readonly class DonorService
         $sponsoredFamilyMemberIds = $syncSponsoredFamilyMembers
             ? $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? [])
             : null;
-        $submittedBeneficiaryIds = $data['sponsored_beneficiary_ids']
-            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []);
+        $submittedBeneficiaryIds = $this->normaliseBeneficiaryIds($data['sponsored_beneficiary_ids']
+            ?? (!empty($data['sponsored_beneficiary_id']) ? [$data['sponsored_beneficiary_id']] : []));
+        $beneficiaryAmounts = is_array($data['sponsorship_beneficiary_amounts'] ?? null) ? $data['sponsorship_beneficiary_amounts'] : [];
+        $familyMemberAmounts = is_array($data['sponsorship_family_member_amounts'] ?? null) ? $data['sponsorship_family_member_amounts'] : [];
         $sponsoredBeneficiaryIds = $syncSponsoredBeneficiaries
             ? $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds ?? [])
             : null;
         $modelData = Arr::except($data, [
             'code', 'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
+            'sponsorship_beneficiary_amounts',
             'sponsored_family_member_ids', 'sync_sponsored_family_members',
+            'sponsorship_family_member_amounts',
             'phone_country', '_phone_national',
         ]);
 
         if (empty($donor->code)) {
             $modelData['code'] = Donor::nextAvailableCode();
+        }
+
+        $calculatedTotal = $this->calculateTotalFromCaseAmounts(
+            $submittedBeneficiaryIds,
+            $beneficiaryAmounts,
+            $sponsoredFamilyMemberIds ?? [],
+            $familyMemberAmounts
+        );
+        if ($calculatedTotal > 0) {
+            $modelData['sponsorship_monthly_amount'] = $calculatedTotal;
         }
 
         $this->applySponsorshipDefaults($modelData, $donor);
@@ -197,18 +238,30 @@ final readonly class DonorService
 
         $payload = array_merge($modelData, [
             'sponsored_beneficiary_ids' => $sponsoredBeneficiaryIds ?? [],
+            'direct_sponsored_beneficiary_ids' => $submittedBeneficiaryIds,
+            'sponsorship_beneficiary_amounts' => $beneficiaryAmounts,
             'sync_sponsored_beneficiaries' => $syncSponsoredBeneficiaries,
             'sponsored_family_member_ids' => $sponsoredFamilyMemberIds ?? [],
+            'sponsorship_family_member_amounts' => $familyMemberAmounts,
             'sync_sponsored_family_members' => $syncSponsoredFamilyMembers,
         ]);
 
-        $executor = function () use ($donor, $modelData, $sponsoredBeneficiaryIds, $sponsoredFamilyMemberIds) {
+        $executor = function () use (
+            $donor,
+            $modelData,
+            $sponsoredBeneficiaryIds,
+            $submittedBeneficiaryIds,
+            $beneficiaryAmounts,
+            $sponsoredFamilyMemberIds,
+            $familyMemberAmounts
+        ) {
             $this->donorRepository->update($donor, $modelData);
-            if (!is_null($sponsoredBeneficiaryIds)) {
-                $donor->sponsoredBeneficiaries()->sync($sponsoredBeneficiaryIds);
-            }
+            $totalMonthly = (float) ($modelData['sponsorship_monthly_amount'] ?? $donor->sponsorship_monthly_amount ?? 0);
             if (!is_null($sponsoredFamilyMemberIds)) {
-                $donor->sponsoredFamilyMembers()->sync($sponsoredFamilyMemberIds);
+                $this->syncFamilyMembersWithAmounts($donor, $sponsoredFamilyMemberIds, $familyMemberAmounts, $submittedBeneficiaryIds, $totalMonthly);
+            }
+            if (!is_null($sponsoredBeneficiaryIds)) {
+                $this->syncBeneficiariesWithAmounts($donor, $sponsoredBeneficiaryIds, $submittedBeneficiaryIds, $beneficiaryAmounts, $sponsoredFamilyMemberIds ?? [], $totalMonthly);
             }
             return $donor;
         };
@@ -303,17 +356,145 @@ final readonly class DonorService
     public function syncSponsoredBeneficiaries(Donor $donor, array $data): void
     {
         $familyMemberIds = $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? []);
+        $directBeneficiaryIds = $this->normaliseBeneficiaryIds($data['direct_sponsored_beneficiary_ids'] ?? $data['sponsored_beneficiary_ids'] ?? []);
+        $beneficiaryAmounts = is_array($data['sponsorship_beneficiary_amounts'] ?? null) ? $data['sponsorship_beneficiary_amounts'] : [];
+        $familyMemberAmounts = is_array($data['sponsorship_family_member_amounts'] ?? null) ? $data['sponsorship_family_member_amounts'] : [];
+        $totalMonthly = (float) ($data['sponsorship_monthly_amount'] ?? $donor->sponsorship_monthly_amount ?? 0);
 
         if ($data['sync_sponsored_family_members'] ?? false) {
-            $donor->sponsoredFamilyMembers()->sync($familyMemberIds);
+            $this->syncFamilyMembersWithAmounts($donor, $familyMemberIds, $familyMemberAmounts, $directBeneficiaryIds, $totalMonthly);
         }
 
         if ($data['sync_sponsored_beneficiaries'] ?? false) {
-            $donor->sponsoredBeneficiaries()->sync($this->beneficiaryIdsForAssignments(
-                $data['sponsored_beneficiary_ids'] ?? [],
-                $familyMemberIds
-            ));
+            $allBeneficiaryIds = $this->beneficiaryIdsForAssignments($directBeneficiaryIds, $familyMemberIds);
+            $this->syncBeneficiariesWithAmounts($donor, $allBeneficiaryIds, $directBeneficiaryIds, $beneficiaryAmounts, $familyMemberIds, $totalMonthly);
         }
+    }
+
+    private function calculateTotalFromCaseAmounts(
+        array $directBeneficiaryIds,
+        array $beneficiaryAmounts,
+        array $familyMemberIds,
+        array $familyMemberAmounts
+    ): float {
+        $sum = 0.0;
+        foreach ($directBeneficiaryIds as $bId) {
+            $val = isset($beneficiaryAmounts[$bId]) ? (float) $beneficiaryAmounts[$bId] : 0.0;
+            if ($val > 0) {
+                $sum += $val;
+            }
+        }
+        foreach ($familyMemberIds as $fmId) {
+            $val = isset($familyMemberAmounts[$fmId]) ? (float) $familyMemberAmounts[$fmId] : 0.0;
+            if ($val > 0) {
+                $sum += $val;
+            }
+        }
+
+        return round($sum, 2);
+    }
+
+    private function syncFamilyMembersWithAmounts(
+        Donor $donor,
+        array $familyMemberIds,
+        array $familyMemberAmounts,
+        array $directBeneficiaryIds,
+        float $totalMonthly
+    ): void {
+        if ($familyMemberIds === []) {
+            $donor->sponsoredFamilyMembers()->sync([]);
+            return;
+        }
+
+        $existingPivot = $donor->sponsoredFamilyMembers()
+            ->pluck('family_member_sponsors.monthly_amount', 'beneficiary_family_members.id')
+            ->all();
+
+        $syncPayload = [];
+        $count = count($familyMemberIds);
+        foreach ($familyMemberIds as $fmId) {
+            $explicitAmt = isset($familyMemberAmounts[$fmId]) && $familyMemberAmounts[$fmId] !== '' && $familyMemberAmounts[$fmId] !== null
+                ? (float) $familyMemberAmounts[$fmId]
+                : null;
+
+            if ($explicitAmt === null || $explicitAmt <= 0) {
+                if (isset($existingPivot[$fmId]) && (float) $existingPivot[$fmId] > 0) {
+                    $explicitAmt = (float) $existingPivot[$fmId];
+                } elseif ($count === 1 && $directBeneficiaryIds === [] && $totalMonthly > 0) {
+                    $explicitAmt = $totalMonthly;
+                }
+            }
+
+            $syncPayload[$fmId] = [
+                'monthly_amount' => ($explicitAmt !== null && $explicitAmt > 0) ? round($explicitAmt, 2) : null,
+            ];
+
+            // If the family member has no required sponsorship_amount set at all yet, initialize it without overwriting existing required amounts
+            if ($explicitAmt !== null && $explicitAmt > 0) {
+                $member = BeneficiaryFamilyMember::find($fmId);
+                if ($member && ((float) ($member->sponsorship_amount ?? 0)) <= 0) {
+                    $member->update(['sponsorship_amount' => round($explicitAmt, 2)]);
+                }
+            }
+        }
+
+        $donor->sponsoredFamilyMembers()->sync($syncPayload);
+    }
+
+    private function syncBeneficiariesWithAmounts(
+        Donor $donor,
+        array $allBeneficiaryIds,
+        array $directBeneficiaryIds,
+        array $beneficiaryAmounts,
+        array $familyMemberIds,
+        float $totalMonthly
+    ): void {
+        if ($allBeneficiaryIds === []) {
+            $donor->sponsoredBeneficiaries()->sync([]);
+            return;
+        }
+
+        if (!Donor::hasBeneficiarySponsorPivotColumns()) {
+            $donor->sponsoredBeneficiaries()->sync($allBeneficiaryIds);
+            return;
+        }
+
+        $existingPivot = $donor->sponsoredBeneficiaries()
+            ->pluck('beneficiary_sponsors.monthly_amount', 'beneficiaries.id')
+            ->all();
+
+        $syncPayload = [];
+        $directCount = count($directBeneficiaryIds);
+        foreach ($allBeneficiaryIds as $bId) {
+            $isDirect = in_array((int) $bId, $directBeneficiaryIds, true);
+            $explicitAmt = isset($beneficiaryAmounts[$bId]) && $beneficiaryAmounts[$bId] !== '' && $beneficiaryAmounts[$bId] !== null
+                ? (float) $beneficiaryAmounts[$bId]
+                : null;
+
+            if (($explicitAmt === null || $explicitAmt <= 0) && $isDirect) {
+                if (isset($existingPivot[$bId]) && (float) $existingPivot[$bId] > 0) {
+                    $explicitAmt = (float) $existingPivot[$bId];
+                } elseif ($directCount === 1 && $familyMemberIds === [] && $totalMonthly > 0) {
+                    $explicitAmt = $totalMonthly;
+                }
+            }
+
+            $syncPayload[$bId] = [
+                'monthly_amount' => ($explicitAmt !== null && $explicitAmt > 0) ? round($explicitAmt, 2) : null,
+            ];
+
+            if ($explicitAmt !== null && $explicitAmt > 0) {
+                $ben = \App\Models\Beneficiary::find($bId);
+                if ($ben && ((float) ($ben->monthly_sponsorship_amount ?? 0)) <= 0) {
+                    $ben->update([
+                        'monthly_sponsorship_amount' => round($explicitAmt, 2),
+                        'sponsorship_type' => $ben->sponsorship_type ?: 'monthly_sponsor',
+                    ]);
+                }
+            }
+        }
+
+        $donor->sponsoredBeneficiaries()->sync($syncPayload);
     }
 
     private function normaliseBeneficiaryIds(array $ids): array

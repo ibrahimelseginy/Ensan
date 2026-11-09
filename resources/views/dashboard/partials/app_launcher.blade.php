@@ -905,7 +905,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission(['roles.view', 'audits.view', 'manage_change_requests', 'reports.view']) || $u->hasRole(['admin', 'super_admin', 'manager'])))
+        @if($u && ($u->hasPermission(['roles.view', 'audits.view', 'manage_change_requests', 'reports.view', 'users.view', 'data_import.view']) || $u->isSuperAdmin()))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
@@ -927,7 +927,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 18. معلومات المطور (Developer Profile) --}}
-        @if($u && $u->hasRole(['admin', 'super_admin', 'manager']))
+        @if($u && $u->isSuperAdmin())
         <a href="{{ route('developer.info') }}" class="ensan-app-card" data-category="admin" data-title="معلومات المطور" data-keywords="مطور ابراهيم السجيني برمجة تواصل واتساب دعم فني developer ibrahim elseginy 01556592017">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #1e40af, #3b82f6); box-shadow: 0 10px 20px -5px rgba(30, 64, 175, 0.45);">
                 <i class="bi bi-code-slash"></i>
@@ -2017,7 +2017,7 @@ body.theme-dark .launcher-cat-btn.active,
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u && ($u->hasPermission('reports.view') || $u->hasRole('admin') || $u->hasRole('super_admin')))
+                    @if($u && ($u->hasPermission('reports.view') || $u->isSuperAdmin()))
                     <a href="{{ route('reports.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
                             <i class="bi bi-bar-chart-fill"></i>
