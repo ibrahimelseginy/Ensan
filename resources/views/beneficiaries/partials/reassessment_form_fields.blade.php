@@ -247,3 +247,4 @@
         <input type="date" name="reassessed_at" class="form-control font-monospace" value="{{ old('reassessed_at', now()->toDateString()) }}">
     </div>
 </div>
+
