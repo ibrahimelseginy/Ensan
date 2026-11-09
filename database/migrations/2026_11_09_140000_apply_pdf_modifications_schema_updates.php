@@ -13,10 +13,10 @@ return new class extends Migration
         if (Schema::hasTable('beneficiary_sponsors')) {
             Schema::table('beneficiary_sponsors', function (Blueprint $table) {
                 if (!Schema::hasColumn('beneficiary_sponsors', 'monthly_amount')) {
-                    $table->decimal('monthly_amount', 12, 2)->nullable()->after('donor_id');
+                    $table->decimal('monthly_amount', 12, 2)->nullable();
                 }
                 if (!Schema::hasColumn('beneficiary_sponsors', 'notes')) {
-                    $table->string('notes', 500)->nullable()->after('monthly_amount');
+                    $table->string('notes', 500)->nullable();
                 }
             });
         }
@@ -25,7 +25,7 @@ return new class extends Migration
         if (Schema::hasTable('guest_house_assets')) {
             Schema::table('guest_house_assets', function (Blueprint $table) {
                 if (!Schema::hasColumn('guest_house_assets', 'quantity')) {
-                    $table->unsignedInteger('quantity')->default(1)->after('name');
+                    $table->unsignedInteger('quantity')->default(1);
                 }
             });
         }
@@ -34,7 +34,7 @@ return new class extends Migration
         if (Schema::hasTable('guest_house_custodies')) {
             Schema::table('guest_house_custodies', function (Blueprint $table) {
                 if (!Schema::hasColumn('guest_house_custodies', 'quantity')) {
-                    $table->unsignedInteger('quantity')->default(1)->after('title');
+                    $table->unsignedInteger('quantity')->default(1);
                 }
             });
         }
@@ -43,7 +43,7 @@ return new class extends Migration
         if (Schema::hasTable('guest_house_patient_profiles')) {
             Schema::table('guest_house_patient_profiles', function (Blueprint $table) {
                 if (!Schema::hasColumn('guest_house_patient_profiles', 'companion_history')) {
-                    $table->json('companion_history')->nullable()->after('companion_id_back_path');
+                    $table->json('companion_history')->nullable();
                 }
             });
         }
@@ -71,10 +71,10 @@ return new class extends Migration
         if (Schema::hasTable('journal_entries')) {
             Schema::table('journal_entries', function (Blueprint $table) {
                 if (!Schema::hasColumn('journal_entries', 'reference')) {
-                    $table->string('reference', 191)->nullable()->index()->after('description');
+                    $table->string('reference', 191)->nullable()->index();
                 }
                 if (!Schema::hasColumn('journal_entries', 'created_by')) {
-                    $table->unsignedBigInteger('created_by')->nullable()->index()->after('locked');
+                    $table->unsignedBigInteger('created_by')->nullable()->index();
                 }
             });
         }
@@ -82,7 +82,7 @@ return new class extends Migration
         if (Schema::hasTable('journal_entry_lines')) {
             Schema::table('journal_entry_lines', function (Blueprint $table) {
                 if (!Schema::hasColumn('journal_entry_lines', 'description')) {
-                    $table->string('description', 500)->nullable()->after('credit');
+                    $table->string('description', 500)->nullable();
                 }
             });
         }
@@ -91,7 +91,7 @@ return new class extends Migration
         if (Schema::hasTable('guest_house_stays')) {
             Schema::table('guest_house_stays', function (Blueprint $table) {
                 if (!Schema::hasColumn('guest_house_stays', 'departure_notes')) {
-                    $table->text('departure_notes')->nullable()->after('notes');
+                    $table->text('departure_notes')->nullable();
                 }
             });
         }
@@ -108,7 +108,7 @@ return new class extends Migration
         if (Schema::hasTable('field_visits')) {
             Schema::table('field_visits', function (Blueprint $table) {
                 if (!Schema::hasColumn('field_visits', 'recommendation_notes')) {
-                    $table->text('recommendation_notes')->nullable()->after('notes');
+                    $table->text('recommendation_notes')->nullable();
                 }
             });
             try {
