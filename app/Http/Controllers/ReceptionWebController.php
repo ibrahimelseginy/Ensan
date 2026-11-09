@@ -22,6 +22,8 @@ final class ReceptionWebController extends Controller
         $primaryTreasury = $receptionTreasuries->first();
         $treasuryIds = $receptionTreasuries->pluck('id')->all();
 
+        $dateCol = \Illuminate\Support\Facades\Schema::hasColumn('expenses', 'paid_at') ? 'paid_at' : 'created_at';
+
         $receptionExpenses = Expense::with(['treasury'])
             ->where(function ($q) use ($treasuryIds) {
                 if (!empty($treasuryIds)) {
@@ -29,7 +31,7 @@ final class ReceptionWebController extends Controller
                 }
                 $q->orWhere('description', 'like', '%[مصروفات الاستقبال%');
             })
-            ->orderByDesc('spent_at')
+            ->orderByDesc($dateCol)
             ->orderByDesc('id')
             ->limit(25)
             ->get();
@@ -41,7 +43,12 @@ final class ReceptionWebController extends Controller
                 }
                 $q->orWhere('description', 'like', '%[مصروفات الاستقبال%');
             })
-            ->whereDate('spent_at', today())
+            ->where(function ($q) use ($dateCol) {
+                $q->whereDate($dateCol, today())
+                  ->orWhere(function ($sq) use ($dateCol) {
+                      $sq->whereNull($dateCol)->whereDate('created_at', today());
+                  });
+            })
             ->sum('amount');
 
         $monthExpensesTotal = (float) Expense::query()
@@ -51,7 +58,12 @@ final class ReceptionWebController extends Controller
                 }
                 $q->orWhere('description', 'like', '%[مصروفات الاستقبال%');
             })
-            ->whereBetween('spent_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->where(function ($q) use ($dateCol) {
+                $q->whereBetween($dateCol, [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()])
+                  ->orWhere(function ($sq) use ($dateCol) {
+                      $sq->whereNull($dateCol)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+                  });
+            })
             ->sum('amount');
 
         $todayStats = [
@@ -116,26 +128,26 @@ final class ReceptionWebController extends Controller
         $spentAt = !empty($validated['spent_at']) ? Carbon::parse($validated['spent_at']) : now();
         $fullDesc = '[مصروفات الاستقبال - ' . trim($validated['expense_item']) . '] ' . trim((string) ($validated['description'] ?? ''));
 
-        DB::transaction(function () use ($treasury, $amount, $spentAt, $fullDesc, $request) {
-            $expense = Expense::create([
-                'category' => 'operational',
+        DB::transaction(function () use ($treasury, $amount, $spentAt, $fullDesc, $validated, $request) {
+            $attachmentPath = null;
+            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+                $attachmentPath = $request->file('attachment')->store('expenses/reception', 'public');
+            }
+
+            $expensePayload = [
+                'type' => 'operational',
+                'category' => $validated['expense_item'] ?? 'operational',
                 'amount' => $amount,
                 'currency' => $treasury?->currency ?? 'EGP',
-                'spent_at' => $spentAt,
+                'paid_at' => $spentAt->toDateString(),
                 'description' => trim($fullDesc),
                 'treasury_id' => $treasury?->id,
                 'created_by' => auth()->id(),
-            ]);
+                'status' => 'approved',
+                'attachment_path' => $attachmentPath,
+            ];
 
-            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
-                $file = $request->file('attachment');
-                $path = $file->store('expenses/reception', 'public');
-                $expense->attachments()->create([
-                    'path' => $path,
-                    'mime' => $file->getClientMimeType(),
-                    'title' => 'إيصال مصروف استقبال: ' . $file->getClientOriginalName(),
-                ]);
-            }
+            $expense = Expense::create($expensePayload);
 
             if ($treasury) {
                 TreasuryTransaction::create([

@@ -223,8 +223,15 @@
                             @foreach($receptionExpenses as $exp)
                                 <tr>
                                     <td class="font-monospace">{{ $exp->id }}</td>
-                                    <td class="font-monospace">{{ optional($exp->spent_at)->format('Y-m-d') ?? optional($exp->created_at)->format('Y-m-d') }}</td>
-                                    <td class="fw-bold text-dark">{{ $exp->description }}</td>
+                                    <td class="font-monospace">{{ optional($exp->paid_at)->format('Y-m-d') ?? optional($exp->created_at)->format('Y-m-d') }}</td>
+                                    <td class="fw-bold text-dark">
+                                        {{ $exp->description }}
+                                        @if(!empty($exp->attachment_path))
+                                            <a href="{{ asset('storage/' . $exp->attachment_path) }}" target="_blank" class="badge bg-info-subtle text-info border border-info-subtle text-decoration-none ms-1">
+                                                <i class="bi bi-paperclip"></i> المرفق
+                                            </a>
+                                        @endif
+                                    </td>
                                     <td><span class="badge bg-light text-dark border">{{ $exp->treasury?->name ?? 'خزينة الاستقبال' }}</span></td>
                                     <td class="fw-bold text-danger font-monospace">{{ number_format((float)$exp->amount, 2) }} ج.م</td>
                                 </tr>
