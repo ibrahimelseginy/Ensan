@@ -644,6 +644,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:roles.edit')->group(function () {
         Route::get('roles/{role}/edit', [RoleWebController::class, 'edit'])->name('roles.edit');
         Route::match(['PUT', 'PATCH'], 'roles/{role}', [RoleWebController::class, 'update'])->name('roles.update');
+        Route::post('roles/{role}/users', [RoleWebController::class, 'attachUser'])->name('roles.attachUser');
+        Route::delete('roles/{role}/users/{user}', [RoleWebController::class, 'detachUser'])->name('roles.detachUser');
     });
     Route::middleware('permission:roles.delete')->group(function () {
         Route::delete('roles/{role}', [RoleWebController::class, 'destroy'])->name('roles.destroy');
@@ -1063,7 +1065,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('reception/custody-deposit', [\App\Http\Controllers\ReceptionWebController::class, 'storeCustodyDeposit'])
             ->name('reception.custody.deposit');
     });
-    Route::resource('tasks', TaskWebController::class);
+    Route::middleware('permission:tasks.view|view_own_tasks|employee_tasks.view|employee_tasks.view_own|volunteer_tasks.view')->group(function () {
+        Route::resource('tasks', TaskWebController::class);
+    });
 
 });
 

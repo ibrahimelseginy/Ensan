@@ -164,20 +164,60 @@
                                 </div>
                             </div>
                             <div class="col-md-12">
-                                <label class="text-muted small mb-1">الأدوار الممنوحة</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="text-muted small mb-0">الأدوار الممنوحة والصلاحيات الفعلية</label>
+                                    @if($canManageUsers)
+                                        <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-sliders me-1"></i> تعديل الأدوار وتخصيص الصلاحيات
+                                        </a>
+                                    @endif
+                                </div>
                                 <div class="d-flex flex-wrap gap-2 mt-1">
                                     @forelse($user->roles as $role)
-                                        <span class="badge bg-secondary-subtle text-secondary-emphasis fs-6 px-3 py-2">
-                                            {{ $role->name }}
-                                            @if($role->description)
-                                                <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip"
-                                                    title="{{ $role->description }}"></i>
-                                            @endif
-                                        </span>
+                                        <a href="{{ route('roles.show', $role) }}" class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6 px-3 py-2 text-decoration-none">
+                                            <i class="bi bi-shield-check me-1"></i> {{ $role->name }}
+                                            <small class="opacity-75">({{ $role->permissions->count() }} صلاحية)</small>
+                                        </a>
                                     @empty
                                         <span class="text-muted small italic">لا توجد أدوار معينة</span>
                                     @endforelse
                                 </div>
+
+                                @php
+                                    $directPermsList = ($user->relationLoaded('directPermissions') && $user->directPermissions) ? $user->directPermissions : collect();
+                                    $allRolePermsList = $user->roles->flatMap->permissions;
+                                    $effectivePermsList = $allRolePermsList->merge($directPermsList)->unique('id')->values();
+                                @endphp
+
+                                @if($directPermsList->isNotEmpty())
+                                    <div class="mt-3">
+                                        <label class="text-muted small mb-1 d-block">صلاحيات إضافية مخصصة مباشرة لهذا الموظف ({{ $directPermsList->count() }}):</label>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach($directPermsList as $dp)
+                                                <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1">{{ $dp->name }}</span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($effectivePermsList->isNotEmpty())
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-light border fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#effectivePermsCollapse">
+                                            <i class="bi bi-key-fill text-success me-1"></i> عرض كافة الصلاحيات الفعلية النشطة في حساب هذا الموظف ({{ $effectivePermsList->count() }} صلاحية)
+                                        </button>
+                                        <div class="collapse mt-2" id="effectivePermsCollapse">
+                                            <div class="card card-body bg-light border-0 p-3">
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @foreach($effectivePermsList as $ep)
+                                                        <span class="badge bg-white text-dark border px-2 py-1">
+                                                            <i class="bi bi-check2 text-success"></i> {{ $ep->name }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

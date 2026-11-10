@@ -1,107 +1,186 @@
 @extends('layouts.app')
+@section('title', 'تفاصيل الدور: ' . $role->name)
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar Info -->
-            <div class="col-md-3 mb-4">
-                <div class="card border-0 shadow-sm text-center h-100">
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center fw-bold display-4"
-                                style="width: 100px; height: 100px;">
-                                {{ strtoupper(substr($role->key, 0, 1)) }}
-                            </div>
-                        </div>
-                        <h4 class="fw-bold mb-1">{{ $role->name }}</h4>
-                        <p class="badge bg-secondary-subtle text-body border mb-3 fs-6">{{ $role->key }}</p>
+@php $u = auth()->user(); @endphp
 
-                        @if($role->description)
-                            <p class="text-muted small mb-4">{{ $role->description }}</p>
-                        @endif
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h3 class="mb-1 fw-bold">
+            <i class="bi bi-shield-check text-primary me-2"></i> الدور الوظيفي: {{ $role->name }}
+        </h3>
+        <div class="text-muted small">
+            المعرّف البرمجي: <code class="px-2 py-1 bg-light rounded border">{{ $role->key }}</code>
+            <span class="mx-2">|</span>
+            إجمالي الصلاحيات المفعلة: <strong class="text-success">{{ $role->permissions->count() }} صلاحية</strong>
+            <span class="mx-2">|</span>
+            الموظفون المسند إليهم الدور: <strong class="text-primary">{{ $role->users->count() }} موظف</strong>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        @if($u && $u->hasPermission('roles.edit'))
+        <a class="btn btn-primary fw-bold" href="{{ route('roles.edit', $role) }}">
+            <i class="bi bi-pencil-square me-1"></i> تعديل صلاحيات وموظفي الدور
+        </a>
+        @endif
+        <a class="btn btn-outline-secondary" href="{{ route('roles.index') }}">
+            <i class="bi bi-arrow-right me-1"></i> رجوع للأدوار
+        </a>
+    </div>
+</div>
 
-                        <div class="d-grid gap-2">
-                            @if(request()->user()?->hasPermission('roles.edit'))
-                                <a href="{{ route('roles.edit', $role) }}" class="btn btn-primary">
-                                    <i class="bi bi-pencil-square me-2"></i> تعديل الدور
-                                </a>
-                            @endif
-                            @if(request()->user()?->hasPermission('roles.delete') && $role->key !== 'admin')
-                                @php
-                                    $showConfirmMsg = ($role->users_count ?? 0) > 0
-                                        ? "هذا الدور مرتبط بـ ({$role->users_count}) مستخدم. هل أنت متأكد من حذف الدور ({$role->name}) وإلغاء ربطه بالمستخدمين؟"
-                                        : "هل أنت متأكد من حذف الدور ({$role->name})؟";
-                                @endphp
-                                <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm(@js($showConfirmMsg))">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger w-100">
-                                        <i class="bi bi-trash me-2"></i> حذف الدور
-                                    </button>
-                                </form>
-                            @endif
-                            <a href="{{ route('roles.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-right me-2"></i> رجوع للقائمة
-                            </a>
-                        </div>
-                    </div>
+@if($role->description)
+    <div class="alert alert-light border mb-4">{{ $role->description }}</div>
+@endif
+
+{{-- 1. قسم إدارة الموظفين المسند إليهم هذا الدور --}}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white border-bottom py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="bi bi-people-fill text-primary me-2"></i> الموظفون المسند إليهم دور ({{ $role->name }})
+            </h5>
+            <small class="text-muted">يمكنك إضافة موظف لهذا الدور مباشرة من هنا أو إزالته، كما يمكنك تفعيل خيار الدور الوحيد لمنع تداخل صلاحيات أدوار قديمة.</small>
+        </div>
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold">
+            {{ $role->users->count() }} موظف في هذا الدور
+        </span>
+    </div>
+    <div class="card-body p-4">
+        @if($u && $u->hasPermission('roles.edit'))
+        <form method="POST" action="{{ route('roles.attachUser', $role) }}" class="row g-3 align-items-end bg-light p-3 rounded-4 border mb-4">
+            @csrf
+            <div class="col-md-5">
+                <label class="form-label fw-bold small mb-1">اختر الموظف لإسناد هذا الدور إليه</label>
+                <select name="user_id" class="form-select" required>
+                    <option value="">-- اختر موظفاً من القائمة --</option>
+                    @foreach($allUsers as $emp)
+                        @php
+                            $currentRoleNames = $emp->roles->pluck('name')->implode('، ');
+                        @endphp
+                        <option value="{{ $emp->id }}">
+                            {{ $emp->name }}
+                            @if($emp->job_title) ({{ $emp->job_title }}) @endif
+                            — [الأدوار الحالية: {{ $currentRoleNames ?: 'بدون دور' }}]
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check form-switch bg-white p-2 px-3 rounded-3 border">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" name="exclusive_role" value="1" id="exclusiveRoleSwitch" checked>
+                    <label class="form-check-label small fw-bold text-dark" for="exclusiveRoleSwitch">
+                        جعله الدور الوحيد للموظف (إلغاء أي أدوار قديمة متراكمة)
+                    </label>
                 </div>
             </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success w-100 fw-bold">
+                    <i class="bi bi-person-plus-fill me-1"></i> إسناد الدور للموظف
+                </button>
+            </div>
+        </form>
+        @endif
 
-            <!-- Permissions List -->
-            <div class="col-md-9">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent py-3 border-bottom-0">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-shield-check me-2 text-success"></i> الصلاحيات الممنوحة
-                            </h5>
-                            <span class="badge bg-success-subtle text-success">{{ $role->permissions->count() }}
-                                صلاحية</span>
-                            <span class="badge bg-info-subtle text-info">{{ $role->users_count }} مستخدم</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        @if($role->permissions->count() > 0)
-                            <div class="row g-4">
-                                @foreach($permissions as $group => $perms)
-                                    <div class="col-md-6 col-xl-4">
-                                        <div class="border rounded p-3 h-100 bg-body-tertiary">
-                                            <h6
-                                                class="text-uppercase fw-bold text-primary mb-3 pb-2 border-bottom d-flex align-items-center">
-                                                <i class="bi bi-shield-check me-2"></i>
-                                                {{ $group }}
-                                            </h6>
-                                            <ul class="list-unstyled mb-0">
-                                                @foreach($perms as $perm)
-                                                    <li class="mb-2 d-flex align-items-start">
-                                                        <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                                                        <div>
-                                                            <span class="d-block fw-medium">{{ $perm->name }}</span>
-                                                            <small class="text-muted font-monospace"
-                                                                style="font-size: 0.75rem;">{{ $perm->key }}</small>
-                                                        </div>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
+        @if($role->users->isNotEmpty())
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>اسم الموظف</th>
+                            <th>المسمى الوظيفي / البريد</th>
+                            <th>الأدوار الحالية للموظف</th>
+                            <th class="text-end">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($role->users as $assignedUser)
+                            <tr>
+                                <td class="fw-bold">
+                                    <a href="{{ route('users.show', $assignedUser) }}" class="text-decoration-none text-dark">
+                                        <i class="bi bi-person-circle text-primary me-1"></i> {{ $assignedUser->name }}
+                                    </a>
+                                </td>
+                                <td class="small text-muted">
+                                    {{ $assignedUser->job_title ?: 'موظف' }} — {{ $assignedUser->email }}
+                                </td>
+                                <td>
+                                    @foreach($assignedUser->roles as $r)
+                                        <span class="badge {{ $r->id === $role->id ? 'bg-primary' : 'bg-warning text-dark' }} me-1">
+                                            {{ $r->name }}
+                                        </span>
+                                    @endforeach
+                                    @if($assignedUser->roles->count() > 1)
+                                        <small class="text-danger fw-bold d-block mt-1">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> تنبيه: لدى الموظف أكثر من دور (تُجمع صلاحياتها معاً)
+                                        </small>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        @if($u && $u->hasPermission('users.edit'))
+                                            <a href="{{ route('users.edit', $assignedUser) }}" class="btn btn-sm btn-outline-primary" title="تخصيص صلاحيات خاصة لهذا الموظف">
+                                                <i class="bi bi-sliders me-1"></i> تخصيص صلاحيات الموظف
+                                            </a>
+                                        @endif
+                                        @if($u && $u->hasPermission('roles.edit'))
+                                            <form method="POST" action="{{ route('roles.detachUser', [$role, $assignedUser]) }}" class="d-inline" onsubmit="return confirm('هل تريد إزالة هذا الدور من الموظف {{ $assignedUser->name }}؟');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="سحب الدور من الموظف">
+                                                    <i class="bi bi-person-x-fill"></i> إزالة من الدور
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-5">
-                                <div class="mb-3">
-                                    <i class="bi bi-shield-exclamation display-1 text-muted opacity-25"></i>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                لا يوجد موظفون مسند إليهم هذا الدور حالياً. يمكنك اختيار موظف من الأعلى لإسناد الدور إليه فوراً.
+            </div>
+        @endif
+    </div>
+</div>
+
+{{-- 2. قسم الصلاحيات المفعلة في هذا الدور --}}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 fw-bold">
+        <i class="bi bi-key-fill text-success me-2"></i> الصلاحيات الفعلية الممنوحة لهذا الدور ({{ $role->permissions->count() }} صلاحية)
+    </h5>
+</div>
+
+<div class="row g-3">
+    @forelse($permissions as $group => $items)
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center py-3">
+                    <span>{{ $group }}</span>
+                    <span class="badge bg-success rounded-pill">{{ $items->count() }}</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        @foreach($items as $p)
+                            <li class="mb-2 d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                                <div>
+                                    <span class="fw-semibold d-block">{{ $p->name }}</span>
+                                    <code class="text-muted" style="font-size: 0.72rem;">{{ $p->key }}</code>
                                 </div>
-                                <h5 class="text-muted">لا توجد صلاحيات ممنوحة لهذا الدور</h5>
-                                <p class="text-muted small">قم بتعديل الدور لإضافة صلاحيات جديدة.</p>
-                                <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-primary mt-2">
-                                    <i class="bi bi-plus-lg"></i> إضافة صلاحيات
-                                </a>
-                            </div>
-                        @endif
-                    </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
-    </div>
+    @empty
+        <div class="col-12">
+            <div class="alert alert-warning">لا توجد صلاحيات مضافة لهذا الدور حتى الآن.</div>
+        </div>
+    @endforelse
+</div>
 @endsection
-

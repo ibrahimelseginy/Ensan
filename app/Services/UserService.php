@@ -41,12 +41,14 @@ final readonly class UserService
     public function createUser(array $data, array $files = []): User
     {
         $data['password'] = Hash::make($data['password']);
-        $data['is_employee'] = true;
-        $data['is_volunteer'] = false;
+        $data['is_employee'] = $data['is_employee'] ?? true;
+        $data['is_volunteer'] = $data['is_volunteer'] ?? false;
         
         $roles = $data['roles'] ?? [];
+        $directPermissions = $data['direct_permissions'] ?? [];
         unset(
             $data['roles'],
+            $data['direct_permissions'],
             $data['profile_photo'],
             $data['contract_image'],
             $data['criminal_record_image'],
@@ -70,6 +72,12 @@ final readonly class UserService
             $user->roles()->sync($roles);
         }
 
+        if (!empty($directPermissions) && \Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
+            $user->directPermissions()->sync(array_values(array_unique(array_map('intval', $directPermissions))));
+        }
+
+        $user->clearPermissionCache();
+
         return $user;
     }
 
@@ -88,9 +96,19 @@ final readonly class UserService
             unset($data['password']);
         }
 
-        $roles = $data['roles'] ?? null;
+        $hasRolesSync = array_key_exists('roles', $data) || !empty($data['roles_present']);
+        $roles = $hasRolesSync ? ($data['roles'] ?? []) : null;
+
+        $hasDirectPermsSync = array_key_exists('direct_permissions', $data) || !empty($data['direct_permissions_present']);
+        $directPermissions = $hasDirectPermsSync ? ($data['direct_permissions'] ?? []) : null;
+
         $payloadData = $data;
-        unset($data['roles']);
+        unset(
+            $data['roles'],
+            $data['roles_present'],
+            $data['direct_permissions'],
+            $data['direct_permissions_present']
+        );
 
         $currentUser = request()->user() ?? auth()->user();
         $isAdmin = $currentUser && (
@@ -99,9 +117,9 @@ final readonly class UserService
         );
 
         if ($isAdmin) {
-            // Accounts managed by an admin from this screen are employees.
-            $data['is_employee'] = true;
-            $data['is_volunteer'] = false;
+            if (!$user->is_volunteer && !isset($data['is_employee'])) {
+                $data['is_employee'] = true;
+            }
         } else {
             // Store requested files without changing the current profile. Their
             // paths are applied only after the admin approves the change request.
@@ -122,9 +140,13 @@ final readonly class UserService
             }
         }
 
-        $executor = function () use ($user, $data, $roles, $files) {
+        $executor = function () use ($user, $data, $roles, $directPermissions, $files) {
             if ($roles !== null) {
-                $user->roles()->sync($roles);
+                $user->roles()->sync(array_values(array_unique(array_map('intval', (array) $roles))));
+            }
+
+            if ($directPermissions !== null && \Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
+                $user->directPermissions()->sync(array_values(array_unique(array_map('intval', (array) $directPermissions))));
             }
 
             if (!empty($data)) {
@@ -141,11 +163,15 @@ final readonly class UserService
                 }
             }
 
+            $user->clearPermissionCache();
             return $user->refresh();
         };
 
         if ($roles !== null) {
             $payloadData['roles'] = array_values(array_map('intval', (array) $roles));
+        }
+        if ($directPermissions !== null) {
+            $payloadData['direct_permissions'] = array_values(array_map('intval', (array) $directPermissions));
         }
 
         return ChangeRequestService::handleRequest(

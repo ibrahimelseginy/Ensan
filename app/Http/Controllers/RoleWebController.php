@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\User;
 use App\Models\ChangeRequest;
 use App\Services\RoleService;
 use App\Http\Requests\StoreRoleRequest;
@@ -30,22 +31,25 @@ final class RoleWebController extends Controller
     public function create(): View
     {
         $permissions = $this->roleService->getPermissionGroups();
-        return view('roles.create', compact('permissions'));
+        $users       = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
+        return view('roles.create', compact('permissions', 'users'));
     }
 
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        $this->roleService->createRole($request->validated());
-        return redirect()->route('roles.index')->with('success', 'تم إنشاء الدور بنجاح');
+        $role = $this->roleService->createRole($request->validated());
+        return redirect()->route('roles.show', $role)->with('success', 'تم إنشاء الدور وتخصيص الصلاحيات والموظفين بنجاح');
     }
 
     public function edit(Role $role): View
     {
-        $role->load('permissions');
+        $role->load(['permissions', 'users']);
         $permissions     = $this->roleService->getPermissionGroups();
         $rolePermissions = $role->permissions->pluck('id')->toArray();
+        $users           = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
+        $roleUserIds     = $role->users->pluck('id')->toArray();
 
-        return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('roles.edit', compact('role', 'permissions', 'rolePermissions', 'users', 'roleUserIds'));
     }
 
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
@@ -56,15 +60,40 @@ final class RoleWebController extends Controller
             return redirect()->route('roles.index')->with('success', 'تم إرسال طلب تعديل الدور للموافقة');
         }
 
-        return redirect()->route('roles.index')->with('success', 'تم تحديث الدور بنجاح');
+        return redirect()->route('roles.show', $role)->with('success', 'تم تحديث الدور والصلاحيات والموظفين بنجاح');
     }
 
     public function show(Role $role): View
     {
-        $role->load('permissions')->loadCount('users');
+        $role->load(['permissions', 'users.roles'])->loadCount('users');
         $permissions = $this->roleService->getGroupedRolePermissions($role);
+        $allUsers    = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
 
-        return view('roles.show', compact('role', 'permissions'));
+        return view('roles.show', compact('role', 'permissions', 'allUsers'));
+    }
+
+    public function attachUser(Request $request, Role $role): RedirectResponse
+    {
+        abort_unless((bool) $request->user()?->hasPermission('roles.edit'), 403);
+
+        $data = $request->validate([
+            'user_id'         => 'required|exists:users,id',
+            'exclusive_role'  => 'nullable|boolean',
+        ]);
+
+        $replaceExisting = $request->boolean('exclusive_role', true);
+        $this->roleService->attachUserToRole($role, (int) $data['user_id'], $replaceExisting);
+
+        return back()->with('success', 'تم إسناد الدور للموظف بنجاح');
+    }
+
+    public function detachUser(Request $request, Role $role, User $user): RedirectResponse
+    {
+        abort_unless((bool) $request->user()?->hasPermission('roles.edit'), 403);
+
+        $this->roleService->detachUserFromRole($role, (int) $user->id);
+
+        return back()->with('success', 'تم إزالة الموظف من هذا الدور بنجاح');
     }
 
     public function destroy(Role $role): RedirectResponse

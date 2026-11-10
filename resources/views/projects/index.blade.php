@@ -15,9 +15,11 @@
         </div>
       </div>
       <div>
+        @if(auth()->user()?->hasPermission('projects.create'))
         <a href="{{ route('projects.create') }}" class="btn btn-primary btn-lg shadow-sm">
           <i class="bi bi-plus-lg me-2"></i> إضافة مشروع
         </a>
+        @endif
       </div>
     </div>
   </div>
@@ -70,6 +72,7 @@
 
   <form action="{{ route('projects.bulk-destroy') }}" method="POST" id="bulkDeleteForm">
     @csrf
+    @if(auth()->user()?->hasPermission('projects.delete'))
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAll">
@@ -79,14 +82,17 @@
             <i class="bi bi-trash"></i> حذف المحدد
         </button>
     </div>
+    @endif
   <div class="row g-3">
     @foreach($projects as $p)
       <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100 position-relative animate-hover">
           <div class="card-body">
+            @if(auth()->user()?->hasPermission('projects.delete'))
             <div class="position-absolute top-0 end-0 p-3" style="z-index: 3;">
                 <input class="form-check-input record-checkbox" type="checkbox" name="ids[]" value="{{ $p->id }}">
             </div>
+            @endif
             <div class="d-flex align-items-start justify-content-between mb-3">
                 <div class="d-flex align-items-center gap-3 w-100 pe-4">
                     <div class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center"
@@ -122,9 +128,11 @@
                 <a href="{{ route('projects.show', $p) }}" class="btn btn-sm btn-outline-primary flex-fill">
                     <i class="bi bi-eye me-1"></i> عرض
                 </a>
+                @if(auth()->user()?->hasPermission(['projects.edit', "projects.manage.{$p->id}"]))
                 <a href="{{ route('projects.edit', $p) }}" class="btn btn-sm btn-outline-secondary flex-fill">
                     <i class="bi bi-pencil-square me-1"></i> تعديل
                 </a>
+                @endif
             </div>
 
             <div class="d-flex align-items-center justify-content-between pt-3 border-top">

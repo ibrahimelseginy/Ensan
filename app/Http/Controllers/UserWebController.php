@@ -49,7 +49,8 @@ final class UserWebController extends Controller
     public function create(): View
     {
         $roles = Role::orderBy('name')->get();
-        return view('users.create', compact('roles'));
+        $permissionGroups = app(\App\Services\RoleService::class)->getPermissionGroups();
+        return view('users.create', compact('roles', 'permissionGroups'));
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
@@ -68,6 +69,11 @@ final class UserWebController extends Controller
 
     public function show(User $user): View
     {
+        $user->loadMissing(['roles.permissions']);
+        if (\Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
+            $user->loadMissing(['directPermissions']);
+        }
+
         $pendingRequest = ChangeRequest::where('model_type', User::class)
             ->where('model_id', $user->id)
             ->where('status', 'pending')
@@ -95,12 +101,29 @@ final class UserWebController extends Controller
             return redirect()->route('users.show', $user)->with('info', 'يوجد طلب تعديل قيد مراجعة الأدمن حاليًا.');
         }
 
+        $user->loadMissing(['roles.permissions']);
+        $directPermissionIds = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
+            $user->loadMissing(['directPermissions']);
+            $directPermissionIds = $user->directPermissions->pluck('id')->all();
+        }
+        $rolePermissionIds = $user->roles->flatMap(fn($r) => $r->permissions->pluck('id'))->unique()->values()->all();
+
         $currentUserId  = request()->user()?->id ?? auth()->id();
         $isOwnProfile   = (int) $currentUserId === (int) $user->id;
         $canManageUsers = Gate::allows('users.edit');
         $roles = $canManageUsers ? Role::orderBy('name')->get() : collect();
+        $permissionGroups = $canManageUsers ? app(\App\Services\RoleService::class)->getPermissionGroups() : collect();
 
-        return view('users.edit', compact('user', 'roles', 'isOwnProfile', 'canManageUsers'));
+        return view('users.edit', compact(
+            'user',
+            'roles',
+            'permissionGroups',
+            'directPermissionIds',
+            'rolePermissionIds',
+            'isOwnProfile',
+            'canManageUsers'
+        ));
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse

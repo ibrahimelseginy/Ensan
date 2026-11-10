@@ -985,3 +985,47 @@ erDiagram
    *«تم التحقق من دفتر الأستاذ الموحد للمساعدات (`beneficiary_disbursements`)، وخطط العلاج الشهري المزمن (`chronic_medication_plans`)، وفصل الملف الطبي الدائم عن إقامات دور الضيافة (`shelter_stays`) مع حفظ ملاحظات المغادرة وحالات الأسرة.»* — **معتمد ✅**
 4. **م. فيكتور كايل (Viktor Kael — «الشيطان الناقد / المهندس الناقد»):**  
    *«لقد حاولتُ كسر هذا المخطط الجديد بكافة الطرق التي دمرتُ بها النظام القديم: حاولتُ صرف راتب إداري من مال الزكاة فمنعني `treasury_fund_balances`؛ حاولتُ تصفير خزينة بمسح تاريخها فأجبرني النظام على `treasury_reconciliations` بقيد محاسبي؛ حاولتُ عكس تبرع مرتين فمنعني القيد الفريد `UNIQUE(reversal_of_tx_id)`؛ حاولتُ حذف متبرع لمسح تبرعاته فمنعني `RESTRICT`؛ وحاولتُ معرفة كل ما تقاضاه مستفيد منذ دخوله المؤسسة فوجدته كاملاً في `beneficiary_disbursements`. أُعلن رضاي التام والمصادقة النهائية الصارمة على هذه الوثائق الثلاث.»* — **معتمد نهائياً ✅**
+
+---
+
+## 🔑 سابعاً: المخطط التفصيلي لجداول الأدوار والصلاحيات الهجينة المنفذة في الإنتاج (`RBAC + Direct PBAC + Entity-Scoped ABAC Tables`)
+
+تم تحديث وتنفيذ الجداول الأربعة الحاكمة لمنظومة الصلاحيات في قاعدة البيانات الحية عبر التهجير [`2026_11_10_010000_enhance_rbac_permissions_and_direct_user_permissions.php`](file:///Users/diaa/Desktop/ابراهيم /Project Forsah/Ensan/System.Ensan-main/database/migrations/2026_11_10_010000_enhance_rbac_permissions_and_direct_user_permissions.php):
+
+### 1. جدول الأدوار الوظيفية (`roles`)
+| اسم العمود | نوع البيانات | القيود والفهارس | الوصف التشغيلي |
+| :--- | :--- | :--- | :--- |
+| `id` | `BIGINT UNSIGNED` | `PK, AUTO_INCREMENT` | المعرف الفريد للدور |
+| `name` | `VARCHAR(255)` | `UNIQUE, NOT NULL` | الاسم العربي للدور (مثل: `مدير مشروع زاد`، `الاستقبال`) |
+| `key` | `VARCHAR(255)` | `UNIQUE, NOT NULL` | المعرف البرمجي الفريد (`admin`, `finance`, `project_manager_3`) |
+| `description` | `TEXT` | `NULLABLE` | وصف مهام وحدود الدور الوظيفي |
+| `created_at / updated_at` | `TIMESTAMP` | `NULLABLE` | طوابع الإنشاء والتحديث |
+
+### 2. جدول كتالوج الصلاحيات الشامل (`permissions` — 200+ صلاحية)
+| اسم العمود | نوع البيانات | القيود والفهارس | الوصف التشغيلي |
+| :--- | :--- | :--- | :--- |
+| `id` | `BIGINT UNSIGNED` | `PK, AUTO_INCREMENT` | المعرف الفريد للصلاحية |
+| `name` | `VARCHAR(255)` | `NOT NULL` | الوصف العربي الدقيق للصلاحية |
+| `key` | `VARCHAR(255)` | `UNIQUE, NOT NULL` | مفتاح الصلاحية (`<module>.<action>` أو `<entity>.manage.<id>`) |
+| `created_at / updated_at` | `TIMESTAMP` | `NULLABLE` | طوابع الإنشاء والتحديث |
+
+### 3. جدول ربط الأدوار بالصلاحيات (`permission_role`)
+| اسم العمود | نوع البيانات | القيود والفهارس | الوصف التشغيلي |
+| :--- | :--- | :--- | :--- |
+| `permission_id` | `BIGINT UNSIGNED` | `FK -> permissions(id) CASCADE` | الصلاحية |
+| `role_id` | `BIGINT UNSIGNED` | `FK -> roles(id) CASCADE` | الدور الوظيفي |
+
+### 4. جدول ربط الموظفين بالأدوار (`role_user`)
+| اسم العمود | نوع البيانات | القيود والفهارس | الوصف التشغيلي |
+| :--- | :--- | :--- | :--- |
+| `role_id` | `BIGINT UNSIGNED` | `FK -> roles(id) CASCADE` | الدور الوظيفي المسند |
+| `user_id` | `BIGINT UNSIGNED` | `FK -> users(id) CASCADE` | الموظف / المستخدم |
+
+### 5. جدول الصلاحيات الفردية المباشرة للموظفين (`permission_user` — جديد)
+| اسم العمود | نوع البيانات | القيود والفهارس | الوصف التشغيلي |
+| :--- | :--- | :--- | :--- |
+| `id` | `BIGINT UNSIGNED` | `PK, AUTO_INCREMENT` | المعرف الفريد |
+| `user_id` | `BIGINT UNSIGNED` | `FK -> users(id) CASCADE, INDEX` | الموظف الممنوح الصلاحية مباشرة |
+| `permission_id` | `BIGINT UNSIGNED` | `FK -> permissions(id) CASCADE, INDEX` | الصلاحية المخصصة للموظف |
+| `created_at / updated_at` | `TIMESTAMP` | `NULLABLE` | تاريخ منح الصلاحية المباشرة (`UNIQUE(user_id, permission_id)`) |
+

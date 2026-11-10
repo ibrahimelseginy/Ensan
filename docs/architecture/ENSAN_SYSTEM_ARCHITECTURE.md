@@ -391,3 +391,35 @@ app/
 - **د. عبد الرحمن السعدي & د. ماركوس فانس:** *«إدخال محاسبة الصناديق الشرعية (`Fund Accounting`) ودفتر الأستاذ غير القابل للتعديل (`Immutable Double-Entry Ledger`) مع بروتوكول التسوية الجردية يضمن سلامة الذمة المالية والشرعية للمؤسسة أمام المتبرعين والجهات الرقابية.»*
 - **د. ليلى المنصور:** *«دفتر الأستاذ الموحد للمساعدات (`beneficiary_disbursements`) وربط الفرد والأسرة ببرامج متعددة مع تفعيل الأثر الآلي لإعادة التقييم نصف السنوي وتنبيهات العلاج المزمن يحول النظام إلى منصة إدارة حالة إنسانية وطبية عالمية المستوى.»*
 - **م. فيكتور كايل (الشيطان الناقد):** *«لقد اختبرتُ هذه المعمارية ضد كافة سيناريوهات التلاعب والانهيار التي فككتُ بها النظام القديم. لا توجد هنا أي بوابة خلفية، ولا حذف لحركات الخزائن، ولا خلط بين التبرعات والمصروفات والمشاوير. أعتمد هذه الوثيقة وأحيلكم الآن إلى الوثيقة الثالثة والأهم: **المخطط الهندسي الشامل لقاعدة البيانات الجديدة (`ENSAN_DATABASE_SCHEMA.md`)**.»*
+
+---
+
+## 🔐 سادساً: المعمارية الهجينة للأمن والتحكم الصارم في الأدوار والصلاحيات (Zero-Trust Hybrid RBAC + Direct PBAC + Entity-Scoped ABAC)
+
+استجابةً لمتطلبات الحوكمة الصارمة في `https://system.ensaneg.com/roles`، تم تصميم وتنفيذ محرك صلاحيات ثلاثي الطبقات يضمن عدم ظهور أو عمل أي صلاحية غير ممنوحة صراحةً للموظف:
+
+```mermaid
+flowchart TD
+    U["الموظف / المستخدم (User)"]
+    R["الأدوار الوظيفية (Roles via role_user)"]
+    DP["الصلاحيات المباشرة للموظف (Direct Permissions via permission_user)"]
+    RP["صلاحيات الدور (Role Permissions via permission_role)"]
+    EP["مصفوفة الصلاحيات الفعلية الموحدة (Effective Permissions Set — 1-to-1 WYSIWYG)"]
+    ES["نطاق الكيانات المحددة (Entity Scopes: projects.manage.ID / campaigns.manage.ID / guest_houses.manage.ID)"]
+    MW["حارس المسارات والإجراءات الصارم (SecurePermissionMiddleware: .view / .create / .edit / .delete)"]
+
+    U --> R --> RP --> EP
+    U --> DP --> EP
+    EP --> ES
+    ES --> MW
+```
+
+1. **الطبقة الأولى — الأدوار الوظيفية مع منع التراكم العشوائي (`Exclusive Role Assignment`):**
+   - يمكن إسناد الموظفين للدور مباشرة من داخل `/roles/create`، `/roles/{role}/edit`، و`/roles/{role}` (`show`)، مع تفعيل خيار **"جعل هذا الدور هو الدور الوحيد للموظف وإلغاء أي أدوار قديمة متراكمة"** افتراضياً لمنع تسرب صلاحيات من أدوار قديمة.
+2. **الطبقة الثانية — الصلاحيات الفردية المباشرة للموظف (`Direct Employee Permissions — PBAC`):**
+   - عبر جدول `permission_user` والعلاقة `User::directPermissions()`، يستطيع الأدمن الدخول لصفحة أي موظف (`/users/{user}/edit`) ومنحه صلاحيات إضافية دقيقة خاصة به دون الحاجة لتعديل الدور العام لباقي الموظفين.
+3. **الطبقة الثالثة — العزل الصارم لنطاق المشاريع والحملات ودور الضيافة (`Entity-Scoped ABAC Precedence`):**
+   - في دوال `getAccessibleProjectIds()`، `getAccessibleCampaignIds()`، و`getAccessibleGuestHouseIds()` داخل [`User.php`](file:///Users/diaa/Desktop/ابراهيم /Project Forsah/Ensan/System.Ensan-main/app/Models/User.php)، يتم فحص الصلاحيات المخصصة (`projects.manage.{id}`, `campaigns.manage.{id}`, `guest_houses.manage.{id}`) **أولاً وبأولوية مطلقة** قبل أي صلاحية عامة؛ فإذا كان الموظف مخصصاً لمشروع `زاد (49)` أو `بعثاء الأمل (46, 51)` أو `دار ضيافة طنطا (1)`، يستحيل أن يرى غيره.
+4. **الطبقة الرابعة — الإنفاذ التلقائي لصلاحيات الإجراءات على مستوى المسارات (`Action-Level Route Enforcement`):**
+   - يتحقق [`SecurePermissionMiddleware.php`](file:///Users/diaa/Desktop/ابراهيم /Project Forsah/Ensan/System.Ensan-main/app/Http/Middleware/SecurePermissionMiddleware.php) في كل طلب على مسارات الموارد من مطابقة الإجراء الفعلي (`create/store` ⬅️ `.create`، `edit/update/bulk` ⬅️ `.edit`، `destroy/bulk-destroy` ⬅️ `.delete`)، فلا يمكن لموظف يملك `.view` فقط أن ينفذ إضافة أو تعديل أو حذف.
+

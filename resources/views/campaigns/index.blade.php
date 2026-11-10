@@ -144,9 +144,11 @@
             <h1 class="hero-title fw-bold text-white mb-2" style="color: #ffffff !important;">إدارة الحملات</h1>
             <p class="hero-subtitle text-white opacity-85 mb-4" style="color: #ffffff !important;">تخطيط وإطلاق الحملات الموسمية والتسويقية باحترافية لزيادة التأثير والوصول.</p>
             <div class="hero-actions d-flex gap-2">
+                @if(auth()->user()?->hasPermission('campaigns.create'))
                 <a href="{{ route('campaigns.create') }}" class="btn btn-sm rounded-pill px-4 btn-light fw-bold hover-lift shadow-sm">
                     <i class="bi bi-plus-lg me-1"></i> إضافة حملة جديدة
                 </a>
+                @endif
                 <button type="button" class="btn btn-sm rounded-pill px-4 btn-outline-light fw-bold hover-lift shadow-sm" style="border-width: 2px;" data-bs-toggle="collapse" data-bs-target="#advancedFilter">
                     <i class="bi bi-funnel me-1"></i> تصفية متقدمة
                 </button>
@@ -190,6 +192,7 @@
             @csrf
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
+                    @if(auth()->user()?->hasPermission('campaigns.delete'))
                     <div class="form-check p-0 m-0 d-flex align-items-center bg-body-tertiary px-3 py-2 rounded-3 border shadow-sm">
                         <input class="form-check-input ms-2 mt-0" type="checkbox" id="selectAll" style="width: 18px; height: 18px;">
                         <label class="form-check-label fw-bold small mb-0" for="selectAll" style="cursor: pointer;">تحديد الكل</label>
@@ -197,6 +200,7 @@
                     <button type="submit" class="btn btn-sm btn-danger d-none px-4 rounded-pill border-0 shadow-sm" id="btnBulkDelete" onclick="return confirm('هل أنت متأكد من حذف الحملات المحددة؟')">
                         <i class="bi bi-trash me-1"></i> حذف المحدد
                     </button>
+                    @endif
                 </div>
                 
                 <div class="input-group shadow-sm" style="width: 300px;">
@@ -217,7 +221,9 @@
                                     <i class="bi {{ $c->status === 'active' ? 'bi-record-circle-fill' : 'bi-archive-fill' }} me-1"></i>
                                     {{ $c->status === 'active' ? 'نشطة حالياً' : 'مؤرشفة' }}
                                 </span>
+                                @if(auth()->user()?->hasPermission('campaigns.delete'))
                                 <input class="form-check-input record-checkbox shadow-none" type="checkbox" name="ids[]" value="{{ $c->id }}" style="width: 20px; height: 20px; border-color: rgba(255,255,255,0.4);">
+                                @endif
                             </div>
                             
                             <div class="mt-3 text-white">
@@ -261,16 +267,22 @@
                                     التفاصيل <i class="bi bi-arrow-left ms-1"></i>
                                 </a>
                                 
+                                @if(auth()->user()?->hasPermission(['campaigns.edit', 'campaigns.delete', "campaigns.manage.{$c->id}"]))
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light rounded-circle shadow-sm border" type="button" data-bs-toggle="dropdown" style="width: 36px; height: 36px;">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+                                        @if(auth()->user()?->hasPermission(['campaigns.edit', "campaigns.manage.{$c->id}"]))
                                         <li><button type="button" class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#editCampaignModal{{ $c->id }}"><i class="bi bi-pencil me-2 text-warning"></i> تعديل</button></li>
+                                        @endif
+                                        @if(auth()->user()?->hasPermission('campaigns.delete'))
                                         <li><hr class="dropdown-divider"></li>
                                         <li><button type="button" class="dropdown-item py-2 text-danger" onclick="openCancelModal('{{ route('campaigns.destroy', $c) }}')"><i class="bi bi-trash me-2"></i> حذف نهائي</button></li>
+                                        @endif
                                     </ul>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     </div>

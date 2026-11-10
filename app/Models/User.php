@@ -108,6 +108,11 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
+
+    public function directPermissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'permission_user')->withTimestamps();
+    }
     public function assignedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'assigned_to');
@@ -203,14 +208,44 @@ class User extends Authenticatable
         return false;
     }
 
+    public function clearPermissionCache(): void
+    {
+        unset($this->cachedPermissions);
+    }
+
     private function ensurePermissionsLoaded(): void
     {
         if (!isset($this->cachedPermissions)) {
             $this->loadMissing('roles.permissions');
-            $this->cachedPermissions = $this->roles->flatMap(function ($role) {
+            $rolePerms = $this->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('key');
-            })->unique()->map(fn($k) => strtolower(trim((string) $k)))->values();
+            });
+
+            $directPerms = collect();
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
+                    $this->loadMissing('directPermissions');
+                    $directPerms = $this->directPermissions->pluck('key');
+                }
+            } catch (\Throwable) {
+                // Fallback if table not migrated yet
+            }
+
+            $this->cachedPermissions = $rolePerms
+                ->merge($directPerms)
+                ->unique()
+                ->map(fn($k) => strtolower(trim((string) $k)))
+                ->values();
         }
+    }
+
+    public function getEffectivePermissionKeys(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return Permission::pluck('key')->map(fn($k) => strtolower(trim((string) $k)))->all();
+        }
+        $this->ensurePermissionsLoaded();
+        return $this->cachedPermissions->all();
     }
 
     public function hasPermission($key): bool
@@ -247,7 +282,9 @@ class User extends Authenticatable
             return true;
         }
 
-        // 1. Entity-scoped and umbrella permissions for Projects, Campaigns, and Guest Houses
+        // Strict entity-scoped view access ONLY when the user has a specific entity assignment
+        // (e.g. projects.manage.{id}, campaigns.manage.{id}, guest_houses.manage.{id})
+        // or the explicit entity umbrella. Never escalate from .create/.edit/.delete or unrelated keys!
         if ($k === 'projects.view') {
             if ($this->project_id !== null) {
                 return true;
@@ -255,7 +292,7 @@ class User extends Authenticatable
             if ($this->cachedPermissions->contains('manage_project')
                 || $this->cachedPermissions->contains('manage_project_volunteers')
                 || $this->cachedPermissions->contains('assist_project_management')
-                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'projects.'))) {
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'projects.manage.'))) {
                 return true;
             }
         }
@@ -265,8 +302,7 @@ class User extends Authenticatable
                 return true;
             }
             if ($this->cachedPermissions->contains('manage_campaign')
-                || $this->cachedPermissions->contains('manage_ramadan')
-                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'campaigns.'))) {
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'campaigns.manage.'))) {
                 return true;
             }
         }
@@ -276,66 +312,7 @@ class User extends Authenticatable
                 return true;
             }
             if ($this->cachedPermissions->contains('manage_guest_house')
-                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'guest_houses.'))) {
-                return true;
-            }
-        }
-
-        // 2. If checking "<prefix>.view", any action permission on the exact same prefix
-        // (e.g. "<prefix>.create", "<prefix>.edit", "<prefix>.manage") implies "<prefix>.view"
-        if (str_ends_with($k, '.view')) {
-            $prefix = substr($k, 0, -5);
-            if ($prefix !== '' && $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, $prefix . '.'))) {
-                return true;
-            }
-        }
-
-        // 3. Umbrella permissions mapped strictly to their own domain's permissions
-        $umbrellaMap = [
-            'manage_employees' => [
-                'users.view', 'users.create', 'users.edit',
-                'employee_attendance.view', 'employee_tasks.view',
-                'leaves.view', 'leaves.manage', 'hr.evaluations',
-            ],
-            'manage_volunteers_hr' => [
-                'volunteers.view', 'volunteers.create', 'volunteers.edit',
-                'volunteer_attendance.view', 'volunteer_hours.view', 'volunteer_tasks.view',
-            ],
-            'manage_payrolls' => [
-                'payrolls.view', 'payrolls.create', 'payrolls.edit',
-            ],
-            'manage_finance' => [
-                'treasuries.view', 'accounts.view', 'expenses.view',
-                'revenues.view', 'journal_entries.view', 'financial_closures.view', 'closures.view',
-            ],
-            'manage_logistics' => [
-                'delegates.view', 'travel_routes.view', 'trips.view',
-                'kafr_el_sheikh_deliveries.view', 'kafr_el_sheikh_services.view',
-                'kafr_el_sheikh_brokers.view', 'tanta_workers.view',
-            ],
-            'manage_ramadan' => [
-                'ramadan_bags.view', 'ramadan_iftars.view', 'campaigns.view',
-            ],
-            'manage_specialized_services' => [
-                'collaborations.view', 'school_collaborations.view',
-                'memberships.view', 'oncology_medicine_reps.view', 'psychological_support.view',
-            ],
-            'manage_website' => [
-                'website.view', 'website.settings.view_edit', 'website.headquarters.view',
-                'website.partners.view', 'website.board.view', 'website.content.view_edit',
-                'website.campaigns_content.view_edit', 'website.volunteer_requests.view',
-                'website.donation_page.view_edit', 'website.donation_settings.view_edit',
-                'website.accounts.view', 'website.donation_accounts.view', 'website.contact_messages.view',
-            ],
-            'manage_mobile' => [
-                'mobile.view', 'mobile.home_content.view_edit', 'mobile.news.view',
-                'mobile.volunteer_requests.view', 'mobile.bookings.view', 'mobile.donations.view',
-                'mobile.donors.view', 'mobile.notifications.view', 'mobile.case_applications.view',
-            ],
-        ];
-
-        foreach ($umbrellaMap as $umbrellaKey => $impliedKeys) {
-            if (in_array($k, $impliedKeys, true) && $this->cachedPermissions->contains($umbrellaKey)) {
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'guest_houses.manage.'))) {
                 return true;
             }
         }
@@ -353,10 +330,6 @@ class User extends Authenticatable
         }
 
         $this->ensurePermissionsLoaded();
-
-        if ($this->cachedPermissions->contains('manage_project')) {
-            return null;
-        }
 
         $specificIds = [];
         foreach ($this->cachedPermissions as $perm) {
@@ -376,13 +349,12 @@ class User extends Authenticatable
             ->all();
         $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
 
-        // If the user has specific project assignments/permissions, restrict them strictly to those projects
+        // Specific project assignments ALWAYS take strict precedence over general project permissions
         if (!empty($specificIds)) {
             return $specificIds;
         }
 
-        // Otherwise, if they have general projects.view, allow viewing all projects
-        if ($this->cachedPermissions->contains('projects.view')) {
+        if ($this->cachedPermissions->contains('manage_project') || $this->cachedPermissions->contains('projects.view')) {
             return null;
         }
 
@@ -399,10 +371,6 @@ class User extends Authenticatable
         }
 
         $this->ensurePermissionsLoaded();
-
-        if ($this->cachedPermissions->contains('manage_campaign') || $this->cachedPermissions->contains('manage_ramadan')) {
-            return null;
-        }
 
         $specificIds = [];
         foreach ($this->cachedPermissions as $perm) {
@@ -421,11 +389,14 @@ class User extends Authenticatable
             ->all();
         $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
 
+        // Specific campaign assignments ALWAYS take strict precedence
         if (!empty($specificIds)) {
             return $specificIds;
         }
 
-        if ($this->cachedPermissions->contains('campaigns.view')) {
+        if ($this->cachedPermissions->contains('manage_campaign')
+            || $this->cachedPermissions->contains('manage_ramadan')
+            || $this->cachedPermissions->contains('campaigns.view')) {
             return null;
         }
 
@@ -442,10 +413,6 @@ class User extends Authenticatable
         }
 
         $this->ensurePermissionsLoaded();
-
-        if ($this->cachedPermissions->contains('manage_guest_house') || $this->cachedPermissions->contains('guest_houses.view_all')) {
-            return null;
-        }
 
         $specificIds = [];
         foreach ($this->cachedPermissions as $perm) {
@@ -465,11 +432,14 @@ class User extends Authenticatable
             ->all();
         $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
 
+        // Specific guest house assignments ALWAYS take strict precedence
         if (!empty($specificIds)) {
             return $specificIds;
         }
 
-        if ($this->cachedPermissions->contains('guest_houses.view')) {
+        if ($this->cachedPermissions->contains('manage_guest_house')
+            || $this->cachedPermissions->contains('guest_houses.view_all')
+            || $this->cachedPermissions->contains('guest_houses.view')) {
             return null;
         }
 

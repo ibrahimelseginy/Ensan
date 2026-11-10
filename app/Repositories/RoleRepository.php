@@ -15,6 +15,7 @@ final readonly class RoleRepository
         $q = $filters['q'] ?? null;
 
         return Role::query()
+            ->with(['users:id,name,email,job_title,is_employee,is_volunteer'])
             ->withCount(['users', 'permissions'])
             ->when($q, function ($query) use ($q) {
                 $query->where('name', 'like', "%$q%")
@@ -26,7 +27,7 @@ final readonly class RoleRepository
 
     public function findById(int $id): ?Role
     {
-        return Role::with(['permissions'])->withCount('users')->find($id);
+        return Role::with(['permissions', 'users'])->withCount('users')->find($id);
     }
 
     public function create(array $data): Role
