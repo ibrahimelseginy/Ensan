@@ -8,11 +8,52 @@
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         border-radius: 20px;
         padding: 2rem;
-        color: white;
+        color: #ffffff !important;
         position: relative;
         overflow: hidden;
         margin-bottom: 2rem;
         box-shadow: 0 10px 25px -5px rgba(30, 41, 59, 0.25);
+    }
+
+    .roles-hero h1,
+    .roles-hero .roles-hero-title {
+        color: #ffffff !important;
+    }
+
+    .roles-hero .roles-hero-subtitle {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .roles-hero .roles-hero-badge {
+        background: rgba(255, 255, 255, 0.16) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    }
+
+    .roles-hero .roles-hero-badge i {
+        color: #34d399 !important;
+    }
+
+    .roles-hero .roles-hero-btn-outline {
+        color: #ffffff !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .roles-hero .roles-hero-btn-outline i {
+        color: #ffffff !important;
+    }
+
+    .roles-hero .roles-hero-btn-outline:hover {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #ffffff !important;
+    }
+
+    .roles-hero .roles-hero-btn-outline:hover i {
+        color: #059669 !important;
     }
 
     .roles-hero::after {
@@ -100,25 +141,25 @@
 @php $u = auth()->user(); @endphp
 
 {{-- Hero Header --}}
-<div class="roles-hero">
+<div class="roles-hero dashboard-hero">
     <div class="row align-items-center position-relative" style="z-index: 1;">
         <div class="col-md-7">
-            <span class="badge bg-white bg-opacity-10 text-white mb-2 px-3 py-2 rounded-pill fw-semibold">
+            <span class="badge roles-hero-badge mb-2 px-3 py-2 rounded-pill fw-semibold">
                 <i class="bi bi-shield-lock me-1"></i> الأمان والتحكم الكامل بالوصول (RBAC)
             </span>
-            <h1 class="fw-black mb-2" style="font-size: 2.2rem;">إدارة الأدوار والصلاحيات</h1>
-            <p class="text-white text-opacity-75 mb-0">
+            <h1 class="fw-black mb-2 roles-hero-title" style="font-size: 2.2rem; color: #ffffff !important;">إدارة الأدوار والصلاحيات</h1>
+            <p class="roles-hero-subtitle mb-0" style="color: rgba(255, 255, 255, 0.92) !important;">
                 تحكم دقيق 100% في صلاحيات كل قسم وكل موظف — الصلاحيات المحددة فقط هي التي تظهر وتعمل في حساب الموظف دون أي صلاحيات إضافية.
             </p>
         </div>
         <div class="col-md-5 text-md-end mt-3 mt-md-0 d-flex flex-wrap gap-2 justify-content-md-end">
             @if($u && $u->hasPermission('users.view'))
-            <a href="{{ route('users.index') }}" class="btn btn-outline-light fw-bold px-3 py-3 rounded-4">
-                <i class="bi bi-people-fill me-1"></i> سجل الموظفين
+            <a href="{{ route('users.index') }}" class="btn btn-outline-light roles-hero-btn-outline fw-bold px-3 py-3 rounded-4">
+                <i class="bi bi-people-fill me-1"></i> <span>سجل الموظفين</span>
             </a>
             @endif
             @if($u && $u->hasPermission('roles.create'))
-            <a href="{{ route('roles.create') }}" class="btn btn-light btn-lg fw-bold px-4 py-3 rounded-4 shadow-sm">
+            <a href="{{ route('roles.create') }}" class="btn btn-light btn-lg fw-bold px-4 py-3 rounded-4 shadow-sm" style="background: #ffffff !important; color: #0f172a !important;">
                 <i class="bi bi-plus-circle-fill me-2 text-primary"></i> إنشاء دور جديد
             </a>
             @endif

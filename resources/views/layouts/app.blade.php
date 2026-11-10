@@ -2146,7 +2146,15 @@
       body:not(.theme-dark) .dashboard-hero label,
       body:not(.theme-dark) .dashboard-hero .hero-title,
       body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white),
-      body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white) span {
+      body:not(.theme-dark) .dashboard-hero .badge:not(.bg-white) span,
+      body:not(.theme-dark) .roles-hero .text-white,
+      body:not(.theme-dark) .roles-hero .text-white-50,
+      body:not(.theme-dark) .roles-hero h1,
+      body:not(.theme-dark) .roles-hero p,
+      body:not(.theme-dark) .roles-hero .badge:not(.bg-white),
+      body:not(.theme-dark) .bg-dark .text-white,
+      body:not(.theme-dark) .bg-dark .text-white-50,
+      body:not(.theme-dark) .bg-dark.text-white {
           color: #fff !important;
       }
       .dashboard-hero .btn-outline-light,

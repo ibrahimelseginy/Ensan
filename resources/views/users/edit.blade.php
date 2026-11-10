@@ -156,12 +156,12 @@
                     <div class="col-12 mt-3">
                         <input type="hidden" name="direct_permissions_present" value="1">
                         <div class="card border shadow-sm rounded-4 overflow-hidden">
-                            <div class="card-header bg-dark text-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div class="card-header bg-dark py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2" style="background: #1e293b !important; color: #ffffff !important;">
                                 <div>
-                                    <h6 class="mb-0 fw-bold">
+                                    <h6 class="mb-0 fw-bold" style="color: #ffffff !important;">
                                         <i class="bi bi-sliders text-warning me-2"></i> تخصيص صلاحيات إضافية مباشرة لهذا الموظف ({{ $user->name }})
                                     </h6>
-                                    <small class="text-white-50">يمكنك منح هذا الموظف أي صلاحية محددة في النظام مباشرة بالإضافة إلى صلاحيات دوره الوظيفي.</small>
+                                    <small style="color: rgba(255, 255, 255, 0.85) !important;">يمكنك منح هذا الموظف أي صلاحية محددة في النظام مباشرة بالإضافة إلى صلاحيات دوره الوظيفي.</small>
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <input type="text" id="empPermSearch" class="form-control form-control-sm" style="width: 240px;" placeholder="ابحث عن صلاحية أو قسم...">

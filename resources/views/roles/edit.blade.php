@@ -84,16 +84,16 @@
     @endif
 
     {{-- شريط التحكم والبحث في الصلاحيات --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 bg-dark text-white p-3 rounded-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 bg-dark p-3 rounded-4" style="background: #1e293b !important; color: #ffffff !important;">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-key-fill fs-5 text-warning"></i>
-            <h5 class="mb-0 fw-bold">الصلاحيات الممنوحة لهذا الدور</h5>
+            <h5 class="mb-0 fw-bold" style="color: #ffffff !important;">الصلاحيات الممنوحة لهذا الدور</h5>
             <span class="badge bg-warning text-dark ms-2" id="selectedPermsCounter">0 صلاحية محددة</span>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center" style="min-width: 320px;">
             <input type="text" id="permSearchBox" class="form-control form-control-sm" style="width: 240px;" placeholder="ابحث عن صلاحية أو قسم...">
             <button type="button" class="btn btn-sm btn-success fw-bold" id="btnCheckAllPerms">تحديد الكل</button>
-            <button type="button" class="btn btn-sm btn-outline-light fw-bold" id="btnUncheckAllPerms">إلغاء الكل</button>
+            <button type="button" class="btn btn-sm btn-outline-light fw-bold" id="btnUncheckAllPerms" style="color: #ffffff !important; border-color: rgba(255,255,255,0.6) !important;">إلغاء الكل</button>
         </div>
     </div>
 
