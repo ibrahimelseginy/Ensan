@@ -1519,9 +1519,17 @@
             </div>
 
             {{-- Petty Cash Stat Badges --}}
+            @php
+                $renderedPettyTreasuryIds = [];
+                $hasAnyPettyCard = false;
+            @endphp
             <div class="row g-3 mb-4">
-                @forelse($pettyCashCustodies as $custody)
+                @foreach($pettyCashCustodies as $custody)
                     @php
+                        $hasAnyPettyCard = true;
+                        if ($custody->treasury_id) {
+                            $renderedPettyTreasuryIds[] = (int) $custody->treasury_id;
+                        }
                         $cBalance = (float)($custody->treasury?->current_balance ?? 0);
                         $isLowPetty = $cBalance < 1000;
                         $cBreakdown = $custody->treasury ? $custody->treasury->balance_breakdown : ['custody_balance' => 0, 'donations_balance' => 0];
@@ -1560,6 +1568,7 @@
                                     <form method="POST" action="{{ route('treasuries.adjustTotals', $custody->treasury) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تصفير خزينة ({{ $custody->treasury->name }}) يدوياً إلى 0.00؟');">
                                         @csrf
                                         <input type="hidden" name="zero_treasury" value="1">
+                                        <input type="hidden" name="redirect_back" value="1">
                                         <input type="hidden" name="reason" value="تصفير خزينة دار الضيافة يدوياً ({{ $guest_house->name }})">
                                         <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill py-0 px-2">
                                             <i class="bi bi-arrow-counterclockwise"></i> تصفير يدوياً (0.00)
@@ -1569,7 +1578,62 @@
                             </div>
                         </div>
                     </div>
-                @empty
+                @endforeach
+
+                @foreach(($guestHouseExpenseTreasuries ?? []) as $ghTr)
+                    @if(!in_array((int) $ghTr->id, $renderedPettyTreasuryIds, true))
+                        @php
+                            $hasAnyPettyCard = true;
+                            $cBalance = (float) ($ghTr->current_balance ?? 0);
+                            $isLowPetty = $cBalance < 1000;
+                            $cBreakdown = $ghTr->balance_breakdown;
+                        @endphp
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 bg-white shadow-xs h-100 border-start border-4 {{ $isLowPetty ? 'border-warning' : 'border-success' }}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="fs-6">{{ $ghTr->name }}</strong>
+                                    <span class="badge {{ $isLowPetty ? 'bg-warning text-dark' : 'bg-success' }}">
+                                        {{ $isLowPetty ? '⚠️ تحتاج استعاضة' : '🟢 رصيد كافٍ' }}
+                                    </span>
+                                </div>
+                                <div class="small text-muted mb-1">خزينة الدار ({{ $ghTr->code }})</div>
+                                <div class="fs-4 fw-bold {{ $isLowPetty ? 'text-warning-emphasis' : 'text-success' }} font-monospace">
+                                    {{ number_format($cBalance, 2) }} {{ $ghTr->currency ?? 'ج.م' }}
+                                </div>
+                                <div class="row g-1 mt-2 pt-2 border-top small">
+                                    <div class="col-6">
+                                        <div class="p-1.5 rounded-2 bg-warning-subtle border border-warning-subtle">
+                                            <span class="text-dark d-block" style="font-size: 0.7rem;">💼 فلوس العهدة</span>
+                                            <strong class="font-monospace text-dark">{{ number_format((float)($cBreakdown['custody_balance'] ?? 0), 2) }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-1.5 rounded-2 bg-success-subtle border border-success-subtle">
+                                            <span class="text-success-emphasis d-block" style="font-size: 0.7rem;">💚 فلوس التبرعات</span>
+                                            <strong class="font-monospace text-success">{{ number_format((float)($cBreakdown['donations_balance'] ?? 0), 2) }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small flex-wrap gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalReplenishPettyCash">
+                                        + تغذية العهدة
+                                    </button>
+                                    <form method="POST" action="{{ route('treasuries.adjustTotals', $ghTr) }}" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تصفير خزينة ({{ $ghTr->name }}) يدوياً إلى 0.00؟');">
+                                        @csrf
+                                        <input type="hidden" name="zero_treasury" value="1">
+                                        <input type="hidden" name="redirect_back" value="1">
+                                        <input type="hidden" name="reason" value="تصفير خزينة دار الضيافة يدوياً ({{ $guest_house->name }})">
+                                        <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill py-0 px-2">
+                                            <i class="bi bi-arrow-counterclockwise"></i> تصفير يدوياً (0.00)
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+
+                @if(!$hasAnyPettyCard)
                     <div class="col-12">
                         <div class="alert alert-info py-3 text-center">
                             لم يتم ربط خزينة عهدة مالية بعد للدار. 
@@ -1578,7 +1642,7 @@
                             </button>
                         </div>
                     </div>
-                @endforelse
+                @endif
             </div>
 
             {{-- Quick Category Shortcuts --}}
@@ -2594,11 +2658,11 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold small">الخزينة المحول منها (المصدر الرئيسي) <span class="text-danger">*</span></label>
-                    <select name="source_treasury_id" class="form-select" required>
-                        <option value="">— اختر الخزينة المصدر —</option>
+                    <label class="form-label fw-bold small">مصدر التغذية / الاستعاضة</label>
+                    <select name="source_treasury_id" class="form-select">
+                        <option value="">💵 إيداع نقدي مباشر في العهدة (بدون خصم من خزينة أخرى)</option>
                         @foreach(($allSourceTreasuries ?? $guestHouseDonationTreasuries) as $srcTr)
-                            <option value="{{ $srcTr->id }}">{{ $srcTr->name }} (الرصيد المتاح: {{ number_format((float)$srcTr->current_balance, 2) }} {{ $srcTr->currency }})</option>
+                            <option value="{{ $srcTr->id }}">تحويل من: {{ $srcTr->name }} (الرصيد المتاح: {{ number_format((float)$srcTr->current_balance, 2) }} {{ $srcTr->currency }})</option>
                         @endforeach
                     </select>
                 </div>

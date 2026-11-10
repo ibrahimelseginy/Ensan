@@ -145,74 +145,132 @@ final class Treasury extends Model
 
     public function getTotalIn()
     {
-        return $this->transactions()->where('type', 'in')->sum('amount');
+        return $this->transactions()
+            ->where('type', 'in')
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
+            ->sum('amount');
     }
 
     public function getTotalOut()
     {
-        return $this->transactions()->where('type', 'out')->sum('amount');
+        return $this->transactions()
+            ->where('type', 'out')
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
+            ->sum('amount');
     }
 
     /**
      * تفصيل رصيد الخزينة إلى: (رصيد العهدة / التغذية) مقابل (رصيد التبرعات)
+     * مع مراعاة التسلسل الزمني للحركات وأي تصفير سابق للخزينة، وخصم المصروفات من العهدة أولاً.
      */
     public function getBalanceBreakdownAttribute(): array
     {
-        $inTransactions = $this->relationLoaded('transactions')
-            ? $this->transactions->where('type', 'in')
-            : $this->transactions()->where('type', 'in')->get(['id', 'amount', 'donation_id', 'description']);
+        $allTransactions = $this->relationLoaded('transactions')
+            ? $this->transactions
+                ->filter(fn ($tx) => ($tx->status ?? 'active') !== 'cancelled')
+                ->sortBy('id')
+                ->values()
+            : $this->transactions()
+                ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
+                ->orderBy('id')
+                ->get(['id', 'type', 'amount', 'donation_id', 'expense_id', 'description', 'reference', 'status']);
 
+        $openingRaw = (float) $this->opening_balance;
+        $negativeOffset = $openingRaw < 0.0 ? abs($openingRaw) : 0.0;
+
+        $custodyBalance = $openingRaw > 0.0 ? $openingRaw : 0.0;
+        $donationsBalance = 0.0;
+
+        $custodyIn = $custodyBalance;
         $donationsIn = 0.0;
-        $custodyTxIn = 0.0;
+        $totalOut = 0.0;
 
-        foreach ($inTransactions as $tx) {
+        $cumulativeRawNet = 0.0;
+
+        foreach ($allTransactions as $tx) {
             $amt = (float) ($tx->amount ?? 0);
-            if ($amt <= 0) {
+            if ($amt <= 0.0) {
                 continue;
             }
+
+            $type = (string) ($tx->type ?? 'in');
             $desc = (string) ($tx->description ?? '');
-            $isDonationTx = !empty($tx->donation_id)
-                || str_contains($desc, 'تبرع')
-                || str_contains($desc, 'كفالة')
-                || str_contains($desc, 'صدقة')
-                || str_contains($desc, 'زكاة');
+            $ref  = (string) ($tx->reference ?? '');
 
-            if ($isDonationTx) {
-                $donationsIn += $amt;
+            if ($type === 'in') {
+                $cumulativeRawNet += $amt;
+                $isDonationTx = !empty($tx->donation_id)
+                    || str_contains($desc, 'تبرع')
+                    || str_contains($desc, 'كفالة')
+                    || str_contains($desc, 'صدقة')
+                    || str_contains($desc, 'زكاة')
+                    || str_starts_with($ref, 'DON-');
+
+                if ($isDonationTx) {
+                    $donationsIn += $amt;
+                    $donationsBalance += $amt;
+                } else {
+                    $custodyIn += $amt;
+                    $custodyBalance += $amt;
+                }
             } else {
-                $custodyTxIn += $amt;
+                $cumulativeRawNet -= $amt;
+                $totalOut += $amt;
+
+                if (str_contains($desc, 'تصفير رصيد الخزينة')) {
+                    $custodyBalance = 0.0;
+                    $donationsBalance = 0.0;
+                    $custodyIn = 0.0;
+                    $donationsIn = 0.0;
+                    $totalOut = 0.0;
+                    continue;
+                }
+
+                $isDonationReversal = !empty($tx->donation_id)
+                    || str_contains($desc, 'إلغاء تبرع')
+                    || str_contains($desc, 'تخفيض وارد');
+
+                if ($isDonationReversal) {
+                    $deductDon = min($donationsBalance, $amt);
+                    $donationsBalance -= $deductDon;
+                    $custodyBalance = max(0.0, $custodyBalance - ($amt - $deductDon));
+                } else {
+                    // المصروفات والصرف النثري تُخصم من العهدة أولاً، وما زاد يُخصم من التبرعات
+                    $deductCust = min($custodyBalance, $amt);
+                    $custodyBalance -= $deductCust;
+                    $donationsBalance = max(0.0, $donationsBalance - ($amt - $deductCust));
+                }
+            }
+
+            // إذا كان هناك تصفير سابق عبر opening_balance سالب يعادل صافي الحركات حتى هذه النقطة، نبدأ دورة الرصيد من الصفر بعدها
+            if ($negativeOffset > 0.0 && abs($cumulativeRawNet - $negativeOffset) < 0.01) {
+                $custodyBalance = 0.0;
+                $donationsBalance = 0.0;
+                $custodyIn = 0.0;
+                $donationsIn = 0.0;
+                $totalOut = 0.0;
+                $negativeOffset = 0.0;
             }
         }
 
-        if ($donationsIn <= 0.0) {
-            $directDonationsSum = (float) $this->donations()
-                ->where('type', 'cash')
-                ->where('status', '!=', 'cancelled')
-                ->sum('amount');
-            if ($directDonationsSum > 0 && $custodyTxIn >= $directDonationsSum) {
-                $donationsIn = $directDonationsSum;
-                $custodyTxIn = max(0.0, $custodyTxIn - $directDonationsSum);
+        // إذا بقي فرق سالب من الرصيد الافتتاحي لم يُطابق نقطة تصفير محددة، يُخصم من التبرعات التاريخية أولاً ثم العهدة
+        if ($negativeOffset > 0.0) {
+            $absorbDon = min($donationsBalance, $negativeOffset);
+            $donationsBalance -= $absorbDon;
+            $remOffset = $negativeOffset - $absorbDon;
+            if ($remOffset > 0.0) {
+                $custodyBalance = max(0.0, $custodyBalance - $remOffset);
             }
         }
 
-        $opening = max(0.0, (float) $this->opening_balance);
-        $custodyIn = $opening + $custodyTxIn;
-        $totalOut = (float) ($this->relationLoaded('transactions')
-            ? $this->transactions->where('type', 'out')->sum('amount')
-            : $this->getTotalOut());
-        $current = (float) $this->current_balance;
-
+        $current = max(0.0, (float) $this->current_balance);
         if ($current <= 0.0) {
             $custodyBalance = 0.0;
             $donationsBalance = 0.0;
         } else {
-            // المصروفات تُخصم من العهدة أولاً، وما زاد يُخصم من التبرعات
-            $custodyAfterOut = max(0.0, $custodyIn - $totalOut);
-            $remainingOut = max(0.0, $totalOut - $custodyIn);
-            $donationsAfterOut = max(0.0, $donationsIn - $remainingOut);
-
-            $donationsBalance = min($current, round($donationsAfterOut, 2));
-            $custodyBalance = max(0.0, round($current - $donationsBalance, 2));
+            // الحفاظ على أولوية رصيد العهدة الفعلي وعدم طمسه بالتبرعات التاريخية
+            $custodyBalance = min($current, round($custodyBalance, 2));
+            $donationsBalance = max(0.0, round($current - $custodyBalance, 2));
         }
 
         return [

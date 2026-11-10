@@ -100,11 +100,14 @@ final readonly class ExpenseService
         if (empty($data['paid_at'])) {
             $data['paid_at'] = now();
         }
+        $data['status'] = (!empty($data['status']) && in_array($data['status'], ['active', 'cancelled'], true))
+            ? $data['status']
+            : 'active';
+        $data['created_by'] = $data['created_by'] ?? auth()->id();
 
         $executor = function () use ($data) {
             return DB::transaction(function() use ($data) {
-                $treasuryId = $data['treasury_id'];
-                unset($data['treasury_id']);
+                $treasuryId = $data['treasury_id'] ?? null;
 
                 $expense = $this->expenseRepository->create($data);
                 app(TreasuryIntegrationService::class)->processExpenseFromTreasury($expense, $treasuryId);

@@ -150,7 +150,8 @@ class TreasuryIntegrationService
                 'reference' => "EXP-{$expense->id}",
                 'transaction_date' => $expense->paid_at ?? $expense->expense_date ?? now(),
                 'created_by' => auth()->id(),
-                'expense_id' => $expense->id
+                'expense_id' => $expense->id,
+                'status' => 'active',
             ]);
 
             // Update expense with treasury
@@ -161,8 +162,12 @@ class TreasuryIntegrationService
             // Update treasury balance
             $treasury->updateBalance();
 
-            // Create journal entry
-            $this->createExpenseJournalEntry($expense, $treasury);
+            // Create journal entry safely without blocking treasury balance deduction
+            try {
+                $this->createExpenseJournalEntry($expense, $treasury);
+            } catch (\Throwable $jeError) {
+                \Illuminate\Support\Facades\Log::warning('Journal entry creation skipped for expense #' . $expense->id . ': ' . $jeError->getMessage());
+            }
 
             DB::commit();
             return $transaction;

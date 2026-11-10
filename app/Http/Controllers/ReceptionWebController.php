@@ -25,6 +25,7 @@ final class ReceptionWebController extends Controller
         $dateCol = \Illuminate\Support\Facades\Schema::hasColumn('expenses', 'paid_at') ? 'paid_at' : 'created_at';
 
         $receptionExpenses = Expense::with(['treasury'])
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
             ->where(function ($q) use ($treasuryIds) {
                 if (!empty($treasuryIds)) {
                     $q->whereIn('treasury_id', $treasuryIds);
@@ -37,6 +38,7 @@ final class ReceptionWebController extends Controller
             ->get();
 
         $todayExpensesTotal = (float) Expense::query()
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
             ->where(function ($q) use ($treasuryIds) {
                 if (!empty($treasuryIds)) {
                     $q->whereIn('treasury_id', $treasuryIds);
@@ -52,6 +54,7 @@ final class ReceptionWebController extends Controller
             ->sum('amount');
 
         $monthExpensesTotal = (float) Expense::query()
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
             ->where(function ($q) use ($treasuryIds) {
                 if (!empty($treasuryIds)) {
                     $q->whereIn('treasury_id', $treasuryIds);
@@ -143,7 +146,7 @@ final class ReceptionWebController extends Controller
                 'description' => trim($fullDesc),
                 'treasury_id' => $treasury?->id,
                 'created_by' => auth()->id(),
-                'status' => 'approved',
+                'status' => 'active',
                 'attachment_path' => $attachmentPath,
             ];
 
@@ -159,6 +162,7 @@ final class ReceptionWebController extends Controller
                     'reference' => 'REC-EXP-' . $expense->id,
                     'transaction_date' => $spentAt->toDateString(),
                     'expense_id' => $expense->id,
+                    'status' => 'active',
                     'created_by' => auth()->id(),
                 ]);
                 $treasury->updateBalance();

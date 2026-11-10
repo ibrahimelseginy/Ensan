@@ -252,10 +252,23 @@ final class GuestHouseWebController extends Controller
         ];
 
         $pettyCashCustodies = $guestHouseCustodies->where('type', 'financial');
+        $ghTreasuryIds = $scopedGuestHouseTreasuries->pluck('id')
+            ->merge($pettyCashCustodies->pluck('treasury_id'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
         $foodCustodies = $guestHouseCustodies->where(function ($c) {
             return $c->type === 'in_kind' && ($c->category === 'food' || str_contains(mb_strtolower((string)$c->name), 'غذائ') || str_contains(mb_strtolower((string)$c->name), 'وجب') || str_contains(mb_strtolower((string)$c->name), 'مطبخ'));
         });
-        $pettyCashExpenses = Expense::where('guest_house_id', $guest_house->id)
+        $pettyCashExpenses = Expense::query()
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'cancelled'))
+            ->where(function ($q) use ($guest_house, $ghTreasuryIds) {
+                $q->where('guest_house_id', $guest_house->id);
+                if (!empty($ghTreasuryIds)) {
+                    $q->orWhereIn('treasury_id', $ghTreasuryIds);
+                }
+            })
             ->with(['treasury', 'creator'])
             ->latest('id')
             ->limit(30)
@@ -1175,7 +1188,7 @@ final class GuestHouseWebController extends Controller
                     'paid_at'        => $data['meal_date'],
                     'description'    => 'تكلفة وجبة ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
                     'created_by'     => auth()->id(),
-                    'status'         => 'approved',
+                    'status'         => 'active',
                 ];
 
                 $expense = \App\Models\Expense::create($expenseData);
@@ -1570,7 +1583,7 @@ final class GuestHouseWebController extends Controller
         $data = $request->validate([
             'target_treasury_id' => 'nullable|exists:treasuries,id',
             'custody_id' => 'nullable|exists:guest_house_custodies,id',
-            'source_treasury_id' => 'required|exists:treasuries,id',
+            'source_treasury_id' => 'nullable|exists:treasuries,id',
             'amount' => 'required|numeric|min:1',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -1592,35 +1605,46 @@ final class GuestHouseWebController extends Controller
             return back()->with('error', 'يرجى تحديد الخزينة المستلمة للتغذية.');
         }
 
-        $sourceTreasury = Treasury::findOrFail($data['source_treasury_id']);
+        $sourceTreasury = !empty($data['source_treasury_id'])
+            ? Treasury::find($data['source_treasury_id'])
+            : null;
 
-        if ((float) $sourceTreasury->current_balance < (float) $data['amount']) {
-            return back()->with('error', 'الرصيد في الخزينة المحددة غير كافٍ لتغذية عهدة الدار.');
+        if ($sourceTreasury && (int) $sourceTreasury->id === (int) $destTreasury->id) {
+            $sourceTreasury = null;
+        }
+
+        if ($sourceTreasury && (float) $sourceTreasury->current_balance < (float) $data['amount']) {
+            return back()->with('error', 'الرصيد في الخزينة المصدر المحددة غير كافٍ لتغذية عهدة الدار.');
         }
 
         DB::transaction(function () use ($guest_house, $custodyName, $sourceTreasury, $destTreasury, $data): void {
-            $sourceTreasury->decrement('current_balance', (float) $data['amount']);
-            $destTreasury->increment('current_balance', (float) $data['amount']);
-
-            TreasuryTransaction::create([
-                'treasury_id' => $sourceTreasury->id,
-                'type' => 'out',
-                'amount' => (float) $data['amount'],
-                'currency' => $sourceTreasury->currency ?: 'EGP',
-                'description' => "تغذية واستعاضة عهدة مالية لدار الضيافة: {$guest_house->name} ({$custodyName})",
-                'transaction_date' => now()->toDateString(),
-                'created_by' => auth()->id(),
-            ]);
+            if ($sourceTreasury) {
+                TreasuryTransaction::create([
+                    'treasury_id' => $sourceTreasury->id,
+                    'type' => 'out',
+                    'amount' => (float) $data['amount'],
+                    'currency' => $sourceTreasury->currency ?: 'EGP',
+                    'description' => "تغذية واستعاضة عهدة مالية لدار الضيافة: {$guest_house->name} ({$custodyName})",
+                    'reference' => 'GH-REP-OUT-' . now()->format('YmdHis'),
+                    'transaction_date' => now()->toDateString(),
+                    'status' => 'active',
+                    'created_by' => auth()->id(),
+                ]);
+                $sourceTreasury->updateBalance();
+            }
 
             TreasuryTransaction::create([
                 'treasury_id' => $destTreasury->id,
                 'type' => 'in',
                 'amount' => (float) $data['amount'],
                 'currency' => $destTreasury->currency ?: 'EGP',
-                'description' => "استلام استعاضة عهدة من: {$sourceTreasury->name} - " . ($data['notes'] ?? ''),
+                'description' => ($sourceTreasury ? "استلام استعاضة عهدة من: {$sourceTreasury->name}" : "تغذية عهدة مالية مباشرة لدار الضيافة ({$custodyName})") . (!empty($data['notes']) ? ' - ' . $data['notes'] : ''),
+                'reference' => 'GH-REP-IN-' . now()->format('YmdHis'),
                 'transaction_date' => now()->toDateString(),
+                'status' => 'active',
                 'created_by' => auth()->id(),
             ]);
+            $destTreasury->updateBalance();
         });
 
         return back()->with('success', 'تمت استعاضة وتغذية العهدة المالية للدار بنجاح وزيادة الرصيد المتاح.');

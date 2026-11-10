@@ -100,6 +100,20 @@ final class ImageUploadService
         }
     }
 
+    /**
+     * Alias متوافق مع الاستدعاءات التي تستخدم uploadImage()
+     */
+    public function uploadImage(
+        UploadedFile $file,
+        string $directory,
+        ?string $oldPath = null,
+        ?int $maxWidth = null,
+        ?int $maxHeight = null,
+        ?int $quality = null,
+    ): ?string {
+        return $this->upload($file, $directory, $oldPath, $maxWidth, $maxHeight, $quality);
+    }
+
     // -------------------------------------------------------------------------
     // Multiple-images Upload
     // -------------------------------------------------------------------------
