@@ -53,6 +53,11 @@ final readonly class RoleService
             ['key' => 'users.edit', 'name' => 'تعديل بيانات الموظفين والمستخدمين'],
             ['key' => 'users.delete', 'name' => 'حذف الموظفين والمستخدمين'],
 
+            // طلبات التوظيف (الموقع)
+            ['key' => 'job_applications.view', 'name' => 'عرض طلبات التوظيف الواردة من الموقع'],
+            ['key' => 'job_applications.manage', 'name' => 'مراجعة طلبات التوظيف وتغيير حالتها (قبول / رفض / مقابلة)'],
+            ['key' => 'job_applications.delete', 'name' => 'حذف طلبات التوظيف'],
+
             // الأدوار والصلاحيات
             ['key' => 'roles.view', 'name' => 'عرض الأدوار والصلاحيات'],
             ['key' => 'roles.create', 'name' => 'إنشاء دور وظيفي جديد'],
@@ -592,6 +597,7 @@ final readonly class RoleService
             'travel_routes'             => 'اللوجيستك - خطوط السير',
             'trips'                     => 'اللوجيستك - الرحلات',
             'users'                     => 'شؤون الموظفين والمستخدمين',
+            'job_applications'          => 'طلبات التوظيف (الموقع)',
             'employee_attendance'       => 'حضور وانصراف الموظفين',
             'employee_tasks'            => 'مهام الموظفين',
             'leaves'                    => 'إجازات الموظفين',

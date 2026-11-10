@@ -95,6 +95,9 @@ Route::prefix('v1')->group(function () {
 
         Route::post('website/volunteer', [WebsiteApiController::class, 'submitVolunteer'])->middleware('throttle:submissions');
         Route::get('website/volunteer/track/{query}', [WebsiteApiController::class, 'trackVolunteerRequest'])->middleware('throttle:heavy-ops');
+        // طلبات التوظيف (Careers) — عام بدون تسجيل دخول
+        Route::post('website/job-applications', [\App\Http\Controllers\Api\JobApplicationApiController::class, 'store'])->middleware('throttle:submissions');
+        Route::get('website/job-applications/track/{query}', [\App\Http\Controllers\Api\JobApplicationApiController::class, 'track'])->middleware('throttle:heavy-ops');
         Route::post('website/contact', [WebsiteApiController::class, 'submitContact'])->middleware('throttle:submissions');
         Route::post('website/room-booking', [WebsiteApiController::class, 'submitRoomBooking'])->middleware('throttle:submissions');
         Route::post('website/subscribe', [WebsiteApiController::class, 'submitSubscription'])->middleware('throttle:submissions');

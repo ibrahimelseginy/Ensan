@@ -539,6 +539,19 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('volunteers', VolunteerWebController::class);
     });
 
+    // --- طلبات التوظيف الواردة من الموقع (الموارد البشرية) ---
+    Route::middleware('permission:job_applications.view|job_applications.manage|manage_employees')->group(function () {
+        Route::get('hr/job-applications', [\App\Http\Controllers\JobApplicationWebController::class, 'index'])->name('hr.job-applications.index');
+        Route::get('hr/job-applications/{jobApplication}', [\App\Http\Controllers\JobApplicationWebController::class, 'show'])->name('hr.job-applications.show');
+        Route::get('hr/job-applications/{jobApplication}/cv', [\App\Http\Controllers\JobApplicationWebController::class, 'downloadCv'])->name('hr.job-applications.cv');
+    });
+    Route::middleware('permission:job_applications.manage|manage_employees')->group(function () {
+        Route::post('hr/job-applications/{jobApplication}/status', [\App\Http\Controllers\JobApplicationWebController::class, 'updateStatus'])->name('hr.job-applications.status');
+    });
+    Route::middleware('permission:job_applications.delete')->group(function () {
+        Route::delete('hr/job-applications/{jobApplication}', [\App\Http\Controllers\JobApplicationWebController::class, 'destroy'])->name('hr.job-applications.destroy');
+    });
+
     Route::middleware('permission:volunteer_hours.view|log_volunteer_hours|volunteer_hours.create')->group(function () {
         Route::resource('volunteer-hours', VolunteerHourWebController::class);
     });

@@ -773,7 +773,7 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 5. الموارد البشرية HR (Popup) --}}
-        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'website.volunteer_requests.view', 'mobile.volunteer_requests.view']))
+        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'job_applications.view', 'job_applications.manage']))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.45);">
                 <i class="bi bi-person-lines-fill"></i>
@@ -1309,6 +1309,19 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">طلبات التطوع (الموقع)</div>
                             <small class="text-muted">متابعة استمارات التطوع الواردة</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
+                    @if($u && $u->hasPermission(['job_applications.view', 'job_applications.manage', 'manage_employees']))
+                    <a href="{{ route('hr.job-applications.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(124,58,237,.12); color: #7c3aed;">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">طلبات التوظيف (الموقع)</div>
+                            <small class="text-muted">المتقدمون للوظائف وقرار القبول أو الرفض</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
