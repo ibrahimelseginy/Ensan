@@ -176,7 +176,13 @@
                                     @foreach($permissionGroups as $groupName => $groupPerms)
                                         <div class="col-md-4 emp-perm-group">
                                             <div class="card h-100 border rounded-3">
-                                                <div class="card-header bg-light py-2 px-3 fw-bold small">{{ $groupName }}</div>
+                                                <div class="card-header bg-light py-2 px-3 fw-bold small d-flex justify-content-between align-items-center">
+                                                    <span>{{ $groupName }}</span>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-primary btn-xs py-0 px-2 emp-toggle-group-btn" data-check="1">الكل</button>
+                                                        <button type="button" class="btn btn-outline-secondary btn-xs py-0 px-2 emp-toggle-group-btn" data-check="0">إلغاء</button>
+                                                    </div>
+                                                </div>
                                                 <div class="card-body py-2 px-3" style="max-height: 240px; overflow-y: auto;">
                                                     @foreach($groupPerms as $p)
                                                         @php
@@ -184,7 +190,7 @@
                                                             $isDirect = in_array($p->id, $checkedDirect);
                                                         @endphp
                                                         <div class="form-check py-1 emp-perm-item" data-search="{{ mb_strtolower($p->name . ' ' . $p->key . ' ' . $groupName) }}">
-                                                            <input class="form-check-input" type="checkbox" name="direct_permissions[]" value="{{ $p->id }}" id="dp_{{ $p->id }}"
+                                                            <input class="form-check-input emp-perm-checkbox" type="checkbox" name="direct_permissions[]" value="{{ $p->id }}" id="dp_{{ $p->id }}"
                                                                 @checked($isDirect)>
                                                             <label class="form-check-label d-block" for="dp_{{ $p->id }}" style="cursor: pointer;">
                                                                 <span class="small fw-semibold">{{ $p->name }}</span>
@@ -203,25 +209,39 @@
                             </div>
                         </div>
                     </div>
-                    @push('scripts')
                     <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        document.getElementById('empPermSearch')?.addEventListener('input', function () {
-                            const q = this.value.trim().toLowerCase();
-                            document.querySelectorAll('.emp-perm-group').forEach(card => {
-                                let visible = 0;
-                                card.querySelectorAll('.emp-perm-item').forEach(item => {
-                                    const txt = item.getAttribute('data-search') || '';
-                                    const match = !q || txt.includes(q);
-                                    item.style.display = match ? '' : 'none';
-                                    if (match) visible++;
+                    (function () {
+                        const initEmpPermControls = () => {
+                            document.getElementById('empPermSearch')?.addEventListener('input', function () {
+                                const q = this.value.trim().toLowerCase();
+                                document.querySelectorAll('.emp-perm-group').forEach(card => {
+                                    let visible = 0;
+                                    card.querySelectorAll('.emp-perm-item').forEach(item => {
+                                        const txt = item.getAttribute('data-search') || '';
+                                        const match = !q || txt.includes(q);
+                                        item.style.display = match ? '' : 'none';
+                                        if (match) visible++;
+                                    });
+                                    card.style.display = visible > 0 ? '' : 'none';
                                 });
-                                card.style.display = visible > 0 ? '' : 'none';
                             });
-                        });
-                    });
+
+                            document.querySelectorAll('.emp-toggle-group-btn').forEach(btn => {
+                                btn.addEventListener('click', function () {
+                                    const shouldCheck = this.getAttribute('data-check') === '1';
+                                    const card = this.closest('.emp-perm-group');
+                                    card?.querySelectorAll('.emp-perm-item:not([style*="display: none"]) .emp-perm-checkbox').forEach(cb => cb.checked = shouldCheck);
+                                });
+                            });
+                        };
+
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initEmpPermControls);
+                        } else {
+                            initEmpPermControls();
+                        }
+                    })();
                     </script>
-                    @endpush
                     @endif
 
                     <div class="col-12">

@@ -5751,6 +5751,7 @@
   @include('layouts.partials.global_search_script')
 
   @yield('scripts')
+  @stack('scripts')
 </body>
 
 </html>

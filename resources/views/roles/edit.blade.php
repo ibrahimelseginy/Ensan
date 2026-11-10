@@ -137,61 +137,67 @@
     </div>
 </form>
 
-@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const updateCounter = () => {
-        const count = document.querySelectorAll('.perm-checkbox:checked').length;
-        const badge = document.getElementById('selectedPermsCounter');
-        if (badge) badge.textContent = count + ' صلاحية محددة';
-    };
+(function () {
+    const initRoleEditForm = () => {
+        const updateCounter = () => {
+            const count = document.querySelectorAll('.perm-checkbox:checked').length;
+            const badge = document.getElementById('selectedPermsCounter');
+            if (badge) badge.textContent = count + ' صلاحية محددة';
+        };
 
-    document.querySelectorAll('.perm-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateCounter);
-    });
-    updateCounter();
-
-    document.getElementById('btnCheckAllPerms')?.addEventListener('click', () => {
-        document.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.perm-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateCounter);
+        });
         updateCounter();
-    });
 
-    document.getElementById('btnUncheckAllPerms')?.addEventListener('click', () => {
-        document.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = false);
-        updateCounter();
-    });
-
-    document.querySelectorAll('.toggle-group-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const shouldCheck = this.getAttribute('data-check') === '1';
-            const card = this.closest('.perm-group-card');
-            card?.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = shouldCheck);
+        document.getElementById('btnCheckAllPerms')?.addEventListener('click', () => {
+            document.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = true);
             updateCounter();
         });
-    });
 
-    document.getElementById('permSearchBox')?.addEventListener('input', function () {
-        const q = this.value.trim().toLowerCase();
-        document.querySelectorAll('.perm-group-card').forEach(card => {
-            let visibleCount = 0;
-            card.querySelectorAll('.perm-item-row').forEach(row => {
-                const txt = row.getAttribute('data-perm-text') || '';
-                const match = !q || txt.includes(q);
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
+        document.getElementById('btnUncheckAllPerms')?.addEventListener('click', () => {
+            document.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = false);
+            updateCounter();
+        });
+
+        document.querySelectorAll('.toggle-group-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const shouldCheck = this.getAttribute('data-check') === '1';
+                const card = this.closest('.perm-group-card');
+                card?.querySelectorAll('.perm-item-row:not([style*="display: none"]) .perm-checkbox').forEach(cb => cb.checked = shouldCheck);
+                updateCounter();
             });
-            card.style.display = visibleCount > 0 ? '' : 'none';
         });
-    });
 
-    document.getElementById('userSearchBox')?.addEventListener('input', function () {
-        const q = this.value.trim().toLowerCase();
-        document.querySelectorAll('.user-item-row').forEach(row => {
-            const txt = row.getAttribute('data-search') || '';
-            row.style.display = (!q || txt.includes(q)) ? '' : 'none';
+        document.getElementById('permSearchBox')?.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            document.querySelectorAll('.perm-group-card').forEach(card => {
+                let visibleCount = 0;
+                card.querySelectorAll('.perm-item-row').forEach(row => {
+                    const txt = row.getAttribute('data-perm-text') || '';
+                    const match = !q || txt.includes(q);
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
+                });
+                card.style.display = visibleCount > 0 ? '' : 'none';
+            });
         });
-    });
-});
+
+        document.getElementById('userSearchBox')?.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            document.querySelectorAll('.user-item-row').forEach(row => {
+                const txt = row.getAttribute('data-search') || '';
+                row.style.display = (!q || txt.includes(q)) ? '' : 'none';
+            });
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRoleEditForm);
+    } else {
+        initRoleEditForm();
+    }
+})();
 </script>
-@endpush
 @endsection
