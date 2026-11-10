@@ -45,7 +45,10 @@
                             </div>
                             <div>
                                 <h5 class="mb-1 text-white fw-bold">{{ $treasury->name }}</h5>
-                                <span class="badge bg-white bg-opacity-10 text-white opacity-50">{{ $treasury->code }}</span>
+                                <div class="d-flex flex-wrap gap-1 align-items-center">
+                                    <span class="badge bg-white bg-opacity-10 text-white opacity-75">{{ $treasury->code }}</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $treasury->type_name }}</span>
+                                </div>
                             </div>
                         </div>
                         <div>

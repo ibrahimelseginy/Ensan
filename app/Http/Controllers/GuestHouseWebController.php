@@ -162,7 +162,10 @@ final class GuestHouseWebController extends Controller
         $scopedGuestHouseTreasuries = Treasury::forGuestHouse($guest_house);
         $guestHouseDonationTreasuries = $scopedGuestHouseTreasuries;
         $guestHouseExpenseTreasuries = $scopedGuestHouseTreasuries;
-        $allSourceTreasuries = Treasury::active()->orderBy('name')->get();
+        $allSourceTreasuries = Treasury::active()
+            ->where('type', Treasury::TYPE_MAIN)
+            ->orderBy('name')
+            ->get();
         $guestHouseItems = Item::where('is_active', true)->orderBy('name')->get(['id', 'name', 'unit']);
         $guestHouseWings = $guest_house->wings()->with(['beds.activeStay.beneficiary'])->orderBy('name')->get();
         $availableBeds = $guestHouseWings->flatMap(fn ($wing) => $wing->beds->filter(
