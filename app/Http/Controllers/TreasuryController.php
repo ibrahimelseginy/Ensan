@@ -70,8 +70,11 @@ final class TreasuryController extends Controller
 
     public function create(): View
     {
-        $managers = User::orderBy('name')->get();
-        return view('treasuries.create', compact('managers'));
+        $managers    = User::orderBy('name')->get();
+        $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
+        $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
+        $campaigns   = \App\Models\Campaign::orderByDesc('id')->get(['id', 'name']);
+        return view('treasuries.create', compact('managers', 'guestHouses', 'projects', 'campaigns'));
     }
 
     public function store(StoreTreasuryRequest $request): RedirectResponse
@@ -108,8 +111,11 @@ final class TreasuryController extends Controller
 
     public function edit(Treasury $treasury): View
     {
-        $managers = User::orderBy('name')->get();
-        return view('treasuries.edit', compact('treasury', 'managers'));
+        $managers    = User::orderBy('name')->get();
+        $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
+        $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
+        $campaigns   = \App\Models\Campaign::orderByDesc('id')->get(['id', 'name']);
+        return view('treasuries.edit', compact('treasury', 'managers', 'guestHouses', 'projects', 'campaigns'));
     }
 
     public function update(UpdateTreasuryRequest $request, Treasury $treasury): RedirectResponse

@@ -38,7 +38,10 @@
 
     {{-- Top KPI Cards for Guest House 4 Pillars --}}
     @php
-        $totalPettyCashBalance = $pettyCashCustodies->sum(fn($c) => (float)($c->treasury?->current_balance ?? 0));
+        $uniqueGhTreasuries = collect($guestHouseExpenseTreasuries ?? [])
+            ->merge($pettyCashCustodies->pluck('treasury')->filter())
+            ->unique('id');
+        $totalPettyCashBalance = $uniqueGhTreasuries->sum(fn($t) => (float)($t->current_balance ?? 0));
         $brokenAssetsCount = ($assetStats['needs_maintenance'] ?? 0) + ($assetStats['out_of_service'] ?? 0);
         $lowFoodStockCount = $guestHouseInventory->filter(function($stock) {
             return (float)$stock->stock <= 5;

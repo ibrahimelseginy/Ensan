@@ -18,6 +18,8 @@ final class Treasury extends Model
      * Treasury Types
      */
     const TYPE_MAIN = 'main';
+    const TYPE_RECEPTION = 'reception';
+    const TYPE_GUEST_HOUSE = 'guest_house';
     const TYPE_BRANCH = 'branch';
     const TYPE_DELEGATE = 'delegate';
     const TYPE_PROJECT = 'project';
@@ -25,11 +27,13 @@ final class Treasury extends Model
     const TYPE_PETTY_CASH = 'petty_cash';
 
     const TYPES = [
-        self::TYPE_MAIN => 'الخزينة الرئيسية',
-        self::TYPE_BRANCH => 'خزينة فرع',
-        self::TYPE_DELEGATE => 'عهدة مندوب',
+        self::TYPE_MAIN => 'الخزينة العامة / الحسابات',
+        self::TYPE_RECEPTION => 'خزينة الاستقبال',
+        self::TYPE_GUEST_HOUSE => 'خزينة دار ضيافة',
         self::TYPE_PROJECT => 'خزينة مشروع',
         self::TYPE_CAMPAIGN => 'خزينة حملة',
+        self::TYPE_DELEGATE => 'عهدة مندوب',
+        self::TYPE_BRANCH => 'خزينة فرع',
         self::TYPE_PETTY_CASH => 'صندوق مصروفات نثرية'
     ];
 
@@ -44,6 +48,7 @@ final class Treasury extends Model
         'opening_balance',
         'current_balance',
         'is_active',
+        'guest_house_id',
         'project_id',
         'campaign_id',
         'delegate_id',
@@ -73,6 +78,11 @@ final class Treasury extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(TreasuryTransaction::class);
+    }
+
+    public function guestHouse(): BelongsTo
+    {
+        return $this->belongsTo(GuestHouse::class, 'guest_house_id');
     }
 
     public function project(): BelongsTo
@@ -394,40 +404,55 @@ final class Treasury extends Model
     }
 
     /**
-     * إرجاع الخزائن الخاصة بدار ضيافة محددة فقط (مع إنشاء خزينة للدار تلقائياً إن لم تكن موجودة)
+     * إرجاع الخزائن الخاصة بدار ضيافة محددة فقط (مع عزل تام عن خزائن الاستقبال والمشاريع والحملات ودور الضيافة الأخرى)
      */
     public static function forGuestHouse(\App\Models\GuestHouse $guestHouse): \Illuminate\Database\Eloquent\Collection
     {
-        $custodyTreasuryIds = $guestHouse->custodies()
-            ->whereNotNull('treasury_id')
-            ->pluck('treasury_id')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $hasGhCol = \Illuminate\Support\Facades\Schema::hasColumn('treasuries', 'guest_house_id');
+
+        if ($hasGhCol) {
+            $directMatched = self::active()
+                ->where('guest_house_id', $guestHouse->id)
+                ->orderBy('name')
+                ->get();
+
+            if ($directMatched->isNotEmpty()) {
+                return $directMatched;
+            }
+        }
 
         $ghName = trim((string) $guestHouse->name);
         $ghLoc = trim((string) ($guestHouse->location ?? ''));
 
         $cityKeywords = [];
-        foreach (['كفر الشيخ', 'كفرالشيخ', 'كفر', 'طنطا', 'القاهرة', 'الإسكندرية', 'المنصورة'] as $kw) {
+        foreach (['كفر الشيخ', 'كفرالشيخ', 'كفر', 'طنطا', 'الغربية', 'الغربيه', 'القاهرة', 'الإسكندرية', 'المنصورة'] as $kw) {
             if (str_contains($ghName, $kw) || str_contains($ghLoc, $kw)) {
                 $cityKeywords[] = $kw;
                 if ($kw === 'كفر الشيخ' || $kw === 'كفرالشيخ') {
                     $cityKeywords[] = 'كفر';
+                }
+                if ($kw === 'طنطا' || $kw === 'الغربية' || $kw === 'الغربيه') {
+                    $cityKeywords[] = 'طنطا';
+                    $cityKeywords[] = 'غربي';
                 }
             }
         }
         $cityKeywords = array_values(array_unique($cityKeywords));
 
         $matched = self::active()
-            ->where(function ($q) use ($custodyTreasuryIds, $guestHouse, $ghName, $cityKeywords) {
-                if (!empty($custodyTreasuryIds)) {
-                    $q->orWhereIn('id', $custodyTreasuryIds);
-                }
-                if (!empty($guestHouse->manager_user_id)) {
-                    $q->orWhere('manager_id', $guestHouse->manager_user_id);
-                }
+            ->whereNull('project_id')
+            ->whereNull('campaign_id')
+            ->when($hasGhCol, fn ($q) => $q->where(fn ($sub) => $sub->whereNull('guest_house_id')->orWhere('guest_house_id', $guestHouse->id)))
+            ->where('type', '!=', self::TYPE_RECEPTION)
+            ->where('type', '!=', self::TYPE_PROJECT)
+            ->where('type', '!=', self::TYPE_CAMPAIGN)
+            ->where('name', 'not like', '%استقبال%')
+            ->where('code', 'not like', 'REC%')
+            ->where('name', 'not like', '%مشروع%')
+            ->where('name', 'not like', '%حملة%')
+            ->where(function ($q) use ($guestHouse, $ghName, $cityKeywords) {
+                $q->where('code', 'GH-' . $guestHouse->id)
+                  ->orWhere('code', 'like', 'GH-' . $guestHouse->id . '-%');
                 if ($ghName !== '') {
                     $q->orWhere('name', 'like', '%' . $ghName . '%');
                 }
@@ -437,8 +462,7 @@ final class Treasury extends Model
                             ->where(function ($sub2) {
                                 $sub2->where('name', 'like', '%ضياف%')
                                     ->orWhere('name', 'like', '%دار%')
-                                    ->orWhere('type', self::TYPE_BRANCH)
-                                    ->orWhere('type', self::TYPE_PETTY_CASH);
+                                    ->orWhere('type', self::TYPE_GUEST_HOUSE);
                             });
                     });
                 }
@@ -446,28 +470,64 @@ final class Treasury extends Model
             ->orderBy('name')
             ->get();
 
-        if ($matched->isEmpty() && !empty($cityKeywords)) {
-            $matched = self::active()
-                ->where(function ($q) use ($cityKeywords) {
-                    foreach ($cityKeywords as $kw) {
-                        $q->orWhere('name', 'like', '%' . $kw . '%')
-                          ->orWhere('location', 'like', '%' . $kw . '%');
-                    }
-                })
-                ->orderBy('name')
-                ->get();
-        }
-
         if ($matched->isEmpty()) {
             $code = 'GH-' . $guestHouse->id;
+            $payload = [
+                'name' => 'خزينة ' . ($ghName ?: ('دار الضيافة #' . $guestHouse->id)),
+                'type' => self::TYPE_GUEST_HOUSE,
+                'description' => 'خزينة وعهدة خاصة بـ ' . $ghName,
+                'manager_id' => $guestHouse->manager_user_id,
+                'location' => $ghLoc ?: $ghName,
+                'currency' => 'EGP',
+                'opening_balance' => 0,
+                'current_balance' => 0,
+                'is_active' => true,
+            ];
+            if ($hasGhCol) {
+                $payload['guest_house_id'] = $guestHouse->id;
+            }
+            $created = self::firstOrCreate(['code' => $code], $payload);
+            return new \Illuminate\Database\Eloquent\Collection([$created]);
+        }
+
+        return $matched;
+    }
+
+    /**
+     * إرجاع خزينة الاستقبال فقط (مع عزل تام عن خزائن دور الضيافة والمشاريع والحملات)
+     */
+    public static function forReception(?\App\Models\User $user = null): \Illuminate\Database\Eloquent\Collection
+    {
+        $hasGhCol = \Illuminate\Support\Facades\Schema::hasColumn('treasuries', 'guest_house_id');
+
+        $matched = self::active()
+            ->whereNull('project_id')
+            ->whereNull('campaign_id')
+            ->when($hasGhCol, fn ($q) => $q->whereNull('guest_house_id'))
+            ->where('type', '!=', self::TYPE_GUEST_HOUSE)
+            ->where('type', '!=', self::TYPE_PROJECT)
+            ->where('type', '!=', self::TYPE_CAMPAIGN)
+            ->where('name', 'not like', '%ضياف%')
+            ->where('name', 'not like', '%مشروع%')
+            ->where('name', 'not like', '%حملة%')
+            ->where(function ($q) {
+                $q->where('type', self::TYPE_RECEPTION)
+                  ->orWhere('name', 'like', '%استقبال%')
+                  ->orWhere('name', 'like', '%الاستقبال%')
+                  ->orWhere('code', 'like', 'REC%');
+            })
+            ->orderBy('id')
+            ->get();
+
+        if ($matched->isEmpty()) {
             $created = self::firstOrCreate(
-                ['code' => $code],
+                ['code' => 'REC-MAIN'],
                 [
-                    'name' => 'خزينة ' . ($ghName ?: ('دار الضيافة #' . $guestHouse->id)),
-                    'type' => self::TYPE_BRANCH,
-                    'description' => 'خزينة وعهدة خاصة بـ ' . $ghName,
-                    'manager_id' => $guestHouse->manager_user_id,
-                    'location' => $ghLoc ?: $ghName,
+                    'name' => 'خزينة الاستقبال',
+                    'type' => self::TYPE_RECEPTION,
+                    'description' => 'خزينة وعهدة خاصة بمكتب الاستقبال (عهدة وتبرعات ومصروفات الاستقبال)',
+                    'manager_id' => $user?->id,
+                    'location' => 'مقر المؤسسة - الاستقبال',
                     'currency' => 'EGP',
                     'opening_balance' => 0,
                     'current_balance' => 0,
@@ -481,31 +541,94 @@ final class Treasury extends Model
     }
 
     /**
-     * إرجاع خزينة الاستقبال فقط (مع إنشائها تلقائياً إن لم تكن موجودة)
+     * إرجاع الخزينة الخاصة بمشروع محدد فقط (مع إنشائها تلقائياً إن لم تكن موجودة)
      */
-    public static function forReception(?\App\Models\User $user = null): \Illuminate\Database\Eloquent\Collection
+    public static function forProject(\App\Models\Project $project): \Illuminate\Database\Eloquent\Collection
     {
+        $hasGhCol = \Illuminate\Support\Facades\Schema::hasColumn('treasuries', 'guest_house_id');
+        $projName = trim((string) $project->name);
+
         $matched = self::active()
-            ->where(function ($q) use ($user) {
-                $q->where('name', 'like', '%استقبال%')
-                  ->orWhere('name', 'like', '%الاستقبال%')
-                  ->orWhere('code', 'like', 'REC%');
-                if ($user) {
-                    $q->orWhere('manager_id', $user->id);
+            ->whereNull('campaign_id')
+            ->when($hasGhCol, fn ($q) => $q->whereNull('guest_house_id'))
+            ->where('type', '!=', self::TYPE_RECEPTION)
+            ->where('type', '!=', self::TYPE_GUEST_HOUSE)
+            ->where('type', '!=', self::TYPE_CAMPAIGN)
+            ->where('name', 'not like', '%استقبال%')
+            ->where('name', 'not like', '%ضياف%')
+            ->where(function ($q) use ($project, $projName) {
+                $q->where('project_id', $project->id)
+                  ->orWhere('code', 'PROJ-' . $project->id);
+                if ($projName !== '') {
+                    $q->orWhere(function ($sub) use ($projName) {
+                        $sub->whereNull('project_id')
+                            ->where('name', 'like', '%' . $projName . '%');
+                    });
                 }
             })
-            ->orderBy('id')
+            ->orderBy('name')
             ->get();
 
         if ($matched->isEmpty()) {
+            $code = 'PROJ-' . $project->id;
             $created = self::firstOrCreate(
-                ['code' => 'REC-MAIN'],
+                ['code' => $code],
                 [
-                    'name' => 'خزينة الاستقبال',
-                    'type' => self::TYPE_PETTY_CASH,
-                    'description' => 'خزينة وعهدة خاصة بمكتب الاستقبال (عهدة وتبرعات ومصروفات الاستقبال)',
-                    'manager_id' => $user?->id,
-                    'location' => 'مقر المؤسسة - الاستقبال',
+                    'name' => 'خزينة ' . ($projName ?: ('مشروع #' . $project->id)),
+                    'type' => self::TYPE_PROJECT,
+                    'project_id' => $project->id,
+                    'description' => 'خزينة خاصة بـ ' . $projName,
+                    'manager_id' => $project->manager_user_id ?? null,
+                    'currency' => 'EGP',
+                    'opening_balance' => 0,
+                    'current_balance' => 0,
+                    'is_active' => true,
+                ]
+            );
+            return new \Illuminate\Database\Eloquent\Collection([$created]);
+        }
+
+        return $matched;
+    }
+
+    /**
+     * إرجاع الخزينة الخاصة بحملة محددة فقط (مع إنشائها تلقائياً إن لم تكن موجودة)
+     */
+    public static function forCampaign(\App\Models\Campaign $campaign): \Illuminate\Database\Eloquent\Collection
+    {
+        $hasGhCol = \Illuminate\Support\Facades\Schema::hasColumn('treasuries', 'guest_house_id');
+        $campName = trim((string) $campaign->name);
+
+        $matched = self::active()
+            ->when($hasGhCol, fn ($q) => $q->whereNull('guest_house_id'))
+            ->where('type', '!=', self::TYPE_RECEPTION)
+            ->where('type', '!=', self::TYPE_GUEST_HOUSE)
+            ->where('type', '!=', self::TYPE_PROJECT)
+            ->where('name', 'not like', '%استقبال%')
+            ->where('name', 'not like', '%ضياف%')
+            ->where(function ($q) use ($campaign, $campName) {
+                $q->where('campaign_id', $campaign->id)
+                  ->orWhere('code', 'CAMP-' . $campaign->id);
+                if ($campName !== '') {
+                    $q->orWhere(function ($sub) use ($campName) {
+                        $sub->whereNull('campaign_id')
+                            ->where('name', 'like', '%' . $campName . '%');
+                    });
+                }
+            })
+            ->orderBy('name')
+            ->get();
+
+        if ($matched->isEmpty()) {
+            $code = 'CAMP-' . $campaign->id;
+            $created = self::firstOrCreate(
+                ['code' => $code],
+                [
+                    'name' => 'خزينة ' . ($campName ?: ('حملة #' . $campaign->id)),
+                    'type' => self::TYPE_CAMPAIGN,
+                    'campaign_id' => $campaign->id,
+                    'project_id' => $campaign->project_id ?? null,
+                    'description' => 'خزينة خاصة بـ ' . $campName,
                     'currency' => 'EGP',
                     'opening_balance' => 0,
                     'current_balance' => 0,

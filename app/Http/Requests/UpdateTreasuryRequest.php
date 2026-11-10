@@ -19,6 +19,10 @@ final class UpdateTreasuryRequest extends FormRequest
         return [
             'name'            => 'required|string|max:255',
             'code'            => 'required|string|max:255|unique:treasuries,code,' . ($treasuryId ?? ''),
+            'type'            => 'nullable|string|max:50',
+            'guest_house_id'  => 'nullable|exists:guest_houses,id',
+            'project_id'      => 'nullable|exists:projects,id',
+            'campaign_id'     => 'nullable|exists:campaigns,id',
             'description'     => 'nullable|string',
             'manager_id'      => 'nullable|exists:users,id',
             'location'        => 'nullable|string',

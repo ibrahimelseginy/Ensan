@@ -251,13 +251,11 @@ final class GuestHouseWebController extends Controller
             'resolved' => $guest_house->supportTickets()->where('status', 'resolved')->count(),
         ];
 
-        $pettyCashCustodies = $guestHouseCustodies->where('type', 'financial');
-        $ghTreasuryIds = $scopedGuestHouseTreasuries->pluck('id')
-            ->merge($pettyCashCustodies->pluck('treasury_id'))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $scopedGhTreasuryIds = $scopedGuestHouseTreasuries->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $pettyCashCustodies = $guestHouseCustodies->filter(function ($c) use ($scopedGhTreasuryIds) {
+            return $c->type === 'financial' && (!$c->treasury_id || in_array((int) $c->treasury_id, $scopedGhTreasuryIds, true));
+        })->values();
+        $ghTreasuryIds = $scopedGhTreasuryIds;
         $foodCustodies = $guestHouseCustodies->where(function ($c) {
             return $c->type === 'in_kind' && ($c->category === 'food' || str_contains(mb_strtolower((string)$c->name), 'غذائ') || str_contains(mb_strtolower((string)$c->name), 'وجب') || str_contains(mb_strtolower((string)$c->name), 'مطبخ'));
         });
@@ -866,14 +864,18 @@ final class GuestHouseWebController extends Controller
         DB::transaction(function () use ($guest_house, $data): void {
             $treasuryId = $data['treasury_id'] ?? null;
             if ($data['type'] === 'financial' && ! $treasuryId) {
-                $treasuryId = Treasury::create([
+                $newTreasuryPayload = [
                     'name' => $data['name'] . ' - ' . $guest_house->name,
                     'code' => 'GH-' . $guest_house->id . '-' . strtoupper(Str::random(8)),
-                    'type' => Treasury::TYPE_PETTY_CASH, 'currency' => 'EGP',
+                    'type' => Treasury::TYPE_GUEST_HOUSE, 'currency' => 'EGP',
                     'opening_balance' => 0, 'current_balance' => 0, 'is_active' => true,
                     'manager_id' => $guest_house->manager_user_id, 'location' => $guest_house->location,
                     'description' => 'عهدة مالية مرتبطة بدار الضيافة',
-                ])->id;
+                ];
+                if (Schema::hasColumn('treasuries', 'guest_house_id')) {
+                    $newTreasuryPayload['guest_house_id'] = $guest_house->id;
+                }
+                $treasuryId = Treasury::create($newTreasuryPayload)->id;
             }
             $custodyPayload = [
                 'name' => $data['name'],
@@ -1494,7 +1496,6 @@ final class GuestHouseWebController extends Controller
     {
         return $treasuryId > 0 && Treasury::active()
             ->whereKey($treasuryId)
-            ->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE, Treasury::TYPE_PETTY_CASH])
             ->exists();
     }
 

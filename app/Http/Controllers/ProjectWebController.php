@@ -96,26 +96,9 @@ final class ProjectWebController extends Controller
             Schema::hasColumn('warehouses', 'is_active'),
             fn ($query) => $query->where('is_active', true)
         )->orderBy('name')->get(['id', 'name']);
-        $projectDonationTreasuries = Treasury::active()
-            ->where(function ($query) use ($project): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE])
-                    ->orWhere(function ($projectTreasury) use ($project): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $project->id);
-                    });
-            })
-            ->orderBy('name')
-            ->get();
-        $projectExpenseTreasuries = Treasury::active()
-            ->where(function ($query) use ($project): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
-                    ->orWhere(function ($projectTreasury) use ($project): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $project->id);
-                    });
-            })
-            ->orderBy('name')
-            ->get();
+        $scopedProjectTreasuries = Treasury::forProject($project);
+        $projectDonationTreasuries = $scopedProjectTreasuries;
+        $projectExpenseTreasuries = $scopedProjectTreasuries;
 
         $zadChildren = \App\Models\BeneficiaryFamilyMember::query()
             ->whereHas('beneficiary', fn ($q) => $q->where('project_id', $project->id))
@@ -381,30 +364,12 @@ final class ProjectWebController extends Controller
 
     private function isAllowedDonationTreasury(Project $project, int $treasuryId): bool
     {
-        return $treasuryId > 0 && Treasury::active()
-            ->whereKey($treasuryId)
-            ->where(function ($query) use ($project): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE])
-                    ->orWhere(function ($projectTreasury) use ($project): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $project->id);
-                    });
-            })
-            ->exists();
+        return $treasuryId > 0 && Treasury::forProject($project)->contains('id', $treasuryId);
     }
 
     private function isAllowedExpenseTreasury(Project $project, int $treasuryId): bool
     {
-        return $treasuryId > 0 && Treasury::active()
-            ->whereKey($treasuryId)
-            ->where(function ($query) use ($project): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
-                    ->orWhere(function ($projectTreasury) use ($project): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $project->id);
-                    });
-            })
-            ->exists();
+        return $treasuryId > 0 && Treasury::forProject($project)->contains('id', $treasuryId);
     }
 
     public function storeZadFamily(StoreZadFamilyRequest $request, Project $project): RedirectResponse

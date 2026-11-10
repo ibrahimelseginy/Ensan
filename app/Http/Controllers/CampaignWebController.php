@@ -95,30 +95,9 @@ final class CampaignWebController extends Controller
             Schema::hasColumn('warehouses', 'is_active'),
             fn ($query) => $query->where('is_active', true)
         )->orderBy('name')->get(['id', 'name']);
-        $campaignDonationTreasuries = Treasury::active()
-            ->where(function ($query) use ($campaign): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE])
-                    ->orWhere(function ($campaignTreasury) use ($campaign): void {
-                        $campaignTreasury->where('type', Treasury::TYPE_CAMPAIGN)
-                            ->where('campaign_id', $campaign->id);
-                    });
-            })
-            ->orderBy('name')
-            ->get();
-        $campaignExpenseTreasuries = Treasury::active()
-            ->where(function ($query) use ($campaign): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
-                    ->orWhere(function ($campaignTreasury) use ($campaign): void {
-                        $campaignTreasury->where('type', Treasury::TYPE_CAMPAIGN)
-                            ->where('campaign_id', $campaign->id);
-                    })
-                    ->orWhere(function ($projectTreasury) use ($campaign): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $campaign->project_id);
-                    });
-            })
-            ->orderBy('name')
-            ->get();
+        $scopedCampaignTreasuries = Treasury::forCampaign($campaign);
+        $campaignDonationTreasuries = $scopedCampaignTreasuries;
+        $campaignExpenseTreasuries = $scopedCampaignTreasuries;
 
         return view('campaigns.show', array_merge(compact(
             'campaign',
@@ -360,34 +339,12 @@ final class CampaignWebController extends Controller
 
     private function isAllowedDonationTreasury(Campaign $campaign, int $treasuryId): bool
     {
-        return $treasuryId > 0 && Treasury::active()
-            ->whereKey($treasuryId)
-            ->where(function ($query) use ($campaign): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_DELEGATE])
-                    ->orWhere(function ($campaignTreasury) use ($campaign): void {
-                        $campaignTreasury->where('type', Treasury::TYPE_CAMPAIGN)
-                            ->where('campaign_id', $campaign->id);
-                    });
-            })
-            ->exists();
+        return $treasuryId > 0 && Treasury::forCampaign($campaign)->contains('id', $treasuryId);
     }
 
     private function isAllowedExpenseTreasury(Campaign $campaign, int $treasuryId): bool
     {
-        return $treasuryId > 0 && Treasury::active()
-            ->whereKey($treasuryId)
-            ->where(function ($query) use ($campaign): void {
-                $query->whereIn('type', [Treasury::TYPE_MAIN, Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH])
-                    ->orWhere(function ($campaignTreasury) use ($campaign): void {
-                        $campaignTreasury->where('type', Treasury::TYPE_CAMPAIGN)
-                            ->where('campaign_id', $campaign->id);
-                    })
-                    ->orWhere(function ($projectTreasury) use ($campaign): void {
-                        $projectTreasury->where('type', Treasury::TYPE_PROJECT)
-                            ->where('project_id', $campaign->project_id);
-                    });
-            })
-            ->exists();
+        return $treasuryId > 0 && Treasury::forCampaign($campaign)->contains('id', $treasuryId);
     }
 
     private function hasPendingRequest(Campaign $campaign): bool

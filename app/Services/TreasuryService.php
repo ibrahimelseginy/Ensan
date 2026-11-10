@@ -30,12 +30,14 @@ final readonly class TreasuryService
 
     public function createTreasury(array $data): Treasury
     {
+        $data = $this->normalizeSpecializationData($data);
         $data['current_balance'] = $data['opening_balance'];
         return $this->treasuryRepository->create($data);
     }
 
     public function updateTreasury(Treasury $treasury, array $data): bool
     {
+        $data = $this->normalizeSpecializationData($data);
         $hasTotalIn  = array_key_exists('total_in', $data) && $data['total_in'] !== null && $data['total_in'] !== '';
         $hasTotalOut = array_key_exists('total_out', $data) && $data['total_out'] !== null && $data['total_out'] !== '';
         $hasBalance  = array_key_exists('current_balance', $data) && $data['current_balance'] !== null && $data['current_balance'] !== '';
@@ -56,6 +58,28 @@ final readonly class TreasuryService
         }
 
         return $this->treasuryRepository->update($treasury, $data);
+    }
+
+    private function normalizeSpecializationData(array $data): array
+    {
+        $type = $data['type'] ?? Treasury::TYPE_MAIN;
+        $data['type'] = $type;
+
+        if ($type !== Treasury::TYPE_GUEST_HOUSE) {
+            $data['guest_house_id'] = null;
+        }
+        if ($type !== Treasury::TYPE_PROJECT) {
+            $data['project_id'] = null;
+        }
+        if ($type !== Treasury::TYPE_CAMPAIGN) {
+            $data['campaign_id'] = null;
+        }
+
+        if (!Schema::hasColumn('treasuries', 'guest_house_id')) {
+            unset($data['guest_house_id']);
+        }
+
+        return $data;
     }
 
     public function syncManualTotals(

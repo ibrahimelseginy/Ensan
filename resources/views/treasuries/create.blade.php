@@ -36,6 +36,63 @@
                             </div>
                         </div>
 
+                        <div class="row mb-3 p-3 bg-light rounded-3 border mx-0">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-primary">تخصص الخزينة / القسم التابع لها <span class="text-danger">*</span></label>
+                                <select name="type" id="treasuryTypeSelect" class="form-select" required>
+                                    <option value="main" {{ old('type', 'main') === 'main' ? 'selected' : '' }}>الخزينة العامة / الحسابات</option>
+                                    <option value="reception" {{ old('type') === 'reception' ? 'selected' : '' }}>خزينة الاستقبال (تظهر في الاستقبال فقط)</option>
+                                    <option value="guest_house" {{ old('type') === 'guest_house' ? 'selected' : '' }}>خزينة دار ضيافة (تظهر في دار الضيافة المحددة فقط)</option>
+                                    <option value="project" {{ old('type') === 'project' ? 'selected' : '' }}>خزينة مشروع (تظهر في المشروع المحدد فقط)</option>
+                                    <option value="campaign" {{ old('type') === 'campaign' ? 'selected' : '' }}>خزينة حملة (تظهر في الحملة المحددة فقط)</option>
+                                    <option value="delegate" {{ old('type') === 'delegate' ? 'selected' : '' }}>عهدة مندوب</option>
+                                    <option value="petty_cash" {{ old('type') === 'petty_cash' ? 'selected' : '' }}>صندوق مصروفات نثرية</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="ghTargetBox" style="display: none;">
+                                <label class="form-label fw-bold">دار الضيافة التابعة لها الخزينة</label>
+                                <select name="guest_house_id" class="form-select">
+                                    <option value="">-- اختر دار الضيافة --</option>
+                                    @foreach($guestHouses ?? [] as $gh)
+                                        <option value="{{ $gh->id }}" {{ old('guest_house_id') == $gh->id ? 'selected' : '' }}>{{ $gh->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="projectTargetBox" style="display: none;">
+                                <label class="form-label fw-bold">المشروع التابع له الخزينة</label>
+                                <select name="project_id" class="form-select">
+                                    <option value="">-- اختر المشروع --</option>
+                                    @foreach($projects ?? [] as $proj)
+                                        <option value="{{ $proj->id }}" {{ old('project_id') == $proj->id ? 'selected' : '' }}>{{ $proj->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="campaignTargetBox" style="display: none;">
+                                <label class="form-label fw-bold">الحملة التابعة لها الخزينة</label>
+                                <select name="campaign_id" class="form-select">
+                                    <option value="">-- اختر الحملة --</option>
+                                    @foreach($campaigns ?? [] as $camp)
+                                        <option value="{{ $camp->id }}" {{ old('campaign_id') == $camp->id ? 'selected' : '' }}>{{ $camp->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <script>
+                        (function() {
+                            const toggleSpec = () => {
+                                const val = document.getElementById('treasuryTypeSelect')?.value;
+                                const gh = document.getElementById('ghTargetBox');
+                                const pr = document.getElementById('projectTargetBox');
+                                const ca = document.getElementById('campaignTargetBox');
+                                if (gh) gh.style.display = val === 'guest_house' ? '' : 'none';
+                                if (pr) pr.style.display = val === 'project' ? '' : 'none';
+                                if (ca) ca.style.display = val === 'campaign' ? '' : 'none';
+                            };
+                            document.getElementById('treasuryTypeSelect')?.addEventListener('change', toggleSpec);
+                            toggleSpec();
+                        })();
+                        </script>
+
                         <div class="mb-3">
                             <label class="form-label">الوصف</label>
                             <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
