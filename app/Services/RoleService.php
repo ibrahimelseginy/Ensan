@@ -318,8 +318,9 @@ final readonly class RoleService
             ['key' => 'mobile.news.delete', 'name' => 'حذف خبر من تطبيق الموبايل'],
             ['key' => 'mobile.volunteer_requests.view', 'name' => 'عرض طلبات التطوع (تطبيق الموبايل)'],
             ['key' => 'mobile.volunteer_requests.delete', 'name' => 'حذف طلب تطوع (تطبيق الموبايل)'],
-            ['key' => 'mobile.case_applications.view', 'name' => 'عرض طلبات الحالات المستحقة (تطبيق الموبايل)'],
-            ['key' => 'mobile.case_applications.delete', 'name' => 'حذف طلب حالة مستحقة (تطبيق الموبايل)'],
+            // التقديمات والبحث المبدئي (طلبات الحالات)
+            ['key' => 'mobile.case_applications.view', 'name' => 'عرض قسم التقديمات والبحث المبدئي (طلبات الحالات / زاد / مدرار / بعثاء الأمل)'],
+            ['key' => 'mobile.case_applications.delete', 'name' => 'حذف طلب تقديم حالة مستحقة (قسم التقديمات)'],
             ['key' => 'mobile.bookings.view', 'name' => 'عرض طلبات حجز الغرف والمساحات (تطبيق الموبايل)'],
             ['key' => 'mobile.bookings.delete', 'name' => 'حذف طلب حجز (تطبيق الموبايل)'],
             ['key' => 'mobile.donations.view', 'name' => 'عرض تبرعات تطبيق الموبايل ومراجعتها'],
@@ -409,6 +410,9 @@ final readonly class RoleService
             if (preg_match('/^guest_houses\.manage\.\d+$/', $permission->key)) {
                 return $groupLabels['guest_houses_specific'];
             }
+            if (str_starts_with($permission->key, 'mobile.case_applications.')) {
+                return $groupLabels['case_applications'];
+            }
 
             $prefix = explode('.', $permission->key)[0];
             return $groupLabels[$prefix] ?? ucfirst($prefix);
@@ -429,6 +433,9 @@ final readonly class RoleService
             }
             if (preg_match('/^guest_houses\.manage\.\d+$/', $permission->key)) {
                 return $groupLabels['guest_houses_specific'];
+            }
+            if (str_starts_with($permission->key, 'mobile.case_applications.')) {
+                return $groupLabels['case_applications'];
             }
 
             $prefix = explode('.', $permission->key)[0];
@@ -561,6 +568,7 @@ final readonly class RoleService
             'donors'                    => 'المتبرعون والكفلاء',
             'donations'                 => 'التبرعات والإيصالات',
             'beneficiaries'             => 'المستفيدون والأسر',
+            'case_applications'         => 'التقديمات والبحث المبدئي (5 خدمات)',
             'psychological_support'     => 'الدعم النفسي (بعثاء الأمل)',
             'projects'                  => 'المشاريع (صلاحيات عامة)',
             'campaigns'                 => 'الحملات (صلاحيات عامة)',
