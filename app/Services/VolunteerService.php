@@ -53,12 +53,20 @@ final readonly class VolunteerService
 
     public function createVolunteer(array $data, $profilePhoto = null): User
     {
-        $data['password']     = Hash::make($data['password']);
-        $data['is_volunteer'] = true;
-        $data['is_employee']  = false;
         if (empty($data['code'])) {
             $data['code'] = User::nextVolunteerCode();
         }
+
+        // Volunteers are data profiles only, not login user accounts
+        if (empty($data['email'])) {
+            $data['email'] = 'volunteer_' . strtolower(str_replace('-', '_', (string) $data['code'])) . '_' . uniqid() . '@internal.ensan';
+        }
+
+        // Secure unguessable locked password - volunteers cannot log in
+        $data['password']     = Hash::make(\Illuminate\Support\Str::random(40));
+        $data['is_volunteer'] = true;
+        $data['is_employee']  = false;
+        $data['role']         = 'volunteer';
         
         $user = $this->volunteerRepository->create($data);
 

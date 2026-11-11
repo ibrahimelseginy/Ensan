@@ -13,7 +13,7 @@ final class AttachmentController extends Controller
         $request->validate([
             'entity_type' => 'required|string',
             'entity_id' => 'required|integer',
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip', 'max:10240'], // Max 10MB
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip', 'max:51200'], // Max 50MB
         ]);
 
         $ext = strtolower((string) $request->file('file')->getClientOriginalExtension());

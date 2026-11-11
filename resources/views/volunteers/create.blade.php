@@ -20,15 +20,11 @@
         @endif
         <form method="POST" action="{{ route('volunteers.store') }}" enctype="multipart/form-data">@csrf
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">الاسم</label><input type="text" name="name"
+            <div class="col-md-6"><label class="form-label">الاسم <span class="text-danger">*</span></label><input type="text" name="name"
                 class="form-control" required autofocus placeholder="مثال: محمد أحمد" value="{{ old('name') }}"></div>
-            <div class="col-md-6"><label class="form-label">البريد الإلكتروني</label><input type="email" name="email"
-                class="form-control" required placeholder="example@mail.com" value="{{ old('email') }}"></div>
-            <div class="col-md-6"><label class="form-label">كلمة المرور</label>
-              <div class="input-group">
-                <input type="password" name="password" class="form-control" required placeholder="••••••">
-                <button class="btn btn-outline-secondary" type="button" id="genPwdBtn">توليد</button>
-              </div>
+            <div class="col-md-6"><label class="form-label">البريد الإلكتروني <span class="text-muted small">(اختياري - للتواصل)</span></label><input type="email" name="email"
+                class="form-control" placeholder="example@mail.com (اختياري)" value="{{ old('email') }}">
+                <div class="form-text">بيانات المتطوع تُحفظ كملف بيانات فقط ولا يتم إنشاء حساب دخول له للنظام.</div>
             </div>
             <div class="col-md-6"><label class="form-label">الهاتف</label><input type="text" name="phone"
                 class="form-control" placeholder="010xxxxxxxx" pattern="^[0-9٠-٩\+\-\s]+$" value="{{ old('phone') }}">

@@ -118,3 +118,4 @@ return new class extends Migration
         // Safe non-destructive migration
     }
 };
+

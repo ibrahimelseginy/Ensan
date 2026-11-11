@@ -131,3 +131,4 @@ final class JobApplicationWebController extends Controller
         return redirect()->route('hr.job-applications.index')->with('success', "تم حذف طلب التوظيف {$code}.");
     }
 }
+

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
   {{-- Welcome Card --}}
   <div class="card welcome-card mb-4 border-0"

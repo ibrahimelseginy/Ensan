@@ -124,3 +124,4 @@ final class JobApplication extends Model
         ];
     }
 }
+

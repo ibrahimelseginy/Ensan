@@ -194,6 +194,106 @@
             </div>
         </div>
     </div>
+
+    {{-- Official Employee Evaluations Table --}}
+    <div class="card border-0 shadow-sm mt-5 mb-4 animate-slide-up">
+        <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-award-fill text-warning me-2"></i> تقييمات أداء الموظفين بالمنظومة
+                </h5>
+                <small class="text-muted">النموذج المعتمد لتقييم الأداء (10 بنود موزونة: إنجاز المهام 25%، التارجيت 15%، الحضور 20%، الجودة 10%، المواعيد 10%، أخرى 20%)</small>
+            </div>
+            <a href="{{ route('users.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-people me-1"></i> دليل الموظفين
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-start ps-4">الموظف</th>
+                            <th>القسم / الإدارة</th>
+                            <th>المسمى الوظيفي</th>
+                            <th>المجموع (من 100)</th>
+                            <th>النسبة المئوية</th>
+                            <th>نتيجة التقييم والأداء</th>
+                            <th>تاريخ آخر تقييم</th>
+                            <th class="text-end pe-4">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($employees as $emp)
+                            @php
+                                $eval = $emp->latestEvaluation;
+                            @endphp
+                            <tr>
+                                <td class="text-start ps-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                                            {{ mb_substr($emp->name, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <a href="{{ route('users.show', $emp) }}" class="fw-bold text-dark text-decoration-none d-block">
+                                                {{ $emp->name }}
+                                            </a>
+                                            <span class="x-small text-muted font-monospace">{{ $emp->code }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ $emp->department ?: '—' }}</td>
+                                <td>{{ $emp->job_title ?: '—' }}</td>
+                                <td>
+                                    @if($eval)
+                                        <span class="fw-bolder font-monospace fs-6 text-primary">{{ number_format($eval->total_score, 1) }}</span>
+                                        <span class="x-small text-muted">/ 100</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($eval)
+                                        <span class="badge bg-light text-dark border font-monospace">{{ $eval->percentage }}%</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($eval)
+                                        <span class="badge {{ $eval->getRatingBadgeClass() }} px-3 py-1 rounded-pill">
+                                            {{ $eval->rating_label }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill small">لم يُقيّم</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($eval && $eval->evaluation_date)
+                                        <span class="small text-muted">{{ $eval->evaluation_date->format('Y-m-d') }}</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ route('users.show', $emp) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="bi bi-eye me-1"></i> فتح التقييم والملف
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-people display-6 d-block mb-2 opacity-50"></i>
+                                    لا يوجد موظفون مسجلون حالياً
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 

@@ -65,7 +65,7 @@
                         <h3 class="fw-bold mb-1">{{ $user->name }}</h3>
                         <p class="text-muted mb-3">{{ $user->email }}</p>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             @if($user->active)
                                 <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill"><i
                                         class="bi bi-check-circle me-1"></i> نشط</span>
@@ -74,6 +74,31 @@
                                         class="bi bi-x-circle me-1"></i> غير نشط</span>
                             @endif
                         </div>
+
+                        {{-- تقييم أداء الموظف تحت اسمه مباشرة --}}
+                        @php
+                            $latestEval = $user->latestEvaluation;
+                        @endphp
+                        @if($latestEval)
+                            <div class="p-3 rounded-4 mb-4 border shadow-2xs text-center" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%); border-color: rgba(139, 92, 246, 0.25) !important;">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="small text-muted fw-bold"><i class="bi bi-award-fill text-warning me-1"></i>تقييم الأداء</span>
+                                    <span class="badge {{ $latestEval->getRatingBadgeClass() }} px-2 py-1 rounded-pill">{{ $latestEval->rating_label }}</span>
+                                </div>
+                                <div class="d-flex align-items-baseline justify-content-center gap-1 my-1">
+                                    <span class="display-6 fw-bolder text-dark">{{ number_format($latestEval->total_score, 1) }}</span>
+                                    <span class="text-muted fw-bold">/ 100</span>
+                                    <span class="badge bg-light text-dark border ms-2 font-monospace">{{ $latestEval->percentage }}%</span>
+                                </div>
+                                @if($latestEval->evaluation_date)
+                                    <div class="x-small text-muted mt-1"><i class="bi bi-calendar3 me-1"></i>{{ $latestEval->evaluation_date->format('Y-m-d') }}</div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="p-2 rounded-3 mb-4 border border-dashed text-center text-muted small bg-light">
+                                <i class="bi bi-clipboard-x me-1"></i> لا يوجد تقييم مسجل بعد
+                            </div>
+                        @endif
 
                         <div class="d-grid gap-2">
                             @if($pendingRequest)
@@ -141,7 +166,196 @@
                     </div>
                 </div>
 
-                <!-- Additional Info & Roles -->
+                {{-- Performance Evaluation Section (نموذج تقييم وأداء الموظفين المعتمد) --}}
+                @php
+                    $evaluations = $user->employeeEvaluations;
+                    $currentEval = $evaluations->first();
+                    $criteriaList = \App\Models\EmployeeEvaluation::CRITERIA;
+                @endphp
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-award-fill me-2 text-warning"></i> تقييم أداء الموظف
+                            <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2">نموذج معتمد من 10 بنود</span>
+                        </h5>
+                        @if($canManageUsers || auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || auth()->user()->hasPermission('hr.evaluations'))
+                            <button type="button" class="btn btn-sm btn-primary shadow-2xs" data-bs-toggle="modal" data-bs-target="#newEvaluationModal">
+                                <i class="bi bi-plus-lg me-1"></i> تسجيل تقييم جديد
+                            </button>
+                        @endif
+                    </div>
+                    <div class="card-body p-4">
+                        @if($currentEval)
+                            <div class="row g-3 align-items-center mb-4 p-3 rounded-4" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border: 1px solid rgba(139, 92, 246, 0.2);">
+                                <div class="col-md-3 text-center border-end">
+                                    <div class="text-muted small fw-bold mb-1">المجموع الكلي</div>
+                                    <div class="display-5 fw-bolder text-primary mb-0 font-monospace">{{ number_format($currentEval->total_score, 1) }}</div>
+                                    <div class="small text-muted">من 100 درجة</div>
+                                </div>
+                                <div class="col-md-3 text-center border-end">
+                                    <div class="text-muted small fw-bold mb-1">النسبة المئوية</div>
+                                    <div class="display-6 fw-bold text-dark mb-0 font-monospace">{{ $currentEval->percentage }}%</div>
+                                    <div class="small text-muted">إجمالي وزن 100%</div>
+                                </div>
+                                <div class="col-md-3 text-center border-end">
+                                    <div class="text-muted small fw-bold mb-1">نتيجة التقييم والأداء</div>
+                                    <span class="badge {{ $currentEval->getRatingBadgeClass() }} fs-6 px-3 py-2 rounded-pill shadow-xs">
+                                        <i class="bi bi-patch-check-fill me-1"></i> {{ $currentEval->rating_label }}
+                                    </span>
+                                    <div class="x-small text-muted mt-1">
+                                        @if($currentEval->percentage >= 90) متميز (90% فأكثر)
+                                        @elseif($currentEval->percentage >= 80) جيد جداً (80% - 89%)
+                                        @elseif($currentEval->percentage >= 65) جيد (65% - 79%)
+                                        @elseif($currentEval->percentage >= 50) مقبول (50% - 64%)
+                                        @else ضعيف (أقل من 50%)
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="text-muted small fw-bold mb-1">تاريخ وفترة التقييم</div>
+                                    <div class="fw-bold text-dark">{{ $currentEval->evaluation_date ? $currentEval->evaluation_date->format('Y-m-d') : '—' }}</div>
+                                    <div class="small text-muted">الفترة: {{ $currentEval->evaluation_period ?: '—' }}</div>
+                                    @if($currentEval->evaluator)
+                                        <div class="x-small text-muted mt-1">بواسطة: {{ $currentEval->evaluator->name }}</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Detailed Criteria Breakdown --}}
+                            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-stars me-1 text-primary"></i> تفاصيل درجات بنود التقييم (الدرجة من 5.0):</h6>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered table-sm align-middle text-center mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-start" style="width: 25%;">بند التقييم</th>
+                                            <th style="width: 12%;">الوزن النسبي</th>
+                                            <th style="width: 15%;">الدرجة الحاصل عليها (من 5)</th>
+                                            <th style="width: 15%;">الدرجة الموزونة (من 100)</th>
+                                            <th style="width: 33%;">المؤشر البياني</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($criteriaList as $key => $meta)
+                                            @php
+                                                $score = (float) ($currentEval->{$key} ?? 0);
+                                                $weighted = round(($score * $meta['weight']) * 20, 2);
+                                                $pct = ($score / 5.0) * 100;
+                                            @endphp
+                                            <tr>
+                                                <td class="text-start fw-medium">
+                                                    <span class="d-block">{{ $meta['label'] }}</span>
+                                                    <span class="x-small text-muted">{{ $meta['desc'] }}</span>
+                                                </td>
+                                                <td><span class="badge bg-light text-dark border font-monospace">{{ ($meta['weight'] * 100) }}%</span></td>
+                                                <td>
+                                                    <span class="fw-bold font-monospace fs-6 text-dark">{{ number_format($score, 1) }}</span>
+                                                    <span class="x-small text-muted">/ 5.0</span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold font-monospace text-primary">{{ number_format($weighted, 1) }}</span>
+                                                    <span class="x-small text-muted">/ {{ ($meta['weight'] * 100) }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 10px;">
+                                                        <div class="progress-bar {{ $pct >= 80 ? 'bg-success' : ($pct >= 60 ? 'bg-primary' : ($pct >= 50 ? 'bg-warning' : 'bg-danger')) }}"
+                                                             role="progressbar" style="width: {{ $pct }}%;" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if($currentEval->notes || $currentEval->strengths || $currentEval->improvements)
+                                <div class="row g-3 mb-4">
+                                    @if($currentEval->strengths)
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-success-subtle rounded-3 border border-success-subtle h-100">
+                                                <div class="fw-bold text-success small mb-1"><i class="bi bi-hand-thumbs-up me-1"></i> نقاط القوة والتميز:</div>
+                                                <p class="small mb-0 text-dark">{{ $currentEval->strengths }}</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if($currentEval->improvements)
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-warning-subtle rounded-3 border border-warning-subtle h-100">
+                                                <div class="fw-bold text-warning small mb-1"><i class="bi bi-graph-up-arrow me-1"></i> مجالات التحسين والتطوير:</div>
+                                                <p class="small mb-0 text-dark">{{ $currentEval->improvements }}</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if($currentEval->notes)
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded-3 border h-100">
+                                                <div class="fw-bold text-secondary small mb-1"><i class="bi bi-chat-left-text me-1"></i> ملاحظات الإدارة:</div>
+                                                <p class="small mb-0 text-dark">{{ $currentEval->notes }}</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Past Evaluations History --}}
+                            @if($evaluations->count() > 1)
+                                <div class="mt-4 pt-3 border-top">
+                                    <h6 class="fw-bold text-muted small mb-2"><i class="bi bi-clock-history me-1"></i> سجل التقييمات السابقة لهذا الموظف:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>تاريخ التقييم</th>
+                                                    <th>الفترة</th>
+                                                    <th>المجموع</th>
+                                                    <th>النسبة</th>
+                                                    <th>التقدير</th>
+                                                    <th>المُقيّم</th>
+                                                    <th>إجراءات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($evaluations as $ev)
+                                                    <tr>
+                                                        <td>{{ $ev->evaluation_date ? $ev->evaluation_date->format('Y-m-d') : '—' }}</td>
+                                                        <td>{{ $ev->evaluation_period ?: '—' }}</td>
+                                                        <td class="fw-bold font-monospace">{{ $ev->total_score }}</td>
+                                                        <td class="font-monospace">{{ $ev->percentage }}%</td>
+                                                        <td><span class="badge {{ $ev->getRatingBadgeClass() }}">{{ $ev->rating_label }}</span></td>
+                                                        <td>{{ $ev->evaluator?->name ?? '—' }}</td>
+                                                        <td>
+                                                            @if($canManageUsers || auth()->user()->hasRole('admin'))
+                                                                <form action="{{ route('employee-evaluations.destroy', $ev) }}" method="POST" class="d-inline"
+                                                                      onsubmit="return confirm('هل تريد حذف هذا التقييم؟');">
+                                                                    @csrf @method('DELETE')
+                                                                    <button type="submit" class="btn btn-outline-danger btn-sm p-1" title="حذف التقييم">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+
+                        @else
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-award display-4 mb-2 d-block opacity-25"></i>
+                                <h6 class="fw-bold mb-1">لا يوجد تقييم أداء مسجل لهذا الموظف حتى الآن</h6>
+                                <p class="small mb-3">يمكنك تسجيل أول تقييم للموظف طبقاً لنموذج الأداء والبنود العشرة المعتمدة.</p>
+                                @if($canManageUsers || auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || auth()->user()->hasPermission('hr.evaluations'))
+                                    <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#newEvaluationModal">
+                                        <i class="bi bi-plus-lg me-1"></i> تسجيل تقييم الموظف الآن
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent py-3 border-bottom">
                         <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-shield-lock me-2"></i> المعلومات الإضافية</h5>
@@ -472,6 +686,160 @@
             </div>
         </div>
     </div>
+
+    {{-- New Evaluation Modal --}}
+    <div class="modal fade" id="newEvaluationModal" tabindex="-1" aria-labelledby="newEvaluationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ route('employee-evaluations.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="user_id" value="{{ $user->id }}">
+                    <div class="modal-header bg-primary text-white py-3">
+                        <h5 class="modal-title fw-bold" id="newEvaluationModalLabel">
+                            <i class="bi bi-award-fill me-2 text-warning"></i> تسجيل تقييم أداء للموظف: {{ $user->name }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        {{-- Live Score Banner --}}
+                        <div class="p-3 mb-4 rounded-4 text-center border shadow-xs" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-color: rgba(139, 92, 246, 0.3) !important;">
+                            <div class="row align-items-center">
+                                <div class="col-4 border-end">
+                                    <div class="small text-muted fw-bold">المجموع المحسوب</div>
+                                    <div class="h3 fw-bolder text-primary mb-0 font-monospace" id="modalLiveTotal">100.0</div>
+                                    <div class="x-small text-muted">من 100 درجة</div>
+                                </div>
+                                <div class="col-4 border-end">
+                                    <div class="small text-muted fw-bold">النسبة المئوية</div>
+                                    <div class="h4 fw-bold text-dark mb-0 font-monospace" id="modalLivePct">100%</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted fw-bold mb-1">التقدير المتوقع</div>
+                                    <span id="modalLiveRating" class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-xs">متميز</span>
+                                </div>
+                            </div>
+                            <div class="x-small text-muted mt-2 border-top pt-2">
+                                <span class="badge bg-light text-dark border">الدرجة الكبرى لكل بند: 5.0</span>
+                                <span class="badge bg-light text-dark border ms-1">الحد الأدنى: 0.5</span>
+                                <span class="ms-2">90%+ متميز | 80%-89% جيد جداً | 65%-79% جيد | 50%-64% مقبول | أقل من 50% ضعيف</span>
+                            </div>
+                        </div>
+
+                        {{-- Metadata --}}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">تاريخ التقييم <span class="text-danger">*</span></label>
+                                <input type="date" name="evaluation_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">فترة التقييم (مثال: نوفمبر 2026 أو 2026-11)</label>
+                                <input type="text" name="evaluation_period" class="form-control" value="{{ date('Y-m') }}" placeholder="2026-11" required>
+                            </div>
+                        </div>
+
+                        {{-- 10 Criteria Inputs --}}
+                        <h6 class="fw-bold text-dark mb-3 border-bottom pb-2">
+                            <i class="bi bi-ui-checks me-1 text-primary"></i> درجات البنود العشرة (أدخل درجة من 0.5 إلى 5.0 لكل بند):
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            @foreach(\App\Models\EmployeeEvaluation::CRITERIA as $k => $c)
+                                <div class="col-md-6">
+                                    <div class="p-3 border rounded-3 bg-light-subtle h-100">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label fw-bold mb-0 text-dark small">{{ $c['label'] }}</label>
+                                            <span class="badge bg-primary-subtle text-primary font-monospace">وزن {{ ($c['weight'] * 100) }}%</span>
+                                        </div>
+                                        <div class="x-small text-muted mb-2">{{ $c['desc'] }}</div>
+                                        <div class="input-group">
+                                            <input type="number" step="0.1" min="0.5" max="5.0" name="{{ $k }}"
+                                                   class="form-control font-monospace fw-bold eval-criteria-input text-center"
+                                                   data-weight="{{ $c['weight'] }}" value="5.0" required>
+                                            <span class="input-group-text bg-white text-muted small">من 5.0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Qualitative Inputs --}}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small"><i class="bi bi-hand-thumbs-up text-success me-1"></i> نقاط القوة والتميز (اختياري)</label>
+                                <textarea name="strengths" rows="2" class="form-control" placeholder="أبرز الإنجازات والصفات الإيجابية للموظف..."></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small"><i class="bi bi-graph-up-arrow text-warning me-1"></i> مجالات التحسين والتطوير (اختياري)</label>
+                                <textarea name="improvements" rows="2" class="form-control" placeholder="النقاط التي تحتاج إلى تطوير ومتابعة..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small"><i class="bi bi-chat-left-text text-secondary me-1"></i> ملاحظات الإدارة وتوصيات الموارد البشرية</label>
+                                <textarea name="notes" rows="2" class="form-control" placeholder="أي توصيات عامة بخصوص الترقية أو المكافأة أو التدريب..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-check-lg me-1"></i> حفظ التقييم واعتماده
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function recalcModalEvaluation() {
+                let weightedSum = 0;
+                document.querySelectorAll('.eval-criteria-input').forEach(function (input) {
+                    let val = parseFloat(input.value) || 0;
+                    if (val < 0) val = 0;
+                    if (val > 5.0) val = 5.0;
+                    let weight = parseFloat(input.dataset.weight) || 0;
+                    weightedSum += (val * weight);
+                });
+
+                let totalScore = Math.round((weightedSum * 20) * 100) / 100;
+                let pct = totalScore;
+
+                let rating = 'ضعيف';
+                let badgeClass = 'badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-xs';
+
+                if (pct >= 90) {
+                    rating = 'متميز';
+                    badgeClass = 'badge bg-success fs-6 px-3 py-2 rounded-pill shadow-xs';
+                } else if (pct >= 80) {
+                    rating = 'جيد جداً';
+                    badgeClass = 'badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-xs';
+                } else if (pct >= 65) {
+                    rating = 'جيد';
+                    badgeClass = 'badge bg-info text-dark fs-6 px-3 py-2 rounded-pill shadow-xs';
+                } else if (pct >= 50) {
+                    rating = 'مقبول';
+                    badgeClass = 'badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill shadow-xs';
+                }
+
+                const totalEl = document.getElementById('modalLiveTotal');
+                const pctEl = document.getElementById('modalLivePct');
+                const ratingEl = document.getElementById('modalLiveRating');
+
+                if (totalEl) totalEl.textContent = totalScore.toFixed(1);
+                if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
+                if (ratingEl) {
+                    ratingEl.textContent = rating;
+                    ratingEl.className = badgeClass;
+                }
+            }
+
+            document.querySelectorAll('.eval-criteria-input').forEach(function (input) {
+                input.addEventListener('input', recalcModalEvaluation);
+            });
+            recalcModalEvaluation();
+        });
+    </script>
+    @endpush
 @endsection
 
 

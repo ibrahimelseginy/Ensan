@@ -110,6 +110,13 @@ final class LoginWebController extends Controller
             return back()->withInput($request->only('email'))->withErrors(['email' => 'هذا الحساب غير نشط، يرجى مراجعة مسؤول النظام']);
         }
 
+        // 5.1 Volunteer Check: Volunteers are data profiles only, not login users
+        if ($user->is_volunteer) {
+            RateLimiter::hit($throttleKey, 60);
+            Log::warning('Security: Volunteer login blocked (data profile only)', ['user_id' => $user->id, 'email' => $email]);
+            return back()->withInput($request->only('email'))->withErrors(['email' => 'حسابات المتطوعين مخصصة لحفظ البيانات والمتابعة فقط وليست لتسجيل الدخول إلى النظام.']);
+        }
+
         // 6. Role & Permission Verification
         if ($user->roles->isEmpty()) {
             RateLimiter::hit($throttleKey, 60);

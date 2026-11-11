@@ -139,3 +139,4 @@ final class JobApplicationApiController extends Controller
         ]);
     }
 }
+

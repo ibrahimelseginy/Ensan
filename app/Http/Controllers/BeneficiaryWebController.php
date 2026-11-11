@@ -493,9 +493,9 @@ final class BeneficiaryWebController extends Controller
             'purpose' => 'nullable|string|max:255',
             'received_at' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
-            'receipt_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'receipt_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:51200',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:51200',
         ]);
 
         $type = ($validated['aid_type'] ?? 'in_kind') === 'cash' ? 'cash' : 'in_kind';

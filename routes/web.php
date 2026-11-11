@@ -532,6 +532,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:hr.evaluations|manage_employees|manage_volunteers_hr')->group(function () {
         Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
         Route::get('hr/evaluations', [HrEvaluationWebController::class, 'index'])->name('hr.evaluations');
+        Route::post('employee-evaluations', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'store'])->name('employee-evaluations.store');
+        Route::put('employee-evaluations/{evaluation}', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'update'])->name('employee-evaluations.update');
+        Route::delete('employee-evaluations/{evaluation}', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'destroy'])->name('employee-evaluations.destroy');
     });
 
     Route::middleware('permission:volunteers.view|manage_volunteers_hr')->group(function () {

@@ -18,10 +18,8 @@
                 <div class="row g-3">
                     <div class="col-md-6"><label class="form-label">الاسم</label><input type="text" name="name"
                             class="form-control" value="{{ $volunteer->name }}"></div>
-                    <div class="col-md-6"><label class="form-label">البريد الإلكتروني</label><input type="email"
-                            name="email" class="form-control" value="{{ $volunteer->email }}"></div>
-                    <div class="col-md-6"><label class="form-label">كلمة المرور</label><input type="password"
-                            name="password" class="form-control"></div>
+                    <div class="col-md-6"><label class="form-label">البريد الإلكتروني <span class="text-muted small">(اختياري - للتواصل)</span></label><input type="email"
+                            name="email" class="form-control" value="{{ str_contains((string)$volunteer->email, '@internal.ensan') ? '' : $volunteer->email }}"></div>
                     <div class="col-md-6"><label class="form-label">الهاتف</label><input type="text" name="phone"
                             class="form-control" value="{{ $volunteer->phone }}"></div>
                     <div class="col-md-6"><label class="form-label">الرقم القومي</label><input type="text" name="national_id"

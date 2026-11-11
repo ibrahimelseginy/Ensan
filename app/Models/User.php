@@ -156,6 +156,16 @@ class User extends Authenticatable
         return $this->hasMany(Payroll::class);
     }
 
+    public function employeeEvaluations(): HasMany
+    {
+        return $this->hasMany(EmployeeEvaluation::class)->orderByDesc('evaluation_date')->orderByDesc('id');
+    }
+
+    public function latestEvaluation()
+    {
+        return $this->hasOne(EmployeeEvaluation::class)->latestOfMany('evaluation_date');
+    }
+
     public function hasRole($key): bool
     {
         if (empty($key)) {

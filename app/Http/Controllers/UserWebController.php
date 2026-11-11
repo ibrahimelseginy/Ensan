@@ -69,7 +69,7 @@ final class UserWebController extends Controller
 
     public function show(User $user): View
     {
-        $user->loadMissing(['roles.permissions']);
+        $user->loadMissing(['roles.permissions', 'employeeEvaluations.evaluator', 'latestEvaluation.evaluator']);
         if (\Illuminate\Support\Facades\Schema::hasTable('permission_user')) {
             $user->loadMissing(['directPermissions']);
         }

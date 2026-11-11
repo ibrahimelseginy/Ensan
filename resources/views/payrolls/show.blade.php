@@ -55,10 +55,43 @@
                         </div>
                         <div class="col-md-6">
                             <div class="info-row">
-                                <span class="info-label">المبلغ</span>
-                                <span class="info-value">
-                                    <span class="fs-4 fw-bold text-success">{{ number_format($payroll->amount, 0) }}</span>
+                                <span class="info-label">الراتب الأساسي</span>
+                                <span class="info-value font-monospace fw-bold">
+                                    {{ number_format($payroll->amount, 2) }}
                                     <small class="text-muted">{{ $payroll->currency }}</small>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">الحوافز والمكافآت</span>
+                                <span class="info-value font-monospace text-success fw-bold">
+                                    +{{ number_format($payroll->bonuses ?? 0, 2) }} {{ $payroll->currency }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">إجمالي المستحقات</span>
+                                <span class="info-value font-monospace text-primary fw-bold">
+                                    {{ number_format(($payroll->amount + ($payroll->bonuses ?? 0)), 2) }} {{ $payroll->currency }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">الخصومات والجزاءات</span>
+                                <span class="info-value font-monospace text-danger fw-bold">
+                                    -{{ number_format($payroll->deductions ?? 0, 2) }} {{ $payroll->currency }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row bg-success-subtle p-2 rounded-3">
+                                <span class="info-label fw-bold text-success">صافي الراتب المنصرف</span>
+                                <span class="info-value font-monospace fs-5 fw-bolder text-success">
+                                    {{ number_format(($payroll->net_amount ?? ($payroll->amount + ($payroll->bonuses ?? 0) - ($payroll->deductions ?? 0))), 2) }}
+                                    <small>{{ $payroll->currency }}</small>
                                 </span>
                             </div>
                         </div>
@@ -68,6 +101,14 @@
                                 <span class="info-value">{{ optional($payroll->paid_at)->format('Y-m-d') ?? '—' }}</span>
                             </div>
                         </div>
+                        @if($payroll->notes)
+                            <div class="col-12">
+                                <div class="info-row bg-light p-2 rounded">
+                                    <span class="info-label">ملاحظات</span>
+                                    <span class="info-value">{{ $payroll->notes }}</span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

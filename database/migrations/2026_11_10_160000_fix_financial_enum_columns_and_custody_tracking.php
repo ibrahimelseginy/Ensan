@@ -63,3 +63,4 @@ return new class extends Migration
         // Non-destructive column type widening
     }
 };
+

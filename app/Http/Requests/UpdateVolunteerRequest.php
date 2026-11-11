@@ -19,8 +19,8 @@ final class UpdateVolunteerRequest extends FormRequest
 
         return [
             'name'            => 'sometimes|string|max:255',
-            'email'           => 'sometimes|email|max:255|unique:users,email,' . ($volunteerId ?? ''),
-            'password'        => 'nullable|string|min:6',
+            'email'           => 'nullable|email|max:255|unique:users,email,' . ($volunteerId ?? ''),
+            'password'        => 'nullable|string',
             'phone'           => 'nullable|string|max:20',
             'national_id'     => 'nullable|string|max:25',
             'active'          => 'nullable|boolean',
@@ -33,7 +33,7 @@ final class UpdateVolunteerRequest extends FormRequest
             'campaign_id'     => 'nullable|exists:campaigns,id',
             'guest_house_id'  => 'nullable|exists:guest_houses,id',
             'join_date'       => 'nullable|date',
-            'profile_photo'   => 'nullable|any_image|max:10240'
+            'profile_photo'   => 'nullable|any_image|max:51200'
         ];
     }
 }

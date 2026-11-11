@@ -27,7 +27,7 @@ final class ImageUploadService
     // -------------------------------------------------------------------------
 
     /** الحجم الأقصى المسموح به للصورة (بالكيلوبايت) */
-    public const MAX_SIZE_KB = 10240; // 10 MB
+    public const MAX_SIZE_KB = 51200; // 50 MB
 
     /** أنواع الصور المسموح بها */
     public const ALLOWED_MIMES = [

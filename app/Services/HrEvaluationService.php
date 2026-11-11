@@ -55,6 +55,10 @@ final readonly class HrEvaluationService
             'totalSalaries'            => (float) Payroll::where('month', 'LIKE', $currentMonthString . '%')->sum('amount'),
             'totalSalariesCount'       => Payroll::where('month', 'LIKE', $currentMonthString . '%')->count(),
             'employeesPaidCount'       => Payroll::where('month', 'LIKE', $currentMonthString . '%')->distinct('user_id')->count('user_id'),
+
+            // Employee Evaluations (Official 10-Criteria Model)
+            'employees'                => User::where('is_employee', true)->where('active', true)->with(['latestEvaluation'])->orderBy('name')->get(),
+            'recentEvaluations'        => \App\Models\EmployeeEvaluation::with(['user', 'evaluator'])->orderByDesc('evaluation_date')->orderByDesc('id')->limit(30)->get(),
         ];
     }
 }
