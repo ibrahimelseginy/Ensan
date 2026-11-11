@@ -115,7 +115,7 @@ final class ReceptionWebController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'spent_at' => 'nullable|date',
             'description' => 'nullable|string|max:500',
-            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,heic,heif,bmp|max:51200',
         ]);
 
         $receptionTreasuries = Treasury::forReception(auth()->user());

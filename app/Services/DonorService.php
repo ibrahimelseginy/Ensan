@@ -132,9 +132,15 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds,
             $familyMemberAmounts
         );
-        // استخدم المبلغ اليدوي اللي المستخدم كتبه لو أكبر من المحسوب من الحالات
+        // الأولوية دائماً للمبلغ الذي كتبه المستخدم يدوياً إذا وُجد (مثلاً متبرع بـ 1500 وباقي الحالات لم تُسجل بعد)
         $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
-        $finalAmount = max($calculatedTotal, $userEnteredAmount);
+        if ($userEnteredAmount > 0) {
+            $finalAmount = $userEnteredAmount;
+        } elseif ($calculatedTotal > 0) {
+            $finalAmount = $calculatedTotal;
+        } else {
+            $finalAmount = 0.0;
+        }
         if ($finalAmount > 0) {
             $modelData['sponsorship_monthly_amount'] = $finalAmount;
         }
@@ -219,9 +225,15 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds ?? [],
             $familyMemberAmounts
         );
-        // استخدم المبلغ اليدوي اللي المستخدم كتبه لو أكبر من المحسوب من الحالات
+        // الأولوية دائماً للمبلغ الذي كتبه المستخدم يدوياً إذا وُجد
         $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
-        $finalAmount = max($calculatedTotal, $userEnteredAmount);
+        if ($userEnteredAmount > 0) {
+            $finalAmount = $userEnteredAmount;
+        } elseif ($calculatedTotal > 0) {
+            $finalAmount = $calculatedTotal;
+        } else {
+            $finalAmount = (float) ($donor->sponsorship_monthly_amount ?? 0);
+        }
         if ($finalAmount > 0) {
             $modelData['sponsorship_monthly_amount'] = $finalAmount;
         }

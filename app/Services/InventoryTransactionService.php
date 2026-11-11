@@ -40,6 +40,22 @@ final readonly class InventoryTransactionService
 
     public function createTransaction(array $data): mixed
     {
+        if (!empty($data['new_item_name']) || (isset($data['item_id']) && $data['item_id'] === 'new_item')) {
+            $name = trim((string) ($data['new_item_name'] ?? ''));
+            if ($name !== '') {
+                $item = \App\Models\Item::firstOrCreate(
+                    ['name' => $name],
+                    [
+                        'code' => 'ITM-' . strtoupper(\Illuminate\Support\Str::random(6)),
+                        'unit' => !empty($data['new_item_unit']) ? trim((string) $data['new_item_unit']) : 'وحدة',
+                        'category' => 'food',
+                        'is_active' => true,
+                    ]
+                );
+                $data['item_id'] = $item->id;
+            }
+        }
+
         // Stock Validation for OUT/TRANSFER
         if (in_array($data['type'], ['out', 'transfer'])) {
             $currentStock = $this->transactionRepository->getCurrentStock((int)$data['item_id'], (int)$data['warehouse_id']);

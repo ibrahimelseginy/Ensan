@@ -471,9 +471,12 @@ final class BeneficiaryWebController extends Controller
             }
         }
 
-        if ($sum > 0) {
+        $currentMonthly = (float) ($donor->sponsorship_monthly_amount ?? 0);
+        $newAmount = max($currentMonthly, $sum);
+
+        if ($newAmount > 0) {
             $donor->update([
-                'sponsorship_monthly_amount' => round($sum, 2),
+                'sponsorship_monthly_amount' => round($newAmount, 2),
                 'classification' => 'recurring',
                 'recurring_cycle' => $donor->recurring_cycle ?: 'monthly',
                 'sponsorship_type' => 'monthly_sponsor',
@@ -738,7 +741,7 @@ final class BeneficiaryWebController extends Controller
 
         $request->validate([
             'doc_type' => 'required|string|in:' . implode(',', array_keys($allowedTypes)),
-            'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx|max:15360',
+            'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx|max:51200',
             'companion_name' => 'nullable|string|max:255',
             'companion_national_id' => 'nullable|string|max:20',
             'companion_phone' => 'nullable|string|max:25',

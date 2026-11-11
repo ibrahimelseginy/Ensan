@@ -28,7 +28,7 @@ final class UploadImageRequest extends FormRequest
                 'required',
                 'file',
                 'image',
-                'max:10240',
+                'max:51200',
                 'mimes:jpeg,jpg,png,gif,webp,bmp,heic,heif,avif',
             ],
             'directory' => [

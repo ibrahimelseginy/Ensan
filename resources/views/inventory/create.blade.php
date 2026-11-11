@@ -21,12 +21,22 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-medium">الصنف <span class="text-danger">*</span></label>
-                        <select name="item_id" class="form-select" required>
+                        <select name="item_id" id="invItemSelect" class="form-select" required>
                             <option value="" disabled selected>اختر الصنف...</option>
+                            <option value="new_item" class="text-primary fw-bold">✨ + كتابة صنف جديد يدوياً (يُضاف تلقائياً للأصناف)...</option>
                             @foreach($items as $i)
-                                <option value="{{ $i->id }}">{{ $i->name }}</option>
+                                <option value="{{ $i->id }}">{{ $i->name }} ({{ $i->unit ?? 'وحدة' }})</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-md-4" id="newItemNameWrapper" style="display: none;">
+                        <label class="form-label fw-medium text-primary">اسم الصنف الجديد <span class="text-danger">*</span></label>
+                        <input type="text" name="new_item_name" id="newItemNameInput" class="form-control border-primary" placeholder="اكتب اسم الصنف الجديد هنا...">
+                        <div class="form-text text-muted small">سيتم إنشاء هذا الصنف تلقائياً وإدراجه في قائمة الأصناف.</div>
+                    </div>
+                    <div class="col-md-2" id="newItemUnitWrapper" style="display: none;">
+                        <label class="form-label fw-medium text-primary">وحدة القياس</label>
+                        <input type="text" name="new_item_unit" class="form-control" placeholder="كيلو، كرتونة، علبة" value="وحدة">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-medium">المخزن <span class="text-danger">*</span></label>
@@ -130,6 +140,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener
     typeSelect.addEventListener('change', toggleFields);
+
+    const itemSelect = document.getElementById('invItemSelect');
+    const newItemNameWrapper = document.getElementById('newItemNameWrapper');
+    const newItemUnitWrapper = document.getElementById('newItemUnitWrapper');
+    const newItemNameInput = document.getElementById('newItemNameInput');
+
+    function toggleNewItemFields() {
+        if (itemSelect.value === 'new_item') {
+            newItemNameWrapper.style.display = 'block';
+            newItemUnitWrapper.style.display = 'block';
+            newItemNameInput.setAttribute('required', 'required');
+            newItemNameInput.focus();
+        } else {
+            newItemNameWrapper.style.display = 'none';
+            newItemUnitWrapper.style.display = 'none';
+            newItemNameInput.removeAttribute('required');
+        }
+    }
+
+    itemSelect.addEventListener('change', toggleNewItemFields);
+    toggleNewItemFields();
 });
 </script>
 @endsection

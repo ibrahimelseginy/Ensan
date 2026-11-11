@@ -82,7 +82,7 @@ final class ImageUploadController extends Controller
     {
         $request->validate([
             'images'    => 'required|array|min:1|max:20',
-            'images.*'  => 'required|file|image|max:10240|mimes:jpeg,jpg,png,gif,webp,bmp',
+            'images.*'  => 'required|file|image|max:51200|mimes:jpeg,jpg,png,gif,webp,bmp',
             'directory' => 'nullable|string|max:100|regex:/^[a-zA-Z0-9_\/\-]+$/',
         ]);
 

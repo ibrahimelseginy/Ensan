@@ -115,7 +115,7 @@ final class StoreDonationRequest extends FormRequest
             'type'                     => 'required|in:cash,in_kind',
             'cash_channel'             => 'required_if:type,cash|in:cash,instapay,vodafone_cash,bank_transfer,delegate',
             'operation_number'         => 'nullable|string|max:191',
-            'transfer_receipt'         => 'nullable|file|mimes:jpeg,png,jpg,pdf,webp|max:10240',
+            'transfer_receipt'         => 'nullable|file|mimes:jpeg,png,jpg,pdf,webp,heic,heif,bmp|max:51200',
             'amount'                   => 'required_if:type,cash|nullable|numeric|min:0.01',
             'currency'                 => 'nullable|string',
             'receipt_number'           => [

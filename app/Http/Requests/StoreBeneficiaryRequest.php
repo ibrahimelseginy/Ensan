@@ -120,6 +120,10 @@ final class StoreBeneficiaryRequest extends FormRequest
             'guest_house_bed_id'    => 'nullable|exists:guest_house_beds,id',
             'arrival_date'          => 'nullable|date',
             'expected_days'         => 'nullable|integer|min:1|max:365',
+            'attachments'           => 'nullable|array',
+            'attachments.*'         => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:51200',
+            'attachment_titles'     => 'nullable|array',
+            'attachment_titles.*'   => 'nullable|string|max:255',
         ];
     }
 

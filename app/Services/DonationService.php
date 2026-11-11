@@ -355,26 +355,48 @@ final readonly class DonationService
 
             // Sync direct beneficiary linking with donor (supports multi-case allocations)
             if (!empty($donation->donor_id)) {
-                $allAllocBenIds = [];
-                if (!empty($donation->beneficiary_allocations) && is_array($donation->beneficiary_allocations)) {
-                    foreach ($donation->beneficiary_allocations as $alloc) {
-                        if (!empty($alloc['beneficiary_id'])) {
-                            $allAllocBenIds[] = (int)$alloc['beneficiary_id'];
-                        }
-                    }
-                }
-                if (!empty($donation->beneficiary_id)) {
-                    $allAllocBenIds[] = (int)$donation->beneficiary_id;
-                }
-                $allAllocBenIds = array_values(array_unique($allAllocBenIds));
+                $donor = Donor::find($donation->donor_id);
+                if ($donor) {
+                    $hasAllocations = !empty($donation->beneficiary_allocations) && is_array($donation->beneficiary_allocations);
+                    if ($hasAllocations) {
+                        foreach ($donation->beneficiary_allocations as $alloc) {
+                            $bId = !empty($alloc['beneficiary_id']) ? (int) $alloc['beneficiary_id'] : null;
+                            $fmId = !empty($alloc['family_member_id']) ? (int) $alloc['family_member_id'] : null;
+                            $allocAmount = isset($alloc['amount']) && (float) $alloc['amount'] > 0 ? (float) $alloc['amount'] : null;
 
-                if (!empty($allAllocBenIds)) {
-                    $donor = Donor::find($donation->donor_id);
-                    if ($donor) {
-                        $donor->sponsoredBeneficiaries()->syncWithoutDetaching($allAllocBenIds);
-                        if (!$donor->sponsored_beneficiary_id) {
-                            $donor->forceFill(['sponsored_beneficiary_id' => $allAllocBenIds[0]])->save();
+                            if ($fmId) {
+                                $donor->sponsoredFamilyMembers()->syncWithoutDetaching([
+                                    $fmId => array_filter(['monthly_amount' => $allocAmount]),
+                                ]);
+                                $member = BeneficiaryFamilyMember::find($fmId);
+                                if ($member) {
+                                    $donor->sponsoredBeneficiaries()->syncWithoutDetaching([$member->beneficiary_id]);
+                                    if ($allocAmount !== null && ((float) ($member->sponsorship_amount ?? 0)) <= 0) {
+                                        $member->update(['sponsorship_amount' => $allocAmount]);
+                                    }
+                                }
+                            } elseif ($bId) {
+                                $donor->sponsoredBeneficiaries()->syncWithoutDetaching([
+                                    $bId => array_filter(['monthly_amount' => $allocAmount]),
+                                ]);
+                                $ben = Beneficiary::find($bId);
+                                if ($ben && $allocAmount !== null && ((float) ($ben->monthly_sponsorship_amount ?? 0)) <= 0) {
+                                    $ben->update([
+                                        'monthly_sponsorship_amount' => $allocAmount,
+                                        'sponsorship_type' => $ben->sponsorship_type ?: 'monthly_sponsor',
+                                    ]);
+                                }
+                            }
                         }
+                    } elseif (!empty($donation->beneficiary_id)) {
+                        $singleBenId = (int) $donation->beneficiary_id;
+                        $donor->sponsoredBeneficiaries()->syncWithoutDetaching([
+                            $singleBenId => array_filter(['monthly_amount' => (float) $donation->amount > 0 ? (float) $donation->amount : null]),
+                        ]);
+                    }
+
+                    if (!$donor->sponsored_beneficiary_id && !empty($donation->beneficiary_id)) {
+                        $donor->forceFill(['sponsored_beneficiary_id' => (int) $donation->beneficiary_id])->save();
                     }
                 }
             }

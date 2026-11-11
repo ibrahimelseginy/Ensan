@@ -142,9 +142,14 @@
                 </div>
                 <div class="col-12" id="caseAmountsBreakdownWrap" style="display:none;">
                   <div class="p-3 rounded-3 bg-white border border-success-subtle shadow-2xs">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                       <span class="fw-bold text-success small"><i class="bi bi-calculator me-1"></i>توزيع مبالغ الكفالة على الحالات المختارة (حدد المبلغ الرايح لصالح كل حالة):</span>
-                      <span class="badge bg-success-subtle text-success border border-success font-monospace" id="caseAmountsAutoTotalBadge">الإجمالي المحسوب: 0 ج.م</span>
+                      <div class="d-flex align-items-center gap-1">
+                        <span class="badge bg-success-subtle text-success border border-success font-monospace" id="caseAmountsAutoTotalBadge">الإجمالي المحسوب: 0 ج.م</span>
+                        <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 small" id="btnSyncCalculatedTotal" title="نسخ هذا المجموع إلى إجمالي المبلغ الشهري">
+                          <i class="bi bi-arrow-down-left-square me-1"></i>تطبيق المجموع
+                        </button>
+                      </div>
                     </div>
                     <div id="caseAmountsBreakdownRows" class="row g-2"></div>
                   </div>
@@ -276,25 +281,41 @@
       }
 
       let userManuallyEditedTotal = false;
-      $('#sponsorshipMonthlyAmountInput').on('input', function () {
+      if (parseFloat($('#sponsorshipMonthlyAmountInput').val() || '0') > 0) {
+        userManuallyEditedTotal = true;
+      }
+
+      $('#sponsorshipMonthlyAmountInput').on('input change', function () {
         userManuallyEditedTotal = true;
       });
 
-      function recalcTotalCaseAmounts() {
+      function getCalculatedCaseSum() {
         let sum = 0;
         $('.case-split-amount-input').each(function () {
           const v = parseFloat($(this).val() || '0');
           if (!isNaN(v) && v > 0) sum += v;
         });
+        return sum;
+      }
+
+      function recalcTotalCaseAmounts() {
+        const sum = getCalculatedCaseSum();
         $('#caseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
-        // فقط نحدّث الإجمالي تلقائياً إذا المستخدم لم يكتب قيمة يدوية
-        // أو إذا المبلغ المحسوب أكبر من المكتوب يدوياً
-        const currentManual = parseFloat($('#sponsorshipMonthlyAmountInput').val() || '0');
-        if (sum > 0 && (!userManuallyEditedTotal || sum > currentManual)) {
+        
+        // لا نعدل قيمة الإجمالي إطلاقاً إذا كتب المستخدم رقماً يدوياً بنفسه (مثل 1500 وباقي الحالات لم تُسجل)
+        const currentVal = $('#sponsorshipMonthlyAmountInput').val().trim();
+        if (!userManuallyEditedTotal && currentVal === '' && sum > 0) {
           $('#sponsorshipMonthlyAmountInput').val(sum.toFixed(2));
-          userManuallyEditedTotal = false;
         }
       }
+
+      $('#btnSyncCalculatedTotal').on('click', function () {
+        const sum = getCalculatedCaseSum();
+        if (sum > 0) {
+          $('#sponsorshipMonthlyAmountInput').val(sum.toFixed(2));
+          userManuallyEditedTotal = true;
+        }
+      });
 
       $(document).on('input', '.case-split-amount-input', recalcTotalCaseAmounts);
       $('#sponsoredBeneficiaries, #sponsoredFullFamilies').on('change', renderCaseAmountsInputs);

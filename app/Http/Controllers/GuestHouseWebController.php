@@ -372,7 +372,7 @@ final class GuestHouseWebController extends Controller
 
         $data['status'] = 'new';
         if (empty($data['code'])) {
-            $data['code'] = Beneficiary::nextGuestCode();
+            $data['code'] = Beneficiary::generateNextCode();
         }
 
         DB::transaction(function () use ($request, $guest_house, $data, $existingBeneficiaryId, $allocatedBeneficiaryIds, $sponsorIds, $bedId, $profileData, $arrivalDate, $expectedDays): void {
@@ -475,8 +475,8 @@ final class GuestHouseWebController extends Controller
             'companion_phone' => 'nullable|string|max:25',
             'companion_address' => 'nullable|string|max:500',
             'change_reason' => 'nullable|string|max:500',
-            'companion_id_front' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
-            'companion_id_back' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'companion_id_front' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,heic,heif,bmp|max:51200',
+            'companion_id_back' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,heic,heif,bmp|max:51200',
         ]);
 
         $profile = $beneficiary->patientProfile;
@@ -1131,7 +1131,7 @@ final class GuestHouseWebController extends Controller
             'meal_date' => 'required|date',
             'meal_type' => 'required|in:breakfast,lunch,dinner',
             'served_at' => 'nullable|date_format:H:i',
-            'meal_image' => 'nullable|any_image|max:10240',
+            'meal_image' => 'nullable|any_image|max:51200',
             'received_beneficiary_ids' => 'nullable|array',
             'received_beneficiary_ids.*' => 'integer|exists:beneficiaries,id',
             'notes' => 'nullable|string|max:1000',
@@ -1462,7 +1462,7 @@ final class GuestHouseWebController extends Controller
 
         if (! $beneficiary) {
             $beneficiary = Beneficiary::create([
-                'code' => Beneficiary::nextGuestCode(), 'full_name' => $data['name'],
+                'code' => !empty($data['code']) ? $data['code'] : Beneficiary::generateNextCode(), 'full_name' => $data['name'],
                 'national_id' => $data['national_id'] ?? null, 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null, 'assistance_type' => 'service',
                 'status' => 'accepted', 'guest_house_id' => $guestHouse->id, 'notes' => $data['notes'] ?? null,
@@ -1520,8 +1520,8 @@ final class GuestHouseWebController extends Controller
             'amount' => 'required|numeric|min:0.5',
             'expense_date' => 'required|date',
             'notes' => 'nullable|string|max:1000',
-            'receipt' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp|max:10240',
-            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp|max:10240',
+            'receipt' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp,heic,heif,bmp|max:51200',
+            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp,heic,heif,bmp|max:51200',
         ]);
 
         $expenseTitle = trim((string) ($data['title'] ?? $data['name'] ?? 'مصروف نثري لدار الضيافة'));
@@ -1565,21 +1565,22 @@ final class GuestHouseWebController extends Controller
             ? ' [' . $categoryLabels[$data['category']] . ']'
             : '';
 
-        DB::transaction(function () use ($guest_house, $treasury, $data, $expenseTitle, $categoryLabel, $invoicePath): void {
-            $this->expenseService->createExpense([
-                'type' => 'operational',
-                'category' => 'guest_house',
-                'description' => $expenseTitle . $categoryLabel . (!empty($data['notes']) ? ' — ' . $data['notes'] : ''),
-                'amount' => (float) $data['amount'],
-                'paid_at' => $data['expense_date'],
-                'treasury_id' => $treasury->id,
-                'guest_house_id' => $guest_house->id,
-                'attachment_path' => $invoicePath,
-                'created_by' => auth()->id(),
-            ]);
-        });
+        $expense = Expense::create([
+            'type' => 'operational',
+            'category' => 'guest_house',
+            'description' => $expenseTitle . $categoryLabel . (!empty($data['notes']) ? ' — ' . $data['notes'] : ''),
+            'amount' => (float) $data['amount'],
+            'paid_at' => $data['expense_date'],
+            'treasury_id' => $treasury->id,
+            'guest_house_id' => $guest_house->id,
+            'attachment_path' => $invoicePath,
+            'status' => 'active',
+            'created_by' => auth()->id(),
+        ]);
 
-        return back()->with('success', 'تم تسجيل المصروف وخصمه من الخزينة (' . $treasury->name . ') بنجاح.');
+        app(\App\Services\TreasuryIntegrationService::class)->processExpenseFromTreasury($expense, $treasury->id);
+
+        return back()->with('success', 'تم تسجيل المصروف وخصمه من الخزينة (' . $treasury->name . ') بنجاح برقم قيد [' . $expense->id . '].');
     }
 
     public function replenishPettyCash(Request $request, GuestHouse $guest_house): RedirectResponse
@@ -1718,7 +1719,7 @@ final class GuestHouseWebController extends Controller
             'technician_phone' => 'nullable|string|max:50',
             'status' => 'required|in:pending,in_progress,completed',
             'completion_notes' => 'nullable|string|max:1000',
-            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf|max:10240',
+            'invoice_file' => 'nullable|file|mimes:jpeg,jpg,png,pdf,webp,heic,heif,bmp|max:51200',
             'deduct_from_custody_id' => 'nullable|exists:guest_house_custodies,id',
         ]);
 
