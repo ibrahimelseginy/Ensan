@@ -383,6 +383,11 @@
         recalcEdTotalCaseAmounts();
       }
 
+      let edUserManuallyEditedTotal = false;
+      $('#edSponsorshipMonthlyAmountInput').on('input', function () {
+        edUserManuallyEditedTotal = true;
+      });
+
       function recalcEdTotalCaseAmounts() {
         let sum = 0;
         $('.ed-case-split-amount-input').each(function () {
@@ -390,8 +395,10 @@
           if (!isNaN(v) && v > 0) sum += v;
         });
         $('#edCaseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
-        if (sum > 0) {
+        const currentManual = parseFloat($('#edSponsorshipMonthlyAmountInput').val() || '0');
+        if (sum > 0 && (!edUserManuallyEditedTotal || sum > currentManual)) {
           $('#edSponsorshipMonthlyAmountInput').val(sum.toFixed(2));
+          edUserManuallyEditedTotal = false;
         }
       }
 

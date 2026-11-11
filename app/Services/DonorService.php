@@ -132,8 +132,11 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds,
             $familyMemberAmounts
         );
-        if ($calculatedTotal > 0) {
-            $modelData['sponsorship_monthly_amount'] = $calculatedTotal;
+        // استخدم المبلغ اليدوي اللي المستخدم كتبه لو أكبر من المحسوب من الحالات
+        $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
+        $finalAmount = max($calculatedTotal, $userEnteredAmount);
+        if ($finalAmount > 0) {
+            $modelData['sponsorship_monthly_amount'] = $finalAmount;
         }
 
         $this->applySponsorshipDefaults($modelData);
@@ -216,8 +219,11 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds ?? [],
             $familyMemberAmounts
         );
-        if ($calculatedTotal > 0) {
-            $modelData['sponsorship_monthly_amount'] = $calculatedTotal;
+        // استخدم المبلغ اليدوي اللي المستخدم كتبه لو أكبر من المحسوب من الحالات
+        $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
+        $finalAmount = max($calculatedTotal, $userEnteredAmount);
+        if ($finalAmount > 0) {
+            $modelData['sponsorship_monthly_amount'] = $finalAmount;
         }
 
         $this->applySponsorshipDefaults($modelData, $donor);

@@ -275,6 +275,11 @@
         recalcTotalCaseAmounts();
       }
 
+      let userManuallyEditedTotal = false;
+      $('#sponsorshipMonthlyAmountInput').on('input', function () {
+        userManuallyEditedTotal = true;
+      });
+
       function recalcTotalCaseAmounts() {
         let sum = 0;
         $('.case-split-amount-input').each(function () {
@@ -282,8 +287,12 @@
           if (!isNaN(v) && v > 0) sum += v;
         });
         $('#caseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
-        if (sum > 0) {
+        // فقط نحدّث الإجمالي تلقائياً إذا المستخدم لم يكتب قيمة يدوية
+        // أو إذا المبلغ المحسوب أكبر من المكتوب يدوياً
+        const currentManual = parseFloat($('#sponsorshipMonthlyAmountInput').val() || '0');
+        if (sum > 0 && (!userManuallyEditedTotal || sum > currentManual)) {
           $('#sponsorshipMonthlyAmountInput').val(sum.toFixed(2));
+          userManuallyEditedTotal = false;
         }
       }
 
