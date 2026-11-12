@@ -242,29 +242,74 @@
         <div class="form-section-title d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-paperclip"></i>
-            <span>الأوراق والمستندات والصور المرفقة (تُحفظ مباشرة في خطوة واحدة)</span>
+            <span>الأوراق والمستندات والصور المطلوبة للملف (تُحفظ مباشرة في خطوة واحدة)</span>
           </div>
           <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addBeneficiaryAttachmentRow()">
-            <i class="bi bi-plus-circle me-1"></i> إضافة مستند أو صورة أخرى
+            <i class="bi bi-plus-circle me-1"></i> إضافة مستند إضافي آخر
           </button>
         </div>
-        <div class="alert alert-info py-2 small mb-3">
-          <i class="bi bi-file-earmark-check me-1"></i> يمكنك رفع بطاقة الرقم القومي، شهادة الوفاة، التقارير الطبية، الروشتات، أو صور البحث الميداني هنا مباشرة ليتم حفظها مع ملف المستفيد في خطوة واحدة دون انتظار قبول الحالة أولاً.
+
+        <div class="alert alert-warning border border-warning-subtle py-2.5 px-3 mb-3 rounded-3 shadow-2xs">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            <strong class="text-dark">ملاحظة هامة بشأن حجم ونوع الملفات المرفوعة:</strong>
+          </div>
+          <div class="small text-muted ps-4">
+            • <strong>الحد الأقصى لحجم الملف الواحد هو 15 ميجابايت (15MB)</strong>. يُرجى تصغير دقة الصور أو استخدام برامج ضغط الصور والـ PDF قبل الرفع لضمان سرعة تصفح ملفات الحالة وسرعة التحميل وتوفير مساحة التخزين.<br>
+            • <strong>الصيغ المسموح بها</strong>: الصور (JPG, PNG, WEBP) وملفات المستندات (PDF, DOC, DOCX).<br>
+            • يُرجى رفع الأوراق الرسمية المحددة في الخانات المخصصة أدناه لتسهيل فرز الملف واعتماد الحالة مباشرة.
+          </div>
         </div>
+
         <div id="beneficiaryAttachmentsContainer" class="row g-3">
+          {{-- 1. بطاقة الرقم القومي --}}
           <div class="col-md-6 attachment-item-row">
-            <div class="p-3 border rounded-3 bg-light">
-              <label class="form-label small fw-bold mb-1">عنوان المستند / الورقة (اختياري)</label>
-              <input type="text" name="attachment_titles[]" class="form-control form-control-sm mb-2" placeholder="مثال: صورة بطاقة الرقم القومي / تقرير طبي / بحث اجتماعي">
-              <label class="form-label small fw-bold mb-1">اختر الملف أو الصورة</label>
+            <div class="p-3 border rounded-3 bg-light h-100 position-relative">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-1.5"><i class="bi bi-person-badge fs-6"></i></span>
+                <span class="fw-bold small text-dark">بطاقة الرقم القومي (ولي الأمر / المستفيد)</span>
+              </div>
+              <input type="hidden" name="attachment_titles[]" value="بطاقة الرقم القومي (وجه وظهر)">
+              <label class="form-label small text-muted mb-1">اختر صورة أو ملف البطاقة (وجه أو وجه وظهر)</label>
+              <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf">
+            </div>
+          </div>
+
+          {{-- 2. شهادات ميلاد الأطفال --}}
+          <div class="col-md-6 attachment-item-row">
+            <div class="p-3 border rounded-3 bg-light h-100 position-relative">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle p-1.5"><i class="bi bi-file-earmark-person fs-6"></i></span>
+                <span class="fw-bold small text-dark">شهادات ميلاد الأطفال وأفراد الأسرة</span>
+              </div>
+              <input type="hidden" name="attachment_titles[]" value="شهادات ميلاد الأطفال وأفراد الأسرة">
+              <label class="form-label small text-muted mb-1">اختر ملف مجمع أو صورة شهادات الميلاد</label>
+              <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf">
+            </div>
+          </div>
+
+          {{-- 3. التقرير الطبي والروشتات --}}
+          <div class="col-md-6 attachment-item-row">
+            <div class="p-3 border rounded-3 bg-light h-100 position-relative">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle p-1.5"><i class="bi bi-heart-pulse fs-6"></i></span>
+                <span class="fw-bold small text-dark">تقرير طبي / أوراق علاجية (خاص بالمرضى)</span>
+              </div>
+              <input type="hidden" name="attachment_titles[]" value="تقرير طبي وروشتات علاجية">
+              <label class="form-label small text-muted mb-1">اختر التقرير الطبي أو كارت المتابعة أو الروشتة</label>
               <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx">
             </div>
           </div>
+
+          {{-- 4. شهادة الوفاة / قيد عائلي / بحث اجتماعي --}}
           <div class="col-md-6 attachment-item-row">
-            <div class="p-3 border rounded-3 bg-light">
-              <label class="form-label small fw-bold mb-1">عنوان المستند / الورقة (اختياري)</label>
-              <input type="text" name="attachment_titles[]" class="form-control form-control-sm mb-2" placeholder="مثال: شهادة الوفاة / شهادة الميلاد / روشتة">
-              <label class="form-label small fw-bold mb-1">اختر الملف أو الصورة</label>
+            <div class="p-3 border rounded-3 bg-light h-100 position-relative">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-info-subtle text-info border border-info-subtle p-1.5"><i class="bi bi-file-earmark-ruled fs-6"></i></span>
+                <span class="fw-bold small text-dark">شهادة الوفاة / بحث اجتماعي وميداني / قيد عائلي</span>
+              </div>
+              <input type="hidden" name="attachment_titles[]" value="شهادة الوفاة أو البحث الميداني">
+              <label class="form-label small text-muted mb-1">اختر شهادة الوفاة للأيتام أو البحث الميداني</label>
               <input type="file" name="attachments[]" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx">
             </div>
           </div>

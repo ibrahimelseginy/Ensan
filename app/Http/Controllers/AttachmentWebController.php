@@ -51,9 +51,9 @@ final class AttachmentWebController extends Controller
         $data = $request->validate([
             'entity_type' => 'required|string',
             'entity_id' => 'required|integer',
-            'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:51200'
+            'file' => 'required|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:15360'
         ], [
-            'file.max' => 'حجم الملف المرفوع لا يمكن أن يتجاوز 50 ميجابايت.',
+            'file.max' => 'حجم الملف المرفوع لا يمكن أن يتجاوز 15 ميجابايت، يُرجى ضغط الملف أو تقليل دقته قبل الرفع.',
             'file.mimes' => 'نوع الملف غير مدعوم.',
             'file.required' => 'يرجى اختيار ملف لرفعه.',
         ]);

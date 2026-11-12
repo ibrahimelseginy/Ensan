@@ -1249,6 +1249,19 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && ($u->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $u->hasPermission(['hr.evaluations', 'manage_employees', 'employees.view'])))
+                    <a href="{{ route('hr.evaluations') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                            <i class="bi bi-star-half"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">تقييمات الموظفين</div>
+                            <small class="text-muted">نماذج تقييم الأداء ومعايير الكفاءة</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
                     @if($u && $u->hasPermission('volunteers.view'))
                     <a href="{{ route('volunteers.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-purple-subtle text-purple">

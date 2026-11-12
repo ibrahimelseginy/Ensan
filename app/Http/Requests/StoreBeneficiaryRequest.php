@@ -121,7 +121,7 @@ final class StoreBeneficiaryRequest extends FormRequest
             'arrival_date'          => 'nullable|date',
             'expected_days'         => 'nullable|integer|min:1|max:365',
             'attachments'           => 'nullable|array',
-            'attachments.*'         => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:51200',
+            'attachments.*'         => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx,txt,csv,zip|max:15360',
             'attachment_titles'     => 'nullable|array',
             'attachment_titles.*'   => 'nullable|string|max:255',
         ];
