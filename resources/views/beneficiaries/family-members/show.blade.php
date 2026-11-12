@@ -133,10 +133,6 @@
         </div>
       </div>
       <div class="d-flex gap-2 flex-wrap no-print">
-        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5" onclick="navigator.clipboard.writeText('{{ $memberPsychPublicUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع بنجاح!');">
-          <i class="bi bi-link-45deg"></i>
-          <span>نسخ رابط الاستمارة للمتطوع</span>
-        </button>
         <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#psychologicalSupportModal">
           <i class="bi bi-plus-circle"></i>
           <span>توثيق تقرير دعم نفسي</span>

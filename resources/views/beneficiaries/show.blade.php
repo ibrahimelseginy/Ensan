@@ -1031,16 +1031,10 @@
             </div>
             <div>
               <h5 class="mb-0 fw-bold text-dark">سجل تقارير الدعم النفسي الشهري</h5>
-              <small class="text-muted">متابعة الحالة النفسية والمعنوية شهرياً وإمكانية مشاركة الرابط للمتطوع ليملاها وتسمّع تلقائياً في السيستم</small>
+              <small class="text-muted">متابعة وتوثيق الحالة النفسية والمعنوية والتغذوية للحالة شهرياً</small>
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1.5 fw-bold" onclick="navigator.clipboard.writeText('{{ $benPsychPublicUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع بنجاح:\n{{ $benPsychPublicUrl }}');">
-              <i class="bi bi-share-fill me-1"></i> نسخ رابط الاستمارة للمتطوع
-            </button>
-            <a href="https://wa.me/?text={{ urlencode('استمارة الدعم النفسي الشهري للحالة (' . $beneficiary->full_name . ' - كود ' . $beneficiary->code . '): ' . $benPsychPublicUrl) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold">
-              <i class="bi bi-whatsapp me-1"></i> إرسال واتساب للمتطوع
-            </a>
             <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1.5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#beneficiaryPsychSupportModal">
               <i class="bi bi-plus-circle me-1"></i> توثيق تقرير دعم نفسي
             </button>
@@ -2284,12 +2278,6 @@ function toggleQuickUploadTarget(val) {
           <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
-          <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <span class="small text-muted"><i class="bi bi-share-fill text-danger me-1"></i> يمكنك إرسال الاستمارة كرابط للمتطوع ليملأها مباشرة:</span>
-            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="navigator.clipboard.writeText('{{ $benPsychPublicUrl ?? '' }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع!');">
-              <i class="bi bi-clipboard me-1"></i> نسخ الرابط للمتطوع
-            </button>
-          </div>
           <div class="row g-3">
             @if($beneficiary->familyMembers->isNotEmpty())
               <div class="col-12">

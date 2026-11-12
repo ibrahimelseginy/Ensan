@@ -179,11 +179,6 @@
                                             : ($b ? \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('beneficiary', $b->id) : null);
                                     @endphp
                                     <div class="d-inline-flex gap-1">
-                                        @if($shareUrl)
-                                            <button type="button" class="btn btn-sm btn-light border text-danger rounded-pill px-2.5" onclick="navigator.clipboard.writeText('{{ $shareUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع!');" title="نسخ رابط الاستمارة للمتطوع">
-                                                <i class="bi bi-share-fill"></i>
-                                            </button>
-                                        @endif
                                         @if($report->familyMember)
                                             <a href="{{ route('beneficiary-family-members.show', $report->familyMember) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="عرض ملف الحالة المريضة">
                                                 <i class="bi bi-heart-pulse-fill me-1"></i> ملف الحالة
