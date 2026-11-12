@@ -1142,13 +1142,13 @@
                 <div class="col-md-6">
                   <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة</label>
                   <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip" capture="environment">
-                  <div class="form-text small text-muted">يدعم الصور وملفات PDF حتى 15 ميجابايت (يمكنك تصوير البطاقة أو رفعها).</div>
+                  <div class="form-text small text-muted">يدعم الصور وملفات PDF حتى 50 ميجابايت (يمكنك تصوير البطاقة أو رفعها).</div>
                 </div>
               @else
                 <div class="col-md-9">
                   <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-cloud-arrow-up me-1"></i> رفع مستند أو صورة جديدة للملف</label>
                   <input type="file" name="file" class="form-control form-control-sm" required accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip">
-                  <div class="form-text small text-muted">يدعم الصور (JPG, PNG, WEBP) وملفات PDF والمستندات حتى 15 ميجابايت (يُرجى ضغط الملفات قبل الرفع).</div>
+                  <div class="form-text small text-muted">يدعم الصور (JPG, PNG, WEBP) وملفات PDF والمستندات حتى 50 ميجابايت (يُرجى ضغط الملفات قبل الرفع).</div>
                 </div>
               @endif
               <div class="col-md-3 d-flex align-items-end">
@@ -1489,7 +1489,7 @@
                   <div class="mb-3">
                     <label class="form-label fw-bold small text-muted">اختر الملف أو التقط صورة بالكاميرا</label>
                     <input type="file" name="file" class="form-control" required accept="image/*,.pdf,.doc,.docx" capture="environment">
-                    <div class="form-text small">يدعم تصوير البطاقات والمستندات بالكاميرا أو رفع صور وملفات PDF حتى 15 ميجابايت.</div>
+                    <div class="form-text small">يدعم تصوير البطاقات والمستندات بالكاميرا أو رفع صور وملفات PDF حتى 50 ميجابايت.</div>
                   </div>
                 </div>
                 <div class="modal-footer bg-light py-2">
