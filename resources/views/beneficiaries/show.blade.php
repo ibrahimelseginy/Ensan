@@ -273,15 +273,9 @@
                       <div class="d-flex justify-content-between align-items-center mb-1.5 flex-wrap gap-1">
                         <span class="small fw-bold text-dark"><i class="bi bi-person-heart text-success me-1"></i>كفلاء هذا الفرد:</span>
                         <div class="d-flex align-items-center gap-1 flex-wrap">
-                          @php
-                            $memPsychShareUrl = \App\Http\Controllers\PsychologicalSupportController::getPublicUrl('member', $member->id);
-                          @endphp
                           <a href="{{ route('beneficiary-family-members.show', $member) }}#psychologicalSupportSection" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill font-monospace" style="font-size: 0.75rem;" title="الدعم النفسي الشهري للحالة">
                             <i class="bi bi-heart-pulse-fill me-0.5"></i> الدعم النفسي
                           </a>
-                          <button type="button" class="btn btn-sm btn-light border text-danger py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ $memPsychShareUrl }}'); alert('تم نسخ رابط استمارة الدعم النفسي للمتطوع:\n{{ $memPsychShareUrl }}');" title="نسخ رابط استمارة الدعم النفسي لإرساله لمتطوع">
-                            <i class="bi bi-share-fill"></i> رابط للمتطوع
-                          </button>
                           <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 rounded-pill font-monospace" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#attachMemberSponsorModal{{ $member->id }}">
                             <i class="bi bi-plus-circle me-0.5"></i> ربط كافل
                           </button>
