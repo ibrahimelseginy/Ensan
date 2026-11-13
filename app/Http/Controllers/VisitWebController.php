@@ -105,6 +105,10 @@ final class VisitWebController extends Controller
         // Process family members
         $validated['family_members'] = $this->formatFamilyMembers($request->input('family_members', []));
         $validated['has_cancer_patient'] = $request->boolean('has_cancer_patient');
+        $validated['eligible_project_path'] = $request->input('eligible_project_path', 'general');
+        if ($validated['eligible_project_path'] === 'amal') {
+            $validated['has_cancer_patient'] = true;
+        }
 
         // House photo upload
         if ($request->hasFile('house_photo')) {
@@ -438,6 +442,10 @@ final class VisitWebController extends Controller
 
         $validated['family_members'] = $this->formatFamilyMembers($request->input('family_members', []));
         $validated['has_cancer_patient'] = $request->boolean('has_cancer_patient');
+        $validated['eligible_project_path'] = $request->input('eligible_project_path', 'general');
+        if ($validated['eligible_project_path'] === 'amal') {
+            $validated['has_cancer_patient'] = true;
+        }
 
         // House photo upload
         if ($request->hasFile('house_photo')) {
@@ -544,6 +552,7 @@ final class VisitWebController extends Controller
 
             // Conditional Flag
             'has_cancer_patient' => 'nullable|boolean',
+            'eligible_project_path' => 'nullable|string|in:zad,amal,medrar,ramadan,general',
 
             // Oncology Patient Info
             'hospital_name' => 'nullable|string|max:255',

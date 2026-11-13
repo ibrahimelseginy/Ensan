@@ -488,6 +488,7 @@ Route::middleware(['auth'])->group(function () {
     // --- Collaborations & Partnerships Directory ---
     Route::middleware('permission:collaborations.view|manage_specialized_services')->group(function () {
         Route::resource('collaborations', \App\Http\Controllers\CollaborationController::class);
+        Route::resource('charity-guides', \App\Http\Controllers\CharityGuideWebController::class);
     });
 
     // --- Finance & Accounting ---

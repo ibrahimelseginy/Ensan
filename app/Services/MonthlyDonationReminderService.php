@@ -96,7 +96,11 @@ final class MonthlyDonationReminderService
                     $statusText = 'متأخر: كفالة متأخرة تستوجب التحصيل من';
                 }
 
+                $dueMonthKey = $dueDate->format('Y-m');
+
                 return [
+                    'id' => 'monthly_don_' . $donor->id . '_' . $dueMonthKey,
+                    'donor_id' => $donor->id,
                     'category' => 'monthly_donations',
                     'type' => $type,
                     'text' => sprintf(
@@ -109,6 +113,10 @@ final class MonthlyDonationReminderService
                         $target,
                     ),
                     'link' => route('donations.create', ['donor_id' => $donor->id]),
+                    'timestamp' => $dueDate->timestamp,
+                    'is_today' => $isToday,
+                    'is_tomorrow' => $isTomorrow,
+                    'is_overdue' => $isOverdue,
                 ];
             })
             ->all();

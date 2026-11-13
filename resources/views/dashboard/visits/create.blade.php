@@ -503,32 +503,90 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- السؤال الشرطي التفاعلي: هل يوجد أحد أفراد الأسرة مريض أورام؟ -->
+    <!-- بوابة توجيه الحالة للمشاريع: الحالة تستوجب دخول أي من مشاريع إنسان؟ -->
     <!-- ============================================================== -->
-    <div class="cancer-toggle-card shadow-sm">
-      <h4 class="fw-bolder mb-2 text-dark">
-        <i class="bi bi-heart-pulse text-danger me-2"></i> هل يوجد أحد أفراد الأسرة مريض أورام؟
-      </h4>
+    @php
+      $currentProjectPath = old('eligible_project_path', $caseApplication?->eligible_project_path ?? ($defaultIsCancer ? 'amal' : 'general'));
+    @endphp
+    <div class="cancer-toggle-card shadow-sm border rounded-4 p-4 mb-4" style="background: #ffffff;">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <h4 class="fw-bolder mb-0 text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-diagram-3-fill text-success fs-4"></i>
+          <span>الحالة تستوجب دخول أي من مشاريع إنسان؟</span>
+        </h4>
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-bold">توجيه واعتماد المسار الميداني</span>
+      </div>
       <p class="text-muted small mb-3">
-        إذا اخترت <strong>(لا)</strong> ينتهي البحث الاجتماعي العادي هنا. وإذا اخترت <strong>(نعم)</strong> سيتم فتح باقي استمارة بحث ومتابعة مريض الأورام وتفاصيل العلاج والبروتوكول.
+        حدد المشروع الخيري الذي تستحقه الحالة بناءً على البحث الاجتماعي والفحص الميداني، أو اختر (بحث اجتماعي عام) في حال المساعدات المتنوعة:
       </p>
 
-      <div class="d-inline-flex gap-3 my-2">
-        <label class="cancer-radio-btn {{ $defaultIsCancer ? '' : 'active-no' }}" id="radioBtnNo">
-          <input type="radio" name="has_cancer_patient" value="0" class="d-none" @checked(!$defaultIsCancer)>
-          <i class="bi bi-x-circle-fill"></i>
-          <span>لا (بحث اجتماعي عادي)</span>
-        </label>
+      <div class="row g-3 my-2" id="projectEligibilitySelector">
+        {{-- 1. مشروع زاد (أيتام) --}}
+        <div class="col-6 col-md-4 col-lg">
+          <label class="project-path-btn h-100 p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center cursor-pointer transition-all {{ $currentProjectPath === 'zad' ? 'active-project border-success shadow-sm' : '' }}" data-project="zad" style="cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="eligible_project_path" value="zad" class="d-none" @checked($currentProjectPath === 'zad')>
+            <div class="icon-circle mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(16,185,129,0.12);color:#10b981;font-size:1.4rem;">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="fw-bold fs-6 text-dark">مشروع زاد</div>
+            <small class="text-muted" style="font-size:0.75rem;">(كفالة أيتام وأسرهم)</small>
+          </label>
+        </div>
 
-        <label class="cancer-radio-btn {{ $defaultIsCancer ? 'active-yes' : '' }}" id="radioBtnYes">
-          <input type="radio" name="has_cancer_patient" value="1" class="d-none" @checked($defaultIsCancer)>
-          <i class="bi bi-check-circle-fill"></i>
-          <span>نعم (يوجد مريض أورام)</span>
-        </label>
+        {{-- 2. مشروع بعثاء الأمل (أورام) --}}
+        <div class="col-6 col-md-4 col-lg">
+          <label class="project-path-btn h-100 p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center cursor-pointer transition-all {{ $currentProjectPath === 'amal' ? 'active-project border-danger shadow-sm' : '' }}" data-project="amal" style="cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="eligible_project_path" value="amal" class="d-none" @checked($currentProjectPath === 'amal')>
+            <div class="icon-circle mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(239,68,68,0.12);color:#ef4444;font-size:1.4rem;">
+              <i class="bi bi-heart-pulse-fill"></i>
+            </div>
+            <div class="fw-bold fs-6 text-dark">بعثاء الأمل</div>
+            <small class="text-muted" style="font-size:0.75rem;">(مرضى أورام وعلاج)</small>
+          </label>
+        </div>
+
+        {{-- 3. مشروع مدرار (مياه وأسقف) --}}
+        <div class="col-6 col-md-4 col-lg">
+          <label class="project-path-btn h-100 p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center cursor-pointer transition-all {{ $currentProjectPath === 'medrar' ? 'active-project border-info shadow-sm' : '' }}" data-project="medrar" style="cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="eligible_project_path" value="medrar" class="d-none" @checked($currentProjectPath === 'medrar')>
+            <div class="icon-circle mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(14,165,233,0.12);color:#0ea5e9;font-size:1.4rem;">
+              <i class="bi bi-droplet-half"></i>
+            </div>
+            <div class="fw-bold fs-6 text-dark">مشروع مدرار</div>
+            <small class="text-muted" style="font-size:0.75rem;">(مياه، أسقف وترميم)</small>
+          </label>
+        </div>
+
+        {{-- 4. مساعدات رمضان --}}
+        <div class="col-6 col-md-4 col-lg">
+          <label class="project-path-btn h-100 p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center cursor-pointer transition-all {{ $currentProjectPath === 'ramadan' ? 'active-project border-warning shadow-sm' : '' }}" data-project="ramadan" style="cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="eligible_project_path" value="ramadan" class="d-none" @checked($currentProjectPath === 'ramadan')>
+            <div class="icon-circle mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(245,158,11,0.12);color:#f59e0b;font-size:1.4rem;">
+              <i class="bi bi-moon-stars-fill"></i>
+            </div>
+            <div class="fw-bold fs-6 text-dark">مساعدات رمضان</div>
+            <small class="text-muted" style="font-size:0.75rem;">(كراتين وسلال غذائية)</small>
+          </label>
+        </div>
+
+        {{-- 5. بحث اجتماعي عام --}}
+        <div class="col-12 col-md-4 col-lg">
+          <label class="project-path-btn h-100 p-3 rounded-4 border text-center d-flex flex-column align-items-center justify-content-center cursor-pointer transition-all {{ $currentProjectPath === 'general' ? 'active-project border-secondary shadow-sm' : '' }}" data-project="general" style="cursor: pointer; transition: all 0.2s;">
+            <input type="radio" name="eligible_project_path" value="general" class="d-none" @checked($currentProjectPath === 'general')>
+            <div class="icon-circle mb-2 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(100,116,139,0.12);color:#64748b;font-size:1.4rem;">
+              <i class="bi bi-file-earmark-text-fill"></i>
+            </div>
+            <div class="fw-bold fs-6 text-dark">بحث عام</div>
+            <small class="text-muted" style="font-size:0.75rem;">(مساعدات نقدية/عينية)</small>
+          </label>
+        </div>
       </div>
 
-      <div id="normalResearchNotice" class="mt-3 text-muted small" style="{{ $defaultIsCancer ? 'display: none;' : '' }}">
-        <i class="bi bi-info-circle text-primary me-1"></i> تم تحديد: <strong>بحث اجتماعي عادي</strong>. يمكنك مراجعة البيانات والضغط على حفظ بالأسفل لإنهاء البحث والطباعة.
+      <input type="hidden" name="has_cancer_patient" id="hasCancerPatientInput" value="{{ $currentProjectPath === 'amal' ? '1' : '0' }}">
+
+      {{-- التنبيهات الإرشادية لكل مشروع --}}
+      <div id="projectPathNotice" class="mt-3 p-3 rounded-3 small border" style="background:#f8fafc;">
+        <i class="bi bi-info-circle-fill text-primary me-1"></i> <span id="projectPathNoticeText">تم تحديد نوع التوجيه.</span>
       </div>
     </div>
 
@@ -741,33 +799,66 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   calculateTotals();
 
-  // 5. Conditional Oncology Section Reveal
-  const radioBtnNo = document.getElementById('radioBtnNo');
-  const radioBtnYes = document.getElementById('radioBtnYes');
+  // 5. Project Eligibility & Conditional Oncology Section Reveal
+  const projectButtons = document.querySelectorAll('.project-path-btn');
   const cancerSection = document.getElementById('cancerSection');
-  const normalNotice = document.getElementById('normalResearchNotice');
+  const noticeText = document.getElementById('projectPathNoticeText');
+  const hasCancerInput = document.getElementById('hasCancerPatientInput');
 
-  function setCancerMode(isCancer) {
-    if (isCancer) {
-      radioBtnYes.classList.add('active-yes');
-      radioBtnNo.classList.remove('active-no');
-      radioBtnYes.querySelector('input').checked = true;
-      radioBtnNo.querySelector('input').checked = false;
-      cancerSection.style.display = 'block';
-      normalNotice.style.display = 'none';
-      cancerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const projectNotices = {
+    'amal': 'تم تحديد مشروع بعثاء الأمل (أورام): تم فتح استمارة بيانات المريض وتفاصيل العلاج والبروتوكول أدناه لاستكمالها.',
+    'zad': 'تم تحديد مشروع زاد (أيتام): يُرجى التأكد من استيفاء بيانات الأطفال الأيتام في جدول أفراد الأسرة أعلاه تمهيداً لكفالتهم.',
+    'medrar': 'تم تحديد مشروع مدرار (مياه وأسقف وترميم): يُرجى إرفاق صور حالة السقف ووصلات المياه في قسم المرفقات.',
+    'ramadan': 'تم تحديد مساعدات رمضان (سلال غذائية وإطعام): سيتم إدراج الحالة في كشوف التوزيع الموسمي الميداني.',
+    'general': 'تم تحديد بحث اجتماعي عام: مساعدات نقدية وعينية عامة وفق المتاح بالجمعية.'
+  };
+
+  function setProjectPath(projectKey, shouldScroll = false) {
+    projectButtons.forEach(btn => {
+      const p = btn.getAttribute('data-project');
+      const input = btn.querySelector('input');
+      if (p === projectKey) {
+        btn.classList.add('active-project', 'shadow-sm');
+        btn.style.borderColor = (p === 'amal' ? '#ef4444' : (p === 'zad' ? '#10b981' : (p === 'medrar' ? '#0ea5e9' : (p === 'ramadan' ? '#f59e0b' : '#64748b'))));
+        btn.style.backgroundColor = 'rgba(0,0,0,0.02)';
+        input.checked = true;
+      } else {
+        btn.classList.remove('active-project', 'shadow-sm');
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.backgroundColor = '#ffffff';
+        input.checked = false;
+      }
+    });
+
+    if (noticeText && projectNotices[projectKey]) {
+      noticeText.textContent = projectNotices[projectKey];
+    }
+
+    if (projectKey === 'amal') {
+      if (hasCancerInput) hasCancerInput.value = '1';
+      if (cancerSection) {
+        cancerSection.style.display = 'block';
+        if (shouldScroll) {
+          cancerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
     } else {
-      radioBtnNo.classList.add('active-no');
-      radioBtnYes.classList.remove('active-yes');
-      radioBtnNo.querySelector('input').checked = true;
-      radioBtnYes.querySelector('input').checked = false;
-      cancerSection.style.display = 'none';
-      normalNotice.style.display = 'block';
+      if (hasCancerInput) hasCancerInput.value = '0';
+      if (cancerSection) cancerSection.style.display = 'none';
     }
   }
 
-  radioBtnNo?.addEventListener('click', () => setCancerMode(false));
-  radioBtnYes?.addEventListener('click', () => setCancerMode(true));
+  projectButtons.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const p = this.getAttribute('data-project');
+      setProjectPath(p, p === 'amal');
+    });
+  });
+
+  // Init selection
+  const initialSelected = document.querySelector('input[name="eligible_project_path"]:checked');
+  setProjectPath(initialSelected ? initialSelected.value : 'general', false);
 });
 </script>
 @endsection

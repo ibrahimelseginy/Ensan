@@ -3650,14 +3650,17 @@
           </div>
 
           {{-- الصف الثاني: أزرار الإجراءات مقسمة بالتساوي وبأيقونات واضحة --}}
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-1.5">
             <button type="button" id="markAllReadBtn" class="btn notif-action-btn flex-grow-1" title="تحديد جميع الإشعارات كمقروءة">
               <i class="bi bi-check2-all text-primary fs-6"></i>
               <span>تحديد كمقروء</span>
             </button>
-            <a href="{{ route('notifications.index') }}" class="btn notif-action-btn flex-grow-1" title="فتح أرشيف وسجل الإشعارات الكامل">
+            <button type="button" id="clearReadNotifsBtn" class="btn notif-action-btn flex-grow-1 text-danger" title="مسح وإخفاء الإشعارات المقروءة">
+              <i class="bi bi-trash3 text-danger fs-6"></i>
+              <span>مسح المقروء</span>
+            </button>
+            <a href="{{ route('notifications.index') }}" class="btn notif-action-btn px-2.5" title="فتح أرشيف وسجل الإشعارات الكامل">
               <i class="bi bi-box-arrow-up-left fs-6"></i>
-              <span>عرض السجل</span>
             </a>
           </div>
         </div>
@@ -3829,6 +3832,7 @@
             currentItems.forEach(function (item) {
               var sig = notificationSignature(item);
               seen[sig] = Date.now();
+              item.is_read = true;
               if (item.id) keys.push(item.id);
             });
             saveSeen(seen);
@@ -3840,16 +3844,35 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
               },
               body: JSON.stringify({ keys: keys })
+            }).then(function () {
+              load();
             }).catch(function () {});
           }
           lastItemCount = 0;
           updateBellBadge(0);
           render(currentItems);
+          showDrawerToast('تم تحديد جميع الإشعارات كمقروءة بنجاح ✓');
         };
 
         if (markAllBtn) {
           markAllBtn.addEventListener('click', function () {
             markAllAsSeen();
+          });
+        }
+
+        var clearReadBtn = document.getElementById('clearReadNotifsBtn');
+        if (clearReadBtn) {
+          clearReadBtn.addEventListener('click', function () {
+            fetch('{{ route('notifications.clear-read') }}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              }
+            }).then(function () {
+              load();
+              showDrawerToast('تم إخفاء ومسح الإشعارات المقروءة بنجاح ✓');
+            }).catch(function () {});
           });
         }
 

@@ -58,6 +58,7 @@ final class FieldVisit extends Model
         'condition_photos',
         // Oncology conditional fields
         'has_cancer_patient',
+        'eligible_project_path',
         'hospital_name',
         'tumor_location',
         'disease_discovery_date',
@@ -181,6 +182,14 @@ final class FieldVisit extends Model
 
     public function getResearchTypeLabelAttribute(): string
     {
-        return $this->has_cancer_patient ? 'بحث مريض أورام' : 'بحث اجتماعي عادي';
+        if ($this->has_cancer_patient || $this->eligible_project_path === 'amal') {
+            return 'مشروع بعثاء الأمل (مرضى أورام)';
+        }
+        return match ($this->eligible_project_path) {
+            'zad' => 'مشروع زاد (كفالة أيتام)',
+            'medrar' => 'مشروع مدرار (مياه وأسقف)',
+            'ramadan' => 'مساعدات رمضان',
+            default => 'بحث اجتماعي عام',
+        };
     }
 }

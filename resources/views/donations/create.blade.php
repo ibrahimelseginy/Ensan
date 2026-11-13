@@ -1225,7 +1225,8 @@ $(function () {
       if (autoSyncTotal && total > 0 && !$('#toggleSplitDonation').is(':checked')) {
         const curDonationAmt = parseFloat($('#donationAmount').val()) || 0;
         const hasOtherTarget = Boolean($('#donationGuestHouse').val() || $('#donationCampaign').val() || $('#donationProject').val());
-        if (!hasOtherTarget || curDonationAmt <= 0 || curDonationAmt < total) {
+        // Do not overwrite user-entered amount. Only fill if current donation amount is empty or 0.
+        if (!hasOtherTarget && curDonationAmt <= 0) {
           $('#donationAmount').val(total.toFixed(2));
         }
       }
@@ -2304,7 +2305,7 @@ $(function () {
 
       if (splitSum > 0) {
         const curAmt = parseFloat(normalizeArabicDigits($('#donationAmount').val())) || 0;
-        if (curAmt <= 0 || curAmt < splitSum) {
+        if (curAmt <= 0) {
           $('#donationAmount').val(splitSum.toFixed(2));
         }
       }

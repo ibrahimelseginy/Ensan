@@ -62,26 +62,8 @@ final readonly class DonationService
             }
             $beneficiaryIds = array_values(array_unique(array_filter($beneficiaryIds)));
 
-            if (empty($familyMemberIds) && !empty($beneficiaryIds)) {
-                $query = BeneficiaryFamilyMember::query()
-                    ->whereIn('beneficiary_id', $beneficiaryIds)
-                    ->where('active', true);
-
-                if (($data['purpose'] ?? '') === 'kafalat_awram') {
-                    $familyMemberIds = (clone $query)->where('is_patient', true)->pluck('id')->all();
-                    if (empty($familyMemberIds)) {
-                        $familyMemberIds = $query->pluck('id')->all();
-                    }
-                } else {
-                    $familyMemberIds = (clone $query)->where('is_patient', false)->where('relationship', 'child')->pluck('id')->all();
-                    if (empty($familyMemberIds)) {
-                        $familyMemberIds = (clone $query)->where('relationship', 'child')->pluck('id')->all();
-                    }
-                    if (empty($familyMemberIds)) {
-                        $familyMemberIds = $query->pluck('id')->all();
-                    }
-                }
-            }
+        // Note: Do NOT automatically query and attach ALL family children if the user did not explicitly select them.
+        // Auto-plucking all children caused single-case donors to be mistakenly attached to all 4+ children in a family.
             $familyMemberIds = array_values(array_unique(array_filter($familyMemberIds)));
         }
 
@@ -196,7 +178,8 @@ final readonly class DonationService
 
                 if (($data['type'] ?? 'cash') === 'cash' && $totalSplitAmount > 0) {
                     $currentAmt = (float)($data['amount'] ?? 0);
-                    if ($currentAmt <= 0 || $currentAmt < $totalSplitAmount) {
+                    // Do not overwrite user-entered amount; only default if amount is empty/zero
+                    if ($currentAmt <= 0) {
                         $data['amount'] = round($totalSplitAmount, 2);
                     }
                 }

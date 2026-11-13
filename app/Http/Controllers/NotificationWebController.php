@@ -328,17 +328,51 @@ final class NotificationWebController extends Controller
         // ==========================================
         if ($canAccess('donors.view', ['reception', 'receptionist'], ['استقبال', 'خدمة عملاء', 'reception']) || $user->hasPermission('donations.view') || $user->hasPermission('donations.create')) {
             $monthlyDonationItems = $this->monthlyDonationReminderService->notificationItems();
-            foreach ($monthlyDonationItems as $idx => $mItem) {
+            
+            $isSpecificFilter = ($category === 'monthly_donations');
+            $overdueItems = [];
+            $immediateItems = [];
+
+            foreach ($monthlyDonationItems as $mItem) {
+                if (!empty($mItem['is_today']) || !empty($mItem['is_tomorrow'])) {
+                    $immediateItems[] = $mItem;
+                } else {
+                    $overdueItems[] = $mItem;
+                }
+            }
+
+            if ($isSpecificFilter) {
+                $donationDisplayList = $monthlyDonationItems;
+            } else {
+                $topOverdue = array_slice($overdueItems, 0, 8);
+                $donationDisplayList = array_merge($immediateItems, $topOverdue);
+
+                $remainingOverdue = count($overdueItems) - count($topOverdue);
+                if ($remainingOverdue > 0) {
+                    $rawItems[] = [
+                        'id' => 'monthly_don_overdue_summary_' . now()->format('Y-m'),
+                        'category' => 'monthly_donations',
+                        'type' => 'danger',
+                        'title' => 'كفالات متأخرة مستحقة التحصيل',
+                        'text' => "تنبيه هام: يوجد إجمالي " . count($overdueItems) . " كفالة دورية متأخرة تستوجب المتابعة والتحصيل هذا الشهر.",
+                        'link' => route('donors.index', ['classification' => 'recurring']),
+                        'timestamp' => !empty($overdueItems[0]['timestamp']) ? $overdueItems[0]['timestamp'] : now()->startOfMonth()->timestamp,
+                    ];
+                }
+            }
+
+            foreach ($donationDisplayList as $mItem) {
                 $rawItems[] = [
-                    'id' => 'monthly_don_' . $idx . '_' . now()->format('Y-m-d'),
+                    'id' => $mItem['id'] ?? ('monthly_don_' . ($mItem['donor_id'] ?? 'item') . '_' . now()->format('Y-m')),
                     'category' => 'monthly_donations',
                     'type' => $mItem['type'] ?? 'info',
-                    'title' => 'تذكير تبرع شهري دوري',
+                    'title' => 'تذكير كفالة شهرية دورية',
                     'text' => $mItem['text'] ?? '',
                     'link' => $mItem['link'] ?? route('donors.index', ['classification' => 'recurring']),
-                    'timestamp' => now()->timestamp,
+                    'timestamp' => $mItem['timestamp'] ?? now()->timestamp,
                 ];
             }
+
             if (!empty($monthlyDonationItems)) {
                 $suggestions[] = [
                     'text' => 'سجّل التبرعات الشهرية المستحقة اليوم والمتأخرة',
@@ -733,7 +767,7 @@ final class NotificationWebController extends Controller
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        $key = (string) $request->input('id');
+        $key = (string) ($request->input('id') ?: $request->input('notification_key'));
         if ($key === '') {
             return response()->json(['error' => 'Missing notification id'], 422);
         }
@@ -761,14 +795,33 @@ final class NotificationWebController extends Controller
         if (Schema::hasTable('user_notification_states')) {
             try {
                 if (is_array($keys) && !empty($keys)) {
+                    $now = now();
+                    $rows = [];
                     foreach ($keys as $k) {
                         if (is_string($k) && $k !== '') {
-                            DB::table('user_notification_states')->updateOrInsert(
-                                ['user_id' => $user->id, 'notification_key' => $k],
-                                ['is_read' => true, 'read_at' => now(), 'updated_at' => now()]
-                            );
+                            $rows[] = [
+                                'user_id' => $user->id,
+                                'notification_key' => $k,
+                                'is_read' => true,
+                                'read_at' => $now,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
                         }
                     }
+                    if (!empty($rows)) {
+                        DB::table('user_notification_states')->upsert(
+                            $rows,
+                            ['user_id', 'notification_key'],
+                            ['is_read', 'read_at', 'updated_at']
+                        );
+                    }
+                } else {
+                    // Mark all existing unread notification states as read
+                    DB::table('user_notification_states')
+                        ->where('user_id', $user->id)
+                        ->where('is_read', false)
+                        ->update(['is_read' => true, 'read_at' => now(), 'updated_at' => now()]);
                 }
             } catch (\Throwable $e) {}
         }
@@ -783,7 +836,7 @@ final class NotificationWebController extends Controller
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        $key = (string) $request->input('id');
+        $key = (string) ($request->input('id') ?: $request->input('notification_key'));
         if ($key === '') {
             return response()->json(['error' => 'Missing notification id'], 422);
         }

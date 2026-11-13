@@ -739,15 +739,15 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
-        {{-- 3.6 دليل الشراكات والتعاونات --}}
-        @if($u && $u->hasPermission('collaborations.view'))
-        <a href="{{ route('collaborations.index') }}" class="ensan-app-card" data-category="operations admin" data-title="الشراكات والتعاونات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات خصومات collaborations partnerships">
+        {{-- 3.6 دليل الشراكات والتعاونات (Popup Modal) --}}
+        @if($u && ($u->hasPermission('collaborations.view') || $u->hasPermission('manage_specialized_services')))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="operations admin" data-title="التعاونات والشراكات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات ادلة منسقين قرى معارض collaborations partnerships">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-diagram-3-fill"></i>
             </div>
             <div class="ensan-app-title">التعاونات والشراكات</div>
-            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دليل الجهات</span>
-        </a>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> خدمتان <i class="bi bi-chevron-down"></i></span>
+        </div>
         @endif
 
         {{-- 3.7 الدعم النفسي (بعثاء الأمل) --}}
@@ -827,16 +827,6 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
-        {{-- 10. العضويات والبروتوكولات (Popup) --}}
-        @if($u && ($u->hasPermission('school_collaborations.view') || $u->hasPermission('memberships.view') || $u->hasPermission('oncology_medicine_reps.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="operations admin" data-title="العضويات والبروتوكولات" data-keywords="بروتوكولات مدارس جامعات عضويات اشتراكات مناديب أدوية أورام memberships">
-            <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0891b2, #06b6d4); box-shadow: 0 10px 20px -5px rgba(8, 145, 178, 0.45);">
-                <i class="bi bi-card-checklist"></i>
-            </div>
-            <div class="ensan-app-title">العضويات والبروتوكولات</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 3 خدمات <i class="bi bi-chevron-down"></i></span>
-        </div>
-        @endif
 
         {{-- 11. الاستقبال وخدمة العملاء --}}
         @if($u && $u->hasPermission('reception.view'))
@@ -1607,62 +1597,47 @@ body.theme-dark .launcher-cat-btn.active,
     </div>
 </div>
 
-{{-- 6. Modal: الشراكات والعضويات --}}
+{{-- 6. Modal: التعاونات والشراكات وأدلة العمل الخيري --}}
 <div class="modal fade ensan-sub-modal" id="modalAppCollaborations" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0891b2, #06b6d4);">
+                    <div class="ensan-app-icon mb-0" style="width: 44px; height: 44px; border-radius: 12px; font-size: 1.3rem; background: linear-gradient(135deg, #0d9488, #14b8a6);">
                         <i class="bi bi-diagram-3-fill"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0">التعاونات والشراكات والعضوية</h5>
-                        <p class="text-muted small mb-0">بروتوكولات الجامعات والمدارس، العضويات، ومندوبي الأدوية</p>
+                        <h5 class="modal-title fw-bold mb-0">التعاونات والشراكات وأدلة العمل الخيري</h5>
+                        <p class="text-muted small mb-0">أدلة القرى والمنسقين الميدانيين وشبكة المؤسسات والجهات الشريكة</p>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
-                    @if($u && $u->hasPermission('school_collaborations.view'))
-                    <a href="{{ route('school-collaborations.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-primary-subtle text-primary">
+                    {{-- 1. أدلة العمل الخيري والمنسقين الميدانيين --}}
+                    <a href="{{ route('charity-guides.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">أدلة العمل الخيري</div>
+                            <small class="text-muted">دليل القرى والمنسقين الميدانيين ومسؤولي المعارض والتواصل</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    {{-- 2. دليل الشركات والجهات الشريكة --}}
+                    <a href="{{ route('collaborations.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(13, 148, 136, 0.15); color: #0d9488;">
                             <i class="bi bi-building"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">بروتوكولات المدارس والجامعات</div>
-                            <small class="text-muted">الأنشطة والشراكات التعليمية</small>
+                            <div class="ensan-sub-tile-title">الشركات والجهات الشريكة</div>
+                            <small class="text-muted">المعامل، الصيدليات، المراكز الطبية والشركات الداعمة</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
-                    @endif
-
-                    @if($u && $u->hasPermission('memberships.view'))
-                    <a href="{{ route('memberships.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
-                            <i class="bi bi-card-checklist"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">العضويات والاشتراكات</div>
-                            <small class="text-muted">إدارة أعضاء الجمعية والاشتراكات</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-
-                    @if($u && $u->hasPermission('oncology_medicine_reps.view'))
-                    <a href="{{ route('oncology-medicine-reps.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-danger-subtle text-danger">
-                            <i class="bi bi-capsule"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">مندوبو أدوية الأورام</div>
-                            <small class="text-muted">تنسيق وتوفير أدوية مرضى الأورام</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
                 </div>
             </div>
         </div>

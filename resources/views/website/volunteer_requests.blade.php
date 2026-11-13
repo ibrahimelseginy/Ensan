@@ -397,6 +397,90 @@
                                         <input type="text" name="assigned_project_name" class="form-control rounded-3" placeholder="مثال: حملة إفطار صائم / مبادرة الكسوة" value="{{ $request->assigned_project_name }}">
                                     </div>
 
+                                    {{-- استمارة تقييم المقابلة الشخصية للمتطوع (مطابقة للنموذج المعتمد) --}}
+                                    <div class="col-12 p-3 rounded-4 border my-2" style="background:#ffffff; border-color:#0ea5e9 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                                            <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                                <i class="bi bi-file-earmark-check-fill text-primary fs-5"></i>
+                                                <span>استمارة تقييم المقابلة الشخصية للمتطوع</span>
+                                            </h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">تقييم المهارات من 5</span>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            {{-- الالتزام --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">الالتزام (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="commitment_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->commitment_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- العمل الجماعي --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">العمل الجماعي (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="teamwork_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->teamwork_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- تحمل المسؤولية --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">تحمل المسؤولية (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="responsibility_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->responsibility_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- التواصل --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">التواصل (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="communication_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->communication_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- الحماس --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">الحماس (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="enthusiasm_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->enthusiasm_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- مناسب للمشروع --}}
+                                            <div class="col-md-4 col-6">
+                                                <label class="form-label x-small fw-bold">مناسب للمشروع (من 5)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="project_fit_score" min="1" max="5" class="form-control text-center font-monospace fw-bold" placeholder="5 /" value="{{ $request->project_fit_score }}">
+                                                    <span class="input-group-text bg-light">/ 5</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- قرار المقابلة --}}
+                                            <div class="col-md-6 mt-3">
+                                                <label class="form-label small fw-bold">نتيجة المقابلة والقرار النهائي</label>
+                                                <select name="interview_decision" class="form-select form-select-sm" id="interviewDecisionSelect{{ $request->id }}" onchange="handleInterviewDecisionChange(this, '{{ $request->id }}')">
+                                                    <option value="">— اختر القرار —</option>
+                                                    <option value="suitable" @selected($request->interview_decision === 'suitable')>مناسب للعمل التطوعي</option>
+                                                    <option value="conditional" @selected($request->interview_decision === 'conditional')>مناسب بشروط محددة</option>
+                                                    <option value="unsuitable" @selected($request->interview_decision === 'unsuitable')>غير مناسب</option>
+                                                </select>
+                                            </div>
+
+                                            {{-- الشروط --}}
+                                            <div class="col-md-6 mt-3" id="interviewConditionsGroup{{ $request->id }}" style="{{ $request->interview_decision === 'conditional' ? '' : 'display:none;' }}">
+                                                <label class="form-label small fw-bold text-warning-emphasis">الشروط المطلوبة للقبول</label>
+                                                <input type="text" name="interview_conditions" class="form-control form-control-sm" placeholder="مثال: إثبات دراسي، التزام بمواعيد الورشة التدريبية..." value="{{ $request->interview_conditions }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {{-- Response Notes & Instructions --}}
                                     <div class="col-12">
                                         <label class="form-label small fw-bold"><i class="bi bi-chat-left-text me-1"></i> ملاحظات وتوجيهات للمتطوع (تظهر له مباشرة في الموقع)</label>
@@ -436,6 +520,13 @@
         const projectGroups = document.querySelectorAll('.project-group-' + reqId);
         interviewGroups.forEach(el => el.style.display = (val === 'interview') ? '' : 'none');
         projectGroups.forEach(el => el.style.display = (val === 'accepted') ? '' : 'none');
+    }
+
+    function handleInterviewDecisionChange(selectElem, reqId) {
+        const condGroup = document.getElementById('interviewConditionsGroup' + reqId);
+        if (condGroup) {
+            condGroup.style.display = (selectElem.value === 'conditional') ? '' : 'none';
+        }
     }
 
     function previewHero(input) {

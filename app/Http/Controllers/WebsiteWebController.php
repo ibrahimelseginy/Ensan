@@ -415,6 +415,14 @@ final class WebsiteWebController extends Controller
             'assigned_project_name' => 'nullable|string|max:191',
             'interview_date' => 'nullable|date',
             'interview_location' => 'nullable|string|max:255',
+            'commitment_score' => 'nullable|integer|min:1|max:5',
+            'teamwork_score' => 'nullable|integer|min:1|max:5',
+            'responsibility_score' => 'nullable|integer|min:1|max:5',
+            'communication_score' => 'nullable|integer|min:1|max:5',
+            'enthusiasm_score' => 'nullable|integer|min:1|max:5',
+            'project_fit_score' => 'nullable|integer|min:1|max:5',
+            'interview_decision' => 'nullable|string|in:suitable,conditional,unsuitable',
+            'interview_conditions' => 'nullable|string|max:1000',
             'response_notes' => 'nullable|string|max:2000',
         ]);
 
