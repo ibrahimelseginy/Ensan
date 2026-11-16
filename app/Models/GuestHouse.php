@@ -27,7 +27,7 @@ final class GuestHouse extends Model
 
     public function manager()
     {
-        return $this->belongsTo(User::class, 'manager_user_id');
+        return $this->belongsTo(User::class, 'manager_user_id')->withTrashed();
     }
 
     public function volunteers()

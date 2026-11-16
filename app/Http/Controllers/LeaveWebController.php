@@ -23,7 +23,7 @@ final class LeaveWebController extends Controller
     public function index(Request $request): View
     {
         $user    = request()->user();
-        $filters = $request->only(['status']);
+        $filters = $request->only(['status', 'type']);
 
         if (!$user || !$user->hasPermission('leaves.manage')) {
             $filters['user_id'] = (int)$user?->id;

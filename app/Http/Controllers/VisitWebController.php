@@ -115,7 +115,10 @@ final class VisitWebController extends Controller
             $file = $request->file('house_photo');
             if ($file->isValid()) {
                 $upload = app(\App\Services\ImageUploadService::class)->upload($file, 'visits/house');
-                $validated['house_photo_path'] = $upload['path'];
+                $path = is_array($upload) ? ($upload['path'] ?? null) : $upload;
+                if ($path) {
+                    $validated['house_photo_path'] = $path;
+                }
             }
         }
 
@@ -125,7 +128,10 @@ final class VisitWebController extends Controller
             foreach ($request->file('condition_photos') as $cFile) {
                 if ($cFile && $cFile->isValid()) {
                     $upload = app(\App\Services\ImageUploadService::class)->upload($cFile, 'visits/conditions');
-                    $conditionPaths[] = $upload['path'];
+                    $path = is_array($upload) ? ($upload['path'] ?? null) : $upload;
+                    if ($path) {
+                        $conditionPaths[] = $path;
+                    }
                 }
             }
             if (!empty($conditionPaths)) {
@@ -452,12 +458,15 @@ final class VisitWebController extends Controller
             $file = $request->file('house_photo');
             if ($file->isValid()) {
                 $upload = app(\App\Services\ImageUploadService::class)->upload($file, 'visits/house');
-                $validated['house_photo_path'] = $upload['path'];
-                $visit->attachments()->create([
-                    'path' => $upload['path'],
-                    'mime' => 'image/jpeg',
-                    'original_name' => 'صورة_المنزل',
-                ]);
+                $path = is_array($upload) ? ($upload['path'] ?? null) : $upload;
+                if ($path) {
+                    $validated['house_photo_path'] = $path;
+                    $visit->attachments()->create([
+                        'path' => $path,
+                        'mime' => $file->getMimeType() ?: 'image/jpeg',
+                        'original_name' => 'صورة_المنزل',
+                    ]);
+                }
             }
         }
 
@@ -467,12 +476,15 @@ final class VisitWebController extends Controller
             foreach ($request->file('condition_photos') as $cFile) {
                 if ($cFile && $cFile->isValid()) {
                     $upload = app(\App\Services\ImageUploadService::class)->upload($cFile, 'visits/conditions');
-                    $existing[] = $upload['path'];
-                    $visit->attachments()->create([
-                        'path' => $upload['path'],
-                        'mime' => 'image/jpeg',
-                        'original_name' => 'مستند_حالة_' . count($existing),
-                    ]);
+                    $path = is_array($upload) ? ($upload['path'] ?? null) : $upload;
+                    if ($path) {
+                        $existing[] = $path;
+                        $visit->attachments()->create([
+                            'path' => $path,
+                            'mime' => $cFile->getMimeType() ?: 'image/jpeg',
+                            'original_name' => 'مستند_حالة_' . count($existing),
+                        ]);
+                    }
                 }
             }
             $validated['condition_photos'] = $existing;
@@ -568,6 +580,9 @@ final class VisitWebController extends Controller
             'before_tumor_notes' => 'nullable|string',
             'after_tumor_notes' => 'nullable|string',
             'treatment_protocol' => 'nullable|string',
+            'medrar_details' => 'nullable|array',
+            'zad_details' => 'nullable|array',
+            'ramadan_details' => 'nullable|array',
             'foundation_manager' => 'nullable|string|max:150',
             'project_manager' => 'nullable|string|max:150',
         ]);

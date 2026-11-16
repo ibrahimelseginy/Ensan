@@ -42,10 +42,10 @@ final class Expense extends Model
     public function guestHouse(): BelongsTo { return $this->belongsTo(GuestHouse::class); }
     public function workspace(): BelongsTo { return $this->belongsTo(Workspace::class); }
     public function beneficiary(): BelongsTo { return $this->belongsTo(Beneficiary::class); }
-    public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
-    public function user(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
+    public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by')->withTrashed(); }
+    public function user(): BelongsTo { return $this->belongsTo(User::class, 'created_by')->withTrashed(); }
     public function treasury(): BelongsTo { return $this->belongsTo(Treasury::class); }
-    public function cancelledBy(): BelongsTo { return $this->belongsTo(User::class, 'cancelled_by'); }
+    public function cancelledBy(): BelongsTo { return $this->belongsTo(User::class, 'cancelled_by')->withTrashed(); }
 
     public function getExpenseDateAttribute(): ?string
     {

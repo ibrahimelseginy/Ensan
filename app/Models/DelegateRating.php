@@ -41,7 +41,7 @@ final class DelegateRating extends Model
 
     public function ratedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'rated_by');
+        return $this->belongsTo(User::class, 'rated_by')->withTrashed();
     }
 
     // Calculate average rating

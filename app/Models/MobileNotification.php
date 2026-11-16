@@ -39,7 +39,7 @@ final class MobileNotification extends Model
 
     public function targetUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'target_user_id');
+        return $this->belongsTo(User::class, 'target_user_id')->withTrashed();
     }
 
     public function scopeForUser(Builder $query, User $user): Builder

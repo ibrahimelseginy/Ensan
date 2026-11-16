@@ -109,12 +109,12 @@ final class EmployeeEvaluation extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function evaluator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'evaluator_id');
+        return $this->belongsTo(User::class, 'evaluator_id')->withTrashed();
     }
 
     /**

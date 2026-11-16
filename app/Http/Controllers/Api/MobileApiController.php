@@ -1443,9 +1443,11 @@ final class MobileApiController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'type' => 'required|string|in:annual,casual,sick,unpaid,emergency,other',
+            'type' => 'required|string|in:annual,casual,sick,unpaid,emergency,permission,other',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'from_time' => 'nullable|required_if:type,permission|date_format:H:i',
+            'to_time' => 'nullable|required_if:type,permission|date_format:H:i|after:from_time',
             'reason' => 'required|string',
         ]);
 
@@ -1455,9 +1457,9 @@ final class MobileApiController extends Controller
 
         $startDate = \Carbon\Carbon::parse($request->start_date);
         $endDate = \Carbon\Carbon::parse($request->end_date);
-        $days = $startDate->diffInDays($endDate) + 1;
+        $days = $request->type === 'permission' ? 0 : ($startDate->diffInDays($endDate) + 1);
 
-        if ($request->type !== 'unpaid') {
+        if (!in_array($request->type, ['unpaid', 'permission'], true)) {
             if (($user->leave_balance ?? 0) < $days) {
                 return response()->json([
                     'status' => 'error',
@@ -1466,7 +1468,7 @@ final class MobileApiController extends Controller
             }
         }
 
-        $data = $request->only(['type', 'start_date', 'end_date', 'reason']);
+        $data = $request->only(['type', 'start_date', 'end_date', 'from_time', 'to_time', 'reason']);
         $result = app(\App\Services\LeaveService::class)->createLeave($data, $user->id);
 
         if ($result instanceof \App\Models\ChangeRequest) {

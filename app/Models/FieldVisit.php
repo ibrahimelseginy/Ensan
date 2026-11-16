@@ -72,6 +72,9 @@ final class FieldVisit extends Model
         'before_tumor_notes',
         'after_tumor_notes',
         'treatment_protocol',
+        'medrar_details',
+        'zad_details',
+        'ramadan_details',
         'foundation_manager',
         'project_manager',
     ];
@@ -81,6 +84,9 @@ final class FieldVisit extends Model
         'has_cancer_patient' => 'boolean',
         'family_members' => 'array',
         'condition_photos' => 'array',
+        'medrar_details' => 'array',
+        'zad_details' => 'array',
+        'ramadan_details' => 'array',
         'income_job' => 'decimal:2',
         'income_daily_work' => 'decimal:2',
         'income_pension' => 'decimal:2',
@@ -115,7 +121,7 @@ final class FieldVisit extends Model
 
     public function researcher()
     {
-        return $this->belongsTo(User::class, 'researcher_id');
+        return $this->belongsTo(User::class, 'researcher_id')->withTrashed();
     }
 
     public function attachments()

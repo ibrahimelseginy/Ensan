@@ -44,7 +44,7 @@ final class Complaint extends Model
         return route('complaint.track', ['code' => $this->tracking_code]);
     }
 
-    public function against(): BelongsTo { return $this->belongsTo(User::class, 'against_user_id'); }
+    public function against(): BelongsTo { return $this->belongsTo(User::class, 'against_user_id')->withTrashed(); }
 
     public function getSourceNameAttribute(): string
     {
@@ -61,7 +61,7 @@ final class Complaint extends Model
             return \App\Models\Beneficiary::find($this->source_id)?->full_name ?? ('مستفيد #' . $this->source_id);
         }
         if ($this->source_type === 'employee') {
-            return \App\Models\User::find($this->source_id)?->name ?? ('موظف #' . $this->source_id);
+            return \App\Models\User::withTrashed()->find($this->source_id)?->name ?? ('موظف #' . $this->source_id);
         }
         return 'غير محدد';
     }
@@ -72,7 +72,7 @@ final class Complaint extends Model
             'website' => \App\Models\WebContactMessage::find($this->source_id),
             'donor' => \App\Models\Donor::find($this->source_id),
             'beneficiary' => \App\Models\Beneficiary::find($this->source_id),
-            'employee' => \App\Models\User::find($this->source_id),
+            'employee' => \App\Models\User::withTrashed()->find($this->source_id),
             default => null,
         };
     }

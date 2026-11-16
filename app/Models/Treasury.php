@@ -67,7 +67,7 @@ final class Treasury extends Model
 
     public function manager(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'manager_id');
+        return $this->belongsTo(User::class, 'manager_id')->withTrashed();
     }
 
     public function donations(): HasMany

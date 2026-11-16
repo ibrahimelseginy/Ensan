@@ -8,8 +8,11 @@
             <h1 class="hero-title">لوحة التحكم المركزية HR</h1>
             <p class="hero-subtitle">تحليل الأداء، الرواتب، والحضور بتقنيات الذكاء الاصطناعي</p>
         </div>
-        <div class="d-flex align-items-center">
-             <div class="glass-tag me-3 d-none d-md-block">
+        <div class="d-flex align-items-center gap-2">
+             <a href="{{ route('hr.documents.index') }}" class="btn btn-light text-primary fw-bold rounded-pill px-3 shadow-sm">
+                <i class="bi bi-folder2-open me-1"></i> ملفات HR (تقارير السيشنز والفعاليات)
+             </a>
+             <div class="glass-tag me-2 d-none d-md-block">
                 <i class="bi bi-cpu me-2"></i>تحليل ذكي
              </div>
             <i class="bi bi-person-lines-fill hero-icon d-none d-md-block"></i>

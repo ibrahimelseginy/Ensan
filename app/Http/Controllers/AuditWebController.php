@@ -74,7 +74,7 @@ final class AuditWebController extends Controller
         $audits = (clone $base)->orderByDesc('id')->paginate(20);
 
         $userIds = $audits->pluck('user_id')->filter()->unique();
-        $usersMap = User::whereIn('id', $userIds)->get()->keyBy('id');
+        $usersMap = User::withTrashed()->whereIn('id', $userIds)->get()->keyBy('id');
 
         $stats = [
             'total' => (int) $base->count(),

@@ -34,6 +34,6 @@ final class CampaignDailyMenu extends Model
 
     public function responsible(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'responsible_user_id');
+        return $this->belongsTo(User::class, 'responsible_user_id')->withTrashed();
     }
 }

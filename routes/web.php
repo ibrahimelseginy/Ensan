@@ -533,9 +533,22 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('permission:hr.evaluations|manage_employees|manage_volunteers_hr')->group(function () {
         Route::get('hr/dashboard', [\App\Http\Controllers\HrDashboardWebController::class, 'index'])->name('hr.dashboard');
         Route::get('hr/evaluations', [HrEvaluationWebController::class, 'index'])->name('hr.evaluations');
+        Route::get('hr/evaluations/employees', [HrEvaluationWebController::class, 'employees'])->name('hr.evaluations.employees');
+        Route::get('hr/evaluations/volunteers', [HrEvaluationWebController::class, 'volunteers'])->name('hr.evaluations.volunteers');
         Route::post('employee-evaluations', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'store'])->name('employee-evaluations.store');
         Route::put('employee-evaluations/{evaluation}', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'update'])->name('employee-evaluations.update');
         Route::delete('employee-evaluations/{evaluation}', [\App\Http\Controllers\EmployeeEvaluationWebController::class, 'destroy'])->name('employee-evaluations.destroy');
+
+        Route::post('volunteer-evaluations', [\App\Http\Controllers\VolunteerEvaluationWebController::class, 'store'])->name('volunteer-evaluations.store');
+        Route::delete('volunteer-evaluations/{evaluation}', [\App\Http\Controllers\VolunteerEvaluationWebController::class, 'destroy'])->name('volunteer-evaluations.destroy');
+    });
+
+    Route::middleware('permission:hr_documents.view|hr_documents.create|hr.evaluations|manage_employees|manage_volunteers_hr')->group(function () {
+        Route::get('hr/documents', [\App\Http\Controllers\HrDocumentWebController::class, 'index'])->name('hr.documents.index');
+        Route::get('hr/documents/{hrDocument}/view', [\App\Http\Controllers\HrDocumentWebController::class, 'show'])->name('hr.documents.show');
+        Route::post('hr/documents', [\App\Http\Controllers\HrDocumentWebController::class, 'store'])->name('hr.documents.store');
+        Route::put('hr/documents/{hrDocument}', [\App\Http\Controllers\HrDocumentWebController::class, 'update'])->name('hr.documents.update');
+        Route::delete('hr/documents/{hrDocument}', [\App\Http\Controllers\HrDocumentWebController::class, 'destroy'])->name('hr.documents.destroy');
     });
 
     Route::middleware('permission:volunteers.view|manage_volunteers_hr')->group(function () {
@@ -1084,6 +1097,20 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::middleware('permission:tasks.view|view_own_tasks|employee_tasks.view|employee_tasks.view_own|volunteer_tasks.view')->group(function () {
         Route::resource('tasks', TaskWebController::class);
+    });
+
+    // --- System Backup & Retention Module (Explicit SuperAdmin or backups.* permission) ---
+    Route::prefix('system/backups')->name('backups.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BackupWebController::class, 'index'])->name('index');
+        Route::post('/create', [\App\Http\Controllers\BackupWebController::class, 'store'])->name('store');
+        Route::post('/upload', [\App\Http\Controllers\BackupWebController::class, 'upload'])->name('upload');
+        Route::post('/settings', [\App\Http\Controllers\BackupWebController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/prune', [\App\Http\Controllers\BackupWebController::class, 'prune'])->name('prune');
+        Route::post('/{snapshot}/pin', [\App\Http\Controllers\BackupWebController::class, 'togglePin'])->name('pin');
+        Route::post('/{snapshot}/verify', [\App\Http\Controllers\BackupWebController::class, 'verify'])->name('verify');
+        Route::post('/{snapshot}/download', [\App\Http\Controllers\BackupWebController::class, 'download'])->name('download');
+        Route::post('/{snapshot}/restore', [\App\Http\Controllers\BackupWebController::class, 'restore'])->name('restore');
+        Route::delete('/{snapshot}', [\App\Http\Controllers\BackupWebController::class, 'destroy'])->name('destroy');
     });
 
 });

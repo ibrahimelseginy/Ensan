@@ -25,7 +25,7 @@ final class Workspace extends Model
 
     public function manager()
     {
-        return $this->belongsTo(User::class, 'manager_id');
+        return $this->belongsTo(User::class, 'manager_id')->withTrashed();
     }
 
     public function rentals()

@@ -84,7 +84,7 @@ final class MobileCaseApplication extends Model
     public function guestHouse() { return $this->belongsTo(GuestHouse::class); }
     public function beneficiary() { return $this->belongsTo(Beneficiary::class); }
     public function stay() { return $this->belongsTo(GuestHouseStay::class, 'guest_house_stay_id'); }
-    public function assignedResearcher() { return $this->belongsTo(User::class, 'assigned_researcher_id'); }
+    public function assignedResearcher() { return $this->belongsTo(User::class, 'assigned_researcher_id')->withTrashed(); }
     public function fieldVisit() { return $this->belongsTo(FieldVisit::class, 'field_visit_id'); }
 
     public function getIdImageUrlAttribute(): ?string

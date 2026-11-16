@@ -29,7 +29,7 @@ class User extends Authenticatable
 
     public static function nextVolunteerCode(): string
     {
-        $codes = self::query()
+        $codes = self::withTrashed()
             ->where('code', 'like', 'V-%')
             ->pluck('code');
 
@@ -159,6 +159,11 @@ class User extends Authenticatable
     public function employeeEvaluations(): HasMany
     {
         return $this->hasMany(EmployeeEvaluation::class)->orderByDesc('evaluation_date')->orderByDesc('id');
+    }
+
+    public function volunteerEvaluations(): HasMany
+    {
+        return $this->hasMany(VolunteerEvaluation::class)->orderByDesc('evaluation_date')->orderByDesc('id');
     }
 
     public function latestEvaluation()

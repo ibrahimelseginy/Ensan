@@ -689,102 +689,144 @@
 
     {{-- New Evaluation Modal --}}
     <div class="modal fade" id="newEvaluationModal" tabindex="-1" aria-labelledby="newEvaluationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <form action="{{ route('employee-evaluations.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="user_id" value="{{ $user->id }}">
-                    <div class="modal-header bg-primary text-white py-3">
-                        <h5 class="modal-title fw-bold" id="newEvaluationModalLabel">
-                            <i class="bi bi-award-fill me-2 text-warning"></i> تسجيل تقييم أداء للموظف: {{ $user->name }}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable my-3">
+            <form action="{{ route('employee-evaluations.store') }}" method="POST" class="modal-content border-0 shadow-lg d-flex flex-column" style="max-height: 92vh;">
+                @csrf
+                <input type="hidden" name="user_id" value="{{ $user->id }}">
+                <div class="modal-header bg-primary text-white py-3 flex-shrink-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="icon-circle bg-white text-primary rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 38px; height: 38px;">
+                            <i class="bi bi-award-fill text-warning fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="newEvaluationModalLabel">تسجيل تقييم أداء للموظف: {{ $user->name }}</h5>
+                            <small class="text-white-50">مصفوفة التقييم الرسمية المعتمدة (10 بنود موزونة بإجمالي 100 درجة)</small>
+                        </div>
                     </div>
-                    <div class="modal-body p-4">
-                        {{-- Live Score Banner --}}
-                        <div class="p-3 mb-4 rounded-4 text-center border shadow-xs" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-color: rgba(139, 92, 246, 0.3) !important;">
-                            <div class="row align-items-center">
-                                <div class="col-4 border-end">
-                                    <div class="small text-muted fw-bold">المجموع المحسوب</div>
-                                    <div class="h3 fw-bolder text-primary mb-0 font-monospace" id="modalLiveTotal">100.0</div>
-                                    <div class="x-small text-muted">من 100 درجة</div>
-                                </div>
-                                <div class="col-4 border-end">
-                                    <div class="small text-muted fw-bold">النسبة المئوية</div>
-                                    <div class="h4 fw-bold text-dark mb-0 font-monospace" id="modalLivePct">100%</div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="small text-muted fw-bold mb-1">التقدير المتوقع</div>
-                                    <span id="modalLiveRating" class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-xs">متميز</span>
-                                </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3 p-md-4" style="overflow-y: auto !important; -webkit-overflow-scrolling: touch; flex: 1 1 auto;">
+                    {{-- Live Score Sticky / Top Banner --}}
+                    <div class="p-3 mb-3 rounded-4 border shadow-xs" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%); border-color: rgba(139, 92, 246, 0.25) !important;">
+                        <div class="row align-items-center text-center g-2">
+                            <div class="col-4 border-end">
+                                <div class="x-small text-muted fw-bold">المجموع المحسوب</div>
+                                <div class="h3 fw-bolder text-primary mb-0 font-monospace" id="modalLiveTotal">100.0</div>
+                                <div class="x-small text-muted">من 100 درجة</div>
                             </div>
-                            <div class="x-small text-muted mt-2 border-top pt-2">
-                                <span class="badge bg-light text-dark border">الدرجة الكبرى لكل بند: 5.0</span>
-                                <span class="badge bg-light text-dark border ms-1">الحد الأدنى: 0.5</span>
-                                <span class="ms-2">90%+ متميز | 80%-89% جيد جداً | 65%-79% جيد | 50%-64% مقبول | أقل من 50% ضعيف</span>
+                            <div class="col-4 border-end">
+                                <div class="x-small text-muted fw-bold">النسبة المئوية</div>
+                                <div class="h3 fw-bold text-dark mb-0 font-monospace" id="modalLivePct">100%</div>
+                                <div class="x-small text-muted">النسبة الإجمالية</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="x-small text-muted fw-bold mb-1">التقدير المتوقع</div>
+                                <span id="modalLiveRating" class="badge bg-success fs-6 px-3 py-1.5 rounded-pill shadow-xs">متميز</span>
                             </div>
                         </div>
-
-                        {{-- Metadata --}}
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small">تاريخ التقييم <span class="text-danger">*</span></label>
-                                <input type="date" name="evaluation_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        <div class="x-small text-muted mt-2 pt-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-1">
+                            <div>
+                                <span class="badge bg-white text-dark border">الدرجة الكبرى: 5.0</span>
+                                <span class="badge bg-white text-dark border ms-1">الحد الأدنى: 0.5</span>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small">فترة التقييم (مثال: نوفمبر 2026 أو 2026-11)</label>
-                                <input type="text" name="evaluation_period" class="form-control" value="{{ date('Y-m') }}" placeholder="2026-11" required>
+                            <div class="fw-semibold">
+                                90%+ متميز | 80%-89% جيد جداً | 65%-79% جيد | 50%-64% مقبول | أقل من 50% ضعيف
                             </div>
                         </div>
+                    </div>
 
-                        {{-- 10 Criteria Inputs --}}
-                        <h6 class="fw-bold text-dark mb-3 border-bottom pb-2">
-                            <i class="bi bi-ui-checks me-1 text-primary"></i> درجات البنود العشرة (أدخل درجة من 0.5 إلى 5.0 لكل بند):
+                    {{-- Metadata Row --}}
+                    <div class="row g-2 mb-3 bg-light p-2 rounded-3 border">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small mb-1">تاريخ التقييم <span class="text-danger">*</span></label>
+                            <input type="date" name="evaluation_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small mb-1">فترة التقييم <span class="text-danger">*</span></label>
+                            <input type="text" name="evaluation_period" class="form-control form-control-sm" value="{{ date('Y-m') }}" placeholder="مثال: 2026-11 أو نوفمبر 2026" required>
+                        </div>
+                    </div>
+
+                    {{-- 10 Criteria Structured Table --}}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-dark mb-0">
+                            <i class="bi bi-ui-checks-grid me-1 text-primary"></i> بنود التقييم العشرة كاملة (أدخل درجة من 0.5 إلى 5.0 لكل بند):
                         </h6>
-                        <div class="row g-3 mb-4">
-                            @foreach(\App\Models\EmployeeEvaluation::CRITERIA as $k => $c)
-                                <div class="col-md-6">
-                                    <div class="p-3 border rounded-3 bg-light-subtle h-100">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="form-label fw-bold mb-0 text-dark small">{{ $c['label'] }}</label>
-                                            <span class="badge bg-primary-subtle text-primary font-monospace">وزن {{ ($c['weight'] * 100) }}%</span>
-                                        </div>
-                                        <div class="x-small text-muted mb-2">{{ $c['desc'] }}</div>
-                                        <div class="input-group">
-                                            <input type="number" step="0.1" min="0.5" max="5.0" name="{{ $k }}"
-                                                   class="form-control font-monospace fw-bold eval-criteria-input text-center"
-                                                   data-weight="{{ $c['weight'] }}" value="5.0" required>
-                                            <span class="input-group-text bg-white text-muted small">من 5.0</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+                        <span class="badge bg-primary text-white font-monospace">10 بنود = 100%</span>
+                    </div>
 
-                        {{-- Qualitative Inputs --}}
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small"><i class="bi bi-hand-thumbs-up text-success me-1"></i> نقاط القوة والتميز (اختياري)</label>
-                                <textarea name="strengths" rows="2" class="form-control" placeholder="أبرز الإنجازات والصفات الإيجابية للموظف..."></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small"><i class="bi bi-graph-up-arrow text-warning me-1"></i> مجالات التحسين والتطوير (اختياري)</label>
-                                <textarea name="improvements" rows="2" class="form-control" placeholder="النقاط التي تحتاج إلى تطوير ومتابعة..."></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold small"><i class="bi bi-chat-left-text text-secondary me-1"></i> ملاحظات الإدارة وتوصيات الموارد البشرية</label>
-                                <textarea name="notes" rows="2" class="form-control" placeholder="أي توصيات عامة بخصوص الترقية أو المكافأة أو التدريب..."></textarea>
-                            </div>
+                    <div class="table-responsive rounded-3 border mb-3">
+                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35px;" class="text-center">#</th>
+                                    <th>اسم البند والمعيار</th>
+                                    <th style="width: 95px;" class="text-center">وزن البند</th>
+                                    <th style="width: 170px;" class="text-center">الدرجة (0.5 - 5.0)</th>
+                                    <th style="width: 100px;" class="text-center">الدرجة المحسوبة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $critIndex = 1; @endphp
+                                @foreach(\App\Models\EmployeeEvaluation::CRITERIA as $k => $c)
+                                    <tr>
+                                        <td class="text-center fw-bold text-muted">{{ $critIndex++ }}</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ $c['label'] }}</div>
+                                            <div class="text-muted" style="font-size: 0.78rem;">{{ $c['desc'] }}</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
+                                                {{ ($c['weight'] * 100) }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" step="0.1" min="0.5" max="5.0" name="{{ $k }}"
+                                                       class="form-control font-monospace fw-bold eval-criteria-input text-center"
+                                                       data-weight="{{ $c['weight'] }}" data-key="{{ $k }}" value="5.0" required>
+                                                <span class="input-group-text bg-white text-muted small">/ 5.0</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center font-monospace fw-bold text-primary">
+                                            <span id="score_{{ $k }}">{{ number_format($c['weight'] * 100, 1) }}</span>
+                                            <span class="text-muted small fw-normal">/ {{ ($c['weight'] * 100) }}</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Qualitative Inputs --}}
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small mb-1"><i class="bi bi-hand-thumbs-up text-success me-1"></i> نقاط القوة والتميز (اختياري)</label>
+                            <textarea name="strengths" rows="2" class="form-control form-control-sm" placeholder="أبرز الإنجازات والصفات الإيجابية للموظف..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small mb-1"><i class="bi bi-graph-up-arrow text-warning me-1"></i> مجالات التحسين والتطوير (اختياري)</label>
+                            <textarea name="improvements" rows="2" class="form-control form-control-sm" placeholder="النقاط التي تحتاج إلى تطوير ومتابعة..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small mb-1"><i class="bi bi-chat-left-text text-secondary me-1"></i> ملاحظات الإدارة وتوصيات الموارد البشرية</label>
+                            <textarea name="notes" rows="2" class="form-control form-control-sm" placeholder="أي توصيات عامة بخصوص الترقية أو المكافأة أو التدريب..."></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light py-3">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        <button type="submit" class="btn btn-primary px-4 fw-bold">
-                            <i class="bi bi-check-lg me-1"></i> حفظ التقييم واعتماده
+                </div>
+                <div class="modal-footer bg-light py-2.5 px-4 flex-shrink-0 d-flex justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        <span class="fw-bold text-dark">المجموع الإجمالي:</span>
+                        <span id="footerTotalScore" class="font-monospace fw-bold text-primary fs-6">100.0</span> / 100
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm">
+                            <i class="bi bi-check-circle-fill me-1"></i> حفظ التقييم واعتماده
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -798,6 +840,11 @@
                     if (val < 0) val = 0;
                     if (val > 5.0) val = 5.0;
                     let weight = parseFloat(input.dataset.weight) || 0;
+                    let k = input.dataset.key;
+                    let itemScore = Math.round((val * weight * 20) * 10) / 10;
+                    const itemEl = document.getElementById('score_' + k);
+                    if (itemEl) itemEl.textContent = itemScore.toFixed(1);
+
                     weightedSum += (val * weight);
                 });
 
@@ -805,28 +852,30 @@
                 let pct = totalScore;
 
                 let rating = 'ضعيف';
-                let badgeClass = 'badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-xs';
+                let badgeClass = 'badge bg-danger fs-6 px-3 py-1.5 rounded-pill shadow-xs';
 
                 if (pct >= 90) {
                     rating = 'متميز';
-                    badgeClass = 'badge bg-success fs-6 px-3 py-2 rounded-pill shadow-xs';
+                    badgeClass = 'badge bg-success fs-6 px-3 py-1.5 rounded-pill shadow-xs';
                 } else if (pct >= 80) {
                     rating = 'جيد جداً';
-                    badgeClass = 'badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-xs';
+                    badgeClass = 'badge bg-primary fs-6 px-3 py-1.5 rounded-pill shadow-xs';
                 } else if (pct >= 65) {
                     rating = 'جيد';
-                    badgeClass = 'badge bg-info text-dark fs-6 px-3 py-2 rounded-pill shadow-xs';
+                    badgeClass = 'badge bg-info text-dark fs-6 px-3 py-1.5 rounded-pill shadow-xs';
                 } else if (pct >= 50) {
                     rating = 'مقبول';
-                    badgeClass = 'badge bg-warning text-dark fs-6 px-3 py-2 rounded-pill shadow-xs';
+                    badgeClass = 'badge bg-warning text-dark fs-6 px-3 py-1.5 rounded-pill shadow-xs';
                 }
 
                 const totalEl = document.getElementById('modalLiveTotal');
                 const pctEl = document.getElementById('modalLivePct');
                 const ratingEl = document.getElementById('modalLiveRating');
+                const footerTotalEl = document.getElementById('footerTotalScore');
 
                 if (totalEl) totalEl.textContent = totalScore.toFixed(1);
                 if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
+                if (footerTotalEl) footerTotalEl.textContent = totalScore.toFixed(1);
                 if (ratingEl) {
                     ratingEl.textContent = rating;
                     ratingEl.className = badgeClass;

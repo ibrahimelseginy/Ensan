@@ -13,7 +13,7 @@ final class GuestHouseCustody extends Model
     public function treasury() { return $this->belongsTo(Treasury::class); }
     public function warehouse() { return $this->belongsTo(Warehouse::class); }
     public function item() { return $this->belongsTo(Item::class); }
-    public function user() { return $this->belongsTo(User::class); }
+    public function user() { return $this->belongsTo(User::class)->withTrashed(); }
 
     public function getCategoryLabelAttribute(): string
     {

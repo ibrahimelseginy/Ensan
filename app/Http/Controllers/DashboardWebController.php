@@ -327,7 +327,7 @@ final class DashboardWebController extends Controller
             $lastPayroll = Payroll::where('user_id', $user->id)->orderByDesc('month')->first();
             $takenDays = \App\Models\Leave::where('user_id', $user->id)
                 ->where('status', 'approved')
-                ->where('type', '!=', 'unpaid')
+                ->whereNotIn('type', ['unpaid', 'permission'])
                 ->whereYear('start_date', now()->year)
                 ->get()->sum('days');
 
@@ -363,7 +363,7 @@ final class DashboardWebController extends Controller
             $lastPayroll = Payroll::where('user_id', $user->id)->orderByDesc('month')->first();
             $takenDays = \App\Models\Leave::where('user_id', $user->id)
                 ->where('status', 'approved')
-                ->where('type', '!=', 'unpaid')
+                ->whereNotIn('type', ['unpaid', 'permission'])
                 ->whereYear('start_date', now()->year)
                 ->get()->sum('days');
 

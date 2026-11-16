@@ -688,6 +688,305 @@
       </div>
     </div>
 
+    <!-- ============================================================== -->
+    <!-- القسم الخاص بمشروع مدرار (مياه، أسقف، إعمار وترميم) -->
+    <!-- ============================================================== -->
+    @php
+      $medrar = old('medrar_details', $caseApplication?->medrar_details ?? []);
+      if (!is_array($medrar)) $medrar = [];
+    @endphp
+    <div id="medrarSection" class="research-card border-info shadow-sm mb-4" style="{{ $currentProjectPath === 'medrar' ? '' : 'display: none;' }}">
+      <div class="research-card-header bg-info text-white d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-droplet-half fs-5"></i>
+          <span class="fw-bold">استمارة بحث مشروع مدرار — (مياه الشرب، الأسقف والترميم، إعمار وضل حيطة)</span>
+        </div>
+        <span class="badge bg-white text-info fw-bold px-3 py-1">مشروع مدرار</span>
+      </div>
+      <div class="research-card-body p-4">
+        <div class="alert alert-info border-0 rounded-3 mb-4 small d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle-fill fs-5"></i>
+          <span>(ملحوظة ميدانية: يتم معاينة جدران وسقف المنزل والتأكد من إمكانية صب الخرسانة أو الترميم، وفحص خط المياه العمومي ومطابقة إمكانية توصيل وصلة أو عداد مع تصوير الوضع الراهن).</span>
+        </div>
+
+        {{-- 1. دليل القرية والبيانات الأساسية للموقع --}}
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt-fill text-info"></i>
+          <span>بيانات دليل القرية وحالة الملكية</span>
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">اسم دليل القرية</label>
+            <input type="text" name="medrar_details[village_guide_name]" value="{{ $medrar['village_guide_name'] ?? '' }}" class="form-control" placeholder="اسم الدليل بالقرية">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">رقم هاتف دليل القرية</label>
+            <input type="text" name="medrar_details[village_guide_phone]" value="{{ $medrar['village_guide_phone'] ?? '' }}" class="form-control" placeholder="01xxxxxxxxx">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">ملكية المنزل</label>
+            <select name="medrar_details[house_ownership_type]" class="form-select">
+              <option value="">اختر حالة الملكية...</option>
+              <option value="ملك" @selected(($medrar['house_ownership_type'] ?? '') === 'ملك')>ملك</option>
+              <option value="إيجار" @selected(($medrar['house_ownership_type'] ?? '') === 'إيجار')>إيجار</option>
+              <option value="وضع يد" @selected(($medrar['house_ownership_type'] ?? '') === 'وضع يد')>وضع يد</option>
+              <option value="أرض أوقاف" @selected(($medrar['house_ownership_type'] ?? '') === 'أرض أوقاف')>أرض أوقاف</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">عدد أدوار المنزل</label>
+            <input type="text" name="medrar_details[house_floors_count]" value="{{ $medrar['house_floors_count'] ?? '' }}" class="form-control" placeholder="مثال: دور أرضي فقط، دورين">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">مساحة المنزل (متر مربع)</label>
+            <input type="text" name="medrar_details[house_area_sqm]" value="{{ $medrar['house_area_sqm'] ?? '' }}" class="form-control" placeholder="مثال: 65 م²">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">المنزل كوردون مباني؟</label>
+            <select name="medrar_details[is_cordon_buildings]" class="form-select">
+              <option value="">اختر...</option>
+              <option value="نعم" @selected(($medrar['is_cordon_buildings'] ?? '') === 'نعم')>نعم</option>
+              <option value="لا" @selected(($medrar['is_cordon_buildings'] ?? '') === 'لا')>لا</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">يوجد أوراق تثبت الملكية؟</label>
+            <select name="medrar_details[has_ownership_papers]" class="form-select">
+              <option value="">اختر...</option>
+              <option value="نعم" @selected(($medrar['has_ownership_papers'] ?? '') === 'نعم')>نعم</option>
+              <option value="لا" @selected(($medrar['has_ownership_papers'] ?? '') === 'لا')>لا</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">هل ورق ملكية البيت باسم المالك؟</label>
+            <select name="medrar_details[papers_in_owner_name]" class="form-select">
+              <option value="">اختر...</option>
+              <option value="نعم" @selected(($medrar['papers_in_owner_name'] ?? '') === 'نعم')>نعم</option>
+              <option value="لا" @selected(($medrar['papers_in_owner_name'] ?? '') === 'لا')>لا</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">هل يشيل صبة خرسانية أم لا؟</label>
+            <select name="medrar_details[can_bear_concrete_roof]" class="form-select">
+              <option value="">اختر...</option>
+              <option value="نعم - يتحمل صبة خرسانية" @selected(($medrar['can_bear_concrete_roof'] ?? '') === 'نعم - يتحمل صبة خرسانية')>نعم - يتحمل صبة خرسانية</option>
+              <option value="لا - يحتاج سقف خشب / صاج فقط" @selected(($medrar['can_bear_concrete_roof'] ?? '') === 'لا - يحتاج سقف خشب / صاج فقط')>لا - يحتاج سقف خشب / صاج فقط</option>
+            </select>
+          </div>
+        </div>
+
+        {{-- 2. مياه الشرب وتوصيل المياه (نوع الوصلة رصاصي ولا خضراء) --}}
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-moisture text-primary"></i>
+          <span>مياه الشرب ونوع الوصلة المطلوبة</span>
+        </h6>
+        <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">احتياج المنزل من المياه</label>
+            <select name="medrar_details[water_connection_needed]" class="form-select">
+              <option value="">اختر الاحتياج...</option>
+              <option value="عداد مياه فقط" @selected(($medrar['water_connection_needed'] ?? '') === 'عداد مياه فقط')>عداد مياه فقط</option>
+              <option value="وصلة مياه كاملة" @selected(($medrar['water_connection_needed'] ?? '') === 'وصلة مياه كاملة')>وصلة مياه كاملة</option>
+              <option value="عداد + وصلة كاملة" @selected(($medrar['water_connection_needed'] ?? '') === 'عداد + وصلة كاملة')>عداد + وصلة كاملة</option>
+              <option value="غير محتاج مياه" @selected(($medrar['water_connection_needed'] ?? '') === 'غير محتاج مياه')>غير محتاج مياه</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-success">
+              <i class="bi bi-check-circle-fill me-1"></i> نوع الوصلة (رصاصي أم خضراء)
+            </label>
+            <select name="medrar_details[water_connection_type]" class="form-select border-success fw-bold">
+              <option value="">اختر نوع الوصلة...</option>
+              <option value="رصاصي" @selected(($medrar['water_connection_type'] ?? '') === 'رصاصي')>وصلة رصاصي</option>
+              <option value="خضراء" @selected(($medrar['water_connection_type'] ?? '') === 'خضراء')>وصلة خضراء</option>
+            </select>
+            <small class="text-muted d-block mt-1">تحديد نوع وصلة المياه بحسب فحص شبكة القرية والخط العمومي.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">ملاحظات توصيل المياه وبعد الخط</label>
+            <input type="text" name="medrar_details[water_notes]" value="{{ $medrar['water_notes'] ?? '' }}" class="form-control" placeholder="مسافة الخط العمومي، وجود حفر...">
+          </div>
+        </div>
+
+        {{-- 3. الإعمار وضل حيطة (الفرش والأجهزة والأثاث) --}}
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-house-gear-fill text-warning"></i>
+          <span>الإعمار والتجهيزات وفرش المنزل (ضل حيطة)</span>
+        </h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <label class="form-label">عدد السراير الموجودة</label>
+            <input type="number" min="0" name="medrar_details[beds_count]" value="{{ $medrar['beds_count'] ?? '' }}" class="form-control" placeholder="0">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">عدد المراتب الموجودة</label>
+            <input type="number" min="0" name="medrar_details[mattresses_count]" value="{{ $medrar['mattresses_count'] ?? '' }}" class="form-control" placeholder="0">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">هل يوجد حمام كامل بأدواته الصحية؟</label>
+            <select name="medrar_details[has_complete_bathroom]" class="form-select">
+              <option value="">اختر...</option>
+              <option value="نعم - حمام كامل" @selected(($medrar['has_complete_bathroom'] ?? '') === 'نعم - حمام كامل')>نعم - حمام كامل</option>
+              <option value="لا - يحتاج تأسيس أو أدوات صحية" @selected(($medrar['has_complete_bathroom'] ?? '') === 'لا - يحتاج تأسيس أو أدوات صحية')>لا - يحتاج تأسيس أو أدوات صحية</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">نوع الأجهزة الموجودة بالمنزل</label>
+            <textarea name="medrar_details[existing_appliances]" class="form-control" rows="2" placeholder="تلفزيون قديم، ثلاجة، غسالة عادية، بوتاجاز مسطح...">{{ $medrar['existing_appliances'] ?? '' }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">الأثاث أو الأجهزة الغير موجودة والمطلوبة</label>
+            <textarea name="medrar_details[missing_appliances_furniture]" class="form-control" rows="2" placeholder="سراير إضافية، دواليب، ثلاجة، غسالة، مطبخ...">{{ $medrar['missing_appliances_furniture'] ?? '' }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">الناقص من التجهيزات الأساسية في المنزل (تشطيب، دهان، أبواب، شبابيك... إلخ)</label>
+            <input type="text" name="medrar_details[missing_basic_finishes]" value="{{ $medrar['missing_basic_finishes'] ?? '' }}" class="form-control" placeholder="أبواب وشبابيك، محارة، دهان، سباكة...">
+          </div>
+        </div>
+
+        {{-- 4. أسئلة إضافية --}}
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-question-circle-fill text-secondary"></i>
+          <span>معلومات اجتماعية وصحية إضافية</span>
+        </h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">هل الأسرة بها أيتام، مرضى أورام، أو أمراض مزمنة؟</label>
+            <textarea name="medrar_details[has_special_cases]" class="form-control" rows="2" placeholder="حدد إن وجد أيتام أو أصحاب أمراض مزمنة وأسمائهم...">{{ $medrar['has_special_cases'] ?? '' }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">هل يوجد ديون أو قروض على الأسرة؟</label>
+            <textarea name="medrar_details[has_debts_loans]" class="form-control" rows="2" placeholder="تفاصيل أي ديون أو وصولات أمانة أو قروض...">{{ $medrar['has_debts_loans'] ?? '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- القسم الخاص بمشروع زاد (كفالة أيتام وأسرهم) -->
+    <!-- ============================================================== -->
+    @php
+      $zad = old('zad_details', $caseApplication?->zad_details ?? []);
+      if (!is_array($zad)) $zad = [];
+    @endphp
+    <div id="zadSection" class="research-card border-success shadow-sm mb-4" style="{{ $currentProjectPath === 'zad' ? '' : 'display: none;' }}">
+      <div class="research-card-header bg-success text-white d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-people-fill fs-5"></i>
+          <span class="fw-bold">استمارة بحث كفالة أيتام وأسرهم — مشروع زاد</span>
+        </div>
+        <span class="badge bg-white text-success fw-bold px-3 py-1">مشروع زاد</span>
+      </div>
+      <div class="research-card-body p-4">
+        <div class="alert alert-success border-0 rounded-3 mb-4 small d-flex align-items-center gap-2">
+          <i class="bi bi-shield-check fs-5"></i>
+          <span>(ملحوظة ميدانية: يتم تصوير شهادات الوفاة وصور بطاقات الأم والوصي وشهادات ميلاد الأيتام، وتوثيق قصة الحالة والظروف المعيشية ودراسة الأطفال).</span>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">اسم الزوج / الزوجة المتوفى/ة</label>
+            <input type="text" name="zad_details[spouse_name]" value="{{ $zad['spouse_name'] ?? '' }}" class="form-control" placeholder="اسم الأب أو الأم المتوفاة">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">تاريخ وسبب الوفاة</label>
+            <input type="text" name="zad_details[death_date_and_cause]" value="{{ $zad['death_date_and_cause'] ?? '' }}" class="form-control" placeholder="مثال: 2023 - مرض مفاجئ / حادث">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">عمل الزوج / ة قبل الوفاة</label>
+            <input type="text" name="zad_details[spouse_job_before_death]" value="{{ $zad['spouse_job_before_death'] ?? '' }}" class="form-control" placeholder="مثال: عامل باليومية، موظف...">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">دليل الحالة للمؤسسة</label>
+            <input type="text" name="zad_details[case_guide]" value="{{ $zad['case_guide'] ?? '' }}" class="form-control" placeholder="الشخص أو الجار الذي دل المؤسسة على الحالة">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">احتياج الحالة من التقديم</label>
+            <input type="text" name="zad_details[case_needs_summary]" value="{{ $zad['case_needs_summary'] ?? '' }}" class="form-control" placeholder="كفالة نقدية شهرية، سلة غذائية، دعم دراسي...">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold text-success">
+              <i class="bi bi-journal-text me-1"></i> قصة الحالة والظروف المعيشية للأيتام
+            </label>
+            <textarea name="zad_details[case_story]" class="form-control" rows="3" placeholder="قصة الأسرة بالتفصيل، المعاناة بعد فقدان المعيل، مصدر الإنفاق الحالي وكيفية تدبير المعيشة...">{{ $zad['case_story'] ?? '' }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">وضع البيت وظروف الأسرة (محتاج سقف / ترميم / بنى)</label>
+            <textarea name="zad_details[house_condition]" class="form-control" rows="2" placeholder="حالة الجدران والأسقف، نظافة المسكن، الاحتياجات الإنشائية...">{{ $zad['house_condition'] ?? '' }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">مستوى الأولاد في الدراسة وإمكانية حضورهم بالمؤسسة</label>
+            <textarea name="zad_details[children_education_status]" class="form-control" rows="2" placeholder="المراحل الدراسية، التفوق أو التعثر، القدرة على الحضور للأنشطة والدروس وقت الحاجة...">{{ $zad['children_education_status'] ?? '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- القسم الخاص بمساعدات رمضان (استكشافات وجبات وسلال رمضان) -->
+    <!-- ============================================================== -->
+    @php
+      $ramadan = old('ramadan_details', $caseApplication?->ramadan_details ?? []);
+      if (!is_array($ramadan)) $ramadan = [];
+    @endphp
+    <div id="ramadanSection" class="research-card border-warning shadow-sm mb-4" style="{{ $currentProjectPath === 'ramadan' ? '' : 'display: none;' }}">
+      <div class="research-card-header bg-warning text-dark d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-moon-stars-fill fs-5"></i>
+          <span class="fw-bold">استمارة استكشافات وجبات وسلال رمضان ٢٠٢٦م</span>
+        </div>
+        <span class="badge bg-dark text-white fw-bold px-3 py-1">مساعدات رمضان</span>
+      </div>
+      <div class="research-card-body p-4">
+        <div class="alert alert-warning border-0 rounded-3 mb-4 small d-flex align-items-center gap-2">
+          <i class="bi bi-stars fs-5"></i>
+          <span>(استمارة استكشافات المساعدات الرمضانية: تحديد احتياج وجبات الإفطار المطبوخة وسلال المواد الغذائية للأسر الأولى بالرعاية).</span>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">اسم الزوج / الزوجة</label>
+            <input type="text" name="ramadan_details[spouse_name]" value="{{ $ramadan['spouse_name'] ?? '' }}" class="form-control" placeholder="اسم الزوج أو الزوجة">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold text-dark">هل تود وجبة إفطار مطبوخة في رمضان؟</label>
+            <select name="ramadan_details[wants_cooked_meals]" class="form-select fw-bold border-warning">
+              <option value="">اختر...</option>
+              <option value="نعم - أيوة" @selected(($ramadan['wants_cooked_meals'] ?? '') === 'نعم - أيوة')>نعم (أيوة) — تود وجبة مطبوخة</option>
+              <option value="لا - سلة مواد غذائية فقط" @selected(($ramadan['wants_cooked_meals'] ?? '') === 'لا - سلة مواد غذائية فقط')>لا — تفضل سلة مواد غذائية / كرتونة فقط</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">السبب</label>
+            <input type="text" name="ramadan_details[cooked_meals_reason]" value="{{ $ramadan['cooked_meals_reason'] ?? '' }}" class="form-control" placeholder="مثال: قاعدة لوحدها + بنتها، مريضة، كبار سن...">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ماذا تحب أن تأكل؟ (التفضيلات ونوع الأكل)</label>
+            <input type="text" name="ramadan_details[preferred_meals]" value="{{ $ramadan['preferred_meals'] ?? '' }}" class="form-control" placeholder="نوع الأكلات المناسبة للحالة الصحية والغذائية">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">وصف السكن</label>
+            <input type="text" name="ramadan_details[housing_description]" value="{{ $ramadan['housing_description'] ?? '' }}" class="form-control" placeholder="مثال: عقاري، شقة بسيطة، ريفي...">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">هل تحتاج سلة / كرتونة مواد غذائية رمضانية؟</label>
+            <select name="ramadan_details[needs_food_box]" class="form-select">
+              <option value="نعم" @selected(($ramadan['needs_food_box'] ?? '') !== 'لا')>نعم — تحتاج كرتونة رمضان</option>
+              <option value="لا" @selected(($ramadan['needs_food_box'] ?? '') === 'لا')>لا — مكتفية</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">عدد الوجبات اليومية المطلوبة للأسرة</label>
+            <input type="number" min="1" name="ramadan_details[meals_count_daily]" value="{{ $ramadan['meals_count_daily'] ?? '1' }}" class="form-control" placeholder="1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">اعتماد مسؤول الحملة</label>
+            <input type="text" name="ramadan_details[campaign_officer_name]" value="{{ $ramadan['campaign_officer_name'] ?? 'مسؤول حملة إطعام رمضان' }}" class="form-control">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- أزرار الإجراءات النهائية -->
     <div class="d-flex justify-content-between align-items-center mb-5 p-3 rounded-3 bg-white shadow-sm border">
       <div>
@@ -799,17 +1098,20 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   calculateTotals();
 
-  // 5. Project Eligibility & Conditional Oncology Section Reveal
+  // 5. Project Eligibility & Conditional Specialized Sections Reveal
   const projectButtons = document.querySelectorAll('.project-path-btn');
   const cancerSection = document.getElementById('cancerSection');
+  const medrarSection = document.getElementById('medrarSection');
+  const zadSection = document.getElementById('zadSection');
+  const ramadanSection = document.getElementById('ramadanSection');
   const noticeText = document.getElementById('projectPathNoticeText');
   const hasCancerInput = document.getElementById('hasCancerPatientInput');
 
   const projectNotices = {
     'amal': 'تم تحديد مشروع بعثاء الأمل (أورام): تم فتح استمارة بيانات المريض وتفاصيل العلاج والبروتوكول أدناه لاستكمالها.',
-    'zad': 'تم تحديد مشروع زاد (أيتام): يُرجى التأكد من استيفاء بيانات الأطفال الأيتام في جدول أفراد الأسرة أعلاه تمهيداً لكفالتهم.',
-    'medrar': 'تم تحديد مشروع مدرار (مياه وأسقف وترميم): يُرجى إرفاق صور حالة السقف ووصلات المياه في قسم المرفقات.',
-    'ramadan': 'تم تحديد مساعدات رمضان (سلال غذائية وإطعام): سيتم إدراج الحالة في كشوف التوزيع الموسمي الميداني.',
+    'zad': 'تم تحديد مشروع زاد (أيتام): تم فتح استمارة بحث كفالة أيتام وأسرهم أدناه لاستكمال بيانات الأسرة والوفاة والدراسة.',
+    'medrar': 'تم تحديد مشروع مدرار (مياه، أسقف وترميم): تم فتح استمارة مدرار أدناه لاستكمال بيانات حالة البيت، نوع الوصلة (رصاصي/خضراء)، وتجهيزات السكن.',
+    'ramadan': 'تم تحديد مساعدات رمضان: تم فتح استمارة استكشافات وجبات وسلال رمضان أدناه لتحديد تفضيلات الإطعام والوجبات.',
     'general': 'تم تحديد بحث اجتماعي عام: مساعدات نقدية وعينية عامة وفق المتاح بالجمعية.'
   };
 
@@ -834,17 +1136,23 @@ document.addEventListener('DOMContentLoaded', function () {
       noticeText.textContent = projectNotices[projectKey];
     }
 
-    if (projectKey === 'amal') {
-      if (hasCancerInput) hasCancerInput.value = '1';
-      if (cancerSection) {
-        cancerSection.style.display = 'block';
-        if (shouldScroll) {
-          cancerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
-    } else {
-      if (hasCancerInput) hasCancerInput.value = '0';
-      if (cancerSection) cancerSection.style.display = 'none';
+    if (hasCancerInput) {
+      hasCancerInput.value = (projectKey === 'amal') ? '1' : '0';
+    }
+
+    if (cancerSection) cancerSection.style.display = (projectKey === 'amal') ? 'block' : 'none';
+    if (medrarSection) medrarSection.style.display = (projectKey === 'medrar') ? 'block' : 'none';
+    if (zadSection) zadSection.style.display = (projectKey === 'zad') ? 'block' : 'none';
+    if (ramadanSection) ramadanSection.style.display = (projectKey === 'ramadan') ? 'block' : 'none';
+
+    let targetSection = null;
+    if (projectKey === 'amal') targetSection = cancerSection;
+    else if (projectKey === 'medrar') targetSection = medrarSection;
+    else if (projectKey === 'zad') targetSection = zadSection;
+    else if (projectKey === 'ramadan') targetSection = ramadanSection;
+
+    if (shouldScroll && targetSection) {
+      targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -852,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       const p = this.getAttribute('data-project');
-      setProjectPath(p, p === 'amal');
+      setProjectPath(p, true);
     });
   });
 

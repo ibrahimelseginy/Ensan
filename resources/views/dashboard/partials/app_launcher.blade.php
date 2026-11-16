@@ -773,13 +773,13 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 5. الموارد البشرية HR (Popup) --}}
-        @if($u && $u->hasPermission(['hr.evaluations', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'job_applications.view', 'job_applications.manage']))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات hr">
+        @if($u && $u->hasPermission(['hr.evaluations', 'hr_documents.view', 'hr_documents.create', 'users.view', 'employee_attendance.view', 'employee_attendance.view_own', 'employee_tasks.view', 'employee_tasks.view_own', 'leaves.view', 'leaves.manage', 'payrolls.view', 'volunteers.view', 'volunteer_attendance.view', 'volunteer_attendance.view_own', 'volunteer_hours.view', 'log_volunteer_hours', 'volunteer_tasks.view', 'website.volunteer_requests.view', 'mobile.volunteer_requests.view', 'job_applications.view', 'job_applications.manage']))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppHR" data-category="hr" data-title="الموارد البشرية HR" data-keywords="موظفين متطوعين حضور انصراف رواتب مهام تقييمات ملفات سيشنز فعاليات hr">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.45);">
                 <i class="bi bi-person-lines-fill"></i>
             </div>
             <div class="ensan-app-title">الموارد البشرية HR</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 10 خدمات <i class="bi bi-chevron-down"></i></span>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 12 خدمة <i class="bi bi-chevron-down"></i></span>
         </div>
         @endif
 
@@ -895,13 +895,13 @@ body.theme-dark .launcher-cat-btn.active,
         @endif
 
         {{-- 15. الإعدادات والنظام (Popup) --}}
-        @if($u && ($u->hasPermission(['roles.view', 'audits.view', 'manage_change_requests', 'reports.view', 'users.view', 'data_import.view']) || $u->isSuperAdmin()))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات settings admin reports">
+        @if($u && ($u->hasPermission(['roles.view', 'audits.view', 'manage_change_requests', 'reports.view', 'users.view', 'data_import.view', 'backups.view']) || $u->hasRole(['admin', 'super_admin', 'مدير المؤسسة بالكامل'])))
+        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppSettings" data-category="admin" data-title="الإعدادات والنظام والنسخ الاحتياطي" data-keywords="مستخدمين صلاحيات أدوار سجل تدقيق طلبات تعديل تقارير شاملة إحصاءات نسخ احتياطي استعادة settings admin reports backup">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #475569, #64748b); box-shadow: 0 10px 20px -5px rgba(71, 85, 105, 0.45);">
                 <i class="bi bi-gear-wide-connected"></i>
             </div>
             <div class="ensan-app-title">الإعدادات والنظام</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 5 خدمات <i class="bi bi-chevron-down"></i></span>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 7 خدمات <i class="bi bi-chevron-down"></i></span>
         </div>
         @endif
 
@@ -1240,13 +1240,39 @@ body.theme-dark .launcher-cat-btn.active,
                     @endif
 
                     @if($u && ($u->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $u->hasPermission(['hr.evaluations', 'manage_employees', 'employees.view'])))
-                    <a href="{{ route('hr.evaluations') }}" class="ensan-sub-tile">
+                    <a href="{{ route('hr.evaluations.employees') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
                             <i class="bi bi-star-half"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">تقييمات الموظفين</div>
-                            <small class="text-muted">نماذج تقييم الأداء ومعايير الكفاءة</small>
+                            <small class="text-muted">نماذج تقييم أداء الموظفين ومعايير الكفاءة</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
+                    @if($u && ($u->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $u->hasPermission(['hr.evaluations', 'manage_volunteers_hr', 'volunteers.view'])))
+                    <a href="{{ route('hr.evaluations.volunteers') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(22, 163, 74, 0.12); color: #16a34a;">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">تقييمات المتطوعين</div>
+                            <small class="text-muted">تقييم أداء المتطوعين وتسجيل التقييمات</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
+                    @if($u && ($u->hasRole(['admin', 'super_admin', 'manager', 'مدير المؤسسة بالكامل', 'إدارة']) || $u->hasPermission(['hr.evaluations', 'hr_documents.view', 'hr_documents.create', 'manage_employees', 'manage_volunteers_hr'])))
+                    <a href="{{ route('hr.documents.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon" style="background: rgba(99, 102, 241, 0.14); color: #4f46e5;">
+                            <i class="bi bi-folder2-open"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">ملفات وتقارير HR</div>
+                            <small class="text-muted">تقارير السيشنز وتقارير الفعاليات وملفات HR</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
@@ -2091,6 +2117,19 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">مركز استيراد الإكسيل (Excel Hub)</div>
                             <small class="text-muted">استيراد وتوزيع ملفات Excel في الحالات والتبرعات والمتبرعين والمهام</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
+                    @if($u && ($u->hasPermission('backups.view') || $u->hasRole(['admin', 'super_admin', 'مدير المؤسسة بالكامل'])))
+                    <a href="{{ route('backups.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-dark-subtle text-dark">
+                            <i class="bi bi-hdd-stack-fill"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">النسخ الاحتياطي والاحتفاظ بنسخة</div>
+                            <small class="text-muted">إنشاء، تثبيت، تنزيل، وفحص النسخ الاحتياطية المشفرة والاستعادة الآمنة</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>

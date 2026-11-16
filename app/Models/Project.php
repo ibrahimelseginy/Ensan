@@ -108,11 +108,11 @@ final class Project extends Model
     }
     public function manager(): BelongsTo
     {
-        return $this->belongsTo(User::class , 'manager_user_id');
+        return $this->belongsTo(User::class , 'manager_user_id')->withTrashed();
     }
     public function deputy(): BelongsTo
     {
-        return $this->belongsTo(User::class , 'deputy_user_id');
+        return $this->belongsTo(User::class , 'deputy_user_id')->withTrashed();
     }
     public function volunteers(): BelongsToMany
     {

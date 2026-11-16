@@ -12,5 +12,5 @@ final class VolunteerHour extends Model
 
     protected $fillable = ['user_id','date','hours','task'];
     protected $casts = ['date' => 'date'];
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function user(): BelongsTo { return $this->belongsTo(User::class)->withTrashed(); }
 }

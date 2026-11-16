@@ -368,7 +368,7 @@
                                                         @elseif($modelBasename === 'User') {{ $req->subject->job_title ?? ($req->subject->is_employee ? 'موظف' : ($req->subject->is_volunteer ? 'متطوع' : 'مستخدم')) }}
                                                         @elseif($modelBasename === 'Account') {{ $req->subject->code ?? 'بدون كود' }}
                                                         @elseif($modelBasename === 'Task') المسند إليه: {{ $req->subject->assignedUser->name ?? 'غير محدد' }}
-                                                        @elseif($modelBasename === 'Leave') النوع: {{ $req->subject->type }} • من {{ $req->subject->start_date->format('Y-m-d') }}
+                                                        @elseif($modelBasename === 'Leave') النوع: {{ $req->subject->type_label }} • {{ $req->subject->start_date->format('Y-m-d') }} @if($req->subject->type === 'permission' && $req->subject->from_time_formatted) ({{ $req->subject->from_time_formatted }} - {{ $req->subject->to_time_formatted }}) @endif
                                                         @elseif($modelBasename === 'JournalEntry') التاريخ: {{ $req->subject->date->format('Y-m-d') }} • النوع: {{ $req->subject->entry_type }}
                                                         @elseif($modelBasename === 'FinancialClosure') تم بواسطة: {{ $req->subject->closed_by }}
                                                         @endif
@@ -388,7 +388,7 @@
                                                         @elseif($modelBasename === 'User') {{ $pData['job_title'] ?? 'مستخدم' }}
                                                         @elseif($modelBasename === 'Account') كود: {{ $pData['code'] ?? '—' }}
                                                         @elseif($modelBasename === 'DelegateTrip') {{ $pData['delegate_name'] ?? '—' }} ({{ $pData['trip_date'] ?? '—' }})
-                                                        @elseif($modelBasename === 'Leave') النوع: {{ $pData['type'] ?? '—' }} • التاريخ: {{ $pData['start_date'] ?? '—' }}
+                                                        @elseif($modelBasename === 'Leave') النوع: {{ \App\Models\Leave::typeLabels()[$pData['type'] ?? ''] ?? ($pData['type'] ?? '—') }} • التاريخ: {{ $pData['start_date'] ?? '—' }} @if(($pData['type'] ?? '') === 'permission' && !empty($pData['from_time'])) ({{ $pData['from_time'] }} - {{ $pData['to_time'] ?? '' }}) @endif
                                                         @elseif($modelBasename === 'JournalEntry') النوع: {{ $pData['entry_type'] ?? '—' }} • الوصف: {{ $pData['description'] ?? '—' }}
                                                         @elseif($modelBasename === 'FinancialClosure') فرع: {{ $pData['branch'] ?? '—' }} • تاريخ: {{ $pData['date'] ?? '—' }}
                                                         @endif

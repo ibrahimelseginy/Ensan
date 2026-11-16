@@ -28,35 +28,47 @@
                         </div>
                         <div class="col-md-6">
                             <div class="info-row">
-                                <span class="info-label text-muted d-block small mb-1">نوع الإجازة</span>
+                                <span class="info-label text-muted d-block small mb-1">نوع الطلب</span>
                                 <div class="info-value">
-                                    @php
-                                        $types = [
-                                            'annual' => 'سنوية',
-                                            'sick' => 'مرضية',
-                                            'unpaid' => 'بدون راتب',
-                                            'emergency' => 'عارضة',
-                                            'other' => 'أخرى'
-                                        ];
-                                    @endphp
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                        {{ $types[$leave->type] ?? $leave->type }}
+                                    <span class="badge {{ $leave->type === 'permission' ? 'bg-info-subtle text-info border-info-subtle' : 'bg-primary-subtle text-primary border-primary-subtle' }} border">
+                                        {{ $leave->type_label }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="info-row">
-                                <span class="info-label text-muted d-block small mb-1">تاريخ البداية</span>
-                                <span class="info-value fw-bold"><i class="bi bi-calendar-event me-1"></i> {{ optional($leave->start_date)->format('Y-m-d') ?? '—' }}</span>
+                        @if($leave->type === 'permission')
+                            <div class="col-md-4">
+                                <div class="info-row">
+                                    <span class="info-label text-muted d-block small mb-1">تاريخ الإذن</span>
+                                    <span class="info-value fw-bold"><i class="bi bi-calendar-event me-1"></i> {{ optional($leave->start_date)->format('Y-m-d') ?? '—' }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-row">
-                                <span class="info-label text-muted d-block small mb-1">تاريخ النهاية</span>
-                                <span class="info-value fw-bold"><i class="bi bi-calendar-event me-1"></i> {{ optional($leave->end_date)->format('Y-m-d') ?? '—' }}</span>
+                            <div class="col-md-4">
+                                <div class="info-row">
+                                    <span class="info-label text-muted d-block small mb-1">من الساعة</span>
+                                    <span class="info-value fw-bold text-primary"><i class="bi bi-clock me-1"></i> {{ $leave->from_time_formatted ?? '—' }}</span>
+                                </div>
                             </div>
-                        </div>
+                            <div class="col-md-4">
+                                <div class="info-row">
+                                    <span class="info-label text-muted d-block small mb-1">إلى الساعة</span>
+                                    <span class="info-value fw-bold text-primary"><i class="bi bi-clock-fill me-1"></i> {{ $leave->to_time_formatted ?? '—' }}</span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <span class="info-label text-muted d-block small mb-1">تاريخ البداية</span>
+                                    <span class="info-value fw-bold"><i class="bi bi-calendar-event me-1"></i> {{ optional($leave->start_date)->format('Y-m-d') ?? '—' }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <span class="info-label text-muted d-block small mb-1">تاريخ النهاية</span>
+                                    <span class="info-value fw-bold"><i class="bi bi-calendar-event me-1"></i> {{ optional($leave->end_date)->format('Y-m-d') ?? '—' }}</span>
+                                </div>
+                            </div>
+                        @endif
                         <div class="col-md-12">
                             <div class="info-row bg-light p-3 rounded-3">
                                 <span class="info-label text-muted d-block small mb-2">السبب</span>
@@ -148,7 +160,13 @@
                         </div>
                         <div>
                             <div class="small text-muted">إجمالي المدة</div>
-                            <div class="fw-bold fs-5">{{ $leave->days }} أيام</div>
+                            <div class="fw-bold fs-5">
+                                @if($leave->type === 'permission')
+                                    {{ $leave->permission_duration_label ?? 'إذن ساعات' }}
+                                @else
+                                    {{ $leave->days }} أيام
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -57,8 +57,12 @@ final readonly class HrEvaluationService
             'employeesPaidCount'       => Payroll::where('month', 'LIKE', $currentMonthString . '%')->distinct('user_id')->count('user_id'),
 
             // Employee Evaluations (Official 10-Criteria Model)
-            'employees'                => User::where('is_employee', true)->where('active', true)->with(['latestEvaluation'])->orderBy('name')->get(),
-            'recentEvaluations'        => \App\Models\EmployeeEvaluation::with(['user', 'evaluator'])->orderByDesc('evaluation_date')->orderByDesc('id')->limit(30)->get(),
+            'employees'                  => User::where('is_employee', true)->where('active', true)->with(['latestEvaluation'])->orderBy('name')->get(),
+            'recentEvaluations'          => \App\Models\EmployeeEvaluation::with(['user', 'evaluator'])->orderByDesc('evaluation_date')->orderByDesc('id')->limit(30)->get(),
+
+            // Volunteer Evaluations (Official 9-Criteria Model)
+            'volunteers'                 => User::where('is_volunteer', true)->where('active', true)->with(['project', 'campaign', 'guestHouse', 'volunteerEvaluations'])->orderBy('name')->get(),
+            'recentVolunteerEvaluations' => \App\Models\VolunteerEvaluation::with(['user', 'evaluator'])->orderByDesc('evaluation_date')->orderByDesc('id')->limit(30)->get(),
         ];
     }
 }

@@ -14,12 +14,22 @@ final readonly class LeaveRepository
     {
         $userId = $filters['user_id'] ?? null;
         $status = $filters['status'] ?? null;
+        $type   = $filters['type'] ?? null;
 
         return Leave::with(['user', 'changeRequests' => fn($q) => $q->where('status', 'pending')])
             ->when($userId, fn($q) => $q->where('user_id', $userId))
             ->when($status, fn($q) => $q->where('status', $status))
+            ->when($type, function ($q) use ($type) {
+                if ($type === 'leaves_only') {
+                    $q->where('type', '!=', 'permission');
+                } else {
+                    $q->where('type', $type);
+                }
+            })
             ->orderByDesc('start_date')
-            ->paginate($perPage);
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function findById(int $id): ?Leave

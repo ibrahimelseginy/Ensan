@@ -27,9 +27,124 @@
 
     {{-- Main Content Grid --}}
     <div class="container-fluid py-4 px-lg-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-bold mb-0 text-dark border-start border-4 border-primary ps-3">طلبات التطوع الواردة</h5>
-            <span class="badge bg-primary rounded-pill px-3 py-2 fw-bold small shadow-sm">{{ $requests->count() }} طلب إجمالي</span>
+        {{-- Header + Official Volunteers List Link --}}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <h5 class="fw-bold mb-0 text-dark border-start border-4 border-primary ps-3">طلبات التطوع الواردة</h5>
+                <span class="badge bg-primary rounded-pill px-3 py-2 fw-bold small shadow-sm">{{ $statusCounts['all'] ?? $requests->count() }} طلب إجمالي</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('volunteers.index') }}" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill"></i>
+                    <span>قائمة المتطوعين المعتمدين ({{ $totalOfficialVolunteers ?? 0 }})</span>
+                    <i class="bi bi-arrow-left-short fs-5"></i>
+                </a>
+            </div>
+        </div>
+
+        {{-- Filters Card: Status Tabs + Search + Project Filter --}}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                {{-- Status Tabs (فلتر الكل / طلب جديد / تم التواصل / مقابلة / مقبول / مرفوض) --}}
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-3 border-bottom">
+                    @php
+                        $tabs = [
+                            'all'       => ['label' => 'الكل', 'icon' => 'bi-grid-fill', 'color' => 'dark'],
+                            'new'       => ['label' => 'طلب جديد', 'icon' => 'bi-stars', 'color' => 'primary'],
+                            'contacted' => ['label' => 'تم التواصل معاه', 'icon' => 'bi-telephone-outbound-fill', 'color' => 'info'],
+                            'interview' => ['label' => 'مقابلة شخصية', 'icon' => 'bi-calendar-event-fill', 'color' => 'warning'],
+                            'accepted'  => ['label' => 'مقبول', 'icon' => 'bi-check-circle-fill', 'color' => 'success'],
+                            'rejected'  => ['label' => 'مرفوض', 'icon' => 'bi-x-circle-fill', 'color' => 'danger'],
+                        ];
+                    @endphp
+                    @foreach($tabs as $key => $tab)
+                        @php
+                            $isActive = ($statusFilter ?? 'all') === $key;
+                            $count = $statusCounts[$key] ?? 0;
+                        @endphp
+                        <a href="{{ route('website.volunteer-requests.index', array_filter(['status' => $key, 'project' => $projectFilter !== 'all' ? $projectFilter : null, 'q' => $searchQuery ?: null])) }}"
+                           class="btn rounded-pill px-3 py-2 fw-bold small d-flex align-items-center gap-2 {{ $isActive ? 'btn-' . $tab['color'] . ' shadow-sm' : 'btn-outline-' . $tab['color'] . ' bg-white' }}">
+                            <i class="bi {{ $tab['icon'] }}"></i>
+                            <span>{{ $tab['label'] }}</span>
+                            <span class="badge rounded-pill {{ $isActive ? 'bg-white text-dark' : 'bg-' . $tab['color'] . ' bg-opacity-10 text-' . $tab['color'] }}">{{ $count }}</span>
+                        </a>
+                    @endforeach
+                </div>
+
+                {{-- Search & Project Filter --}}
+                <form method="GET" action="{{ route('website.volunteer-requests.index') }}" class="row g-2 align-items-center">
+                    <input type="hidden" name="status" value="{{ $statusFilter ?? 'all' }}">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="q" value="{{ $searchQuery ?? '' }}" class="form-control border-start-0" placeholder="بحث بالاسم، رقم الهاتف، البريد، أو مجال التطوع...">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <select name="project" class="form-select" onchange="this.form.submit()">
+                            <option value="all" @selected(($projectFilter ?? 'all') === 'all')>📁 كل المشاريع (التطوع في أي مشروع)</option>
+                            @foreach($projects as $p)
+                                <option value="{{ $p->id }}" @selected((string)($projectFilter ?? 'all') === (string)$p->id)>📌 {{ $p->name }}</option>
+                            @endforeach
+                            @foreach($customProjectNames ?? [] as $customProj)
+                                <option value="{{ $customProj['name'] }}" @selected(($projectFilter ?? 'all') === $customProj['name'])>📌 {{ $customProj['name'] }}</option>
+                            @endforeach
+                            <option value="unassigned" @selected(($projectFilter ?? 'all') === 'unassigned')>⏳ لم يحدد مشروع بعد</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100 rounded-3 fw-bold">تصفية</button>
+                        @if(($statusFilter ?? 'all') !== 'all' || ($projectFilter ?? 'all') !== 'all' || !empty($searchQuery))
+                            <a href="{{ route('website.volunteer-requests.index') }}" class="btn btn-outline-secondary rounded-3" title="إلغاء الفلاتر"><i class="bi bi-arrow-counterclockwise"></i></a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Dedicated Section: التطوع في أني مشروع --}}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 border-top border-4 border-success">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="icon-circle bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="bi bi-diagram-3-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">التطوع في أي مشروع — توزيع المتطوعين على مشاريع المؤسسة</h6>
+                            <small class="text-muted">اضغط على أي مشروع لعرض المتطوعين المعينين فيه أو مراجعة طلباتهم</small>
+                        </div>
+                    </div>
+                    <a href="{{ route('website.volunteer-requests.index', ['status' => $statusFilter ?? 'all']) }}" class="badge bg-light text-dark border text-decoration-none px-3 py-2 rounded-pill">
+                        عرض كل المشاريع
+                    </a>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($projectStats ?? [] as $ps)
+                        @php $isProjActive = (string)($projectFilter ?? 'all') === (string)$ps['id']; @endphp
+                        <a href="{{ route('website.volunteer-requests.index', array_filter(['status' => $statusFilter !== 'all' ? $statusFilter : null, 'project' => $ps['id']])) }}"
+                           class="btn btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 {{ $isProjActive ? 'btn-success text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark' }}">
+                            <i class="bi bi-briefcase-fill {{ $isProjActive ? 'text-white' : 'text-success' }}"></i>
+                            <span>{{ $ps['name'] }}</span>
+                            <span class="badge rounded-pill {{ $isProjActive ? 'bg-white text-success' : 'bg-success bg-opacity-10 text-success' }}" title="مقبول">
+                                {{ $ps['accepted_count'] }} مقبول
+                            </span>
+                            @if($ps['total_count'] > $ps['accepted_count'])
+                                <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary">{{ $ps['total_count'] }} إجمالي</span>
+                            @endif
+                        </a>
+                    @endforeach
+                    @foreach($customProjectNames ?? [] as $cp)
+                        @php $isCpActive = ($projectFilter ?? 'all') === $cp['name']; @endphp
+                        <a href="{{ route('website.volunteer-requests.index', array_filter(['status' => $statusFilter !== 'all' ? $statusFilter : null, 'project' => $cp['name']])) }}"
+                           class="btn btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 {{ $isCpActive ? 'btn-success text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark' }}">
+                            <i class="bi bi-tag-fill text-info"></i>
+                            <span>{{ $cp['name'] }}</span>
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info">{{ $cp['total_count'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -63,8 +178,8 @@
                                 <div class="x-small text-primary fw-bold text-truncate mt-1">
                                     <i class="bi bi-briefcase me-1"></i> {{ $request->current_job ?? 'باحث عن عمل' }}
                                 </div>
-                                @if($request->status === 'accepted' && $request->effective_project_name)
-                                    <div class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 x-small fw-bold border border-success border-opacity-25 text-truncate d-inline-block mt-1" style="max-width: 170px;" title="{{ $request->effective_project_name }}">
+                                @if($request->effective_project_name)
+                                    <div class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 x-small fw-bold border border-success border-opacity-25 text-truncate d-inline-block mt-1" style="max-width: 170px;" title="المشروع: {{ $request->effective_project_name }}">
                                         <i class="bi bi-diagram-3-fill me-1"></i> {{ $request->effective_project_name }}
                                     </div>
                                 @elseif($request->status === 'interview' && $request->interview_date)
@@ -78,10 +193,19 @@
                             </div>
                         </div>
 
-                        <div class="p-3 bg-stats-inner-item rounded-4 border border-light-subtle mb-4">
+                        <div class="p-3 bg-stats-inner-item rounded-4 border border-light-subtle mb-3">
                             <div class="x-small text-muted-theme mb-1 fw-bold opacity-75">مجال التطوع المفضل</div>
                             <div class="fw-bold text-stats-main small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> {{ $request->area_of_interest ?? 'انضمام عام' }}</div>
                         </div>
+
+                        @if($request->status === 'accepted' && !empty($request->matched_volunteer_user))
+                            <div class="mb-3">
+                                <a href="{{ route('volunteers.show', $request->matched_volunteer_user->id) }}" class="btn btn-sm btn-outline-success w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-1">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <span>ملف المتطوع ({{ $request->matched_volunteer_user->code }})</span>
+                                </a>
+                            </div>
+                        @endif
 
                         <div class="vstack gap-2 mb-4 bg-stats-inner-item p-3 rounded-4 border border-light-subtle">
                             <div class="d-flex justify-content-between align-items-center x-small">
@@ -381,9 +505,9 @@
                                         <input type="text" name="interview_location" class="form-control rounded-3" placeholder="مثال: مقر الجمعية - كفر الشيخ أو عبر زووم" value="{{ $request->interview_location }}">
                                     </div>
 
-                                    {{-- Project Assignment section (shown if status is accepted) --}}
-                                    <div class="col-md-6 project-group-{{ $request->id }}" style="{{ $request->status === 'accepted' ? '' : 'display: none;' }}">
-                                        <label class="form-label small fw-bold text-success"><i class="bi bi-diagram-3 me-1"></i> المشروع المخصص للمتطوع</label>
+                                    {{-- Project Assignment section (always visible) --}}
+                                    <div class="col-md-6 project-group-{{ $request->id }}">
+                                        <label class="form-label small fw-bold text-success"><i class="bi bi-diagram-3 me-1"></i> التطوع في أي مشروع (المشروع المخصص للمتطوع)</label>
                                         <select name="assigned_project_id" class="form-select rounded-3">
                                             <option value="">— اختر من مشاريع الجمعية —</option>
                                             @foreach($projects as $p)
@@ -392,7 +516,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="col-md-6 project-group-{{ $request->id }}" style="{{ $request->status === 'accepted' ? '' : 'display: none;' }}">
+                                    <div class="col-md-6 project-group-{{ $request->id }}">
                                         <label class="form-label small fw-bold text-success"><i class="bi bi-pencil me-1"></i> أو اكتب اسم مشروع/مبادرة يدوياً</label>
                                         <input type="text" name="assigned_project_name" class="form-control rounded-3" placeholder="مثال: حملة إفطار صائم / مبادرة الكسوة" value="{{ $request->assigned_project_name }}">
                                     </div>
@@ -517,9 +641,7 @@
     function handleVolunteerStatusChange(selectElem, reqId) {
         const val = selectElem.value;
         const interviewGroups = document.querySelectorAll('.interview-group-' + reqId);
-        const projectGroups = document.querySelectorAll('.project-group-' + reqId);
         interviewGroups.forEach(el => el.style.display = (val === 'interview') ? '' : 'none');
-        projectGroups.forEach(el => el.style.display = (val === 'accepted') ? '' : 'none');
     }
 
     function handleInterviewDecisionChange(selectElem, reqId) {

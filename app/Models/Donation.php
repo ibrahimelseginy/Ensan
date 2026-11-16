@@ -73,7 +73,7 @@ final class Donation extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function webDonor()
@@ -143,12 +143,12 @@ final class Donation extends Model
 
     public function createdBy(): BelongsTo 
     { 
-        return $this->belongsTo(User::class, 'created_by'); 
+        return $this->belongsTo(User::class, 'created_by')->withTrashed(); 
     }
 
     public function cancelledBy(): BelongsTo 
     { 
-        return $this->belongsTo(User::class, 'cancelled_by'); 
+        return $this->belongsTo(User::class, 'cancelled_by')->withTrashed(); 
     }
 
     // Scopes

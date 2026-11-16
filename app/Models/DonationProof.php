@@ -37,7 +37,7 @@ final class DonationProof extends Model
 
     public function verifiedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'verified_by');
+        return $this->belongsTo(User::class, 'verified_by')->withTrashed();
     }
 
     public function getImageUrlAttribute(): ?string

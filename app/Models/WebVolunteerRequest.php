@@ -116,7 +116,7 @@ final class WebVolunteerRequest extends Model
 
     public function reviewer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->belongsTo(User::class, 'reviewed_by')->withTrashed();
     }
 
     public function getEffectiveProjectNameAttribute(): ?string

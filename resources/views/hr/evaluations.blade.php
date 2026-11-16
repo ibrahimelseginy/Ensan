@@ -7,6 +7,14 @@
             <div class="hero-greeting">الموارد البشرية 📋</div>
             <h1 class="hero-title">التقييمات والمتابعة</h1>
             <p class="hero-subtitle">لوحة التحكم الخاصة بمتابعة أداء الموظفين والمتطوعين</p>
+            <div class="hero-actions d-flex flex-wrap gap-2">
+                <a href="{{ route('hr.documents.index') }}" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-4">
+                    <i class="bi bi-folder2-open me-1"></i> ملفات HR (تقارير السيشنز والفعاليات)
+                </a>
+                <a href="{{ route('leaves.index') }}" class="btn btn-sm rounded-pill px-4">
+                    <i class="bi bi-calendar-check me-1"></i> الإجازات والأذونات
+                </a>
+            </div>
         </div>
         <i class="bi bi-clipboard-data-fill hero-icon d-none d-md-block"></i>
     </div>
@@ -91,26 +99,33 @@
         <!-- Evaluations Stats -->
         <div class="col-md-3 animate-slide-up animate-delay-3">
             <div class="glass-card h-100 hover-lift">
-                <a href="{{ route('tasks.index') }}" class="card-body p-4 text-decoration-none text-dark d-block">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-3"
-                            style="width: 50px; height: 50px;">
-                            <i class="bi bi-star fs-4"></i>
+                <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+                    <a href="#evaluationsHubSection" class="text-decoration-none text-dark d-block">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-circle bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                style="width: 50px; height: 50px;">
+                                <i class="bi bi-star fs-4"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">جودة الأداء والتقييمات</h6>
                         </div>
-                        <h6 class="fw-bold mb-0">جودة الأداء</h6>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <div class="display-5 fw-bold text-dark me-2">{{ number_format($avgRating, 1) }}</div>
-                        <div class="text-warning small">
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="bi bi-star{{ $i <= round($avgRating) ? '-fill' : '' }}"></i>
-                            @endfor
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <div class="display-5 fw-bold text-dark me-2">{{ number_format($avgRating, 1) }}</div>
+                            <div class="text-warning small">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <i class="bi bi-star{{ $i <= round($avgRating) ? '-fill' : '' }}"></i>
+                                @endfor
+                            </div>
                         </div>
+                    </a>
+                    <div class="d-flex gap-2 justify-content-center pt-2 border-top">
+                        <a href="{{ route('hr.evaluations.employees') }}" class="btn btn-sm btn-outline-warning text-dark fw-bold rounded-pill px-3">
+                            <i class="bi bi-person-badge me-1"></i> تقييم الموظفين
+                        </a>
+                        <a href="{{ route('hr.evaluations.volunteers') }}" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                            <i class="bi bi-heart-pulse me-1"></i> تقييم المتطوعين
+                        </a>
                     </div>
-                    <div class="text-center small text-muted">
-                        تم تقييم {{ $ratedTasksCount }} من {{ $tasksCompleted }} مهمة مكتملة
-                    </div>
-                </a>
+                </div>
             </div>
         </div>
 
@@ -192,6 +207,42 @@
                     <p class="card-text text-muted mb-0">متابعة المهام الموكلة وإنجازات الفريق</p>
                 </a>
             </div>
+        </div>
+    </div>
+
+    {{-- Official Evaluations Hub Section --}}
+    <div id="evaluationsHubSection" class="row g-3 mt-4 mb-2 animate-slide-up">
+        <div class="col-md-6">
+            <a href="{{ route('hr.evaluations.employees') }}" class="card border-0 shadow-sm rounded-4 text-decoration-none text-dark hover-lift h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                            <i class="bi bi-star-half fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">تقييمات الموظفين</h5>
+                            <div class="text-muted small">فتح صفحة تقييم الموظفين وتسجيل تقييم جديد (10 بنود)</div>
+                        </div>
+                    </div>
+                    <i class="bi bi-arrow-left fs-4 text-warning"></i>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ route('hr.evaluations.volunteers') }}" class="card border-0 shadow-sm rounded-4 text-decoration-none text-dark hover-lift h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                            <i class="bi bi-star-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">تقييمات المتطوعين</h5>
+                            <div class="text-muted small">فتح صفحة تقييم المتطوعين وتسجيل تقييم جديد (9 بنود)</div>
+                        </div>
+                    </div>
+                    <i class="bi bi-arrow-left fs-4 text-success"></i>
+                </div>
+            </a>
         </div>
     </div>
 

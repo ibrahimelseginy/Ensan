@@ -357,12 +357,95 @@ final class WebsiteWebController extends Controller
     }
 
     // --- Volunteer Requests & Content ---
-    public function volunteerRequests()
+    public function volunteerRequests(Request $request)
     {
-        $requests = WebVolunteerRequest::with('project')->orderByDesc('created_at')->get();
+        $allRequests = WebVolunteerRequest::with('project')->orderByDesc('created_at')->get();
         $projects = \App\Models\Project::orderBy('name')->get();
         $settings = \App\Models\WebSetting::all()->pluck('value', 'key');
-        return view('website.volunteer_requests', compact('requests', 'projects', 'settings'));
+
+        $statusCounts = [
+            'all'       => $allRequests->count(),
+            'new'       => $allRequests->where('status', 'new')->count(),
+            'contacted' => $allRequests->where('status', 'contacted')->count(),
+            'interview' => $allRequests->where('status', 'interview')->count(),
+            'accepted'  => $allRequests->where('status', 'accepted')->count(),
+            'rejected'  => $allRequests->where('status', 'rejected')->count(),
+        ];
+
+        // Map matched volunteer user profiles for accepted requests
+        $volunteerUsers = \App\Models\User::where('is_volunteer', true)
+            ->get(['id', 'name', 'email', 'phone', 'national_id', 'code', 'project_id']);
+
+        $allRequests->each(function ($req) use ($volunteerUsers) {
+            $matched = $volunteerUsers->first(function ($u) use ($req) {
+                return (!empty($req->email) && $u->email === $req->email)
+                    || (!empty($req->phone) && $u->phone === $req->phone)
+                    || (!empty($req->national_id) && $u->national_id === $req->national_id);
+            });
+            $req->matched_volunteer_user = $matched;
+        });
+
+        // Distribution by project ("التطوع في أي مشروع")
+        $projectStats = $projects->map(function ($proj) use ($allRequests) {
+            $projReqs = $allRequests->filter(fn ($r) => (int) $r->assigned_project_id === (int) $proj->id);
+            return [
+                'id'             => $proj->id,
+                'name'           => $proj->name,
+                'accepted_count' => $projReqs->where('status', 'accepted')->count(),
+                'total_count'    => $projReqs->count(),
+            ];
+        });
+
+        $customProjectNames = $allRequests
+            ->filter(fn ($r) => empty($r->assigned_project_id) && !empty($r->assigned_project_name))
+            ->groupBy('assigned_project_name')
+            ->map(fn ($group, $name) => [
+                'name'           => $name,
+                'accepted_count' => $group->where('status', 'accepted')->count(),
+                'total_count'    => $group->count(),
+            ]);
+
+        $statusFilter = $request->query('status', 'all');
+        $projectFilter = $request->query('project', 'all');
+        $searchQuery = trim((string) $request->query('q', ''));
+
+        $requests = $allRequests;
+        if ($statusFilter !== 'all' && in_array($statusFilter, ['new', 'contacted', 'interview', 'accepted', 'rejected'], true)) {
+            $requests = $requests->where('status', $statusFilter);
+        }
+        if ($projectFilter !== 'all') {
+            if (is_numeric($projectFilter)) {
+                $requests = $requests->where('assigned_project_id', (int) $projectFilter);
+            } elseif ($projectFilter === 'unassigned') {
+                $requests = $requests->filter(fn ($r) => empty($r->assigned_project_id) && empty($r->assigned_project_name));
+            } else {
+                $requests = $requests->where('assigned_project_name', $projectFilter);
+            }
+        }
+        if ($searchQuery !== '') {
+            $requests = $requests->filter(function ($r) use ($searchQuery) {
+                return mb_stripos((string) $r->name, $searchQuery) !== false
+                    || mb_stripos((string) $r->phone, $searchQuery) !== false
+                    || mb_stripos((string) $r->email, $searchQuery) !== false
+                    || mb_stripos((string) $r->area_of_interest, $searchQuery) !== false
+                    || mb_stripos((string) $r->effective_project_name, $searchQuery) !== false;
+            });
+        }
+
+        $totalOfficialVolunteers = \App\Models\User::where('is_volunteer', true)->count();
+
+        return view('website.volunteer_requests', compact(
+            'requests',
+            'projects',
+            'settings',
+            'statusCounts',
+            'projectStats',
+            'customProjectNames',
+            'statusFilter',
+            'projectFilter',
+            'searchQuery',
+            'totalOfficialVolunteers'
+        ));
     }
 
     public function updateVolunteerContent(Request $request)
@@ -431,9 +514,6 @@ final class WebsiteWebController extends Controller
             if ($proj) {
                 $data['assigned_project_name'] = $proj->name;
             }
-        } elseif ($data['status'] !== 'accepted') {
-            $data['assigned_project_id'] = null;
-            $data['assigned_project_name'] = null;
         }
 
         if ($data['status'] !== 'interview') {
@@ -444,60 +524,93 @@ final class WebsiteWebController extends Controller
         $data['reviewed_at'] = now();
         $data['reviewed_by'] = auth()->id();
 
-        $volunteerRequest->update($data);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($volunteerRequest, $data) {
+            $volunteerRequest->update($data);
 
-        // Automatically sync accepted volunteer request to the HR Volunteers list (users table)
-        if ($data['status'] === 'accepted') {
-            $email = $volunteerRequest->email ?: ('vol_' . $volunteerRequest->id . '@ensan.local');
-            $existingVolunteer = \App\Models\User::withTrashed()
-                ->where(function ($q) use ($volunteerRequest, $email) {
-                    $q->where('email', $email);
-                    if (!empty($volunteerRequest->phone)) {
-                        $q->orWhere('phone', $volunteerRequest->phone);
-                    }
-                    if (!empty($volunteerRequest->national_id) && \Illuminate\Support\Facades\Schema::hasColumn('users', 'national_id')) {
-                        $q->orWhere('national_id', $volunteerRequest->national_id);
-                    }
-                })
-                ->first();
-
-            if ($existingVolunteer) {
-                if ($existingVolunteer->trashed()) {
-                    $existingVolunteer->restore();
-                }
-                $existingVolunteer->update(array_filter([
-                    'is_volunteer' => true,
-                    'active' => true,
-                    'national_id' => $volunteerRequest->national_id ?: $existingVolunteer->national_id,
-                    'college' => $volunteerRequest->faculty ?: $existingVolunteer->college,
-                    'project_id' => $volunteerRequest->assigned_project_id ?: $existingVolunteer->project_id,
-                    'project_role' => $volunteerRequest->area_of_interest ?: $existingVolunteer->project_role,
-                ], fn ($v) => $v !== null));
-            } else {
-                \App\Models\User::create([
-                    'code' => \App\Models\User::nextVolunteerCode(),
-                    'name' => $volunteerRequest->name,
-                    'email' => $email,
-                    'password' => \Illuminate\Support\Facades\Hash::make($volunteerRequest->phone ?: '12345678'),
-                    'phone' => $volunteerRequest->phone,
-                    'national_id' => $volunteerRequest->national_id,
-                    'is_volunteer' => true,
-                    'is_employee' => false,
-                    'active' => true,
-                    'registration_source' => 'website',
-                    'college' => $volunteerRequest->faculty ?: $volunteerRequest->education_level,
-                    'governorate' => $volunteerRequest->address,
-                    'city' => $volunteerRequest->current_address,
-                    'project_role' => $volunteerRequest->area_of_interest,
-                    'volunteer_hours' => is_numeric($volunteerRequest->volunteer_hours) ? (float) $volunteerRequest->volunteer_hours : 0,
-                    'project_id' => $volunteerRequest->assigned_project_id,
-                    'join_date' => now()->toDateString(),
-                    'id_card_image' => $volunteerRequest->id_card_path,
-                ]);
+            // Automatically sync accepted volunteer request to the HR Volunteers list (users table)
+            if ($data['status'] === 'accepted') {
+                $this->syncAcceptedVolunteerToUsers($volunteerRequest);
             }
+        });
+
+        return back()->with('success', $data['status'] === 'accepted'
+            ? 'تم قبول المتطوع بنجاح وإدراجه تلقائياً في قائمة المتطوعين الرسمية.'
+            : 'تم حفظ قرار طلب التطوع وتحديث الحالة بنجاح');
+    }
+
+    /**
+     * Ensure an accepted website volunteer request is registered/updated in the HR volunteers list (`users`).
+     */
+    private function syncAcceptedVolunteerToUsers(WebVolunteerRequest $volunteerRequest): \App\Models\User
+    {
+        $email = $volunteerRequest->email ?: ('vol_' . $volunteerRequest->id . '@ensan.local');
+        $existingVolunteer = \App\Models\User::withTrashed()
+            ->where(function ($q) use ($volunteerRequest, $email) {
+                $q->where('email', $email);
+                if (!empty($volunteerRequest->phone)) {
+                    $q->orWhere('phone', $volunteerRequest->phone);
+                }
+                if (!empty($volunteerRequest->national_id) && \Illuminate\Support\Facades\Schema::hasColumn('users', 'national_id')) {
+                    $q->orWhere('national_id', $volunteerRequest->national_id);
+                }
+            })
+            ->first();
+
+        $projectRoleText = $volunteerRequest->assigned_project_name
+            ? ($volunteerRequest->assigned_project_name . ($volunteerRequest->area_of_interest ? ' — ' . $volunteerRequest->area_of_interest : ''))
+            : $volunteerRequest->area_of_interest;
+        if ($projectRoleText !== null && $projectRoleText !== '') {
+            $projectRoleText = mb_substr((string) $projectRoleText, 0, 240);
         }
 
-        return back()->with('success', 'تم حفظ قرار طلب التطوع وتحديث الحالة بنجاح');
+        if ($existingVolunteer) {
+            if ($existingVolunteer->trashed()) {
+                $existingVolunteer->restore();
+            }
+            $existingVolunteer->update(array_filter([
+                'is_volunteer' => true,
+                'active'       => true,
+                'role'         => $existingVolunteer->role ?: 'volunteer',
+                'national_id'  => $volunteerRequest->national_id ?: $existingVolunteer->national_id,
+                'college'      => $volunteerRequest->faculty ?: $existingVolunteer->college,
+                'project_id'   => $volunteerRequest->assigned_project_id ?: $existingVolunteer->project_id,
+                'project_role' => $projectRoleText ?: $existingVolunteer->project_role,
+            ], fn ($v) => $v !== null));
+            $volunteer = $existingVolunteer;
+        } else {
+            $volunteer = \App\Models\User::create([
+                'code'                => \App\Models\User::nextVolunteerCode(),
+                'name'                => $volunteerRequest->name,
+                'email'               => $email,
+                'password'            => \Illuminate\Support\Facades\Hash::make($volunteerRequest->phone ?: '12345678'),
+                'phone'               => $volunteerRequest->phone,
+                'national_id'         => $volunteerRequest->national_id,
+                'role'                => 'volunteer',
+                'is_volunteer'        => true,
+                'is_employee'         => false,
+                'active'              => true,
+                'registration_source' => 'website',
+                'college'             => $volunteerRequest->faculty ?: $volunteerRequest->education_level,
+                'governorate'         => $volunteerRequest->address,
+                'city'                => $volunteerRequest->current_address,
+                'project_role'        => $projectRoleText,
+                'volunteer_hours'     => is_numeric($volunteerRequest->volunteer_hours) ? (float) $volunteerRequest->volunteer_hours : 0,
+                'project_id'          => $volunteerRequest->assigned_project_id,
+                'join_date'           => now()->toDateString(),
+                'id_card_image'       => $volunteerRequest->id_card_path,
+            ]);
+        }
+
+        if ($volunteerRequest->assigned_project_id && \Illuminate\Support\Facades\Schema::hasTable('project_volunteers')) {
+            $volunteer->projects()->syncWithoutDetaching([
+                $volunteerRequest->assigned_project_id => [
+                    'role'       => mb_substr((string) ($volunteerRequest->area_of_interest ?: 'متطوع'), 0, 190),
+                    'started_at' => now()->toDateString(),
+                ],
+            ]);
+        }
+
+        return $volunteer;
     }
 
     public function destroyVolunteerRequest(WebVolunteerRequest $volunteerRequest)

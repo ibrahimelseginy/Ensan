@@ -1499,20 +1499,31 @@ $(function () {
       $('#splitItemsTable').show();
     }
 
-    if (autoSyncTotal && $('#toggleSplitDonation').is(':checked') && total > 0) {
-      $('#donationAmount').val(total.toFixed(2));
+    let caseTotal = 0;
+    $('.case-amount-input').each(function() {
+      caseTotal += parseFloat($(this).val()) || 0;
+    });
+
+    const combinedDistributed = total + caseTotal;
+
+    // Only auto-sync donation amount if it is empty or zero
+    if (autoSyncTotal && combinedDistributed > 0) {
+      const curDonationAmt = parseFloat($('#donationAmount').val()) || 0;
+      if (curDonationAmt <= 0) {
+        $('#donationAmount').val(combinedDistributed.toFixed(2));
+      }
     }
 
     const donationAmt = parseFloat($('#donationAmount').val()) || 0;
-    const diff = donationAmt - total;
+    const diff = donationAmt - combinedDistributed;
     let statusHtml = '';
-    if (rowsCount > 0 && donationAmt > 0) {
+    if ((rowsCount > 0 || caseTotal > 0) && donationAmt > 0) {
       if (Math.abs(diff) < 0.01) {
-        statusHtml = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> متطابق تماماً مع إجمالي التبرع</span>';
+        statusHtml = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> متطابق تماماً مع إجمالي التبرع (تم توزيع كامل المبلغ)</span>';
       } else if (diff > 0) {
-        statusHtml = `<span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> متبقي لم يوزع: ${diff.toFixed(2)} ج.م</span>`;
+        statusHtml = `<span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> متبقي لم يوزع: ${diff.toFixed(2)} ج.م (إجمالي البنود والكفالات: ${combinedDistributed.toFixed(2)} ج.م)</span>`;
       } else {
-        statusHtml = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i> مجموع البنود يتجاوز إجمالي التبرع بـ ${Math.abs(diff).toFixed(2)} ج.م</span>`;
+        statusHtml = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i> مجموع البنود والكفالات يتجاوز إجمالي التبرع بـ ${Math.abs(diff).toFixed(2)} ج.م</span>`;
       }
     }
     $('#splitMatchStatus').html(statusHtml);
@@ -1524,8 +1535,13 @@ $(function () {
     $('.split-amount-input').each(function() {
       total += parseFloat($(this).val()) || 0;
     });
-    if (total > 0) {
-      $('#donationAmount').val(total.toFixed(2)).trigger('input');
+    let caseTotal = 0;
+    $('.case-amount-input').each(function() {
+      caseTotal += parseFloat($(this).val()) || 0;
+    });
+    const combined = total + caseTotal;
+    if (combined > 0) {
+      $('#donationAmount').val(combined.toFixed(2)).trigger('input');
     }
   });
 

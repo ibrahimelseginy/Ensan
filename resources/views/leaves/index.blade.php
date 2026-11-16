@@ -5,11 +5,14 @@
 <div class="dashboard-hero animate-slide-up" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #7e22ce 100%);">
     <div class="hero-content">
         <div class="hero-greeting">الموارد البشرية 🌴</div>
-        <h1 class="hero-title">الإجازات</h1>
-        <p class="hero-subtitle">طلبات إجازات الموظفين وإدارتها</p>
-        <div class="hero-actions d-flex gap-2">
+        <h1 class="hero-title">الإجازات والأذونات</h1>
+        <p class="hero-subtitle">طلبات الإجازات والأذونات بالساعات للموظفين وإدارتها</p>
+        <div class="hero-actions d-flex flex-wrap gap-2">
             <a href="{{ route('leaves.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> طلب إجازة
+            </a>
+            <a href="{{ route('leaves.create', ['type' => 'permission']) }}" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-4">
+                <i class="bi bi-clock-history me-1 text-primary"></i> طلب إذن (بالساعات)
             </a>
         </div>
     </div>
@@ -18,8 +21,18 @@
 
 <div class="chart-container animate-slide-up animate-delay-1">
 
-        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3 px-4">
-             <h5 class="mb-0 fw-bold text-primary">السجل ({{ $leaves->total() }})</h5>
+        <div class="card-header bg-transparent border-0 d-flex flex-wrap justify-content-between align-items-center gap-2 py-3 px-4">
+             <div class="d-flex flex-wrap align-items-center gap-2">
+                 <h5 class="mb-0 fw-bold text-primary me-2">السجل ({{ $leaves->total() }})</h5>
+                 <a href="{{ route('leaves.index', array_filter(['status' => request('status')])) }}"
+                    class="btn btn-sm rounded-pill {{ !request('type') ? 'btn-primary' : 'btn-outline-secondary' }}">الكل</a>
+                 <a href="{{ route('leaves.index', array_filter(['type' => 'leaves_only', 'status' => request('status')])) }}"
+                    class="btn btn-sm rounded-pill {{ request('type') === 'leaves_only' ? 'btn-primary' : 'btn-outline-secondary' }}">الإجازات</a>
+                 <a href="{{ route('leaves.index', array_filter(['type' => 'permission', 'status' => request('status')])) }}"
+                    class="btn btn-sm rounded-pill {{ request('type') === 'permission' ? 'btn-info text-white' : 'btn-outline-info' }}">
+                    <i class="bi bi-clock me-1"></i> الأذونات (بالساعات)
+                 </a>
+             </div>
              <div class="d-none animate-fade-in" id="bulk-actions">
                  <button class="btn btn-sm btn-outline-danger d-flex align-items-center gap-2" onclick="submitBulk('destroy')">
                      <i class="bi bi-trash"></i> حذف المحدد
@@ -59,22 +72,34 @@
                                     </div>
                                 </td>
                                 <td class="px-4">
-                                    @php
-                                        $types = [
-                                            'annual' => 'سنوية',
-                                            'sick' => 'مرضية',
-                                            'unpaid' => 'بدون راتب',
-                                            'emergency' => 'عارضة',
-                                            'other' => 'أخرى'
-                                        ];
-                                    @endphp
-                                    {{ $types[$leave->type] ?? $leave->type }}
+                                    @if($leave->type === 'permission')
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3">
+                                            <i class="bi bi-clock-history me-1"></i> طلب إذن
+                                        </span>
+                                    @else
+                                        {{ $leave->type_label }}
+                                    @endif
                                 </td>
                                 <td class="px-4">
-                                    <div>{{ $leave->start_date->format('Y-m-d') }}</div>
-                                    <div class="small text-muted">إلى {{ $leave->end_date->format('Y-m-d') }}</div>
+                                    @if($leave->type === 'permission')
+                                        <div>{{ $leave->start_date->format('Y-m-d') }}</div>
+                                        @if($leave->from_time_formatted && $leave->to_time_formatted)
+                                            <div class="small text-info fw-semibold">
+                                                من {{ $leave->from_time_formatted }} إلى {{ $leave->to_time_formatted }}
+                                            </div>
+                                        @endif
+                                    @else
+                                        <div>{{ $leave->start_date->format('Y-m-d') }}</div>
+                                        <div class="small text-muted">إلى {{ $leave->end_date->format('Y-m-d') }}</div>
+                                    @endif
                                 </td>
-                                <td class="px-4">{{ $leave->days }} يوم</td>
+                                <td class="px-4">
+                                    @if($leave->type === 'permission')
+                                        <span class="badge bg-light text-dark border">{{ $leave->permission_duration_label ?? 'إذن ساعات' }}</span>
+                                    @else
+                                        {{ $leave->days }} يوم
+                                    @endif
+                                </td>
                                 <td class="px-4">
                                     <div class="d-flex align-items-center gap-2">
                                         @if($leave->status == 'approved')

@@ -441,6 +441,282 @@
         </div>
       </div>
     @endif
+
+    {{-- ============================================================== --}}
+    {{-- قسم مشروع مدرار (مياه، أسقف وترميم) --}}
+    {{-- ============================================================== --}}
+    @if(!empty($visit->medrar_details) || $visit->eligible_project_path === 'medrar')
+      @php $medrar = is_array($visit->medrar_details) ? $visit->medrar_details : []; @endphp
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-info">
+          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-info"><i class="bi bi-droplet-half me-2"></i>بيانات استمارة مشروع مدرار (مياه وأسقف وترميم)</h5>
+            <span class="badge bg-info">مشروع مدرار</span>
+          </div>
+          <div class="card-body p-4">
+            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">بيانات دليل القرية وحالة الملكية</h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">اسم دليل القرية</div>
+                  <div class="fw-bold text-dark">{{ $medrar['village_guide_name'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">هاتف دليل القرية</div>
+                  <div class="fw-bold text-dark">{{ $medrar['village_guide_phone'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">ملكية المنزل</div>
+                  <div class="fw-bold text-dark">{{ $medrar['house_ownership_type'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">عدد الأدوار والمساحة</div>
+                  <div class="fw-bold text-dark">{{ $medrar['house_floors_count'] ?? '—' }} ({{ $medrar['house_area_sqm'] ?? '—' }} م²)</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">كوردون مباني؟</div>
+                  <div class="fw-bold text-dark">{{ $medrar['is_cordon_buildings'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">يوجد أوراق تثبت الملكية باسم المالك؟</div>
+                  <div class="fw-bold text-dark">{{ $medrar['has_ownership_papers'] ?? '—' }} (باسم المالك: {{ $medrar['papers_in_owner_name'] ?? '—' }})</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">تحمل صبة خرسانية؟</div>
+                  <div class="fw-bold text-dark">{{ $medrar['can_bear_concrete_roof'] ?? '—' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">مياه الشرب وتوصيل المياه</h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">الاحتياج من المياه</div>
+                  <div class="fw-bold text-dark">{{ $medrar['water_connection_needed'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-success bg-opacity-10 border border-success">
+                  <div class="small text-success fw-bold">نوع الوصلة المطلوبة</div>
+                  <div class="fw-bolder text-dark fs-6">
+                    @if(($medrar['water_connection_type'] ?? '') === 'خضراء')
+                      <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i> وصلة خضراء</span>
+                    @elseif(($medrar['water_connection_type'] ?? '') === 'رصاصي')
+                      <span class="badge bg-secondary fs-6"><i class="bi bi-check-circle me-1"></i> وصلة رصاصي</span>
+                    @else
+                      {{ $medrar['water_connection_type'] ?? 'لم يحدد' }}
+                    @endif
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">ملاحظات الخط والتوصيل</div>
+                  <div class="fw-bold text-dark">{{ $medrar['water_notes'] ?? '—' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">التجهيزات وفرش المنزل (ضل حيطة)</h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">عدد السراير والمراتب</div>
+                  <div class="fw-bold text-dark">{{ $medrar['beds_count'] ?? 0 }} سراير — {{ $medrar['mattresses_count'] ?? 0 }} مراتب</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">حمام كامل بأدواته الصحية؟</div>
+                  <div class="fw-bold text-dark">{{ $medrar['has_complete_bathroom'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">الأجهزة الموجودة بالمنزل</div>
+                  <div class="fw-bold text-dark">{{ $medrar['existing_appliances'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">الأثاث أو الأجهزة الغير موجودة والمطلوبة</div>
+                  <div class="fw-bold text-dark">{{ $medrar['missing_appliances_furniture'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">الناقص من التجهيزات الأساسية (تشطيب/دهان)</div>
+                  <div class="fw-bold text-dark">{{ $medrar['missing_basic_finishes'] ?? '—' }}</div>
+                </div>
+              </div>
+              @if(!empty($medrar['has_special_cases']))
+                <div class="col-md-6">
+                  <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning">
+                    <div class="small text-warning fw-bold">أيتام / مرضى أورام / أمراض مزمنة:</div>
+                    <div class="text-dark">{{ $medrar['has_special_cases'] }}</div>
+                  </div>
+                </div>
+              @endif
+              @if(!empty($medrar['has_debts_loans']))
+                <div class="col-md-6">
+                  <div class="p-3 rounded bg-danger bg-opacity-10 border border-danger">
+                    <div class="small text-danger fw-bold">ديون أو قروض:</div>
+                    <div class="text-dark">{{ $medrar['has_debts_loans'] }}</div>
+                  </div>
+                </div>
+              @endif
+            </div>
+          </div>
+        </div>
+      </div>
+    @endif
+
+    {{-- ============================================================== --}}
+    {{-- قسم مشروع زاد (كفالة أيتام وأسرهم) --}}
+    {{-- ============================================================== --}}
+    @if(!empty($visit->zad_details) || $visit->eligible_project_path === 'zad')
+      @php $zad = is_array($visit->zad_details) ? $visit->zad_details : []; @endphp
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-success">
+          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-success"><i class="bi bi-people-fill me-2"></i>بيانات استمارة كفالة أيتام وأسرهم (مشروع زاد)</h5>
+            <span class="badge bg-success">مشروع زاد</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">اسم الزوج / الزوجة المتوفى/ة</div>
+                  <div class="fw-bold text-dark">{{ $zad['spouse_name'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">تاريخ وسبب الوفاة</div>
+                  <div class="fw-bold text-dark">{{ $zad['death_date_and_cause'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">عمل الزوج قبل الوفاة</div>
+                  <div class="fw-bold text-dark">{{ $zad['spouse_job_before_death'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">دليل الحالة للمؤسسة</div>
+                  <div class="fw-bold text-dark">{{ $zad['case_guide'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">احتياج الحالة من التقديم</div>
+                  <div class="fw-bold text-dark">{{ $zad['case_needs_summary'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="p-3 rounded bg-success bg-opacity-10 border border-success">
+                  <div class="small text-success fw-bold">قصة الحالة وظروف الأيتام:</div>
+                  <div class="text-dark">{{ $zad['case_story'] ?? 'لم تدوّن قصة الحالة' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">وضع البيت (محتاج سقف / ترميم / بنى)</div>
+                  <div class="fw-bold text-dark">{{ $zad['house_condition'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">مستوى الأولاد في الدراسة وإمكانية حضورهم</div>
+                  <div class="fw-bold text-dark">{{ $zad['children_education_status'] ?? '—' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    @endif
+
+    {{-- ============================================================== --}}
+    {{-- قسم مساعدات رمضان (وجبات وسلال) --}}
+    {{-- ============================================================== --}}
+    @if(!empty($visit->ramadan_details) || $visit->eligible_project_path === 'ramadan')
+      @php $ramadan = is_array($visit->ramadan_details) ? $visit->ramadan_details : []; @endphp
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 border-top border-4 border-warning">
+          <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-warning"><i class="bi bi-moon-stars-fill me-2"></i>بيانات استكشافات وجبات وسلال رمضان ٢٠٢٦م</h5>
+            <span class="badge bg-warning text-dark">مساعدات رمضان</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">اسم الزوج / الزوجة</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['spouse_name'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning">
+                  <div class="small text-warning fw-bold">هل تود وجبة إفطار مطبوخة في رمضان؟</div>
+                  <div class="fw-bolder text-dark fs-6">{{ $ramadan['wants_cooked_meals'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">السبب</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['cooked_meals_reason'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">ماذا تحب أن تأكل؟ (التفضيلات)</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['preferred_meals'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">وصف السكن</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['housing_description'] ?? '—' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">تحتاج كرتونة / سلة مواد غذائية؟</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['needs_food_box'] ?? 'نعم' }}</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">عدد الوجبات اليومية</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['meals_count_daily'] ?? '1' }} وجبة</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded bg-light border">
+                  <div class="small text-muted">اعتماد مسؤول الحملة</div>
+                  <div class="fw-bold text-dark">{{ $ramadan['campaign_officer_name'] ?? '—' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    @endif
   </div>
 </div>
 
