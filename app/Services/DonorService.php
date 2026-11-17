@@ -115,7 +115,7 @@ final readonly class DonorService
         $sponsoredFamilyMemberIds = $this->normaliseBeneficiaryIds($data['sponsored_family_member_ids'] ?? []);
         $beneficiaryAmounts = is_array($data['sponsorship_beneficiary_amounts'] ?? null) ? $data['sponsorship_beneficiary_amounts'] : [];
         $familyMemberAmounts = is_array($data['sponsorship_family_member_amounts'] ?? null) ? $data['sponsorship_family_member_amounts'] : [];
-        $sponsoredBeneficiaryIds = $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds);
+        $sponsoredBeneficiaryIds = $submittedBeneficiaryIds;
         $syncSponsoredBeneficiaries = (bool) ($data['sync_sponsored_beneficiaries'] ?? false);
         $syncSponsoredFamilyMembers = (bool) ($data['sync_sponsored_family_members'] ?? false);
         $modelData = Arr::except($data, [
@@ -205,7 +205,7 @@ final readonly class DonorService
         $beneficiaryAmounts = is_array($data['sponsorship_beneficiary_amounts'] ?? null) ? $data['sponsorship_beneficiary_amounts'] : [];
         $familyMemberAmounts = is_array($data['sponsorship_family_member_amounts'] ?? null) ? $data['sponsorship_family_member_amounts'] : [];
         $sponsoredBeneficiaryIds = $syncSponsoredBeneficiaries
-            ? $this->beneficiaryIdsForAssignments($submittedBeneficiaryIds, $sponsoredFamilyMemberIds ?? [])
+            ? $submittedBeneficiaryIds
             : null;
         $modelData = Arr::except($data, [
             'code', 'sponsored_beneficiary_ids', 'sync_sponsored_beneficiaries',
@@ -384,7 +384,7 @@ final readonly class DonorService
         }
 
         if ($data['sync_sponsored_beneficiaries'] ?? false) {
-            $allBeneficiaryIds = $this->beneficiaryIdsForAssignments($directBeneficiaryIds, $familyMemberIds);
+            $allBeneficiaryIds = $directBeneficiaryIds;
             $this->syncBeneficiariesWithAmounts($donor, $allBeneficiaryIds, $directBeneficiaryIds, $beneficiaryAmounts, $familyMemberIds, $totalMonthly);
         }
     }

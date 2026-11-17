@@ -2,8 +2,15 @@
 @section('content')
 
     @php
-        $sponsored = $donor->sponsoredBeneficiaries;
         $familyMembers = $donor->sponsoredFamilyMembers;
+        $familyMemberParentIds = $familyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+
+        // ملفات الأسر / الحالات الكاملة المكفولة مباشرة (استبعاد أولياء أمور الأطفال المكفولين الذين ليس لهم كفالة أسرة مباشرة)
+        $directSponsored = $donor->sponsoredBeneficiaries->filter(function ($sb) use ($familyMemberParentIds) {
+            $pivotAmt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            return !in_array($sb->id, $familyMemberParentIds, true) || $pivotAmt > 0;
+        });
+        $sponsored = $directSponsored;
 
         // حساب قيمة الكفالة الشهرية الفعلية
         $effectiveMonthlyAmount = 0.0;
@@ -154,75 +161,21 @@
                             </div>
                         @endif
 
-                        <div class="col-md-12">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="text-muted small mb-0">الأطفال / الحالات المكفولة ({{ $sponsored->count() }})</label>
-                                @if($effectiveMonthlyAmount > 0)
-                                    <span class="text-success small fw-bold font-monospace">
-                                        <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
-                                    </span>
-                                @endif
-                            </div>
-                            <div class="d-flex flex-wrap gap-2 mt-1">
-                                @forelse($sponsored as $sb)
-                                    @php
-                                        $childCommitment = (float) ($sb->pivot?->monthly_amount ?? 0);
-                                        $donorMembersForFamily = $donor->sponsoredFamilyMembers->where('beneficiary_id', $sb->id);
-                                        if ($childCommitment <= 0 && $donorMembersForFamily->isNotEmpty()) {
-                                            $childCommitment = (float) $donorMembersForFamily->sum(fn ($m) => (float) ($m->pivot?->monthly_amount ?? 0));
-                                        }
-                                        if ($childCommitment <= 0 && $effectiveMonthlyAmount > 0 && $sponsored->count() === 1 && $donor->sponsoredFamilyMembers->count() <= 1) {
-                                            $childCommitment = (float) $effectiveMonthlyAmount;
-                                        }
-                                        if ($childCommitment <= 0) {
-                                            foreach ($history as $h) {
-                                                if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
-                                                    foreach ($h->beneficiary_allocations as $ba) {
-                                                        if (($ba['beneficiary_id'] ?? null) == $sb->id || ($ba['code'] ?? null) == $sb->code) {
-                                                            $childCommitment = (float)($ba['amount'] ?? 0);
-                                                            break 2;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        $sbRequiredTotal = (float) ($sb->total_family_sponsorship_amount ?? $sb->monthly_sponsorship_amount ?? 0);
-                                        $sbRemainingTotal = (float) ($sb->remaining_family_sponsorship_amount ?? max(0, $sbRequiredTotal - $childCommitment));
-                                    @endphp
-                                    <div class="d-inline-flex align-items-center flex-wrap gap-1 bg-white border border-success rounded-pill px-3 py-1.5 shadow-sm">
-                                        <a href="{{ route('beneficiaries.show', $sb) }}" class="text-success text-decoration-none fw-bold me-1">
-                                            <i class="bi bi-person-heart me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
-                                        </a>
-                                        @if($childCommitment > 0)
-                                            <span class="badge bg-success text-white font-monospace fs-7 px-2.5 py-1 rounded-pill" title="المبلغ المخصص من هذا المتبرع لصالح الحالة">
-                                                مساهمة الكفيل: {{ number_format($childCommitment, 2) }} ج.م
-                                            </span>
-                                        @endif
-                                        @if($sbRequiredTotal > 0 && abs($sbRequiredTotal - $childCommitment) > 0.01)
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace rounded-pill">
-                                                إجمالي كفالة الحالة: {{ number_format($sbRequiredTotal, 0) }} ج.م
-                                            </span>
-                                            @if($sbRemainingTotal > 0)
-                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning font-monospace rounded-pill">
-                                                    باقي للحالة: {{ number_format($sbRemainingTotal, 0) }} ج.م
-                                                </span>
-                                            @endif
-                                        @endif
-                                    </div>
-                                @empty
-                                    <span class="text-muted small">لا توجد حالات مكفولة مسجلة باسم هذا المتبرع</span>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        @if($donor->sponsoredFamilyMembers->isNotEmpty())
+                        @if($familyMembers->isNotEmpty())
                             <div class="col-md-12">
-                                <label class="text-muted small mb-1">توزيع الكفالة على الأفراد / الأطفال المرتبطين تحديدًا ({{ $donor->sponsoredFamilyMembers->count() }})</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="text-muted small mb-0 fw-bold"><i class="bi bi-person-heart text-success me-1"></i>الأطفال / أفراد الأسر المكفولون ({{ $familyMembers->count() }})</label>
+                                    @if($effectiveMonthlyAmount > 0 && $directSponsored->isEmpty())
+                                        <span class="text-success small fw-bold font-monospace">
+                                            <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
+                                        </span>
+                                    @endif
+                                </div>
                                 <div class="row g-2 mt-1">
-                                    @foreach($donor->sponsoredFamilyMembers as $familyMember)
+                                    @foreach($familyMembers as $familyMember)
                                         @php
                                             $fmAmount = (float) ($familyMember->pivot->monthly_amount ?? 0);
-                                            if ($fmAmount <= 0 && $effectiveMonthlyAmount > 0 && $donor->sponsoredFamilyMembers->count() === 1) {
+                                            if ($fmAmount <= 0 && $effectiveMonthlyAmount > 0 && $familyMembers->count() === 1 && $directSponsored->isEmpty()) {
                                                 $fmAmount = (float) $effectiveMonthlyAmount;
                                             }
                                             if ($fmAmount <= 0) {
@@ -264,6 +217,70 @@
                                         </div>
                                     @endforeach
                                 </div>
+                            </div>
+                        @endif
+
+                        @if($directSponsored->isNotEmpty())
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="text-muted small mb-0 fw-bold"><i class="bi bi-house-heart text-primary me-1"></i>ملفات الأسر / الحالات الكاملة المكفولة ({{ $directSponsored->count() }})</label>
+                                    @if($effectiveMonthlyAmount > 0)
+                                        <span class="text-success small fw-bold font-monospace">
+                                            <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    @foreach($directSponsored as $sb)
+                                        @php
+                                            $caseCommitment = (float) ($sb->pivot?->monthly_amount ?? 0);
+                                            if ($caseCommitment <= 0 && $effectiveMonthlyAmount > 0 && $directSponsored->count() === 1 && $familyMembers->isEmpty()) {
+                                                $caseCommitment = (float) $effectiveMonthlyAmount;
+                                            }
+                                            if ($caseCommitment <= 0) {
+                                                foreach ($history as $h) {
+                                                    if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
+                                                        foreach ($h->beneficiary_allocations as $ba) {
+                                                            if (($ba['beneficiary_id'] ?? null) == $sb->id || ($ba['code'] ?? null) == $sb->code) {
+                                                                $caseCommitment = (float)($ba['amount'] ?? 0);
+                                                                break 2;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            $sbRequiredTotal = (float) ($sb->total_family_sponsorship_amount ?? $sb->monthly_sponsorship_amount ?? 0);
+                                            $sbRemainingTotal = (float) ($sb->remaining_family_sponsorship_amount ?? max(0, $sbRequiredTotal - $caseCommitment));
+                                        @endphp
+                                        <div class="d-inline-flex align-items-center flex-wrap gap-1 bg-white border border-success rounded-pill px-3 py-1.5 shadow-sm">
+                                            <a href="{{ route('beneficiaries.show', $sb) }}" class="text-success text-decoration-none fw-bold me-1">
+                                                <i class="bi bi-house-check me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
+                                            </a>
+                                            @if($caseCommitment > 0)
+                                                <span class="badge bg-success text-white font-monospace fs-7 px-2.5 py-1 rounded-pill" title="المبلغ المخصص من هذا المتبرع لصالح الحالة">
+                                                    مساهمة الكفيل: {{ number_format($caseCommitment, 2) }} ج.م
+                                                </span>
+                                            @endif
+                                            @if($sbRequiredTotal > 0 && abs($sbRequiredTotal - $caseCommitment) > 0.01)
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace rounded-pill">
+                                                    إجمالي كفالة الحالة: {{ number_format($sbRequiredTotal, 0) }} ج.م
+                                                </span>
+                                                @if($sbRemainingTotal > 0)
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning font-monospace rounded-pill">
+                                                        باقي للحالة: {{ number_format($sbRemainingTotal, 0) }} ج.م
+                                                    </span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($familyMembers->isEmpty() && $directSponsored->isEmpty())
+                            <div class="col-md-12">
+                                <label class="text-muted small mb-0">الحالات والأطفال المكفولين</label>
+                                <div class="text-muted small mt-1">لا توجد حالات أو أطفال مكفولين مسجلين باسم هذا المتبرع</div>
                             </div>
                         @endif
 

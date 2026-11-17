@@ -45,7 +45,7 @@
 
     {{-- Stats Row --}}
     <div class="row g-3 mt-1 mb-4">
-        <div class="col-md-3 col-6">
+        <div class="col-md-6 col-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-3">
                     <div class="text-muted small mb-1"><i class="bi bi-archive-fill text-primary me-1"></i> إجمالي النسخ المكتملة</div>
@@ -54,36 +54,12 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-6">
+        <div class="col-md-6 col-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-3">
                     <div class="text-muted small mb-1"><i class="bi bi-pin-angle-fill text-warning me-1"></i> النسخ المثبتة (محمية)</div>
                     <div class="h3 fw-bolder mb-0 text-warning">{{ $stats['pinned_count'] }}</div>
                     <small class="text-muted">لا تُحذف بالتدوير التلقائي</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-3">
-                    <div class="text-muted small mb-1"><i class="bi bi-hdd-fill text-success me-1"></i> مساحة الخزنة المستخدمة</div>
-                    <div class="h3 fw-bolder mb-0 text-success">{{ $stats['total_size_human'] }}</div>
-                    <small class="text-muted">الحد الأقصى: {{ number_format($settings->max_storage_mb) }} MB</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-3">
-                    <div class="text-muted small mb-1"><i class="bi bi-cloud-check-fill text-info me-1"></i> المساحة الحرة وآخر نسخة</div>
-                    <div class="h5 fw-bolder mb-0 text-info">{{ $stats['disk_free_human'] }}</div>
-                    <small class="text-muted">
-                        @if($stats['latest_snapshot'])
-                            آخر نسخة: {{ $stats['latest_snapshot']->created_at?->diffForHumans() }}
-                        @else
-                            لا توجد نسخ حتى الآن
-                        @endif
-                    </small>
                 </div>
             </div>
         </div>
