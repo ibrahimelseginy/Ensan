@@ -142,8 +142,12 @@ final class StoreDonationRequest extends FormRequest
             'sponsorship_kind'         => 'nullable|string',
             'beneficiary_id'           => 'nullable|exists:beneficiaries,id',
             'beneficiary_allocations'  => 'nullable|array',
-            'beneficiary_allocations.*.beneficiary_id' => 'required_with:beneficiary_allocations|exists:beneficiaries,id',
+            'beneficiary_allocations.*.beneficiary_id' => 'nullable|exists:beneficiaries,id',
             'beneficiary_allocations.*.family_member_id' => 'nullable|exists:beneficiary_family_members,id',
+            'beneficiary_allocations.*.pending_sponsorship_id' => 'nullable|integer',
+            'beneficiary_allocations.*.type'           => 'nullable|string',
+            'beneficiary_allocations.*.name'           => 'nullable|string',
+            'beneficiary_allocations.*.code'           => 'nullable|string',
             'beneficiary_allocations.*.amount'         => 'nullable|numeric|min:0',
             'beneficiary_allocations.*.notes'          => 'nullable|string',
             'split_allocations'        => 'nullable|array',
@@ -313,13 +317,14 @@ final class StoreDonationRequest extends FormRequest
         $benSum = 0.0;
         if (is_array($rawBenAllocs)) {
             foreach ($rawBenAllocs as $alloc) {
-                if (!is_array($alloc) || empty($alloc['beneficiary_id'])) {
+                if (!is_array($alloc) || (empty($alloc['beneficiary_id']) && empty($alloc['pending_sponsorship_id']))) {
                     continue;
                 }
                 $allocAmountRaw = $alloc['amount'] ?? null;
                 $allocAmount = ($allocAmountRaw !== null && $allocAmountRaw !== '') ? (float) $normalizeAsciiDigits($allocAmountRaw) : null;
-                $alloc['beneficiary_id'] = (int) $alloc['beneficiary_id'];
+                $alloc['beneficiary_id'] = !empty($alloc['beneficiary_id']) ? (int) $alloc['beneficiary_id'] : null;
                 $alloc['family_member_id'] = !empty($alloc['family_member_id']) ? (int) $alloc['family_member_id'] : null;
+                $alloc['pending_sponsorship_id'] = !empty($alloc['pending_sponsorship_id']) ? (int) $alloc['pending_sponsorship_id'] : null;
                 $alloc['amount'] = $allocAmount;
                 $cleanedBenAllocs[] = $alloc;
                 if ($allocAmount !== null && $allocAmount > 0) {

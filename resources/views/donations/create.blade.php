@@ -1112,11 +1112,12 @@ $(function () {
   // Multi-Beneficiary Allocation Logic
   let allocRowCounter = 0;
   function addBeneficiaryRow(item) {
-    if (!item || !item.id) return;
+    if (!item || (!item.id && !item.pending_sponsorship_id)) return;
 
-    const bId = item.id;
+    const bId = item.id || '';
     const mId = item.matched_member_id || item.family_member_id || null;
-    const rowKey = mId ? `${bId}_${mId}` : `${bId}`;
+    const pId = item.pending_sponsorship_id || null;
+    const rowKey = pId ? ('slot_' + pId) : (mId ? `${bId}_${mId}` : `${bId}`);
 
     // Check if already in list
     const existing = $(`.allocated-case-row[data-row-key="${rowKey}"]`);
@@ -1129,23 +1130,28 @@ $(function () {
 
     allocRowCounter++;
     const rowIdx = allocRowCounter;
-    const bCode = item.code || ('BEN-' + bId);
-    const bName = item.name || item.full_name || item.text || ('مستفيد #' + bId);
+    const isPending = !!pId;
+    const bCode = item.code || (isPending ? ('SLOT-' + pId) : ('BEN-' + bId));
+    const bName = item.name || item.full_name || item.text || (isPending ? 'كفالة طفل (قيد التسكين - ربط لاحقاً)' : ('مستفيد #' + bId));
     const bPhone = item.phone || '';
     const bAmt = (item.amount !== undefined && item.amount !== null) ? item.amount : '';
     const bNotes = item.notes || '';
 
     const rowHtml = `
-      <div class="allocated-case-row p-2.5 mb-2 rounded-3 border bg-white shadow-xs" data-id="${bId}" data-member-id="${mId || ''}" data-row-key="${rowKey}">
+      <div class="allocated-case-row p-2.5 mb-2 rounded-3 border bg-white shadow-xs" data-id="${bId}" data-member-id="${mId || ''}" data-pending-id="${pId || ''}" data-row-key="${rowKey}">
         <div class="row g-2 align-items-center">
           <div class="col-md-5 d-flex align-items-center gap-2">
-            <span class="badge bg-success font-monospace px-2.5 py-1.5">${bCode}</span>
+            <span class="badge ${isPending ? 'bg-warning text-dark' : 'bg-success'} font-monospace px-2.5 py-1.5">${bCode}</span>
             <div class="overflow-hidden">
               <span class="fw-bold text-dark d-block text-truncate" title="${bName}">${bName}</span>
               ${bPhone ? `<span class="text-muted small font-monospace"><i class="bi bi-telephone me-1"></i>${bPhone}</span>` : ''}
             </div>
-            <input type="hidden" name="beneficiary_allocations[${rowIdx}][beneficiary_id]" value="${bId}">
+            ${bId ? `<input type="hidden" name="beneficiary_allocations[${rowIdx}][beneficiary_id]" value="${bId}">` : ''}
             ${mId ? `<input type="hidden" name="beneficiary_allocations[${rowIdx}][family_member_id]" value="${mId}">` : ''}
+            ${pId ? `<input type="hidden" name="beneficiary_allocations[${rowIdx}][pending_sponsorship_id]" value="${pId}">` : ''}
+            ${pId ? `<input type="hidden" name="beneficiary_allocations[${rowIdx}][type]" value="pending">` : ''}
+            <input type="hidden" name="beneficiary_allocations[${rowIdx}][name]" value="${bName}">
+            <input type="hidden" name="beneficiary_allocations[${rowIdx}][code]" value="${bCode}">
             ${mId ? `<input type="hidden" name="family_member_ids[]" class="case-family-member-input" value="${mId}">` : ''}
           </div>
           <div class="col-md-3">
@@ -1970,8 +1976,7 @@ $(function () {
           notes: c.notes || 'كفالة دورية',
           family_member_id: c.family_member_id || null,
           matched_member_id: c.family_member_id || null,
-          family_member_id: c.family_member_id || null,
-          matched_member_id: c.family_member_id || null
+          pending_sponsorship_id: c.pending_sponsorship_id || null
         });
       });
     }

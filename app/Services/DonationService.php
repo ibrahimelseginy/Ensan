@@ -239,23 +239,30 @@ final readonly class DonationService
             $allocBenIds = [];
             $allocMemberIds = [];
             foreach ($data['beneficiary_allocations'] as $alloc) {
-                if (empty($alloc['beneficiary_id'])) continue;
-                $bId = (int)$alloc['beneficiary_id'];
+                if (empty($alloc['beneficiary_id']) && empty($alloc['pending_sponsorship_id'])) continue;
+                $bId = !empty($alloc['beneficiary_id']) ? (int)$alloc['beneficiary_id'] : null;
                 $mId = !empty($alloc['family_member_id']) ? (int)$alloc['family_member_id'] : null;
-                $allocBenIds[] = $bId;
+                $pId = !empty($alloc['pending_sponsorship_id']) ? (int)$alloc['pending_sponsorship_id'] : null;
+                if ($bId) {
+                    $allocBenIds[] = $bId;
+                }
                 if ($mId) {
                     $allocMemberIds[] = $mId;
                 }
                 $formattedAllocations[] = [
-                    'beneficiary_id'   => $bId,
-                    'family_member_id' => $mId,
-                    'amount'           => !empty($alloc['amount']) ? (float)$alloc['amount'] : 0,
-                    'notes'            => !empty($alloc['notes']) ? (string)$alloc['notes'] : null,
+                    'beneficiary_id'         => $bId,
+                    'family_member_id'       => $mId,
+                    'pending_sponsorship_id' => $pId,
+                    'name'                   => $alloc['name'] ?? null,
+                    'code'                   => $alloc['code'] ?? null,
+                    'type'                   => $alloc['type'] ?? ($pId ? 'pending' : null),
+                    'amount'                 => !empty($alloc['amount']) ? (float)$alloc['amount'] : 0,
+                    'notes'                  => !empty($alloc['notes']) ? (string)$alloc['notes'] : null,
                 ];
             }
 
             if (!empty($formattedAllocations)) {
-                $bens = Beneficiary::whereIn('id', array_unique($allocBenIds))->get()->keyBy('id');
+                $bens = !empty($allocBenIds) ? Beneficiary::whereIn('id', array_unique($allocBenIds))->get()->keyBy('id') : collect();
                 $members = !empty($allocMemberIds)
                     ? BeneficiaryFamilyMember::whereIn('id', array_unique($allocMemberIds))->get()->keyBy('id')
                     : collect();
@@ -264,6 +271,23 @@ final readonly class DonationService
                 foreach ($formattedAllocations as $item) {
                     $bId = $item['beneficiary_id'];
                     $mId = $item['family_member_id'];
+                    $pId = $item['pending_sponsorship_id'];
+
+                    if ($pId || $bId === null) {
+                        $finalAllocations[] = [
+                            'beneficiary_id'         => null,
+                            'family_member_id'       => null,
+                            'pending_sponsorship_id' => $pId,
+                            'type'                   => 'pending',
+                            'name'                   => $item['name'] ?: 'كفالة طفل (قيد التسكين - ربط لاحقاً)',
+                            'code'                   => $item['code'] ?: ('SLOT-' . ($pId ?: 'NEW')),
+                            'phone'                  => '',
+                            'amount'                 => $item['amount'],
+                            'notes'                  => $item['notes'] ?: 'كفالة قيد التسكين',
+                        ];
+                        continue;
+                    }
+
                     $ben = $bens->get($bId);
                     $member = $mId ? $members->get($mId) : null;
 

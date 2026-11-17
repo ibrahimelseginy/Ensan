@@ -45,7 +45,10 @@
             return $amt;
         });
 
-        $casesTotalAmount = $familyMembersTotal + $directSponsoredTotal;
+        $pendingSlots = $donor->pendingSponsorships;
+        $pendingTotal = (float) $pendingSlots->sum('monthly_amount');
+
+        $casesTotalAmount = $familyMembersTotal + $directSponsoredTotal + $pendingTotal;
 
         // حساب قيمة الكفالة الشهرية الفعلية
         $effectiveMonthlyAmount = 0.0;
@@ -203,6 +206,63 @@
                             </div>
                         @endif
 
+                        {{-- شريط إدارة الكفالات والحالات --}}
+                        <div class="col-12 mt-2 pt-2 border-top">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                <span class="fw-bold text-dark small">
+                                    <i class="bi bi-heart-pulse-fill text-danger me-1"></i>الكفالات والحالات المخصصة للمتبرع
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold rounded-pill shadow-xs" data-bs-toggle="modal" data-bs-target="#addPendingSlotModal">
+                                    <i class="bi bi-plus-circle-fill text-warning me-1"></i>إضافة كفالة (قيد التسكين / ربط لاحقاً)
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- الكفالات المعلقة (قيد التسكين - ربط لاحقاً) --}}
+                        @if($pendingSlots->isNotEmpty())
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="text-warning-emphasis small mb-0 fw-bold">
+                                        <i class="bi bi-hourglass-split text-warning me-1"></i>كفالات قيد التسكين والربط اللاحق ({{ $pendingSlots->count() }})
+                                    </label>
+                                    <span class="text-warning-emphasis small fw-bold font-monospace">
+                                        <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالات المعلقة: {{ number_format($pendingTotal, 2) }} ج.م شهرياً
+                                    </span>
+                                </div>
+                                <div class="row g-2 mt-1 mb-2">
+                                    @foreach($pendingSlots as $slot)
+                                        <div class="col-md-6">
+                                            <div class="border border-warning border-dashed rounded-3 p-2.5 bg-warning bg-opacity-10 shadow-xs">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                                    <span class="fw-bold text-dark">
+                                                        <i class="bi bi-hourglass-top text-warning me-1"></i>{{ $slot->type_label }} <span class="badge bg-warning text-dark px-1.5 py-0.5 rounded-pill small">قيد التسكين</span>
+                                                    </span>
+                                                    <span class="badge bg-warning text-dark font-monospace px-2.5 py-1 rounded-pill">
+                                                        مساهمة الكفيل: {{ number_format((float)$slot->monthly_amount, 2) }} ج.م
+                                                    </span>
+                                                </div>
+                                                <div class="small text-muted mt-1.5 d-flex flex-wrap align-items-center justify-content-between gap-1">
+                                                    <span>{{ $slot->target_notes ?: 'بانتظار وصول وتحديد الحالة' }}</span>
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <button type="button" class="btn btn-sm btn-success py-0 px-2.5 small rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#linkPendingModal_{{ $slot->id }}">
+                                                            <i class="bi bi-link-45deg me-1"></i>ربط بالحالة الآن
+                                                        </button>
+                                                        <form action="{{ route('donors.pending-sponsorships.destroy', [$donor, $slot]) }}" method="POST" onsubmit="return confirm('هل تريد بالتأكيد إلغاء هذه الكفالة المعلقة؟');" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1.5 small border-0" title="إلغاء الكفالة">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         @if($familyMembers->isNotEmpty())
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
@@ -327,10 +387,10 @@
                             </div>
                         @endif
 
-                        @if($familyMembers->isEmpty() && $directSponsored->isEmpty())
+                        @if($familyMembers->isEmpty() && $directSponsored->isEmpty() && $pendingSlots->isEmpty())
                             <div class="col-md-12">
                                 <label class="text-muted small mb-0">الحالات والأطفال المكفولين</label>
-                                <div class="text-muted small mt-1">لا توجد حالات أو أطفال مكفولين مسجلين باسم هذا المتبرع</div>
+                                <div class="text-muted small mt-1">لا توجد حالات أو أطفال مكفولين مسجلين باسم هذا المتبرع حالياً، يمكنك إضافة كفالة للربط لاحقاً من الزر أعلاه.</div>
                             </div>
                         @endif
 
@@ -924,6 +984,122 @@
             </form>
         </div>
     </div>
+
+    {{-- نافذة إضافة كفالة جديدة قيد التسكين والربط لاحقاً --}}
+    <div class="modal fade" id="addPendingSlotModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg text-end" dir="rtl">
+                <form action="{{ route('donors.pending-sponsorships.store', $donor) }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-warning-subtle py-2.5 border-bottom border-warning-subtle">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning text-dark p-2 rounded-circle"><i class="bi bi-person-plus-fill"></i></span>
+                            <h6 class="modal-title fw-bold text-dark mb-0">إضافة كفالة جديدة (قيد التسكين - ربط لاحقاً)</h6>
+                        </div>
+                        <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div class="alert alert-warning alert-dismissible fade show small py-2 mb-3 border-0 bg-warning bg-opacity-15 text-dark" role="alert">
+                            <i class="bi bi-info-circle-fill text-warning me-1"></i>
+                            تتيح هذه الميزة تسجيل كفالة بمبلغ شهري محدد للمتبرع، بحيث يمكنه التبرع لها فوراً من شاشة التبرعات، وتسكين/ربط الطفل أو الأسرة لاحقاً عند وصول الملف.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">نوع الكفالة <span class="text-danger">*</span></label>
+                            <select name="type" class="form-select fw-medium" required>
+                                <option value="child" selected>كفالة طفل / يتيم</option>
+                                <option value="family">كفالة أسرة كاملة / ملف حالة</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">مبلغ الكفالة الشهري (ج.م) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">ج.م</span>
+                                <input type="number" step="any" min="1" name="monthly_amount" class="form-control font-monospace fw-bold text-success fs-6" placeholder="مثال: 500.00" required>
+                            </div>
+                            <div class="form-text small">سيتم إضافة هذا المبلغ تلقائياً لإجمالي كفالة المتبرع الشهرية.</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small text-muted">ملاحظات أو رغبة المتبرع (اختياري)</label>
+                            <textarea name="target_notes" class="form-control" rows="2" placeholder="مثال: كفالة يتيم ولد في المرحلة الابتدائية بكفر الشيخ..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-2">
+                        <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold px-3">
+                            <i class="bi bi-check-circle me-1"></i>حفظ وإدراج بالملف
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- نوافذ ربط الكفالات المعلقة بالحالات --}}
+    @foreach($pendingSlots as $slot)
+        <div class="modal fade" id="linkPendingModal_{{ $slot->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg text-end" dir="rtl">
+                    <form action="{{ route('donors.pending-sponsorships.link', [$donor, $slot]) }}" method="POST">
+                        @csrf
+                        <div class="modal-header bg-success-subtle py-2.5 border-bottom border-success-subtle">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success text-white p-2 rounded-circle"><i class="bi bi-link-45deg fs-6"></i></span>
+                                <div>
+                                    <h6 class="modal-title fw-bold text-success mb-0">تسكين وربط الكفالة بالحالة</h6>
+                                    <small class="text-muted font-monospace">مساهمة الكفيل: {{ number_format((float)$slot->monthly_amount, 2) }} ج.م شهرياً</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-3">
+                            <p class="small text-muted mb-3">
+                                اختر الطفل أو الأسرة المراد ربطها بهذا المتبرع ليتم تحويل هذا المبلغ الشهري (<strong>{{ number_format((float)$slot->monthly_amount, 2) }} ج.م</strong>) لصالحها رسمياً، وتحديث أي تبرعات سابقة غير مسكنة.
+                            </p>
+
+                            @if($slot->type === 'family')
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-muted">ابحث واختر الأسرة / الحالة <span class="text-danger">*</span></label>
+                                    <select name="beneficiary_id" class="form-select select2-pending-link" required data-placeholder="ابحث باسم الأسرة أو كود الحالة...">
+                                        <option value="">— اختر الأسرة —</option>
+                                        @foreach($allBeneficiaries ?? [] as $ben)
+                                            <option value="{{ $ben->id }}">{{ $ben->full_name }} — كود: {{ $ben->code }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-muted">ابحث واختر الطفل / اليتيم <span class="text-danger">*</span></label>
+                                    <select name="family_member_id" class="form-select select2-pending-link" required data-placeholder="ابحث باسم الطفل أو كود الحالة...">
+                                        <option value="">— اختر الطفل / فرد الأسرة —</option>
+                                        @foreach($allFamilyMembers ?? [] as $member)
+                                            <option value="{{ $member->id }}">
+                                                {{ $member->full_name }} ({{ $member->relationship_label ?? 'طفل' }}) — أسرة: {{ $member->beneficiary?->full_name ?? 'الأسرة' }} — كود: {{ $member->code }} @if($member->sponsorship_amount > 0) [المطلوب: {{ number_format((float)$member->sponsorship_amount, 0) }}ج] @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            @if($slot->target_notes)
+                                <div class="p-2 rounded bg-light border small text-muted">
+                                    <i class="bi bi-chat-left-text me-1 text-primary"></i><strong>رغبة المتبرع المسجلة:</strong> {{ $slot->target_notes }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="modal-footer bg-light py-2">
+                            <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-sm btn-success fw-bold px-3">
+                                <i class="bi bi-check2-circle me-1"></i>تأكيد الربط والتسكين في الملف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 
     {{-- Print Styles (Native Fallback) --}}
     <style>

@@ -142,6 +142,16 @@ final class Donor extends Model
         )->withPivot(['monthly_amount', 'notes'])->withTimestamps();
     }
 
+    public function pendingSponsorships(): HasMany
+    {
+        return $this->hasMany(DonorPendingSponsorship::class)->where('status', 'pending');
+    }
+
+    public function allPendingSponsorships(): HasMany
+    {
+        return $this->hasMany(DonorPendingSponsorship::class);
+    }
+
     public function getActiveSponsoredCasesSumAttribute(): float
     {
         $fmParentIds = $this->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
@@ -152,7 +162,9 @@ final class Donor extends Model
             return !in_array($sb->id, $fmParentIds, true) || $pivotAmt > 0;
         })->sum(fn ($sb) => (float) ($sb->pivot?->monthly_amount ?? 0));
 
-        return $fmSum + $dsSum;
+        $pendingSum = (float) $this->pendingSponsorships->sum(fn ($ps) => (float) ($ps->monthly_amount ?? 0));
+
+        return $fmSum + $dsSum + $pendingSum;
     }
 
     public function donations(): HasMany
@@ -180,6 +192,7 @@ final class Donor extends Model
         $this->loadMissing([
             'sponsoredBeneficiaries',
             'sponsoredFamilyMembers.beneficiary',
+            'pendingSponsorships',
             'campaign',
             'guestHouse',
         ]);
@@ -304,6 +317,22 @@ final class Donor extends Model
                 'amount' => $caseAmt,
                 'required_amount' => (float) ($sb->total_family_sponsorship_amount ?? $sb->monthly_sponsorship_amount ?? 0),
                 'notes' => ($sb->pivot?->notes ?? null) ?: ($lastBenNotes[$sb->id] ?? 'كفالة أسرة / حالة'),
+            ];
+        }
+
+        // 3. Add pending sponsorships (slots pledged/waiting to be linked to a child or family)
+        foreach ($this->pendingSponsorships as $ps) {
+            $cases[] = [
+                'id' => null,
+                'family_member_id' => null,
+                'pending_sponsorship_id' => $ps->id,
+                'code' => 'SLOT-' . $ps->id,
+                'name' => ($ps->type === 'family' ? 'كفالة أسرة' : 'كفالة طفل') . ' (قيد التسكين - ربط لاحقاً)',
+                'phone' => '',
+                'type' => 'pending_' . $ps->type,
+                'amount' => (float) $ps->monthly_amount,
+                'required_amount' => (float) $ps->monthly_amount,
+                'notes' => $ps->target_notes ?: (($ps->type === 'family' ? 'كفالة أسرة' : 'كفالة طفل') . ' قيد التسكين والربط لاحقاً'),
             ];
         }
 

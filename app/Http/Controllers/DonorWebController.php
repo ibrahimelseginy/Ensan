@@ -13,6 +13,7 @@ use App\Models\Warehouse;
 use App\Models\GuestHouse;
 use App\Models\Beneficiary;
 use App\Models\BeneficiaryFamilyMember;
+use App\Models\DonorPendingSponsorship;
 use App\Services\DonorService;
 use App\Http\Requests\StoreDonorRequest;
 use App\Http\Requests\UpdateDonorRequest;
@@ -177,7 +178,7 @@ final class DonorWebController extends Controller
             return redirect()->route('change-requests.index')->with('info', 'هذا المتبرع لديه طلب مراجعة حالياً');
         }
 
-        $donor->load(['sponsoredBeneficiaries', 'sponsoredFamilyMembers.beneficiary']);
+        $donor->load(['sponsoredBeneficiaries', 'sponsoredFamilyMembers.beneficiary', 'pendingSponsorships']);
         $stats         = $this->donorService->getDonorStats($donor->id);
         $paidThisMonth = $this->donorService->getPaidThisMonth($donor);
         $history       = Donation::with(['project', 'campaign', 'warehouse'])
@@ -185,7 +186,16 @@ final class DonorWebController extends Controller
             ->orderByDesc('received_at')->orderByDesc('id')
             ->get();
             
-        return view('donors.show', compact('donor', 'stats', 'paidThisMonth', 'history'));
+        $allBeneficiaries = Beneficiary::orderBy('full_name')->get(['id', 'full_name', 'code']);
+
+        $allFamilyMembers = BeneficiaryFamilyMember::query()
+            ->where(fn($q) => $q->whereNull('active')->orWhere('active', true))
+            ->where(fn ($query) => $query->whereIn('relationship', ['child', 'son', 'daughter', 'orphan', 'patient', 'ابن', 'ابنة', 'طفل', 'يتيم', 'مريض'])->orWhere('is_patient', true)->orWhereNull('relationship'))
+            ->with('beneficiary:id,full_name,code')
+            ->orderBy('full_name')
+            ->get(['id', 'beneficiary_id', 'full_name', 'code', 'relationship', 'sponsorship_amount']);
+
+        return view('donors.show', compact('donor', 'stats', 'paidThisMonth', 'history', 'allBeneficiaries', 'allFamilyMembers'));
     }
 
     public function edit(Donor $donor): View|RedirectResponse
@@ -403,6 +413,153 @@ final class DonorWebController extends Controller
         }
 
         return redirect()->route('donors.index')->with('success', 'تم حذف المتبرع بنجاح.');
+    }
+
+    public function storePendingSponsorship(Request $request, Donor $donor): RedirectResponse
+    {
+        $validated = $request->validate([
+            'type'           => 'required|in:child,family',
+            'monthly_amount' => 'required|numeric|min:1',
+            'target_notes'   => 'nullable|string|max:500',
+        ]);
+
+        $slot = $donor->allPendingSponsorships()->create([
+            'type'           => $validated['type'],
+            'monthly_amount' => (float) $validated['monthly_amount'],
+            'target_notes'   => $validated['target_notes'] ?? null,
+            'status'         => 'pending',
+        ]);
+
+        // Recalculate monthly amount
+        $newTotal = $donor->active_sponsored_cases_sum;
+        $donor->update([
+            'sponsorship_monthly_amount' => $newTotal,
+            'sponsorship_type'           => $donor->sponsorship_type ?: 'monthly_sponsor',
+            'allocation_type'            => $donor->allocation_type ?: 'sponsorship',
+        ]);
+
+        return redirect()->route('donors.show', $donor)->with('success', "تم إضافة كفالة (" . ($slot->type === 'family' ? 'أسرة' : 'طفل') . ") بمبلغ " . number_format((float)$slot->monthly_amount, 2) . " ج.م بنجاح، وهي الآن جاهزة للتبرع المباشر أو الربط لاحقاً.");
+    }
+
+    public function linkPendingSponsorship(Request $request, Donor $donor, DonorPendingSponsorship $slot): RedirectResponse
+    {
+        if ($slot->donor_id !== $donor->id) {
+            abort(404);
+        }
+
+        $request->validate([
+            'family_member_id' => 'nullable|exists:beneficiary_family_members,id',
+            'beneficiary_id'   => 'nullable|exists:beneficiaries,id',
+        ]);
+
+        $fmId = $request->input('family_member_id');
+        $benId = $request->input('beneficiary_id');
+
+        if (!$fmId && !$benId) {
+            return back()->with('error', 'يرجى اختيار طفل أو أسرة للربط.');
+        }
+
+        $linkedName = '';
+        if ($fmId) {
+            $member = BeneficiaryFamilyMember::with('beneficiary')->findOrFail($fmId);
+            $donor->sponsoredFamilyMembers()->syncWithoutDetaching([
+                $member->id => [
+                    'monthly_amount' => $slot->monthly_amount,
+                    'notes'          => $slot->target_notes ?: ('كفالة مسكنة: ' . $member->full_name),
+                ]
+            ]);
+
+            $slot->update([
+                'status'                  => 'linked',
+                'linked_family_member_id' => $member->id,
+                'linked_beneficiary_id'   => $member->beneficiary_id,
+                'linked_at'               => now(),
+                'linked_by_user_id'       => auth()->id(),
+            ]);
+
+            $linkedName = $member->full_name;
+
+            // Retroactively update allocations in past donations for this pending slot
+            $recentDonations = Donation::where('donor_id', $donor->id)->get();
+            foreach ($recentDonations as $donation) {
+                if (!empty($donation->beneficiary_allocations) && is_array($donation->beneficiary_allocations)) {
+                    $allocs = $donation->beneficiary_allocations;
+                    $changed = false;
+                    foreach ($allocs as &$a) {
+                        if (($a['pending_sponsorship_id'] ?? null) == $slot->id) {
+                            $a['family_member_id'] = $member->id;
+                            $a['beneficiary_id']   = $member->beneficiary_id;
+                            $a['name']             = $member->full_name . ' (أسرة ' . ($member->beneficiary?->full_name ?? '') . ')';
+                            $a['code']             = $member->code;
+                            $changed = true;
+                        }
+                    }
+                    if ($changed) {
+                        $donation->beneficiary_allocations = $allocs;
+                        $donation->saveQuietly();
+                    }
+                }
+            }
+        } elseif ($benId) {
+            $ben = Beneficiary::findOrFail($benId);
+            $donor->sponsoredBeneficiaries()->syncWithoutDetaching([
+                $ben->id => [
+                    'monthly_amount' => $slot->monthly_amount,
+                    'notes'          => $slot->target_notes ?: ('كفالة أسرة مسكنة: ' . $ben->full_name),
+                ]
+            ]);
+
+            $slot->update([
+                'status'                => 'linked',
+                'linked_beneficiary_id' => $ben->id,
+                'linked_at'             => now(),
+                'linked_by_user_id'     => auth()->id(),
+            ]);
+
+            $linkedName = $ben->full_name;
+
+            // Retroactively update allocations in past donations for this pending slot
+            $recentDonations = Donation::where('donor_id', $donor->id)->get();
+            foreach ($recentDonations as $donation) {
+                if (!empty($donation->beneficiary_allocations) && is_array($donation->beneficiary_allocations)) {
+                    $allocs = $donation->beneficiary_allocations;
+                    $changed = false;
+                    foreach ($allocs as &$a) {
+                        if (($a['pending_sponsorship_id'] ?? null) == $slot->id) {
+                            $a['beneficiary_id'] = $ben->id;
+                            $a['name']           = $ben->full_name;
+                            $a['code']           = $ben->code;
+                            $changed = true;
+                        }
+                    }
+                    if ($changed) {
+                        $donation->beneficiary_allocations = $allocs;
+                        $donation->saveQuietly();
+                    }
+                }
+            }
+        }
+
+        // Recalculate donor sponsorship amount
+        $newTotal = $donor->active_sponsored_cases_sum;
+        $donor->update(['sponsorship_monthly_amount' => $newTotal]);
+
+        return redirect()->route('donors.show', $donor)->with('success', "تم تسكين وربط الكفالة بالحالة ({$linkedName}) بنجاح وتحويلها إلى كفالة منتظمة في الملف.");
+    }
+
+    public function destroyPendingSponsorship(Donor $donor, DonorPendingSponsorship $slot): RedirectResponse
+    {
+        if ($slot->donor_id !== $donor->id) {
+            abort(404);
+        }
+
+        $slot->delete();
+
+        // Recalculate donor sponsorship amount
+        $newTotal = $donor->active_sponsored_cases_sum;
+        $donor->update(['sponsorship_monthly_amount' => $newTotal]);
+
+        return redirect()->route('donors.show', $donor)->with('success', 'تم إلغاء الكفالة المعلقة بنجاح.');
     }
 
     private function hasPendingRequest(Donor $donor): bool

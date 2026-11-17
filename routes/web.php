@@ -411,6 +411,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('donors/export/pdf', [DonorWebController::class, 'exportPdf'])->middleware('throttle:heavy-ops')->name('donors.export-pdf.post');
         Route::resource('donors', DonorWebController::class);
         Route::post('donors/bulk-destroy', [DonorWebController::class, 'bulkDestroy'])->name('donors.bulk-destroy');
+        Route::post('donors/{donor}/pending-sponsorships', [DonorWebController::class, 'storePendingSponsorship'])->name('donors.pending-sponsorships.store');
+        Route::post('donors/{donor}/pending-sponsorships/{slot}/link', [DonorWebController::class, 'linkPendingSponsorship'])->name('donors.pending-sponsorships.link');
+        Route::delete('donors/{donor}/pending-sponsorships/{slot}', [DonorWebController::class, 'destroyPendingSponsorship'])->name('donors.pending-sponsorships.destroy');
     });
 
     Route::middleware('permission:donations.view')->group(function () {
