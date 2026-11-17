@@ -33,8 +33,7 @@ final class MonthlyDonationReminderService
                 $q->whereNotNull('next_due_date')
                   ->orWhereNotNull('monthly_donation_day');
             })
-            ->withCount('sponsoredBeneficiaries')
-            ->with(['sponsoredBeneficiary'])
+            ->with(['sponsoredBeneficiary', 'sponsoredBeneficiaries', 'sponsoredFamilyMembers.beneficiary'])
             ->orderBy('monthly_donation_day')
             ->orderBy('name')
             ->get()
@@ -79,8 +78,10 @@ final class MonthlyDonationReminderService
                 $isOverdue = $dueDate->lt($todayStart);
 
                 $target = $this->targetDescription($donor);
-                $amount = (float) $donor->sponsorship_monthly_amount > 0
-                    ? ' — ' . number_format((float) $donor->sponsorship_monthly_amount, 2) . ' جنيه'
+                $caseSum = (float) $donor->active_sponsored_cases_sum;
+                $effectiveAmount = $caseSum > 0 ? $caseSum : (float) $donor->sponsorship_monthly_amount;
+                $amount = $effectiveAmount > 0
+                    ? ' — ' . number_format($effectiveAmount, 2) . ' جنيه'
                     : '';
 
                 $donorCode = $donor->display_code ?? ($donor->code ?? ('D-' . $donor->id));
@@ -135,12 +136,30 @@ final class MonthlyDonationReminderService
 
     private function targetDescription(Donor $donor): string
     {
-        if ($donor->sponsoredBeneficiary) {
-            return 'كفالة الحالة: ' . $donor->sponsoredBeneficiary->full_name . ' (' . ($donor->sponsoredBeneficiary->code ?? 'BEN-' . $donor->sponsoredBeneficiary->id) . ')';
+        if ($donor->sponsoredFamilyMembers->isNotEmpty()) {
+            if ($donor->sponsoredFamilyMembers->count() === 1) {
+                $fm = $donor->sponsoredFamilyMembers->first();
+                return 'كفالة الطفل: ' . $fm->full_name . ' (' . ($fm->code ?? 'BEN-' . $fm->beneficiary_id) . ')';
+            }
+            return 'كفالة ' . $donor->sponsoredFamilyMembers->count() . ' أطفال/أفراد أسر';
         }
 
-        if ($donor->sponsored_beneficiaries_count > 0) {
-            return 'كفالة ' . $donor->sponsored_beneficiaries_count . ' طفل/حالة';
+        $fmParentIds = $donor->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+        $directBens = $donor->sponsoredBeneficiaries->filter(function ($sb) use ($fmParentIds) {
+            $pivotAmt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            return !in_array($sb->id, $fmParentIds, true) || $pivotAmt > 0;
+        });
+
+        if ($directBens->isNotEmpty()) {
+            if ($directBens->count() === 1) {
+                $ben = $directBens->first();
+                return 'كفالة الأسرة: ' . $ben->full_name . ' (' . ($ben->code ?? 'BEN-' . $ben->id) . ')';
+            }
+            return 'كفالة ' . $directBens->count() . ' أسر/حالات';
+        }
+
+        if ($donor->sponsoredBeneficiary && !in_array($donor->sponsoredBeneficiary->id, $fmParentIds, true)) {
+            return 'كفالة الحالة: ' . $donor->sponsoredBeneficiary->full_name . ' (' . ($donor->sponsoredBeneficiary->code ?? 'BEN-' . $donor->sponsoredBeneficiary->id) . ')';
         }
 
         return trim((string) $donor->monthly_allocation_target) !== ''

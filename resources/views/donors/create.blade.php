@@ -281,11 +281,8 @@
       }
 
       let userManuallyEditedTotal = false;
-      if (parseFloat($('#sponsorshipMonthlyAmountInput').val() || '0') > 0) {
-        userManuallyEditedTotal = true;
-      }
 
-      $('#sponsorshipMonthlyAmountInput').on('input change', function () {
+      $('#sponsorshipMonthlyAmountInput').on('input', function () {
         userManuallyEditedTotal = true;
       });
 
@@ -302,9 +299,7 @@
         const sum = getCalculatedCaseSum();
         $('#caseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
         
-        // لا نعدل قيمة الإجمالي إطلاقاً إذا كتب المستخدم رقماً يدوياً بنفسه (مثل 1500 وباقي الحالات لم تُسجل)
-        const currentVal = $('#sponsorshipMonthlyAmountInput').val().trim();
-        if (!userManuallyEditedTotal && currentVal === '' && sum > 0) {
+        if (!userManuallyEditedTotal && sum > 0) {
           $('#sponsorshipMonthlyAmountInput').val(sum.toFixed(2));
         }
       }

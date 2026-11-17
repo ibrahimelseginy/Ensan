@@ -353,7 +353,6 @@ final readonly class DonationService
                                 ]);
                                 $member = BeneficiaryFamilyMember::find($fmId);
                                 if ($member) {
-                                    $donor->sponsoredBeneficiaries()->syncWithoutDetaching([$member->beneficiary_id]);
                                     if ($allocAmount !== null && ((float) ($member->sponsorship_amount ?? 0)) <= 0) {
                                         $member->update(['sponsorship_amount' => $allocAmount]);
                                     }
@@ -584,9 +583,9 @@ final readonly class DonationService
             return;
         }
 
-        $donor->sponsoredBeneficiaries()->syncWithoutDetaching($beneficiaryIds);
-
+        $hasFamilyMember = false;
         if (preg_match('/(?:^|;)family_member_id=(\d+)/m', (string) $donation->allocation_note, $memberMatches)) {
+            $hasFamilyMember = true;
             $familyMember = BeneficiaryFamilyMember::query()
                 ->whereKey((int) $memberMatches[1])
                 ->whereIn('beneficiary_id', $beneficiaryIds)
@@ -595,8 +594,13 @@ final readonly class DonationService
             $familyMember?->sponsors()->syncWithoutDetaching([$donor->id]);
         }
 
-        if (! $donor->sponsored_beneficiary_id) {
-            $donor->forceFill(['sponsored_beneficiary_id' => reset($beneficiaryIds)])->save();
+        // Only attach to whole-family sponsorship if this donation was NOT for an individual child/family member
+        if (! $hasFamilyMember) {
+            $donor->sponsoredBeneficiaries()->syncWithoutDetaching($beneficiaryIds);
+
+            if (! $donor->sponsored_beneficiary_id) {
+                $donor->forceFill(['sponsored_beneficiary_id' => reset($beneficiaryIds)])->save();
+            }
         }
     }
 
@@ -623,9 +627,6 @@ final readonly class DonationService
         }
 
         $donor->sponsoredFamilyMembers()->syncWithoutDetaching($members->modelKeys());
-        $donor->sponsoredBeneficiaries()->syncWithoutDetaching(
-            $members->pluck('beneficiary_id')->unique()->values()->all()
-        );
     }
 
     private function addInKindDonationToInventory(Donation $donation): void

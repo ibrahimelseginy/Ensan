@@ -389,11 +389,8 @@
       }
 
       let edUserManuallyEditedTotal = false;
-      if (parseFloat($('#edSponsorshipMonthlyAmountInput').val() || '0') > 0) {
-        edUserManuallyEditedTotal = true;
-      }
 
-      $('#edSponsorshipMonthlyAmountInput').on('input change', function () {
+      $('#edSponsorshipMonthlyAmountInput').on('input', function () {
         edUserManuallyEditedTotal = true;
       });
 
@@ -410,8 +407,7 @@
         const sum = getEdCalculatedCaseSum();
         $('#edCaseAmountsAutoTotalBadge').text('الإجمالي المحسوب: ' + sum.toFixed(2) + ' ج.م');
         
-        const currentVal = $('#edSponsorshipMonthlyAmountInput').val().trim();
-        if (!edUserManuallyEditedTotal && currentVal === '' && sum > 0) {
+        if (!edUserManuallyEditedTotal && sum > 0) {
           $('#edSponsorshipMonthlyAmountInput').val(sum.toFixed(2));
         }
       }

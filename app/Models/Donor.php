@@ -142,6 +142,19 @@ final class Donor extends Model
         )->withPivot(['monthly_amount', 'notes'])->withTimestamps();
     }
 
+    public function getActiveSponsoredCasesSumAttribute(): float
+    {
+        $fmParentIds = $this->sponsoredFamilyMembers->pluck('beneficiary_id')->filter()->unique()->all();
+        $fmSum = (float) $this->sponsoredFamilyMembers->sum(fn ($fm) => (float) ($fm->pivot->monthly_amount ?? 0));
+        
+        $dsSum = (float) $this->sponsoredBeneficiaries->filter(function ($sb) use ($fmParentIds) {
+            $pivotAmt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            return !in_array($sb->id, $fmParentIds, true) || $pivotAmt > 0;
+        })->sum(fn ($sb) => (float) ($sb->pivot?->monthly_amount ?? 0));
+
+        return $fmSum + $dsSum;
+    }
+
     public function donations(): HasMany
     {
         return $this->hasMany(Donation::class);
@@ -179,18 +192,31 @@ final class Donor extends Model
 
         // Extract previous per-beneficiary amounts and split allocations from last donation
         $lastBenAmounts = [];
+        $lastFmAmounts = [];
         $lastBenNotes = [];
+        $lastFmNotes = [];
         $lastSplits = [];
         $lastSplitSum = 0.0;
         if ($lastDonation) {
             if (!empty($lastDonation->beneficiary_allocations) && is_array($lastDonation->beneficiary_allocations)) {
                 foreach ($lastDonation->beneficiary_allocations as $ba) {
+                    $fmId = (int)($ba['family_member_id'] ?? 0);
                     $bId = (int)($ba['beneficiary_id'] ?? 0);
-                    if ($bId > 0 && !empty($ba['amount']) && (float)$ba['amount'] > 0) {
-                        $lastBenAmounts[$bId] = (float)$ba['amount'];
-                    }
-                    if ($bId > 0 && !empty($ba['notes'])) {
-                        $lastBenNotes[$bId] = (string)$ba['notes'];
+                    $amt = !empty($ba['amount']) && (float)$ba['amount'] > 0 ? (float)$ba['amount'] : null;
+                    if ($fmId > 0) {
+                        if ($amt > 0) {
+                            $lastFmAmounts[$fmId] = $amt;
+                        }
+                        if (!empty($ba['notes'])) {
+                            $lastFmNotes[$fmId] = (string)$ba['notes'];
+                        }
+                    } elseif ($bId > 0) {
+                        if ($amt > 0) {
+                            $lastBenAmounts[$bId] = $amt;
+                        }
+                        if (!empty($ba['notes'])) {
+                            $lastBenNotes[$bId] = (string)$ba['notes'];
+                        }
                     }
                 }
             }
@@ -228,6 +254,9 @@ final class Donor extends Model
         // 1. Add each sponsored family member with its exact allocated monthly_amount
         foreach ($this->sponsoredFamilyMembers as $fm) {
             $fmAmount = (float) ($fm->pivot->monthly_amount ?? 0);
+            if ($fmAmount <= 0 && isset($lastFmAmounts[$fm->id])) {
+                $fmAmount = (float) $lastFmAmounts[$fm->id];
+            }
             if ($fmAmount <= 0 && $monthlyAmount > 0 && $this->sponsoredFamilyMembers->count() === 1 && $this->sponsoredBeneficiaries->count() <= 1 && empty($lastSplits)) {
                 $fmAmount = $monthlyAmount;
             }
@@ -241,15 +270,21 @@ final class Donor extends Model
                 'type' => 'family_member',
                 'amount' => $fmAmount > 0 ? $fmAmount : null,
                 'required_amount' => (float) ($fm->sponsorship_amount ?? 0),
-                'notes' => $fm->pivot->notes ?? ('كفالة فرد: ' . $fm->full_name),
+                'notes' => $fm->pivot->notes ?? ($lastFmNotes[$fm->id] ?? ('كفالة فرد: ' . $fm->full_name)),
             ];
         }
 
-        // 2. Add sponsored beneficiaries (either direct family sponsorships or those with explicit pivot monthly_amount)
+        // 2. Add sponsored beneficiaries (ONLY direct family sponsorships that have explicit pivot monthly_amount or are not parents of sponsored children)
         foreach ($this->sponsoredBeneficiaries as $sb) {
             $pivotAmt = (float) ($sb->pivot?->monthly_amount ?? 0);
-            $isOnlyParentOfSponsoredMember = in_array($sb->id, $familyMemberParentIds, true) && $pivotAmt <= 0 && !isset($lastBenAmounts[$sb->id]);
-            if ($isOnlyParentOfSponsoredMember) {
+
+            // If this beneficiary is only linked because of a sponsored child/family member and has no direct pivot monthly amount, SKIP!
+            if (in_array($sb->id, $familyMemberParentIds, true) && $pivotAmt <= 0) {
+                continue;
+            }
+
+            // Prevent duplicating any beneficiary already added as a whole case
+            if (collect($cases)->contains(fn ($c) => $c['id'] == $sb->id && empty($c['family_member_id']))) {
                 continue;
             }
 
@@ -273,7 +308,7 @@ final class Donor extends Model
         }
 
         $allocatedCasesSum = collect($cases)->sum(fn ($c) => (float) ($c['amount'] ?? 0));
-        if ($allocatedCasesSum > 0 && ($monthlyAmount <= 0 || abs($monthlyAmount - $allocatedCasesSum) > 0.01)) {
+        if ($allocatedCasesSum > 0) {
             $monthlyAmount = $allocatedCasesSum;
         }
 

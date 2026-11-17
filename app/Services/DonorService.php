@@ -132,12 +132,12 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds,
             $familyMemberAmounts
         );
-        // الأولوية دائماً للمبلغ الذي كتبه المستخدم يدوياً إذا وُجد (مثلاً متبرع بـ 1500 وباقي الحالات لم تُسجل بعد)
+        // إذا كانت هناك حالات محددة بمبالغها، الإجمالي يطابق مجموعها تلقائياً
         $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
-        if ($userEnteredAmount > 0) {
-            $finalAmount = $userEnteredAmount;
-        } elseif ($calculatedTotal > 0) {
+        if ($calculatedTotal > 0) {
             $finalAmount = $calculatedTotal;
+        } elseif ($userEnteredAmount > 0) {
+            $finalAmount = $userEnteredAmount;
         } else {
             $finalAmount = 0.0;
         }
@@ -146,7 +146,7 @@ final readonly class DonorService
         }
 
         $this->applySponsorshipDefaults($modelData);
-        $modelData['sponsored_beneficiary_id'] = $sponsoredBeneficiaryIds[0] ?? null;
+        $modelData['sponsored_beneficiary_id'] = $submittedBeneficiaryIds[0] ?? null;
         if (($modelData['classification'] ?? null) === 'recurring'
             && ($modelData['recurring_cycle'] ?? null) === 'monthly') {
             $modelData['allocation_type'] = $sponsoredBeneficiaryIds !== [] ? 'sponsorship' : null;
@@ -225,12 +225,12 @@ final readonly class DonorService
             $sponsoredFamilyMemberIds ?? [],
             $familyMemberAmounts
         );
-        // الأولوية دائماً للمبلغ الذي كتبه المستخدم يدوياً إذا وُجد
+        // إذا كانت هناك حالات محددة بمبالغها، الإجمالي يطابق مجموعها تلقائياً
         $userEnteredAmount = (float) ($modelData['sponsorship_monthly_amount'] ?? 0);
-        if ($userEnteredAmount > 0) {
-            $finalAmount = $userEnteredAmount;
-        } elseif ($calculatedTotal > 0) {
+        if ($calculatedTotal > 0) {
             $finalAmount = $calculatedTotal;
+        } elseif ($userEnteredAmount > 0) {
+            $finalAmount = $userEnteredAmount;
         } else {
             $finalAmount = (float) ($donor->sponsorship_monthly_amount ?? 0);
         }
@@ -240,7 +240,7 @@ final readonly class DonorService
 
         $this->applySponsorshipDefaults($modelData, $donor);
         if ($syncSponsoredBeneficiaries) {
-            $modelData['sponsored_beneficiary_id'] = $sponsoredBeneficiaryIds[0] ?? null;
+            $modelData['sponsored_beneficiary_id'] = $submittedBeneficiaryIds[0] ?? null;
         }
         if (($modelData['classification'] ?? $donor->classification) === 'recurring'
             && ($modelData['recurring_cycle'] ?? $donor->recurring_cycle) === 'monthly') {

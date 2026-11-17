@@ -589,9 +589,15 @@
               </span>
             </td>
             <td>
-              @if((float)($donor->sponsorship_monthly_amount ?? 0) > 0)
+              @php
+                $fmSum = (float) $donor->sponsoredFamilyMembers->sum('pivot.monthly_amount');
+                $dsSum = (float) $directBens->sum('pivot.monthly_amount');
+                $donorCasesSum = $fmSum + $dsSum;
+                $displayMonthly = $donorCasesSum > 0 ? $donorCasesSum : (float)($donor->sponsorship_monthly_amount ?? 0);
+              @endphp
+              @if($displayMonthly > 0)
                 <div class="fw-bold text-success font-monospace small mb-1">
-                  {{ number_format((float)$donor->sponsorship_monthly_amount, 0) }} ج.م / شهرياً
+                  {{ number_format($displayMonthly, 0) }} ج.م / شهرياً
                 </div>
               @endif
               <div class="d-flex flex-wrap gap-1">

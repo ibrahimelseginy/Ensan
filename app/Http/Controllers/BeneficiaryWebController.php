@@ -471,8 +471,7 @@ final class BeneficiaryWebController extends Controller
             }
         }
 
-        $currentMonthly = (float) ($donor->sponsorship_monthly_amount ?? 0);
-        $newAmount = max($currentMonthly, $sum);
+        $newAmount = $sum > 0 ? $sum : (float) ($donor->sponsorship_monthly_amount ?? 0);
 
         if ($newAmount > 0) {
             $donor->update([

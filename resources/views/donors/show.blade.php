@@ -12,9 +12,46 @@
         });
         $sponsored = $directSponsored;
 
+        // حساب مجاميع الكفالات المفصلة بدقة
+        $familyMembersTotal = (float) $familyMembers->sum(function ($fm) use ($history) {
+            $amt = (float) ($fm->pivot->monthly_amount ?? 0);
+            if ($amt <= 0) {
+                foreach ($history as $h) {
+                    if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
+                        foreach ($h->beneficiary_allocations as $ba) {
+                            if (($ba['family_member_id'] ?? null) == $fm->id || ($ba['code'] ?? null) == $fm->code) {
+                                return (float) ($ba['amount'] ?? 0);
+                            }
+                        }
+                    }
+                }
+            }
+            return $amt;
+        });
+
+        $directSponsoredTotal = (float) $directSponsored->sum(function ($sb) use ($history) {
+            $amt = (float) ($sb->pivot?->monthly_amount ?? 0);
+            if ($amt <= 0) {
+                foreach ($history as $h) {
+                    if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
+                        foreach ($h->beneficiary_allocations as $ba) {
+                            if (($ba['beneficiary_id'] ?? null) == $sb->id || ($ba['code'] ?? null) == $sb->code) {
+                                return (float) ($ba['amount'] ?? 0);
+                            }
+                        }
+                    }
+                }
+            }
+            return $amt;
+        });
+
+        $casesTotalAmount = $familyMembersTotal + $directSponsoredTotal;
+
         // حساب قيمة الكفالة الشهرية الفعلية
         $effectiveMonthlyAmount = 0.0;
-        if ((float) $donor->sponsorship_monthly_amount > 0) {
+        if ($casesTotalAmount > 0) {
+            $effectiveMonthlyAmount = $casesTotalAmount;
+        } elseif ((float) $donor->sponsorship_monthly_amount > 0) {
             $effectiveMonthlyAmount = (float) $donor->sponsorship_monthly_amount;
         } else {
             // محاولة جلب القيمة من آخر تبرع نقدي نشط
@@ -24,6 +61,11 @@
             } elseif ($sponsored->isNotEmpty() && (float) ($sponsored->first()->monthly_sponsorship_amount ?? 0) > 0) {
                 $effectiveMonthlyAmount = (float) $sponsored->first()->monthly_sponsorship_amount;
             }
+        }
+
+        $totalRecurringAmount = (float) ($donor->sponsorship_monthly_amount ?? 0);
+        if ($totalRecurringAmount <= 0) {
+            $totalRecurringAmount = $effectiveMonthlyAmount;
         }
 
         $hasSponsorshipOrRecurring = ($donor->classification === 'recurring')
@@ -165,7 +207,11 @@
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label class="text-muted small mb-0 fw-bold"><i class="bi bi-person-heart text-success me-1"></i>الأطفال / أفراد الأسر المكفولون ({{ $familyMembers->count() }})</label>
-                                    @if($effectiveMonthlyAmount > 0 && $directSponsored->isEmpty())
+                                    @if($familyMembersTotal > 0)
+                                        <span class="text-success small fw-bold font-monospace">
+                                            <i class="bi bi-cash-stack me-1"></i>إجمالي كفالة الأطفال: {{ number_format($familyMembersTotal, 2) }} ج.م شهرياً
+                                        </span>
+                                    @elseif($effectiveMonthlyAmount > 0 && $directSponsored->isEmpty())
                                         <span class="text-success small fw-bold font-monospace">
                                             <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
                                         </span>
@@ -224,7 +270,11 @@
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label class="text-muted small mb-0 fw-bold"><i class="bi bi-house-heart text-primary me-1"></i>ملفات الأسر / الحالات الكاملة المكفولة ({{ $directSponsored->count() }})</label>
-                                    @if($effectiveMonthlyAmount > 0)
+                                    @if($directSponsoredTotal > 0)
+                                        <span class="text-success small fw-bold font-monospace">
+                                            <i class="bi bi-cash-stack me-1"></i>إجمالي كفالة الأسر: {{ number_format($directSponsoredTotal, 2) }} ج.م شهرياً
+                                        </span>
+                                    @elseif($effectiveMonthlyAmount > 0)
                                         <span class="text-success small fw-bold font-monospace">
                                             <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
                                         </span>
@@ -291,7 +341,10 @@
                             <div class="col-md-6">
                                 <label class="text-muted small mb-1"><i class="bi bi-cash-coin text-success me-1"></i>قيمة الكفالة / الالتزام الشهري</label>
                                 <div>
-                                    @if($donor->sponsorship_monthly_amount > 0)
+                                    @if($casesTotalAmount > 0)
+                                        <span class="fs-5 fw-bold text-success font-monospace">{{ number_format($casesTotalAmount, 2) }}</span>
+                                        <span class="text-muted small">جنيه مصري / شهرياً (كفالة الحالات)</span>
+                                    @elseif($donor->sponsorship_monthly_amount > 0)
                                         <span class="fs-5 fw-bold text-success font-monospace">{{ number_format($donor->sponsorship_monthly_amount, 2) }}</span>
                                         <span class="text-muted small">جنيه مصري / شهرياً</span>
                                     @elseif($effectiveMonthlyAmount > 0)
@@ -329,8 +382,11 @@
                     <div class="col-12">
                         <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #0d7a5f 0%, #15803d 100%);">
                             <div class="card-body p-3 text-center">
-                                <div class="opacity-90 small mb-1"><i class="bi bi-heart-pulse-fill me-1"></i>قيمة الكفالة / التبرع الشهري</div>
+                                <div class="opacity-90 small mb-1"><i class="bi bi-heart-pulse-fill me-1"></i>{{ $casesTotalAmount > 0 ? 'قيمة كفالة الحالات الشهرية' : 'قيمة الكفالة / التبرع الشهري' }}</div>
                                 <div class="h3 fw-bold mb-0 font-monospace">{{ number_format($effectiveMonthlyAmount, 2) }} <span class="fs-6 fw-normal opacity-75">ج.م / شهرياً</span></div>
+                                @if($totalRecurringAmount > $effectiveMonthlyAmount && $effectiveMonthlyAmount > 0)
+                                    <div class="small opacity-90 mt-1" style="font-size: 0.78rem;">إجمالي الاستقطاع الشهري: {{ number_format($totalRecurringAmount, 2) }} ج.م</div>
+                                @endif
                                 <div class="mt-2 pt-2 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center small">
                                     <span class="opacity-90">سداد {{ now()->format('m / Y') }}:</span>
                                     @if($paidThisMonth > 0)
@@ -679,7 +735,7 @@
                                         </div>
                                         <div>
                                             <span style="color: #475569 !important; font-weight: 700;">الكفالات المسجلة:</span>
-                                            <strong style="color: #1d4ed8 !important; font-weight: 900;">{{ $donor->sponsoredBeneficiaries->count() }} كفالة منتظمة</strong>
+                                            <strong style="color: #1d4ed8 !important; font-weight: 900;">{{ $directSponsored->count() + $familyMembers->count() }} كفالة منتظمة</strong>
                                         </div>
                                         @if($effectiveMonthlyAmount > 0)
                                         <div>

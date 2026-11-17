@@ -1969,6 +1969,8 @@ $(function () {
           amount: c.amount || '',
           notes: c.notes || 'كفالة دورية',
           family_member_id: c.family_member_id || null,
+          matched_member_id: c.family_member_id || null,
+          family_member_id: c.family_member_id || null,
           matched_member_id: c.family_member_id || null
         });
       });
@@ -2015,7 +2017,9 @@ $(function () {
           name: c.name,
           phone: c.phone || '',
           amount: c.amount || '',
-          notes: c.notes || 'كفالة دورية'
+          notes: c.notes || 'كفالة دورية',
+          family_member_id: c.family_member_id || null,
+          matched_member_id: c.family_member_id || null
         });
       });
       const casesEl = $('#allocatedCasesList');
