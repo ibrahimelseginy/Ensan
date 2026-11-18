@@ -167,7 +167,7 @@ final class LoginWebController extends Controller
 
         $user = User::with('roles.permissions')->where('email', $email)->first();
 
-        if ($user && $user->active && !$user->is_volunteer && $user->roles->isNotEmpty()) {
+        if ($user && $user->active && $user->is_employee && !$user->is_volunteer && $user->roles->isNotEmpty()) {
             PasswordResetRequest::where('user_id', $user->id)
                 ->where('channel', 'email_otp')
                 ->where('is_used', false)
@@ -260,7 +260,7 @@ final class LoginWebController extends Controller
 
         $user = User::with('roles.permissions')->where('email', $email)->first();
 
-        if (!$user || !$user->active || $user->is_volunteer || $user->roles->isEmpty()) {
+        if (!$user || !$user->active || !$user->is_employee || $user->is_volunteer || $user->roles->isEmpty()) {
             RateLimiter::hit($throttleKey, 60);
             return back()
                 ->with('login_tab', 'email_otp')
@@ -329,7 +329,7 @@ final class LoginWebController extends Controller
 
         $user = User::with('roles.permissions')->find($req->user_id);
 
-        if (!$user || !$user->active || $user->is_volunteer || $user->roles->isEmpty()) {
+        if (!$user || !$user->active || !$user->is_employee || $user->is_volunteer || $user->roles->isEmpty()) {
             return redirect()->route('login')
                 ->with('login_tab', 'email_otp')
                 ->withErrors(['email_otp' => 'هذا الحساب غير نشط أو غير مصرح له بالدخول.']);
