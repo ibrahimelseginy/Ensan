@@ -59,7 +59,16 @@ Route::get('/', function () {
 
 Route::get('login', [LoginWebController::class , 'show'])->name('login');
 Route::post('login', [LoginWebController::class , 'login'])->middleware('throttle:auth-strict')->name('login.post');
+Route::post('login/email/send', [LoginWebController::class , 'sendEmailLoginCode'])->middleware('throttle:auth-strict')->name('login.email.send');
+Route::post('login/email/verify', [LoginWebController::class , 'verifyEmailLoginCode'])->middleware('throttle:auth-strict')->name('login.email.verify');
+Route::get('login/email/magic/{token}', [LoginWebController::class , 'magicLogin'])->middleware('throttle:auth-strict')->name('login.email.magic');
 Route::post('logout', [LoginWebController::class , 'logout'])->name('logout');
+
+// استعادة وتعيين كلمة المرور عبر البريد الإلكتروني (Magic Link + 6-Digit OTP)
+Route::get('forgot-password', [\App\Http\Controllers\PasswordSecurityController::class, 'showForgotForm'])->name('password.request');
+Route::post('forgot-password', [\App\Http\Controllers\PasswordSecurityController::class, 'sendResetCode'])->middleware('throttle:auth-strict')->name('password.email');
+Route::get('reset-password/{token?}', [\App\Http\Controllers\PasswordSecurityController::class, 'showResetForm'])->name('password.reset');
+Route::post('reset-password', [\App\Http\Controllers\PasswordSecurityController::class, 'resetPassword'])->middleware('throttle:auth-strict')->name('password.update');
 
 // تتبع الشكاوي - صفحة عامة بدون تسجيل دخول محمية بمعدل طلبات ومكافحة تخمين
 Route::get('track-complaint', [\App\Http\Controllers\ComplaintTrackingController::class, 'show'])->middleware('throttle:heavy-ops')->name('complaint.track');

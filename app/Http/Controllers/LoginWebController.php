@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Mail\EmailLoginMail;
+use App\Models\PasswordResetRequest;
+use App\Models\SecurityAuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -130,6 +134,221 @@ final class LoginWebController extends Controller
         // 8. Cryptographic Login with Laravel's built-in signed remember token
         $remember = $request->boolean('remember', true);
 
+        return $this->completeLogin($request, $user, $remember, $ip, 'password');
+    }
+
+    /**
+     * Send a 6-digit OTP & Magic Login Link to the user's email for passwordless login.
+     */
+    public function sendEmailLoginCode(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email|max:255',
+        ], [
+            'email.required' => 'يرجى إدخال البريد الإلكتروني',
+            'email.email'    => 'صيغة البريد الإلكتروني غير صحيحة',
+        ]);
+
+        $email = Str::lower(trim($validated['email']));
+        $ip = $request->ip() ?? 'unknown';
+        $throttleKey = 'email_login_send|' . Str::transliterate($email . '|' . $ip);
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_tab', 'email_otp')
+                ->withErrors([
+                    'email_otp' => "تم تجاوز الحد المسموح لطلب الأكواد. يرجى الانتظار {$seconds} ثانية والمحاولة مجدداً.",
+                ]);
+        }
+
+        RateLimiter::hit($throttleKey, 300);
+
+        $user = User::with('roles.permissions')->where('email', $email)->first();
+
+        if ($user && $user->active && !$user->is_volunteer && $user->roles->isNotEmpty()) {
+            PasswordResetRequest::where('user_id', $user->id)
+                ->where('channel', 'email_otp')
+                ->where('is_used', false)
+                ->update(['is_used' => true]);
+
+            $selector = Str::random(16);
+            $validator = Str::random(32);
+            $otpCode = sprintf('%06d', random_int(100000, 999999));
+
+            PasswordResetRequest::create([
+                'user_id'              => $user->id,
+                'token_selector'       => $selector,
+                'token_validator_hash' => hash('sha256', $validator),
+                'otp_code_hash'        => Hash::make($otpCode),
+                'channel'              => 'email_otp',
+                'target_destination'   => $user->email,
+                'attempts_count'       => 0,
+                'max_attempts'         => 3,
+                'is_used'              => false,
+                'expires_at'           => now()->addMinutes(10),
+                'ip_address'           => $ip,
+                'user_agent'           => substr((string) $request->userAgent(), 0, 500),
+            ]);
+
+            $magicUrl = route('login.email.magic', [
+                'token' => $selector . '.' . $validator,
+            ]);
+
+            try {
+                Mail::to($user->email)->send(new EmailLoginMail($user, $otpCode, $magicUrl, 10));
+
+                SecurityAuditLog::record(
+                    $user->id,
+                    'email_login_code_sent',
+                    'info',
+                    ['email' => $user->email, 'selector' => $selector],
+                    'email'
+                );
+            } catch (\Throwable $e) {
+                Log::error('Security: Failed to send email login OTP', [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'error'   => $e->getMessage(),
+                ]);
+
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('login_tab', 'email_otp')
+                    ->withErrors([
+                        'email_otp' => 'تعذر إرسال البريد الإلكتروني حالياً بسبب إعدادات خادم البريد على السيرفر. يرجى التواصل مع مسؤول النظام.',
+                    ]);
+            }
+        }
+
+        // Prevent user enumeration: always show neutral confirmation
+        return back()
+            ->with('login_tab', 'email_otp')
+            ->with('email_login_sent', $email)
+            ->with('email_login_status', 'إذا كان البريد الإلكتروني مسجلاً ونشطاً لدينا، فقد تم إرسال كود التحقق ورابط الدخول المباشر إليه.');
+    }
+
+    /**
+     * Verify 6-digit OTP code sent via email and log the user in.
+     */
+    public function verifyEmailLoginCode(Request $request)
+    {
+        $validated = $request->validate([
+            'email'    => 'required|string|email|max:255',
+            'otp_code' => 'required|string|min:6|max:6',
+            'remember' => 'nullable',
+        ], [
+            'email.required'    => 'يرجى إدخال البريد الإلكتروني',
+            'otp_code.required' => 'يرجى إدخال كود التحقق المكون من 6 أرقام',
+            'otp_code.min'      => 'كود التحقق يجب أن يتكون من 6 أرقام',
+            'otp_code.max'      => 'كود التحقق يجب أن يتكون من 6 أرقام',
+        ]);
+
+        $email = Str::lower(trim($validated['email']));
+        $cleanOtp = preg_replace('/\D/', '', (string) $validated['otp_code']);
+        $ip = $request->ip() ?? 'unknown';
+        $throttleKey = 'email_login_verify|' . Str::transliterate($email . '|' . $ip);
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()
+                ->with('login_tab', 'email_otp')
+                ->with('email_login_sent', $email)
+                ->withErrors(['otp_code' => "تم حظر المحاولات مؤقتاً. يرجى الانتظار {$seconds} ثانية."]);
+        }
+
+        $user = User::with('roles.permissions')->where('email', $email)->first();
+
+        if (!$user || !$user->active || $user->is_volunteer || $user->roles->isEmpty()) {
+            RateLimiter::hit($throttleKey, 60);
+            return back()
+                ->with('login_tab', 'email_otp')
+                ->with('email_login_sent', $email)
+                ->withErrors(['otp_code' => 'بيانات الحساب غير صالحة أو الحساب غير مفعل.']);
+        }
+
+        $req = PasswordResetRequest::where('user_id', $user->id)
+            ->where('channel', 'email_otp')
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$req || $req->attempts_count >= $req->max_attempts || strlen($cleanOtp) !== 6 || !Hash::check($cleanOtp, (string) $req->otp_code_hash)) {
+            RateLimiter::hit($throttleKey, 60);
+
+            if ($req) {
+                $req->increment('attempts_count');
+                if ($req->attempts_count >= $req->max_attempts) {
+                    $req->update(['is_used' => true]);
+                }
+            }
+
+            return back()
+                ->with('login_tab', 'email_otp')
+                ->with('email_login_sent', $email)
+                ->withErrors(['otp_code' => 'كود التحقق غير صحيح أو منتهي الصلاحية.']);
+        }
+
+        $req->update([
+            'is_used' => true,
+            'used_at' => now(),
+        ]);
+
+        RateLimiter::clear($throttleKey);
+        $remember = $request->boolean('remember', true);
+
+        return $this->completeLogin($request, $user, $remember, $ip, 'email_otp');
+    }
+
+    /**
+     * One-click Magic Login via signed email link.
+     */
+    public function magicLogin(Request $request, string $token)
+    {
+        if (!str_contains($token, '.')) {
+            return redirect()->route('login')
+                ->with('login_tab', 'email_otp')
+                ->withErrors(['email_otp' => 'رابط تسجيل الدخول غير صالح.']);
+        }
+
+        [$selector, $validator] = explode('.', $token, 2);
+
+        $req = PasswordResetRequest::where('token_selector', $selector)
+            ->where('channel', 'email_otp')
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$req || !hash_equals((string) $req->token_validator_hash, hash('sha256', $validator))) {
+            return redirect()->route('login')
+                ->with('login_tab', 'email_otp')
+                ->withErrors(['email_otp' => 'رابط تسجيل الدخول غير صالح أو انتهت صلاحيته. يرجى طلب رابط جديد.']);
+        }
+
+        $user = User::with('roles.permissions')->find($req->user_id);
+
+        if (!$user || !$user->active || $user->is_volunteer || $user->roles->isEmpty()) {
+            return redirect()->route('login')
+                ->with('login_tab', 'email_otp')
+                ->withErrors(['email_otp' => 'هذا الحساب غير نشط أو غير مصرح له بالدخول.']);
+        }
+
+        $req->update([
+            'is_used' => true,
+            'used_at' => now(),
+        ]);
+
+        $ip = $request->ip() ?? 'unknown';
+        return $this->completeLogin($request, $user, true, $ip, 'email_magic_link');
+    }
+
+    /**
+     * Complete authenticated session setup with security fingerprints and open-redirect protection.
+     */
+    private function completeLogin(Request $request, User $user, bool $remember, string $ip, string $method = 'password')
+    {
         Auth::login($user, $remember);
 
         // Session Fixation Prevention: Regenerate session ID
@@ -152,6 +371,7 @@ final class LoginWebController extends Controller
             'email'    => $user->email,
             'ip'       => $ip,
             'remember' => $remember,
+            'method'   => $method,
         ]);
 
         // 9. Open Redirect Prevention: Ensure target is internal

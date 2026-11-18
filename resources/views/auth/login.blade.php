@@ -646,6 +646,85 @@
         border-inline-start: none;
       }
     }
+    .login-method-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 5px;
+      background: #f1f5f9;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      border: 1px solid #e2e8f0;
+    }
+
+    html.theme-dark .login-method-tabs,
+    body.theme-dark .login-method-tabs {
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .login-method-btn {
+      border: none;
+      background: transparent;
+      color: #64748b;
+      padding: 9px 10px;
+      border-radius: 9px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .login-method-btn.active {
+      background: #ffffff;
+      color: #059669;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+
+    html.theme-dark .login-method-btn,
+    body.theme-dark .login-method-btn {
+      color: #94a3b8;
+    }
+
+    html.theme-dark .login-method-btn.active,
+    body.theme-dark .login-method-btn.active {
+      background: #1e293b;
+      color: #34d399;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .alert-custom-success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    html.theme-dark .alert-custom-success,
+    body.theme-dark .alert-custom-success {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .otp-code-input {
+      letter-spacing: 0.45em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 800;
+      font-size: 1.25rem;
+      text-align: center;
+      direction: ltr;
+    }
   </style>
 </head>
 
@@ -748,8 +827,33 @@
           <!-- Form Intro -->
           <div class="form-header">
             <h2>تسجيل الدخول 👋</h2>
-            <p>أهلاً بك مجدداً، أدخل بياناتك للوصول إلى لوحة التحكم</p>
+            <p>أهلاً بك مجدداً، اختر طريقة الدخول المناسبة للوصول إلى لوحة التحكم</p>
           </div>
+
+          @php
+            $activeTab = session('login_tab')
+              ?? ($errors->has('email_otp') || $errors->has('otp_code') ? 'email_otp' : 'password');
+            $sentEmail = session('email_login_sent') ?? old('email');
+          @endphp
+
+          <!-- Login Method Switcher -->
+          <div class="login-method-tabs" role="tablist">
+            <button type="button" class="login-method-btn {{ $activeTab === 'password' ? 'active' : '' }}" data-login-tab="password">
+              <i class="bi bi-shield-lock-fill"></i>
+              <span>كلمة المرور</span>
+            </button>
+            <button type="button" class="login-method-btn {{ $activeTab === 'email_otp' ? 'active' : '' }}" data-login-tab="email_otp">
+              <i class="bi bi-envelope-check-fill"></i>
+              <span>الدخول عبر الإيميل</span>
+            </button>
+          </div>
+
+          @if(session('email_login_status'))
+            <div class="alert-custom-success">
+              <i class="bi bi-envelope-check-fill fs-5 mt-1 flex-shrink-0"></i>
+              <div>{{ session('email_login_status') }}</div>
+            </div>
+          @endif
 
           <!-- Validation / Server Errors -->
           @if(isset($errors) && $errors->any())
@@ -766,8 +870,8 @@
             </div>
           @endif
 
-          <!-- Login Form -->
-          <form method="POST" action="{{ route('login.post') }}" id="loginForm" autocomplete="on">
+          <!-- Method 1: Password Login Form -->
+          <form method="POST" action="{{ route('login.post') }}" id="loginForm" autocomplete="on" class="{{ $activeTab === 'password' ? '' : 'd-none' }}">
             @csrf
 
             <!-- Email Field -->
@@ -793,6 +897,9 @@
             <div class="input-field-group">
               <div class="d-flex justify-content-between align-items-center mb-1">
                 <label for="password-input" class="field-label mb-0">كلمة المرور</label>
+                <a href="{{ route('password.request') }}" class="text-decoration-none small fw-semibold" style="color: var(--primary-color);">
+                  نسيت كلمة المرور؟
+                </a>
               </div>
               <div class="field-wrapper field-wrapper-password">
                 <i class="bi bi-shield-lock field-icon"></i>
@@ -837,6 +944,88 @@
               <span class="spinner-border spinner-border-sm d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
             </button>
           </form>
+
+          <!-- Method 2: Passwordless Email Login (OTP + Magic Link) -->
+          <div id="emailOtpSection" class="{{ $activeTab === 'email_otp' ? '' : 'd-none' }}">
+            @if(!session('email_login_sent') && !$errors->has('otp_code'))
+              <form method="POST" action="{{ route('login.email.send') }}" id="emailSendCodeForm">
+                @csrf
+                <div class="input-field-group">
+                  <label for="otp_email" class="field-label">البريد الإلكتروني المسجل</label>
+                  <div class="field-wrapper">
+                    <i class="bi bi-envelope-at field-icon"></i>
+                    <input
+                      type="email"
+                      name="email"
+                      id="otp_email"
+                      class="form-control-custom"
+                      value="{{ old('email') }}"
+                      required
+                      placeholder="name@ensan.org"
+                      autocomplete="email"
+                    >
+                  </div>
+                  <div class="form-text small text-muted mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    سيصلك كود تحقق من 6 أرقام ورابط دخول مباشر على بريدك الإلكتروني.
+                  </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="sendOtpBtn">
+                  <span>إرسال كود الدخول عبر الإيميل</span>
+                  <i class="bi bi-send-fill fs-6"></i>
+                </button>
+              </form>
+            @else
+              <form method="POST" action="{{ route('login.email.verify') }}" id="emailVerifyCodeForm">
+                @csrf
+                <input type="hidden" name="email" value="{{ $sentEmail }}">
+
+                <div class="input-field-group">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label for="otp_code" class="field-label mb-0">كود التحقق المرسل إلى</label>
+                    <span class="small fw-bold text-success" dir="ltr">{{ $sentEmail }}</span>
+                  </div>
+                  <div class="field-wrapper">
+                    <i class="bi bi-key-fill field-icon"></i>
+                    <input
+                      type="text"
+                      name="otp_code"
+                      id="otp_code"
+                      class="form-control-custom otp-code-input"
+                      maxlength="6"
+                      inputmode="numeric"
+                      pattern="[0-9]{6}"
+                      required
+                      autofocus
+                      placeholder="••••••"
+                      autocomplete="one-time-code"
+                    >
+                  </div>
+                </div>
+
+                <div class="form-options-row">
+                  <label class="custom-check-wrap">
+                    <input type="checkbox" name="remember" value="1" checked>
+                    <span>تذكّر هذا الجهاز تلقائياً</span>
+                  </label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                  <span>تحقق وتسجيل الدخول</span>
+                  <i class="bi bi-check2-circle fs-5"></i>
+                </button>
+              </form>
+
+              <form method="POST" action="{{ route('login.email.send') }}" class="mt-3 text-center">
+                @csrf
+                <input type="hidden" name="email" value="{{ $sentEmail }}">
+                <button type="submit" class="btn btn-link btn-sm text-decoration-none text-muted fw-semibold">
+                  <i class="bi bi-arrow-repeat me-1"></i> لم يصلك الكود؟ إعادة الإرسال
+                </button>
+              </form>
+            @endif
+          </div>
         </div>
 
         <!-- Footer -->
@@ -861,8 +1050,9 @@
   </div>
 
   <script>
-    // 0. Auto-restore saved email
+    // 0. Auto-restore saved email & Login Method Tabs
     const emailInput = document.getElementById('email');
+    const otpEmailInput = document.getElementById('otp_email');
     if (emailInput && !emailInput.value) {
       try {
         const savedEmail = localStorage.getItem('ensan_saved_email');
@@ -871,6 +1061,36 @@
         }
       } catch (e) {}
     }
+    if (otpEmailInput && !otpEmailInput.value && emailInput && emailInput.value) {
+      otpEmailInput.value = emailInput.value;
+    }
+
+    const tabButtons = document.querySelectorAll('[data-login-tab]');
+    const passwordFormEl = document.getElementById('loginForm');
+    const emailOtpSectionEl = document.getElementById('emailOtpSection');
+
+    tabButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const target = btn.getAttribute('data-login-tab');
+        tabButtons.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+
+        if (target === 'email_otp') {
+          if (passwordFormEl) passwordFormEl.classList.add('d-none');
+          if (emailOtpSectionEl) emailOtpSectionEl.classList.remove('d-none');
+          if (otpEmailInput && emailInput && emailInput.value && !otpEmailInput.value) {
+            otpEmailInput.value = emailInput.value;
+          }
+          if (otpEmailInput) otpEmailInput.focus();
+        } else {
+          if (emailOtpSectionEl) emailOtpSectionEl.classList.add('d-none');
+          if (passwordFormEl) passwordFormEl.classList.remove('d-none');
+          if (emailInput && otpEmailInput && otpEmailInput.value && !emailInput.value) {
+            emailInput.value = otpEmailInput.value;
+          }
+        }
+      });
+    });
 
     // 1. Password Visibility Toggle
     const togglePassBtn = document.getElementById('togglePasswordBtn');
