@@ -20,14 +20,23 @@ return new class extends Migration {
             });
         }
 
-        if (Schema::hasTable('inventory_transactions')
-            && ! Schema::hasColumn('inventory_transactions', 'guest_house_meal_inventory_item_id')) {
-            Schema::table('inventory_transactions', function (Blueprint $table) {
-                $table->foreignId('guest_house_meal_inventory_item_id')
-                    ->nullable()
-                    ->constrained('guest_house_meal_inventory_items')
-                    ->nullOnDelete();
-            });
+        if (Schema::hasTable('inventory_transactions')) {
+            if (! Schema::hasColumn('inventory_transactions', 'guest_house_meal_inventory_item_id')) {
+                Schema::table('inventory_transactions', function (Blueprint $table) {
+                    $table->unsignedBigInteger('guest_house_meal_inventory_item_id')->nullable();
+                });
+            }
+
+            try {
+                Schema::table('inventory_transactions', function (Blueprint $table) {
+                    $table->foreign('guest_house_meal_inventory_item_id', 'inv_tx_gh_meal_item_fk')
+                        ->references('id')
+                        ->on('guest_house_meal_inventory_items')
+                        ->nullOnDelete();
+                });
+            } catch (\Throwable $e) {
+                // Foreign key already exists
+            }
         }
     }
 
