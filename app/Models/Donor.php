@@ -278,7 +278,7 @@ final class Donor extends Model
                 'id' => $fm->beneficiary_id,
                 'family_member_id' => $fm->id,
                 'code' => $fm->code ?: ($fm->beneficiary?->code ?: 'BEN-' . $fm->beneficiary_id),
-                'name' => $fm->full_name . ' (' . ($fm->relationship_label ?? 'فرد أسرة') . ' - أسرة ' . ($fm->beneficiary?->full_name ?? '') . ')',
+                'name' => $fm->full_name . ' (' . ($fm->relationship_label ?? 'طفل مكفول') . ')',
                 'phone' => $fm->phone ?: ($fm->beneficiary?->phone ?: ''),
                 'type' => 'family_member',
                 'amount' => $fmAmount > 0 ? $fmAmount : null,

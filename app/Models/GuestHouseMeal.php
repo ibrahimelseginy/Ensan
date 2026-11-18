@@ -63,6 +63,12 @@ final class GuestHouseMeal extends Model
         return $this->belongsTo(Item::class, 'inventory_item_id');
     }
 
+    /** أصناف المخزون المصروفة لتحضير هذه الوجبة. */
+    public function inventoryItems(): HasMany
+    {
+        return $this->hasMany(GuestHouseMealInventoryItem::class, 'guest_house_meal_id');
+    }
+
     public function treasury(): BelongsTo
     {
         return $this->belongsTo(Treasury::class, 'treasury_id');

@@ -109,6 +109,23 @@ final class FieldVisit extends Model
         'radiation_sessions_remaining' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (FieldVisit $visit): void {
+            $numericZeroFields = [
+                'income_job', 'income_daily_work', 'income_pension', 'income_social_affairs', 'income_charities', 'total_income',
+                'expense_rent', 'expense_tuition', 'expense_food_weekly', 'expense_transportation', 'expense_utilities', 'total_expenses',
+                'total_debts', 'debt_repaid', 'debt_remaining', 'debt_monthly_installment',
+                'chemo_sessions_taken', 'chemo_sessions_remaining', 'radiation_sessions_taken', 'radiation_sessions_remaining',
+            ];
+            foreach ($numericZeroFields as $field) {
+                if ($visit->{$field} === null || $visit->{$field} === '') {
+                    $visit->{$field} = 0;
+                }
+            }
+        });
+    }
+
     public function beneficiary()
     {
         return $this->belongsTo(Beneficiary::class);

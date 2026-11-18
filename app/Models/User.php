@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -10,7 +11,7 @@ class User extends Authenticatable
 {
     use SoftDeletes, \App\Traits\HashedRouteKey, \App\Traits\UploadsImages;
 
-    protected $fillable = ['code', 'name', 'email', 'password', 'phone', 'national_id', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date'];
+    protected $fillable = ['code', 'name', 'email', 'password', 'phone', 'national_id', 'role', 'otp_code', 'otp_expires_at', 'is_employee', 'is_volunteer', 'is_sales', 'active', 'registration_source', 'department', 'job_title', 'annual_leave_quota', 'leave_balance', 'salary', 'monthly_target', 'commission_rate', 'join_date', 'college', 'governorate', 'city', 'project_role', 'volunteer_hours', 'project_id', 'campaign_id', 'guest_house_id', 'profile_photo_path', 'contract_image', 'criminal_record_image', 'id_card_image', 'contract_start_date', 'contract_end_date', 'security_tier', 'password_changed_at', 'password_expires_at', 'force_password_change', 'password_snooze_count', 'password_snoozed_until', 'password_version', 'consecutive_failed_logins', 'locked_until'];
 
     protected static function booted(): void
     {
@@ -101,8 +102,41 @@ class User extends Authenticatable
         'contract_start_date' => 'date',
         'contract_end_date' => 'date',
         'phone_verified_at' => 'datetime',
-        'otp_expires_at' => 'datetime'
+        'otp_expires_at' => 'datetime',
+        'password_changed_at' => 'datetime',
+        'password_expires_at' => 'datetime',
+        'password_snoozed_until' => 'datetime',
+        'locked_until' => 'datetime',
+        'force_password_change' => 'boolean',
+        'password_snooze_count' => 'integer',
+        'password_version' => 'integer',
+        'consecutive_failed_logins' => 'integer',
     ];
+
+    public function passwordHistories(): HasMany
+    {
+        return $this->hasMany(PasswordHistory::class)->orderByDesc('created_at');
+    }
+
+    public function passwordResetRequests(): HasMany
+    {
+        return $this->hasMany(PasswordResetRequest::class)->orderByDesc('created_at');
+    }
+
+    public function securityAuditLogs(): HasMany
+    {
+        return $this->hasMany(SecurityAuditLog::class)->orderByDesc('created_at');
+    }
+
+    public function passwordPolicy(): BelongsTo
+    {
+        return $this->belongsTo(PasswordPolicy::class, 'security_tier', 'tier_name');
+    }
+
+    public function getPolicyAttribute(): PasswordPolicy
+    {
+        return PasswordPolicy::forTier($this->security_tier ?: 'tier2_field');
+    }
 
     public function roles(): BelongsToMany
     {

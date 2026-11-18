@@ -821,12 +821,40 @@
                         <span class="font-monospace text-dark">{{ $d->received_at?->format('Y-m-d') ?? $d->created_at->format('Y-m-d') }}</span>
                       </td>
                       <td>
-                        <span class="badge bg-success bg-opacity-15 text-success px-2 py-1 rounded-pill fw-bold">
-                          <i class="bi bi-check2 me-1"></i> مسدد ومستلم
-                        </span>
+                        @if($d->status === 'awaiting_discussion' || $d->status === 'pending')
+                          <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2.5 py-1 rounded-pill fw-bold">
+                            <i class="bi bi-hourglass-split me-1"></i> في انتظار المناقشة
+                          </span>
+                        @elseif($d->status === 'rejected')
+                          <span class="badge bg-danger-subtle text-danger border border-danger px-2.5 py-1 rounded-pill fw-bold">
+                            <i class="bi bi-x-circle me-1"></i> مرفوضة
+                          </span>
+                        @else
+                          <span class="badge bg-success bg-opacity-15 text-success px-2.5 py-1 rounded-pill fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> مقبولة ومستلمة
+                          </span>
+                        @endif
                       </td>
                       <td class="text-center">
-                        <div class="d-inline-flex gap-1">
+                        <div class="d-inline-flex align-items-center gap-1">
+                          @if($d->status === 'awaiting_discussion' || $d->status === 'pending')
+                            <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline">
+                              @csrf
+                              @method('PATCH')
+                              <input type="hidden" name="status" value="active">
+                              <button type="submit" class="btn btn-sm btn-success px-2 py-0.5 rounded-pill shadow-xs" title="قبول وصرف المساعدة">
+                                <i class="bi bi-check-lg me-1"></i>قبول
+                              </button>
+                            </form>
+                            <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد تسجيل هذه المساعدة كمرفوضة؟');">
+                              @csrf
+                              @method('PATCH')
+                              <input type="hidden" name="status" value="rejected">
+                              <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5 rounded-pill" title="رفض المساعدة">
+                                <i class="bi bi-x-lg me-1"></i>رفض
+                              </button>
+                            </form>
+                          @endif
                           <a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-outline-primary px-2 py-1" title="عرض التفاصيل">
                             <i class="bi bi-eye"></i>
                           </a>
@@ -2088,6 +2116,17 @@ function toggleQuickUploadTarget(val) {
           <div class="col-md-6">
             <label class="form-label fw-bold small text-dark mb-1" id="aidAmountLabel">القيمة التقديرية أو المبلغ (ج.م)</label>
             <input type="number" step="0.01" min="0" name="amount" class="form-control rounded-3 font-monospace" placeholder="0.00" value="0.00">
+          </div>
+
+          {{-- Aid Status (حالة المساعدة / الاعتماد) --}}
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-dark mb-1">حالة المساعدة / الاعتماد <span class="text-danger">*</span></label>
+            <select name="status" id="directAidStatusSelect" class="form-select rounded-3 fw-bold">
+              <option value="active" selected>✅ مقبولة / تم الصرف والتسليم</option>
+              <option value="awaiting_discussion">⏳ في انتظار المناقشة / قيد المراجعة</option>
+              <option value="rejected">❌ مرفوضة</option>
+            </select>
+            <div class="form-text small text-muted">اختر "في انتظار المناقشة" إن كانت المساعدة مقترحة وبانتظار قرار الإدارة.</div>
           </div>
 
           {{-- Project Assignment --}}

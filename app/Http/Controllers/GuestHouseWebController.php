@@ -189,9 +189,9 @@ final class GuestHouseWebController extends Controller
             ->limit(25)
             ->get();
         $todayMeals = $guest_house->meals()->whereDate('meal_date', today())
-            ->with('servings.beneficiary')->get()->keyBy('meal_type');
+            ->with(['servings.beneficiary', 'inventoryItems'])->get()->keyBy('meal_type');
         $pastMeals = $guest_house->meals()
-            ->with(['servings.beneficiary', 'creator', 'warehouse', 'item', 'treasury', 'expense'])
+            ->with(['servings.beneficiary', 'creator', 'warehouse', 'item', 'inventoryItems.warehouse', 'inventoryItems.item', 'treasury', 'expense'])
             ->latest('meal_date')
             ->latest('id')
             ->limit(50)
@@ -940,6 +940,7 @@ final class GuestHouseWebController extends Controller
             'new_item_name' => 'nullable|string|max:191',
             'new_item_unit' => 'nullable|string|max:50',
             'quantity' => 'required|numeric|min:0.001',
+            'supply_source' => 'required|in:donation,purchase',
             'notes' => 'nullable|string|max:1000',
             'transaction_date' => 'nullable|date',
         ]);
@@ -980,6 +981,7 @@ final class GuestHouseWebController extends Controller
             'guest_house_id' => $guest_house->id,
             'type' => 'in',
             'quantity' => $data['quantity'],
+            'supply_source' => $data['supply_source'],
             'reference' => 'GH-IN-' . now()->format('YmdHis'),
             'notes' => $data['notes'] ?: 'توريد مخزون لعهدة: ' . $custody->name,
             'transaction_date' => $data['transaction_date'] ?? now()->toDateString(),
@@ -989,7 +991,9 @@ final class GuestHouseWebController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        return back()->with('success', 'تم توريد الصنف للمخزون بنجاح (مع تسجيل الصنف تلقائياً في دليل الأصناف) وزيادة الرصيد المتاح.');
+        $supplySource = $data['supply_source'] === 'donation' ? 'كتبرع عيني' : 'كمشتريات';
+
+        return back()->with('success', 'تم توريد الصنف للمخزون بنجاح ' . $supplySource . ' وزيادة الرصيد المتاح.');
     }
 
     public function issueInventory(Request $request, GuestHouse $guest_house): RedirectResponse
@@ -1138,22 +1142,58 @@ final class GuestHouseWebController extends Controller
             'warehouse_id' => 'nullable|integer|exists:warehouses,id',
             'item_id' => 'nullable|integer|exists:items,id',
             'quantity_deducted' => 'nullable|numeric|min:0.01',
+            'inventory_items' => 'nullable|array|max:20',
+            'inventory_items.*.warehouse_id' => 'nullable|integer|exists:warehouses,id',
+            'inventory_items.*.item_id' => 'nullable|integer|exists:items,id',
+            'inventory_items.*.quantity' => 'nullable|numeric|min:0.01',
             'record_expense' => 'nullable|boolean',
             'expense_amount' => 'nullable|numeric|min:0.01',
             'expense_treasury_id' => 'nullable|integer|exists:treasuries,id',
             'servings' => 'nullable|array',
         ]);
 
-        DB::transaction(function () use ($request, $guest_house, $data): void {
+        // Keep the old single-item request format working, while the form now sends a list.
+        $inventoryItems = collect($data['inventory_items'] ?? [])
+            ->filter(fn (array $entry): bool => filled($entry['warehouse_id'] ?? null)
+                || filled($entry['item_id'] ?? null)
+                || filled($entry['quantity'] ?? null))
+            ->map(function (array $entry): array {
+                if (empty($entry['warehouse_id']) || empty($entry['item_id']) || empty($entry['quantity'])) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'inventory_items' => 'أكمل المخزن والصنف والكمية لكل صنف تريد خصمه.',
+                    ]);
+                }
+
+                return [
+                    'warehouse_id' => (int) $entry['warehouse_id'],
+                    'item_id' => (int) $entry['item_id'],
+                    'quantity' => (float) $entry['quantity'],
+                ];
+            })
+            ->groupBy(fn (array $entry): string => $entry['warehouse_id'] . ':' . $entry['item_id'])
+            ->map(fn ($entries): array => [
+                'warehouse_id' => $entries->first()['warehouse_id'],
+                'item_id' => $entries->first()['item_id'],
+                'quantity' => (float) $entries->sum('quantity'),
+            ])
+            ->values()
+            ->all();
+
+        if ($inventoryItems === [] && filled($data['warehouse_id'] ?? null) && filled($data['item_id'] ?? null) && filled($data['quantity_deducted'] ?? null)) {
+            $inventoryItems[] = [
+                'warehouse_id' => (int) $data['warehouse_id'],
+                'item_id' => (int) $data['item_id'],
+                'quantity' => (float) $data['quantity_deducted'],
+            ];
+        }
+
+        DB::transaction(function () use ($request, $guest_house, $data, $inventoryItems): void {
             $meal = GuestHouseMeal::updateOrCreate(
                 ['guest_house_id' => $guest_house->id, 'meal_date' => $data['meal_date'], 'meal_type' => $data['meal_type']],
                 [
                     'served_at'          => $data['served_at'] ?? null,
                     'notes'              => $data['notes'] ?? null,
                     'created_by'         => auth()->id(),
-                    'warehouse_id'       => $data['warehouse_id'] ?? null,
-                    'inventory_item_id'  => $data['item_id'] ?? null,
-                    'quantity_deducted'  => $data['quantity_deducted'] ?? null,
                     'treasury_id'        => $data['expense_treasury_id'] ?? null,
                     'expense_amount'     => !empty($data['record_expense']) ? ($data['expense_amount'] ?? null) : null,
                 ]
@@ -1163,21 +1203,41 @@ final class GuestHouseWebController extends Controller
                 $meal->uploadImage($request->file('meal_image'), 'guest-houses/meals');
             }
 
-            // Deduct from inventory if warehouse and item specified
-            if (!empty($data['warehouse_id']) && !empty($data['item_id']) && !empty($data['quantity_deducted'])) {
-                InventoryTransaction::create([
-                    'warehouse_id'     => $data['warehouse_id'],
-                    'item_id'          => $data['item_id'],
-                    'guest_house_id'   => $guest_house->id,
-                    'type'             => 'out',
-                    'quantity'         => (float)$data['quantity_deducted'],
-                    'transaction_date' => $data['meal_date'],
-                    'notes'            => 'صرف وجبات ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
-                    'status'           => 'approved',
-                    'user_id'          => auth()->id(),
-                    'created_by'       => auth()->id(),
-                    'approved_by'      => auth()->id(),
-                    'approved_at'      => now(),
+            // A meal can consume several stock items. Re-saving a meal replaces only
+            // its managed deductions, preventing a second submission from duplicating stock outflows.
+            $existingAllocationIds = $meal->inventoryItems()->pluck('id');
+            if ($inventoryItems !== [] || $existingAllocationIds->isNotEmpty()) {
+                if ($existingAllocationIds->isNotEmpty()) {
+                    InventoryTransaction::whereIn('guest_house_meal_inventory_item_id', $existingAllocationIds)->delete();
+                    $meal->inventoryItems()->delete();
+                }
+
+                foreach ($inventoryItems as $inventoryItem) {
+                    $allocation = $meal->inventoryItems()->create($inventoryItem);
+                    InventoryTransaction::create([
+                        'warehouse_id'                          => $inventoryItem['warehouse_id'],
+                        'item_id'                               => $inventoryItem['item_id'],
+                        'guest_house_id'                        => $guest_house->id,
+                        'guest_house_meal_inventory_item_id'    => $allocation->id,
+                        'type'                                  => 'out',
+                        'quantity'                              => $inventoryItem['quantity'],
+                        'transaction_date'                      => $data['meal_date'],
+                        'reference'                             => 'GH-MEAL-' . $meal->id . '-' . $allocation->id,
+                        'notes'                                 => 'صرف وجبات ' . match($data['meal_type']) { 'breakfast' => 'الإفطار', 'lunch' => 'الغداء', 'dinner' => 'العشاء', default => $data['meal_type'] } . ' بتاريخ ' . $data['meal_date'] . ' - دار ' . $guest_house->name,
+                        'status'                                => 'approved',
+                        'user_id'                               => auth()->id(),
+                        'created_by'                            => auth()->id(),
+                        'approved_by'                           => auth()->id(),
+                        'approved_at'                           => now(),
+                    ]);
+                }
+
+                // Retain a first-item snapshot for old reports that still read these columns.
+                $firstInventoryItem = $inventoryItems[0] ?? null;
+                $meal->update([
+                    'warehouse_id' => $firstInventoryItem['warehouse_id'] ?? null,
+                    'inventory_item_id' => $firstInventoryItem['item_id'] ?? null,
+                    'quantity_deducted' => $firstInventoryItem['quantity'] ?? null,
                 ]);
             }
 

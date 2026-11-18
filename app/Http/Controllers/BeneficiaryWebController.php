@@ -488,6 +488,7 @@ final class BeneficiaryWebController extends Controller
     {
         $validated = $request->validate([
             'aid_type' => 'required|string|in:cash,in_kind,service',
+            'status' => 'nullable|string|in:active,awaiting_discussion,rejected,pending',
             'category_title' => 'nullable|string|max:191',
             'amount' => 'nullable|numeric|min:0',
             'donor_id' => 'nullable|exists:donors,id',
@@ -501,6 +502,9 @@ final class BeneficiaryWebController extends Controller
         ]);
 
         $type = ($validated['aid_type'] ?? 'in_kind') === 'cash' ? 'cash' : 'in_kind';
+        $status = in_array($validated['status'] ?? 'active', ['active', 'awaiting_discussion', 'rejected', 'pending'], true)
+            ? (($validated['status'] ?? 'active') === 'pending' ? 'awaiting_discussion' : ($validated['status'] ?? 'active'))
+            : 'active';
         $amount = (float) ($validated['amount'] ?? 0);
         $receivedAt = !empty($validated['received_at']) ? Carbon::parse($validated['received_at']) : now();
         $donorId = !empty($validated['donor_id']) ? (int) $validated['donor_id'] : null;
@@ -592,7 +596,7 @@ final class BeneficiaryWebController extends Controller
             'allocation_note' => $allocationNote,
             'transfer_receipt_path' => $primaryReceiptPath,
             'received_at' => $receivedAt,
-            'status' => 'active',
+            'status' => $status,
             'created_by' => auth()->id(),
         ];
 
@@ -611,7 +615,34 @@ final class BeneficiaryWebController extends Controller
             $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
         }
 
-        return back()->with('success', "تم تسجيل استلام المساعدة بنجاح برقم إيصال [{$receiptNumber}]" . (!empty($savedFiles) ? ' مع حفظ صور الروشتات/الفواتير المرفقة' : '') . ' وتم إدراجها فوراً في سجل الحالة.');
+        $statusMsg = match ($status) {
+            'awaiting_discussion' => "تم تسجيل المساعدة للحالة برقم ({$receiptNumber}) وهي الآن (في انتظار المناقشة).",
+            'rejected' => "تم تسجيل المساعدة للحالة كـ (مرفوضة).",
+            default => "تم تسجيل استلام المساعدة بنجاح برقم إيصال [{$receiptNumber}]" . (!empty($savedFiles) ? ' مع حفظ صور الروشتات/الفواتير المرفقة' : '') . ' وتم إدراجها فوراً في سجل الحالة.',
+        };
+
+        return back()->with('success', $statusMsg);
+    }
+
+    public function updateAidStatus(Request $request, Beneficiary $beneficiary, Donation $donation): RedirectResponse
+    {
+        $request->validate([
+            'status' => 'required|in:active,awaiting_discussion,rejected,cancelled',
+        ]);
+
+        $newStatus = $request->input('status');
+        $donation->update([
+            'status' => $newStatus,
+        ]);
+
+        $statusLabels = [
+            'active' => 'تم اعتماد وقبول المساعدة بنجاح وإدراجها كمنفذة ومستلمة.',
+            'awaiting_discussion' => 'تم تحويل المساعدة إلى (في انتظار المناقشة).',
+            'rejected' => 'تم تسجيل المساعدة كـ (مرفوضة).',
+            'cancelled' => 'تم إلغاء المساعدة.',
+        ];
+
+        return back()->with('success', $statusLabels[$newStatus] ?? 'تم تحديث حالة المساعدة بنجاح.');
     }
 
     private function handleUploadedBeneficiaryAttachments(Request $request): array

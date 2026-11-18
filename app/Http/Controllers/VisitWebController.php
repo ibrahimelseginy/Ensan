@@ -85,21 +85,32 @@ final class VisitWebController extends Controller
     {
         $validated = $this->validateVisitData($request);
 
+        // Sanitize numeric fields to prevent null constraint violations
+        $numericFields = [
+            'income_job', 'income_daily_work', 'income_pension', 'income_social_affairs', 'income_charities',
+            'expense_rent', 'expense_tuition', 'expense_food_weekly', 'expense_transportation', 'expense_utilities',
+            'total_debts', 'debt_repaid', 'debt_monthly_installment',
+            'chemo_sessions_taken', 'chemo_sessions_remaining', 'radiation_sessions_taken', 'radiation_sessions_remaining',
+        ];
+        foreach ($numericFields as $nf) {
+            $validated[$nf] = (float)($request->input($nf, 0) ?: 0);
+        }
+
         // Calculate Totals
-        $validated['total_income'] = (float)($request->input('income_job', 0))
-            + (float)($request->input('income_daily_work', 0))
-            + (float)($request->input('income_pension', 0))
-            + (float)($request->input('income_social_affairs', 0))
-            + (float)($request->input('income_charities', 0));
+        $validated['total_income'] = (float)$validated['income_job']
+            + (float)$validated['income_daily_work']
+            + (float)$validated['income_pension']
+            + (float)$validated['income_social_affairs']
+            + (float)$validated['income_charities'];
 
-        $validated['total_expenses'] = (float)($request->input('expense_rent', 0))
-            + (float)($request->input('expense_tuition', 0))
-            + round((float)($request->input('expense_food_weekly', 0)) * 4.33, 2)
-            + (float)($request->input('expense_transportation', 0))
-            + (float)($request->input('expense_utilities', 0));
+        $validated['total_expenses'] = (float)$validated['expense_rent']
+            + (float)$validated['expense_tuition']
+            + round((float)$validated['expense_food_weekly'] * 4.33, 2)
+            + (float)$validated['expense_transportation']
+            + (float)$validated['expense_utilities'];
 
-        $totalDebts = (float)($request->input('total_debts', 0));
-        $debtRepaid = (float)($request->input('debt_repaid', 0));
+        $totalDebts = (float)$validated['total_debts'];
+        $debtRepaid = (float)$validated['debt_repaid'];
         $validated['debt_remaining'] = max(0, $totalDebts - $debtRepaid);
 
         // Process family members
@@ -191,8 +202,8 @@ final class VisitWebController extends Controller
         $user = auth()->user();
         $authorizedForFinalApproval = $user && (
             $user->hasRole(['admin', 'super_admin', 'manager', 'social_research_manager']) ||
-            $user->hasPermission('visits.edit') ||
-            $user->hasPermission('beneficiaries.create')
+            ($user->is_admin ?? false) ||
+            $user->hasPermission('visits.final_approval')
         );
         return view('dashboard.visits.show', compact('visit', 'projects', 'authorizedForFinalApproval'));
     }
@@ -202,10 +213,10 @@ final class VisitWebController extends Controller
         $user = auth()->user();
         $isAuthorized = $user && (
             $user->hasRole(['admin', 'super_admin', 'manager', 'social_research_manager']) ||
-            $user->hasPermission('visits.edit') ||
-            $user->hasPermission('beneficiaries.create')
+            ($user->is_admin ?? false) ||
+            $user->hasPermission('visits.final_approval')
         );
-        abort_unless($isAuthorized, 403, 'غير مصرح لك بالاعتماد النهائي للحالات بعد البحث الميداني.');
+        abort_unless($isAuthorized, 403, 'غير مصرح لك بالاعتماد النهائي للحالات بعد البحث الميداني (هذه الصلاحية خاصة بالمدير فقط).');
 
         $decision = $request->input('decision');
         if ($decision === 'rejected') {
@@ -405,13 +416,16 @@ final class VisitWebController extends Controller
 
         $managerUserId = $project->manager_user_id ?? $project->manager_id ?? null;
         if ($managerUserId) {
-            \App\Models\Notification::create([
-                'user_id' => $managerUserId,
+            // Notifications for employees are stored in mobile_notifications.
+            // The legacy App\Models\Notification model no longer exists.
+            \App\Models\MobileNotification::create([
                 'title' => 'اعتماد حالة جديدة في المشروع',
-                'message' => "تم قبول واعتماد الحالة: {$beneficiary->full_name} في مشروع ({$project->name}) وتحويلها لمستفيد بالكود [{$beneficiary->code}].",
-                'type' => 'project_case_approved',
-                'data' => ['beneficiary_id' => $beneficiary->id, 'project_id' => $project->id, 'visit_id' => $visit->id],
-                'is_read' => false,
+                'body' => "تم قبول واعتماد الحالة: {$beneficiary->full_name} في مشروع ({$project->name}) وتحويلها لمستفيد بالكود [{$beneficiary->code}].",
+                'category' => \App\Models\MobileNotification::CATEGORY_GENERAL,
+                'target_type' => 'user',
+                'target_user_id' => $managerUserId,
+                'is_sent' => true,
+                'sent_at' => now(),
             ]);
         }
 
@@ -430,20 +444,31 @@ final class VisitWebController extends Controller
     {
         $validated = $this->validateVisitData($request, $visit->id);
 
-        $validated['total_income'] = (float)($request->input('income_job', 0))
-            + (float)($request->input('income_daily_work', 0))
-            + (float)($request->input('income_pension', 0))
-            + (float)($request->input('income_social_affairs', 0))
-            + (float)($request->input('income_charities', 0));
+        // Sanitize numeric fields to prevent null constraint violations
+        $numericFields = [
+            'income_job', 'income_daily_work', 'income_pension', 'income_social_affairs', 'income_charities',
+            'expense_rent', 'expense_tuition', 'expense_food_weekly', 'expense_transportation', 'expense_utilities',
+            'total_debts', 'debt_repaid', 'debt_monthly_installment',
+            'chemo_sessions_taken', 'chemo_sessions_remaining', 'radiation_sessions_taken', 'radiation_sessions_remaining',
+        ];
+        foreach ($numericFields as $nf) {
+            $validated[$nf] = (float)($request->input($nf, 0) ?: 0);
+        }
 
-        $validated['total_expenses'] = (float)($request->input('expense_rent', 0))
-            + (float)($request->input('expense_tuition', 0))
-            + round((float)($request->input('expense_food_weekly', 0)) * 4.33, 2)
-            + (float)($request->input('expense_transportation', 0))
-            + (float)($request->input('expense_utilities', 0));
+        $validated['total_income'] = (float)$validated['income_job']
+            + (float)$validated['income_daily_work']
+            + (float)$validated['income_pension']
+            + (float)$validated['income_social_affairs']
+            + (float)$validated['income_charities'];
 
-        $totalDebts = (float)($request->input('total_debts', 0));
-        $debtRepaid = (float)($request->input('debt_repaid', 0));
+        $validated['total_expenses'] = (float)$validated['expense_rent']
+            + (float)$validated['expense_tuition']
+            + round((float)$validated['expense_food_weekly'] * 4.33, 2)
+            + (float)$validated['expense_transportation']
+            + (float)$validated['expense_utilities'];
+
+        $totalDebts = (float)$validated['total_debts'];
+        $debtRepaid = (float)$validated['debt_repaid'];
         $validated['debt_remaining'] = max(0, $totalDebts - $debtRepaid);
 
         $validated['family_members'] = $this->formatFamilyMembers($request->input('family_members', []));

@@ -1027,30 +1027,78 @@
                                             </button>
                                         </h2>
                                         <div id="mealInvExp_{{ $mealType }}" class="accordion-collapse collapse p-2 bg-light">
-                                            <div class="row g-1 mb-2">
-                                                <div class="col-6">
-                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">المخزن</label>
-                                                    <select name="warehouse_id" class="form-select form-select-sm">
-                                                        <option value="">— بدون خصم —</option>
-                                                        @foreach($guestHouseWarehouses ?? [] as $wh)
-                                                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-6">
-                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الصنف</label>
-                                                    <select name="item_id" class="form-select form-select-sm">
-                                                        <option value="">— اختر الصنف —</option>
-                                                        @foreach($guestHouseItems ?? [] as $itm)
-                                                            <option value="{{ $itm->id }}">{{ $itm->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-12 mt-1">
-                                                    <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الكمية المصروفة</label>
-                                                    <input type="number" step="0.01" min="0" name="quantity_deducted" class="form-control form-control-sm" placeholder="مثلاً: 25">
-                                                </div>
+                                            @php
+                                                $savedInventoryRows = $savedMeal?->inventoryItems ?? collect();
+                                                $inventoryRows = $savedInventoryRows->isNotEmpty() ? $savedInventoryRows : collect([null]);
+                                            @endphp
+                                            <input type="hidden" name="inventory_items_submitted" value="1">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الأصناف المصروفة</label>
+                                                <button type="button" class="btn btn-link btn-sm p-0 small" onclick="addMealInventoryRow('{{ $mealType }}')">
+                                                    <i class="bi bi-plus-circle me-1"></i>إضافة صنف
+                                                </button>
                                             </div>
+                                            <div id="mealInventoryRows_{{ $mealType }}">
+                                                @foreach($inventoryRows as $inventoryIndex => $savedInventoryRow)
+                                                    <div class="row g-1 mb-2 align-items-end" data-meal-inventory-row>
+                                                        <div class="col-5">
+                                                            <label class="form-label small text-muted mb-0" style="font-size:0.75rem">المخزن</label>
+                                                            <select name="inventory_items[{{ $inventoryIndex }}][warehouse_id]" class="form-select form-select-sm">
+                                                                <option value="">— بدون خصم —</option>
+                                                                @foreach($guestHouseWarehouses ?? [] as $wh)
+                                                                    <option value="{{ $wh->id }}" @selected($savedInventoryRow?->warehouse_id == $wh->id)>{{ $wh->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-5">
+                                                            <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الصنف</label>
+                                                            <select name="inventory_items[{{ $inventoryIndex }}][item_id]" class="form-select form-select-sm">
+                                                                <option value="">— اختر الصنف —</option>
+                                                                @foreach($guestHouseItems ?? [] as $itm)
+                                                                    <option value="{{ $itm->id }}" @selected($savedInventoryRow?->item_id == $itm->id)>{{ $itm->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-2">
+                                                            <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeMealInventoryRow(this)" title="حذف الصنف"><i class="bi bi-trash"></i></button>
+                                                        </div>
+                                                        <div class="col-12 mt-1">
+                                                            <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الكمية المصروفة</label>
+                                                            <input type="number" step="0.01" min="0" name="inventory_items[{{ $inventoryIndex }}][quantity]" value="{{ $savedInventoryRow?->quantity }}" class="form-control form-control-sm" placeholder="مثلاً: 25">
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <template id="mealInventoryTemplate_{{ $mealType }}">
+                                                <div class="row g-1 mb-2 align-items-end" data-meal-inventory-row>
+                                                    <div class="col-5">
+                                                        <label class="form-label small text-muted mb-0" style="font-size:0.75rem">المخزن</label>
+                                                        <select name="inventory_items[__INDEX__][warehouse_id]" class="form-select form-select-sm">
+                                                            <option value="">— بدون خصم —</option>
+                                                            @foreach($guestHouseWarehouses ?? [] as $wh)
+                                                                <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-5">
+                                                        <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الصنف</label>
+                                                        <select name="inventory_items[__INDEX__][item_id]" class="form-select form-select-sm">
+                                                            <option value="">— اختر الصنف —</option>
+                                                            @foreach($guestHouseItems ?? [] as $itm)
+                                                                <option value="{{ $itm->id }}">{{ $itm->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeMealInventoryRow(this)" title="حذف الصنف"><i class="bi bi-trash"></i></button>
+                                                    </div>
+                                                    <div class="col-12 mt-1">
+                                                        <label class="form-label small text-muted mb-0" style="font-size:0.75rem">الكمية المصروفة</label>
+                                                        <input type="number" step="0.01" min="0" name="inventory_items[__INDEX__][quantity]" class="form-control form-control-sm" placeholder="مثلاً: 25">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <div class="small text-muted mb-2" style="font-size:0.72rem">يمكنك إضافة كل الأصناف التي استُخدمت في تحضير الوجبة.</div>
                                             <div class="border-top pt-2">
                                                 <div class="form-check mb-1">
                                                     <input class="form-check-input" type="checkbox" name="record_expense" value="1" id="recExp_{{ $mealType }}" onchange="document.getElementById('expDetails_{{ $mealType }}').style.display = this.checked ? 'block' : 'none'">
@@ -1192,7 +1240,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        @if($pMeal->warehouse && $pMeal->item)
+                                        @if($pMeal->inventoryItems->isNotEmpty())
+                                            @foreach($pMeal->inventoryItems as $inventoryItem)
+                                                <div class="small text-dark mb-1">
+                                                    <i class="bi bi-box-seam text-info me-1"></i>
+                                                    <strong>{{ $inventoryItem->quantity }}</strong> {{ $inventoryItem->item?->unit ?: 'وحدة' }} من {{ $inventoryItem->item?->name }}
+                                                    <span class="text-muted d-block" style="font-size:0.75rem">مخزن: {{ $inventoryItem->warehouse?->name }}</span>
+                                                </div>
+                                            @endforeach
+                                        @elseif($pMeal->warehouse && $pMeal->item)
+                                            {{-- سجل قديم أُنشئ قبل دعم أكثر من صنف للوجبة. --}}
                                             <div class="small text-dark mb-1">
                                                 <i class="bi bi-box-seam text-info me-1"></i>
                                                 <strong>{{ $pMeal->quantity_deducted }}</strong> {{ $pMeal->item->unit ?: 'وحدة' }} من {{ $pMeal->item->name }}
@@ -1479,6 +1536,9 @@
                                                         <span class="badge {{ $log->type === 'in' ? 'bg-success' : 'bg-danger' }}">
                                                             {{ $log->type === 'in' ? 'توريد' : 'صرف' }}
                                                         </span>
+                                                        @if($log->type === 'in' && $log->supply_source_label)
+                                                            <span class="badge bg-light text-dark border mt-1">{{ $log->supply_source_label }}</span>
+                                                        @endif
                                                     </td>
                                                     <td class="text-end fw-bold {{ $log->type === 'in' ? 'text-success' : 'text-danger' }} font-monospace">
                                                         {{ $log->type === 'in' ? '+' : '-' }}{{ number_format((float)$log->quantity, 2) }}
@@ -2107,6 +2167,19 @@
         });
     }
 
+    function addMealInventoryRow(mealType) {
+        const target = document.getElementById('mealInventoryRows_' + mealType);
+        const template = document.getElementById('mealInventoryTemplate_' + mealType);
+        if (!target || !template) return;
+
+        // A timestamp keeps field keys unique even after a row has been removed.
+        target.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__INDEX__', Date.now()));
+    }
+
+    function removeMealInventoryRow(button) {
+        button.closest('[data-meal-inventory-row]')?.remove();
+    }
+
     function toggleCustodyTypeFields(type) {
         const finBox = document.getElementById('gh_custody_financial_box');
         const inkBox = document.getElementById('gh_custody_inkind_box');
@@ -2299,6 +2372,13 @@
                     @endforeach
                 </select>
 
+                <label class="form-label form-label-required">مصدر المخزون المورّد</label>
+                <select name="supply_source" class="form-select mb-2" required>
+                    <option value="">— هل هو تبرع أم مشتريات؟ —</option>
+                    <option value="donation" @selected(old('supply_source') === 'donation')>🎁 تبرع عيني</option>
+                    <option value="purchase" @selected(old('supply_source') === 'purchase')>🛒 مشتريات / تم شراؤه</option>
+                </select>
+
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <label class="form-label form-label-required mb-0">الصنف المراد توريده</label>
                     <button type="button" class="btn btn-xs btn-outline-success rounded-pill py-0 px-2" onclick="const box = document.getElementById('gh_supply_new_item_box'); box.classList.toggle('d-none'); const sel = document.getElementById('gh_supply_item_select'); if(!box.classList.contains('d-none')) { sel.value = ''; sel.required = false; document.getElementById('gh_supply_new_item_name').focus(); } else { sel.required = true; }">
@@ -2336,8 +2416,8 @@
                     </div>
                 </div>
 
-                <label class="form-label">ملاحظات التوريد أو مصدر الشراء</label>
-                <textarea name="notes" class="form-control" rows="2" placeholder="مثال: شراء كراتين مياه ومعلبات لصالح الدار"></textarea>
+                <label class="form-label">ملاحظات التوريد / اسم المتبرع أو جهة الشراء</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="مثال: تبرع عيني من فاعل خير، أو شراء كراتين مياه من المورد"></textarea>
             </div>
             <div class="modal-footer py-2">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>

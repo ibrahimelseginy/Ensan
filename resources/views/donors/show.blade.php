@@ -263,32 +263,38 @@
                             </div>
                         @endif
 
-                        @if($familyMembers->isNotEmpty())
+                        @php
+                            $totalSponsoredCases = $familyMembers->count() + $directSponsored->count();
+                        @endphp
+                        @if($totalSponsoredCases > 0)
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="text-muted small mb-0 fw-bold"><i class="bi bi-person-heart text-success me-1"></i>الأطفال / أفراد الأسر المكفولون ({{ $familyMembers->count() }})</label>
-                                    @if($familyMembersTotal > 0)
+                                    <label class="text-muted small mb-0 fw-bold">
+                                        <i class="bi bi-people-fill text-success me-1"></i>الأطفال / الحالات المكفولة ({{ $totalSponsoredCases }})
+                                    </label>
+                                    @if($casesTotalAmount > 0)
                                         <span class="text-success small fw-bold font-monospace">
-                                            <i class="bi bi-cash-stack me-1"></i>إجمالي كفالة الأطفال: {{ number_format($familyMembersTotal, 2) }} ج.م شهرياً
+                                            <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($casesTotalAmount, 2) }} ج.م شهرياً
                                         </span>
-                                    @elseif($effectiveMonthlyAmount > 0 && $directSponsored->isEmpty())
+                                    @elseif($effectiveMonthlyAmount > 0)
                                         <span class="text-success small fw-bold font-monospace">
                                             <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
                                         </span>
                                     @endif
                                 </div>
                                 <div class="row g-2 mt-1">
+                                    {{-- أولاً: الأطفال وأفراد الأسر المكفولون --}}
                                     @foreach($familyMembers as $familyMember)
                                         @php
                                             $fmAmount = (float) ($familyMember->pivot->monthly_amount ?? 0);
-                                            if ($fmAmount <= 0 && $effectiveMonthlyAmount > 0 && $familyMembers->count() === 1 && $directSponsored->isEmpty()) {
+                                            if ($fmAmount <= 0 && $effectiveMonthlyAmount > 0 && $totalSponsoredCases === 1) {
                                                 $fmAmount = (float) $effectiveMonthlyAmount;
                                             }
                                             if ($fmAmount <= 0) {
                                                 foreach ($history as $h) {
                                                     if (!empty($h->beneficiary_allocations) && is_array($h->beneficiary_allocations)) {
                                                         foreach ($h->beneficiary_allocations as $ba) {
-                                                            if (($ba['code'] ?? null) == $familyMember->code || ($ba['beneficiary_id'] ?? null) == $familyMember->beneficiary_id) {
+                                                            if (($ba['code'] ?? null) == $familyMember->code || ($ba['family_member_id'] ?? null) == $familyMember->id) {
                                                                 $fmAmount = (float)($ba['amount'] ?? 0);
                                                                 break 2;
                                                             }
@@ -311,7 +317,7 @@
                                                     @endif
                                                 </div>
                                                 <div class="small text-muted mt-1 d-flex flex-wrap align-items-center gap-1">
-                                                    <span>{{ $familyMember->relationship_label }} — أسرة {{ $familyMember->beneficiary?->full_name }} — كود: {{ $familyMember->code }}</span>
+                                                    <span>{{ $familyMember->relationship_label ?? 'كفالة طفل' }} — كود: {{ $familyMember->code }}</span>
                                                     @if($fmRequired > 0 && abs($fmRequired - $fmAmount) > 0.01)
                                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">المطلوب: {{ number_format($fmRequired, 0) }} ج</span>
                                                         @if($fmRemaining > 0)
@@ -322,29 +328,12 @@
                                             </a>
                                         </div>
                                     @endforeach
-                                </div>
-                            </div>
-                        @endif
 
-                        @if($directSponsored->isNotEmpty())
-                            <div class="col-md-12">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="text-muted small mb-0 fw-bold"><i class="bi bi-house-heart text-primary me-1"></i>ملفات الأسر / الحالات الكاملة المكفولة ({{ $directSponsored->count() }})</label>
-                                    @if($directSponsoredTotal > 0)
-                                        <span class="text-success small fw-bold font-monospace">
-                                            <i class="bi bi-cash-stack me-1"></i>إجمالي كفالة الأسر: {{ number_format($directSponsoredTotal, 2) }} ج.م شهرياً
-                                        </span>
-                                    @elseif($effectiveMonthlyAmount > 0)
-                                        <span class="text-success small fw-bold font-monospace">
-                                            <i class="bi bi-cash-stack me-1"></i>إجمالي الكفالة: {{ number_format($effectiveMonthlyAmount, 2) }} ج.م شهرياً
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    {{-- ثانياً: ملفات الأسر / الحالات الكاملة المكفولة مباشرة --}}
                                     @foreach($directSponsored as $sb)
                                         @php
                                             $caseCommitment = (float) ($sb->pivot?->monthly_amount ?? 0);
-                                            if ($caseCommitment <= 0 && $effectiveMonthlyAmount > 0 && $directSponsored->count() === 1 && $familyMembers->isEmpty()) {
+                                            if ($caseCommitment <= 0 && $effectiveMonthlyAmount > 0 && $totalSponsoredCases === 1) {
                                                 $caseCommitment = (float) $effectiveMonthlyAmount;
                                             }
                                             if ($caseCommitment <= 0) {
@@ -362,25 +351,26 @@
                                             $sbRequiredTotal = (float) ($sb->total_family_sponsorship_amount ?? $sb->monthly_sponsorship_amount ?? 0);
                                             $sbRemainingTotal = (float) ($sb->remaining_family_sponsorship_amount ?? max(0, $sbRequiredTotal - $caseCommitment));
                                         @endphp
-                                        <div class="d-inline-flex align-items-center flex-wrap gap-1 bg-white border border-success rounded-pill px-3 py-1.5 shadow-sm">
-                                            <a href="{{ route('beneficiaries.show', $sb) }}" class="text-success text-decoration-none fw-bold me-1">
-                                                <i class="bi bi-house-check me-1"></i> {{ $sb->full_name }} ({{ $sb->code ?? ('BEN-'.$sb->id) }})
+                                        <div class="col-md-6">
+                                            <a href="{{ route('beneficiaries.show', $sb) }}" class="text-decoration-none d-block border rounded-3 p-2.5 bg-light bg-opacity-25 hover-shadow">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                                    <span class="fw-bold text-success"><i class="bi bi-house-check me-1"></i>{{ $sb->full_name }}</span>
+                                                    @if($caseCommitment > 0)
+                                                        <span class="badge bg-success text-white font-monospace px-2.5 py-1 rounded-pill">
+                                                            مساهمة الكفيل: {{ number_format((float)$caseCommitment, 2) }} ج.م
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="small text-muted mt-1 d-flex flex-wrap align-items-center gap-1">
+                                                    <span>كفالة أسرة / حالة كاملة — كود: {{ $sb->code ?? ('BEN-'.$sb->id) }}</span>
+                                                    @if($sbRequiredTotal > 0 && abs($sbRequiredTotal - $caseCommitment) > 0.01)
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">المطلوب: {{ number_format($sbRequiredTotal, 0) }} ج</span>
+                                                        @if($sbRemainingTotal > 0)
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning">باقي: {{ number_format($sbRemainingTotal, 0) }} ج</span>
+                                                        @endif
+                                                    @endif
+                                                </div>
                                             </a>
-                                            @if($caseCommitment > 0)
-                                                <span class="badge bg-success text-white font-monospace fs-7 px-2.5 py-1 rounded-pill" title="المبلغ المخصص من هذا المتبرع لصالح الحالة">
-                                                    مساهمة الكفيل: {{ number_format($caseCommitment, 2) }} ج.م
-                                                </span>
-                                            @endif
-                                            @if($sbRequiredTotal > 0 && abs($sbRequiredTotal - $caseCommitment) > 0.01)
-                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace rounded-pill">
-                                                    إجمالي كفالة الحالة: {{ number_format($sbRequiredTotal, 0) }} ج.م
-                                                </span>
-                                                @if($sbRemainingTotal > 0)
-                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning font-monospace rounded-pill">
-                                                        باقي للحالة: {{ number_format($sbRemainingTotal, 0) }} ج.م
-                                                    </span>
-                                                @endif
-                                            @endif
                                         </div>
                                     @endforeach
                                 </div>

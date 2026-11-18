@@ -476,6 +476,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('beneficiaries/{beneficiary}/sponsors', [BeneficiaryWebController::class, 'attachSponsor'])->name('beneficiaries.attach-sponsor');
         Route::delete('beneficiaries/{beneficiary}/sponsors/{donor}', [BeneficiaryWebController::class, 'detachSponsor'])->name('beneficiaries.detach-sponsor');
         Route::post('beneficiaries/{beneficiary}/direct-aid', [BeneficiaryWebController::class, 'recordDirectAid'])->name('beneficiaries.record-direct-aid');
+        Route::patch('beneficiaries/{beneficiary}/donations/{donation}/status', [BeneficiaryWebController::class, 'updateAidStatus'])->name('beneficiaries.aid-status.update');
         Route::post('beneficiaries/{beneficiary}/reassessments', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'store'])->name('beneficiaries.reassessments.store');
         Route::delete('beneficiary-reassessments/{reassessment}', [\App\Http\Controllers\BeneficiaryReassessmentController::class, 'destroy'])->name('beneficiaries.reassessments.destroy');
         Route::resource('beneficiaries', BeneficiaryWebController::class);

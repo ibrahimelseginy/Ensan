@@ -18,10 +18,12 @@ final class InventoryTransaction extends Model
         'unit_cost',
         'total_cost',
         'source_donation_id',
+        'supply_source',
         'beneficiary_id',
         'project_id',
         'campaign_id',
         'guest_house_id',
+        'guest_house_meal_inventory_item_id',
         'expense_id',
         'delegate_id',
         'user_id',
@@ -68,6 +70,15 @@ final class InventoryTransaction extends Model
         return $this->belongsTo(Donation::class, 'source_donation_id'); 
     }
 
+    public function getSupplySourceLabelAttribute(): ?string
+    {
+        return match ($this->supply_source) {
+            'donation' => 'تبرع عيني',
+            'purchase' => 'مشتريات',
+            default => null,
+        };
+    }
+
     public function beneficiary(): BelongsTo 
     { 
         return $this->belongsTo(Beneficiary::class); 
@@ -86,6 +97,11 @@ final class InventoryTransaction extends Model
     public function guestHouse(): BelongsTo
     {
         return $this->belongsTo(GuestHouse::class);
+    }
+
+    public function guestHouseMealInventoryItem(): BelongsTo
+    {
+        return $this->belongsTo(GuestHouseMealInventoryItem::class);
     }
 
     public function expense(): BelongsTo 
