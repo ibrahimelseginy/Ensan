@@ -5630,6 +5630,8 @@ body:not(.theme-dark) .review-action-modal .modal-content,
 body:not(.theme-dark) #reviewRequestActionModal .modal-content {
   background-color: #ffffff !important;
   background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 
 body:not(.theme-dark) .review-action-modal .modal-header,
@@ -5638,12 +5640,41 @@ body:not(.theme-dark) .review-action-modal .modal-footer,
 body:not(.theme-dark) #reviewRequestActionModal .modal-footer {
   background-color: #ffffff !important;
   background: #ffffff !important;
+  border-color: #e2e8f0 !important;
 }
 
 body:not(.theme-dark) .review-action-modal .modal-body,
 body:not(.theme-dark) #reviewRequestActionModal .modal-body {
   background-color: #f8fafc !important;
   background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body:not(.theme-dark) .review-action-modal .modal-title,
+body:not(.theme-dark) #reviewRequestActionModal .modal-title,
+body:not(.theme-dark) .review-action-modal .review-section-title,
+body:not(.theme-dark) #reviewRequestActionModal .review-section-title,
+body:not(.theme-dark) .review-action-modal .review-summary-item strong,
+body:not(.theme-dark) #reviewRequestActionModal .review-summary-item strong,
+body:not(.theme-dark) .review-action-modal .review-field-card strong,
+body:not(.theme-dark) #reviewRequestActionModal .review-field-card strong,
+body:not(.theme-dark) .review-action-modal .review-diff-card h3,
+body:not(.theme-dark) #reviewRequestActionModal .review-diff-card h3,
+body:not(.theme-dark) .review-action-modal .review-flow-step strong,
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-step strong {
+  color: #0f172a !important;
+}
+
+body:not(.theme-dark) .review-action-modal .review-modal-eyebrow,
+body:not(.theme-dark) #reviewRequestActionModal .review-modal-eyebrow,
+body:not(.theme-dark) .review-action-modal .review-summary-item small,
+body:not(.theme-dark) #reviewRequestActionModal .review-summary-item small,
+body:not(.theme-dark) .review-action-modal .review-field-card small,
+body:not(.theme-dark) #reviewRequestActionModal .review-field-card small,
+body:not(.theme-dark) .review-action-modal .review-flow-step small,
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-step small,
+body:not(.theme-dark) #reviewRequestActionModal .review-empty-details {
+  color: #475569 !important;
 }
 
 body:not(.theme-dark) .review-action-modal .review-summary-item,
@@ -5654,6 +5685,87 @@ body:not(.theme-dark) .review-action-modal .review-execution-flow,
 body:not(.theme-dark) #reviewRequestActionModal .review-execution-flow {
   background-color: #ffffff !important;
   background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+}
+
+body:not(.theme-dark) .review-action-modal .review-field-card,
+body:not(.theme-dark) #reviewRequestActionModal .review-field-card,
+body:not(.theme-dark) .review-action-modal .review-diff-card,
+body:not(.theme-dark) #reviewRequestActionModal .review-diff-card,
+body:not(.theme-dark) #reviewRequestActionModal .review-empty-details {
+  background-color: #f1f5f9 !important;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+body:not(.theme-dark) #reviewRequestActionModal .review-effect {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-effect strong {
+  color: #1e3a8a !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-effect p {
+  color: #1e40af !important;
+}
+
+body:not(.theme-dark) #reviewRequestActionModal .review-effect--danger {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-effect--danger strong {
+  color: #991b1b !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-effect--danger p {
+  color: #b91c1c !important;
+}
+
+body:not(.theme-dark) #reviewRequestActionModal .review-value--old {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-value--new {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-step > span {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-step--done > span {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-step--current > span {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-flow-line {
+  background: #cbd5e1 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-reject-panel {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-reject-panel .form-label {
+  color: #991b1b !important;
+}
+body:not(.theme-dark) #reviewRequestActionModal .review-reject-panel .form-control {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+body:not(.theme-dark) .review-history-button {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* ======================================================

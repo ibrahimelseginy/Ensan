@@ -2562,7 +2562,13 @@
           color: #ef4444;
       }
       .review-effect--danger strong {
+          color: #991b1b;
+      }
+      .theme-dark .review-effect--danger strong {
           color: #fca5a5;
+      }
+      .review-effect--danger p {
+          color: #b91c1c;
       }
       .theme-dark .review-effect--danger p {
           color: #fecdd3;
@@ -2843,7 +2849,6 @@
           color: #f59e0b;
           font-size: .82rem;
           font-weight: 700;
-      }ght: 700;
       }
 
       @media (max-width: 991.98px) {
