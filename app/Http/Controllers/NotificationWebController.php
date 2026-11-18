@@ -276,8 +276,8 @@ final class NotificationWebController extends Controller
             ];
         }
 
-        // مهام للإشراف والمتابعة (للمديرين، الموارد البشرية HR، ومنشئي المهام)
-        if ($isAdmin || $isManager || $isHr || $user->hasPermission('employee_tasks.view')) {
+        // مهام للإشراف والمتابعة (للمديرين والإدارة العليا فقط)
+        if ($isAdmin || $isManager) {
             $supervisedTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
                 ->where(function ($q) {
                     $q->where('status', 'under_review')
@@ -300,25 +300,7 @@ final class NotificationWebController extends Controller
                 ->limit(15)
                 ->get();
         } else {
-            // مهام أنشأها الموظف أو يتابعها كـ assigned_by
-            $supervisedTasks = Task::with(['assignee:id,name'])
-                ->where('assigned_by', $user->id)
-                ->where(function ($q) {
-                    $q->where('status', 'under_review')
-                      ->orWhere(function ($sub) {
-                          $sub->where('status', 'done')
-                              ->where('updated_at', '>=', now()->subDays(7));
-                      })
-                      ->orWhere(function ($sub) {
-                          $sub->where('status', '!=', 'done')
-                              ->whereNotNull('due_date')
-                              ->whereDate('due_date', '<', now()->toDateString());
-                      });
-                })
-                ->when(!empty($seenTaskIds), fn($q) => $q->whereNotIn('id', $seenTaskIds))
-                ->latest('updated_at')
-                ->limit(10)
-                ->get();
+            $supervisedTasks = collect();
         }
 
         foreach ($supervisedTasks as $t) {

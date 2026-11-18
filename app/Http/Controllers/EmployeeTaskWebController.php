@@ -55,7 +55,6 @@ final class EmployeeTaskWebController extends Controller
         if (!$isAdmin) {
             $query->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
-                  ->orWhere('assigned_by', $user->id)
                   ->orWhereHas('assignees', fn($sq) => $sq->where('users.id', $user->id));
             });
         } elseif ($selectedEmployee) {
@@ -229,7 +228,7 @@ final class EmployeeTaskWebController extends Controller
             "مهمة عمل جديدة: {$task->title}",
             "تم إسناد مهمة عمل جديدة لك بواسطة " . ($user?->name ?? 'الإدارة') . $dueText,
             $recipientIds,
-            true
+            false
         );
 
         return redirect()->route('employee-tasks.show', $task)->with('success', 'تم إنشاء المهمة بنجاح وإضافتها للوحة المهام');
