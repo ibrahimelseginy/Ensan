@@ -31,7 +31,7 @@ final class RoleWebController extends Controller
     public function create(): View
     {
         $permissions = $this->roleService->getPermissionGroups();
-        $users       = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
+        $users       = User::with('roles:id,name')->where('is_volunteer', false)->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
         return view('roles.create', compact('permissions', 'users'));
     }
 
@@ -46,7 +46,7 @@ final class RoleWebController extends Controller
         $role->load(['permissions', 'users']);
         $permissions     = $this->roleService->getPermissionGroups();
         $rolePermissions = $role->permissions->pluck('id')->toArray();
-        $users           = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
+        $users           = User::with('roles:id,name')->where('is_volunteer', false)->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
         $roleUserIds     = $role->users->pluck('id')->toArray();
 
         return view('roles.edit', compact('role', 'permissions', 'rolePermissions', 'users', 'roleUserIds'));
@@ -67,7 +67,7 @@ final class RoleWebController extends Controller
     {
         $role->load(['permissions', 'users.roles'])->loadCount('users');
         $permissions = $this->roleService->getGroupedRolePermissions($role);
-        $allUsers    = User::with('roles:id,name')->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
+        $allUsers    = User::with('roles:id,name')->where('is_volunteer', false)->orderBy('name')->get(['id', 'name', 'email', 'job_title', 'is_employee', 'is_volunteer']);
 
         return view('roles.show', compact('role', 'permissions', 'allUsers'));
     }

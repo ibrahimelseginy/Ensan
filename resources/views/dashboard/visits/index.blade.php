@@ -237,15 +237,25 @@
       </div>
       <form action="{{ route('visits.store') }}" method="POST">
         @csrf
+        <input type="hidden" name="is_quick_schedule" value="1">
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label fw-bold">المستفيد <span class="text-danger">*</span></label>
-            <select name="beneficiary_id" class="form-select" required>
-              <option value="">-- اختر المستفيد --</option>
-              @foreach($beneficiaries as $ben)
-                <option value="{{ $ben->id }}">{{ $ben->full_name ?? $ben->name }} ({{ $ben->code ?: $ben->id }})</option>
+            <label class="form-label fw-bold">الحالة (من تقديمات الأبحاث) <span class="text-danger">*</span></label>
+            <select name="case_application_id" id="scheduleCaseAppSelect" class="form-select" required>
+              <option value="">-- اختر الحالة من تقديمات الأبحاث --</option>
+              @foreach($caseApplications as $app)
+                @php
+                  $appLocation = trim(implode(' - ', array_filter([$app->governorate, $app->city, $app->address])));
+                @endphp
+                <option value="{{ $app->id }}" data-address="{{ $appLocation }}">
+                  {{ $app->applicant_name }} ({{ $app->phone ?? 'بدون هاتف' }})@if($app->governorate) - {{ $app->governorate }}@endif
+                </option>
               @endforeach
             </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">المكان أو المنطقة <span class="text-danger">*</span></label>
+            <input type="text" name="address" id="scheduleVisitAddress" class="form-control" required placeholder="مثال: كفر الشيخ - دسوق - قرية ...">
           </div>
           <div class="mb-3">
             <label class="form-label fw-bold">الباحث الميداني <span class="text-danger">*</span></label>
@@ -280,4 +290,20 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const caseSelect = document.getElementById('scheduleCaseAppSelect');
+    const addressInput = document.getElementById('scheduleVisitAddress');
+    if (caseSelect && addressInput) {
+      caseSelect.addEventListener('change', function () {
+        const opt = caseSelect.options[caseSelect.selectedIndex];
+        const addr = opt ? (opt.getAttribute('data-address') || '') : '';
+        if (addr) {
+          addressInput.value = addr;
+        }
+      });
+    }
+  });
+</script>
 @endsection

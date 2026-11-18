@@ -774,7 +774,7 @@
                                                     <select name="status" id="statusSelect{{ $app->id }}" class="form-select p-2.5 fw-bold rounded-3 shadow-xs" onchange="toggleRejectionBox({{ $app->id }})">
                                                         <option value="pending" {{ in_array($app->status, ['pending', 'في انتظار البحث']) ? 'selected' : '' }}>⏳ في انتظار البحث</option>
                                                         <option value="under_research" {{ in_array($app->status, ['under_research', 'تحت البحث', 'reviewed']) ? 'selected' : '' }}>🔍 تحت البحث (جاري المسح الميداني)</option>
-                                                        <option value="approved" {{ in_array($app->status, ['approved', 'completed', 'تم البحث', 'accepted']) ? 'selected' : '' }}>✅ تم البحث (اعتماد للبحث الميداني)</option>
+                                                        <option value="approved" {{ in_array($app->status, ['approved', 'completed', 'تم البحث', 'accepted']) ? 'selected' : '' }}>✅ تم البحث</option>
                                                         <option value="rejected" {{ in_array($app->status, ['rejected', 'مرفوض']) ? 'selected' : '' }}>❌ مرفوض (عدم استيفاء الشروط)</option>
                                                     </select>
                                                 </div>

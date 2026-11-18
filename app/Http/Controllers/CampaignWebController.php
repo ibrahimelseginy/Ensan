@@ -332,7 +332,22 @@ final class CampaignWebController extends Controller
     {
         abort_unless((int) $beneficiary->campaign_id === (int) $campaign->id, 404);
 
-        $beneficiary->delete();
+        $executor = function () use ($beneficiary) {
+            return $beneficiary->delete();
+        };
+
+        $result = \App\Services\ChangeRequestService::handleRequest(
+            Beneficiary::class,
+            $beneficiary->id,
+            'delete',
+            [],
+            $executor,
+            true
+        );
+
+        if ($result instanceof \App\Models\ChangeRequest) {
+            return back()->with('success', 'تم إرسال طلب حذف المستفيد للمراجعة والاعتماد من مدير المؤسسة.');
+        }
 
         return back()->with('success', 'تم حذف المستفيد بنجاح');
     }

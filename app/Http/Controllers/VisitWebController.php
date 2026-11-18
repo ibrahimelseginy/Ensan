@@ -55,9 +55,12 @@ final class VisitWebController extends Controller
         ];
 
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
+        $caseApplications = \App\Models\MobileCaseApplication::where('status', '!=', 'rejected')
+            ->orderByDesc('id')
+            ->get();
         $researchers = User::where('is_employee', true)->orWhere('role', 'volunteer')->orderBy('name')->get();
 
-        return view('dashboard.visits.index', compact('visits', 'stats', 'beneficiaries', 'researchers'));
+        return view('dashboard.visits.index', compact('visits', 'stats', 'beneficiaries', 'caseApplications', 'researchers'));
     }
 
     public function create(Request $request)
@@ -150,10 +153,28 @@ final class VisitWebController extends Controller
             }
         }
 
-        $validated['status'] = 'awaiting_discussion';
+        $isQuickSchedule = $request->boolean('is_quick_schedule');
+        $validated['status'] = $isQuickSchedule
+            ? ($request->input('status', 'scheduled'))
+            : 'awaiting_discussion';
+
         $appId = $request->input('case_application_id') ?: $request->input('application_id');
         if (!empty($appId)) {
             $validated['case_application_id'] = $appId;
+            $caseAppPre = \App\Models\MobileCaseApplication::find($appId);
+            if ($caseAppPre) {
+                $validated['beneficiary_id'] = $validated['beneficiary_id'] ?? $caseAppPre->beneficiary_id;
+                $validated['patient_name'] = $validated['patient_name'] ?? $caseAppPre->applicant_name;
+                $validated['phone'] = $validated['phone'] ?? $caseAppPre->phone;
+                $validated['national_id'] = $validated['national_id'] ?? $caseAppPre->national_id;
+                if (empty($validated['address'])) {
+                    $validated['address'] = trim(implode(' - ', array_filter([
+                        $caseAppPre->governorate,
+                        $caseAppPre->city,
+                        $caseAppPre->address,
+                    ])));
+                }
+            }
         }
 
         $visit = FieldVisit::create($validated);

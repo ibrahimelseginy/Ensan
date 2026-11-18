@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="ensan-user-id" content="{{ auth()->id() ?? 'guest' }}">
   <title>مؤسسة انسان الخيرية</title>
   {{-- Anti-FOUC Immediate Theme Script: prevents white flash on refresh/load --}}
   <script>
@@ -5774,6 +5775,8 @@
       document.addEventListener('shown.bs.modal', initGlobalDonationAndPhoneEnhancements);
   })();
   </script>
+
+  <script src="{{ asset('js/auto-save.js') }}?v={{ filemtime(public_path('js/auto-save.js')) }}"></script>
 
   @include('components.internal-chat-widget')
   @include('layouts.partials.global_search_script')
