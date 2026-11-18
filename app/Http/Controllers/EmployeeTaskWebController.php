@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\Campaign;
 use App\Models\GuestHouse;
+use App\Models\MobileNotification;
 use App\Models\TaskAttachment;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
@@ -216,6 +217,21 @@ final class EmployeeTaskWebController extends Controller
             'تم إنشاء المهمة وتعيينها بواسطة ' . ($user?->name ?? 'المسؤول')
         );
 
+        // Notify assigned employee(s), shared collaborators, HR & managers
+        $recipientIds = array_merge(
+            $task->assigned_to ? [(int) $task->assigned_to] : [],
+            array_map('intval', $sharedWith)
+        );
+        $dueText = $task->due_date ? ' (الاستحقاق: ' . $task->due_date->format('Y-m-d') . ')' : '';
+        $this->sendTaskNotifications(
+            $task,
+            $user,
+            "مهمة عمل جديدة: {$task->title}",
+            "تم إسناد مهمة عمل جديدة لك بواسطة " . ($user?->name ?? 'الإدارة') . $dueText,
+            $recipientIds,
+            true
+        );
+
         return redirect()->route('employee-tasks.show', $task)->with('success', 'تم إنشاء المهمة بنجاح وإضافتها للوحة المهام');
     }
 
@@ -343,6 +359,15 @@ final class EmployeeTaskWebController extends Controller
             }
 
             $employee_task->logActivity('status_changed', $oldStatus, $newStatus, $details);
+
+            $this->sendTaskNotifications(
+                $employee_task,
+                $user,
+                "تحديث حالة مهمة: {$employee_task->title}",
+                $details,
+                $this->getTaskParticipantIds($employee_task),
+                true
+            );
         }
 
         return redirect()->route('employee-tasks.show', $employee_task)->with('success', 'تم تحديث المهمة بنجاح.');
@@ -412,6 +437,17 @@ final class EmployeeTaskWebController extends Controller
 
         $employee_task->logActivity($action, $oldStatus, $newStatus, $details);
 
+        if ($newStatus !== $oldStatus) {
+            $this->sendTaskNotifications(
+                $employee_task,
+                $user,
+                "تحديث مرحلة مهمة: {$employee_task->title}",
+                $details,
+                $this->getTaskParticipantIds($employee_task),
+                true
+            );
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -458,6 +494,15 @@ final class EmployeeTaskWebController extends Controller
             null,
             null,
             "قام {$user->name} بإرفاق ملف: {$attachment->file_name}" . ($request->note ? " ({$request->note})" : '')
+        );
+
+        $this->sendTaskNotifications(
+            $employee_task,
+            $user,
+            "مرفق جديد في مهمة: {$employee_task->title}",
+            "قام {$user->name} بإرفاق ملف ({$attachment->file_name}) على المهمة.",
+            $this->getTaskParticipantIds($employee_task),
+            true
         );
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -509,5 +554,97 @@ final class EmployeeTaskWebController extends Controller
     public function destroy(Task $employee_task): RedirectResponse
     {
         return redirect()->back()->with('error', '🔒 عفواً، المهام وسجلاتها غير قابلة للحذف نهائياً في النظام لحفظ السجلات والشفافية التامة.');
+    }
+
+    /**
+     * Collect all direct participant user IDs for a task (assigner, assignee, shared collaborators).
+     */
+    private function getTaskParticipantIds(Task $task): array
+    {
+        $ids = [];
+        if ($task->assigned_by) {
+            $ids[] = (int) $task->assigned_by;
+        }
+        if ($task->assigned_to) {
+            $ids[] = (int) $task->assigned_to;
+        }
+        $sharedIds = $task->assignees()->pluck('users.id')->all();
+        foreach ($sharedIds as $id) {
+            $ids[] = (int) $id;
+        }
+
+        return array_values(array_unique(array_filter($ids)));
+    }
+
+    /**
+     * Send targeted in-app notifications to task participants, HR, and managers.
+     */
+    private function sendTaskNotifications(
+        Task $task,
+        ?User $actor,
+        string $title,
+        string $body,
+        array $recipientIds = [],
+        bool $includeHrAndManagers = false
+    ): void {
+        try {
+            $ids = array_map('intval', $recipientIds);
+
+            if ($includeHrAndManagers) {
+                $supervisorIds = User::where('active', true)
+                    ->where(function ($q) {
+                        $q->whereHas('roles', function ($rq) {
+                            $rq->whereIn('key', [
+                                'admin',
+                                'super_admin',
+                                'manager',
+                                'hr',
+                                'hr2',
+                                'project_manager_2',
+                                'project_manager_3',
+                                'guest_house_manager_1',
+                                'guest_house_manager_2',
+                            ]);
+                        })
+                        ->orWhere('job_title', 'like', '%موارد%')
+                        ->orWhere('job_title', 'like', '%مدير%')
+                        ->orWhere('department', 'like', '%موارد%')
+                        ->orWhere('department', 'like', '%HR%');
+                    })
+                    ->pluck('id')
+                    ->all();
+
+                $ids = array_merge($ids, array_map('intval', $supervisorIds));
+            }
+
+            $ids = array_values(array_unique(array_filter($ids, fn($id) => $id > 0 && (!$actor || $id !== (int) $actor->id))));
+
+            if (empty($ids)) {
+                return;
+            }
+
+            $now = now();
+            $category = in_array($task->priority, ['high', 'urgent'], true) ? 'عاجل' : 'مهام';
+            $taggedBody = $body . " [مهمة #{$task->id}]";
+
+            $users = User::whereIn('id', $ids)->get(['id', 'name']);
+            foreach ($users as $targetUser) {
+                MobileNotification::create([
+                    'title'           => $title,
+                    'body'            => $taggedBody,
+                    'category'        => $category,
+                    'target_type'     => 'user',
+                    'target_user_id'  => $targetUser->id,
+                    'target_audience' => $targetUser->name,
+                    'is_sent'         => true,
+                    'sent_at'         => $now,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Task notification dispatch failed', [
+                'task_id' => $task->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 }

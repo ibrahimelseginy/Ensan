@@ -50,7 +50,18 @@ final class NotificationWebController extends Controller
         $rawItems = [];
         $suggestions = [];
         $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin');
-        $isManager = $user->hasRole('manager');
+        $isManager = $user->hasRole([
+            'manager',
+            'project_manager_2',
+            'project_manager_3',
+            'guest_house_manager_1',
+            'guest_house_manager_2',
+            'social_research_manager',
+        ]);
+        $userJobLower = mb_strtolower((string) ($user->job_title . ' ' . $user->department));
+        $isHr = $user->hasRole(['hr', 'hr2'])
+            || str_contains($userJobLower, 'موارد')
+            || str_contains($userJobLower, 'hr');
 
         // Helper check closure matching role, permissions, or job title
         $canAccess = function (string $permission, array $roles = [], array $jobKeywords = []) use ($user, $isAdmin, $isManager): bool {
@@ -94,13 +105,19 @@ final class NotificationWebController extends Controller
                 default => 'info',
             };
             $targetDesc = $tNotif->target_type === 'user' ? 'إشعار خاص بك من الإدارة' : $tNotif->target_description;
+            $targetLink = route('notifications.index');
+            if (preg_match('/\[مهمة #(\d+)\]/u', (string) $tNotif->body, $taskMatch)) {
+                $targetLink = route('employee-tasks.show', (int) $taskMatch[1]);
+            } elseif ($tNotif->category === 'مهام') {
+                $targetLink = route('employee-tasks.index');
+            }
             $rawItems[] = [
                 'id' => 'targeted_' . $tNotif->id,
                 'category' => 'targeted_employee',
                 'type' => $notifType,
                 'title' => 'تنبيه موجه: ' . $tNotif->title,
                 'text' => $tNotif->body . ' (' . $targetDesc . ')',
-                'link' => route('notifications.index'),
+                'link' => $targetLink,
                 'timestamp' => $ts,
             ];
         }
@@ -230,27 +247,105 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 3. المهام الخاصة بالموظف وفريق العمل
+        // 3. المهام الخاصة بالموظف وفريق العمل (مهام الموظفين / HR / الإدارة)
         // ==========================================
-        $myTasks = Task::where(function ($q) use ($user) {
+        $seenTaskIds = [];
+
+        $myTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
+            ->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
                   ->orWhereHas('assignees', fn($sq) => $sq->where('users.id', $user->id));
             })
             ->where('status', '!=', 'done')
-            ->latest('created_at')
-            ->limit(6)
+            ->latest('updated_at')
+            ->limit(10)
             ->get();
 
         foreach ($myTasks as $t) {
+            $seenTaskIds[] = $t->id;
             $isOverdue = $t->due_date && $t->due_date->toDateString() < now()->toDateString();
+            $isReview = $t->status === 'under_review';
             $rawItems[] = [
                 'id' => 'task_' . $t->id,
                 'category' => 'tasks',
-                'type' => $isOverdue ? 'danger' : 'info',
-                'title' => $isOverdue ? 'مهمة عمل متأخرة' : 'مهمة عمل مسندة إليك',
+                'type' => $isOverdue ? 'danger' : ($isReview ? 'warning' : 'info'),
+                'title' => $isOverdue ? 'مهمة عمل متأخرة' : ($isReview ? 'مهمة قيد المراجعة' : 'مهمة عمل مسندة إليك'),
                 'text' => $t->title . ($t->due_date ? ' (استحقاق: ' . $t->due_date->format('Y-m-d') . ')' : ''),
-                'link' => route('tasks.index'),
-                'timestamp' => $t->created_at ? $t->created_at->timestamp : now()->timestamp,
+                'link' => route('employee-tasks.show', $t),
+                'timestamp' => $t->updated_at ? $t->updated_at->timestamp : ($t->created_at ? $t->created_at->timestamp : now()->timestamp),
+            ];
+        }
+
+        // مهام للإشراف والمتابعة (للمديرين، الموارد البشرية HR، ومنشئي المهام)
+        if ($isAdmin || $isManager || $isHr || $user->hasPermission('employee_tasks.view')) {
+            $supervisedTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
+                ->where(function ($q) {
+                    $q->where('status', 'under_review')
+                      ->orWhere(function ($sub) {
+                          $sub->where('status', '!=', 'done')
+                              ->whereNotNull('due_date')
+                              ->whereDate('due_date', '<', now()->toDateString());
+                      })
+                      ->orWhere(function ($sub) {
+                          $sub->where('status', 'done')
+                              ->where('updated_at', '>=', now()->subDays(7));
+                      })
+                      ->orWhere(function ($sub) {
+                          $sub->whereIn('status', ['pending', 'in_progress'])
+                              ->where('created_at', '>=', now()->subDays(7));
+                      });
+                })
+                ->when(!empty($seenTaskIds), fn($q) => $q->whereNotIn('id', $seenTaskIds))
+                ->latest('updated_at')
+                ->limit(15)
+                ->get();
+        } else {
+            // مهام أنشأها الموظف أو يتابعها كـ assigned_by
+            $supervisedTasks = Task::with(['assignee:id,name'])
+                ->where('assigned_by', $user->id)
+                ->where(function ($q) {
+                    $q->where('status', 'under_review')
+                      ->orWhere(function ($sub) {
+                          $sub->where('status', 'done')
+                              ->where('updated_at', '>=', now()->subDays(7));
+                      })
+                      ->orWhere(function ($sub) {
+                          $sub->where('status', '!=', 'done')
+                              ->whereNotNull('due_date')
+                              ->whereDate('due_date', '<', now()->toDateString());
+                      });
+                })
+                ->when(!empty($seenTaskIds), fn($q) => $q->whereNotIn('id', $seenTaskIds))
+                ->latest('updated_at')
+                ->limit(10)
+                ->get();
+        }
+
+        foreach ($supervisedTasks as $t) {
+            $isOverdue = $t->status !== 'done' && $t->due_date && $t->due_date->toDateString() < now()->toDateString();
+            $empName = $t->assignee?->name ?? 'موظف';
+            if ($t->status === 'under_review') {
+                $title = 'مهمة بانتظار المراجعة والاعتماد';
+                $type = 'warning';
+            } elseif ($t->status === 'done') {
+                $title = 'تم إنجاز مهمة عمل';
+                $type = 'success';
+            } elseif ($isOverdue) {
+                $title = 'مهمة موظف متأخرة عن الموعد';
+                $type = 'danger';
+            } else {
+                $title = 'مهمة موظف جارية';
+                $type = 'info';
+            }
+
+            $rawItems[] = [
+                'id' => 'task_sup_' . $t->id . '_' . $t->status,
+                'category' => 'tasks',
+                'type' => $type,
+                'title' => $title,
+                'text' => "{$t->title} — المكلف: {$empName}" . ($t->due_date ? ' (استحقاق: ' . $t->due_date->format('Y-m-d') . ')' : ''),
+                'link' => route('employee-tasks.show', $t),
+                'timestamp' => $t->updated_at ? $t->updated_at->timestamp : ($t->created_at ? $t->created_at->timestamp : now()->timestamp),
             ];
         }
 
@@ -710,7 +805,18 @@ final class NotificationWebController extends Controller
         }
 
         $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin');
-        $isManager = $user->hasRole('manager');
+        $isManager = $user->hasRole([
+            'manager',
+            'project_manager_2',
+            'project_manager_3',
+            'guest_house_manager_1',
+            'guest_house_manager_2',
+            'social_research_manager',
+        ]);
+        $userJobLower = mb_strtolower((string) ($user->job_title . ' ' . $user->department));
+        $isHr = $user->hasRole(['hr', 'hr2'])
+            || str_contains($userJobLower, 'موارد')
+            || str_contains($userJobLower, 'hr');
         if (!$isAdmin && !$isManager && !$user->hasPermission('notifications.create') && !$user->hasPermission('mobile.notifications.view')) {
             abort(403, 'غير مصرح لك بإرسال إشعارات خاصة للموظفين.');
         }

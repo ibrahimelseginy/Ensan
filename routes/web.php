@@ -398,14 +398,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('batch-process', [\App\Http\Controllers\DataImportWebController::class, 'batchProcess'])->name('batch-process');
     });
 
+    // الإشعارات الشخصية للمستخدم (متاحة لكل موظف مسجل دخول وتُفلتر حسب صلاحياته ومهامه)
+    Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-read', [NotificationWebController::class, 'markRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [NotificationWebController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::post('notifications/dismiss', [NotificationWebController::class, 'dismiss'])->name('notifications.dismiss');
+    Route::post('notifications/clear-read', [NotificationWebController::class, 'clearRead'])->name('notifications.clear-read');
+
     Route::middleware('permission:notifications.view')->group(function () {
-        Route::get('notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
         Route::post('notifications/store-targeted', [NotificationWebController::class, 'storeTargeted'])->name('notifications.store-targeted');
         Route::post('notifications/broadcast-update', [NotificationWebController::class, 'broadcastSystemUpdate'])->name('notifications.broadcast-update');
-        Route::post('notifications/mark-read', [NotificationWebController::class, 'markRead'])->name('notifications.mark-read');
-        Route::post('notifications/mark-all-read', [NotificationWebController::class, 'markAllRead'])->name('notifications.mark-all-read');
-        Route::post('notifications/dismiss', [NotificationWebController::class, 'dismiss'])->name('notifications.dismiss');
-        Route::post('notifications/clear-read', [NotificationWebController::class, 'clearRead'])->name('notifications.clear-read');
     });
 
     Route::middleware('permission:audits.view')->group(function () {
