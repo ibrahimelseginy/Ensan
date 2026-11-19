@@ -63,6 +63,113 @@ final class VisitWebController extends Controller
         return view('dashboard.visits.index', compact('visits', 'stats', 'beneficiaries', 'caseApplications', 'researchers'));
     }
 
+    /**
+     * Display the Researcher Daily Visit Route / Itinerary with multi-stop Google Maps & WhatsApp export.
+     */
+    public function researcherRoute(Request $request)
+    {
+        $date = $request->input('date', now('Africa/Cairo')->toDateString());
+        $researcherId = $request->input('researcher_id');
+
+        $researchers = User::where('is_employee', true)
+            ->orWhere('role', 'volunteer')
+            ->orderBy('name')
+            ->get();
+
+        $query = FieldVisit::with(['beneficiary', 'researcher'])
+            ->whereDate('visit_date', $date)
+            ->orderBy('id');
+
+        if (!empty($researcherId)) {
+            $query->where('researcher_id', $researcherId);
+        }
+
+        $routeVisits = $query->get();
+        $selectedResearcher = !empty($researcherId) ? $researchers->firstWhere('id', (int) $researcherId) : null;
+
+        // Extract map points for multi-stop Google Maps directions
+        $mapPoints = [];
+        foreach ($routeVisits as $v) {
+            $point = null;
+            if (!empty($v->location_url)) {
+                if (preg_match('/[?&]q=([-0-9.]+,[-0-9.]+)/', (string) $v->location_url, $m)) {
+                    $point = $m[1];
+                } elseif (preg_match('/@([-0-9.]+,[-0-9.]+)/', (string) $v->location_url, $m)) {
+                    $point = $m[1];
+                }
+            }
+            if (!$point) {
+                $addr = trim((string) ($v->address ?: ($v->beneficiary?->address ?? '')));
+                if ($addr !== '') {
+                    $point = $addr;
+                }
+            }
+            if ($point) {
+                $mapPoints[] = $point;
+            }
+        }
+
+        $multiStopMapsUrl = null;
+        if (count($mapPoints) === 1) {
+            $multiStopMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($mapPoints[0]);
+        } elseif (count($mapPoints) > 1) {
+            $destination = array_pop($mapPoints);
+            $waypoints = implode('|', array_slice($mapPoints, 0, 9));
+            $multiStopMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($destination) . '&waypoints=' . urlencode($waypoints);
+        }
+
+        // Build WhatsApp itinerary text
+        $lines = [
+            "🗺️ *خط سير الزيارات الميدانية — مؤسسة إنسان*",
+            "📅 التاريخ: {$date}",
+        ];
+        if ($selectedResearcher) {
+            $lines[] = "👤 الباحث: {$selectedResearcher->name}";
+        }
+        $lines[] = "📍 عدد المحطات: {$routeVisits->count()}";
+        $lines[] = "------------------";
+        foreach ($routeVisits as $idx => $v) {
+            $num = $idx + 1;
+            $name = $v->patient_name ?: ($v->beneficiary?->full_name ?? 'حالة #' . $v->id);
+            $phone = $v->phone ?: ($v->beneficiary?->phone ?? '—');
+            $addr = $v->address ?: ($v->beneficiary?->address ?? 'غير محدد');
+            $pin = $v->location_url ?: ($addr !== 'غير محدد' ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($addr) : '');
+            $lines[] = "{$num}) *{$name}*";
+            $lines[] = "📞 {$phone}";
+            $lines[] = "📌 {$addr}";
+            if ($pin) {
+                $lines[] = "🗺️ {$pin}";
+            }
+            if (!empty($v->report)) {
+                $lines[] = "📝 " . \Illuminate\Support\Str::limit($v->report, 100);
+            }
+            $lines[] = "";
+        }
+        if ($multiStopMapsUrl) {
+            $lines[] = "🚗 *رابط خط السير كامل على الخريطة:*";
+            $lines[] = $multiStopMapsUrl;
+        }
+
+        $whatsappText = implode("\n", $lines);
+        $researcherPhone = preg_replace('/\D/', '', (string) ($selectedResearcher?->phone ?? ''));
+        if (str_starts_with($researcherPhone, '01') && strlen($researcherPhone) === 11) {
+            $researcherPhone = '2' . $researcherPhone;
+        }
+        $whatsappUrl = $researcherPhone
+            ? "https://wa.me/{$researcherPhone}?text=" . rawurlencode($whatsappText)
+            : "https://wa.me/?text=" . rawurlencode($whatsappText);
+
+        return view('dashboard.visits.route', compact(
+            'routeVisits',
+            'researchers',
+            'selectedResearcher',
+            'date',
+            'researcherId',
+            'multiStopMapsUrl',
+            'whatsappUrl'
+        ));
+    }
+
     public function create(Request $request)
     {
         $beneficiaries = Beneficiary::orderBy('full_name')->get();

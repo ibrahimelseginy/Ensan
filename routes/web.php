@@ -1111,6 +1111,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Reception & Visits (Shared/General)
     Route::middleware('permission:visits.view')->group(function () {
+        Route::get('visits/researcher-route', [\App\Http\Controllers\VisitWebController::class, 'researcherRoute'])->name('visits.researcher-route');
         Route::get('visits/{visit}/print', [\App\Http\Controllers\VisitWebController::class, 'print'])->name('visits.print');
         Route::post('visits/{visit}/final-approval', [\App\Http\Controllers\VisitWebController::class, 'finalApproval'])->name('visits.final-approval');
         Route::resource('visits', \App\Http\Controllers\VisitWebController::class);

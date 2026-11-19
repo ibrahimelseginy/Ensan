@@ -12,7 +12,10 @@
       </h3>
       <p class="text-muted small mb-0 mt-1">متابعة الزيارات الميدانية، البحث الاجتماعي، وبحث مرضى الأورام</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ route('visits.researcher-route') }}" class="btn btn-outline-danger fw-bold">
+        <i class="bi bi-signpost-split-fill me-1"></i> خط سير الباحث
+      </a>
       <button type="button" class="btn btn-outline-primary fw-bold" data-bs-toggle="modal" data-bs-target="#newVisitModal">
         <i class="bi bi-calendar-plus me-1"></i> جدولة موعد زيارة
       </button>
