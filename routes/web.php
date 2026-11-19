@@ -503,8 +503,19 @@ Route::middleware(['auth'])->group(function () {
     // --- Collaborations & Partnerships Directory ---
     Route::middleware('permission:collaborations.view|manage_specialized_services')->group(function () {
         Route::resource('collaborations', \App\Http\Controllers\CollaborationController::class);
-        Route::resource('charity-guides', \App\Http\Controllers\CharityGuideWebController::class);
     });
+
+    // --- Charity Guides Directory (أدلة العمل الخيري - صلاحيات مستقلة) ---
+    Route::get('charity-guides', [\App\Http\Controllers\CharityGuideWebController::class, 'index'])
+        ->middleware('permission:charity_guides.view')->name('charity-guides.index');
+    Route::post('charity-guides', [\App\Http\Controllers\CharityGuideWebController::class, 'store'])
+        ->middleware('permission:charity_guides.create')->name('charity-guides.store');
+    Route::put('charity-guides/{charity_guide}', [\App\Http\Controllers\CharityGuideWebController::class, 'update'])
+        ->middleware('permission:charity_guides.edit')->name('charity-guides.update');
+    Route::patch('charity-guides/{charity_guide}', [\App\Http\Controllers\CharityGuideWebController::class, 'update'])
+        ->middleware('permission:charity_guides.edit');
+    Route::delete('charity-guides/{charity_guide}', [\App\Http\Controllers\CharityGuideWebController::class, 'destroy'])
+        ->middleware('permission:charity_guides.delete')->name('charity-guides.destroy');
 
     // --- Finance & Accounting ---
     Route::middleware('permission:accounts.view|treasuries.view|manage_finance')->group(function () {

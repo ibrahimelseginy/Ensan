@@ -739,8 +739,8 @@ body.theme-dark .launcher-cat-btn.active,
         </div>
         @endif
 
-        {{-- 3.6 دليل الشراكات والتعاونات (Popup Modal) --}}
-        @if($u && ($u->hasPermission('collaborations.view') || $u->hasPermission('manage_specialized_services')))
+        {{-- 3.6 دليل الشراكات والتعاونات وأدلة العمل الخيري (Popup Modal) --}}
+        @if($u && ($u->hasPermission('collaborations.view') || $u->hasPermission('charity_guides.view') || $u->hasPermission('manage_specialized_services')))
         <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCollaborations" data-category="operations admin" data-title="التعاونات والشراكات" data-keywords="شراكات تعاونات معامل مراكز اطباء صيدليات مستشفيات ادلة منسقين قرى معارض collaborations partnerships">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 10px 20px -5px rgba(13, 148, 136, 0.45);">
                 <i class="bi bi-diagram-3-fill"></i>
@@ -1642,6 +1642,7 @@ body.theme-dark .launcher-cat-btn.active,
             <div class="modal-body p-0">
                 <div class="ensan-sub-grid">
                     {{-- 1. أدلة العمل الخيري والمنسقين الميدانيين --}}
+                    @if($u && $u->hasPermission('charity_guides.view'))
                     <a href="{{ route('charity-guides.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                             <i class="bi bi-geo-alt-fill"></i>
@@ -1652,8 +1653,10 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
 
                     {{-- 2. دليل الشركات والجهات الشريكة --}}
+                    @if($u && ($u->hasPermission('collaborations.view') || $u->hasPermission('manage_specialized_services')))
                     <a href="{{ route('collaborations.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon" style="background: rgba(13, 148, 136, 0.15); color: #0d9488;">
                             <i class="bi bi-building"></i>
@@ -1664,6 +1667,7 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
+                    @endif
                 </div>
             </div>
         </div>

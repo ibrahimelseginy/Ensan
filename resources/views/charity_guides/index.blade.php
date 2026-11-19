@@ -19,14 +19,18 @@
             </div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
+            @if(auth()->user()?->hasPermission('collaborations.view') || auth()->user()?->hasPermission('manage_specialized_services'))
             <a href="{{ route('collaborations.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm px-3 py-2">
                 <i class="bi bi-building me-1"></i>
                 <span>الشركات والجهات الشريكة</span>
             </a>
+            @endif
+            @if(auth()->user()?->hasPermission('charity_guides.create'))
             <button type="button" class="btn btn-success d-inline-flex align-items-center gap-2 shadow-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#createGuideModal">
                 <i class="bi bi-plus-circle-fill"></i>
                 <span>إضافة منسق / دليل جديد</span>
             </button>
+            @endif
         </div>
     </div>
 
@@ -113,20 +117,26 @@
                         </span>
                         <h5 class="fw-bold text-dark mb-0 mt-1">{{ $guide->coordinator_name }}</h5>
                     </div>
+                    @if(auth()->user()?->hasPermission('charity_guides.edit') || auth()->user()?->hasPermission('charity_guides.delete'))
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            @if(auth()->user()?->hasPermission('charity_guides.edit'))
                             <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editGuideModal{{ $guide->id }}"><i class="bi bi-pencil me-2 text-primary"></i> تعديل</button></li>
+                            @endif
+                            @if(auth()->user()?->hasPermission('charity_guides.delete'))
                             <li>
                                 <form method="POST" action="{{ route('charity-guides.destroy', $guide) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا الدليل؟')">
                                     @csrf @method('DELETE')
                                     <button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> حذف</button>
                                 </form>
                             </li>
+                            @endif
                         </ul>
                     </div>
+                    @endif
                 </div>
 
                 <div class="small text-muted my-2">

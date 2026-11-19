@@ -252,6 +252,12 @@ final readonly class RoleService
             ['key' => 'collaborations.create', 'name' => 'إضافة جهة في دليل الشراكات'],
             ['key' => 'collaborations.edit', 'name' => 'تعديل جهة في دليل الشراكات'],
             ['key' => 'collaborations.delete', 'name' => 'حذف جهة من دليل الشراكات'],
+
+            // أدلة العمل الخيري والمنسقين الميدانيين (مستقلة)
+            ['key' => 'charity_guides.view', 'name' => 'عرض أدلة العمل الخيري والمنسقين'],
+            ['key' => 'charity_guides.create', 'name' => 'إضافة دليل عمل خيري / منسق'],
+            ['key' => 'charity_guides.edit', 'name' => 'تعديل أدلة العمل الخيري'],
+            ['key' => 'charity_guides.delete', 'name' => 'حذف أدلة العمل الخيري'],
             ['key' => 'school_collaborations.view', 'name' => 'عرض تعاونات المدارس'],
             ['key' => 'school_collaborations.create', 'name' => 'إضافة تعاون مدرسة'],
             ['key' => 'school_collaborations.edit', 'name' => 'تعديل تعاون مدرسة'],
@@ -623,6 +629,7 @@ final readonly class RoleService
             'visits'                    => 'الزيارات والأبحاث الميدانية',
             'complaints'                => 'الشكاوى والمقترحات',
             'collaborations'            => 'دليل التعاونات والشراكات',
+            'charity_guides'            => 'أدلة العمل الخيري والمنسقين',
             'school_collaborations'     => 'تعاونات المدارس',
             'memberships'               => 'العضويات',
             'oncology_medicine_reps'    => 'مناديب أدوية الأورام',
