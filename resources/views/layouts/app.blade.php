@@ -3241,6 +3241,39 @@
                   <i class="bi bi-check2-circle fs-6"></i>
                   <span class="fw-bold">تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
                 </span>
+              @else
+                <script>
+                  (function () {
+                    if (!navigator.geolocation) return;
+                    const throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
+                    const lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
+                    if (Date.now() - lastTry < 60000) return;
+                    sessionStorage.setItem(throttleKey, String(Date.now()));
+
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                      fetch('{{ route('employee-attendance.checkIn') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                          latitude: pos.coords.latitude,
+                          longitude: pos.coords.longitude
+                        })
+                      })
+                      .then(r => r.json())
+                      .then(data => {
+                        if (data && data.success && data.checked_in) {
+                          window.location.reload();
+                        }
+                      })
+                      .catch(() => {});
+                    }, function () {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+                  })();
+                </script>
               @endif
             @endif
 

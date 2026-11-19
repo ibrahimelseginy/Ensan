@@ -25,12 +25,21 @@
                     <i class="bi bi-check-circle-fill" style="color: #10b981 !important;"></i>
                     <span style="color: #047857 !important;">تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})</span>
                 </span>
+            @else
+                <button type="button" id="manualGpsCheckInBtn" class="btn btn-light text-primary fw-bold btn-sm rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)
+                </button>
             @endif
+
+            <a href="https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307" target="_blank" rel="noopener" class="btn btn-sm rounded-pill px-4 fw-bold" style="background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.45);">
+                <i class="bi bi-sign-turn-right-fill me-1"></i> اتجاهات مقر الحضور (Directions)
+            </a>
 
             <a href="{{ route('employee-attendance.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> تسجيل يدوي
             </a>
         </div>
+        <div id="gpsCheckInFeedback" class="mt-2 small fw-bold d-none" style="background: rgba(255,255,255,0.95); color: #0f172a; padding: 8px 14px; border-radius: 12px; display: inline-block;"></div>
     </div>
     <i class="bi bi-calendar-check-fill hero-icon d-none d-md-block"></i>
 </div>
@@ -180,6 +189,64 @@
 
         form.submit();
     }
+
+    (function () {
+        const btn = document.getElementById('manualGpsCheckInBtn');
+        const feedback = document.getElementById('gpsCheckInFeedback');
+        if (!btn) return;
+
+        function showFeedback(html, isError) {
+            if (!feedback) return;
+            feedback.classList.remove('d-none');
+            feedback.style.color = isError ? '#b91c1c' : '#047857';
+            feedback.innerHTML = html;
+        }
+
+        btn.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                showFeedback('<i class="bi bi-exclamation-triangle-fill me-1"></i> المتصفح لا يدعم تحديد الموقع الجغرافي (GPS).', true);
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ التحقق من موقعك...';
+
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                fetch('{{ route('employee-attendance.checkIn') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.success) {
+                        showFeedback('<i class="bi bi-check-circle-fill me-1"></i> ' + (data.message || 'تم تسجيل حضورك بنجاح'), false);
+                        setTimeout(() => window.location.reload(), 900);
+                    } else {
+                        showFeedback('<i class="bi bi-geo-alt-fill me-1"></i> ' + (data.message || 'أنت خارج نطاق المقر المسموح به.'), true);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> إعادة فحص الموقع وتسجيل الحضور (GPS)';
+                    }
+                })
+                .catch(() => {
+                    showFeedback('<i class="bi bi-exclamation-triangle-fill me-1"></i> حدث خطأ أثناء الاتصال بالخادم.', true);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)';
+                });
+            }, function () {
+                showFeedback('<i class="bi bi-exclamation-triangle-fill me-1"></i> يرجى السماح بصلاحية الوصول للموقع (Location) في المتصفح لتسجيل الحضور.', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)';
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        });
+    })();
     </script>
     <form id="bulk-destroy-form" action="{{ route('employee-attendance.bulk-destroy') }}" method="POST" style="display:none">
         @csrf

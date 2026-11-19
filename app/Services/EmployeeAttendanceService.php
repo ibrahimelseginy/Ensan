@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 final readonly class EmployeeAttendanceService
 {
+    public const OFFICE_LAT = 31.1112969;
+    public const OFFICE_LNG = 30.9489307;
+    public const ALLOWED_RADIUS_METERS = 250;
+
     public function __construct(
         private EmployeeAttendanceRepository $attendanceRepository
     ) {}
@@ -30,6 +34,63 @@ final readonly class EmployeeAttendanceService
     public function findTodayRecord(int $userId): ?EmployeeAttendance
     {
         return $this->attendanceRepository->findTodayRecord($userId);
+    }
+
+    public function calculateDistanceMeters(float $lat1, float $lng1, float $lat2, float $lng2): int
+    {
+        $earthRadius = 6371000.0;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2)
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2))
+            * sin($dLng / 2) * sin($dLng / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return (int) round($earthRadius * $c);
+    }
+
+    public function checkInWithLocation(int $userId, float $lat, float $lng): array
+    {
+        $distance = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+
+        if ($existing) {
+            return [
+                'success' => true,
+                'already_checked_in' => true,
+                'time' => $existing->check_in_at,
+                'distance' => $distance,
+                'message' => 'تم تسجيل حضورك اليوم مسبقاً الساعة ' . $existing->check_in_at,
+            ];
+        }
+
+        if ($distance > self::ALLOWED_RADIUS_METERS) {
+            return [
+                'success' => false,
+                'outside_geofence' => true,
+                'distance' => $distance,
+                'max_distance' => self::ALLOWED_RADIUS_METERS,
+                'message' => "أنت خارج نطاق مقر المؤسسة (المسافة الحالية: {$distance} متر — المسموح حتى " . self::ALLOWED_RADIUS_METERS . ' متر).',
+            ];
+        }
+
+        $cairoNow = now('Africa/Cairo');
+        $this->attendanceRepository->create([
+            'user_id'     => $userId,
+            'date'        => $cairoNow->toDateString(),
+            'check_in_at' => $cairoNow->format('H:i'),
+            'notes'       => "تسجيل حضور تلقائي من مقر المؤسسة (المسافة: {$distance} متر)",
+        ]);
+
+        return [
+            'success' => true,
+            'checked_in' => true,
+            'time' => $cairoNow->format('H:i'),
+            'distance' => $distance,
+            'message' => 'تم تسجيل حضورك تلقائياً من مقر المؤسسة الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distance} متر)",
+        ];
     }
 
     public function ensureAutoCheckIn(int $userId): EmployeeAttendance

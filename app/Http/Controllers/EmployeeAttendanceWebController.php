@@ -35,17 +35,43 @@ final class EmployeeAttendanceWebController extends Controller
         return view('employee_attendance.index', compact('records', 'todayRecord'));
     }
 
-    public function checkIn(): RedirectResponse
+    public function checkIn(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         try {
-            $user = request()->user();
+            $user = $request->user();
             if (!$user) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+                }
                 return redirect()->route('login');
             }
 
-            $message = $this->attendanceService->checkIn((int)$user->id);
-            return back()->with('success', $message);
+            if ($request->filled('latitude') && $request->filled('longitude')) {
+                $lat = (float) $request->input('latitude');
+                $lng = (float) $request->input('longitude');
+                $result = $this->attendanceService->checkInWithLocation((int) $user->id, $lat, $lng);
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json($result, $result['success'] ? 200 : 422);
+                }
+
+                return $result['success']
+                    ? back()->with('success', $result['message'])
+                    : back()->with('error', $result['message']);
+            }
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'يرجى تفعيل صلاحية الموقع (GPS) لتسجيل الحضور من مقر المؤسسة.',
+                ], 422);
+            }
+
+            return back()->with('error', 'يرجى تفعيل الموقع الجغرافي (GPS) لتسجيل الحضور من مقر المؤسسة.');
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

@@ -82,19 +82,6 @@ class WebAuth
         $request->session()->put('user_id', $user->id);
         $request->setUserResolver(fn () => $user);
 
-        // 9. Automatic daily Check-In for active employees (runs once per day per session)
-        if ($user->is_employee && !$user->is_volunteer && $user->active) {
-            $cairoToday = now('Africa/Cairo')->toDateString();
-            if ($request->session()->get('_att_checked_in_date') !== $cairoToday) {
-                try {
-                    app(\App\Services\EmployeeAttendanceService::class)->ensureAutoCheckIn((int) $user->id);
-                    $request->session()->put('_att_checked_in_date', $cairoToday);
-                } catch (\Throwable $e) {
-                    Log::warning('Auto check-in skipped', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-                }
-            }
-        }
-
         return $next($request);
     }
 

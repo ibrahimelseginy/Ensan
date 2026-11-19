@@ -366,16 +366,6 @@ final class LoginWebController extends Controller
             $request->session()->flash('show_admin_notifications', true);
         }
 
-        // Automatic daily Check-In on login for active employees
-        if ($user->is_employee && !$user->is_volunteer && $user->active) {
-            try {
-                app(\App\Services\EmployeeAttendanceService::class)->ensureAutoCheckIn((int) $user->id);
-                $request->session()->put('_att_checked_in_date', now('Africa/Cairo')->toDateString());
-            } catch (\Throwable $e) {
-                Log::warning('Login auto check-in skipped', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            }
-        }
-
         Log::info('Security: Successful login', [
             'user_id'  => $user->id,
             'email'    => $user->email,
