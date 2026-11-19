@@ -264,32 +264,17 @@
         @csrf
         <input type="hidden" name="is_quick_schedule" value="1">
         <div class="modal-body">
-          {{-- اختيار نوع الشخص: من تقديمات الأبحاث أو مستفيد مسجل --}}
-          <div class="mb-3">
-            <label class="form-label fw-bold d-block">نوع الزيارة / الشخص المستهدف <span class="text-danger">*</span></label>
-            <div class="btn-group w-100" role="group">
-              <input type="radio" class="btn-check" name="schedule_target_type" id="targetTypeApp" value="application" checked>
-              <label class="btn btn-outline-primary fw-bold btn-sm py-2" for="targetTypeApp">
-                <i class="bi bi-file-earmark-person me-1"></i> من تقديمات الأبحاث
-              </label>
-              <input type="radio" class="btn-check" name="schedule_target_type" id="targetTypeBen" value="beneficiary">
-              <label class="btn btn-outline-success fw-bold btn-sm py-2" for="targetTypeBen">
-                <i class="bi bi-people-fill me-1"></i> مستفيد مسجل بالنظام
-              </label>
-            </div>
-          </div>
-
-          {{-- بحث سريع داخل القائمة --}}
+          {{-- بحث سريع داخل تقديمات الأبحاث غير المبحوثة --}}
           <div class="mb-2">
             <div class="input-group input-group-sm">
               <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
-              <input type="text" id="schedulePersonSearch" class="form-control" placeholder="ابحث بالاسم أو رقم الهاتف أو الكود...">
+              <input type="text" id="schedulePersonSearch" class="form-control" placeholder="ابحث بالاسم أو رقم الهاتف أو المحافظة...">
             </div>
           </div>
 
-          {{-- قائمة تقديمات الأبحاث --}}
+          {{-- قائمة تقديمات الأبحاث غير المبحوثة فقط --}}
           <div class="mb-3" id="scheduleAppGroup">
-            <label class="form-label fw-bold">الحالة (من تقديمات الأبحاث) <span class="text-danger">*</span></label>
+            <label class="form-label fw-bold">الحالة (من تقديمات الأبحاث غير المبحوثة) <span class="text-danger">*</span></label>
             <select name="case_application_id" id="scheduleCaseAppSelect" class="form-select" required>
               <option value="">-- اختر الحالة من تقديمات الأبحاث --</option>
               @foreach($caseApplications as $app)
@@ -298,19 +283,6 @@
                 @endphp
                 <option value="{{ $app->id }}" data-address="{{ $appLocation }}">
                   {{ $app->applicant_name }} ({{ $app->phone ?? 'بدون هاتف' }})@if($app->governorate) - {{ $app->governorate }}@endif
-                </option>
-              @endforeach
-            </select>
-          </div>
-
-          {{-- قائمة المستفيدين المسجلين --}}
-          <div class="mb-3 d-none" id="scheduleBenGroup">
-            <label class="form-label fw-bold">المستفيد المسجل <span class="text-danger">*</span></label>
-            <select name="beneficiary_id" id="scheduleBenSelect" class="form-select">
-              <option value="">-- اختر المستفيد --</option>
-              @foreach($beneficiaries as $ben)
-                <option value="{{ $ben->id }}" data-address="{{ $ben->address ?? '' }}">
-                  {{ $ben->full_name ?? $ben->name }} ({{ $ben->code ?: $ben->id }})@if($ben->phone) - {{ $ben->phone }}@endif
                 </option>
               @endforeach
             </select>

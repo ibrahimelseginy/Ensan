@@ -55,7 +55,14 @@ final class VisitWebController extends Controller
         ];
 
         $beneficiaries = Beneficiary::orderBy('full_name')->get();
-        $caseApplications = \App\Models\MobileCaseApplication::where('status', '!=', 'rejected')
+        $caseApplications = \App\Models\MobileCaseApplication::whereNotIn('status', [
+                'approved',
+                'completed',
+                'accepted',
+                'تم البحث',
+                'rejected',
+                'مرفوض',
+            ])
             ->orderByDesc('id')
             ->get();
         $researchers = User::where('is_employee', true)->orWhere('role', 'volunteer')->orderBy('name')->get();

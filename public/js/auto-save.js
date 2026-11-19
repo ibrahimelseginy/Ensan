@@ -162,6 +162,7 @@
 
   function saveDraft(form, silent = false) {
     if (!form || form.dataset.autosaveSubmitting === '1' || form.dataset.autosaveRestoring === '1' || form.dataset.autosaveDiscarded === '1') return;
+    if (form.dataset.autosaveDirty !== '1') return;
 
     const { hasValue, data, selectMeta } = serializeForm(form);
     const key = getFormStorageKey(form);
@@ -197,6 +198,7 @@
 
   function applyFieldValues(form, draftData, selectMeta) {
     const fields = getTrackableFields(form);
+    let restoredCount = 0;
 
     fields.forEach((el) => {
       const name = el.name;
@@ -212,6 +214,7 @@
         if (el.checked !== shouldCheck) {
           el.checked = shouldCheck;
           el.dispatchEvent(new Event('change', { bubbles: true }));
+          restoredCount++;
         }
       } else if (type === 'radio') {
         const shouldCheck = el.value === String(savedVal);
@@ -219,6 +222,7 @@
           el.checked = shouldCheck;
           if (shouldCheck) {
             el.dispatchEvent(new Event('change', { bubbles: true }));
+            restoredCount++;
           }
         }
       } else if (el.tagName === 'SELECT') {
@@ -231,30 +235,46 @@
             if (!exists) {
               const newOpt = new Option(meta.text || meta.value, meta.value, true, true);
               el.add(newOpt);
+              restoredCount++;
             }
           }
         });
 
         if (el.multiple && Array.isArray(savedVal)) {
+          let changed = false;
           Array.from(el.options).forEach((opt) => {
-            opt.selected = savedVal.includes(opt.value);
+            const shouldSel = savedVal.includes(opt.value);
+            if (opt.selected !== shouldSel) {
+              opt.selected = shouldSel;
+              changed = true;
+            }
           });
+          if (changed) {
+            restoredCount++;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            if (window.jQuery && window.jQuery(el).data('select2')) {
+              window.jQuery(el).trigger('change');
+            }
+          }
         } else if (savedVal !== null && savedVal !== undefined && el.value !== String(savedVal)) {
           el.value = savedVal;
-        }
-
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-        if (window.jQuery && window.jQuery(el).data('select2')) {
-          window.jQuery(el).trigger('change');
+          restoredCount++;
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          if (window.jQuery && window.jQuery(el).data('select2')) {
+            window.jQuery(el).trigger('change');
+          }
         }
       } else if (savedVal !== null && savedVal !== undefined) {
         if (el.value !== String(savedVal)) {
           el.value = savedVal;
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
+          restoredCount++;
         }
       }
     });
+
+    return restoredCount;
   }
 
   function autoRestoreDraft(form) {
@@ -279,47 +299,52 @@
     form.dataset.autosaveRestoring = '1';
 
     // Pass 1: Immediate full restore
-    applyFieldValues(form, parsed.data, parsed.selectMeta || {});
+    const pass1Count = applyFieldValues(form, parsed.data, parsed.selectMeta || {});
 
     // Pass 2: Re-apply after conditional/JS-rendered fields finish opening
     setTimeout(() => {
-      applyFieldValues(form, parsed.data, parsed.selectMeta || {});
+      const pass2Count = applyFieldValues(form, parsed.data, parsed.selectMeta || {});
       delete form.dataset.autosaveRestoring;
+
+      if ((pass1Count + pass2Count) <= 0) {
+        try { localStorage.removeItem(key); } catch (e) {}
+        return;
+      }
+
+      const savedDate = new Date(parsed.savedAt).toLocaleString('ar-EG', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      const banner = document.createElement('div');
+      banner.className = 'ensan-autosave-banner alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-3 mb-3 rounded-3 shadow-xs';
+      banner.style.fontSize = '0.85rem';
+      banner.innerHTML = `
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-cloud-check-fill fs-5 text-success"></i>
+          <span><strong>تمت استعادة المسودة المحفوظة تلقائياً بالكامل</strong> (${savedDate})</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 ensan-autosave-discard">
+            <i class="bi bi-trash me-1"></i>مسح المسودة والبدء من جديد
+          </button>
+        </div>
+      `;
+
+      banner.querySelector('.ensan-autosave-discard').addEventListener('click', () => {
+        form.dataset.autosaveDiscarded = '1';
+        activeForms.delete(form);
+        const existingTimer = saveTimers.get(form);
+        if (existingTimer) clearTimeout(existingTimer);
+        clearDraft(form);
+        window.location.reload();
+      });
+
+      form.insertBefore(banner, form.firstChild);
+      showStatusPill('تمت استعادة المسودة المحفوظة تلقائياً بالكامل', true);
     }, 200);
-
-    const savedDate = new Date(parsed.savedAt).toLocaleString('ar-EG', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const banner = document.createElement('div');
-    banner.className = 'ensan-autosave-banner alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-3 mb-3 rounded-3 shadow-xs';
-    banner.style.fontSize = '0.85rem';
-    banner.innerHTML = `
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-cloud-check-fill fs-5 text-success"></i>
-        <span><strong>تمت استعادة المسودة المحفوظة تلقائياً بالكامل</strong> (${savedDate})</span>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 ensan-autosave-discard">
-          <i class="bi bi-trash me-1"></i>مسح المسودة والبدء من جديد
-        </button>
-      </div>
-    `;
-
-    banner.querySelector('.ensan-autosave-discard').addEventListener('click', () => {
-      form.dataset.autosaveDiscarded = '1';
-      activeForms.delete(form);
-      const existingTimer = saveTimers.get(form);
-      if (existingTimer) clearTimeout(existingTimer);
-      clearDraft(form);
-      window.location.reload();
-    });
-
-    form.insertBefore(banner, form.firstChild);
-    showStatusPill('تمت استعادة المسودة المحفوظة تلقائياً بالكامل', true);
   }
 
   function bindForm(form) {
@@ -331,6 +356,7 @@
 
     const scheduleSave = () => {
       if (form.dataset.autosaveRestoring === '1') return;
+      form.dataset.autosaveDirty = '1';
       const existingTimer = saveTimers.get(form);
       if (existingTimer) clearTimeout(existingTimer);
       saveTimers.set(form, setTimeout(() => saveDraft(form, false), DEBOUNCE_MS));
