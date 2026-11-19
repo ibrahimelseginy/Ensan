@@ -3222,6 +3222,28 @@
               </a>
             @endif
 
+            @if($navUser && $navUser->is_employee && !$navUser->is_volunteer)
+              @php
+                $topbarTodayAtt = \App\Models\EmployeeAttendance::where('user_id', $navUser->id)
+                  ->where('date', now('Africa/Cairo')->toDateString())
+                  ->first();
+              @endphp
+              @if($topbarTodayAtt && empty($topbarTodayAtt->check_out_at))
+                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" class="d-inline-block" onsubmit="return confirm('هل تريد تسجيل الانصراف الآن؟');">
+                  @csrf
+                  <button type="submit" class="btn btn-glass-pill" style="background: rgba(245, 158, 11, 0.14); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.35);" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>تسجيل انصراف</span>
+                  </button>
+                </form>
+              @elseif($topbarTodayAtt && !empty($topbarTodayAtt->check_out_at))
+                <span class="btn btn-glass-pill" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
+                  <i class="bi bi-check2-circle"></i>
+                  <span>تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
+                </span>
+              @endif
+            @endif
+
             @if($navUser)
               <button class="btn btn-glass-pill" id="notificationBellBtn" style="overflow: visible !important;"
                 type="button" data-bs-toggle="offcanvas" data-bs-target="#notifOffcanvas" aria-label="الإشعارات" title="الإشعارات">
