@@ -29,6 +29,7 @@ final class FieldVisit extends Model
         'home_ownership',
         'house_photo_path',
         'address',
+        'location_url',
         'researcher_opinion',
         'family_members',
         // Income

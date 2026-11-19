@@ -125,6 +125,7 @@
                 <th style="width: 50px;" class="text-center">#</th>
                 <th>نوع البحث</th>
                 <th>المستفيد / الحالة</th>
+                <th>المكان / اللوكيشن</th>
                 <th>الباحث المسؤول</th>
                 <th>تاريخ البحث</th>
                 <th>الدخل / المصروفات</th>
@@ -156,6 +157,27 @@
                     </div>
                     @if($visit->beneficiary)
                       <small class="text-muted">كود: {{ $visit->beneficiary->code ?: $visit->beneficiary->id }} | هاتف: {{ $visit->phone ?: $visit->beneficiary->phone }}</small>
+                    @elseif($visit->phone)
+                      <small class="text-muted font-monospace">هاتف: {{ $visit->phone }}</small>
+                    @endif
+                  </td>
+                  <td>
+                    @php
+                      $visitAddr = $visit->address ?: ($visit->beneficiary?->address ?? null);
+                      $mapLink = $visit->location_url
+                        ?: ($visitAddr ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($visitAddr) : null);
+                    @endphp
+                    @if($visitAddr)
+                      <div class="small text-dark fw-semibold text-truncate" style="max-width: 190px;" title="{{ $visitAddr }}">
+                        <i class="bi bi-geo-alt text-danger me-1"></i>{{ $visitAddr }}
+                      </div>
+                    @endif
+                    @if($mapLink)
+                      <a href="{{ $mapLink }}" target="_blank" rel="noopener" class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none mt-1">
+                        <i class="bi bi-pin-map-fill me-1"></i>فتح اللوكيشن
+                      </a>
+                    @else
+                      <span class="text-muted small">—</span>
                     @endif
                   </td>
                   <td>
@@ -239,7 +261,31 @@
         @csrf
         <input type="hidden" name="is_quick_schedule" value="1">
         <div class="modal-body">
+          {{-- اختيار نوع الشخص: من تقديمات الأبحاث أو مستفيد مسجل --}}
           <div class="mb-3">
+            <label class="form-label fw-bold d-block">نوع الزيارة / الشخص المستهدف <span class="text-danger">*</span></label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="schedule_target_type" id="targetTypeApp" value="application" checked>
+              <label class="btn btn-outline-primary fw-bold btn-sm py-2" for="targetTypeApp">
+                <i class="bi bi-file-earmark-person me-1"></i> من تقديمات الأبحاث
+              </label>
+              <input type="radio" class="btn-check" name="schedule_target_type" id="targetTypeBen" value="beneficiary">
+              <label class="btn btn-outline-success fw-bold btn-sm py-2" for="targetTypeBen">
+                <i class="bi bi-people-fill me-1"></i> مستفيد مسجل بالنظام
+              </label>
+            </div>
+          </div>
+
+          {{-- بحث سريع داخل القائمة --}}
+          <div class="mb-2">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" id="schedulePersonSearch" class="form-control" placeholder="ابحث بالاسم أو رقم الهاتف أو الكود...">
+            </div>
+          </div>
+
+          {{-- قائمة تقديمات الأبحاث --}}
+          <div class="mb-3" id="scheduleAppGroup">
             <label class="form-label fw-bold">الحالة (من تقديمات الأبحاث) <span class="text-danger">*</span></label>
             <select name="case_application_id" id="scheduleCaseAppSelect" class="form-select" required>
               <option value="">-- اختر الحالة من تقديمات الأبحاث --</option>
@@ -253,10 +299,36 @@
               @endforeach
             </select>
           </div>
+
+          {{-- قائمة المستفيدين المسجلين --}}
+          <div class="mb-3 d-none" id="scheduleBenGroup">
+            <label class="form-label fw-bold">المستفيد المسجل <span class="text-danger">*</span></label>
+            <select name="beneficiary_id" id="scheduleBenSelect" class="form-select">
+              <option value="">-- اختر المستفيد --</option>
+              @foreach($beneficiaries as $ben)
+                <option value="{{ $ben->id }}" data-address="{{ $ben->address ?? '' }}">
+                  {{ $ben->full_name ?? $ben->name }} ({{ $ben->code ?: $ben->id }})@if($ben->phone) - {{ $ben->phone }}@endif
+                </option>
+              @endforeach
+            </select>
+          </div>
+
           <div class="mb-3">
             <label class="form-label fw-bold">المكان أو المنطقة <span class="text-danger">*</span></label>
             <input type="text" name="address" id="scheduleVisitAddress" class="form-control" required placeholder="مثال: كفر الشيخ - دسوق - قرية ...">
           </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">اللوكيشن / رابط الموقع (Google Maps)</label>
+            <div class="input-group">
+              <input type="url" name="location_url" id="scheduleVisitLocationUrl" class="form-control" dir="ltr" placeholder="https://maps.google.com/?q=...">
+              <button type="button" class="btn btn-outline-success fw-bold" id="detectGpsLocationBtn" title="تحديد موقعك الحالي تلقائياً">
+                <i class="bi bi-crosshair"></i> موقعي
+              </button>
+            </div>
+            <div class="form-text small text-muted">يمكنك لصق رابط اللوكيشن من واتساب/خرائط جوجل أو الضغط على "موقعي".</div>
+          </div>
+
           <div class="mb-3">
             <label class="form-label fw-bold">الباحث الميداني <span class="text-danger">*</span></label>
             <select name="researcher_id" class="form-select" required>
@@ -293,15 +365,86 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    const typeApp = document.getElementById('targetTypeApp');
+    const typeBen = document.getElementById('targetTypeBen');
+    const appGroup = document.getElementById('scheduleAppGroup');
+    const benGroup = document.getElementById('scheduleBenGroup');
     const caseSelect = document.getElementById('scheduleCaseAppSelect');
+    const benSelect = document.getElementById('scheduleBenSelect');
+    const searchInput = document.getElementById('schedulePersonSearch');
     const addressInput = document.getElementById('scheduleVisitAddress');
-    if (caseSelect && addressInput) {
-      caseSelect.addEventListener('change', function () {
-        const opt = caseSelect.options[caseSelect.selectedIndex];
+    const locationInput = document.getElementById('scheduleVisitLocationUrl');
+    const gpsBtn = document.getElementById('detectGpsLocationBtn');
+
+    function syncTargetMode() {
+      const isBen = typeBen && typeBen.checked;
+      if (appGroup) appGroup.classList.toggle('d-none', isBen);
+      if (benGroup) benGroup.classList.toggle('d-none', !isBen);
+      if (caseSelect) {
+        caseSelect.required = !isBen;
+        if (isBen) caseSelect.value = '';
+      }
+      if (benSelect) {
+        benSelect.required = isBen;
+        if (!isBen) benSelect.value = '';
+      }
+      if (searchInput) {
+        searchInput.value = '';
+        filterActiveSelect('');
+      }
+    }
+
+    function filterActiveSelect(term) {
+      const activeSelect = (typeBen && typeBen.checked) ? benSelect : caseSelect;
+      if (!activeSelect) return;
+      const q = term.trim().toLowerCase();
+      Array.from(activeSelect.options).forEach((opt, idx) => {
+        if (idx === 0) return;
+        const text = (opt.textContent || '').toLowerCase();
+        opt.hidden = q !== '' && !text.includes(q);
+      });
+    }
+
+    if (typeApp) typeApp.addEventListener('change', syncTargetMode);
+    if (typeBen) typeBen.addEventListener('change', syncTargetMode);
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        filterActiveSelect(this.value);
+      });
+    }
+
+    [caseSelect, benSelect].forEach(function (sel) {
+      if (!sel || !addressInput) return;
+      sel.addEventListener('change', function () {
+        const opt = sel.options[sel.selectedIndex];
         const addr = opt ? (opt.getAttribute('data-address') || '') : '';
-        if (addr) {
-          addressInput.value = addr;
+        if (addr) addressInput.value = addr;
+      });
+    });
+
+    if (gpsBtn && locationInput) {
+      gpsBtn.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+          alert('المتصفح لا يدعم تحديد الموقع الجغرافي (GPS).');
+          return;
         }
+        gpsBtn.disabled = true;
+        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            locationInput.value = `https://www.google.com/maps?q=${lat},${lng}`;
+            gpsBtn.disabled = false;
+            gpsBtn.innerHTML = '<i class="bi bi-check-lg"></i> تم';
+          },
+          function () {
+            alert('تعذر الحصول على الموقع الحالي. يرجى السماح بصلاحية الموقع أو لصق الرابط يدوياً.');
+            gpsBtn.disabled = false;
+            gpsBtn.innerHTML = '<i class="bi bi-crosshair"></i> موقعي';
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
       });
     }
   });

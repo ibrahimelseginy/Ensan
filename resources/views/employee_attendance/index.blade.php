@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('content')
 
 {{-- Premium Dashboard Hero --}}
@@ -21,8 +21,9 @@
                     </button>
                 </form>
             @elseif($myTodayAtt && !empty($myTodayAtt->check_out_at))
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
-                    <i class="bi bi-check-circle-fill me-1"></i> تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})
+                <span class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1" style="background: #ffffff !important; color: #047857 !important; border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); font-weight: 700; font-size: 0.84rem;">
+                    <i class="bi bi-check-circle-fill" style="color: #10b981 !important;"></i>
+                    <span style="color: #047857 !important;">تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})</span>
                 </span>
             @endif
 

@@ -175,6 +175,16 @@ final class VisitWebController extends Controller
                     ])));
                 }
             }
+        } elseif (!empty($validated['beneficiary_id'])) {
+            $benPre = Beneficiary::find($validated['beneficiary_id']);
+            if ($benPre) {
+                $validated['patient_name'] = $validated['patient_name'] ?? ($benPre->full_name ?? $benPre->name);
+                $validated['phone'] = $validated['phone'] ?? $benPre->phone;
+                $validated['national_id'] = $validated['national_id'] ?? $benPre->national_id;
+                if (empty($validated['address']) && !empty($benPre->address)) {
+                    $validated['address'] = $benPre->address;
+                }
+            }
         }
 
         $visit = FieldVisit::create($validated);
@@ -211,6 +221,10 @@ final class VisitWebController extends Controller
                     'beneficiary_id' => $visit->beneficiary_id,
                 ]);
             }
+        }
+
+        if ($isQuickSchedule) {
+            return redirect()->route('visits.index')->with('success', 'تم جدولة موعد الزيارة وحفظ المكان واللوكيشن بنجاح.');
         }
 
         return redirect()->route('visits.show', $visit)->with('success', 'تم حفظ استمارة البحث الميداني بنجاح، والحالة الآن [في انتظار المناقشة] من لجنة الحالات والإدارة.');
@@ -583,6 +597,7 @@ final class VisitWebController extends Controller
             'condition_photos' => 'nullable|array',
             'condition_photos.*' => 'nullable|file|mimes:jpeg,jpg,png,webp,pdf|max:15360',
             'address' => 'nullable|string',
+            'location_url' => 'nullable|string|max:500',
             'researcher_opinion' => 'nullable|string',
 
             // Income & Expenses
