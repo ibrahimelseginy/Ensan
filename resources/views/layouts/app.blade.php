@@ -3229,17 +3229,17 @@
                   ->first();
               @endphp
               @if($topbarTodayAtt && empty($topbarTodayAtt->check_out_at))
-                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" class="d-inline-block" onsubmit="return confirm('هل تريد تسجيل الانصراف الآن؟');">
+                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" class="d-inline-flex m-0" onsubmit="return confirm('هل تريد تسجيل الانصراف الآن؟');">
                   @csrf
-                  <button type="submit" class="btn btn-glass-pill" style="background: rgba(245, 158, 11, 0.14); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.35);" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>تسجيل انصراف</span>
+                  <button type="submit" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف">
+                    <i class="bi bi-box-arrow-left fs-6"></i>
+                    <span class="fw-bold">تسجيل انصراف</span>
                   </button>
                 </form>
               @elseif($topbarTodayAtt && !empty($topbarTodayAtt->check_out_at))
-                <span class="btn btn-glass-pill" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
-                  <i class="bi bi-check2-circle"></i>
-                  <span>تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
+                <span class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important; cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
+                  <i class="bi bi-check2-circle fs-6"></i>
+                  <span class="fw-bold">تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
                 </span>
               @endif
             @endif
