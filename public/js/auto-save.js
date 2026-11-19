@@ -1,19 +1,20 @@
 /**
- * Ensan System - Global Auto-Save Drafts Engine
- * Automatically saves form progress locally per user/page/form to prevent data loss
- * on accidental refresh, browser crash, or network drop.
+ * Ensan System - Global Auto-Save Drafts Engine (Full Auto-Restore)
+ * Automatically saves all form progress per user/page/form (including Select2 labels
+ * and conditional fields) and restores the entire form automatically on return.
  */
 (function () {
   'use strict';
 
   const STORAGE_PREFIX = 'ensan_autosave_v1:';
   const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-  const DEBOUNCE_MS = 800;
+  const DEBOUNCE_MS = 600;
 
   const userId = document.querySelector('meta[name="ensan-user-id"]')?.getAttribute('content') || 'guest';
 
   const saveTimers = new WeakMap();
   const initializedForms = new WeakSet();
+  const activeForms = new Set();
   let statusPill = null;
   let statusHideTimer = null;
 
@@ -32,7 +33,6 @@
     const methodOverride = (form.querySelector('input[name="_method"]')?.value || '').toUpperCase();
     if (methodOverride === 'DELETE') return false;
 
-    // Must have at least 2 interactive non-hidden/non-password/non-file fields
     const fields = getTrackableFields(form);
     return fields.length >= 2;
   }
@@ -64,6 +64,7 @@
   function serializeForm(form) {
     const fields = getTrackableFields(form);
     const data = {};
+    const selectMeta = {};
     let hasValue = false;
 
     fields.forEach((el) => {
@@ -83,10 +84,26 @@
           data[name] = el.value;
           hasValue = true;
         }
-      } else if (el.tagName === 'SELECT' && el.multiple) {
-        const selected = Array.from(el.selectedOptions).map((opt) => opt.value);
-        if (selected.length > 0) hasValue = true;
-        data[name] = selected;
+      } else if (el.tagName === 'SELECT') {
+        if (el.multiple) {
+          const selected = Array.from(el.selectedOptions).map((opt) => ({
+            value: opt.value,
+            text: opt.text,
+          }));
+          if (selected.length > 0) hasValue = true;
+          data[name] = selected.map((o) => o.value);
+          selectMeta[name] = selected;
+        } else {
+          const val = el.value;
+          if (val !== '' && val !== null && val !== undefined) {
+            hasValue = true;
+            const selectedOpt = el.options[el.selectedIndex];
+            if (selectedOpt) {
+              selectMeta[name] = [{ value: val, text: selectedOpt.text }];
+            }
+          }
+          data[name] = val;
+        }
       } else {
         const val = el.value;
         if (val !== '' && val !== null && val !== undefined) {
@@ -96,7 +113,7 @@
       }
     });
 
-    return { hasValue, data };
+    return { hasValue, data, selectMeta };
   }
 
   function showStatusPill(message, isSuccess = true) {
@@ -144,9 +161,9 @@
   }
 
   function saveDraft(form, silent = false) {
-    if (form.dataset.autosaveSubmitting === '1') return;
+    if (!form || form.dataset.autosaveSubmitting === '1' || form.dataset.autosaveRestoring === '1') return;
 
-    const { hasValue, data } = serializeForm(form);
+    const { hasValue, data, selectMeta } = serializeForm(form);
     const key = getFormStorageKey(form);
 
     if (!hasValue) {
@@ -157,6 +174,7 @@
     const payload = {
       savedAt: Date.now(),
       data,
+      selectMeta,
     };
 
     try {
@@ -166,7 +184,7 @@
         showStatusPill(`تم الحفظ التلقائي للمسودة • ${timeStr}`, true);
       }
     } catch (e) {
-      // Ignore quota exceeded errors gracefully
+      // Ignore storage quota errors
     }
   }
 
@@ -177,7 +195,7 @@
     if (existingBanner) existingBanner.remove();
   }
 
-  function restoreDraft(form, draftData) {
+  function applyFieldValues(form, draftData, selectMeta) {
     const fields = getTrackableFields(form);
 
     fields.forEach((el) => {
@@ -188,32 +206,58 @@
       const type = (el.type || '').toLowerCase();
 
       if (type === 'checkbox') {
-        if (Array.isArray(savedVal)) {
-          el.checked = savedVal.includes(el.value || 'on');
-        } else {
-          el.checked = Boolean(savedVal);
+        const shouldCheck = Array.isArray(savedVal)
+          ? savedVal.includes(el.value || 'on')
+          : Boolean(savedVal);
+        if (el.checked !== shouldCheck) {
+          el.checked = shouldCheck;
+          el.dispatchEvent(new Event('change', { bubbles: true }));
         }
       } else if (type === 'radio') {
-        el.checked = el.value === String(savedVal);
-      } else if (el.tagName === 'SELECT' && el.multiple && Array.isArray(savedVal)) {
-        Array.from(el.options).forEach((opt) => {
-          opt.selected = savedVal.includes(opt.value);
-        });
-      } else if (savedVal !== null && savedVal !== undefined) {
-        el.value = savedVal;
-      }
+        const shouldCheck = el.value === String(savedVal);
+        if (el.checked !== shouldCheck) {
+          el.checked = shouldCheck;
+          if (shouldCheck) {
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+      } else if (el.tagName === 'SELECT') {
+        const metaList = (selectMeta && Array.isArray(selectMeta[name])) ? selectMeta[name] : [];
 
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-      if (window.jQuery && window.jQuery(el).data('select2')) {
-        window.jQuery(el).trigger('change');
+        // Ensure AJAX / Select2 options exist in DOM before setting value
+        metaList.forEach((meta) => {
+          if (meta && meta.value !== '' && meta.value !== null && meta.value !== undefined) {
+            const exists = Array.from(el.options).some((opt) => opt.value === String(meta.value));
+            if (!exists) {
+              const newOpt = new Option(meta.text || meta.value, meta.value, true, true);
+              el.add(newOpt);
+            }
+          }
+        });
+
+        if (el.multiple && Array.isArray(savedVal)) {
+          Array.from(el.options).forEach((opt) => {
+            opt.selected = savedVal.includes(opt.value);
+          });
+        } else if (savedVal !== null && savedVal !== undefined && el.value !== String(savedVal)) {
+          el.value = savedVal;
+        }
+
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        if (window.jQuery && window.jQuery(el).data('select2')) {
+          window.jQuery(el).trigger('change');
+        }
+      } else if (savedVal !== null && savedVal !== undefined) {
+        if (el.value !== String(savedVal)) {
+          el.value = savedVal;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
     });
-
-    showStatusPill('تمت استعادة المسودة المحفوظة بنجاح', true);
   }
 
-  function checkAndOfferRestore(form) {
+  function autoRestoreDraft(form) {
     if (form.querySelector('.ensan-autosave-banner')) return;
 
     const key = getFormStorageKey(form);
@@ -232,6 +276,17 @@
       return;
     }
 
+    form.dataset.autosaveRestoring = '1';
+
+    // Pass 1: Immediate full restore
+    applyFieldValues(form, parsed.data, parsed.selectMeta || {});
+
+    // Pass 2: Re-apply after conditional/JS-rendered fields finish opening
+    setTimeout(() => {
+      applyFieldValues(form, parsed.data, parsed.selectMeta || {});
+      delete form.dataset.autosaveRestoring;
+    }, 200);
+
     const savedDate = new Date(parsed.savedAt).toLocaleString('ar-EG', {
       month: 'short',
       day: 'numeric',
@@ -240,42 +295,38 @@
     });
 
     const banner = document.createElement('div');
-    banner.className = 'ensan-autosave-banner alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-3 mb-3 rounded-3 shadow-xs';
-    banner.style.fontSize = '0.86rem';
+    banner.className = 'ensan-autosave-banner alert alert-success d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 px-3 mb-3 rounded-3 shadow-xs';
+    banner.style.fontSize = '0.85rem';
     banner.innerHTML = `
       <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-clock-history fs-5 text-primary"></i>
-        <span><strong>توجد مسودة غير مرسلة</strong> محفوظة تلقائياً (${savedDate}). هل ترغب في استعادتها؟</span>
+        <i class="bi bi-cloud-check-fill fs-5 text-success"></i>
+        <span><strong>تمت استعادة المسودة المحفوظة تلقائياً بالكامل</strong> (${savedDate})</span>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm btn-primary fw-bold rounded-pill px-3 ensan-autosave-restore">
-          <i class="bi bi-arrow-counterclockwise me-1"></i>استعادة المسودة
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 ensan-autosave-discard">
-          تجاهل وحذف
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 ensan-autosave-discard">
+          <i class="bi bi-trash me-1"></i>مسح المسودة والبدء من جديد
         </button>
       </div>
     `;
 
-    banner.querySelector('.ensan-autosave-restore').addEventListener('click', () => {
-      restoreDraft(form, parsed.data);
-      banner.remove();
-    });
-
     banner.querySelector('.ensan-autosave-discard').addEventListener('click', () => {
       clearDraft(form);
+      window.location.reload();
     });
 
     form.insertBefore(banner, form.firstChild);
+    showStatusPill('تمت استعادة المسودة المحفوظة تلقائياً بالكامل', true);
   }
 
   function bindForm(form) {
     if (initializedForms.has(form) || !isTrackableForm(form)) return;
     initializedForms.add(form);
+    activeForms.add(form);
 
-    checkAndOfferRestore(form);
+    autoRestoreDraft(form);
 
     const scheduleSave = () => {
+      if (form.dataset.autosaveRestoring === '1') return;
       const existingTimer = saveTimers.get(form);
       if (existingTimer) clearTimeout(existingTimer);
       saveTimers.set(form, setTimeout(() => saveDraft(form, false), DEBOUNCE_MS));
@@ -283,6 +334,11 @@
 
     form.addEventListener('input', scheduleSave);
     form.addEventListener('change', scheduleSave);
+
+    // Also listen for jQuery/Select2 change events
+    if (window.jQuery) {
+      window.jQuery(form).on('change.ensanAutosave', 'select, input, textarea', scheduleSave);
+    }
 
     form.addEventListener('submit', () => {
       form.dataset.autosaveSubmitting = '1';
@@ -295,6 +351,16 @@
   function scanForms() {
     document.querySelectorAll('form').forEach(bindForm);
   }
+
+  // Flush any pending draft immediately before leaving or hiding tab
+  window.addEventListener('beforeunload', () => {
+    activeForms.forEach((form) => saveDraft(form, true));
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      activeForms.forEach((form) => saveDraft(form, true));
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', scanForms);
