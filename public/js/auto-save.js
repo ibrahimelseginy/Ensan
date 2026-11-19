@@ -161,7 +161,7 @@
   }
 
   function saveDraft(form, silent = false) {
-    if (!form || form.dataset.autosaveSubmitting === '1' || form.dataset.autosaveRestoring === '1') return;
+    if (!form || form.dataset.autosaveSubmitting === '1' || form.dataset.autosaveRestoring === '1' || form.dataset.autosaveDiscarded === '1') return;
 
     const { hasValue, data, selectMeta } = serializeForm(form);
     const key = getFormStorageKey(form);
@@ -310,6 +310,10 @@
     `;
 
     banner.querySelector('.ensan-autosave-discard').addEventListener('click', () => {
+      form.dataset.autosaveDiscarded = '1';
+      activeForms.delete(form);
+      const existingTimer = saveTimers.get(form);
+      if (existingTimer) clearTimeout(existingTimer);
       clearDraft(form);
       window.location.reload();
     });

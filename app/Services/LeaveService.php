@@ -27,30 +27,30 @@ final readonly class LeaveService
         return $this->leaveRepository->findById($id);
     }
 
-    public function createLeave(array $data, int $userId): mixed
+    public function createLeave(array $data, int $userId): Leave
     {
         $data['user_id'] = $userId;
         $data['status']  = 'pending';
 
-        $executor = fn() => $this->leaveRepository->create($data);
-
-        return ChangeRequestService::handleRequest(
-            Leave::class,
-            null,
-            'create',
-            $data,
-            $executor,
-            true
-        );
+        return $this->leaveRepository->create($data);
     }
 
     public function updateLeave(Leave $leave, array $data, bool $isManager): mixed
     {
         $executor = function () use ($leave, $data) {
-            if (isset($data['status']) && $data['status'] === 'approved') {
+            $oldStatus = $leave->status;
+            $newStatus = $data['status'] ?? $oldStatus;
+
+            if ($newStatus === 'approved' && $oldStatus !== 'approved') {
                 $data['approved_by'] = auth()->id();
             }
+
             $this->leaveRepository->update($leave, $data);
+            $leave->refresh();
+
+            // Sync employee leave_balance automatically on approval/reversal
+            $this->syncLeaveBalance($leave, $oldStatus, $newStatus);
+
             return $leave;
         };
 
@@ -72,6 +72,9 @@ final readonly class LeaveService
     public function deleteLeave(Leave $leave): mixed
     {
         $executor = function () use ($leave) {
+            if ($leave->status === 'approved') {
+                $this->syncLeaveBalance($leave, 'approved', 'deleted');
+            }
             return $this->leaveRepository->delete($leave);
         };
 
@@ -83,6 +86,27 @@ final readonly class LeaveService
             $executor,
             true
         );
+    }
+
+    private function syncLeaveBalance(Leave $leave, string $oldStatus, string $newStatus): void
+    {
+        if ($oldStatus === $newStatus || ($leave->type ?? '') === 'unpaid') {
+            return;
+        }
+
+        $user = $leave->user;
+        if (!$user || !$leave->start_date || !$leave->end_date) {
+            return;
+        }
+
+        $days = max(1, (int) $leave->start_date->diffInDays($leave->end_date) + 1);
+        $currentBalance = (int) ($user->leave_balance ?? $user->annual_leave_quota ?? 21);
+
+        if ($newStatus === 'approved' && $oldStatus !== 'approved') {
+            $user->update(['leave_balance' => max(0, $currentBalance - $days)]);
+        } elseif ($oldStatus === 'approved' && $newStatus !== 'approved') {
+            $user->update(['leave_balance' => $currentBalance + $days]);
+        }
     }
 
     public function bulkDelete(array $ids, int $authUserId, bool $isManager): int
