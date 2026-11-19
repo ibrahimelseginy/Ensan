@@ -108,6 +108,8 @@ final class NotificationWebController extends Controller
             $targetLink = route('notifications.index');
             if (preg_match('/\[مهمة #(\d+)\]/u', (string) $tNotif->body, $taskMatch)) {
                 $targetLink = route('employee-tasks.show', (int) $taskMatch[1]);
+            } elseif (preg_match('/\[مستفيد #(\d+)\]/u', (string) $tNotif->body, $benMatch)) {
+                $targetLink = route('beneficiaries.show', (int) $benMatch[1]);
             } elseif ($tNotif->category === 'مهام') {
                 $targetLink = route('employee-tasks.index');
             }
@@ -120,6 +122,44 @@ final class NotificationWebController extends Controller
                 'link' => $targetLink,
                 'timestamp' => $ts,
             ];
+        }
+
+        // ==========================================
+        // 0.5. إشعارات قرارات المساعدات (قبول / رفض / بانتظار المناقشة) — للمدير فقط
+        // ==========================================
+        if ($isAdmin || $user->hasRole('manager')) {
+            $recentDirectAids = Donation::with('beneficiary:id,full_name')
+                ->whereNotNull('beneficiary_id')
+                ->where('receipt_number', 'like', 'AID-%')
+                ->whereIn('status', ['awaiting_discussion', 'active', 'rejected'])
+                ->where('updated_at', '>=', now()->subDays(7))
+                ->latest('updated_at')
+                ->limit(10)
+                ->get();
+
+            foreach ($recentDirectAids as $aid) {
+                $benName = $aid->beneficiary?->full_name ?? ('حالة #' . $aid->beneficiary_id);
+                $amt = number_format((float) ($aid->amount ?: $aid->estimated_value ?: 0), 2);
+                if ($aid->status === 'awaiting_discussion') {
+                    $aidTitle = 'مساعدة بانتظار قرار المدير (قبول / رفض)';
+                    $aidType = 'warning';
+                } elseif ($aid->status === 'active') {
+                    $aidTitle = 'تم قبول واعتماد مساعدة لحالة';
+                    $aidType = 'success';
+                } else {
+                    $aidTitle = 'تم رفض مساعدة لحالة';
+                    $aidType = 'danger';
+                }
+                $rawItems[] = [
+                    'id' => 'direct_aid_' . $aid->id . '_' . $aid->status,
+                    'category' => 'cases',
+                    'type' => $aidType,
+                    'title' => $aidTitle,
+                    'text' => "الحالة: {$benName} — المبلغ: {$amt} ج.م (إيصال: {$aid->receipt_number})",
+                    'link' => route('beneficiaries.show', $aid->beneficiary_id),
+                    'timestamp' => $aid->updated_at ? $aid->updated_at->timestamp : now()->timestamp,
+                ];
+            }
         }
 
         // ==========================================

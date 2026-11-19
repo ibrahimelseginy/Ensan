@@ -830,7 +830,7 @@
                             <i class="bi bi-x-circle me-1"></i> مرفوضة
                           </span>
                         @else
-                          <span class="badge bg-success bg-opacity-15 text-success px-2.5 py-1 rounded-pill fw-bold">
+                          <span class="badge px-2.5 py-1 rounded-pill fw-bold" style="background: #dcfce7 !important; color: #047857 !important; border: 1px solid #86efac !important;">
                             <i class="bi bi-check2-circle me-1"></i> مقبولة ومستلمة
                           </span>
                         @endif

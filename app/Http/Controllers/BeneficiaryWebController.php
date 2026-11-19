@@ -615,6 +615,9 @@ final class BeneficiaryWebController extends Controller
             $beneficiary->sponsors()->syncWithoutDetaching([$donorId]);
         }
 
+        // إشعار للمدير فقط بحالة المساعدة (قبول / رفض / بانتظار المناقشة)
+        $this->notifyManagersOfAid($beneficiary, $donation, $status, auth()->user());
+
         $statusMsg = match ($status) {
             'awaiting_discussion' => "تم تسجيل المساعدة للحالة برقم ({$receiptNumber}) وهي الآن (في انتظار المناقشة).",
             'rejected' => "تم تسجيل المساعدة للحالة كـ (مرفوضة).",
@@ -635,6 +638,9 @@ final class BeneficiaryWebController extends Controller
             'status' => $newStatus,
         ]);
 
+        // إشعار للمدير فقط بقرار قبول أو رفض المساعدة
+        $this->notifyManagersOfAid($beneficiary, $donation, $newStatus, $request->user());
+
         $statusLabels = [
             'active' => 'تم اعتماد وقبول المساعدة بنجاح وإدراجها كمنفذة ومستلمة.',
             'awaiting_discussion' => 'تم تحويل المساعدة إلى (في انتظار المناقشة).',
@@ -643,6 +649,63 @@ final class BeneficiaryWebController extends Controller
         ];
 
         return back()->with('success', $statusLabels[$newStatus] ?? 'تم تحديث حالة المساعدة بنجاح.');
+    }
+
+    /**
+     * Send aid approval/rejection/pending notification STRICTLY to top-level Managers/Admins only.
+     */
+    private function notifyManagersOfAid(Beneficiary $beneficiary, Donation $donation, string $status, ?\App\Models\User $actor): void
+    {
+        try {
+            $managers = \App\Models\User::where('active', true)
+                ->whereHas('roles', fn($q) => $q->whereIn('key', ['admin', 'super_admin', 'manager']))
+                ->get(['id', 'name']);
+
+            if ($managers->isEmpty()) {
+                return;
+            }
+
+            $benName = $beneficiary->full_name ?: ('حالة #' . $beneficiary->id);
+            $amountStr = number_format((float) ($donation->amount ?: $donation->estimated_value ?: 0), 2);
+            $receiptStr = $donation->receipt_number ?: ('#' . $donation->id);
+            $actorName = $actor?->name ?? 'النظام';
+
+            if ($status === 'active') {
+                $title = "قبول واعتماد مساعدة: {$benName}";
+                $body = "تم قبول واعتماد مساعدة للحالة ({$benName}) بمبلغ {$amountStr} ج.م (إيصال: {$receiptStr}) — بواسطة: {$actorName} [مستفيد #{$beneficiary->id}]";
+                $category = 'حملات';
+            } elseif ($status === 'rejected') {
+                $title = "رفض مساعدة: {$benName}";
+                $body = "تم رفض مساعدة للحالة ({$benName}) بمبلغ {$amountStr} ج.م (إيصال: {$receiptStr}) — بواسطة: {$actorName} [مستفيد #{$beneficiary->id}]";
+                $category = 'عاجل';
+            } elseif ($status === 'awaiting_discussion') {
+                $title = "مساعدة بانتظار قرار القبول أو الرفض: {$benName}";
+                $body = "تم تسجيل مساعدة للحالة ({$benName}) بمبلغ {$amountStr} ج.م (إيصال: {$receiptStr}) وتنتظر قرار المدير — بواسطة: {$actorName} [مستفيد #{$beneficiary->id}]";
+                $category = 'عاجل';
+            } else {
+                return;
+            }
+
+            $now = now();
+            foreach ($managers as $mgr) {
+                \App\Models\MobileNotification::create([
+                    'title'           => $title,
+                    'body'            => $body,
+                    'category'        => $category,
+                    'target_type'     => 'user',
+                    'target_user_id'  => $mgr->id,
+                    'target_audience' => $mgr->name,
+                    'is_sent'         => true,
+                    'sent_at'         => $now,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Manager aid notification failed', [
+                'beneficiary_id' => $beneficiary->id,
+                'donation_id'    => $donation->id,
+                'error'          => $e->getMessage(),
+            ]);
+        }
     }
 
     private function handleUploadedBeneficiaryAttachments(Request $request): array

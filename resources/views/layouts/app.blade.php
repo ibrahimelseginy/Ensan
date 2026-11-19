@@ -3242,36 +3242,87 @@
                   <span class="fw-bold">تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
                 </span>
               @else
+                <button type="button" id="topbarEnableGpsBtn" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط للموافقة على تحديد الموقع (GPS) وتسجيل حضورك من المقر">
+                  <i class="bi bi-geo-alt-fill fs-6"></i>
+                  <span class="fw-bold">تفعيل الموقع للحضور</span>
+                </button>
                 <script>
                   (function () {
+                    const gpsBtn = document.getElementById('topbarEnableGpsBtn');
                     if (!navigator.geolocation) return;
-                    const throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
-                    const lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
-                    if (Date.now() - lastTry < 60000) return;
-                    sessionStorage.setItem(throttleKey, String(Date.now()));
 
-                    navigator.geolocation.getCurrentPosition(function (pos) {
-                      fetch('{{ route('employee-attendance.checkIn') }}', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Accept': 'application/json',
-                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                          'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                          latitude: pos.coords.latitude,
-                          longitude: pos.coords.longitude
+                    function requestGpsCheckIn(isManual) {
+                      if (isManual && gpsBtn) {
+                        gpsBtn.disabled = true;
+                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ التحقق...</span>';
+                      }
+
+                      navigator.geolocation.getCurrentPosition(function (pos) {
+                        fetch('{{ route('employee-attendance.checkIn') }}', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                          },
+                          body: JSON.stringify({
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude
+                          })
                         })
-                      })
-                      .then(r => r.json())
-                      .then(data => {
-                        if (data && data.success && data.checked_in) {
-                          window.location.reload();
+                        .then(r => r.json())
+                        .then(data => {
+                          if (data && data.success && data.checked_in) {
+                            window.location.reload();
+                          } else if (isManual) {
+                            alert((data && data.message) ? data.message : 'أنت خارج نطاق مقر المؤسسة.');
+                            if (gpsBtn) {
+                              gpsBtn.disabled = false;
+                              gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill fs-6"></i> <span class="fw-bold">تفعيل الموقع للحضور</span>';
+                            }
+                          }
+                        })
+                        .catch(() => {
+                          if (isManual && gpsBtn) {
+                            gpsBtn.disabled = false;
+                            gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill fs-6"></i> <span class="fw-bold">تفعيل الموقع للحضور</span>';
+                          }
+                        });
+                      }, function (err) {
+                        if (isManual) {
+                          if (err && err.code === 1) {
+                            alert('يرجى السماح بصلاحية الموقع (Allow Location) من أيقونة القفل بجانب رابط الموقع في المتصفح لتسجيل حضورك من المقر.');
+                          } else {
+                            alert('تعذر تحديد الموقع الجغرافي حالياً. تأكد من تفعيل GPS وحاول مجدداً.');
+                          }
+                          if (gpsBtn) {
+                            gpsBtn.disabled = false;
+                            gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill fs-6"></i> <span class="fw-bold">تفعيل الموقع للحضور</span>';
+                          }
                         }
-                      })
-                      .catch(() => {});
-                    }, function () {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+                      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+                    }
+
+                    if (gpsBtn) {
+                      gpsBtn.addEventListener('click', function () {
+                        requestGpsCheckIn(true);
+                      });
+                    }
+
+                    // Auto-check silently ONLY if permission is already granted
+                    if (navigator.permissions && navigator.permissions.query) {
+                      navigator.permissions.query({ name: 'geolocation' }).then(function (status) {
+                        if (status.state === 'granted') {
+                          const throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
+                          const lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
+                          if (Date.now() - lastTry >= 60000) {
+                            sessionStorage.setItem(throttleKey, String(Date.now()));
+                            requestGpsCheckIn(false);
+                          }
+                        }
+                      }).catch(() => {});
+                    }
                   })();
                 </script>
               @endif
