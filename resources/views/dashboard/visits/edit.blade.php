@@ -602,6 +602,9 @@
     <!-- ============================================================== -->
     <!-- القسم الخاص بمرضى الأورام (يفتح فقط إذا تم اختيار "نعم") -->
     <!-- ============================================================== -->
+    @php
+      $isCancerActive = ($currentProjectPath === 'amal') || (bool) old('has_cancer_patient', $visit->has_cancer_patient);
+    @endphp
     <div id="cancerSection" class="research-card border-danger shadow-sm" style="{{ $isCancerActive ? '' : 'display: none;' }}">
       <div class="research-card-header bg-danger text-white">
         <i class="bi bi-hospital-fill"></i>
