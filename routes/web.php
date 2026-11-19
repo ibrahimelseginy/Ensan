@@ -596,9 +596,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('volunteer-tasks', VolunteerTaskWebController::class);
     });
 
+    // تسجيل الحضور والانصراف الشخصي متاح لجميع الموظفين المسجلين
+    Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
+    Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
+
     Route::middleware('permission:employee_attendance.view|employee_attendance.view_own|employee_attendance.create')->group(function () {
-        Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
-        Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
         Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
     });

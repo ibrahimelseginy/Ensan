@@ -7,7 +7,24 @@
         <div class="hero-greeting">الموارد البشرية ⏰</div>
         <h1 class="hero-title">سجل حضور الموظفين</h1>
         <p class="hero-subtitle">تسجيل ومتابعة حضور وانصراف الموظفين</p>
-        <div class="hero-actions d-flex gap-2 flex-wrap">
+        <div class="hero-actions d-flex gap-2 flex-wrap align-items-center">
+            @php
+                $myTodayAtt = auth()->user()
+                    ? \App\Models\EmployeeAttendance::where('user_id', auth()->id())->where('date', now('Africa/Cairo')->toDateString())->first()
+                    : null;
+            @endphp
+            @if($myTodayAtt && empty($myTodayAtt->check_out_at))
+                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" onsubmit="return confirm('هل تريد تسجيل انصرافك الآن؟');">
+                    @csrf
+                    <button type="submit" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-box-arrow-left me-1"></i> تسجيل انصراف الآن (Check Out) — حضور: {{ $myTodayAtt->check_in_at }}
+                    </button>
+                </form>
+            @elseif($myTodayAtt && !empty($myTodayAtt->check_out_at))
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
+                    <i class="bi bi-check-circle-fill me-1"></i> تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})
+                </span>
+            @endif
 
             <a href="{{ route('employee-attendance.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> تسجيل يدوي

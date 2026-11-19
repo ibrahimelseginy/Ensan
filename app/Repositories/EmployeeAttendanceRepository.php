@@ -29,7 +29,7 @@ final readonly class EmployeeAttendanceRepository
     public function findTodayRecord(int $userId): ?EmployeeAttendance
     {
         return EmployeeAttendance::where('user_id', $userId)
-            ->where('date', now()->toDateString())
+            ->where('date', now('Africa/Cairo')->toDateString())
             ->first();
     }
 

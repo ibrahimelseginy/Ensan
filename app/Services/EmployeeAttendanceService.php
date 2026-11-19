@@ -32,6 +32,23 @@ final readonly class EmployeeAttendanceService
         return $this->attendanceRepository->findTodayRecord($userId);
     }
 
+    public function ensureAutoCheckIn(int $userId): EmployeeAttendance
+    {
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+        if ($existing) {
+            return $existing;
+        }
+
+        $cairoNow = now('Africa/Cairo');
+
+        return $this->attendanceRepository->create([
+            'user_id'     => $userId,
+            'date'        => $cairoNow->toDateString(),
+            'check_in_at' => $cairoNow->format('H:i'),
+            'notes'       => 'تسجيل حضور تلقائي عند الدخول للنظام',
+        ]);
+    }
+
     public function checkIn(int $userId): string
     {
         $existing = $this->attendanceRepository->findTodayRecord($userId);
@@ -39,31 +56,33 @@ final readonly class EmployeeAttendanceService
             throw new \Exception('لقد قمت بتسجيل الدخول لهذا اليوم مسبقاً في الساعة ' . $existing->check_in_at);
         }
 
+        $cairoNow = now('Africa/Cairo');
         $this->attendanceRepository->create([
             'user_id'     => $userId,
-            'date'        => now()->toDateString(),
-            'check_in_at' => now()->format('H:i'),
+            'date'        => $cairoNow->toDateString(),
+            'check_in_at' => $cairoNow->format('H:i'),
         ]);
 
-        return 'تم تسجيل الدخول بنجاح: ' . now()->format('h:i A');
+        return 'تم تسجيل الدخول بنجاح: ' . $cairoNow->format('h:i A');
     }
 
     public function checkOut(int $userId): string
     {
         $record = $this->attendanceRepository->findTodayRecord($userId);
         if (!$record) {
-            throw new \Exception('يجب عليك تسجيل الدخول (Check In) أولاً قبل تسجيل الخروج.');
+            $record = $this->ensureAutoCheckIn($userId);
         }
 
         if (!is_null($record->check_out_at)) {
             throw new \Exception('لقد قمت بتسجيل الخروج بالفعل في الساعة ' . $record->check_out_at);
         }
 
+        $cairoNow = now('Africa/Cairo');
         $this->attendanceRepository->update($record, [
-            'check_out_at' => now()->format('H:i'),
+            'check_out_at' => $cairoNow->format('H:i'),
         ]);
 
-        return 'تم تسجيل الخروج بنجاح: ' . now()->format('h:i A');
+        return 'تم تسجيل الانصراف بنجاح: ' . $cairoNow->format('h:i A');
     }
 
     public function createAttendance(array $data): EmployeeAttendance

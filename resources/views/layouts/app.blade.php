@@ -3453,6 +3453,28 @@
                     <span>الملف الشخصي</span>
                   </a>
 
+                  @if($navUser && $navUser->is_employee && !$navUser->is_volunteer)
+                    @php
+                      $navTodayAtt = \App\Models\EmployeeAttendance::where('user_id', $navUser->id)
+                        ->where('date', now('Africa/Cairo')->toDateString())
+                        ->first();
+                    @endphp
+                    @if($navTodayAtt && empty($navTodayAtt->check_out_at))
+                      <form method="POST" action="{{ route('employee-attendance.checkOut') }}" onsubmit="return confirm('هل تريد تسجيل الانصراف الآن؟');">
+                        @csrf
+                        <button type="submit" class="pmenu-item text-warning fw-bold">
+                          <i class="bi bi-clock-history"></i>
+                          <span>تسجيل انصراف (حضر {{ $navTodayAtt->check_in_at }})</span>
+                        </button>
+                      </form>
+                    @elseif($navTodayAtt && !empty($navTodayAtt->check_out_at))
+                      <div class="pmenu-item text-success small" style="cursor: default;">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>الحضور {{ $navTodayAtt->check_in_at }} • الانصراف {{ $navTodayAtt->check_out_at }}</span>
+                      </div>
+                    @endif
+                  @endif
+
                   <hr class="pmenu-divider">
 
                   <form method="POST" action="{{ route('logout') }}">
