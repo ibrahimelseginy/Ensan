@@ -57,7 +57,10 @@ final class CustodyWebController extends Controller
             Custody::STATUS_SETTLED_PENDING_RETURN,
         ])->sum(fn ($c) => $c->remaining_to_return);
 
-        $employees = User::where('is_employee', true)->orWhere('status', 'active')->orderBy('name')->get();
+        $employees = User::where('is_employee', true)->orderBy('name')->get();
+        if ($employees->isEmpty()) {
+            $employees = User::orderBy('name')->get();
+        }
         $projects = Project::orderBy('name')->get(['id', 'name']);
 
         return view('custodies.index', compact(
