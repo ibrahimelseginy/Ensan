@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class UpdateUserRequest extends FormRequest
 {
@@ -15,11 +16,13 @@ final class UpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
-        $userId = $this->route('user')?->id;
-
         return [
             'name'                  => 'sometimes|string|max:255',
-            'email'                 => 'sometimes|email|max:255|unique:users,email,' . ($userId ?? ''),
+            // A soft-deleted account must not reserve an email address forever.
+            // Active accounts remain strictly unique, excluding the user being edited.
+            'email'                 => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')
+                ->ignore($this->route('user'))
+                ->withoutTrashed()],
             'password'              => 'nullable|string|min:6',
             'phone'                 => 'nullable|string|max:20',
             'national_id'           => 'nullable|string|max:25',
@@ -45,5 +48,12 @@ final class UpdateUserRequest extends FormRequest
             'annual_leave_quota'    => 'nullable|integer|min:0',
             'leave_balance'         => 'nullable|integer|min:0'
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+        }
     }
 }

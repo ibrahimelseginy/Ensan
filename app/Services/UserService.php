@@ -12,6 +12,7 @@ use App\Services\ChangeRequestService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 final readonly class UserService
 {
@@ -150,6 +151,9 @@ final readonly class UserService
             }
 
             if (!empty($data)) {
+                if (isset($data['email'])) {
+                    $this->releaseSoftDeletedEmail($data['email']);
+                }
                 $this->userRepository->update($user, $data);
             }
 
@@ -181,6 +185,25 @@ final readonly class UserService
             $payloadData,
             $executor
         );
+    }
+
+    /**
+     * A unique index includes soft-deleted rows. Release an archived address
+     * just before an approved update so it can be reused by an active account.
+     */
+    public function releaseSoftDeletedEmail(string $email): void
+    {
+        $archivedUser = User::onlyTrashed()
+            ->whereRaw('LOWER(email) = ?', [strtolower(trim($email))])
+            ->first();
+
+        if (! $archivedUser) {
+            return;
+        }
+
+        $archivedUser->forceFill([
+            'email' => 'deleted-user-' . $archivedUser->id . '-' . Str::lower(Str::random(12)) . '@invalid.ensan.eg',
+        ])->saveQuietly();
     }
 
     public function deleteUser(User $user): mixed

@@ -36,3 +36,4 @@ class EmailLoginMail extends Mailable
         );
     }
 }
+

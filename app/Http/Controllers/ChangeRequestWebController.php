@@ -271,6 +271,12 @@ final class ChangeRequestWebController extends Controller
                     if (empty($executionData['updated_by']) && !empty($changeRequest->user_id)) {
                         $executionData['updated_by'] = $changeRequest->user_id;
                     }
+
+                    // The request can have been submitted by a non-manager and
+                    // approved later, so release an archived email at execution time.
+                    if ($modelClass === \App\Models\User::class && isset($executionData['email'])) {
+                        app(\App\Services\UserService::class)->releaseSoftDeletedEmail($executionData['email']);
+                    }
                     $instance->update($executionData);
                     
                     if ($modelClass === 'App\Models\Role' && isset($executionData['permissions'])) {

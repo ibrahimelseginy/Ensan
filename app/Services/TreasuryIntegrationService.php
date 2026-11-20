@@ -133,13 +133,14 @@ class TreasuryIntegrationService
             throw new \Exception('لا توجد خزينة متاحة للمصروفات');
         }
 
-        // Check balance
-        if ($treasury->current_balance < $expense->amount) {
-            throw new \Exception("رصيد الخزينة غير كافي. المتاح: {$treasury->current_balance}");
-        }
+        return DB::transaction(function () use ($treasury, $expense) {
+            // Lock the cash source before the availability check.  Two concurrent
+            // expenses must never be approved against the same visible balance.
+            $treasury = Treasury::query()->lockForUpdate()->findOrFail($treasury->id);
+            if ((float) $treasury->current_balance < (float) $expense->amount) {
+                throw new \Exception("رصيد الخزينة غير كافي. المتاح: {$treasury->current_balance}");
+            }
 
-        DB::beginTransaction();
-        try {
             // Create treasury transaction
             $transaction = TreasuryTransaction::create([
                 'treasury_id' => $treasury->id,
@@ -162,20 +163,12 @@ class TreasuryIntegrationService
             // Update treasury balance
             $treasury->updateBalance();
 
-            // Create journal entry safely without blocking treasury balance deduction
-            try {
-                $this->createExpenseJournalEntry($expense, $treasury);
-            } catch (\Throwable $jeError) {
-                \Illuminate\Support\Facades\Log::warning('Journal entry creation skipped for expense #' . $expense->id . ': ' . $jeError->getMessage());
-            }
+            // The treasury transaction and the journal entry are one financial
+            // event.  A posting failure must roll back the cash deduction.
+            $this->createExpenseJournalEntry($expense, $treasury);
 
-            DB::commit();
             return $transaction;
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        }, 3);
     }
 
     /**
