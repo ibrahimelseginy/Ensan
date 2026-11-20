@@ -13,9 +13,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 final readonly class EmployeeAttendanceService
 {
+    // 1. المقر الرئيسي لمؤسسة إنسان
     public const OFFICE_LAT = 31.1112969;
     public const OFFICE_LNG = 30.9489307;
     public const ALLOWED_RADIUS_METERS = 250;
+
+    // 2. دار ضيافة إنســـــــان - كفر الشيخ (خاصة بموظفي الدار)
+    public const KAFR_GUEST_HOUSE_LAT = 31.1061705;
+    public const KAFR_GUEST_HOUSE_LNG = 30.9378786;
+    public const KAFR_GUEST_HOUSE_RADIUS_METERS = 250;
 
     public function __construct(
         private EmployeeAttendanceRepository $attendanceRepository
@@ -53,7 +59,6 @@ final readonly class EmployeeAttendanceService
 
     public function checkInWithLocation(int $userId, float $lat, float $lng): array
     {
-        $distance = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
         $existing = $this->attendanceRepository->findTodayRecord($userId);
 
         if ($existing) {
@@ -61,35 +66,101 @@ final readonly class EmployeeAttendanceService
                 'success' => true,
                 'already_checked_in' => true,
                 'time' => $existing->check_in_at,
-                'distance' => $distance,
                 'message' => 'تم تسجيل حضورك اليوم مسبقاً الساعة ' . $existing->check_in_at,
             ];
         }
 
-        if ($distance > self::ALLOWED_RADIUS_METERS) {
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
             return [
                 'success' => false,
-                'outside_geofence' => true,
-                'distance' => $distance,
-                'max_distance' => self::ALLOWED_RADIUS_METERS,
-                'message' => "أنت خارج نطاق مقر المؤسسة (المسافة الحالية: {$distance} متر — المسموح حتى " . self::ALLOWED_RADIUS_METERS . ' متر).',
+                'message' => 'المستخدم غير موجود.',
             ];
         }
 
-        $cairoNow = now('Africa/Cairo');
-        $this->attendanceRepository->create([
-            'user_id'     => $userId,
-            'date'        => $cairoNow->toDateString(),
-            'check_in_at' => $cairoNow->format('H:i'),
-            'notes'       => "تسجيل حضور تلقائي من مقر المؤسسة (المسافة: {$distance} متر)",
-        ]);
+        $distToHq   = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
+        $distToKafr = $this->calculateDistanceMeters($lat, $lng, self::KAFR_GUEST_HOUSE_LAT, self::KAFR_GUEST_HOUSE_LNG);
+
+        // هل الموظف من طاقم دار كفر الشيخ؟
+        $isKafrStaff = (int) $user->guest_house_id === 2
+            || (int) $user->id === 74 // مريم بدوي مدير دار الضيافة كفر الشيخ
+            || str_contains((string) $user->job_title, 'كفر الشيخ')
+            || str_contains((string) $user->job_title, 'مدير دار الضيافة')
+            || (str_contains((string) $user->department, 'دار الضيافة') && !str_contains((string) $user->job_title, 'الغربيه'));
+
+        $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
+            || in_array((int) $user->id, [2, 8, 50], true);
+
+        // النطاق الأول: دار ضيافة كفر الشيخ
+        if ($distToKafr <= self::KAFR_GUEST_HOUSE_RADIUS_METERS) {
+            if (!$isKafrStaff && !$isAdminOrManager) {
+                return [
+                    'success' => false,
+                    'outside_geofence' => true,
+                    'distance' => $distToHq,
+                    'max_distance' => self::ALLOWED_RADIUS_METERS,
+                    'message' => "أنت داخل نطاق دار ضيافة كفر الشيخ، ولكن تسجيل الحضور بها مخصص لموظفي الدار فقط. موقع حضورك المعتمد هو مقر المؤسسة الرئيسي (المسافة: {$distToHq} متر).",
+                ];
+            }
+
+            $cairoNow = now('Africa/Cairo');
+            $this->attendanceRepository->create([
+                'user_id'     => $userId,
+                'date'        => $cairoNow->toDateString(),
+                'check_in_at' => $cairoNow->format('H:i'),
+                'notes'       => "تسجيل حضور تلقائي من دار ضيافة كفر الشيخ (المسافة: {$distToKafr} متر)",
+            ]);
+
+            return [
+                'success' => true,
+                'checked_in' => true,
+                'time' => $cairoNow->format('H:i'),
+                'distance' => $distToKafr,
+                'location' => 'دار ضيافة كفر الشيخ',
+                'message' => 'تم تسجيل حضورك بنجاح من مقر دار ضيافة كفر الشيخ الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToKafr} متر)",
+            ];
+        }
+
+        // النطاق الثاني: المقر الرئيسي لمؤسسة إنسان
+        if ($distToHq <= self::ALLOWED_RADIUS_METERS) {
+            $cairoNow = now('Africa/Cairo');
+            $locationLabel = $isKafrStaff ? 'مقر المؤسسة الرئيسي (زيارة)' : 'مقر المؤسسة الرئيسي';
+            $this->attendanceRepository->create([
+                'user_id'     => $userId,
+                'date'        => $cairoNow->toDateString(),
+                'check_in_at' => $cairoNow->format('H:i'),
+                'notes'       => "تسجيل حضور تلقائي من {$locationLabel} (المسافة: {$distToHq} متر)",
+            ]);
+
+            return [
+                'success' => true,
+                'checked_in' => true,
+                'time' => $cairoNow->format('H:i'),
+                'distance' => $distToHq,
+                'location' => 'مقر المؤسسة الرئيسي',
+                'message' => 'تم تسجيل حضورك بنجاح من مقر المؤسسة الرئيسي الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToHq} متر)",
+            ];
+        }
+
+        // خارج كلا المقرين
+        if ($isKafrStaff) {
+            return [
+                'success' => false,
+                'outside_geofence' => true,
+                'distance' => $distToKafr,
+                'max_distance' => self::KAFR_GUEST_HOUSE_RADIUS_METERS,
+                'location' => 'دار ضيافة كفر الشيخ',
+                'message' => "أنت خارج نطاق مقر دار ضيافة كفر الشيخ (المسافة الحالية: {$distToKafr} متر — المسموح حتى " . self::KAFR_GUEST_HOUSE_RADIUS_METERS . ' متر).',
+            ];
+        }
 
         return [
-            'success' => true,
-            'checked_in' => true,
-            'time' => $cairoNow->format('H:i'),
-            'distance' => $distance,
-            'message' => 'تم تسجيل حضورك تلقائياً من مقر المؤسسة الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distance} متر)",
+            'success' => false,
+            'outside_geofence' => true,
+            'distance' => $distToHq,
+            'max_distance' => self::ALLOWED_RADIUS_METERS,
+            'location' => 'مقر المؤسسة الرئيسي',
+            'message' => "أنت خارج نطاق مقر المؤسسة (المسافة الحالية: {$distToHq} متر — المسموح حتى " . self::ALLOWED_RADIUS_METERS . ' متر).',
         ];
     }
 

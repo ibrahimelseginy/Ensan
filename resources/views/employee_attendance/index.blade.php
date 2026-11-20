@@ -9,9 +9,21 @@
         <p class="hero-subtitle">تسجيل ومتابعة حضور وانصراف الموظفين</p>
         <div class="hero-actions d-flex gap-2 flex-wrap align-items-center">
             @php
-                $myTodayAtt = auth()->user()
-                    ? \App\Models\EmployeeAttendance::where('user_id', auth()->id())->where('date', now('Africa/Cairo')->toDateString())->first()
+                $u = auth()->user();
+                $myTodayAtt = $u
+                    ? \App\Models\EmployeeAttendance::where('user_id', $u->id)->where('date', now('Africa/Cairo')->toDateString())->first()
                     : null;
+                $isKafrStaff = $u && (
+                    (int) $u->guest_house_id === 2
+                    || (int) $u->id === 74
+                    || str_contains((string) $u->job_title, 'كفر الشيخ')
+                    || str_contains((string) $u->job_title, 'مدير دار الضيافة')
+                    || (str_contains((string) $u->department, 'دار الضيافة') && !str_contains((string) $u->job_title, 'الغربيه'))
+                );
+                $primaryLocationName = $isKafrStaff ? 'دار ضيافة كفر الشيخ' : 'مقر المؤسسة الرئيسي';
+                $directionsUrl = $isKafrStaff
+                    ? 'https://www.google.com/maps/dir/?api=1&destination=31.1061705,30.9378786'
+                    : 'https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307';
             @endphp
             @if($myTodayAtt && empty($myTodayAtt->check_out_at))
                 <form method="POST" action="{{ route('employee-attendance.checkOut') }}" onsubmit="return confirm('هل تريد تسجيل انصرافك الآن؟');">
@@ -26,14 +38,26 @@
                     <span style="color: #047857 !important;">تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})</span>
                 </span>
             @else
-                <button type="button" id="manualGpsCheckInBtn" class="btn btn-light text-primary fw-bold btn-sm rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)
+                <button type="button" id="manualGpsCheckInBtn" data-location-name="{{ $primaryLocationName }}" class="btn btn-light text-primary fw-bold btn-sm rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من {{ $primaryLocationName }} (GPS)
                 </button>
             @endif
 
-            <a href="https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307" target="_blank" rel="noopener" class="btn btn-sm rounded-pill px-4 fw-bold" style="background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.45);">
-                <i class="bi bi-sign-turn-right-fill me-1"></i> اتجاهات مقر الحضور (Directions)
+            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener" class="btn btn-sm rounded-pill px-4 fw-bold" style="background: rgba(255,255,255,0.2); color: #ffffff; border: 1px solid rgba(255,255,255,0.45);">
+                <i class="bi bi-sign-turn-right-fill me-1"></i> اتجاهات {{ $primaryLocationName }} (Directions)
             </a>
+
+            @if($u && ($u->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$u->id, [2, 8, 50], true)))
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.35);">
+                        <i class="bi bi-geo-alt me-1"></i> مقرات الحضور
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                        <li><a class="dropdown-item small" href="https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307" target="_blank" rel="noopener"><i class="bi bi-building text-primary me-2"></i>المقر الرئيسي للمؤسسة</a></li>
+                        <li><a class="dropdown-item small" href="https://www.google.com/maps/dir/?api=1&destination=31.1061705,30.9378786" target="_blank" rel="noopener"><i class="bi bi-house-door text-success me-2"></i>دار ضيافة كفر الشيخ</a></li>
+                    </ul>
+                </div>
+            @endif
 
             <a href="{{ route('employee-attendance.create') }}" class="btn btn-sm rounded-pill px-4">
                 <i class="bi bi-plus-lg me-1"></i> تسجيل يدوي
@@ -238,12 +262,12 @@
                 .catch(() => {
                     showFeedback('<i class="bi bi-exclamation-triangle-fill me-1"></i> حدث خطأ أثناء الاتصال بالخادم.', true);
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)';
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور الذكي (GPS)';
                 });
             }, function () {
                 showFeedback('<i class="bi bi-exclamation-triangle-fill me-1"></i> يرجى السماح بصلاحية الوصول للموقع (Location) في المتصفح لتسجيل الحضور.', true);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من مقر المؤسسة (GPS)';
+                btn.innerHTML = '<i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور الذكي (GPS)';
             }, { enableHighAccuracy: true, timeout: 10000 });
         });
     })();
