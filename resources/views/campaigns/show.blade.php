@@ -277,36 +277,46 @@
         <div class="col-lg-8">
 
             @if(Str::contains($campaign->name, 'رمضان') || Str::contains($campaign->name, 'Ramadan'))
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <a href="{{ route('ramadan-bags.index') }}" class="text-decoration-none">
-                            <div class="card border-0 shadow-sm bg-primary text-white h-100" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="bg-white bg-opacity-25 rounded p-3 me-3 fs-3">
-                                        <i class="bi bi-bag-heart"></i>
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-moon-stars-fill text-success me-2"></i>برامج وأنشطة حملة رمضان
+                            </h6>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-3">شنط + إفطارات</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="{{ route('ramadan-bags.index') }}" class="text-decoration-none">
+                                    <div class="card border-0 shadow-sm bg-warning bg-gradient text-dark h-100 rounded-4" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <div class="card-body d-flex align-items-center">
+                                            <div class="bg-white bg-opacity-50 rounded-3 p-3 me-3 fs-3 text-warning-emphasis">
+                                                <i class="bi bi-bag-heart-fill"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold mb-1">شنط وكراتين رمضان</h5>
+                                                <div class="small opacity-75">تعبئة وتوزيع الشنط والكراتين الغذائية</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h5 class="fw-bold mb-1">شنط رمضان</h5>
-                                        <div class="small text-white-50">إدارة المستفيدين وتوزيع الشنط الرمضانية</div>
-                                    </div>
-                                </div>
+                                </a>
                             </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6">
-                        <a href="{{ route('ramadan-iftars.index') }}" class="text-decoration-none">
-                            <div class="card border-0 shadow-sm bg-success text-white h-100" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                                <div class="card-body d-flex align-items-center">
-                                    <div class="bg-white bg-opacity-25 rounded p-3 me-3 fs-3">
-                                        <i class="bi bi-cup-hot"></i>
+                            <div class="col-md-6">
+                                <a href="{{ route('ramadan-iftars.index') }}" class="text-decoration-none">
+                                    <div class="card border-0 shadow-sm bg-success bg-gradient text-white h-100 rounded-4" style="transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <div class="card-body d-flex align-items-center">
+                                            <div class="bg-white bg-opacity-25 rounded-3 p-3 me-3 fs-3">
+                                                <i class="bi bi-cup-hot-fill"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold mb-1">إفطارات رمضان</h5>
+                                                <div class="small text-white-50">وجبات ومطابخ إفطار الصائم وتوزيعها</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h5 class="fw-bold mb-1">إفطارات رمضان</h5>
-                                        <div class="small text-white-50">إدارة المستفيدين والوجبات وتوزيع الإفطارات</div>
-                                    </div>
-                                </div>
+                                </a>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 </div>
             @endif

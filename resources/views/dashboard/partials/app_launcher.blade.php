@@ -1586,33 +1586,27 @@ body.theme-dark .launcher-cat-btn.active,
                         </div>
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">إدارة الحملات</div>
-                            <small class="text-muted">إنشاء ومتابعة حملات التبرع</small>
+                            <small class="text-muted">إنشاء ومتابعة جميع الحملات الموسمية</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
                     @endif
 
-                    @if($u && $u->hasPermission('ramadan_bags.view'))
-                    <a href="{{ route('ramadan-bags.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
-                            <i class="bi bi-bag-heart"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">شنط وكراتين رمضان</div>
-                            <small class="text-muted">تعبئة وتوزيع الشنط الغذائية</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-
-                    @if($u && $u->hasPermission('ramadan_iftars.view'))
-                    <a href="{{ route('ramadan-iftars.index') }}" class="ensan-sub-tile">
+                    @php
+                        $activeRamadanCampaign = \App\Models\Campaign::where('name', 'like', '%رمضان%')
+                            ->orWhere('name', 'like', '%Ramadan%')
+                            ->orderByDesc('season_year')
+                            ->orderByDesc('id')
+                            ->first();
+                    @endphp
+                    @if($activeRamadanCampaign && $u && ($u->hasPermission('campaigns.view') || $u->hasPermission('ramadan_bags.view') || $u->hasPermission('ramadan_iftars.view')))
+                    <a href="{{ route('campaigns.show', $activeRamadanCampaign) }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-success-subtle text-success">
-                            <i class="bi bi-cup-hot"></i>
+                            <i class="bi bi-moon-stars-fill"></i>
                         </div>
                         <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">إفطارات رمضان</div>
-                            <small class="text-muted">وجبات ومطابخ إفطار الصائم</small>
+                            <div class="ensan-sub-tile-title">{{ $activeRamadanCampaign->name }}</div>
+                            <small class="text-muted">شنط وكراتين رمضان + إفطارات رمضان معاً داخل الحملة</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
