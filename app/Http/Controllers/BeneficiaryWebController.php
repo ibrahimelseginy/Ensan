@@ -486,11 +486,12 @@ final class BeneficiaryWebController extends Controller
 
     public function recordDirectAid(Request $request, Beneficiary $beneficiary): RedirectResponse
     {
+        $isCash = ($request->input('aid_type') ?? 'in_kind') === 'cash';
         $validated = $request->validate([
             'aid_type' => 'required|string|in:cash,in_kind,service',
             'status' => 'nullable|string|in:active,awaiting_discussion,rejected,pending',
             'category_title' => 'nullable|string|max:191',
-            'amount' => 'nullable|numeric|min:0',
+            'amount' => $isCash ? 'required|numeric|min:1' : 'nullable|numeric|min:0',
             'donor_id' => 'nullable|exists:donors,id',
             'project_id' => 'nullable',
             'purpose' => 'nullable|string|max:255',
@@ -649,6 +650,36 @@ final class BeneficiaryWebController extends Controller
         ];
 
         return back()->with('success', $statusLabels[$newStatus] ?? 'تم تحديث حالة المساعدة بنجاح.');
+    }
+
+    public function destroyAid(Request $request, Beneficiary $beneficiary, Donation $donation): RedirectResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !$user->can('beneficiaries.delete') && !$user->can('beneficiaries.edit'))) {
+            abort(403, 'غير مصرح لك بحذف سجل المساعدة.');
+        }
+
+        if ((int) $donation->beneficiary_id !== (int) $beneficiary->id) {
+            abort(404, 'سجل المساعدة غير مرتبط بهذه الحالة.');
+        }
+
+        // Delete any related attachments if they were stored with this receipt number
+        if ($donation->receipt_number) {
+            $attachments = $beneficiary->attachments()
+                ->where('title', 'LIKE', '%' . $donation->receipt_number . '%')
+                ->get();
+            foreach ($attachments as $att) {
+                if ($att->path && \Illuminate\Support\Facades\Storage::disk('public')->exists($att->path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($att->path);
+                }
+                $att->delete();
+            }
+        }
+
+        $receiptNumber = $donation->receipt_number ?: ('#' . $donation->id);
+        $donation->delete();
+
+        return back()->with('success', "تم حذف سجل المساعدة رقم ({$receiptNumber}) بنجاح.");
     }
 
     /**

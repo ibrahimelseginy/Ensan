@@ -837,24 +837,67 @@
                       </td>
                       <td class="text-center">
                         <div class="d-inline-flex align-items-center gap-1">
-                          @if($d->status === 'awaiting_discussion' || $d->status === 'pending')
-                            <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline">
+                          @php
+                            $authUser = auth()->user();
+                            $canManageAid = $authUser && ($authUser->hasRole(['admin', 'manager', 'super_admin']) || $authUser->can('beneficiaries.edit'));
+                          @endphp
+
+                          @if($canManageAid)
+                            @if($d->status === 'awaiting_discussion' || $d->status === 'pending')
+                              <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="active">
+                                <button type="submit" class="btn btn-sm btn-success px-2 py-0.5 rounded-pill shadow-xs" title="قبول وصرف المساعدة">
+                                  <i class="bi bi-check-lg me-1"></i>قبول
+                                </button>
+                              </form>
+                              <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد تسجيل هذه المساعدة كمرفوضة؟');">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="rejected">
+                                <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5 rounded-pill" title="رفض المساعدة">
+                                  <i class="bi bi-x-lg me-1"></i>رفض
+                                </button>
+                              </form>
+                            @elseif($d->status === 'rejected')
+                              <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد اعتماد وقبول هذه المساعدة بعد رفضها؟');">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="active">
+                                <button type="submit" class="btn btn-sm btn-success px-2 py-0.5 rounded-pill shadow-xs" title="تراجع وقبول المساعدة">
+                                  <i class="bi bi-check-lg me-1"></i>قبول
+                                </button>
+                              </form>
+                              <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="awaiting_discussion">
+                                <button type="submit" class="btn btn-sm btn-outline-warning text-dark px-2 py-0.5 rounded-pill shadow-xs" title="إعادة فتح المساعدة للمناقشة">
+                                  <i class="bi bi-arrow-repeat me-1"></i>مناقشة
+                                </button>
+                              </form>
+                            @elseif($d->status === 'active')
+                              <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد تحويل هذه المساعدة إلى (في انتظار المناقشة)؟');">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="awaiting_discussion">
+                                <button type="submit" class="btn btn-sm btn-light border text-muted px-1.5 py-0.5 rounded-pill" title="إعادة للمناقشة">
+                                  <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                              </form>
+                            @endif
+
+                            {{-- Delete action for aid entries --}}
+                            <form action="{{ route('beneficiaries.aid.destroy', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد حذف سجل المساعدة رقم ({{ $d->receipt_number ?: ('#' . $d->id) }})؟ لا يمكن التراجع عن الحذف.');">
                               @csrf
-                              @method('PATCH')
-                              <input type="hidden" name="status" value="active">
-                              <button type="submit" class="btn btn-sm btn-success px-2 py-0.5 rounded-pill shadow-xs" title="قبول وصرف المساعدة">
-                                <i class="bi bi-check-lg me-1"></i>قبول
-                              </button>
-                            </form>
-                            <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد تسجيل هذه المساعدة كمرفوضة؟');">
-                              @csrf
-                              @method('PATCH')
-                              <input type="hidden" name="status" value="rejected">
-                              <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5 rounded-pill" title="رفض المساعدة">
-                                <i class="bi bi-x-lg me-1"></i>رفض
+                              @method('DELETE')
+                              <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-0.5 rounded-pill" title="حذف السجل نهائياً">
+                                <i class="bi bi-trash"></i>
                               </button>
                             </form>
                           @endif
+
                           <a href="{{ route('donations.show', $d) }}" class="btn btn-sm btn-outline-primary px-2 py-1" title="عرض التفاصيل">
                             <i class="bi bi-eye"></i>
                           </a>
