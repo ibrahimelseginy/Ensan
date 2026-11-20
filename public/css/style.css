@@ -630,6 +630,36 @@ body.sidebar-collapsed .content-wrapper {
   border-color: var(--gray-100);
 }
 
+/* Ensure outline-light buttons on dark or gradient hero cards are crisp high-contrast white */
+.premium-hero-card .btn-outline-light,
+.premium-hero-card .btn-outline-light:visited,
+.premium-hero-card .btn-outline-light:link,
+.premium-hero-card .btn-outline-light i,
+.premium-hero-card .btn-outline-light span,
+[style*="linear-gradient"] .btn-outline-light,
+[style*="linear-gradient"] .btn-outline-light:visited,
+[style*="linear-gradient"] .btn-outline-light:link,
+[style*="linear-gradient"] .btn-outline-light i,
+[style*="linear-gradient"] .btn-outline-light span {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.premium-hero-card .btn-outline-light:hover,
+[style*="linear-gradient"] .btn-outline-light:hover {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #047857 !important;
+}
+
+.premium-hero-card .btn-outline-light:hover i,
+.premium-hero-card .btn-outline-light:hover span,
+[style*="linear-gradient"] .btn-outline-light:hover i,
+[style*="linear-gradient"] .btn-outline-light:hover span {
+  color: #047857 !important;
+}
+
 .theme-dark .btn-outline-light {
   border-color: rgba(255, 255, 255, 0.2);
   color: var(--gray-400);

@@ -1,5 +1,32 @@
 @extends('layouts.app')
 @section('content')
+<style>
+.btn-revenue-hero-action {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease-in-out;
+}
+.btn-revenue-hero-action,
+.btn-revenue-hero-action:visited,
+.btn-revenue-hero-action:link,
+.btn-revenue-hero-action i,
+.btn-revenue-hero-action span {
+    color: #ffffff !important;
+}
+.btn-revenue-hero-action:hover {
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #047857 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
+.btn-revenue-hero-action:hover i,
+.btn-revenue-hero-action:hover span {
+    color: #047857 !important;
+}
+</style>
 <div class="revenue-system-container animate-fade-in">
     {{-- Hero Section --}}
     <div class="premium-hero-card mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 24px;">
@@ -10,16 +37,13 @@
                 </span>
                 <h1 class="display-5 fw-bold text-white mb-2" style="color: #ffffff !important;">لوحة الإيرادات والتبرعات</h1>
                 <p class="text-white text-opacity-75 lead" style="color: rgba(255,255,255,0.8) !important;">نظرة شاملة على مصادر الدخل، أنواع التبرعات، ونمط النمو المالي.</p>
-                <div class="d-flex gap-3 mt-4">
-                    <button class="btn btn-outline-light btn-lg px-4 rounded-pill shadow-premium fw-bold" onclick="EnsanPrintPreview.open(null, {title: 'تقرير الإيرادات والنمو المالي'})">
+                <div class="d-flex gap-3 mt-4 flex-wrap">
+                    <button class="btn btn-revenue-hero-action btn-lg px-4 rounded-pill shadow-sm fw-bold" onclick="EnsanPrintPreview.open(null, {title: 'تقرير الإيرادات والنمو المالي'})">
                         <i class="bi bi-eye me-2"></i> معاينة قبل الطباعة
                     </button>
-                    <button class="btn btn-outline-light btn-lg px-4 rounded-pill shadow-premium fw-bold" onclick="window.print()">
+                    <button class="btn btn-revenue-hero-action btn-lg px-4 rounded-pill shadow-sm fw-bold" onclick="window.print()">
                         <i class="bi bi-printer me-2"></i> طباعة التقرير
                     </button>
-                    <!-- <a href="{{ route('donations.create') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-                        <i class="bi bi-plus-lg me-2"></i> تسجيل تبرع
-                    </a> -->
                 </div>
             </div>
             <div class="col-md-5 d-none d-md-block text-center text-md-end">
