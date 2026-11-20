@@ -19,12 +19,23 @@
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ route('ramadan-iftars.index') }}" class="row g-2">
+        <form method="GET" action="{{ route('ramadan-iftars.index') }}" class="row g-2 align-items-center">
             <div class="col-md-5">
                 <input type="text" name="q" class="form-control" placeholder="بحث بالاسم، الهوية، الدليل، الهاتف..." value="{{ request('q') }}">
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-secondary w-100">بحث</button>
+            <div class="col-md-4">
+                <select name="region" class="form-select">
+                    <option value="">جميع المناطق / البلاد</option>
+                    @foreach($regions as $r)
+                        <option value="{{ $r }}" {{ request('region') == $r ? 'selected' : '' }}>{{ $r }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button type="submit" class="btn btn-secondary flex-grow-1"><i class="bi bi-search me-1"></i>بحث</button>
+                @if(request()->filled('q') || request()->filled('region'))
+                    <a href="{{ route('ramadan-iftars.index') }}" class="btn btn-outline-danger" title="إلغاء الفلترة والرجوع للكل"><i class="bi bi-x-lg"></i></a>
+                @endif
             </div>
         </form>
     </div>
@@ -71,6 +82,7 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="ps-3">اسم المستفيد</th>
+                        <th>المنطقة / البلد</th>
                         <th>عدد الوجبات</th>
                         <th>اسم الدليل</th>
                         <th>هاتف الدليل</th>
@@ -82,6 +94,7 @@
                     @forelse($iftars as $iftar)
                         <tr>
                             <td class="ps-3 fw-bold">{{ $iftar->beneficiary_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ $iftar->region ?? '—' }}</span></td>
                             <td><span class="badge bg-primary rounded-pill">{{ $iftar->meals_count }}</span></td>
                             <td>{{ $iftar->guide_name ?? '—' }}</td>
                             <td>{{ $iftar->guide_phone ?? '—' }}</td>
@@ -103,7 +116,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">لا توجد سجلات.</td>
+                            <td colspan="7" class="text-center text-muted py-4">لا توجد سجلات.</td>
                         </tr>
                     @endforelse
                 </tbody>

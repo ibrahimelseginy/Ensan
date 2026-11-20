@@ -19,9 +19,17 @@
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ route('ramadan-bags.index') }}" class="row g-2">
-            <div class="col-md-5">
+        <form method="GET" action="{{ route('ramadan-bags.index') }}" class="row g-2 align-items-center">
+            <div class="col-md-4">
                 <input type="text" name="q" class="form-control" placeholder="بحث بالاسم، الرقم القومي، الهاتف..." value="{{ request('q') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="region" class="form-select">
+                    <option value="">جميع المناطق / البلاد</option>
+                    @foreach($regions as $r)
+                        <option value="{{ $r }}" {{ request('region') == $r ? 'selected' : '' }}>{{ $r }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select">
@@ -32,8 +40,11 @@
                     <option value="تم التسليم" {{ request('status') == 'تم التسليم' ? 'selected' : '' }}>تم التسليم</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-secondary w-100">بحث</button>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-secondary flex-grow-1"><i class="bi bi-search me-1"></i>بحث</button>
+                @if(request()->filled('q') || request()->filled('region') || request()->filled('status'))
+                    <a href="{{ route('ramadan-bags.index') }}" class="btn btn-outline-danger" title="إلغاء الفلترة والرجوع للكل"><i class="bi bi-x-lg"></i></a>
+                @endif
             </div>
         </form>
     </div>

@@ -20,9 +20,19 @@ final readonly class RamadanBagService
         return $this->bagRepository->paginateFiltered($filters, $perPage);
     }
 
-    public function getStatistics(): array
+    public function getAllFilteredBags(array $filters): Collection
     {
-        $rawStats = $this->bagRepository->getRegionStats();
+        return $this->bagRepository->getAllFiltered($filters);
+    }
+
+    public function getDistinctRegions(): array
+    {
+        return $this->bagRepository->getDistinctRegions();
+    }
+
+    public function getStatistics(?string $region = null): array
+    {
+        $rawStats = $this->bagRepository->getRegionStats($region);
         $statistics = [];
 
         foreach ($rawStats as $stat) {

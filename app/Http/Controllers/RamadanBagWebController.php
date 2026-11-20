@@ -22,11 +22,12 @@ final class RamadanBagWebController extends Controller
 
     public function index(Request $request): View
     {
-        $filters    = $request->only(['q', 'status']);
+        $filters    = $request->only(['q', 'status', 'region']);
         $bags       = $this->bagService->getFilteredBags($filters, 50);
-        $statistics = $this->bagService->getStatistics();
+        $statistics = $this->bagService->getStatistics($filters['region'] ?? null);
+        $regions    = $this->bagService->getDistinctRegions();
 
-        return view('ramadan_bags.index', compact('bags', 'statistics'));
+        return view('ramadan_bags.index', compact('bags', 'statistics', 'regions'));
     }
 
     public function create(): View

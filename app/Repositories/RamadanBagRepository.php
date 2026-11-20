@@ -15,17 +15,59 @@ final readonly class RamadanBagRepository
     {
         $search = $filters['q'] ?? null;
         $status = $filters['status'] ?? null;
+        $region = $filters['region'] ?? null;
 
         return RamadanBag::with(['project', 'campaign'])
             ->when($search, function ($query) use ($search) {
-                $query->where('beneficiary_name', 'like', "%{$search}%")
-                    ->orWhere('national_id', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('phone_2', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('beneficiary_name', 'like', "%{$search}%")
+                        ->orWhere('national_id', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('phone_2', 'like', "%{$search}%")
+                        ->orWhere('region', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('spouse_name', 'like', "%{$search}%");
+                });
             })
             ->when($status, fn($q) => $q->where('status', $status))
+            ->when($region, fn($q) => $q->where('region', $region))
             ->latest()
             ->paginate($perPage);
+    }
+
+    public function getAllFiltered(array $filters): Collection
+    {
+        $search = $filters['q'] ?? null;
+        $status = $filters['status'] ?? null;
+        $region = $filters['region'] ?? null;
+
+        return RamadanBag::with(['project', 'campaign'])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('beneficiary_name', 'like', "%{$search}%")
+                        ->orWhere('national_id', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('phone_2', 'like', "%{$search}%")
+                        ->orWhere('region', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('spouse_name', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->when($region, fn($q) => $q->where('region', $region))
+            ->orderBy('region')
+            ->orderBy('beneficiary_name')
+            ->get();
+    }
+
+    public function getDistinctRegions(): array
+    {
+        return RamadanBag::whereNotNull('region')
+            ->where('region', '!=', '')
+            ->distinct()
+            ->orderBy('region')
+            ->pluck('region')
+            ->toArray();
     }
 
     public function findById(int $id): ?RamadanBag
@@ -33,9 +75,10 @@ final readonly class RamadanBagRepository
         return RamadanBag::with(['project', 'campaign'])->find($id);
     }
 
-    public function getRegionStats(): Collection
+    public function getRegionStats(?string $region = null): Collection
     {
         return RamadanBag::with('project')
+            ->when($region, fn($q) => $q->where('region', $region))
             ->select('project_id', 'region', DB::raw('COUNT(*) as families_count'), DB::raw('SUM(bags_count) as bags_sum'))
             ->groupBy('project_id', 'region')
             ->get();

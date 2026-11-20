@@ -22,11 +22,12 @@ final class RamadanIftarWebController extends Controller
 
     public function index(Request $request): View
     {
-        $filters    = $request->only(['q']);
+        $filters    = $request->only(['q', 'region']);
         $iftars     = $this->iftarService->getFilteredIftars($filters, 50);
-        $statistics = $this->iftarService->getStatistics();
+        $statistics = $this->iftarService->getStatistics($filters['region'] ?? null);
+        $regions    = $this->iftarService->getDistinctRegions();
 
-        return view('ramadan_iftars.index', compact('iftars', 'statistics'));
+        return view('ramadan_iftars.index', compact('iftars', 'statistics', 'regions'));
     }
 
     public function create(): View

@@ -20,9 +20,19 @@ final readonly class RamadanIftarService
         return $this->iftarRepository->paginateFiltered($filters, $perPage);
     }
 
-    public function getStatistics(): array
+    public function getAllFilteredIftars(array $filters): Collection
     {
-        $rawStats = $this->iftarRepository->getRegionStats();
+        return $this->iftarRepository->getAllFiltered($filters);
+    }
+
+    public function getDistinctRegions(): array
+    {
+        return $this->iftarRepository->getDistinctRegions();
+    }
+
+    public function getStatistics(?string $region = null): array
+    {
+        $rawStats = $this->iftarRepository->getRegionStats($region);
         $statistics = [];
 
         foreach ($rawStats as $stat) {
