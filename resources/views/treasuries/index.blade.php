@@ -1,173 +1,728 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2><i class="bi bi-safe me-2"></i>الخزائن</h2>
-            <p class="text-muted">إدارة جميع الخزائن المالية</p>
-        </div>
-        <div class="col-md-4 text-end d-flex gap-2 justify-content-end align-items-center">
-            @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager')))
-                <a href="{{ route('change-requests.index') }}" class="btn btn-outline-info shadow-sm rounded-pill px-3">
-                    <i class="bi bi-shield-check me-1"></i> طلبات المراجعة
-                </a>
-            @endif
-            <a href="{{ route('treasuries.dashboard') }}" class="btn btn-info text-white shadow-sm rounded-pill px-3">
-                <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
-            </a>
-            <a href="{{ route('treasuries.create') }}" class="btn btn-primary shadow-sm rounded-pill px-3">
-                <i class="bi bi-plus-circle me-1"></i> إضافة خزينة
-            </a>
-        </div>
-    </div>
+@section('title', 'الخزائن والحسابات النقدية')
 
+@push('styles')
+<style>
+    .finance-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .finance-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+    .fund-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 22px;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        transition: all 0.2s ease;
+    }
+    .fund-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+    .fund-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    .fund-icon-cash {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+    .fund-icon-bank {
+        background: rgba(59, 130, 246, 0.12);
+        color: #2563eb;
+    }
+    .fund-icon-wallet {
+        background: rgba(168, 85, 247, 0.12);
+        color: #9333ea;
+    }
+    .summary-overview-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    }
+    .summary-tile {
+        padding: 20px;
+        border-radius: 14px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    .summary-tile-bank { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .summary-tile-central { background: #fffbeb; border: 1px solid #fde68a; }
+    .summary-tile-sub { background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; }
+    .summary-tile-sub:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateY(-2px); }
+    .summary-tile-accounts { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .tab-pill-btn {
+        padding: 8px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        color: #64748b;
+        border: none;
+        background: transparent;
+        transition: all 0.2s ease;
+    }
+    .tab-pill-btn.active {
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid py-4 px-lg-4" style="direction: rtl; text-align: right;">
+
+    {{-- Alert Messages --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i>
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <div class="row g-4">
-        @forelse($treasuries as $treasury)
-        @php
-            $pending = $pendingRequests->get($treasury->id)?->first();
-        @endphp
-        <div class="col-md-4 mb-4">
-            <div class="glass-card shadow-sm border-0 h-100 animate-slide-up position-relative overflow-hidden" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05) !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="icon-box bg-primary bg-opacity-10 text-primary p-3 rounded-4">
-                                <i class="bi bi-safe2 fs-3"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1 text-white fw-bold">{{ $treasury->name }}</h5>
-                                <div class="d-flex flex-wrap gap-1 align-items-center">
-                                    <span class="badge bg-white bg-opacity-10 text-white opacity-75">{{ $treasury->code }}</span>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{{ $treasury->type_name }}</span>
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5 align-middle"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    {{-- Top Action Row --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-safe2 text-success"></i>
+                الخزائن
+            </h2>
+            <p class="text-muted mb-0 small">إدارة الأرصدة النقدية والحسابات البنكية والتوريدات والعهد المالية</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2" onclick="window.location.reload();">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span>تحديث</span>
+                <span class="badge bg-light text-muted border ms-1" style="font-size: 0.72rem;">{{ now()->format('h:i A') }}</span>
+            </button>
+            <a href="{{ route('transfers.index') }}" class="btn btn-outline-primary rounded-pill px-3 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left-right"></i>
+                <span>التوريدات والتحويلات</span>
+            </a>
+            <a href="{{ route('custodies.index') }}" class="btn btn-outline-success rounded-pill px-3 py-2 d-flex align-items-center gap-2">
+                <i class="bi bi-wallet2"></i>
+                <span>العهد المالية</span>
+            </a>
+            <a href="{{ route('treasuries.create') }}" class="btn btn-primary rounded-pill px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-plus-lg"></i>
+                <span>إضافة خزينة / صندوق</span>
+            </a>
+        </div>
+    </div>
+
+    {{-- Top Stat Cards (Exact match to proposed wireframe) --}}
+    <div class="row g-3 mb-4">
+        {{-- Total Balance --}}
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="finance-stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-bold">إجمالي الرصيد</span>
+                    <div class="fund-icon-box" style="background: rgba(37,99,235,0.1); color: #2563eb; width: 34px; height: 34px;">
+                        <i class="bi bi-cash-stack fs-6"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ number_format($totalPhysicalBalance, 2) }}</h4>
+                <small class="text-muted" style="font-size: 0.75rem;">ج.م (الرصيد الفعلي للمؤسسة)</small>
+            </div>
+        </div>
+
+        {{-- Cash Total --}}
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="finance-stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-bold">النقدي</span>
+                    <div class="fund-icon-box" style="background: rgba(16,185,129,0.1); color: #059669; width: 34px; height: 34px;">
+                        <i class="bi bi-wallet fs-6"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-success mb-0 font-monospace">{{ number_format($cashBalance, 2) }}</h4>
+                <small class="text-muted" style="font-size: 0.75rem;">ج.م (الصناديق ودور الضيافة)</small>
+            </div>
+        </div>
+
+        {{-- Bank Total --}}
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="finance-stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-bold">البنوك</span>
+                    <div class="fund-icon-box" style="background: rgba(59,130,246,0.1); color: #1d4ed8; width: 34px; height: 34px;">
+                        <i class="bi bi-bank fs-6"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-primary mb-0 font-monospace">{{ number_format($bankBalance, 2) }}</h4>
+                <small class="text-muted" style="font-size: 0.75rem;">ج.م (الحسابات البنكية المعتمدة)</small>
+            </div>
+        </div>
+
+        {{-- Today In --}}
+        <div class="col-xl col-md-6 col-sm-6">
+            <div class="finance-stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-bold">قبض اليوم</span>
+                    <div class="fund-icon-box" style="background: rgba(16,185,129,0.1); color: #10b981; width: 34px; height: 34px;">
+                        <i class="bi bi-arrow-down-left fs-6"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ number_format($todayIn, 2) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
+                <small class="text-success" style="font-size: 0.75rem;">واردات وتبرعات اليوم</small>
+            </div>
+        </div>
+
+        {{-- Today Out --}}
+        <div class="col-xl col-md-6 col-sm-6">
+            <div class="finance-stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-bold">صرف اليوم</span>
+                    <div class="fund-icon-box" style="background: rgba(239,68,68,0.1); color: #dc2626; width: 34px; height: 34px;">
+                        <i class="bi bi-arrow-up-right fs-6"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-danger mb-0 font-monospace">{{ number_format($todayOut, 2) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
+                <small class="text-danger" style="font-size: 0.75rem;">مصروفات ومساعدات اليوم</small>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Tabs Navigation --}}
+    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #ffffff;">
+        <div class="card-header bg-white border-0 pt-3 px-4">
+            <ul class="nav nav-pills p-1 bg-light rounded-3 d-inline-flex gap-1" id="treasuryMainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active tab-pill-btn" id="funds-tab" data-bs-toggle="tab" data-bs-target="#tab-funds" type="button" role="tab">
+                        <i class="bi bi-grid-fill me-1"></i> الصناديق
+                        <span class="badge bg-secondary bg-opacity-25 text-dark ms-1">{{ $physicalTreasuries->count() }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link tab-pill-btn" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#tab-transactions" type="button" role="tab">
+                        <i class="bi bi-receipt-cutoff me-1"></i> الحركات
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link tab-pill-btn" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#tab-transfers" type="button" role="tab">
+                        <i class="bi bi-arrow-left-right me-1"></i> التوريدات والتحويلات
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link tab-pill-btn" id="custodies-tab" data-bs-toggle="tab" data-bs-target="#tab-custodies" type="button" role="tab">
+                        <i class="bi bi-wallet2 me-1"></i> العهد المالية
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="treasuryMainTabsContent">
+
+                {{-- Tab 1: الصناديق (Treasury Cards) --}}
+                <div class="tab-pane fade show active" id="tab-funds" role="tabpanel">
+                    <div class="row g-4">
+                        @forelse($physicalTreasuries as $treasury)
+                            @php
+                                $isBank = $treasury->type === 'bank' || str_contains($treasury->name, 'بنك') || str_contains($treasury->name, 'البنك');
+                                $isWallet = $treasury->type === 'wallet' || str_contains($treasury->name, 'فودافون') || str_contains($treasury->name, 'انستاباي') || str_contains($treasury->name, 'إنستاباي');
+                            @endphp
+                            <div class="col-lg-4 col-md-6">
+                                <div class="fund-card h-100 d-flex flex-column justify-content-between">
+                                    {{-- Card Header --}}
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            {{-- Dropdown Menu --}}
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light rounded-circle text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                    <li>
+                                                        <a class="dropdown-item py-2" href="{{ route('treasuries.show', $treasury) }}">
+                                                            <i class="bi bi-eye text-primary me-2"></i> تفاصيل الخزينة
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2" href="{{ route('treasuries.edit', $treasury) }}">
+                                                            <i class="bi bi-pencil text-warning me-2"></i> تعديل البيانات
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-success" href="#" data-bs-toggle="modal" data-bs-target="#quickSupplyModal" onclick="document.getElementById('quickFromTreasury').value='{{ $treasury->id }}';">
+                                                            <i class="bi bi-box-arrow-up-right me-2"></i> توريد مالي من هذه الخزينة
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            {{-- Name & Icon --}}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="text-end">
+                                                    <h6 class="fw-bold text-dark mb-0">{{ $treasury->name }}</h6>
+                                                    <small class="text-muted" style="font-size: 0.78rem;">
+                                                        @if($isBank)
+                                                            <span class="text-primary fw-semibold"><i class="bi bi-bank me-1"></i>حساب بنكي</span>
+                                                        @elseif($isWallet)
+                                                            <span class="text-purple fw-semibold" style="color: #9333ea;"><i class="bi bi-phone me-1"></i>محفظة إلكترونية</span>
+                                                        @else
+                                                            <span class="text-success fw-semibold"><i class="bi bi-cash me-1"></i>صندوق نقدي</span>
+                                                        @endif
+                                                    </small>
+                                                </div>
+                                                <div class="fund-icon-box {{ $isBank ? 'fund-icon-bank' : ($isWallet ? 'fund-icon-wallet' : 'fund-icon-cash') }}">
+                                                    <i class="bi {{ $isBank ? 'bi-bank2' : ($isWallet ? 'bi-phone-flip' : 'bi-safe2') }}"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Badges row --}}
+                                        <div class="d-flex flex-wrap gap-1 mb-3">
+                                            @if($treasury->type === 'main' || $treasury->id == 1)
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2.5 py-1">افتراضي</span>
+                                            @endif
+                                            <span class="badge bg-light text-muted border rounded-pill px-2.5 py-1">{{ $treasury->code ?? 'ACC-'.$treasury->id }}</span>
+                                            @if($treasury->manager)
+                                                <span class="badge bg-light text-muted border rounded-pill px-2 py-1"><i class="bi bi-person me-1"></i>{{ Str::limit($treasury->manager->name, 16) }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Card Bottom Balance --}}
+                                    <div class="pt-3 border-top d-flex justify-content-between align-items-baseline">
+                                        <div class="text-muted small">الرصيد:</div>
+                                        <div class="text-end">
+                                            <span class="fs-4 fw-bold font-monospace {{ (float)$treasury->current_balance < 0 ? 'text-danger' : 'text-success' }}">
+                                                {{ number_format($treasury->current_balance, 2) }}
+                                            </span>
+                                            <small class="text-muted ms-1" style="font-size: 0.8rem;">{{ $treasury->currency ?? 'ج.م' }}</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div>
-                            @if($treasury->is_active)
-                                <span class="badge rounded-pill px-3 bg-success bg-opacity-10 text-success border border-success border-opacity-25">نشط</span>
-                            @else
-                                <span class="badge rounded-pill px-3 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">غير نشط</span>
-                            @endif
-                        </div>
+                        @empty
+                            <div class="col-12 text-center py-5">
+                                <div class="text-muted mb-3"><i class="bi bi-safe fs-1 opacity-25"></i></div>
+                                <h5 class="text-muted">لا توجد خزائن فعلية مسجلة بعد</h5>
+                                <a href="{{ route('treasuries.create') }}" class="btn btn-primary mt-2">إضافة أول خزينة</a>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- Tab 2: الحركات (Transactions) --}}
+                <div class="tab-pane fade" id="tab-transactions" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-muted small">
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الخزينة</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>البيان والملاحظات</th>
+                                    <th>المسؤول</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentTransactions as $tx)
+                                    <tr>
+                                        <td class="text-muted small">#{{ $tx->id }}</td>
+                                        <td class="font-monospace small">{{ $tx->transaction_date ? \Carbon\Carbon::parse($tx->transaction_date)->format('Y-m-d') : $tx->created_at->format('Y-m-d') }}</td>
+                                        <td class="fw-semibold">{{ $tx->treasury->name ?? '—' }}</td>
+                                        <td>
+                                            @if($tx->type === 'in')
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1">قبض (وارد)</span>
+                                            @else
+                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1">صرف (صادر)</span>
+                                            @endif
+                                        </td>
+                                        <td class="fw-bold font-monospace {{ $tx->type === 'in' ? 'text-success' : 'text-danger' }}">
+                                            {{ $tx->type === 'in' ? '+' : '-' }}{{ number_format($tx->amount, 2) }} ج.م
+                                        </td>
+                                        <td class="small text-muted">{{ $tx->description ?? '—' }}</td>
+                                        <td class="small">{{ $tx->createdBy->name ?? 'النظام' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">لا توجد حركات حديثة مسجلة</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Tab 3: التوريدات والتحويلات (Transfers) --}}
+                <div class="tab-pane fade" id="tab-transfers" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">سجل التوريدات والتحويلات النقدية بين الخزائن</h6>
+                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#quickSupplyModal">
+                            <i class="bi bi-plus-lg me-1"></i> تسجيل طلب توريد جديد
+                        </button>
                     </div>
 
-                    @php
-                        $breakdown = $treasury->balance_breakdown;
-                    @endphp
-                    <div class="mb-4">
-                        <div class="text-white opacity-50 small mb-1">إجمالي الرصيد الحالي بالخزينة:</div>
-                        <div class="fw-bold text-white fs-3 mb-2">
-                            {{ number_format($treasury->current_balance, 2) }} <small class="fs-6 opacity-50">{{ $treasury->currency }}</small>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <div class="p-2 rounded-3 border border-info border-opacity-25" style="background: rgba(56, 189, 248, 0.12);">
-                                    <div class="text-info x-small fw-bold mb-0.5"><i class="bi bi-wallet2 me-1"></i>فلوس العهدة:</div>
-                                    <div class="text-white fw-bold font-monospace small">{{ number_format($breakdown['custody_balance'], 2) }} <small class="opacity-75">{{ $treasury->currency }}</small></div>
-                                    <div class="text-white opacity-50" style="font-size: 0.68rem;">إجمالي وارد عهدة: {{ number_format($breakdown['custody_in'], 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="p-2 rounded-3 border border-success border-opacity-25" style="background: rgba(16, 185, 129, 0.12);">
-                                    <div class="text-success x-small fw-bold mb-0.5"><i class="bi bi-heart-fill me-1"></i>فلوس التبرعات:</div>
-                                    <div class="text-white fw-bold font-monospace small">{{ number_format($breakdown['donations_balance'], 2) }} <small class="opacity-75">{{ $treasury->currency }}</small></div>
-                                    <div class="text-white opacity-50" style="font-size: 0.68rem;">إجمالي وارد تبرعات: {{ number_format($breakdown['donations_in'], 0) }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="p-2 rounded-3 bg-white bg-opacity-5">
-                                    <div class="text-white opacity-50 x-small mb-1">المدير:</div>
-                                    <div class="text-white small fw-bold text-truncate">{{ $treasury->manager->name ?? '-' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="p-2 rounded-3 bg-white bg-opacity-5">
-                                    <div class="text-white opacity-50 x-small mb-1">الموقع:</div>
-                                    <div class="text-white small fw-bold text-truncate">{{ $treasury->location ?? '-' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="p-2 rounded-3 bg-white bg-opacity-5 d-flex justify-content-between align-items-center">
-                                    <div class="text-white opacity-50 x-small">عدد الحركات:</div>
-                                    <div class="badge bg-white bg-opacity-10 text-white">{{ $treasury->transactions_count }}</div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-muted small">
+                                    <th>رقم السند</th>
+                                    <th>التاريخ</th>
+                                    <th>من الخزينة</th>
+                                    <th>إلى الخزينة</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                    <th>المسلم / المستلم</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentTransfers as $trf)
+                                    <tr>
+                                        <td class="font-monospace fw-bold text-primary">{{ $trf->transfer_number }}</td>
+                                        <td class="font-monospace small">{{ $trf->requested_on ? $trf->requested_on->format('Y-m-d') : '—' }}</td>
+                                        <td class="fw-semibold">{{ $trf->fromAccount->name ?? '—' }}</td>
+                                        <td class="fw-semibold">{{ $trf->toAccount->name ?? '—' }}</td>
+                                        <td class="fw-bold font-monospace text-dark">{{ number_format($trf->amount, 2) }} ج.م</td>
+                                        <td>
+                                            @if($trf->status === 'received')
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1">تم الاستلام والمطابقة</span>
+                                            @elseif($trf->status === 'submitted')
+                                                <span class="badge bg-warning bg-opacity-10 text-warning text-dark border border-warning border-opacity-25 px-2.5 py-1">بانتظار تأكيد الاستلام</span>
+                                            @else
+                                                <span class="badge bg-secondary px-2 py-1">{{ $trf->status }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="small">
+                                            <div><span class="text-muted">مُسلّم:</span> {{ $trf->requester->name ?? '—' }}</div>
+                                            @if($trf->receiver)
+                                                <div><span class="text-success">مُستلم:</span> {{ $trf->receiver->name }}</div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                @if($trf->status === 'submitted')
+                                                    <form method="POST" action="{{ route('transfers.confirmReceipt', $trf) }}" onsubmit="return confirm('هل تؤكد استلام المبلغ فعلياً وعدّه؟');">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-success px-2 py-1" title="تأكيد الاستلام">
+                                                            <i class="bi bi-check-lg"></i> تأكيد الاستلام
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                                <a href="{{ route('transfers.printVoucher', $trf) }}" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="طباعة سند التوريد">
+                                                    <i class="bi bi-printer"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">لا توجد تحويلات أو توريدات مسجلة حتى الآن</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    @if($pending)
-                        <div class="alert alert-warning mb-3 p-3 border-0 bg-warning bg-opacity-10 text-warning rounded-4 shadow-sm animate-pulse">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi bi-hourglass-split fs-5"></i>
-                                <span class="fw-bold small">طلب قيد المراجعة</span>
-                            </div>
-                            <div class="d-flex gap-2 mt-2">
-                                <form action="{{ route('change-requests.cancel', $pending) }}" method="POST" class="w-100" onsubmit="return confirm('هل تريد بالتأكيد إلغاء هذا الطلب؟')">
-                                    @csrf
-                                    <button class="btn btn-sm btn-danger w-100 rounded-pill">
-                                        <i class="bi bi-x-circle me-1"></i> إلغاء الطلب
-                                    </button>
-                                </form>
-                                @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager')))
-                                    <a href="{{ route('change-requests.index') }}" class="btn btn-sm btn-warning w-100 rounded-pill">
-                                        <i class="bi bi-shield-check me-1"></i> المراجعة
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('treasuries.show', $treasury) }}" class="btn btn-light rounded-pill py-2 shadow-sm hover-lift">
-                            <i class="bi bi-eye me-1"></i> عرض التفاصيل الحسابات
+                {{-- Tab 4: العهد المالية (Custodies) --}}
+                <div class="tab-pane fade" id="tab-custodies" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">كشف العهد المالية الحالية للموظفين</h6>
+                        <a href="{{ route('custodies.create') }}" class="btn btn-success btn-sm rounded-pill px-3">
+                            <i class="bi bi-plus-lg me-1"></i> صرف عهدة جديدة
                         </a>
-                        
-                        @if(!$pending)
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('treasuries.edit', $treasury) }}" class="btn btn-outline-light rounded-pill py-2 flex-grow-1 hover-lift">
-                                    <i class="bi bi-pencil me-1"></i> تعديل
-                                </a>
-                                <form action="{{ route('treasuries.destroy', $treasury) }}" method="POST" class="flex-grow-1" onsubmit="return confirm('هل تريد بالتأكيد حذف هذه الخزينة؟')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-outline-danger rounded-pill py-2 w-100 hover-lift">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        @endif
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-muted small">
+                                    <th>رقم العهدة</th>
+                                    <th>الموظف المستلم</th>
+                                    <th>تاريخ الصرف</th>
+                                    <th>قيمة العهدة</th>
+                                    <th>المصروف / المعتمد</th>
+                                    <th>المتبقي للرد</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentCustodies as $custody)
+                                    <tr>
+                                        <td class="font-monospace fw-bold text-dark">
+                                            <a href="{{ route('custodies.show', $custody) }}" class="text-decoration-none">
+                                                {{ $custody->custody_number }}
+                                            </a>
+                                        </td>
+                                        <td class="fw-semibold">
+                                            <i class="bi bi-person-badge text-muted me-1"></i>
+                                            {{ $custody->holder->name ?? '—' }}
+                                        </td>
+                                        <td class="font-monospace small">{{ $custody->issued_on ? $custody->issued_on->format('Y-m-d') : '—' }}</td>
+                                        <td class="fw-bold font-monospace">{{ number_format($custody->issued_amount, 2) }} ج.م</td>
+                                        <td class="font-monospace text-primary">{{ number_format($custody->settled_amount, 2) }} ج.م</td>
+                                        <td class="font-monospace text-danger fw-bold">{{ number_format($custody->remaining_to_return, 2) }} ج.م</td>
+                                        <td>
+                                            @php $st = $custody->status_meta; @endphp
+                                            <span class="badge {{ $st['class'] }} px-2.5 py-1">{{ $st['label'] }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ route('custodies.show', $custody) }}" class="btn btn-sm btn-outline-primary px-2.5 py-1" title="كشف العهدة والتسوية">
+                                                    <i class="bi bi-card-checklist me-1"></i> التسوية
+                                                </a>
+                                                <a href="{{ route('custodies.printVoucher', $custody) }}" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="طباعة سند الصرف">
+                                                    <i class="bi bi-printer"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">لا توجد عهد مالية مفتوحة حالياً</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
             </div>
         </div>
-        @empty
-        <div class="col-12">
-            <div class="glass-card shadow-sm border-0">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-safe2 text-muted opacity-25" style="font-size: 5rem;"></i>
-                    <h4 class="mt-4 mb-2 text-white opacity-75">لا توجد خزائن بعد</h4>
-                    <p class="text-white opacity-50 mb-4">ابدأ بإضافة خزينة جديدة لإدارة الأموال</p>
-                    <a href="{{ route('treasuries.create') }}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                        <i class="bi bi-plus-circle me-2"></i> إضافة خزينة جديدة
-                    </a>
+    </div>
+
+    {{-- Bottom Summary Card (ملخص الخزائن الفعلية - Exact Wireframe Implementation) --}}
+    <div class="summary-overview-box mb-4">
+        <h5 class="fw-bold mb-4 text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-pie-chart-fill text-primary"></i>
+            ملخص الخزائن الفعلية
+        </h5>
+
+        <div class="row g-3 mb-4">
+            {{-- Bank Treasury Tile --}}
+            <div class="col-md-3 col-sm-6">
+                <div class="summary-tile summary-tile-bank">
+                    <div class="text-muted small fw-semibold mb-1">خزينة البنك</div>
+                    <div class="fs-3 fw-bold text-primary font-monospace">{{ number_format($bankBalance, 0) }}</div>
+                    <small class="text-muted">جنيه</small>
+                </div>
+            </div>
+
+            {{-- Central Treasury Tile --}}
+            <div class="col-md-3 col-sm-6">
+                <div class="summary-tile summary-tile-central">
+                    <div class="text-muted small fw-semibold mb-1">الخزينة المركزية (الصندوق)</div>
+                    <div class="fs-3 fw-bold text-dark font-monospace">
+                        {{ number_format($centralTreasury ? $centralTreasury->current_balance : 0, 0) }}
+                    </div>
+                    <small class="text-muted">جنيه</small>
+                </div>
+            </div>
+
+            {{-- Accounts Treasury Tile --}}
+            <div class="col-md-3 col-sm-6">
+                <div class="summary-tile summary-tile-accounts">
+                    <div class="text-muted small fw-semibold mb-1">خزينة الحسابات</div>
+                    <div class="fs-3 fw-bold text-success font-monospace">
+                        {{ number_format($accountsTreasury ? $accountsTreasury->current_balance : 0, 0) }}
+                    </div>
+                    <small class="text-muted">جنيه</small>
+                </div>
+            </div>
+
+            {{-- Sub Treasuries Tile (Clickable to open modal) --}}
+            <div class="col-md-3 col-sm-6">
+                <div class="summary-tile summary-tile-sub" data-bs-toggle="modal" data-bs-target="#subTreasuriesModal" title="اضغط لعرض تفاصيل الخزائن الفرعية">
+                    <div class="text-muted small fw-semibold mb-1 d-flex justify-content-center align-items-center gap-1">
+                        <span>الخزائن الفرعية</span>
+                        <i class="bi bi-box-arrow-up-right text-primary" style="font-size: 0.75rem;"></i>
+                    </div>
+                    <div class="fs-3 fw-bold text-dark font-monospace">
+                        {{ number_format($subTreasuries->sum('current_balance'), 0) }}
+                    </div>
+                    <small class="text-primary fw-semibold" style="font-size: 0.75rem;">(اضغط لعرض التفاصيل)</small>
                 </div>
             </div>
         </div>
-        @endforelse
+
+        {{-- Grand Total Physical Balance --}}
+        <div class="pt-3 border-top text-center">
+            <div class="text-muted small mb-1">إجمالي الأموال الفعلية في المؤسسة:</div>
+            <div class="display-6 fw-bold text-success font-monospace mb-1">
+                {{ number_format($totalPhysicalBalance, 2) }} <span class="fs-5">جنيه</span>
+            </div>
+            <div class="text-muted small">
+                <i class="bi bi-shield-check text-success me-1"></i>
+                أرقام فعلية ومطابقة محاسبياً لمنع التكرار (Double-Counting)
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{-- MODAL 1: الخزائن الفرعية المنبثقة --}}
+<div class="modal fade" id="subTreasuriesModal" tabindex="-1" aria-labelledby="subTreasuriesModalLabel" aria-hidden="true" style="direction: rtl; text-align: right;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-light rounded-top-4 px-4 py-3">
+                <h5 class="modal-title fw-bold" id="subTreasuriesModalLabel">
+                    <i class="bi bi-layers-half text-primary me-2"></i>
+                    تفاصيل الخزائن الفرعية (الفروع ودور الضيافة والاستقبال)
+                </h5>
+                <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="text-muted small">
+                                <th>اسم الخزينة الفرعية</th>
+                                <th>النوع / التبعية</th>
+                                <th>المسؤول</th>
+                                <th>الرصيد الفعلي الحالي</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($subTreasuries as $sub)
+                                <tr>
+                                    <td class="fw-bold text-dark">
+                                        <i class="bi bi-safe me-1 text-muted"></i>
+                                        {{ $sub->name }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-muted border px-2 py-1">{{ $sub->type_name }}</span>
+                                    </td>
+                                    <td class="small">{{ $sub->manager->name ?? 'غير محدد' }}</td>
+                                    <td class="fw-bold font-monospace text-success fs-6">
+                                        {{ number_format($sub->current_balance, 2) }} ج.م
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('treasuries.show', $sub) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            عرض
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">لا توجد خزائن فرعية مسجلة</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">الإجمالي الفرعي:</td>
+                                <td class="text-success font-monospace fs-6">{{ number_format($subTreasuries->sum('current_balance'), 2) }} ج.م</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light rounded-bottom-4 px-4 py-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 2: تسجيل طلب توريد سريع --}}
+<div class="modal fade" id="quickSupplyModal" tabindex="-1" aria-labelledby="quickSupplyModalLabel" aria-hidden="true" style="direction: rtl; text-align: right;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <form method="POST" action="{{ route('transfers.storeSupply') }}">
+                @csrf
+                <div class="modal-header bg-light rounded-top-4 px-4 py-3">
+                    <h5 class="modal-title fw-bold" id="quickSupplyModalLabel">
+                        <i class="bi bi-box-arrow-in-left text-success me-2"></i>
+                        تسجيل طلب توريد نقدية بين الخزائن
+                    </h5>
+                    <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">الخزينة الموردة (المصدر) <span class="text-danger">*</span></label>
+                        <select name="from_treasury_id" id="quickFromTreasury" class="form-select rounded-3" required>
+                            <option value="">-- اختر الخزينة الموردة --</option>
+                            @foreach($physicalTreasuries as $t)
+                                <option value="{{ $t->id }}">{{ $t->name }} (رصيد: {{ number_format($t->current_balance, 2) }} ج.م)</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">الخزينة المستلمة (الهدف) <span class="text-danger">*</span></label>
+                        <select name="to_treasury_id" class="form-select rounded-3" required>
+                            <option value="">-- اختر الخزينة المستلمة --</option>
+                            @foreach($physicalTreasuries as $t)
+                                <option value="{{ $t->id }}">{{ $t->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">المبلغ المراد توريده <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="1" name="amount" class="form-control rounded-start-3" placeholder="0.00" required>
+                                <span class="input-group-text">ج.م</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">نوع التوريد</label>
+                            <select name="transfer_type" class="form-select rounded-3">
+                                <option value="supply">توريد دوري للخزينة</option>
+                                <option value="bank_deposit">إيداع بنكي مباشر</option>
+                                <option value="internal_transfer">تحويل داخلي</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">رقم الإيصال / المرجع البنكي (إن وجد)</label>
+                        <input type="text" name="reference" class="form-control rounded-3" placeholder="رقم حافظة الإيداع أو إيصال التوريد">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small">ملاحظات التوريد</label>
+                        <textarea name="note" class="form-control rounded-3" rows="2" placeholder="أي ملاحظات حول التوريد أو أسماء الإيصالات"></textarea>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        يتم خصم المبلغ من الخزينة الموردة فوراً، ولا يُضاف للخزينة المستلمة إلا بعد تأكيد الاستلام الفعلي من المحاسب/المستلم.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light rounded-bottom-4 px-4 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">تأكيد وإصدار طلب التوريد</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
-
-

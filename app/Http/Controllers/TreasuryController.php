@@ -39,7 +39,81 @@ final class TreasuryController extends Controller
             ->get()
             ->groupBy('model_id');
 
-        $totalBalance     = $treasuries->sum('current_balance');
+        // Distinguish physical actual treasuries from project/campaign allocations
+        $physicalTypes = [
+            Treasury::TYPE_MAIN,
+            Treasury::TYPE_CENTRAL ?? 'central',
+            Treasury::TYPE_BANK ?? 'bank',
+            Treasury::TYPE_WALLET ?? 'wallet',
+            Treasury::TYPE_RECEPTION,
+            Treasury::TYPE_GUEST_HOUSE,
+            Treasury::TYPE_BRANCH,
+            Treasury::TYPE_PETTY_CASH,
+        ];
+
+        $physicalTreasuries = $treasuries->filter(function ($t) use ($physicalTypes) {
+            return in_array($t->type, $physicalTypes, true)
+                || !in_array($t->type, [Treasury::TYPE_PROJECT, Treasury::TYPE_CAMPAIGN], true);
+        });
+
+        $bankTreasuries = $physicalTreasuries->filter(function ($t) {
+            return $t->type === (Treasury::TYPE_BANK ?? 'bank') || str_contains($t->name, 'بنك') || str_contains($t->name, 'البنك');
+        });
+
+        $cashTreasuries = $physicalTreasuries->filter(function ($t) {
+            return !($t->type === (Treasury::TYPE_BANK ?? 'bank') || str_contains($t->name, 'بنك') || str_contains($t->name, 'البنك'));
+        });
+
+        $bankBalance = (float) $bankTreasuries->sum('current_balance');
+        $cashBalance = (float) $cashTreasuries->sum('current_balance');
+        $totalPhysicalBalance = $bankBalance + $cashBalance;
+
+        // Today In / Out
+        $todayStr = now()->toDateString();
+        $todayIn = 0.0;
+        $todayOut = 0.0;
+        if (Schema::hasTable('treasury_transactions')) {
+            $todayIn = (float) \App\Models\TreasuryTransaction::whereIn('treasury_id', $physicalTreasuries->pluck('id'))
+                ->where('transaction_date', $todayStr)
+                ->where('type', 'in')
+                ->sum('amount');
+            $todayOut = (float) \App\Models\TreasuryTransaction::whereIn('treasury_id', $physicalTreasuries->pluck('id'))
+                ->where('transaction_date', $todayStr)
+                ->where('type', 'out')
+                ->sum('amount');
+        }
+
+        // Sub treasuries for the popup modal
+        $subTreasuries = $physicalTreasuries->filter(function ($t) {
+            return in_array($t->type, [Treasury::TYPE_RECEPTION, Treasury::TYPE_GUEST_HOUSE, Treasury::TYPE_WALLET ?? 'wallet', Treasury::TYPE_BRANCH, Treasury::TYPE_PETTY_CASH], true);
+        });
+
+        $centralTreasury = $physicalTreasuries->first(function ($t) {
+            return $t->type === (Treasury::TYPE_CENTRAL ?? 'central') || str_contains($t->name, 'المركزية') || str_contains($t->name, 'الصندوق');
+        });
+
+        $accountsTreasury = $physicalTreasuries->first(function ($t) {
+            return $t->type === Treasury::TYPE_MAIN || str_contains($t->name, 'الحسابات');
+        });
+
+        // Recent transfers and custodies for tabs
+        $recentTransfers = collect();
+        if (Schema::hasTable('cash_transfers')) {
+            $recentTransfers = \App\Models\Finance\CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver'])
+                ->orderByDesc('id')
+                ->limit(15)
+                ->get();
+        }
+
+        $recentCustodies = collect();
+        if (Schema::hasTable('custodies')) {
+            $recentCustodies = \App\Models\Finance\Custody::with(['holder', 'project'])
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get();
+        }
+
+        $totalBalance     = $totalPhysicalBalance;
         $activeTreasuries = $treasuries->where('is_active', true)->count();
         $totalTreasuries  = $treasuries->count();
 
@@ -49,7 +123,7 @@ final class TreasuryController extends Controller
                 ->whereIn('treasury_id', $treasuries->pluck('id'))
                 ->orderByDesc('transaction_date')
                 ->orderByDesc('created_at')
-                ->limit(10)
+                ->limit(15)
                 ->get();
         }
 
@@ -58,8 +132,20 @@ final class TreasuryController extends Controller
 
         return view('treasuries.index', compact(
             'treasuries',
+            'physicalTreasuries',
             'pendingRequests',
             'totalBalance',
+            'totalPhysicalBalance',
+            'bankBalance',
+            'cashBalance',
+            'todayIn',
+            'todayOut',
+            'bankTreasuries',
+            'subTreasuries',
+            'centralTreasury',
+            'accountsTreasury',
+            'recentTransfers',
+            'recentCustodies',
             'activeTreasuries',
             'totalTreasuries',
             'recentTransactions',

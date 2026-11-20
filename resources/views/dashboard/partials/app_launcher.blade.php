@@ -790,7 +790,7 @@ body.theme-dark .launcher-cat-btn.active,
                 <i class="bi bi-calculator-fill"></i>
             </div>
             <div class="ensan-app-title">الحسابات والمالية</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 7 خدمات <i class="bi bi-chevron-down"></i></span>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 9 خدمات <i class="bi bi-chevron-down"></i></span>
         </div>
         @endif
 
@@ -1411,6 +1411,28 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">الخزائن النقدية</div>
                             <small class="text-muted">إدارة الخزائن الرئيسية والفرعية</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    <a href="{{ route('transfers.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">التوريدات والتحويلات النقدية</div>
+                            <small class="text-muted">توريدات الخزائن وصرف الشيكات والبنك</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+
+                    <a href="{{ route('custodies.index') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">العهد المالية للموظفين</div>
+                            <small class="text-muted">تسليم وتسوية فواتير العهد والمتبقي</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>

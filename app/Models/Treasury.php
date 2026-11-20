@@ -18,6 +18,9 @@ final class Treasury extends Model
      * Treasury Types
      */
     const TYPE_MAIN = 'main';
+    const TYPE_CENTRAL = 'central';
+    const TYPE_BANK = 'bank';
+    const TYPE_WALLET = 'wallet';
     const TYPE_RECEPTION = 'reception';
     const TYPE_GUEST_HOUSE = 'guest_house';
     const TYPE_BRANCH = 'branch';
@@ -27,11 +30,14 @@ final class Treasury extends Model
     const TYPE_PETTY_CASH = 'petty_cash';
 
     const TYPES = [
-        self::TYPE_MAIN => 'الخزينة العامة / الحسابات',
-        self::TYPE_RECEPTION => 'خزينة الاستقبال',
+        self::TYPE_CENTRAL => 'الخزينة المركزية (الصندوق الرئيسي)',
+        self::TYPE_BANK => 'خزينة البنك (حساب بنكي)',
+        self::TYPE_MAIN => 'خزينة الحسابات (المحاسب)',
+        self::TYPE_RECEPTION => 'خزينة الاستقبال النقدية',
+        self::TYPE_WALLET => 'محفظة إلكترونية (إنستاباي / فودافون كاش)',
         self::TYPE_GUEST_HOUSE => 'خزينة دار ضيافة',
-        self::TYPE_PROJECT => 'خزينة مشروع',
-        self::TYPE_CAMPAIGN => 'خزينة حملة',
+        self::TYPE_PROJECT => 'تخصيص مشروع (تحليلي)',
+        self::TYPE_CAMPAIGN => 'تخصيص حملة (تحليلي)',
         self::TYPE_DELEGATE => 'عهدة مندوب',
         self::TYPE_BRANCH => 'خزينة فرع',
         self::TYPE_PETTY_CASH => 'صندوق مصروفات نثرية'

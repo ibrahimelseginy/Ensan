@@ -41,11 +41,14 @@
                                 <label class="form-label fw-bold text-primary">تخصص الخزينة / القسم التابع لها <span class="text-danger">*</span></label>
                                 <select name="type" id="treasuryTypeEditSelect" class="form-select" required>
                                     @php $curType = old('type', $treasury->type ?: 'main'); @endphp
-                                    <option value="main" {{ $curType === 'main' ? 'selected' : '' }}>الخزينة العامة / الحسابات</option>
-                                    <option value="reception" {{ $curType === 'reception' ? 'selected' : '' }}>خزينة الاستقبال (تظهر في الاستقبال فقط)</option>
+                                    <option value="bank" {{ $curType === 'bank' ? 'selected' : '' }}>خزينة البنك (حساب بنكي للمؤسسة)</option>
+                                    <option value="central" {{ $curType === 'central' ? 'selected' : '' }}>الخزينة المركزية (الصندوق الرئيسي للإدارة)</option>
+                                    <option value="main" {{ $curType === 'main' ? 'selected' : '' }}>خزينة الحسابات (المحاسب والصرف التشغيلي)</option>
+                                    <option value="reception" {{ $curType === 'reception' ? 'selected' : '' }}>خزينة الاستقبال النقدية</option>
+                                    <option value="wallet" {{ $curType === 'wallet' ? 'selected' : '' }}>محفظة إلكترونية (إنستاباي / فودافون كاش)</option>
                                     <option value="guest_house" {{ $curType === 'guest_house' ? 'selected' : '' }}>خزينة دار ضيافة (تظهر في دار الضيافة المحددة فقط)</option>
-                                    <option value="project" {{ $curType === 'project' ? 'selected' : '' }}>خزينة مشروع (تظهر في المشروع المحدد فقط)</option>
-                                    <option value="campaign" {{ $curType === 'campaign' ? 'selected' : '' }}>خزينة حملة (تظهر في الحملة المحددة فقط)</option>
+                                    <option value="project" {{ $curType === 'project' ? 'selected' : '' }}>تخصيص مشروع تحليلي</option>
+                                    <option value="campaign" {{ $curType === 'campaign' ? 'selected' : '' }}>تخصيص حملة تحليلي</option>
                                     <option value="delegate" {{ $curType === 'delegate' ? 'selected' : '' }}>عهدة مندوب</option>
                                     <option value="petty_cash" {{ $curType === 'petty_cash' ? 'selected' : '' }}>صندوق مصروفات نثرية</option>
                                 </select>

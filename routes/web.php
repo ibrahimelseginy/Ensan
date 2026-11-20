@@ -530,6 +530,23 @@ Route::middleware(['auth'])->group(function () {
         Route::put('treasuries/{treasury}/transactions/{transaction}', [TreasuryController::class, 'updateTransaction'])->name('treasuries.updateTransaction');
         Route::delete('treasuries/{treasury}/transactions/{transaction}', [TreasuryController::class, 'deleteTransaction'])->name('treasuries.deleteTransaction');
         Route::resource('treasuries', TreasuryController::class);
+
+        // --- Supplies & Transfers (نظام التوريدات والتحويلات النقدية) ---
+        Route::get('transfers', [\App\Http\Controllers\CashTransferWebController::class, 'index'])->name('transfers.index');
+        Route::post('transfers/supply', [\App\Http\Controllers\CashTransferWebController::class, 'storeSupply'])->name('transfers.storeSupply');
+        Route::post('transfers/{transfer}/confirm-receipt', [\App\Http\Controllers\CashTransferWebController::class, 'confirmReceipt'])->name('transfers.confirmReceipt');
+        Route::post('transfers/disburse-cheque', [\App\Http\Controllers\CashTransferWebController::class, 'disburseCheque'])->name('transfers.disburseCheque');
+        Route::post('transfers/direct-bank-transfer', [\App\Http\Controllers\CashTransferWebController::class, 'directBankTransfer'])->name('transfers.directBankTransfer');
+        Route::get('transfers/{transfer}/print', [\App\Http\Controllers\CashTransferWebController::class, 'printSupplyVoucher'])->name('transfers.printVoucher');
+
+        // --- Custodies & Settlements (نظام العهد المالية للموظفين وتسويتها) ---
+        Route::get('custodies', [\App\Http\Controllers\CustodyWebController::class, 'index'])->name('custodies.index');
+        Route::get('custodies/create', [\App\Http\Controllers\CustodyWebController::class, 'create'])->name('custodies.create');
+        Route::post('custodies', [\App\Http\Controllers\CustodyWebController::class, 'store'])->name('custodies.store');
+        Route::get('custodies/{custody}', [\App\Http\Controllers\CustodyWebController::class, 'show'])->name('custodies.show');
+        Route::post('custodies/{custody}/expenses', [\App\Http\Controllers\CustodyWebController::class, 'addExpense'])->name('custodies.addExpense');
+        Route::post('custodies/{custody}/settle', [\App\Http\Controllers\CustodyWebController::class, 'settle'])->name('custodies.settle');
+        Route::get('custodies/{custody}/print', [\App\Http\Controllers\CustodyWebController::class, 'printVoucher'])->name('custodies.printVoucher');
     });
 
     Route::middleware('permission:revenues.view|accounts.view|manage_finance')->group(function () {

@@ -40,11 +40,14 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-primary">تخصص الخزينة / القسم التابع لها <span class="text-danger">*</span></label>
                                 <select name="type" id="treasuryTypeSelect" class="form-select" required>
-                                    <option value="main" {{ old('type', 'main') === 'main' ? 'selected' : '' }}>الخزينة العامة / الحسابات</option>
-                                    <option value="reception" {{ old('type') === 'reception' ? 'selected' : '' }}>خزينة الاستقبال (تظهر في الاستقبال فقط)</option>
+                                    <option value="bank" {{ old('type') === 'bank' ? 'selected' : '' }}>خزينة البنك (حساب بنكي للمؤسسة)</option>
+                                    <option value="central" {{ old('type') === 'central' ? 'selected' : '' }}>الخزينة المركزية (الصندوق الرئيسي للإدارة)</option>
+                                    <option value="main" {{ old('type', 'main') === 'main' ? 'selected' : '' }}>خزينة الحسابات (المحاسب والصرف التشغيلي)</option>
+                                    <option value="reception" {{ old('type') === 'reception' ? 'selected' : '' }}>خزينة الاستقبال النقدية</option>
+                                    <option value="wallet" {{ old('type') === 'wallet' ? 'selected' : '' }}>محفظة إلكترونية (إنستاباي / فودافون كاش)</option>
                                     <option value="guest_house" {{ old('type') === 'guest_house' ? 'selected' : '' }}>خزينة دار ضيافة (تظهر في دار الضيافة المحددة فقط)</option>
-                                    <option value="project" {{ old('type') === 'project' ? 'selected' : '' }}>خزينة مشروع (تظهر في المشروع المحدد فقط)</option>
-                                    <option value="campaign" {{ old('type') === 'campaign' ? 'selected' : '' }}>خزينة حملة (تظهر في الحملة المحددة فقط)</option>
+                                    <option value="project" {{ old('type') === 'project' ? 'selected' : '' }}>تخصيص مشروع تحليلي</option>
+                                    <option value="campaign" {{ old('type') === 'campaign' ? 'selected' : '' }}>تخصيص حملة تحليلي</option>
                                     <option value="delegate" {{ old('type') === 'delegate' ? 'selected' : '' }}>عهدة مندوب</option>
                                     <option value="petty_cash" {{ old('type') === 'petty_cash' ? 'selected' : '' }}>صندوق مصروفات نثرية</option>
                                 </select>
