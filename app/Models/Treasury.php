@@ -67,6 +67,18 @@ final class Treasury extends Model
         'current_balance' => 'decimal:2'
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $treasury) {
+            // عند تعديل الرصيد الحالي يدوياً (سواء عبر طلبات التعديل أو الحفظ المباشر) دون تعديل الرصيد الافتتاحي:
+            // يتم ضبط الرصيد الافتتاحي تلقائياً ليعكس الرصيد المطلوب مع مراعاة الحركات المسجلة، لضمان عدم مسح الرصيد عند إضافة أي حركة لاحقة
+            if ($treasury->isDirty('current_balance') && !$treasury->isDirty('opening_balance')) {
+                $netTx = (float) $treasury->getTotalIn() - (float) $treasury->getTotalOut();
+                $treasury->opening_balance = (float) $treasury->current_balance - $netTx;
+            }
+        });
+    }
+
     // ==========================================
     // RELATIONSHIPS
     // ==========================================

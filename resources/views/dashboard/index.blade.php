@@ -70,6 +70,40 @@
                 }
             }
 
+            @media (max-width: 768px) {
+                .dashboard-hero {
+                    padding: 1.25rem 1rem !important;
+                    margin-top: 0.25rem !important;
+                    border-radius: 20px !important;
+                }
+                .dashboard-hero .hero-greeting {
+                    margin-bottom: 0.4rem !important;
+                    flex-wrap: wrap !important;
+                }
+                .dashboard-hero .hero-greeting .badge {
+                    font-size: 0.82rem !important;
+                    padding: 4px 10px !important;
+                }
+                .dashboard-hero .hero-greeting > span:last-child {
+                    font-size: 0.9rem !important;
+                }
+                .dashboard-hero .hero-title {
+                    font-size: 1.35rem !important;
+                    line-height: 1.35 !important;
+                    margin-bottom: 0.6rem !important;
+                }
+                .dashboard-hero .badge.bg-dark {
+                    font-size: 0.78rem !important;
+                    padding: 5px 10px !important;
+                }
+                .hero-clean-search,
+                #ensanAppSearch.hero-clean-search {
+                    height: 44px !important;
+                    font-size: 0.88rem !important;
+                    padding: 0.5rem 2.6rem 0.5rem 1rem !important;
+                }
+            }
+
             .hero-clean-search,
             #ensanAppSearch.hero-clean-search,
             html.theme-dark #ensanAppSearch.hero-clean-search,

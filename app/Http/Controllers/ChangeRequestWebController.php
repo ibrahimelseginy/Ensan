@@ -216,6 +216,12 @@ final class ChangeRequestWebController extends Controller
 
                 if ($instance) {
                     $instance->update($executionData);
+                    
+                    if (($instance instanceof \App\Models\Treasury || $modelClass === \App\Models\Treasury::class || $modelClass === 'App\Models\Treasury') && isset($executionData['current_balance'])) {
+                        $netTx = (float) $instance->getTotalIn() - (float) $instance->getTotalOut();
+                        $instance->opening_balance = (float) $instance->current_balance - $netTx;
+                        $instance->save();
+                    }
                 } else {
                     $instance = $modelClass::create($executionData);
                     // Save the newly created model ID
@@ -278,6 +284,12 @@ final class ChangeRequestWebController extends Controller
                         app(\App\Services\UserService::class)->releaseSoftDeletedEmail($executionData['email']);
                     }
                     $instance->update($executionData);
+                    
+                    if (($instance instanceof \App\Models\Treasury || $modelClass === \App\Models\Treasury::class || $modelClass === 'App\Models\Treasury') && isset($executionData['current_balance'])) {
+                        $netTx = (float) $instance->getTotalIn() - (float) $instance->getTotalOut();
+                        $instance->opening_balance = (float) $instance->current_balance - $netTx;
+                        $instance->save();
+                    }
                     
                     if ($modelClass === 'App\Models\Role' && isset($executionData['permissions'])) {
                         $instance->permissions()->sync($executionData['permissions']);

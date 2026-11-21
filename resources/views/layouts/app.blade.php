@@ -912,6 +912,12 @@
             transform: none !important;
             filter: none !important;
             perspective: none !important;
+            padding-top: 108px !important;
+        }
+        @media (max-width: 991.98px) {
+            .content-wrapper {
+                padding-top: 72px !important;
+            }
         }
         .modal,
         .modal.fade,
@@ -3169,21 +3175,21 @@
       <div class="d-flex align-items-center justify-content-between w-100 h-100">
 
         {{-- Right Side: Toggle & Brand --}}
-        <div class="d-flex align-items-center gap-2 gap-md-3">
+        <div class="d-flex align-items-center gap-1.5 gap-md-3">
           <a class="navbar-brand navbar-logo-elite me-0" href="{{ route('dashboard.index') }}" title="مؤسسة إنسان">
             @if(file_exists(public_path('images/heart-icon.png')))
-              <img src="{{ asset('images/heart-icon.png') }}" alt="شعار إنسان" loading="lazy" style="height: 50px !important; width: auto !important;">
+              <img src="{{ asset('images/heart-icon.png') }}" alt="شعار إنسان" loading="lazy" class="navbar-ensan-logo" style="height: 50px; width: auto;">
             @else
               <span class="fw-800 text-primary">مؤسسة إنسان الخيرية</span>
             @endif
           </a>
           @if(request()->routeIs('dashboard.index'))
-            <a href="#ensanAppsGrid" class="btn-home-nav d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill" title="لوحة الأيقونات الرئيسية">
+            <a href="#ensanAppsGrid" class="btn-home-nav d-inline-flex align-items-center gap-1 px-2 px-sm-3 py-1 rounded-pill" title="لوحة الأيقونات الرئيسية">
               <i class="bi bi-grid-fill text-primary fs-5"></i>
               <span class="fw-bold fs-7 d-none d-sm-inline">الرئيسية</span>
             </a>
           @else
-            <button type="button" class="btn-home-nav d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill border-0" 
+            <button type="button" class="btn-home-nav d-inline-flex align-items-center gap-1 px-2 px-sm-3 py-1 rounded-pill border-0" 
                     data-bs-toggle="modal" data-bs-target="#globalAppLauncherModal" 
                     id="btnGlobalLauncherNav"
                     title="فتح لوحة الأيقونات والتطبيقات (سريعة)">
@@ -3207,7 +3213,7 @@
         </div>
 
         {{-- Left Side: Actions --}}
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-1 gap-sm-2 flex-nowrap">
             @if($navUser && $navUser->hasPermission('data_import.view'))
               <a href="{{ route('data-import.index') }}" class="btn btn-reports-elite d-none d-md-flex align-items-center gap-1.5" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important;" title="استيراد وتوزيع ملفات الإكسيل آلياً">
                   <i class="bi bi-file-earmark-spreadsheet-fill text-success fs-6"></i>
@@ -3229,22 +3235,26 @@
                   ->first();
               @endphp
               @if($topbarTodayAtt && empty($topbarTodayAtt->check_out_at))
-                <button type="button" onclick="startAttendanceCapture('checkout')" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف بالصورة">
+                <button type="button" onclick="startAttendanceCapture('checkout')" class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف بالصورة">
                   <i class="bi bi-box-arrow-left fs-6"></i>
-                  <span class="fw-bold">تسجيل انصراف</span>
+                  <span class="fw-bold d-none d-sm-inline">تسجيل انصراف</span>
+                  <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">انصراف</span>
                 </button>
               @elseif($topbarTodayAtt && !empty($topbarTodayAtt->check_out_at))
-                <span class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important; cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
+                @php $tShort = substr((string)$topbarTodayAtt->check_out_at, 0, 5); @endphp
+                <span class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; white-space: nowrap !important; width: auto !important; cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
                   <i class="bi bi-check2-circle fs-6"></i>
-                  <span class="fw-bold">تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
+                  <span class="fw-bold d-none d-sm-inline">تم الانصراف ({{ $tShort }})</span>
+                  <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">{{ $tShort }}</span>
                 </span>
               @else
                 @php
                   $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
                 @endphp
-                <button type="button" id="topbarEnableGpsBtn" onclick="startAttendanceCapture('checkin')" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط لتسجيل حضورك">
+                <button type="button" id="topbarEnableGpsBtn" onclick="startAttendanceCapture('checkin')" class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important;" title="اضغط لتسجيل حضورك">
                   <i class="bi bi-geo-alt-fill fs-6"></i>
-                  <span class="fw-bold">تسجيل الحضور</span>
+                  <span class="fw-bold d-none d-sm-inline">تسجيل الحضور</span>
+                  <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">حضور</span>
                 </button>
                 <script>
                   (function () {
@@ -3406,6 +3416,8 @@
                       }
                     }
 
+                    var isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || (window.innerWidth <= 768);
+
                     var getDeviceCookie = function(name) {
                       var match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'));
                       return match ? decodeURIComponent(match[2]) : null;
@@ -3414,6 +3426,7 @@
                     var authDeviceToken = localStorage.getItem('ensan_authorized_device_token') || getDeviceCookie('ensan_device_token');
 
                     function checkInWithAuthorizedDeviceToken(token) {
+                      if (isMobileDevice) return; // ممنوع الاعتماد التلقائي على الموبايل نهائياً
                       if (gpsBtn) {
                         gpsBtn.disabled = true;
                         gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ تسجيل الحضور...</span>';
@@ -3437,7 +3450,7 @@
                           resetGpsBtn();
                         } else if (data && data.device_authorized === false) {
                           localStorage.removeItem('ensan_authorized_device_token');
-                          notifyUnauthorizedDevice();
+                          if (!isMobileDevice) notifyUnauthorizedDevice();
                           resetGpsBtn();
                         } else {
                           resetGpsBtn();
@@ -3449,15 +3462,21 @@
                     }
 
                     function notifyUnauthorizedDevice() {
+                      // ممنوع نهائياً على الموبايل - مخصص فقط لأجهزة الكمبيوتر المكتبية
+                      if (isMobileDevice) return;
                       var key = 'ensan_unauth_dev_notify_{{ $navUser->id }}_' + (new Date()).toISOString().slice(0,10);
                       if (!sessionStorage.getItem(key)) {
                         sessionStorage.setItem(key, '1');
-                        var authBtn = isTopAdmin ? ' <button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الجهاز للمقر</button>' : '';
-                        showGpsToast('⚠️ هذا الجهاز غير معتمد كجهاز مقر رسمي للحضور التلقائي. يرجى تسجيل الحضور عبر GPS من هاتفك المحمول أو مراجعة الإدارة.' + authBtn, 'warning');
+                        var authBtn = isTopAdmin ? ' <button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>' : '';
+                        showGpsToast('⚠️ هذا الكمبيوتر غير معتمد كجهاز مقر رسمي للحضور التلقائي. يرجى تسجيل الحضور عبر GPS من هاتفك المحمول أو مراجعة الإدارة.' + authBtn, 'warning');
                       }
                     }
 
                     window.openAuthorizeDeviceModal = function() {
+                      if (isMobileDevice) {
+                        alert('اعتماد أجهزة المقرات مخصص لأجهزة الكمبيوتر المكتبية فقط ولا يمكن اعتماده من الهواتف المحمولة.');
+                        return;
+                      }
                       var el = document.getElementById('modalAuthorizeDevice');
                       if (el) {
                         var modal = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
@@ -3566,8 +3585,8 @@
                       attActionType = type || 'checkin';
                       resetAttendanceCapture();
 
-                      // If on desktop and authorized device token exists:
-                      if (attActionType === 'checkin' && authDeviceToken) {
+                      // If on desktop PC and authorized device token exists:
+                      if (!isMobileDevice && attActionType === 'checkin' && authDeviceToken) {
                         checkInWithAuthorizedDeviceToken(authDeviceToken);
                         return;
                       }
@@ -3608,7 +3627,12 @@
                         },
                         function(err) {
                           resetGpsBtn();
-                          var adminBtn = isTopAdmin ? ' <div class="mt-2 d-flex flex-wrap gap-1.5"><button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button><button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الجهاز للمقر</button></div>' : '';
+                          var adminBtn = '';
+                          if (isTopAdmin) {
+                            adminBtn = ' <div class="mt-2 d-flex flex-wrap gap-1.5"><button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' +
+                              (!isMobileDevice ? '<button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>' : '') +
+                              '</div>';
+                          }
                           if (err && err.code === 1) {
                             showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
                           } else {
@@ -3680,11 +3704,13 @@
                       });
                     };
 
-                    // Auto-check on entering system if device is authorized
-                    if (authDeviceToken) {
-                      checkInWithAuthorizedDeviceToken(authDeviceToken);
-                    } else {
-                      notifyUnauthorizedDevice();
+                    // Auto-check on entering system if device is authorized (مخصص لأجهزة الكمبيوتر المكتبية فقط ولا يعمل على الموبايل)
+                    if (!isMobileDevice) {
+                      if (authDeviceToken) {
+                        checkInWithAuthorizedDeviceToken(authDeviceToken);
+                      } else {
+                        notifyUnauthorizedDevice();
+                      }
                     }
                   })();
                 </script>
