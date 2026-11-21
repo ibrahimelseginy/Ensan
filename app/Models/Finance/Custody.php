@@ -109,3 +109,4 @@ final class Custody extends Model
         return self::STATUSES[$this->status] ?? ['label' => $this->status, 'class' => 'bg-secondary'];
     }
 }
+

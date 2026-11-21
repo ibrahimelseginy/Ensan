@@ -3242,14 +3242,17 @@
                   <span class="fw-bold">تم الانصراف ({{ $topbarTodayAtt->check_out_at }})</span>
                 </span>
               @else
-                <button type="button" id="topbarEnableGpsBtn" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط للموافقة على تحديد الموقع (GPS) وتسجيل حضورك من المقر">
+                @php
+                  $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
+                @endphp
+                <button type="button" id="topbarEnableGpsBtn" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط لتسجيل حضورك">
                   <i class="bi bi-geo-alt-fill fs-6"></i>
-                  <span class="fw-bold">تفعيل الموقع للحضور</span>
+                  <span class="fw-bold">تسجيل الحضور</span>
                 </button>
                 <script>
                   (function () {
                     const gpsBtn = document.getElementById('topbarEnableGpsBtn');
-                    if (!navigator.geolocation) return;
+                    const isTopAdmin = @json($isTopAdminUser);
 
                     // Toast notification instead of blocking alert()
                     function showGpsToast(msg, type) {
@@ -3264,7 +3267,7 @@
                       var icons = { error: 'x-circle', warning: 'exclamation-triangle', success: 'check-circle', info: 'info-circle' };
                       var c = document.createElement('div');
                       c.id = 'gpsToastContainer';
-                      c.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;max-width:460px;width:92%;padding:14px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;direction:rtl;animation:gpsToastIn .3s ease;' + (colors[type] || colors.info);
+                      c.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;max-width:560px;width:94%;padding:14px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.22);display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;direction:rtl;animation:gpsToastIn .3s ease;' + (colors[type] || colors.info);
                       c.innerHTML = '<i class="bi bi-' + (icons[type] || 'info-circle') + ' fs-5"></i><span style="flex:1">' + msg + '</span><button onclick="this.parentNode.remove()" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>';
                       document.body.appendChild(c);
                       if (!document.getElementById('gpsToastStyle')) {
@@ -3273,15 +3276,46 @@
                         s.textContent = '@keyframes gpsToastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
                         document.head.appendChild(s);
                       }
-                      setTimeout(function(){ if (c.parentNode) c.remove(); }, type === 'error' ? 8000 : 5000);
+                      setTimeout(function(){ if (c.parentNode) c.remove(); }, type === 'error' ? 12000 : 5000);
                     }
 
                     function resetGpsBtn() {
                       if (gpsBtn) {
                         gpsBtn.disabled = false;
-                        gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill fs-6"></i> <span class="fw-bold">تفعيل الموقع للحضور</span>';
+                        gpsBtn.innerHTML = '<i class="bi bi-geo-alt-fill fs-6"></i> <span class="fw-bold">تسجيل الحضور</span>';
                       }
                     }
+
+                    window.checkInAsAdmin = function () {
+                      if (gpsBtn) {
+                        gpsBtn.disabled = true;
+                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ تسجيل الحضور...</span>';
+                      }
+                      fetch('{{ route('employee-attendance.checkIn') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ admin_override: true })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success) {
+                          showGpsToast('✅ ' + (data.message || 'تم تسجيل حضورك بنجاح!'), 'success');
+                          setTimeout(function(){ window.location.reload(); }, 1200);
+                        } else {
+                          showGpsToast((data && data.message) ? data.message : 'تعذر تسجيل الحضور الإداري.', 'error');
+                          resetGpsBtn();
+                        }
+                      })
+                      .catch(function() {
+                        showGpsToast('حدث خطأ في الاتصال بالسيرفر. حاول مجدداً.', 'error');
+                        resetGpsBtn();
+                      });
+                    };
 
                     function sendCheckIn(lat, lng, isManual) {
                       fetch('{{ route('employee-attendance.checkIn') }}', {
@@ -3300,7 +3334,8 @@
                           showGpsToast('✅ تم تسجيل حضورك بنجاح!', 'success');
                           setTimeout(function(){ window.location.reload(); }, 1200);
                         } else if (isManual) {
-                          showGpsToast((data && data.message) ? data.message : 'أنت خارج نطاق مقر المؤسسة.', 'warning');
+                          var adminAction = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
+                          showGpsToast(((data && data.message) ? data.message : 'أنت خارج نطاق مقر المؤسسة.') + adminAction, 'warning');
                           resetGpsBtn();
                         }
                       })
@@ -3333,12 +3368,13 @@
                               },
                               function (err2) {
                                 if (isManual) {
+                                  var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
                                   if (err2 && err2.code === 1) {
-                                    showGpsToast('الموقع محظور في المتصفح. افتح إعدادات الموقع من أيقونة 🔒 بجانب الرابط واختر "السماح" (Allow) ثم أعد المحاولة.', 'error');
+                                    showGpsToast('الموقع محظور في نظام جهازك (تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع).' + adminBtn, 'error');
                                   } else if (err2 && err2.code === 3) {
-                                    showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.', 'warning');
+                                    showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
                                   } else {
-                                    showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.', 'warning');
+                                    showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.' + adminBtn, 'warning');
                                   }
                                   resetGpsBtn();
                                 }
@@ -3348,12 +3384,13 @@
                             return;
                           }
                           if (isManual) {
+                            var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
                             if (err && err.code === 1) {
-                              showGpsToast('الموقع محظور في المتصفح. افتح إعدادات الموقع من أيقونة 🔒 بجانب الرابط واختر "السماح" (Allow) ثم أعد المحاولة.', 'error');
+                              showGpsToast('الموقع محظور في نظام جهازك (تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع).' + adminBtn, 'error');
                             } else if (err && err.code === 3) {
-                              showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.', 'warning');
+                              showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
                             } else {
-                              showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.', 'warning');
+                              showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.' + adminBtn, 'warning');
                             }
                             resetGpsBtn();
                           }

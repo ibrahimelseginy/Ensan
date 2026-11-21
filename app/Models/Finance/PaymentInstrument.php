@@ -60,3 +60,4 @@ final class PaymentInstrument extends Model
         return $this->belongsTo(User::class, 'created_by')->withTrashed();
     }
 }
+

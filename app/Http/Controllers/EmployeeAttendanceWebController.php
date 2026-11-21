@@ -60,6 +60,16 @@ final class EmployeeAttendanceWebController extends Controller
                     : back()->with('error', $result['message']);
             }
 
+            if ($request->boolean('admin_override')) {
+                $result = $this->attendanceService->checkInAdminOverride((int) $user->id);
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json($result, $result['success'] ? 200 : 422);
+                }
+                return $result['success']
+                    ? back()->with('success', $result['message'])
+                    : back()->with('error', $result['message']);
+            }
+
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,

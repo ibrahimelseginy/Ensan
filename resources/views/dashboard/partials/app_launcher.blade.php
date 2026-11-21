@@ -816,15 +816,15 @@ body.theme-dark .launcher-cat-btn.active,
         </a>
         @endif
 
-        {{-- 9. حملات موسمية (Popup) --}}
-        @if($u && ($u->hasPermission('campaigns.view') || $u->hasPermission('ramadan_bags.view') || $u->hasPermission('ramadan_iftars.view')))
-        <div class="ensan-app-card" data-bs-toggle="modal" data-bs-target="#modalAppCampaigns" data-category="operations" data-title="حملات موسمية" data-keywords="حملات رمضان شنط إفطار أضاحي شتاء campaigns">
+        {{-- 9. حملات موسمية --}}
+        @if($u && $u->hasPermission('campaigns.view'))
+        <a href="{{ route('campaigns.index') }}" class="ensan-app-card" data-category="operations" data-title="حملات موسمية" data-keywords="حملات رمضان إفطار أضاحي شتاء campaigns">
             <div class="ensan-app-icon" style="background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.45);">
                 <i class="bi bi-megaphone-fill"></i>
             </div>
             <div class="ensan-app-title">حملات موسمية</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 2 خدمات <i class="bi bi-chevron-down"></i></span>
-        </div>
+            <span class="ensan-app-badge badge-direct"><i class="bi bi-box-arrow-up-left"></i> دخول مباشر</span>
+        </a>
         @endif
 
 
@@ -1609,19 +1609,6 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">إدارة الحملات</div>
                             <small class="text-muted">إنشاء ومتابعة جميع الحملات الموسمية</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-
-                    @if($u && $u->hasPermission('ramadan_iftars.view'))
-                    <a href="{{ route('ramadan-iftars.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-success-subtle text-success">
-                            <i class="bi bi-cup-hot"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">إفطارات رمضان</div>
-                            <small class="text-muted">وجبات ومطابخ إفطار الصائم</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>

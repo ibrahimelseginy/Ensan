@@ -164,6 +164,46 @@ final readonly class EmployeeAttendanceService
         ];
     }
 
+    public function checkInAdminOverride(int $userId): array
+    {
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+        if ($existing) {
+            return [
+                'success' => true,
+                'already_checked_in' => true,
+                'time' => $existing->check_in_at,
+                'message' => 'تم تسجيل حضورك اليوم مسبقاً الساعة ' . $existing->check_in_at,
+            ];
+        }
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return ['success' => false, 'message' => 'المستخدم غير موجود.'];
+        }
+
+        $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
+            || in_array((int) $user->id, [2, 8, 50], true);
+
+        if (!$isAdminOrManager) {
+            return ['success' => false, 'message' => 'تسجيل الحضور بدون GPS مقتصر على الإدارة فقط.'];
+        }
+
+        $cairoNow = now('Africa/Cairo');
+        $this->attendanceRepository->create([
+            'user_id'     => $userId,
+            'date'        => $cairoNow->toDateString(),
+            'check_in_at' => $cairoNow->format('H:i'),
+            'notes'       => 'تسجيل حضور إداري معتمد (تجاوز GPS لجهاز الكمبيوتر)',
+        ]);
+
+        return [
+            'success' => true,
+            'checked_in' => true,
+            'time' => $cairoNow->format('H:i'),
+            'message' => 'تم تسجيل حضورك الإداري بنجاح الساعة ' . $cairoNow->format('h:i A'),
+        ];
+    }
+
     public function ensureAutoCheckIn(int $userId): EmployeeAttendance
     {
         $existing = $this->attendanceRepository->findTodayRecord($userId);

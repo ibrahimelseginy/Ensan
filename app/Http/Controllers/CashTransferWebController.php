@@ -281,3 +281,4 @@ final class CashTransferWebController extends Controller
         return view('transfers.print_voucher', compact('transfer'));
     }
 }
+
