@@ -3287,27 +3287,29 @@
                         s.textContent = `
                           .ensan-gps-toast-responsive {
                             position: fixed;
-                            top: 14px;
-                            left: 12px;
-                            right: 12px;
+                            bottom: 24px;
+                            top: auto;
+                            left: 14px;
+                            right: 14px;
                             max-width: 480px;
                             margin: 0 auto;
                             z-index: 999999;
-                            padding: 12px 14px;
-                            border-radius: 14px;
-                            box-shadow: 0 10px 28px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+                            padding: 14px 16px;
+                            border-radius: 16px;
+                            box-shadow: 0 16px 40px rgba(0,0,0,0.35);
                             display: flex;
                             align-items: flex-start;
-                            gap: 10px;
-                            font-size: 13px;
+                            gap: 12px;
+                            font-size: 13.5px;
                             line-height: 1.5;
                             font-weight: 600;
                             direction: rtl;
-                            animation: gpsToastSlideDown .3s ease;
+                            animation: gpsToastSlideUp .3s ease;
                           }
                           @media (min-width: 768px) {
                             .ensan-gps-toast-responsive {
-                              top: 72px;
+                              top: 80px;
+                              bottom: auto;
                               left: 50%;
                               right: auto;
                               transform: translateX(-50%);
@@ -3316,7 +3318,16 @@
                               font-size: 14px;
                               padding: 14px 18px;
                               border-radius: 16px;
+                              animation: gpsToastSlideDown .3s ease;
                             }
+                          }
+                          @keyframes gpsToastSlideUp {
+                            from { transform: translateY(100%); opacity: 0; }
+                            to { transform: translateY(0); opacity: 1; }
+                          }
+                          @keyframes gpsToastSlideDown {
+                            from { transform: translate(-50%, -100%); opacity: 0; }
+                            to { transform: translate(-50%, 0); opacity: 1; }
                           }
                           .ensan-gps-toast-icon {
                             font-size: 1.15rem;
@@ -3409,8 +3420,10 @@
                         return 'الموقع محظور في جهازك. تأكد من تفعيل خيار الموقع في المتصفح، وتفعيله في ويندوز: الإعدادات (Settings) > الخصوصية والأمان (Privacy) > الموقع (Location).';
                       } else if (/Mac/i.test(ua)) {
                         return 'الموقع محظور في نظام جهازك. تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع.';
-                      } else if (/Android|iPhone|iPad/i.test(ua)) {
-                        return 'الموقع محظور في هاتفك. يرجى تشغيل الـ GPS والسماح للمتصفح بالوصول إلى موقعك.';
+                      } else if (/Android/i.test(ua)) {
+                        return 'الموقع محظور في متصفح الهاتف. اضغط على أيقونة الإعدادات 🎛️ أو القفل 🔒 بجانب الرابط system.ensaneg.com بالأعلى، واختر "الأذونات" (Permissions) ثم فعّل "الموقع" (Location) على سماح، وتأكد من تشغيل الـ GPS.';
+                      } else if (/iPhone|iPad/i.test(ua)) {
+                        return 'الموقع محظور في Safari/الهاتف. ادخل إعدادات الآيفون > الخصوصية والأمن > خدمات الموقع > Safari > اختر "أثناء استخدام التطبيق".';
                       } else {
                         return 'الموقع محظور في المتصفح. اضغط على أيقونة القفل بجانب الرابط واختر السماح بالموقع (Allow).';
                       }
@@ -3596,50 +3609,68 @@
                         gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ فحص الموقع...</span>';
                       }
 
+                      var handlePosSuccess = function(pos) {
+                        attCapturedLat = pos.coords.latitude;
+                        attCapturedLng = pos.coords.longitude;
+                        resetGpsBtn();
+
+                        var modalTitle = document.getElementById('attCameraTitle');
+                        var modalSub = document.getElementById('attCameraSubtitle');
+                        var submitText = document.getElementById('btnSubmitAttText');
+                        var headerIcon = document.getElementById('attCameraHeaderIcon');
+
+                        if (attActionType === 'checkout') {
+                          if (modalTitle) modalTitle.textContent = 'توثيق الانصراف بالصورة والموقع';
+                          if (modalSub) modalSub.textContent = 'التقط صورة شخصية داخل المقر لتأكيد الانصراف';
+                          if (submitText) submitText.textContent = 'تأكيد الانصراف مع الصورة';
+                          if (headerIcon) headerIcon.className = 'bi bi-box-arrow-left';
+                        } else {
+                          if (modalTitle) modalTitle.textContent = 'توثيق الحضور بالصورة والموقع';
+                          if (modalSub) modalSub.textContent = 'صورة سيلفي حية من داخل مقر العمل';
+                          if (submitText) submitText.textContent = 'تأكيد الحضور مع الصورة';
+                          if (headerIcon) headerIcon.className = 'bi bi-camera-fill';
+                        }
+
+                        var modalEl = document.getElementById('modalAttendanceCamera');
+                        if (modalEl) {
+                          var m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                          m.show();
+                        }
+                      };
+
+                      var handlePosError = function(err) {
+                        resetGpsBtn();
+                        var adminBtn = '';
+                        if (isTopAdmin) {
+                          adminBtn = ' <div class="mt-2 d-flex flex-wrap gap-1.5"><button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' +
+                            (!isMobileDevice ? '<button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>' : '') +
+                            '</div>';
+                        }
+                        if (err && err.code === 1) {
+                          showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
+                        } else {
+                          showGpsToast('تعذر تحديد الموقع الجغرافي بدقة. تأكد من تشغيل الـ GPS وخدمات الموقع في هاتفك والمحاولة مجدداً.' + adminBtn, 'warning');
+                        }
+                      };
+
+                      // Stage 1: Try high accuracy (satellite)
                       navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                          attCapturedLat = pos.coords.latitude;
-                          attCapturedLng = pos.coords.longitude;
-                          resetGpsBtn();
-
-                          var modalTitle = document.getElementById('attCameraTitle');
-                          var modalSub = document.getElementById('attCameraSubtitle');
-                          var submitText = document.getElementById('btnSubmitAttText');
-                          var headerIcon = document.getElementById('attCameraHeaderIcon');
-
-                          if (attActionType === 'checkout') {
-                            if (modalTitle) modalTitle.textContent = 'توثيق الانصراف بالصورة والموقع';
-                            if (modalSub) modalSub.textContent = 'التقط صورة شخصية داخل المقر لتأكيد الانصراف';
-                            if (submitText) submitText.textContent = 'تأكيد الانصراف مع الصورة';
-                            if (headerIcon) headerIcon.className = 'bi bi-box-arrow-left';
-                          } else {
-                            if (modalTitle) modalTitle.textContent = 'توثيق الحضور بالصورة والموقع';
-                            if (modalSub) modalSub.textContent = 'صورة سيلفي حية من داخل مقر العمل';
-                            if (submitText) submitText.textContent = 'تأكيد الحضور مع الصورة';
-                            if (headerIcon) headerIcon.className = 'bi bi-camera-fill';
+                        handlePosSuccess,
+                        function(firstErr) {
+                          if (firstErr && firstErr.code === 1) {
+                            handlePosError(firstErr);
+                            return;
                           }
-
-                          var modalEl = document.getElementById('modalAttendanceCamera');
-                          if (modalEl) {
-                            var m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                            m.show();
-                          }
+                          // Stage 2: Fallback to network/fused location (faster indoors)
+                          navigator.geolocation.getCurrentPosition(
+                            handlePosSuccess,
+                            function(secondErr) {
+                              handlePosError(secondErr || firstErr);
+                            },
+                            { enableHighAccuracy: false, timeout: 10000, maximumAge: 180000 }
+                          );
                         },
-                        function(err) {
-                          resetGpsBtn();
-                          var adminBtn = '';
-                          if (isTopAdmin) {
-                            adminBtn = ' <div class="mt-2 d-flex flex-wrap gap-1.5"><button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' +
-                              (!isMobileDevice ? '<button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>' : '') +
-                              '</div>';
-                          }
-                          if (err && err.code === 1) {
-                            showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
-                          } else {
-                            showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تشغيل GPS في هاتفك والمحاولة مجدداً.' + adminBtn, 'warning');
-                          }
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                        { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 }
                       );
                     };
 
