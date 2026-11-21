@@ -16,12 +16,12 @@ final readonly class EmployeeAttendanceService
     // 1. المقر الرئيسي لمؤسسة إنسان
     public const OFFICE_LAT = 31.1112969;
     public const OFFICE_LNG = 30.9489307;
-    public const ALLOWED_RADIUS_METERS = 250;
+    public const ALLOWED_RADIUS_METERS = 10;
 
     // 2. دار ضيافة إنســـــــان - كفر الشيخ (خاصة بموظفي الدار)
     public const KAFR_GUEST_HOUSE_LAT = 31.1061705;
     public const KAFR_GUEST_HOUSE_LNG = 30.9378786;
-    public const KAFR_GUEST_HOUSE_RADIUS_METERS = 250;
+    public const KAFR_GUEST_HOUSE_RADIUS_METERS = 10;
 
     public function __construct(
         private EmployeeAttendanceRepository $attendanceRepository
