@@ -63,9 +63,10 @@ final class EmployeeAttendanceWebController extends Controller
             }
 
             if ($request->filled('latitude') && $request->filled('longitude')) {
-                $lat = (float) $request->input('latitude');
-                $lng = (float) $request->input('longitude');
-                $result = $this->attendanceService->checkInWithLocation((int) $user->id, $lat, $lng);
+                $lat   = (float) $request->input('latitude');
+                $lng   = (float) $request->input('longitude');
+                $photo = $request->input('photo') ?: $request->file('photo');
+                $result = $this->attendanceService->checkInWithLocation((int) $user->id, $lat, $lng, $photo);
 
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json($result, $result['success'] ? 200 : 422);
@@ -102,17 +103,41 @@ final class EmployeeAttendanceWebController extends Controller
         }
     }
 
-    public function checkOut(): RedirectResponse
+    public function checkOut(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         try {
-            $user = request()->user();
+            $user = $request->user();
             if (!$user) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+                }
                 return redirect()->route('login');
             }
 
+            if ($request->filled('latitude') && $request->filled('longitude')) {
+                $lat   = (float) $request->input('latitude');
+                $lng   = (float) $request->input('longitude');
+                $photo = $request->input('photo') ?: $request->file('photo');
+                $result = $this->attendanceService->checkOutWithLocation((int) $user->id, $lat, $lng, $photo);
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json($result, $result['success'] ? 200 : 422);
+                }
+
+                return $result['success']
+                    ? back()->with('success', $result['message'])
+                    : back()->with('error', $result['message']);
+            }
+
             $message = $this->attendanceService->checkOut((int)$user->id);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
             return back()->with('success', $message);
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

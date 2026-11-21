@@ -26,20 +26,17 @@
                     : 'https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307';
             @endphp
             @if($myTodayAtt && empty($myTodayAtt->check_out_at))
-                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" onsubmit="return confirm('هل تريد تسجيل انصرافك الآن؟');">
-                    @csrf
-                    <button type="submit" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-4 shadow-sm">
-                        <i class="bi bi-box-arrow-left me-1"></i> تسجيل انصراف الآن (Check Out) — حضور: {{ $myTodayAtt->check_in_at }}
-                    </button>
-                </form>
+                <button type="button" onclick="startAttendanceCapture('checkout')" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-box-arrow-left me-1"></i> تسجيل انصراف الآن بالصورة — حضور: {{ $myTodayAtt->check_in_at }}
+                </button>
             @elseif($myTodayAtt && !empty($myTodayAtt->check_out_at))
                 <span class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1" style="background: #ffffff !important; color: #047857 !important; border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); font-weight: 700; font-size: 0.84rem;">
                     <i class="bi bi-check-circle-fill" style="color: #10b981 !important;"></i>
                     <span style="color: #047857 !important;">تم تسجيل الحضور ({{ $myTodayAtt->check_in_at }}) والانصراف ({{ $myTodayAtt->check_out_at }})</span>
                 </span>
             @else
-                <button type="button" id="manualGpsCheckInBtn" data-location-name="{{ $primaryLocationName }}" class="btn btn-light text-primary fw-bold btn-sm rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> تسجيل الحضور من {{ $primaryLocationName }} (GPS)
+                <button type="button" onclick="startAttendanceCapture('checkin')" class="btn btn-light text-primary fw-bold btn-sm rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-camera-fill text-danger me-1"></i> تسجيل الحضور بالصورة والموقع (GPS)
                 </button>
             @endif
 
@@ -55,6 +52,7 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                         <li><a class="dropdown-item small" href="https://www.google.com/maps/dir/?api=1&destination=31.1112969,30.9489307" target="_blank" rel="noopener"><i class="bi bi-building text-primary me-2"></i>المقر الرئيسي للمؤسسة</a></li>
                         <li><a class="dropdown-item small" href="https://www.google.com/maps/dir/?api=1&destination=31.1061705,30.9378786" target="_blank" rel="noopener"><i class="bi bi-house-door text-success me-2"></i>دار ضيافة كفر الشيخ</a></li>
+                        <li><a class="dropdown-item small" href="https://www.google.com/maps/dir/?api=1&destination=30.8038626,30.9969359" target="_blank" rel="noopener"><i class="bi bi-geo-alt text-warning me-2"></i>دار ضيافة طنطا</a></li>
                     </ul>
                 </div>
             @endif
@@ -88,7 +86,9 @@
                             <th class="py-3 px-4">الموظف</th>
                             <th class="py-3 px-4">التاريخ</th>
                             <th class="py-3 px-4">وقت الدخول</th>
+                            <th class="py-3 px-3 text-center">صورة الحضور</th>
                             <th class="py-3 px-4">وقت الخروج</th>
+                            <th class="py-3 px-3 text-center">صورة الانصراف</th>
                             <th class="py-3 px-4">ملاحظات</th>
                             <th class="py-3 px-4">التقييم</th>
                             <th class="py-3 px-4 text-end">إجراءات</th>
@@ -113,8 +113,34 @@
                                 <td class="px-4"><span
                                         class="badge bg-success-subtle text-success rounded-pill px-3">{{ $r->check_in_at ?? '—' }}</span>
                                 </td>
+                                <td class="px-3 text-center">
+                                    @if($r->check_in_photo)
+                                        <a href="{{ asset($r->check_in_photo) }}" target="_blank" class="d-inline-block position-relative" title="عرض صورة الحضور">
+                                            <img src="{{ asset($r->check_in_photo) }}" alt="حضور" class="rounded-3 shadow-xs border" style="width: 38px; height: 38px; object-fit: cover;">
+                                            <span class="position-absolute bottom-0 start-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 14px; height: 14px; font-size: 8px;">
+                                                <i class="bi bi-camera-fill"></i>
+                                            </span>
+                                        </a>
+                                    @else
+                                        <span class="badge bg-light text-muted border small" style="font-size: 0.72rem;">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-4"><span
                                         class="badge bg-danger-subtle text-danger rounded-pill px-3">{{ $r->check_out_at ?? '—' }}</span>
+                                </td>
+                                <td class="px-3 text-center">
+                                    @if($r->check_out_photo)
+                                        <a href="{{ asset($r->check_out_photo) }}" target="_blank" class="d-inline-block position-relative" title="عرض صورة الانصراف">
+                                            <img src="{{ asset($r->check_out_photo) }}" alt="انصراف" class="rounded-3 shadow-xs border" style="width: 38px; height: 38px; object-fit: cover;">
+                                            <span class="position-absolute bottom-0 start-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 14px; height: 14px; font-size: 8px;">
+                                                <i class="bi bi-camera-fill"></i>
+                                            </span>
+                                        </a>
+                                    @elseif(!empty($r->check_out_at))
+                                        <span class="badge bg-light text-muted border small" style="font-size: 0.72rem;">تم الانصراف</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 text-muted small">{{ Str::limit($r->notes, 30) ?? '—' }}</td>
                                 <td class="px-4">

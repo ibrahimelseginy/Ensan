@@ -62,7 +62,44 @@ final readonly class EmployeeAttendanceService
         return (int) round($earthRadius * $c);
     }
 
-    public function checkInWithLocation(int $userId, float $lat, float $lng): array
+    public function saveAttendancePhoto(mixed $photoData, string $prefix = 'attendance'): ?string
+    {
+        if (empty($photoData)) {
+            return null;
+        }
+
+        $dir = public_path('uploads/attendance_photos');
+        if (!file_exists($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+
+        $filename = $prefix . '_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(8) . '.jpg';
+        $targetPath = $dir . '/' . $filename;
+
+        if ($photoData instanceof \Illuminate\Http\UploadedFile) {
+            $photoData->move($dir, $filename);
+            return 'uploads/attendance_photos/' . $filename;
+        }
+
+        if (is_string($photoData)) {
+            if (str_starts_with($photoData, 'data:image')) {
+                $parts = explode(',', $photoData, 2);
+                if (count($parts) === 2) {
+                    $decoded = base64_decode($parts[1]);
+                    if ($decoded !== false) {
+                        file_put_contents($targetPath, $decoded);
+                        return 'uploads/attendance_photos/' . $filename;
+                    }
+                }
+            } elseif (file_exists(public_path($photoData))) {
+                return $photoData;
+            }
+        }
+
+        return null;
+    }
+
+    public function checkInWithLocation(int $userId, float $lat, float $lng, mixed $photo = null): array
     {
         $existing = $this->attendanceRepository->findTodayRecord($userId);
 
@@ -80,6 +117,23 @@ final readonly class EmployeeAttendanceService
             return [
                 'success' => false,
                 'message' => 'المستخدم غير موجود.',
+            ];
+        }
+
+        if (empty($photo)) {
+            return [
+                'success' => false,
+                'photo_required' => true,
+                'message' => 'التقاط صورة شخصية في مقر العمل إلزامي لتسجيل الحضور.',
+            ];
+        }
+
+        $photoPath = $this->saveAttendancePhoto($photo, 'checkin');
+        if (!$photoPath) {
+            return [
+                'success' => false,
+                'photo_required' => true,
+                'message' => 'تعذر حفظ صورة الحضور. يرجى إعادة التقاط الصورة.',
             ];
         }
 
@@ -121,11 +175,19 @@ final readonly class EmployeeAttendanceService
 
             $cairoNow = now('Africa/Cairo');
             $this->attendanceRepository->create([
-                'user_id'     => $userId,
-                'date'        => $cairoNow->toDateString(),
-                'check_in_at' => $cairoNow->format('H:i'),
-                'notes'       => "تسجيل حضور تلقائي من دار ضيافة كفر الشيخ (المسافة: {$distToKafr} متر)",
+                'user_id'        => $userId,
+                'date'           => $cairoNow->toDateString(),
+                'check_in_at'    => $cairoNow->format('H:i'),
+                'check_in_photo' => $photoPath,
+                'check_in_lat'   => $lat,
+                'check_in_lng'   => $lng,
+                'notes'          => "تسجيل حضور موثق بالصورة من دار ضيافة كفر الشيخ (المسافة: {$distToKafr} متر)",
             ]);
+
+            $this->notifyDirectorAndAdmins(
+                "تسجيل حضور: {$user->name}",
+                "سجل الموظف {$user->name} حضوره الساعة {$cairoNow->format('h:i A')} موثقاً بصورة سيلفي من دار ضيافة كفر الشيخ (نطاق {$distToKafr}م)."
+            );
 
             return [
                 'success' => true,
@@ -133,7 +195,8 @@ final readonly class EmployeeAttendanceService
                 'time' => $cairoNow->format('H:i'),
                 'distance' => $distToKafr,
                 'location' => 'دار ضيافة كفر الشيخ',
-                'message' => 'تم تسجيل حضورك بنجاح من مقر دار ضيافة كفر الشيخ الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToKafr} متر)",
+                'photo' => $photoPath,
+                'message' => 'تم تسجيل حضورك وتوثيق صورتك وموقعك بنجاح من دار ضيافة كفر الشيخ الساعة ' . $cairoNow->format('h:i A'),
             ];
         }
 
@@ -153,11 +216,19 @@ final readonly class EmployeeAttendanceService
 
             $cairoNow = now('Africa/Cairo');
             $this->attendanceRepository->create([
-                'user_id'     => $userId,
-                'date'        => $cairoNow->toDateString(),
-                'check_in_at' => $cairoNow->format('H:i'),
-                'notes'       => "تسجيل حضور تلقائي من دار ضيافة طنطا (المسافة: {$distToTanta} متر)",
+                'user_id'        => $userId,
+                'date'           => $cairoNow->toDateString(),
+                'check_in_at'    => $cairoNow->format('H:i'),
+                'check_in_photo' => $photoPath,
+                'check_in_lat'   => $lat,
+                'check_in_lng'   => $lng,
+                'notes'          => "تسجيل حضور موثق بالصورة من دار ضيافة طنطا (المسافة: {$distToTanta} متر)",
             ]);
+
+            $this->notifyDirectorAndAdmins(
+                "تسجيل حضور: {$user->name}",
+                "سجل الموظف {$user->name} حضوره الساعة {$cairoNow->format('h:i A')} موثقاً بصورة سيلفي من دار ضيافة طنطا (نطاق {$distToTanta}م)."
+            );
 
             return [
                 'success' => true,
@@ -165,7 +236,8 @@ final readonly class EmployeeAttendanceService
                 'time' => $cairoNow->format('H:i'),
                 'distance' => $distToTanta,
                 'location' => 'دار ضيافة طنطا',
-                'message' => 'تم تسجيل حضورك بنجاح من مقر دار ضيافة طنطا الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToTanta} متر)",
+                'photo' => $photoPath,
+                'message' => 'تم تسجيل حضورك وتوثيق صورتك وموقعك بنجاح من دار ضيافة طنطا الساعة ' . $cairoNow->format('h:i A'),
             ];
         }
 
@@ -174,11 +246,19 @@ final readonly class EmployeeAttendanceService
             $cairoNow = now('Africa/Cairo');
             $locationLabel = ($isKafrStaff || $isTantaStaff) ? 'مقر المؤسسة الرئيسي (زيارة)' : 'مقر المؤسسة الرئيسي';
             $this->attendanceRepository->create([
-                'user_id'     => $userId,
-                'date'        => $cairoNow->toDateString(),
-                'check_in_at' => $cairoNow->format('H:i'),
-                'notes'       => "تسجيل حضور تلقائي من {$locationLabel} (المسافة: {$distToHq} متر)",
+                'user_id'        => $userId,
+                'date'           => $cairoNow->toDateString(),
+                'check_in_at'    => $cairoNow->format('H:i'),
+                'check_in_photo' => $photoPath,
+                'check_in_lat'   => $lat,
+                'check_in_lng'   => $lng,
+                'notes'          => "تسجيل حضور موثق بالصورة من {$locationLabel} (المسافة: {$distToHq} متر)",
             ]);
+
+            $this->notifyDirectorAndAdmins(
+                "تسجيل حضور: {$user->name}",
+                "سجل الموظف {$user->name} حضوره الساعة {$cairoNow->format('h:i A')} موثقاً بصورة سيلفي من {$locationLabel} (نطاق {$distToHq}م)."
+            );
 
             return [
                 'success' => true,
@@ -186,7 +266,8 @@ final readonly class EmployeeAttendanceService
                 'time' => $cairoNow->format('H:i'),
                 'distance' => $distToHq,
                 'location' => 'مقر المؤسسة الرئيسي',
-                'message' => 'تم تسجيل حضورك بنجاح من مقر المؤسسة الرئيسي الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToHq} متر)",
+                'photo' => $photoPath,
+                'message' => 'تم تسجيل حضورك وتوثيق صورتك وموقعك بنجاح من مقر المؤسسة الرئيسي الساعة ' . $cairoNow->format('h:i A'),
             ];
         }
 
@@ -266,6 +347,11 @@ final readonly class EmployeeAttendanceService
             'notes'       => "تسجيل حضور تلقائي من جهاز المقر المعتمد: {$device->device_name} ({$device->location_name})",
         ]);
 
+        $this->notifyDirectorAndAdmins(
+            "تسجيل حضور (جهاز معتمد): {$user->name}",
+            "سجل الموظف {$user->name} حضوره الساعة {$cairoNow->format('h:i A')} من جهاز المقر المعتمد ({$device->device_name} - {$device->location_name})."
+        );
+
         $device->update([
             'last_used_at' => now(),
             'ip_address'   => $ip ?: $device->ip_address,
@@ -314,6 +400,11 @@ final readonly class EmployeeAttendanceService
             'notes'       => 'تسجيل حضور إداري معتمد (تجاوز GPS لجهاز الكمبيوتر)',
         ]);
 
+        $this->notifyDirectorAndAdmins(
+            "تسجيل حضور إداري: {$user->name}",
+            "سجل الموظف {$user->name} حضوره إدارياً الساعة " . $cairoNow->format('h:i A') . "."
+        );
+
         return [
             'success' => true,
             'checked_in' => true,
@@ -354,6 +445,116 @@ final readonly class EmployeeAttendanceService
         ]);
 
         return 'تم تسجيل الدخول بنجاح: ' . $cairoNow->format('h:i A');
+    }
+
+    public function checkOutWithLocation(int $userId, float $lat, float $lng, mixed $photo = null): array
+    {
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+        if (!$existing) {
+            return [
+                'success' => false,
+                'message' => 'لم يتم تسجيل حضورك اليوم حتى الآن.',
+            ];
+        }
+
+        if (!empty($existing->check_out_at)) {
+            return [
+                'success' => false,
+                'already_checked_out' => true,
+                'time' => $existing->check_out_at,
+                'message' => 'تم تسجيل انصرافك اليوم مسبقاً الساعة ' . $existing->check_out_at,
+            ];
+        }
+
+        if (empty($photo)) {
+            return [
+                'success' => false,
+                'photo_required' => true,
+                'message' => 'التقاط صورة سيلفي في مقر العمل إلزامي لتسجيل الانصراف.',
+            ];
+        }
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return ['success' => false, 'message' => 'المستخدم غير موجود.'];
+        }
+
+        $distToHq    = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
+        $distToKafr  = $this->calculateDistanceMeters($lat, $lng, self::KAFR_GUEST_HOUSE_LAT, self::KAFR_GUEST_HOUSE_LNG);
+        $distToTanta = $this->calculateDistanceMeters($lat, $lng, self::TANTA_GUEST_HOUSE_LAT, self::TANTA_GUEST_HOUSE_LNG);
+
+        $isTantaStaff = (int) $user->guest_house_id === 1
+            || str_contains((string) $user->job_title, 'طنطا')
+            || str_contains((string) $user->job_title, 'الغربيه')
+            || str_contains((string) $user->job_title, 'الغربية')
+            || str_contains((string) $user->department, 'طنطا')
+            || str_contains((string) $user->department, 'الغربية');
+
+        $isKafrStaff = (int) $user->guest_house_id === 2
+            || (int) $user->id === 74
+            || str_contains((string) $user->job_title, 'كفر الشيخ')
+            || (str_contains((string) $user->job_title, 'مدير دار الضيافة') && !$isTantaStaff)
+            || (str_contains((string) $user->department, 'دار الضيافة') && !$isTantaStaff);
+
+        $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
+            || in_array((int) $user->id, [2, 8, 50], true);
+
+        $locationLabel = null;
+        $matchedDist = 0;
+
+        if ($distToKafr <= self::KAFR_GUEST_HOUSE_RADIUS_METERS) {
+            $locationLabel = 'دار ضيافة كفر الشيخ';
+            $matchedDist = $distToKafr;
+        } elseif ($distToTanta <= self::TANTA_GUEST_HOUSE_RADIUS_METERS) {
+            $locationLabel = 'دار ضيافة طنطا';
+            $matchedDist = $distToTanta;
+        } elseif ($distToHq <= self::ALLOWED_RADIUS_METERS) {
+            $locationLabel = 'مقر المؤسسة الرئيسي';
+            $matchedDist = $distToHq;
+        } else {
+            $targetDist = $isTantaStaff ? $distToTanta : ($isKafrStaff ? $distToKafr : $distToHq);
+            $targetName = $isTantaStaff ? 'دار ضيافة طنطا' : ($isKafrStaff ? 'دار ضيافة كفر الشيخ' : 'مقر المؤسسة الرئيسي');
+            return [
+                'success' => false,
+                'outside_geofence' => true,
+                'distance' => $targetDist,
+                'max_distance' => self::ALLOWED_RADIUS_METERS,
+                'message' => "أنت خارج نطاق مقر العمل ({$targetName}). المسافة: {$targetDist} متر، والمسموح حتى 10 أمتار فقط. يجب التواجد داخل المقر لتسجيل الانصراف.",
+            ];
+        }
+
+        $photoPath = $this->saveAttendancePhoto($photo, 'checkout');
+        if (!$photoPath) {
+            return [
+                'success' => false,
+                'photo_required' => true,
+                'message' => 'تعذر حفظ صورة الانصراف. يرجى إعادة المحاولة.',
+            ];
+        }
+
+        $cairoNow = now('Africa/Cairo');
+        $this->attendanceRepository->update($existing, [
+            'check_out_at'    => $cairoNow->format('H:i'),
+            'check_out_photo' => $photoPath,
+            'check_out_lat'   => $lat,
+            'check_out_lng'   => $lng,
+            'notes'           => ($existing->notes ? $existing->notes . ' | ' : '') . "انصراف موثق بصورة وGPS من {$locationLabel} (المسافة: {$matchedDist}م)",
+        ]);
+
+        $this->notifyDirectorAndAdmins(
+            "تسجيل انصراف: {$user->name}",
+            "سجل الموظف {$user->name} انصرافه الساعة {$cairoNow->format('h:i A')} موثقاً بالصورة وموقع المقر ({$locationLabel})."
+        );
+
+        return [
+            'success' => true,
+            'checked_out' => true,
+            'time' => $cairoNow->format('H:i'),
+            'location' => $locationLabel,
+            'distance' => $matchedDist,
+            'photo' => $photoPath,
+            'message' => 'تم تسجيل انصرافك وتوثيق صورتك وموقعك بنجاح الساعة ' . $cairoNow->format('h:i A'),
+        ];
     }
 
     public function checkOut(int $userId): string
@@ -428,5 +629,29 @@ final readonly class EmployeeAttendanceService
             $count++;
         }
         return $count;
+    }
+
+    private function notifyDirectorAndAdmins(string $title, string $body, string $category = 'attendance'): void
+    {
+        try {
+            $adminIds = \App\Models\User::role(['admin', 'super_admin', 'manager'])
+                ->orWhereIn('id', [2, 8, 50])
+                ->pluck('id')
+                ->unique();
+
+            foreach ($adminIds as $adminId) {
+                \App\Models\MobileNotification::create([
+                    'title'          => $title,
+                    'body'           => $body,
+                    'category'       => \App\Models\MobileNotification::CATEGORY_GENERAL,
+                    'target_type'    => 'user',
+                    'target_user_id' => $adminId,
+                    'is_sent'        => true,
+                    'sent_at'        => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Attendance notification dispatch error: ' . $e->getMessage());
+        }
     }
 }

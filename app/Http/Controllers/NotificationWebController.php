@@ -441,6 +441,51 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
+        // 5.5. إشعارات حضور وانصراف الموظفين (لمدير المؤسسة ومسؤولي الإدارة والـ HR)
+        // ==========================================
+        if ($isAdmin || $isManager || $isHr || in_array((int)$user->id, [2, 8, 50], true)) {
+            $recentAttendances = EmployeeAttendance::with('user')
+                ->where('date', '>=', now()->subDays(3)->toDateString())
+                ->latest('updated_at')
+                ->limit(25)
+                ->get();
+
+            foreach ($recentAttendances as $att) {
+                $empName = $att->user?->name ?? 'موظف';
+
+                // إشعار الحضور
+                if (!empty($att->check_in_at)) {
+                    $hasPhoto = !empty($att->check_in_photo);
+                    $badgeText = $hasPhoto ? ' (موثق بسيلفي المقر والـ GPS)' : ' (جهاز المقر المعتمد)';
+                    $rawItems[] = [
+                        'id' => 'emp_att_in_' . $att->id,
+                        'category' => 'attendance',
+                        'type' => 'success',
+                        'title' => "تسجيل حضور: {$empName}",
+                        'text' => "سجل الموظف {$empName} حضوره الساعة {$att->check_in_at} بتاريخ {$att->date}{$badgeText}",
+                        'link' => route('employee-attendance.index', ['date' => $att->date]),
+                        'timestamp' => $att->created_at ? $att->created_at->timestamp : strtotime($att->date . ' ' . $att->check_in_at),
+                    ];
+                }
+
+                // إشعار الانصراف
+                if (!empty($att->check_out_at)) {
+                    $hasOutPhoto = !empty($att->check_out_photo);
+                    $badgeOutText = $hasOutPhoto ? ' (موثق بسيلفي الانصراف والموقع)' : '';
+                    $rawItems[] = [
+                        'id' => 'emp_att_out_' . $att->id,
+                        'category' => 'attendance',
+                        'type' => 'info',
+                        'title' => "تسجيل انصراف: {$empName}",
+                        'text' => "سجل الموظف {$empName} انصرافه الساعة {$att->check_out_at} بتاريخ {$att->date}{$badgeOutText}",
+                        'link' => route('employee-attendance.index', ['date' => $att->date]),
+                        'timestamp' => $att->updated_at ? $att->updated_at->timestamp : strtotime($att->date . ' ' . $att->check_out_at),
+                    ];
+                }
+            }
+        }
+
+        // ==========================================
         // 6. Monthly Donation Reminders
         // ==========================================
         if ($canAccess('donors.view', ['reception', 'receptionist'], ['استقبال', 'خدمة عملاء', 'reception']) || $user->hasPermission('donations.view') || $user->hasPermission('donations.create')) {

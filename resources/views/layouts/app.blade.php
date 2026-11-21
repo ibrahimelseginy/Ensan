@@ -3229,13 +3229,10 @@
                   ->first();
               @endphp
               @if($topbarTodayAtt && empty($topbarTodayAtt->check_out_at))
-                <form method="POST" action="{{ route('employee-attendance.checkOut') }}" class="d-inline-flex m-0" onsubmit="return confirm('هل تريد تسجيل الانصراف الآن؟');">
-                  @csrf
-                  <button type="submit" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف">
-                    <i class="bi bi-box-arrow-left fs-6"></i>
-                    <span class="fw-bold">تسجيل انصراف</span>
-                  </button>
-                </form>
+                <button type="button" onclick="startAttendanceCapture('checkout')" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف بالصورة">
+                  <i class="bi bi-box-arrow-left fs-6"></i>
+                  <span class="fw-bold">تسجيل انصراف</span>
+                </button>
               @elseif($topbarTodayAtt && !empty($topbarTodayAtt->check_out_at))
                 <span class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.12) !important; color: #059669 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important; cursor: default;" title="الحضور: {{ $topbarTodayAtt->check_in_at }} • الانصراف: {{ $topbarTodayAtt->check_out_at }}">
                   <i class="bi bi-check2-circle fs-6"></i>
@@ -3245,7 +3242,7 @@
                 @php
                   $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
                 @endphp
-                <button type="button" id="topbarEnableGpsBtn" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط لتسجيل حضورك">
+                <button type="button" id="topbarEnableGpsBtn" onclick="startAttendanceCapture('checkin')" class="btn btn-reports-elite d-flex align-items-center gap-2" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important; padding: 0 14px !important;" title="اضغط لتسجيل حضورك">
                   <i class="bi bi-geo-alt-fill fs-6"></i>
                   <span class="fw-bold">تسجيل الحضور</span>
                 </button>
@@ -3254,30 +3251,109 @@
                     const gpsBtn = document.getElementById('topbarEnableGpsBtn');
                     const isTopAdmin = @json($isTopAdminUser);
 
-                    // Toast notification instead of blocking alert()
-                    function showGpsToast(msg, type) {
+                    // Responsive Toast notification
+                    window.showGpsToast = function(msg, type) {
+                      type = type || 'info';
                       var existing = document.getElementById('gpsToastContainer');
                       if (existing) existing.remove();
                       var colors = {
-                        error: 'background:#dc2626;color:#fff;',
-                        warning: 'background:#f59e0b;color:#1a1a1a;',
-                        success: 'background:#059669;color:#fff;',
-                        info: 'background:#2563eb;color:#fff;'
+                        error: 'background: #dc2626; color: #ffffff;',
+                        warning: 'background: #d97706; color: #ffffff;',
+                        success: 'background: #059669; color: #ffffff;',
+                        info: 'background: #2563eb; color: #ffffff;'
                       };
-                      var icons = { error: 'x-circle', warning: 'exclamation-triangle', success: 'check-circle', info: 'info-circle' };
+                      var icons = { error: 'x-circle-fill', warning: 'exclamation-triangle-fill', success: 'check-circle-fill', info: 'info-circle-fill' };
                       var c = document.createElement('div');
                       c.id = 'gpsToastContainer';
-                      c.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;max-width:560px;width:94%;padding:14px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.22);display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;direction:rtl;animation:gpsToastIn .3s ease;' + (colors[type] || colors.info);
-                      c.innerHTML = '<i class="bi bi-' + (icons[type] || 'info-circle') + ' fs-5"></i><span style="flex:1">' + msg + '</span><button onclick="this.parentNode.remove()" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>';
+                      c.className = 'ensan-gps-toast-responsive';
+                      c.style.cssText = (colors[type] || colors.info);
+                      c.innerHTML = '<div class="ensan-gps-toast-icon"><i class="bi bi-' + (icons[type] || 'info-circle-fill') + '"></i></div>' +
+                                    '<div class="ensan-gps-toast-body">' + msg + '</div>' +
+                                    '<button type="button" class="ensan-gps-toast-close" onclick="this.closest(\'#gpsToastContainer\').remove()">✕</button>';
                       document.body.appendChild(c);
                       if (!document.getElementById('gpsToastStyle')) {
                         var s = document.createElement('style');
                         s.id = 'gpsToastStyle';
-                        s.textContent = '@keyframes gpsToastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+                        s.textContent = `
+                          .ensan-gps-toast-responsive {
+                            position: fixed;
+                            top: 14px;
+                            left: 12px;
+                            right: 12px;
+                            max-width: 480px;
+                            margin: 0 auto;
+                            z-index: 999999;
+                            padding: 12px 14px;
+                            border-radius: 14px;
+                            box-shadow: 0 10px 28px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 10px;
+                            font-size: 13px;
+                            line-height: 1.5;
+                            font-weight: 600;
+                            direction: rtl;
+                            animation: gpsToastSlideDown .3s ease;
+                          }
+                          @media (min-width: 768px) {
+                            .ensan-gps-toast-responsive {
+                              top: 72px;
+                              left: 50%;
+                              right: auto;
+                              transform: translateX(-50%);
+                              width: 90%;
+                              max-width: 520px;
+                              font-size: 14px;
+                              padding: 14px 18px;
+                              border-radius: 16px;
+                            }
+                          }
+                          .ensan-gps-toast-icon {
+                            font-size: 1.15rem;
+                            line-height: 1;
+                            margin-top: 2px;
+                            flex-shrink: 0;
+                          }
+                          .ensan-gps-toast-body {
+                            flex: 1;
+                            min-width: 0;
+                            word-break: break-word;
+                          }
+                          .ensan-gps-toast-close {
+                            background: rgba(0, 0, 0, 0.16);
+                            border: none;
+                            color: #fff;
+                            font-size: 13px;
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            flex-shrink: 0;
+                            padding: 0;
+                            line-height: 1;
+                            transition: background 0.2s;
+                          }
+                          .ensan-gps-toast-close:hover {
+                            background: rgba(0, 0, 0, 0.28);
+                          }
+                          @keyframes gpsToastSlideDown {
+                            from { opacity: 0; transform: translateY(-15px); }
+                            to { opacity: 1; transform: translateY(0); }
+                          }
+                          @media (min-width: 768px) {
+                            @keyframes gpsToastSlideDown {
+                              from { opacity: 0; transform: translate(-50%, -15px); }
+                              to { opacity: 1; transform: translate(-50%, 0); }
+                            }
+                          }
+                        `;
                         document.head.appendChild(s);
                       }
-                      setTimeout(function(){ if (c.parentNode) c.remove(); }, type === 'error' ? 12000 : 5000);
-                    }
+                      setTimeout(function(){ if (c.parentNode) c.remove(); }, type === 'error' ? 12000 : 6000);
+                    };
 
                     function resetGpsBtn() {
                       if (gpsBtn) {
@@ -3317,36 +3393,6 @@
                       });
                     };
 
-                    function sendCheckIn(lat, lng, isManual) {
-                      fetch('{{ route('employee-attendance.checkIn') }}', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Accept': 'application/json',
-                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                          'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ latitude: lat, longitude: lng })
-                      })
-                      .then(function(r){ return r.json(); })
-                      .then(function(data) {
-                        if (data && data.success && data.checked_in) {
-                          showGpsToast('✅ تم تسجيل حضورك بنجاح!', 'success');
-                          setTimeout(function(){ window.location.reload(); }, 1200);
-                        } else if (isManual) {
-                          var adminAction = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
-                          showGpsToast(((data && data.message) ? data.message : 'أنت خارج نطاق مقر المؤسسة.') + adminAction, 'warning');
-                          resetGpsBtn();
-                        }
-                      })
-                      .catch(function() {
-                        if (isManual) {
-                          showGpsToast('حدث خطأ في الاتصال بالسيرفر. حاول مجدداً.', 'error');
-                          resetGpsBtn();
-                        }
-                      });
-                    }
-
                     function getLocationDeniedMessage() {
                       var ua = navigator.userAgent || '';
                       if (/Win/i.test(ua)) {
@@ -3358,58 +3404,6 @@
                       } else {
                         return 'الموقع محظور في المتصفح. اضغط على أيقونة القفل بجانب الرابط واختر السماح بالموقع (Allow).';
                       }
-                    }
-
-                    function requestGpsCheckIn(isManual, useHighAccuracy) {
-                      if (typeof useHighAccuracy === 'undefined') useHighAccuracy = true;
-
-                      if (isManual && gpsBtn) {
-                        gpsBtn.disabled = true;
-                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ التحقق...</span>';
-                      }
-
-                      navigator.geolocation.getCurrentPosition(
-                        function (pos) {
-                          sendCheckIn(pos.coords.latitude, pos.coords.longitude, isManual);
-                        },
-                        function (err) {
-                          // If high accuracy failed, retry with low accuracy (network-based)
-                          if (useHighAccuracy && err && (err.code === 1 || err.code === 2 || err.code === 3)) {
-                            navigator.geolocation.getCurrentPosition(
-                              function (pos) {
-                                sendCheckIn(pos.coords.latitude, pos.coords.longitude, isManual);
-                              },
-                              function (err2) {
-                                if (isManual) {
-                                  var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
-                                  if (err2 && err2.code === 1) {
-                                    showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
-                                  } else if (err2 && err2.code === 3) {
-                                    showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
-                                  } else {
-                                    showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.' + adminBtn, 'warning');
-                                  }
-                                  resetGpsBtn();
-                                }
-                              },
-                              { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-                            );
-                            return;
-                          }
-                          if (isManual) {
-                            var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
-                            if (err && err.code === 1) {
-                              showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
-                            } else if (err && err.code === 3) {
-                              showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
-                            } else {
-                              showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تفعيل GPS وأن المتصفح يسمح بالموقع.' + adminBtn, 'warning');
-                            }
-                            resetGpsBtn();
-                          }
-                        },
-                        { enableHighAccuracy: useHighAccuracy, timeout: 10000, maximumAge: 30000 }
-                      );
                     }
 
                     var getDeviceCookie = function(name) {
@@ -3523,34 +3517,174 @@
                       });
                     };
 
-                    if (gpsBtn) {
-                      gpsBtn.addEventListener('click', function () {
-                        if (authDeviceToken) {
-                          checkInWithAuthorizedDeviceToken(authDeviceToken);
+                    // ==========================================
+                    // Mobile GPS & Photo Camera Capture Workflow
+                    // ==========================================
+                    var attActionType = 'checkin';
+                    var attCapturedLat = null;
+                    var attCapturedLng = null;
+                    var attCapturedPhotoBase64 = null;
+
+                    window.triggerAttCameraInput = function() {
+                      var fileInput = document.getElementById('attCameraFileInput');
+                      if (fileInput) fileInput.click();
+                    };
+
+                    window.handleAttPhotoSelected = function(e) {
+                      var file = e.target.files && e.target.files[0];
+                      if (!file) return;
+
+                      var reader = new FileReader();
+                      reader.onload = function(evt) {
+                        attCapturedPhotoBase64 = evt.target.result;
+                        var preview = document.getElementById('attPhotoPreviewImg');
+                        var container = document.getElementById('attCameraPreviewContainer');
+                        var placeholder = document.getElementById('attCameraPlaceholder');
+                        var submitBtn = document.getElementById('btnSubmitAttWithPhoto');
+
+                        if (preview) preview.src = attCapturedPhotoBase64;
+                        if (container) container.classList.remove('d-none');
+                        if (placeholder) placeholder.classList.add('d-none');
+                        if (submitBtn) submitBtn.disabled = false;
+                      };
+                      reader.readAsDataURL(file);
+                    };
+
+                    window.resetAttendanceCapture = function() {
+                      attCapturedPhotoBase64 = null;
+                      var fileInput = document.getElementById('attCameraFileInput');
+                      if (fileInput) fileInput.value = '';
+                      var container = document.getElementById('attCameraPreviewContainer');
+                      var placeholder = document.getElementById('attCameraPlaceholder');
+                      var submitBtn = document.getElementById('btnSubmitAttWithPhoto');
+                      if (container) container.classList.add('d-none');
+                      if (placeholder) placeholder.classList.remove('d-none');
+                      if (submitBtn) submitBtn.disabled = true;
+                    };
+
+                    window.startAttendanceCapture = function(type) {
+                      attActionType = type || 'checkin';
+                      resetAttendanceCapture();
+
+                      // If on desktop and authorized device token exists:
+                      if (attActionType === 'checkin' && authDeviceToken) {
+                        checkInWithAuthorizedDeviceToken(authDeviceToken);
+                        return;
+                      }
+
+                      if (gpsBtn && attActionType === 'checkin') {
+                        gpsBtn.disabled = true;
+                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ فحص الموقع...</span>';
+                      }
+
+                      navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                          attCapturedLat = pos.coords.latitude;
+                          attCapturedLng = pos.coords.longitude;
+                          resetGpsBtn();
+
+                          var modalTitle = document.getElementById('attCameraTitle');
+                          var modalSub = document.getElementById('attCameraSubtitle');
+                          var submitText = document.getElementById('btnSubmitAttText');
+                          var headerIcon = document.getElementById('attCameraHeaderIcon');
+
+                          if (attActionType === 'checkout') {
+                            if (modalTitle) modalTitle.textContent = 'توثيق الانصراف بالصورة والموقع';
+                            if (modalSub) modalSub.textContent = 'التقط صورة شخصية داخل المقر لتأكيد الانصراف';
+                            if (submitText) submitText.textContent = 'تأكيد الانصراف مع الصورة';
+                            if (headerIcon) headerIcon.className = 'bi bi-box-arrow-left';
+                          } else {
+                            if (modalTitle) modalTitle.textContent = 'توثيق الحضور بالصورة والموقع';
+                            if (modalSub) modalSub.textContent = 'صورة سيلفي حية من داخل مقر العمل';
+                            if (submitText) submitText.textContent = 'تأكيد الحضور مع الصورة';
+                            if (headerIcon) headerIcon.className = 'bi bi-camera-fill';
+                          }
+
+                          var modalEl = document.getElementById('modalAttendanceCamera');
+                          if (modalEl) {
+                            var m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            m.show();
+                          }
+                        },
+                        function(err) {
+                          resetGpsBtn();
+                          var adminBtn = isTopAdmin ? ' <div class="mt-2 d-flex flex-wrap gap-1.5"><button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button><button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 py-1 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الجهاز للمقر</button></div>' : '';
+                          if (err && err.code === 1) {
+                            showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
+                          } else {
+                            showGpsToast('تعذر تحديد الموقع الجغرافي. تأكد من تشغيل GPS في هاتفك والمحاولة مجدداً.' + adminBtn, 'warning');
+                          }
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                      );
+                    };
+
+                    window.submitAttendanceWithPhoto = function() {
+                      if (!attCapturedPhotoBase64) {
+                        alert('التقاط الصورة إلزامي لإتمام العملية.');
+                        return;
+                      }
+                      if (!attCapturedLat || !attCapturedLng) {
+                        alert('لم يتم التقاط إحداثيات الموقع (GPS). يرجى المحاولة مجدداً.');
+                        return;
+                      }
+
+                      var btn = document.getElementById('btnSubmitAttWithPhoto');
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ التحقق والحفظ...';
+                      }
+
+                      var endpoint = attActionType === 'checkout'
+                        ? '{{ route('employee-attendance.checkOut') }}'
+                        : '{{ route('employee-attendance.checkIn') }}';
+
+                      fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                          latitude: attCapturedLat,
+                          longitude: attCapturedLng,
+                          photo: attCapturedPhotoBase64
+                        })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success) {
+                          showGpsToast('✅ ' + (data.message || 'تمت العملية بنجاح!'), 'success');
+                          var modalEl = document.getElementById('modalAttendanceCamera');
+                          if (modalEl) {
+                            var m = bootstrap.Modal.getInstance(modalEl);
+                            if (m) m.hide();
+                          }
+                          setTimeout(function(){ window.location.reload(); }, 1200);
                         } else {
-                          requestGpsCheckIn(true);
+                          if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> ' + (attActionType === 'checkout' ? 'تأكيد الانصراف مع الصورة' : 'تأكيد الحضور مع الصورة');
+                          }
+                          showGpsToast((data && data.message) ? data.message : 'تعذر تسجيل العملية', 'error');
                         }
+                      })
+                      .catch(function() {
+                        if (btn) {
+                          btn.disabled = false;
+                          btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> إعادة المحاولة';
+                        }
+                        showGpsToast('حدث خطأ أثناء رفع الصورة والاتصال بالسيرفر. حاول مجدداً.', 'error');
                       });
-                    }
+                    };
 
                     // Auto-check on entering system if device is authorized
                     if (authDeviceToken) {
                       checkInWithAuthorizedDeviceToken(authDeviceToken);
                     } else {
                       notifyUnauthorizedDevice();
-                      // Auto-check silently ONLY if GPS permission is already granted
-                      if (navigator.permissions && navigator.permissions.query) {
-                        navigator.permissions.query({ name: 'geolocation' }).then(function (status) {
-                          if (status.state === 'granted') {
-                            var throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
-                            var lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
-                            if (Date.now() - lastTry >= 60000) {
-                              sessionStorage.setItem(throttleKey, String(Date.now()));
-                              requestGpsCheckIn(false, false);
-                            }
-                          }
-                        }).catch(function(){});
-                      }
                     }
                   })();
                 </script>
@@ -3947,6 +4081,62 @@
           <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
           <button type="button" id="btnSubmitAuthorizeDevice" onclick="submitAuthorizeCurrentDevice()" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
             <i class="bi bi-check2-circle me-1"></i> اعتماد هذا الجهاز الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
+  @if($navUser)
+  {{-- Modal: توثيق الحضور والانصراف بالصورة والموقع (GPS) --}}
+  <div class="modal fade" id="modalAttendanceCamera" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" style="direction: rtl;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.25rem auto;">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden; background: #ffffff;">
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; padding: 20px 22px;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-white bg-opacity-20 text-white rounded-3 p-2 fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+              <i class="bi bi-camera-fill" id="attCameraHeaderIcon"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0.5 fs-6" id="attCameraTitle">توثيق الحضور بالصورة</h5>
+              <p class="text-white-50 small mb-0" id="attCameraSubtitle" style="font-size: 0.8rem;">صورة سيلفي حية من داخل مقر العمل</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="resetAttendanceCapture()"></button>
+        </div>
+        <div class="modal-body p-3.5 text-center">
+          {{-- Location status badge --}}
+          <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill mb-3 shadow-xs" style="background: rgba(16, 185, 129, 0.12); color: #047857; font-size: 0.82rem; font-weight: 700;">
+            <i class="bi bi-geo-alt-fill text-success"></i>
+            <span id="attCameraGpsStatus">تم تأكيد الموقع بنجاح (ضمن 10 أمتار)</span>
+          </div>
+
+          <input type="file" id="attCameraFileInput" accept="image/*" capture="user" style="display:none;" onchange="handleAttPhotoSelected(event)">
+
+          <div id="attCameraPlaceholder" onclick="triggerAttCameraInput()" style="cursor: pointer; border: 2px dashed #0284c7; border-radius: 20px; padding: 32px 16px; background: #f0f9ff; transition: all 0.2s;">
+            <div class="mb-2">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-primary shadow-sm" style="width: 64px; height: 64px; background: #ffffff;">
+                <i class="bi bi-camera-fill fs-2"></i>
+              </span>
+            </div>
+            <div class="fw-bold text-dark fs-6 mt-2">اضغط لفتح الكاميرا والتقاط الصورة 📸</div>
+            <small class="text-muted d-block mt-1" style="font-size: 0.78rem;">التقط صورة واضحة لوجهك داخل المقر لإتمام العملية</small>
+          </div>
+
+          <div id="attCameraPreviewContainer" class="d-none">
+            <img id="attPhotoPreviewImg" src="" alt="معاينة الصورة" style="max-height: 260px; width: 100%; object-fit: cover; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.14); border: 3px solid #10b981;">
+            <div class="mt-2.5 text-center">
+              <button type="button" onclick="triggerAttCameraInput()" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size: 0.82rem;">
+                <i class="bi bi-arrow-repeat me-1"></i> إعادة التقاط الصورة
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 px-3.5 pb-3.5 gap-2">
+          <button type="button" class="btn btn-light rounded-pill px-3.5 fw-bold" data-bs-dismiss="modal" onclick="resetAttendanceCapture()">إلغاء</button>
+          <button type="button" id="btnSubmitAttWithPhoto" disabled onclick="submitAttendanceWithPhoto()" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm flex-grow-1">
+            <i class="bi bi-check2-circle me-1"></i> <span id="btnSubmitAttText">تأكيد الحضور مع الصورة</span>
           </button>
         </div>
       </div>
