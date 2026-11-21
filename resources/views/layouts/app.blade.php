@@ -3347,6 +3347,19 @@
                       });
                     }
 
+                    function getLocationDeniedMessage() {
+                      var ua = navigator.userAgent || '';
+                      if (/Win/i.test(ua)) {
+                        return 'الموقع محظور في جهازك. تأكد من تفعيل خيار الموقع في المتصفح، وتفعيله في ويندوز: الإعدادات (Settings) > الخصوصية والأمان (Privacy) > الموقع (Location).';
+                      } else if (/Mac/i.test(ua)) {
+                        return 'الموقع محظور في نظام جهازك. تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع.';
+                      } else if (/Android|iPhone|iPad/i.test(ua)) {
+                        return 'الموقع محظور في هاتفك. يرجى تشغيل الـ GPS والسماح للمتصفح بالوصول إلى موقعك.';
+                      } else {
+                        return 'الموقع محظور في المتصفح. اضغط على أيقونة القفل بجانب الرابط واختر السماح بالموقع (Allow).';
+                      }
+                    }
+
                     function requestGpsCheckIn(isManual, useHighAccuracy) {
                       if (typeof useHighAccuracy === 'undefined') useHighAccuracy = true;
 
@@ -3370,7 +3383,7 @@
                                 if (isManual) {
                                   var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
                                   if (err2 && err2.code === 1) {
-                                    showGpsToast('الموقع محظور في نظام جهازك (تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع).' + adminBtn, 'error');
+                                    showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
                                   } else if (err2 && err2.code === 3) {
                                     showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
                                   } else {
@@ -3386,7 +3399,7 @@
                           if (isManual) {
                             var adminBtn = isTopAdmin ? ' <button type="button" onclick="checkInAsAdmin()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-shield-check me-1"></i>تسجيل كإدارة الآن</button>' : '';
                             if (err && err.code === 1) {
-                              showGpsToast('الموقع محظور في نظام جهازك (تأكد من تفعيل Google Chrome في إعدادات الماك: الخصوصية والأمن > خدمات الموقع).' + adminBtn, 'error');
+                              showGpsToast(getLocationDeniedMessage() + adminBtn, 'error');
                             } else if (err && err.code === 3) {
                               showGpsToast('انتهت مهلة تحديد الموقع. تأكد من تفعيل GPS في جهازك وحاول مجدداً.' + adminBtn, 'warning');
                             } else {
