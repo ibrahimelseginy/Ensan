@@ -823,7 +823,7 @@ body.theme-dark .launcher-cat-btn.active,
                 <i class="bi bi-megaphone-fill"></i>
             </div>
             <div class="ensan-app-title">حملات موسمية</div>
-            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 3 خدمات <i class="bi bi-chevron-down"></i></span>
+            <span class="ensan-app-badge badge-sub"><i class="bi bi-layers-fill"></i> 2 خدمات <i class="bi bi-chevron-down"></i></span>
         </div>
         @endif
 
@@ -1609,19 +1609,6 @@ body.theme-dark .launcher-cat-btn.active,
                         <div class="ensan-sub-tile-content">
                             <div class="ensan-sub-tile-title">إدارة الحملات</div>
                             <small class="text-muted">إنشاء ومتابعة جميع الحملات الموسمية</small>
-                        </div>
-                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
-                    </a>
-                    @endif
-
-                    @if($u && $u->hasPermission('ramadan_bags.view'))
-                    <a href="{{ route('ramadan-bags.index') }}" class="ensan-sub-tile">
-                        <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
-                            <i class="bi bi-bag-heart"></i>
-                        </div>
-                        <div class="ensan-sub-tile-content">
-                            <div class="ensan-sub-tile-title">شنط وكراتين رمضان</div>
-                            <small class="text-muted">تعبئة وتوزيع الشنط الغذائية</small>
                         </div>
                         <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
                     </a>
