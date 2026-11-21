@@ -3750,7 +3750,7 @@
             </div>
           @endif
         </div>
-        <p class="mb-1 fw-medium text-secondary">جميع الحقوق محفوظة مؤسسة إنسان {{ date('Y') }} &copy;</p>
+        <p class="mb-1 fw-medium text-secondary">جميع الحقوق محفوظة مؤسسة إنسان &copy; {{ date('Y') }}</p>
         <div class="developer-credit mt-2 d-flex align-items-center justify-content-center flex-wrap gap-2">
           <span class="text-muted">تطوير النظام:</span>
           <a href="{{ route('developer.info') }}" class="fw-bold text-decoration-none px-2 py-1 rounded" style="background: rgba(13,110,253,0.1); color: #0d6efd;">
