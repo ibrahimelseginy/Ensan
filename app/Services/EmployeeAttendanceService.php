@@ -23,6 +23,11 @@ final readonly class EmployeeAttendanceService
     public const KAFR_GUEST_HOUSE_LNG = 30.9378786;
     public const KAFR_GUEST_HOUSE_RADIUS_METERS = 10;
 
+    // 3. دار ضيافة إنســـــــان - طنطا (خاصة بموظفي دار طنطا)
+    public const TANTA_GUEST_HOUSE_LAT = 30.8038626;
+    public const TANTA_GUEST_HOUSE_LNG = 30.9969359;
+    public const TANTA_GUEST_HOUSE_RADIUS_METERS = 10;
+
     public function __construct(
         private EmployeeAttendanceRepository $attendanceRepository
     ) {}
@@ -78,15 +83,24 @@ final readonly class EmployeeAttendanceService
             ];
         }
 
-        $distToHq   = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
-        $distToKafr = $this->calculateDistanceMeters($lat, $lng, self::KAFR_GUEST_HOUSE_LAT, self::KAFR_GUEST_HOUSE_LNG);
+        $distToHq    = $this->calculateDistanceMeters($lat, $lng, self::OFFICE_LAT, self::OFFICE_LNG);
+        $distToKafr  = $this->calculateDistanceMeters($lat, $lng, self::KAFR_GUEST_HOUSE_LAT, self::KAFR_GUEST_HOUSE_LNG);
+        $distToTanta = $this->calculateDistanceMeters($lat, $lng, self::TANTA_GUEST_HOUSE_LAT, self::TANTA_GUEST_HOUSE_LNG);
+
+        // هل الموظف من طاقم دار طنطا؟
+        $isTantaStaff = (int) $user->guest_house_id === 1
+            || str_contains((string) $user->job_title, 'طنطا')
+            || str_contains((string) $user->job_title, 'الغربيه')
+            || str_contains((string) $user->job_title, 'الغربية')
+            || str_contains((string) $user->department, 'طنطا')
+            || str_contains((string) $user->department, 'الغربية');
 
         // هل الموظف من طاقم دار كفر الشيخ؟
         $isKafrStaff = (int) $user->guest_house_id === 2
             || (int) $user->id === 74 // مريم بدوي مدير دار الضيافة كفر الشيخ
             || str_contains((string) $user->job_title, 'كفر الشيخ')
-            || str_contains((string) $user->job_title, 'مدير دار الضيافة')
-            || (str_contains((string) $user->department, 'دار الضيافة') && !str_contains((string) $user->job_title, 'الغربيه'));
+            || (str_contains((string) $user->job_title, 'مدير دار الضيافة') && !$isTantaStaff)
+            || (str_contains((string) $user->department, 'دار الضيافة') && !$isTantaStaff);
 
         $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
             || in_array((int) $user->id, [2, 8, 50], true);
@@ -94,12 +108,14 @@ final readonly class EmployeeAttendanceService
         // النطاق الأول: دار ضيافة كفر الشيخ
         if ($distToKafr <= self::KAFR_GUEST_HOUSE_RADIUS_METERS) {
             if (!$isKafrStaff && !$isAdminOrManager) {
+                $approvedLoc = $isTantaStaff ? 'دار ضيافة طنطا' : 'مقر المؤسسة الرئيسي';
                 return [
                     'success' => false,
                     'outside_geofence' => true,
-                    'distance' => $distToHq,
-                    'max_distance' => self::ALLOWED_RADIUS_METERS,
-                    'message' => "أنت داخل نطاق دار ضيافة كفر الشيخ، ولكن تسجيل الحضور بها مخصص لموظفي الدار فقط. موقع حضورك المعتمد هو مقر المؤسسة الرئيسي (المسافة: {$distToHq} متر).",
+                    'distance' => $distToKafr,
+                    'max_distance' => self::KAFR_GUEST_HOUSE_RADIUS_METERS,
+                    'location' => 'دار ضيافة كفر الشيخ',
+                    'message' => "أنت داخل نطاق دار ضيافة كفر الشيخ، ولكن تسجيل الحضور هنا مخصص لموظفي دار كفر الشيخ فقط. موقع حضورك المعتمد هو {$approvedLoc}.",
                 ];
             }
 
@@ -121,10 +137,42 @@ final readonly class EmployeeAttendanceService
             ];
         }
 
-        // النطاق الثاني: المقر الرئيسي لمؤسسة إنسان
+        // النطاق الثاني: دار ضيافة طنطا
+        if ($distToTanta <= self::TANTA_GUEST_HOUSE_RADIUS_METERS) {
+            if (!$isTantaStaff && !$isAdminOrManager) {
+                $approvedLoc = $isKafrStaff ? 'دار ضيافة كفر الشيخ' : 'مقر المؤسسة الرئيسي';
+                return [
+                    'success' => false,
+                    'outside_geofence' => true,
+                    'distance' => $distToTanta,
+                    'max_distance' => self::TANTA_GUEST_HOUSE_RADIUS_METERS,
+                    'location' => 'دار ضيافة طنطا',
+                    'message' => "أنت داخل نطاق دار ضيافة طنطا، ولكن تسجيل الحضور هنا مخصص لموظفي دار طنطا فقط. موقع حضورك المعتمد هو {$approvedLoc}.",
+                ];
+            }
+
+            $cairoNow = now('Africa/Cairo');
+            $this->attendanceRepository->create([
+                'user_id'     => $userId,
+                'date'        => $cairoNow->toDateString(),
+                'check_in_at' => $cairoNow->format('H:i'),
+                'notes'       => "تسجيل حضور تلقائي من دار ضيافة طنطا (المسافة: {$distToTanta} متر)",
+            ]);
+
+            return [
+                'success' => true,
+                'checked_in' => true,
+                'time' => $cairoNow->format('H:i'),
+                'distance' => $distToTanta,
+                'location' => 'دار ضيافة طنطا',
+                'message' => 'تم تسجيل حضورك بنجاح من مقر دار ضيافة طنطا الساعة ' . $cairoNow->format('h:i A') . " (المسافة: {$distToTanta} متر)",
+            ];
+        }
+
+        // النطاق الثالث: المقر الرئيسي لمؤسسة إنسان
         if ($distToHq <= self::ALLOWED_RADIUS_METERS) {
             $cairoNow = now('Africa/Cairo');
-            $locationLabel = $isKafrStaff ? 'مقر المؤسسة الرئيسي (زيارة)' : 'مقر المؤسسة الرئيسي';
+            $locationLabel = ($isKafrStaff || $isTantaStaff) ? 'مقر المؤسسة الرئيسي (زيارة)' : 'مقر المؤسسة الرئيسي';
             $this->attendanceRepository->create([
                 'user_id'     => $userId,
                 'date'        => $cairoNow->toDateString(),
@@ -142,7 +190,18 @@ final readonly class EmployeeAttendanceService
             ];
         }
 
-        // خارج كلا المقرين
+        // خارج كافة المقرات
+        if ($isTantaStaff) {
+            return [
+                'success' => false,
+                'outside_geofence' => true,
+                'distance' => $distToTanta,
+                'max_distance' => self::TANTA_GUEST_HOUSE_RADIUS_METERS,
+                'location' => 'دار ضيافة طنطا',
+                'message' => "أنت خارج نطاق مقر دار ضيافة طنطا (المسافة الحالية: {$distToTanta} متر — المسموح حتى " . self::TANTA_GUEST_HOUSE_RADIUS_METERS . ' متر).',
+            ];
+        }
+
         if ($isKafrStaff) {
             return [
                 'success' => false,
