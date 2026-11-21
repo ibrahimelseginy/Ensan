@@ -223,6 +223,65 @@ final readonly class EmployeeAttendanceService
         ];
     }
 
+    public function checkInWithAuthorizedDevice(int $userId, string $deviceToken, ?string $ip = null, ?string $userAgent = null): array
+    {
+        $device = \App\Models\AttendanceDevice::where('device_token', $deviceToken)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$device) {
+            return [
+                'success' => false,
+                'device_authorized' => false,
+                'message' => 'هذا الجهاز غير معتمد حالياً لتسجيل الحضور.',
+            ];
+        }
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return ['success' => false, 'message' => 'المستخدم غير موجود.'];
+        }
+
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+        if ($existing) {
+            $device->update([
+                'last_used_at' => now(),
+                'ip_address'   => $ip ?: $device->ip_address,
+            ]);
+            return [
+                'success' => true,
+                'already_checked_in' => true,
+                'time' => $existing->check_in_at,
+                'device' => $device->device_name,
+                'location' => $device->location_name,
+                'message' => 'تم تسجيل حضورك اليوم مسبقاً الساعة ' . $existing->check_in_at,
+            ];
+        }
+
+        $cairoNow = now('Africa/Cairo');
+        $this->attendanceRepository->create([
+            'user_id'     => $userId,
+            'date'        => $cairoNow->toDateString(),
+            'check_in_at' => $cairoNow->format('H:i'),
+            'notes'       => "تسجيل حضور تلقائي من جهاز المقر المعتمد: {$device->device_name} ({$device->location_name})",
+        ]);
+
+        $device->update([
+            'last_used_at' => now(),
+            'ip_address'   => $ip ?: $device->ip_address,
+            'user_agent'   => $userAgent ?: $device->user_agent,
+        ]);
+
+        return [
+            'success' => true,
+            'checked_in' => true,
+            'time' => $cairoNow->format('H:i'),
+            'device' => $device->device_name,
+            'location' => $device->location_name,
+            'message' => "تم تسجيل حضورك بنجاح من جهاز المقر المعتمد ({$device->device_name} - {$device->location_name}) الساعة " . $cairoNow->format('h:i A'),
+        ];
+    }
+
     public function checkInAdminOverride(int $userId): array
     {
         $existing = $this->attendanceRepository->findTodayRecord($userId);

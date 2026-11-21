@@ -3412,24 +3412,145 @@
                       );
                     }
 
-                    if (gpsBtn) {
-                      gpsBtn.addEventListener('click', function () {
-                        requestGpsCheckIn(true);
+                    var getDeviceCookie = function(name) {
+                      var match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'));
+                      return match ? decodeURIComponent(match[2]) : null;
+                    };
+
+                    var authDeviceToken = localStorage.getItem('ensan_authorized_device_token') || getDeviceCookie('ensan_device_token');
+
+                    function checkInWithAuthorizedDeviceToken(token) {
+                      if (gpsBtn) {
+                        gpsBtn.disabled = true;
+                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ تسجيل الحضور...</span>';
+                      }
+                      fetch('{{ route('employee-attendance.device-auto-checkin') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ device_token: token })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success && data.checked_in) {
+                          showGpsToast('✅ مرحباً بك! تم تسجيل حضورك تلقائياً من جهاز المقر المعتمد (' + (data.device || '') + ' - ' + (data.location || '') + ') الساعة ' + (data.time || ''), 'success');
+                          setTimeout(function(){ window.location.reload(); }, 1200);
+                        } else if (data && data.already_checked_in) {
+                          resetGpsBtn();
+                        } else if (data && data.device_authorized === false) {
+                          localStorage.removeItem('ensan_authorized_device_token');
+                          notifyUnauthorizedDevice();
+                          resetGpsBtn();
+                        } else {
+                          resetGpsBtn();
+                        }
+                      })
+                      .catch(function(){
+                        resetGpsBtn();
                       });
                     }
 
-                    // Auto-check silently ONLY if permission is already granted
-                    if (navigator.permissions && navigator.permissions.query) {
-                      navigator.permissions.query({ name: 'geolocation' }).then(function (status) {
-                        if (status.state === 'granted') {
-                          var throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
-                          var lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
-                          if (Date.now() - lastTry >= 60000) {
-                            sessionStorage.setItem(throttleKey, String(Date.now()));
-                            requestGpsCheckIn(false, false);
+                    function notifyUnauthorizedDevice() {
+                      var key = 'ensan_unauth_dev_notify_{{ $navUser->id }}_' + (new Date()).toISOString().slice(0,10);
+                      if (!sessionStorage.getItem(key)) {
+                        sessionStorage.setItem(key, '1');
+                        var authBtn = isTopAdmin ? ' <button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الجهاز للمقر</button>' : '';
+                        showGpsToast('⚠️ هذا الجهاز غير معتمد كجهاز مقر رسمي للحضور التلقائي. يرجى تسجيل الحضور عبر GPS من هاتفك المحمول أو مراجعة الإدارة.' + authBtn, 'warning');
+                      }
+                    }
+
+                    window.openAuthorizeDeviceModal = function() {
+                      var el = document.getElementById('modalAuthorizeDevice');
+                      if (el) {
+                        var modal = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+                        modal.show();
+                      }
+                    };
+
+                    window.submitAuthorizeCurrentDevice = function() {
+                      var locSelect = document.getElementById('authDeviceLocation');
+                      var nameInput = document.getElementById('authDeviceName');
+                      if (!nameInput || !nameInput.value.trim()) {
+                        alert('يرجى إدخال اسم أو وصف الجهاز.');
+                        return;
+                      }
+                      var selectedOpt = locSelect.options[locSelect.selectedIndex];
+                      var ghId = selectedOpt.getAttribute('data-guest-house') || null;
+                      var btn = document.getElementById('btnSubmitAuthorizeDevice');
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ الاعتماد...';
+                      }
+
+                      fetch('{{ route('employee-attendance.authorize-device') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                          device_name: nameInput.value.trim(),
+                          location_name: locSelect.value,
+                          guest_house_id: ghId
+                        })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success) {
+                          localStorage.setItem('ensan_authorized_device_token', data.device_token);
+                          showGpsToast('✅ ' + data.message, 'success');
+                          setTimeout(function(){ window.location.reload(); }, 1200);
+                        } else {
+                          alert((data && data.message) ? data.message : 'تعذر اعتماد الجهاز');
+                          if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> اعتماد هذا الجهاز الآن';
                           }
                         }
-                      }).catch(function(){});
+                      })
+                      .catch(function(){
+                        alert('حدث خطأ في الاتصال بالسيرفر');
+                        if (btn) {
+                          btn.disabled = false;
+                          btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> اعتماد هذا الجهاز الآن';
+                        }
+                      });
+                    };
+
+                    if (gpsBtn) {
+                      gpsBtn.addEventListener('click', function () {
+                        if (authDeviceToken) {
+                          checkInWithAuthorizedDeviceToken(authDeviceToken);
+                        } else {
+                          requestGpsCheckIn(true);
+                        }
+                      });
+                    }
+
+                    // Auto-check on entering system if device is authorized
+                    if (authDeviceToken) {
+                      checkInWithAuthorizedDeviceToken(authDeviceToken);
+                    } else {
+                      notifyUnauthorizedDevice();
+                      // Auto-check silently ONLY if GPS permission is already granted
+                      if (navigator.permissions && navigator.permissions.query) {
+                        navigator.permissions.query({ name: 'geolocation' }).then(function (status) {
+                          if (status.state === 'granted') {
+                            var throttleKey = 'ensan_gps_checkin_try_{{ $navUser->id }}';
+                            var lastTry = parseInt(sessionStorage.getItem(throttleKey) || '0', 10);
+                            if (Date.now() - lastTry >= 60000) {
+                              sessionStorage.setItem(throttleKey, String(Date.now()));
+                              requestGpsCheckIn(false, false);
+                            }
+                          }
+                        }).catch(function(){});
+                      }
                     }
                   })();
                 </script>
@@ -3782,6 +3903,55 @@
   @stack('modals')
   @if(session('show_admin_notifications') && $navUser?->hasRole('admin'))
     @include('partials.admin_login_notifications_modal')
+  @endif
+
+  @if($navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2,8,50], true)))
+  {{-- Modal: اعتماد هذا الجهاز كجهاز مقر معتمد --}}
+  <div class="modal fade" id="modalAuthorizeDevice" tabindex="-1" aria-hidden="true" style="direction: rtl;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 22px 24px;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary bg-opacity-25 text-primary rounded-3 p-2 fs-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+              <i class="bi bi-display"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-1">اعتماد هذا الجهاز كجهاز مقر رسمي</h5>
+              <p class="text-white-50 small mb-0">تحويل هذا الكمبيوتر إلى جهاز بصمة رسمي للموظفين بالمقر</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="formAuthorizeDevice" onsubmit="event.preventDefault(); submitAuthorizeCurrentDevice();">
+            <div class="mb-3">
+              <label class="form-label fw-bold text-dark small mb-1">مقر العمل المعتمد لهذا الجهاز <span class="text-danger">*</span></label>
+              <select class="form-select form-select-lg rounded-3" id="authDeviceLocation" required>
+                <option value="دار ضيافة كفر الشيخ" data-guest-house="2">دار ضيافة كفر الشيخ (كفر الشيخ)</option>
+                <option value="دار ضيافة طنطا" data-guest-house="1">دار ضيافة طنطا (الغربية)</option>
+                <option value="مقر مؤسسة إنسان الرئيسي" data-guest-house="">مقر مؤسسة إنسان الرئيسي</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold text-dark small mb-1">اسم/وصف الجهاز <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg rounded-3" id="authDeviceName" placeholder="مثال: كمبيوتر استقبال دار كفر الشيخ" required>
+              <div class="form-text small text-muted">اسم يميز هذا الجهاز في التقارير وسجلات الحضور.</div>
+            </div>
+            <div class="alert alert-info border-0 rounded-3 small mb-0">
+              <i class="bi bi-shield-check me-1 text-primary"></i>
+              بمجرد الاعتماد، سيتم حفظ بصمة رقمية مشفرة على هذا المتصفح، وسيتم تسجيل حضور أي موظف فور دخوله للنظام من هذا الجهاز دون طلب GPS.
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+          <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" id="btnSubmitAuthorizeDevice" onclick="submitAuthorizeCurrentDevice()" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-check2-circle me-1"></i> اعتماد هذا الجهاز الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   @endif
 
   @if($navUser)

@@ -628,6 +628,10 @@ Route::middleware(['auth'])->group(function () {
     // تسجيل الحضور والانصراف الشخصي متاح لجميع الموظفين المسجلين
     Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
     Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
+    Route::post('employee-attendance/device-auto-checkin', [EmployeeAttendanceWebController::class, 'deviceAutoCheckIn'])->name('employee-attendance.device-auto-checkin');
+    Route::post('employee-attendance/authorize-device', [EmployeeAttendanceWebController::class, 'authorizeDevice'])->name('employee-attendance.authorize-device');
+    Route::get('employee-attendance/authorized-devices', [EmployeeAttendanceWebController::class, 'authorizedDevicesList'])->name('employee-attendance.authorized-devices');
+    Route::delete('employee-attendance/authorized-devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.revoke-device');
 
     Route::middleware('permission:employee_attendance.view|employee_attendance.view_own|employee_attendance.create')->group(function () {
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');

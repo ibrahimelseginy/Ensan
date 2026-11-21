@@ -46,6 +46,22 @@ final class EmployeeAttendanceWebController extends Controller
                 return redirect()->route('login');
             }
 
+            if ($request->filled('device_token') || $request->hasCookie('ensan_device_token')) {
+                $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
+                $result = $this->attendanceService->checkInWithAuthorizedDevice(
+                    (int) $user->id,
+                    (string) $token,
+                    $request->ip(),
+                    $request->userAgent()
+                );
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json($result, $result['success'] ? 200 : 422);
+                }
+                return $result['success']
+                    ? back()->with('success', $result['message'])
+                    : back()->with('error', $result['message']);
+            }
+
             if ($request->filled('latitude') && $request->filled('longitude')) {
                 $lat = (float) $request->input('latitude');
                 $lng = (float) $request->input('longitude');
@@ -99,6 +115,104 @@ final class EmployeeAttendanceWebController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function deviceAutoCheckIn(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح'], 401);
+        }
+
+        $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'device_authorized' => false,
+                'message' => 'هذا الجهاز غير معتمد حالياً.',
+            ]);
+        }
+
+        $result = $this->attendanceService->checkInWithAuthorizedDevice(
+            (int) $user->id,
+            (string) $token,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        return response()->json($result);
+    }
+
+    public function authorizeDevice(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح لك باعتماد الأجهزة.'], 403);
+        }
+
+        $request->validate([
+            'device_name'   => 'required|string|max:100',
+            'location_name' => 'required|string|max:100',
+            'guest_house_id'=> 'nullable|integer',
+        ]);
+
+        $token = bin2hex(random_bytes(32));
+
+        $device = \App\Models\AttendanceDevice::create([
+            'device_token'          => $token,
+            'device_name'           => $request->input('device_name'),
+            'location_name'         => $request->input('location_name'),
+            'guest_house_id'        => $request->input('guest_house_id'),
+            'authorized_by_user_id' => $user->id,
+            'ip_address'            => $request->ip(),
+            'user_agent'            => $request->userAgent(),
+            'last_used_at'          => now(),
+            'is_active'             => true,
+        ]);
+
+        $checkInResult = $this->attendanceService->checkInWithAuthorizedDevice(
+            (int) $user->id,
+            $token,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        $cookie = cookie('ensan_device_token', $token, 60 * 24 * 365 * 5); // 5 years
+
+        return response()->json([
+            'success'      => true,
+            'message'      => "تم اعتماد هذا الجهاز بنجاح: {$device->device_name} ({$device->location_name})",
+            'device_token' => $token,
+            'device'       => $device,
+            'check_in'     => $checkInResult,
+        ])->withCookie($cookie);
+    }
+
+    public function authorizedDevicesList(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+        }
+
+        $devices = \App\Models\AttendanceDevice::with(['authorizedBy:id,name', 'guestHouse:id,name'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json(['success' => true, 'devices' => $devices]);
+    }
+
+    public function revokeDevice(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+        }
+
+        $device = \App\Models\AttendanceDevice::findOrFail($id);
+        $device->update(['is_active' => false]);
+
+        return response()->json(['success' => true, 'message' => 'تم إلغاء اعتماد الجهاز بنجاح.']);
     }
 
     public function create(): View
