@@ -227,17 +227,66 @@ final class EmployeeAttendanceWebController extends Controller
         return response()->json(['success' => true, 'devices' => $devices]);
     }
 
-    public function revokeDevice(Request $request, int $id): \Illuminate\Http\JsonResponse
+    public function devices(Request $request): View|\Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2']) && !in_array((int)$user->id, [2,8,50], true))) {
+            abort(403, 'غير مصرح لك بالوصول لإدارة أجهزة بصمة المقرات.');
+        }
+
+        $devices = \App\Models\AttendanceDevice::with(['authorizedBy:id,name', 'guestHouse:id,name'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $guestHouses = \App\Models\GuestHouse::all();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'devices' => $devices]);
+        }
+
+        return view('employee_attendance.devices', compact('devices', 'guestHouses'));
+    }
+
+    public function toggleDeviceActive(Request $request, int $id): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $user = $request->user();
         if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
-            return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+            abort(403, 'غير مصرح.');
         }
 
         $device = \App\Models\AttendanceDevice::findOrFail($id);
-        $device->update(['is_active' => false]);
+        $device->update(['is_active' => !$device->is_active]);
 
-        return response()->json(['success' => true, 'message' => 'تم إلغاء اعتماد الجهاز بنجاح.']);
+        $statusStr = $device->is_active ? 'تفعيل' : 'تعطيل';
+        $msg = "تم {$statusStr} جهاز [{$device->device_name}] بنجاح.";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => $msg, 'is_active' => $device->is_active]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    public function revokeDevice(Request $request, int $id): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+            }
+            abort(403, 'غير مصرح.');
+        }
+
+        $device = \App\Models\AttendanceDevice::findOrFail($id);
+        $device->delete();
+
+        $msg = "تم حذف وإلغاء اعتماد الجهاز [{$device->device_name}] بنجاح.";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+
+        return back()->with('success', $msg);
     }
 
     public function create(): View

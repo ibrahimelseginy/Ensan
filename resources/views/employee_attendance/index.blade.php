@@ -45,6 +45,10 @@
             </a>
 
             @if($u && ($u->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$u->id, [2, 8, 50], true)))
+                <a href="{{ route('employee-attendance.devices') }}" class="btn btn-sm rounded-pill px-3.5 fw-bold" style="background: rgba(255,255,255,0.22); color: #ffffff; border: 1px solid rgba(255,255,255,0.5);" title="إدارة واعتماد أجهزة الكمبيوتر المكتبية للمقرات">
+                    <i class="bi bi-display me-1"></i> أجهزة بصمة المقرات
+                </a>
+
                 <div class="dropdown d-inline-block">
                     <button class="btn btn-sm rounded-pill px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.35);">
                         <i class="bi bi-geo-alt me-1"></i> مقرات الحضور

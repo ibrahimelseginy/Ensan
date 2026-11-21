@@ -631,7 +631,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('employee-attendance/device-auto-checkin', [EmployeeAttendanceWebController::class, 'deviceAutoCheckIn'])->name('employee-attendance.device-auto-checkin');
     Route::post('employee-attendance/authorize-device', [EmployeeAttendanceWebController::class, 'authorizeDevice'])->name('employee-attendance.authorize-device');
     Route::get('employee-attendance/authorized-devices', [EmployeeAttendanceWebController::class, 'authorizedDevicesList'])->name('employee-attendance.authorized-devices');
+    Route::get('employee-attendance/devices', [EmployeeAttendanceWebController::class, 'devices'])->name('employee-attendance.devices');
+    Route::post('employee-attendance/devices/{id}/toggle', [EmployeeAttendanceWebController::class, 'toggleDeviceActive'])->name('employee-attendance.toggle-device');
     Route::delete('employee-attendance/authorized-devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.revoke-device');
+    Route::delete('employee-attendance/devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.destroy-device');
 
     Route::middleware('permission:employee_attendance.view|employee_attendance.view_own|employee_attendance.create')->group(function () {
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');

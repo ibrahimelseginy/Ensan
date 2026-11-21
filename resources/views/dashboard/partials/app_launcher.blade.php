@@ -1200,6 +1200,19 @@ body.theme-dark .launcher-cat-btn.active,
                     </a>
                     @endif
 
+                    @if($u && ($u->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2']) || in_array((int)$u->id, [2, 8, 50], true)))
+                    <a href="{{ route('employee-attendance.devices') }}" class="ensan-sub-tile">
+                        <div class="ensan-sub-tile-icon bg-info-subtle text-info">
+                            <i class="bi bi-display"></i>
+                        </div>
+                        <div class="ensan-sub-tile-content">
+                            <div class="ensan-sub-tile-title">أجهزة بصمة المقرات</div>
+                            <small class="text-muted">اعتماد أجهزة كمبيوتر المقرات والدار</small>
+                        </div>
+                        <i class="bi bi-arrow-left ensan-sub-tile-arrow"></i>
+                    </a>
+                    @endif
+
                     @if($u && $u->hasPermission(['employee_tasks.view', 'employee_tasks.view_own']))
                     <a href="{{ route('employee-tasks.index') }}" class="ensan-sub-tile">
                         <div class="ensan-sub-tile-icon bg-warning-subtle text-warning">
