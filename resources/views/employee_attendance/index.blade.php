@@ -120,13 +120,21 @@
                                 <td class="px-3 text-center">
                                     @if($r->check_in_photo)
                                         <a href="{{ asset($r->check_in_photo) }}" target="_blank" class="d-inline-block position-relative" title="عرض صورة الحضور">
-                                            <img src="{{ asset($r->check_in_photo) }}" alt="حضور" class="rounded-3 shadow-xs border" style="width: 38px; height: 38px; object-fit: cover;">
-                                            <span class="position-absolute bottom-0 start-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 14px; height: 14px; font-size: 8px;">
+                                            <img src="{{ asset($r->check_in_photo) }}" alt="صورة الحضور" class="rounded-3 shadow-xs border" style="width: 44px; height: 44px; object-fit: cover;">
+                                            <span class="position-absolute bottom-0 start-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 16px; height: 16px; font-size: 9px;">
                                                 <i class="bi bi-camera-fill"></i>
                                             </span>
                                         </a>
+                                    @elseif($r->notes && (str_contains($r->notes, 'جهاز المقر') || str_contains($r->notes, 'جهاز معتمد')))
+                                        <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.28); font-size: 0.74rem; padding: 5px 10px;">
+                                            <i class="bi bi-display me-1"></i> كمبيوتر المقر
+                                        </span>
+                                    @elseif($r->notes && str_contains($r->notes, 'إدار'))
+                                        <span class="badge rounded-pill fw-bold" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.74rem; padding: 5px 10px;">
+                                            <i class="bi bi-shield-check me-1"></i> حضور إداري
+                                        </span>
                                     @else
-                                        <span class="badge bg-light text-muted border small" style="font-size: 0.72rem;">—</span>
+                                        <span class="badge bg-light text-muted border small" style="font-size: 0.74rem;">—</span>
                                     @endif
                                 </td>
                                 <td class="px-4"><span
@@ -135,13 +143,15 @@
                                 <td class="px-3 text-center">
                                     @if($r->check_out_photo)
                                         <a href="{{ asset($r->check_out_photo) }}" target="_blank" class="d-inline-block position-relative" title="عرض صورة الانصراف">
-                                            <img src="{{ asset($r->check_out_photo) }}" alt="انصراف" class="rounded-3 shadow-xs border" style="width: 38px; height: 38px; object-fit: cover;">
-                                            <span class="position-absolute bottom-0 start-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 14px; height: 14px; font-size: 8px;">
+                                            <img src="{{ asset($r->check_out_photo) }}" alt="صورة الانصراف" class="rounded-3 shadow-xs border" style="width: 44px; height: 44px; object-fit: cover;">
+                                            <span class="position-absolute bottom-0 start-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 16px; height: 16px; font-size: 9px;">
                                                 <i class="bi bi-camera-fill"></i>
                                             </span>
                                         </a>
                                     @elseif(!empty($r->check_out_at))
-                                        <span class="badge bg-light text-muted border small" style="font-size: 0.72rem;">تم الانصراف</span>
+                                        <span class="badge rounded-pill fw-bold" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.28); font-size: 0.74rem; padding: 5px 10px;">
+                                            <i class="bi bi-check2 me-1"></i> تم الانصراف
+                                        </span>
                                     @else
                                         <span class="text-muted small">—</span>
                                     @endif

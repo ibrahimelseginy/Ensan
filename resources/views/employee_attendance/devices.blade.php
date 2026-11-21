@@ -330,7 +330,9 @@
 {{-- Interactive Current Device Script --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || (window.innerWidth <= 768);
+    var ua = navigator.userAgent || '';
+    var isDesktopOs = /Windows NT|Macintosh|Linux x86_64/i.test(ua);
+    var isMobile = !isDesktopOs && (/Android|iPhone|iPad|iPod|Mobile/i.test(ua) || window.innerWidth <= 768);
     var token = localStorage.getItem('ensan_authorized_device_token');
 
     var loadingEl = document.getElementById('currentDeviceLoading');
