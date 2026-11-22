@@ -912,11 +912,11 @@
             transform: none !important;
             filter: none !important;
             perspective: none !important;
-            padding-top: 108px !important;
+            padding-top: 8px !important;
         }
         @media (max-width: 991.98px) {
             .content-wrapper {
-                padding-top: 72px !important;
+                padding-top: 8px !important;
             }
         }
         .modal,
@@ -3254,11 +3254,13 @@
                   <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">حضور</span>
                 </button>
               @endif
+            @endif
 
+            @if($navUser)
               <span id="topbarDeviceActionContainer" class="d-inline-flex align-items-center ms-1"></span>
-
               @php
                 $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
+                $isAttendanceEmployeeUser = $navUser && $navUser->is_employee && !$navUser->is_volunteer;
               @endphp
               <script>
                   (function () {
@@ -3436,7 +3438,7 @@
                     var deviceContainer = document.getElementById('topbarDeviceActionContainer');
 
                     // Setup dedicated device action buttons in topbar
-                    if (deviceContainer && isDesktopOs) {
+                    if (deviceContainer) {
                       if (authDeviceToken) {
                         deviceContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-xs" title="كمبيوتر مقر معتمد رسمياً">' +
                           '<i class="bi bi-display-fill text-success"></i> <span class="d-none d-sm-inline">جهاز معتمد</span></span>' +
@@ -3553,14 +3555,24 @@
                     }
 
                     window.openRequestDeviceModal = function() {
-                      if (isMobileDevice) {
-                        alert('طلب اعتماد أجهزة المقرات مخصص لأجهزة الكمبيوتر المكتبية فقط.');
-                        return;
-                      }
+                      var pMenu = document.getElementById('profileMenuDropdown');
+                      if (pMenu) pMenu.style.display = 'none';
                       var el = document.getElementById('modalRequestDeviceAuth');
                       if (el) {
-                        var modal = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
-                        modal.show();
+                        if (window.bootstrap && window.bootstrap.Modal) {
+                          try {
+                            window.bootstrap.Modal.getOrCreateInstance(el).show();
+                            return;
+                          } catch(err) {
+                            console.warn('Bootstrap modal error:', err);
+                          }
+                        }
+                        if (window.jQuery && typeof window.jQuery(el).modal === 'function') {
+                          window.jQuery(el).modal('show');
+                        } else {
+                          el.classList.add('show');
+                          el.style.display = 'block';
+                        }
                       }
                     };
 
@@ -3626,14 +3638,24 @@
                     };
 
                     window.openAuthorizeDeviceModal = function() {
-                      if (isMobileDevice) {
-                        alert('اعتماد أجهزة المقرات مخصص لأجهزة الكمبيوتر المكتبية فقط ولا يمكن اعتماده من الهواتف المحمولة.');
-                        return;
-                      }
+                      var pMenu = document.getElementById('profileMenuDropdown');
+                      if (pMenu) pMenu.style.display = 'none';
                       var el = document.getElementById('modalAuthorizeDevice');
                       if (el) {
-                        var modal = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
-                        modal.show();
+                        if (window.bootstrap && window.bootstrap.Modal) {
+                          try {
+                            window.bootstrap.Modal.getOrCreateInstance(el).show();
+                            return;
+                          } catch(err) {
+                            console.warn('Bootstrap modal error:', err);
+                          }
+                        }
+                        if (window.jQuery && typeof window.jQuery(el).modal === 'function') {
+                          window.jQuery(el).modal('show');
+                        } else {
+                          el.classList.add('show');
+                          el.style.display = 'block';
+                        }
                       }
                     };
 
@@ -3931,49 +3953,6 @@
                       // فحص الموقع في الخلفية داخل النافذة
                       acquireMobileLocation();
                     };
-                          if (attActionType === 'checkout') {
-                            checkOutWithAuthorizedDeviceToken(authDeviceToken);
-                          } else {
-                            checkInWithAuthorizedDeviceToken(authDeviceToken);
-                          }
-                          return;
-                        } else {
-                          if (isTopAdmin) {
-                            openAuthorizeDeviceModal();
-                          } else {
-                            openRequestDeviceModal();
-                          }
-                          return;
-                        }
-                      }
-
-                      // إذا كان هاتف محمول: فتح نافذة التصوير فوراً والبدء بجلب الموقع بالتوازي
-                      var modalTitle = document.getElementById('attCameraTitle');
-                      var modalSub = document.getElementById('attCameraSubtitle');
-                      var submitText = document.getElementById('btnSubmitAttText');
-                      var headerIcon = document.getElementById('attCameraHeaderIcon');
-
-                      if (attActionType === 'checkout') {
-                        if (modalTitle) modalTitle.textContent = 'توثيق الانصراف بالصورة والموقع';
-                        if (modalSub) modalSub.textContent = 'التقط صورة شخصية داخل المقر لتأكيد الانصراف';
-                        if (submitText) submitText.textContent = 'تأكيد الانصراف مع الصورة';
-                        if (headerIcon) headerIcon.className = 'bi bi-box-arrow-left';
-                      } else {
-                        if (modalTitle) modalTitle.textContent = 'توثيق الحضور بالصورة والموقع';
-                        if (modalSub) modalSub.textContent = 'صورة سيلفي حية من داخل مقر العمل';
-                        if (submitText) submitText.textContent = 'تأكيد الحضور مع الصورة';
-                        if (headerIcon) headerIcon.className = 'bi bi-camera-fill';
-                      }
-
-                      var modalEl = document.getElementById('modalAttendanceCamera');
-                      if (modalEl) {
-                        var m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        m.show();
-                      }
-
-                      // فحص الموقع في الخلفية داخل النافذة
-                      acquireMobileLocation();
-                    };
 
                     window.submitAttendanceWithPhoto = function() {
                       if (!attCapturedPhotoBase64) {
@@ -4037,7 +4016,8 @@
                     };
 
                     // Auto-check on entering system if device is authorized (مخصص لأجهزة الكمبيوتر المكتبية فقط ولا يعمل على الموبايل)
-                    if (!isMobileDevice) {
+                    const isAttendanceEmployee = @json($isAttendanceEmployeeUser);
+                    if (isAttendanceEmployee && !isMobileDevice) {
                       if (authDeviceToken) {
                         checkInWithAuthorizedDeviceToken(authDeviceToken);
                       } else {

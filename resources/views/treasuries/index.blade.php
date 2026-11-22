@@ -86,7 +86,7 @@
 @endpush
 
 @section('content')
-<div class="container-fluid py-4 px-lg-4" style="direction: rtl; text-align: right;">
+<div class="container-fluid pt-2 pb-4 px-lg-4" style="direction: rtl; text-align: right;">
 
     {{-- Alert Messages --}}
     @if(session('success'))

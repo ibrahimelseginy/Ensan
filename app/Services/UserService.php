@@ -41,6 +41,18 @@ final readonly class UserService
 
     public function createUser(array $data, array $files = []): User
     {
+        if (!empty($data['email'])) {
+            $cleanEmail = strtolower(trim((string) $data['email']));
+            $data['email'] = $cleanEmail;
+            User::onlyTrashed()
+                ->where('email', $cleanEmail)
+                ->get()
+                ->each(function (User $trashed) {
+                    $trashed->email = 'deleted_' . $trashed->id . '_' . time() . '_' . $trashed->email;
+                    $trashed->saveQuietly();
+                });
+        }
+
         $data['password'] = Hash::make($data['password']);
         $data['is_employee'] = $data['is_employee'] ?? true;
         $data['is_volunteer'] = $data['is_volunteer'] ?? false;
@@ -84,6 +96,19 @@ final readonly class UserService
 
     public function updateUser(User $user, array $data, array $files = []): mixed
     {
+        if (!empty($data['email'])) {
+            $cleanEmail = strtolower(trim((string) $data['email']));
+            $data['email'] = $cleanEmail;
+            User::onlyTrashed()
+                ->where('email', $cleanEmail)
+                ->where('id', '!=', $user->id)
+                ->get()
+                ->each(function (User $trashed) {
+                    $trashed->email = 'deleted_' . $trashed->id . '_' . time() . '_' . $trashed->email;
+                    $trashed->saveQuietly();
+                });
+        }
+
         unset(
             $data['profile_photo'],
             $data['contract_image'],

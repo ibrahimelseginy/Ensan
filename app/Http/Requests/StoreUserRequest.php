@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StoreUserRequest extends FormRequest
 {
@@ -13,11 +14,20 @@ final class StoreUserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge([
+                'email' => strtolower(trim((string) $this->input('email'))),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'name'                  => 'required|string|max:255',
-            'email'                 => 'required|email|max:255|unique:users,email',
+            'email'                 => ['required', 'email', 'max:255', Rule::unique('users', 'email')->withoutTrashed()],
             'password'              => 'required|string|min:6',
             'phone'                 => 'nullable|string|max:20',
             'national_id'           => 'nullable|string|max:25',

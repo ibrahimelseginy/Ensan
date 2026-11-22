@@ -42,6 +42,11 @@ final readonly class UserRepository
 
     public function delete(User $user): bool
     {
-        return $user->delete();
+        if (!str_starts_with((string) $user->email, 'deleted_')) {
+            $user->email = 'deleted_' . $user->id . '_' . time() . '_' . $user->email;
+            $user->saveQuietly();
+        }
+
+        return (bool) $user->delete();
     }
 }

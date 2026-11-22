@@ -3,7 +3,7 @@
 @section('title', 'الرئيسية — منظومة إنسان')
 
 @section('content')
-<div class="container-fluid py-4 px-3 px-md-4">
+<div class="container-fluid pt-2 pb-4 px-3 px-md-4">
     @php
         $hour = (int) date('H');
         $greeting = $hour < 12 ? 'صباح الخير' : 'مساء الخير';

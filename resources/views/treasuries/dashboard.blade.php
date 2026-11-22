@@ -1,7 +1,7 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid pt-2 pb-4">
     {{-- Hero Section --}}
     <div class="row mb-4">
         <div class="col-12">
