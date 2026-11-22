@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Finance\Custody;
 use App\Models\Finance\CustodyExpense;
 use App\Models\Finance\CashAccount;
+use App\Models\Finance\FinancialAccount;
 use App\Models\Treasury;
 use App\Models\User;
 use App\Models\Project;
@@ -106,10 +107,48 @@ final class CustodyWebController extends Controller
         DB::transaction(function () use ($data, $treasury) {
             $custodyNumber = 'CUST-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
-            // Find or link a cash_account_id if available
+            // Find or dynamically link a cash_account_id & financial_account_id to prevent FK errors
             $cashAccount = CashAccount::where('legacy_treasury_id', $treasury->id)->first();
-            $sourceCashAccountId = $cashAccount ? $cashAccount->id : 1;
-            $custodyAccountId = $cashAccount && $cashAccount->ledger_account_id ? $cashAccount->ledger_account_id : 1;
+            if (!$cashAccount) {
+                $finAccount = FinancialAccount::firstOrCreate(
+                    ['code' => 'TREAS-' . $treasury->id],
+                    [
+                        'name' => $treasury->name,
+                        'classification' => 'asset',
+                        'normal_balance' => 'debit',
+                        'is_posting' => true,
+                        'is_active' => true,
+                        'currency' => 'EGP',
+                    ]
+                );
+
+                $cashAccount = CashAccount::firstOrCreate(
+                    ['legacy_treasury_id' => $treasury->id],
+                    [
+                        'code' => 'CASH-TR-' . $treasury->id,
+                        'name' => $treasury->name,
+                        'kind' => 'cash',
+                        'ledger_account_id' => $finAccount->id,
+                        'currency' => 'EGP',
+                        'is_active' => true,
+                    ]
+                );
+            }
+
+            $custodyFinAccount = FinancialAccount::firstOrCreate(
+                ['code' => 'CUSTODY-ACC-DEFAULT'],
+                [
+                    'name' => 'حساب العهد المالية',
+                    'classification' => 'asset',
+                    'normal_balance' => 'debit',
+                    'is_posting' => true,
+                    'is_active' => true,
+                    'currency' => 'EGP',
+                ]
+            );
+
+            $sourceCashAccountId = $cashAccount->id;
+            $custodyAccountId = $custodyFinAccount->id;
 
             $custody = Custody::create([
                 'custody_number' => $custodyNumber,

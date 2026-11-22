@@ -3446,6 +3446,13 @@
                           gpsBtn.style.borderColor = 'rgba(245, 158, 11, 0.35)';
                           gpsBtn.title = 'اضغط لاعتماد هذا الكمبيوتر لدار الضيافة / المقر لتسجيل حضور الموظفين تلقائياً';
                           gpsBtn.onclick = function() { openAuthorizeDeviceModal(); };
+                        } else {
+                          gpsBtn.innerHTML = '<i class="bi bi-display fs-6 text-primary me-1"></i> <span class="fw-bold d-none d-sm-inline">طلب اعتماد هذا الجهاز</span><span class="fw-bold d-inline d-sm-none">اعتماد</span>';
+                          gpsBtn.style.background = 'rgba(37, 99, 235, 0.12)';
+                          gpsBtn.style.color = '#1d4ed8';
+                          gpsBtn.style.borderColor = 'rgba(37, 99, 235, 0.35)';
+                          gpsBtn.title = 'اضغط لإرسال طلب للإدارة لاعتماد هذا الكمبيوتر كجهاز مقر لتسجيل الحضور';
+                          gpsBtn.onclick = function() { openRequestDeviceModal(); };
                         }
                       }
                     }
@@ -3473,6 +3480,9 @@
                           setTimeout(function(){ window.location.reload(); }, 1200);
                         } else if (data && data.already_checked_in) {
                           resetGpsBtn();
+                        } else if (data && data.device_pending) {
+                          showGpsToast('⏳ ' + (data.message || 'طلب اعتماد هذا الكمبيوتر قيد المراجعة والموافقة من الإدارة حالياً.'), 'warning');
+                          resetGpsBtn();
                         } else if (data && data.device_authorized === false) {
                           localStorage.removeItem('ensan_authorized_device_token');
                           if (!isMobileDevice) notifyUnauthorizedDevice();
@@ -3492,10 +3502,85 @@
                       var key = 'ensan_unauth_dev_notify_{{ $navUser->id }}_' + (new Date()).toISOString().slice(0,10);
                       if (!sessionStorage.getItem(key)) {
                         sessionStorage.setItem(key, '1');
-                        var authBtn = isTopAdmin ? ' <button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>' : '';
-                        showGpsToast('⚠️ هذا الكمبيوتر غير معتمد كجهاز مقر رسمي للحضور التلقائي. يرجى تسجيل الحضور عبر GPS من هاتفك المحمول أو مراجعة الإدارة.' + authBtn, 'warning');
+                        var authBtn = isTopAdmin
+                          ? ' <button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>اعتماد هذا الكمبيوتر للمقر</button>'
+                          : ' <button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-light text-dark fw-bold rounded-pill px-3 py-1 ms-2 shadow-sm"><i class="bi bi-display me-1"></i>طلب اعتماد هذا الجهاز</button>';
+                        showGpsToast('⚠️ هذا الكمبيوتر غير معتمد كجهاز مقر رسمي للحضور التلقائي. يرجى تسجيل الحضور عبر GPS من هاتفك المحمول أو طلب اعتماده.' + authBtn, 'warning');
                       }
                     }
+
+                    window.openRequestDeviceModal = function() {
+                      if (isMobileDevice) {
+                        alert('طلب اعتماد أجهزة المقرات مخصص لأجهزة الكمبيوتر المكتبية فقط.');
+                        return;
+                      }
+                      var el = document.getElementById('modalRequestDeviceAuth');
+                      if (el) {
+                        var modal = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+                        modal.show();
+                      }
+                    };
+
+                    window.submitRequestDeviceAuth = function() {
+                      var locSelect = document.getElementById('reqDeviceLocation');
+                      var nameInput = document.getElementById('reqDeviceName');
+                      if (!nameInput || !nameInput.value.trim()) {
+                        alert('يرجى إدخال اسم أو وصف الجهاز.');
+                        return;
+                      }
+                      var selectedOpt = locSelect.options[locSelect.selectedIndex];
+                      var ghId = selectedOpt.getAttribute('data-guest-house') || null;
+                      var btn = document.getElementById('btnSubmitRequestDeviceAuth');
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ إرسال الطلب...';
+                      }
+
+                      fetch('{{ route('employee-attendance.request-device-authorization') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                          device_name: nameInput.value.trim(),
+                          location_name: locSelect.value,
+                          guest_house_id: ghId
+                        })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success) {
+                          if (data.device_token) {
+                            localStorage.setItem('ensan_authorized_device_token', data.device_token);
+                            var exp = new Date(Date.now() + (5 * 365 * 24 * 60 * 60 * 1000)).toUTCString();
+                            document.cookie = 'ensan_device_token=' + encodeURIComponent(data.device_token) + '; expires=' + exp + '; path=/; SameSite=Lax';
+                          }
+                          var modalEl = document.getElementById('modalRequestDeviceAuth');
+                          if (modalEl) {
+                            var m = bootstrap.Modal.getInstance(modalEl);
+                            if (m) m.hide();
+                          }
+                          showGpsToast('✅ ' + data.message, 'success');
+                          setTimeout(function(){ window.location.reload(); }, 2000);
+                        } else {
+                          alert((data && data.message) ? data.message : 'تعذر إرسال الطلب');
+                          if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> إرسال الطلب للمدير الآن';
+                          }
+                        }
+                      })
+                      .catch(function(){
+                        alert('حدث خطأ أثناء الاتصال بالسيرفر');
+                        if (btn) {
+                          btn.disabled = false;
+                          btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> إرسال الطلب للمدير الآن';
+                        }
+                      });
+                    };
 
                     window.openAuthorizeDeviceModal = function() {
                       if (isMobileDevice) {
@@ -3622,15 +3707,36 @@
 
                     window.acquireMobileLocation = function() {
                       var statusEl = document.getElementById('attCameraGpsStatus');
-                      if (statusEl) {
+
+                      // 1. استخدام الموقع المخزن بالذاكرة المؤقتة فوراً إن وُجد (< 10 دقائق) لتجنب التأخير على أندرويد
+                      var cachedLat = sessionStorage.getItem('ensan_geo_lat');
+                      var cachedLng = sessionStorage.getItem('ensan_geo_lng');
+                      var cachedTime = sessionStorage.getItem('ensan_geo_time');
+                      var isFresh = cachedLat && cachedLng && cachedTime && ((Date.now() - parseInt(cachedTime, 10)) < 600000);
+
+                      if (isFresh && !attCapturedLat) {
+                        attCapturedLat = parseFloat(cachedLat);
+                        attCapturedLng = parseFloat(cachedLng);
+                        if (statusEl) {
+                          statusEl.innerHTML = '<i class="bi bi-geo-alt-fill text-success me-1"></i> تم تأكيد الموقع بنجاح ✅';
+                          statusEl.parentElement.style.background = 'rgba(16, 185, 129, 0.12)';
+                          statusEl.parentElement.style.color = '#047857';
+                        }
+                        updateSubmitButtonState();
+                      } else if (statusEl && !attCapturedLat) {
                         statusEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ تحديد موقعك عبر الـ GPS...';
                         statusEl.parentElement.style.background = 'rgba(14, 165, 233, 0.12)';
                         statusEl.parentElement.style.color = '#0284c7';
                       }
 
                       var onSuccess = function(pos) {
+                        if (!pos || !pos.coords) return;
                         attCapturedLat = pos.coords.latitude;
                         attCapturedLng = pos.coords.longitude;
+                        sessionStorage.setItem('ensan_geo_lat', attCapturedLat);
+                        sessionStorage.setItem('ensan_geo_lng', attCapturedLng);
+                        sessionStorage.setItem('ensan_geo_time', Date.now().toString());
+
                         if (statusEl) {
                           statusEl.innerHTML = '<i class="bi bi-geo-alt-fill text-success me-1"></i> تم تحديد إحداثيات موقعك بنجاح ✅';
                           statusEl.parentElement.style.background = 'rgba(16, 185, 129, 0.12)';
@@ -3640,9 +3746,13 @@
                       };
 
                       var onError = function(err) {
+                        if (attCapturedLat && attCapturedLng) {
+                          // يوجد موقع معتمد سابق بالذاكرة، لا داعي لإظهار الخطأ الأحمر
+                          return;
+                        }
                         var msg = (err && err.code === 1)
-                          ? 'الموقع محظور بالمتصفح! انقر على القفل 🔒 ثم اختر [إعادة ضبط الأذونات] أو فعّل مفتاح الموقع.'
-                          : 'تعذر تحديد الموقع. تأكد من تفعيل GPS بالهاتف.';
+                          ? 'إذن الموقع محظور بالمتصفح! انقر على القفل 🔒 بأعلى الشاشة بجانب الرابط ➔ فعّل (الموقع) أو اضغط [إعادة ضبط الأذونات].'
+                          : 'تعذر التقاط إشارة GPS. تأكد من تشغيل "الموقع" بهاتفك المحمول.';
                         if (statusEl) {
                           statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> ' + msg +
                             ' <button type="button" onclick="acquireMobileLocation()" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5 ms-1 fw-bold" style="font-size: 0.72rem;">إعادة الفحص 🔄</button>';
@@ -3651,24 +3761,54 @@
                         }
                       };
 
-                      // Stage 1: Satellite GPS (6s timeout)
+                      if (!navigator.geolocation) {
+                        onError({ code: 2 });
+                        return;
+                      }
+
+                      // على أندرويد: مزود الشبكة Fused/Network يعطي الموقع الداخلي فوراً دون انتظار القمر الصناعي
                       navigator.geolocation.getCurrentPosition(
                         onSuccess,
-                        function(err1) {
-                          if (err1 && err1.code === 1) {
-                            onError(err1);
+                        function(firstErr) {
+                          if (firstErr && firstErr.code === 1) {
+                            onError(firstErr);
                             return;
                           }
-                          // Stage 2: Network / Wi-Fi fused provider
                           navigator.geolocation.getCurrentPosition(
                             onSuccess,
                             onError,
-                            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+                            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
                           );
                         },
-                        { enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 }
+                        { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
                       );
+
+                      // طلب متوازي بدقة أعلى في الخلفية
+                      try {
+                        navigator.geolocation.getCurrentPosition(
+                          onSuccess,
+                          function() {},
+                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                        );
+                      } catch(e) {}
                     };
+
+                    // تجهيز مسبق لإحداثيات الموقع على الهواتف فور فتح النظام لتكون جاهزة بدون انتظار
+                    if (isMobileDevice && navigator.geolocation) {
+                      try {
+                        navigator.geolocation.getCurrentPosition(
+                          function(pos) {
+                            if (pos && pos.coords) {
+                              sessionStorage.setItem('ensan_geo_lat', pos.coords.latitude);
+                              sessionStorage.setItem('ensan_geo_lng', pos.coords.longitude);
+                              sessionStorage.setItem('ensan_geo_time', Date.now().toString());
+                            }
+                          },
+                          function() {},
+                          { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+                        );
+                      } catch(e) {}
+                    }
 
                     window.startAttendanceCapture = function(type) {
                       attActionType = type || 'checkin';
@@ -3683,7 +3823,7 @@
                           if (isTopAdmin) {
                             openAuthorizeDeviceModal();
                           } else {
-                            showGpsToast('⚠️ هذا الكمبيوتر غير معتمد كجهاز مقر بعد. يرجى من مدير المقر تسجيل الدخول من هذا الجهاز واعتماده لمرة واحدة.', 'warning');
+                            openRequestDeviceModal();
                           }
                           return;
                         }
@@ -4181,6 +4321,55 @@
           <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
           <button type="button" id="btnSubmitAuthorizeDevice" onclick="submitAuthorizeCurrentDevice()" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
             <i class="bi bi-check2-circle me-1"></i> اعتماد هذا الجهاز الآن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
+  @if($navUser && !($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2,8,50], true)))
+  {{-- Modal: طلب اعتماد هذا الكمبيوتر كجهاز مقر للموظفين --}}
+  <div class="modal fade" id="modalRequestDeviceAuth" tabindex="-1" aria-hidden="true" style="direction: rtl;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #1e40af, #1e3a8a); color: #fff; padding: 22px 24px;">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-white bg-opacity-20 text-white rounded-3 p-2 fs-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+              <i class="bi bi-display"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-1">طلب اعتماد هذا الكمبيوتر للمقر</h5>
+              <p class="text-white-50 small mb-0">إرسال طلب للمدير لتسجيل حضور الموظفين تلقائياً من هذا الجهاز</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="formRequestDeviceAuth" onsubmit="event.preventDefault(); submitRequestDeviceAuth();">
+            <div class="mb-3">
+              <label class="form-label fw-bold text-dark small mb-1">المقر التابع له هذا الجهاز <span class="text-danger">*</span></label>
+              <select class="form-select form-select-lg rounded-3" id="reqDeviceLocation" required>
+                <option value="دار ضيافة كفر الشيخ" data-guest-house="2">دار ضيافة كفر الشيخ (كفر الشيخ)</option>
+                <option value="دار ضيافة طنطا" data-guest-house="1">دار ضيافة طنطا (الغربية)</option>
+                <option value="مقر مؤسسة إنسان الرئيسي" data-guest-house="">مقر مؤسسة إنسان الرئيسي</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold text-dark small mb-1">اسم/وصف الجهاز <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg rounded-3" id="reqDeviceName" placeholder="مثال: كمبيوتر الاستقبال الرئيسي - جهاز الدور الأول" required>
+              <div class="form-text small text-muted">اسم يوضح للإدارة مكان ومهمة هذا الجهاز لاعتماده.</div>
+            </div>
+            <div class="alert alert-primary border-0 rounded-3 small mb-0" style="background: #eff6ff; color: #1e40af;">
+              <i class="bi bi-bell-fill me-1"></i>
+              فور إرسال الطلب، سيصل إشعار مباشر لمدير النظام والمدير العام في صفحة <strong>أجهزة الحضور المعتمدة</strong> لمراجعة الجهاز واعتماده فوراً.
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+          <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" id="btnSubmitRequestDeviceAuth" onclick="submitRequestDeviceAuth()" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-send-fill me-1"></i> إرسال الطلب للمدير الآن
           </button>
         </div>
       </div>

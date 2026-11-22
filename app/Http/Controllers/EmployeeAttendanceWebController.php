@@ -227,6 +227,86 @@ final class EmployeeAttendanceWebController extends Controller
         return response()->json(['success' => true, 'devices' => $devices]);
     }
 
+    public function requestDeviceAuthorization(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'يرجى تسجيل الدخول أولاً لإرسال طلب الاعتماد.'], 401);
+        }
+
+        $request->validate([
+            'device_name'   => 'required|string|max:100',
+            'location_name' => 'required|string|max:100',
+            'guest_house_id'=> 'nullable|integer',
+        ]);
+
+        $token = bin2hex(random_bytes(32));
+
+        $device = \App\Models\AttendanceDevice::create([
+            'device_token'          => $token,
+            'device_name'           => $request->input('device_name') . ' (طلب: ' . $user->name . ')',
+            'location_name'         => $request->input('location_name'),
+            'guest_house_id'        => $request->input('guest_house_id'),
+            'authorized_by_user_id' => null,
+            'ip_address'            => $request->ip(),
+            'user_agent'            => $request->userAgent(),
+            'last_used_at'          => null,
+            'is_active'             => false, // معلق بانتظار اعتماد الإدارة
+        ]);
+
+        // إرسال إشعار فوري لمديري النظام والمدير العام
+        try {
+            $adminIds = \App\Models\User::role(['admin', 'super_admin', 'manager'])
+                ->orWhereIn('id', [2, 8, 50])
+                ->pluck('id')
+                ->unique();
+
+            foreach ($adminIds as $admId) {
+                \App\Models\MobileNotification::create([
+                    'title'          => 'طلب اعتماد جهاز مقر جديد 💻',
+                    'body'           => "أرسل الموظف {$user->name} طلباً لاعتماد جهاز [{$device->device_name}] لمقر [{$device->location_name}]. يرجى مراجعته واعتماده من صفحة أجهزة المقرات.",
+                    'category'       => \App\Models\MobileNotification::CATEGORY_GENERAL,
+                    'target_type'    => 'user',
+                    'target_user_id' => $admId,
+                    'is_sent'        => true,
+                    'sent_at'        => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {}
+
+        $cookie = cookie('ensan_device_token', $token, 60 * 24 * 365 * 5);
+
+        return response()->json([
+            'success'      => true,
+            'message'      => "تم إرسال طلب اعتماد الجهاز للإدارة بنجاح. سيتم تفعيل تسجيل حضورك التلقائي فور موافقة المدير من لوحة أجهزة المقرات.",
+            'device_token' => $token,
+            'device'       => $device,
+        ])->withCookie($cookie);
+    }
+
+    public function approveDevice(Request $request, int $id): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !in_array((int)$user->id, [2,8,50], true))) {
+            abort(403, 'غير مصرح.');
+        }
+
+        $device = \App\Models\AttendanceDevice::findOrFail($id);
+        $device->update([
+            'is_active'             => true,
+            'authorized_by_user_id' => $user->id,
+            'last_used_at'          => now(),
+        ]);
+
+        $msg = "تمت الموافقة وتفعيل اعتماد جهاز [{$device->device_name}] لمقر [{$device->location_name}] بنجاح!";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
     public function devices(Request $request): View|\Illuminate\Http\JsonResponse
     {
         $user = $request->user();
@@ -238,13 +318,15 @@ final class EmployeeAttendanceWebController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $guestHouses = \App\Models\GuestHouse::all();
+        $pendingDevices = $devices->where('is_active', false);
+        $activeDevices  = $devices->where('is_active', true);
+        $guestHouses    = \App\Models\GuestHouse::all();
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'devices' => $devices]);
+            return response()->json(['success' => true, 'devices' => $devices, 'pending_count' => $pendingDevices->count()]);
         }
 
-        return view('employee_attendance.devices', compact('devices', 'guestHouses'));
+        return view('employee_attendance.devices', compact('devices', 'pendingDevices', 'activeDevices', 'guestHouses'));
     }
 
     public function toggleDeviceActive(Request $request, int $id): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse

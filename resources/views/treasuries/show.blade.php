@@ -165,6 +165,7 @@
                             <tr>
                                 <th>التاريخ</th>
                                 <th>النوع</th>
+                                <th>طريقة الدفع / القناة</th>
                                 <th>المبلغ</th>
                                 <th>الوصف</th>
                                 <th class="text-center" style="width: 110px;">إجراءات</th>
@@ -172,6 +173,18 @@
                         </thead>
                         <tbody>
                             @forelse($recentTransactions as $transaction)
+                            @php
+                                $don = $transaction->donation;
+                                $method = $don ? $don->payment_method : null;
+                                $desc = (string)$transaction->description;
+                                if (!$method) {
+                                    if (str_contains($desc, 'فودافون') || str_contains($desc, 'vodafone')) $method = 'vodafone_cash';
+                                    elseif (str_contains($desc, 'انستا') || str_contains($desc, 'instapay') || str_contains($desc, 'إنستا')) $method = 'instapay';
+                                    elseif (str_contains($desc, 'بنك') || str_contains($desc, 'تحويل')) $method = 'bank_transfer';
+                                    elseif (str_contains($desc, 'نقدي') || str_contains($desc, 'كاش')) $method = 'cash';
+                                    elseif (str_contains($desc, 'فوري')) $method = 'fawry';
+                                }
+                            @endphp
                             <tr>
                                 <td>{{ $transaction->transaction_date->format('Y-m-d') }}</td>
                                 <td>
@@ -181,8 +194,35 @@
                                         <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">صادر</span>
                                     @endif
                                 </td>
+                                <td>
+                                    @if($method === 'vodafone_cash')
+                                        <span class="badge rounded-pill fw-bold" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 0.74rem; padding: 4px 9px;">
+                                            <i class="bi bi-phone-fill me-1"></i> فودافون كاش
+                                        </span>
+                                    @elseif($method === 'instapay')
+                                        <span class="badge rounded-pill fw-bold" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; font-size: 0.74rem; padding: 4px 9px;">
+                                            <i class="bi bi-lightning-charge-fill me-1"></i> إنستاباي
+                                        </span>
+                                    @elseif($method === 'cash')
+                                        <span class="badge rounded-pill fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.74rem; padding: 4px 9px;">
+                                            <i class="bi bi-cash-stack me-1"></i> نقدي (كاش)
+                                        </span>
+                                    @elseif($method === 'bank_transfer')
+                                        <span class="badge rounded-pill fw-bold" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.74rem; padding: 4px 9px;">
+                                            <i class="bi bi-bank2 me-1"></i> تحويل بنكي
+                                        </span>
+                                    @elseif($method === 'fawry')
+                                        <span class="badge rounded-pill fw-bold" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.74rem; padding: 4px 9px;">
+                                            <i class="bi bi-upc-scan me-1"></i> فوري
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-muted border rounded-pill px-2.5 py-1 small">
+                                            {{ $transaction->type === 'in' ? 'نقدي' : 'مصروف' }}
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
-                                <td class="text-muted">{{ $transaction->description }}</td>
+                                <td class="text-dark fw-semibold">{{ $transaction->description }}</td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-1">
                                         <button

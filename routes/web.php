@@ -629,9 +629,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('employee-attendance/check-in', [EmployeeAttendanceWebController::class, 'checkIn'])->name('employee-attendance.checkIn');
     Route::post('employee-attendance/check-out', [EmployeeAttendanceWebController::class, 'checkOut'])->name('employee-attendance.checkOut');
     Route::post('employee-attendance/device-auto-checkin', [EmployeeAttendanceWebController::class, 'deviceAutoCheckIn'])->name('employee-attendance.device-auto-checkin');
+    Route::post('employee-attendance/request-device-authorization', [EmployeeAttendanceWebController::class, 'requestDeviceAuthorization'])->name('employee-attendance.request-device-authorization');
     Route::post('employee-attendance/authorize-device', [EmployeeAttendanceWebController::class, 'authorizeDevice'])->name('employee-attendance.authorize-device');
     Route::get('employee-attendance/authorized-devices', [EmployeeAttendanceWebController::class, 'authorizedDevicesList'])->name('employee-attendance.authorized-devices');
     Route::get('employee-attendance/devices', [EmployeeAttendanceWebController::class, 'devices'])->name('employee-attendance.devices');
+    Route::post('employee-attendance/devices/{id}/approve', [EmployeeAttendanceWebController::class, 'approveDevice'])->name('employee-attendance.approve-device');
     Route::post('employee-attendance/devices/{id}/toggle', [EmployeeAttendanceWebController::class, 'toggleDeviceActive'])->name('employee-attendance.toggle-device');
     Route::delete('employee-attendance/authorized-devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.revoke-device');
     Route::delete('employee-attendance/devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.destroy-device');

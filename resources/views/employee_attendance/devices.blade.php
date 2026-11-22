@@ -133,6 +133,95 @@
         </div>
     </div>
 
+    {{-- SECTION 1.5: PENDING APPROVAL REQUESTS (طلبات اعتماد الأجهزة المعلقة) --}}
+    @php
+        $pendingList = isset($pendingDevices) ? $pendingDevices : $devices->where('is_active', false);
+        $approvedList = isset($activeDevices) ? $activeDevices : $devices->where('is_active', true);
+    @endphp
+
+    @if($pendingList->count() > 0)
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="border: 2px solid #f59e0b !important; background: #fffdf8;">
+            <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-bottom: 1px solid #fef3c7 !important;">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center text-warning" style="width: 42px; height: 42px; min-width: 42px; background: rgba(245, 158, 11, 0.15);">
+                        <i class="bi bi-hourglass-split fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="fw-bold mb-0 text-dark">طلبات اعتماد أجهزة الموظفين المعلقة</h5>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold">{{ $pendingList->count() }} طلب جديد بانتظار الاعتماد</span>
+                        </div>
+                        <small class="text-muted">هذه الأجهزة أرسل موظفوها طلباً لاعتمادها كأجهزة حضور رسمي. اضغط [موافقة واعتماد] لتفعيل الحضور فوراً من هذا الجهاز.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="min-width: 900px;">
+                    <thead class="bg-light text-muted small text-uppercase" style="border-bottom: 1px solid #fed7aa;">
+                        <tr>
+                            <th class="py-3 px-3">اسم الجهاز ومقدم الطلب</th>
+                            <th class="py-3 px-3">المقر المطلوب</th>
+                            <th class="py-3 px-3">عنوان IP والمتصفح</th>
+                            <th class="py-3 px-3">وقت إرسال الطلب</th>
+                            <th class="py-3 px-3 text-center" style="width: 220px;">القرار</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pendingList as $pDev)
+                            <tr style="background: rgba(254, 243, 199, 0.15);">
+                                <td class="px-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-3 d-flex align-items-center justify-content-center text-warning shadow-xs" style="width: 38px; height: 38px; min-width: 38px; background: #fef3c7;">
+                                            <i class="bi bi-display fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ $pDev->device_name }}</div>
+                                            <small class="text-muted font-monospace" style="font-size: 0.72rem;" dir="ltr">token: {{ substr($pDev->device_token, 0, 16) }}...</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-3">
+                                    <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.1); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.82rem; padding: 6px 12px;">
+                                        <i class="bi bi-geo-alt-fill me-1"></i> {{ $pDev->location_name }}
+                                    </span>
+                                </td>
+                                <td class="px-3">
+                                    <div class="font-monospace fw-bold text-dark bg-white px-2 py-0.5 rounded border d-inline-block small" style="font-size: 0.76rem;" dir="ltr">{{ $pDev->ip_address ?: 'غير متوفر' }}</div>
+                                    <div class="text-muted text-truncate" style="max-width: 170px; font-size: 0.7rem;" title="{{ $pDev->user_agent }}">{{ $pDev->user_agent ?: '-' }}</div>
+                                </td>
+                                <td class="px-3">
+                                    <div class="small fw-bold text-dark">{{ $pDev->created_at ? $pDev->created_at->diffForHumans() : '-' }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;" dir="ltr">{{ $pDev->created_at ? $pDev->created_at->format('Y-m-d h:i A') : '' }}</div>
+                                </td>
+                                <td class="px-3 text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <form action="{{ route('employee-attendance.approve-device', $pDev->id) }}" method="POST" class="d-inline m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1.5" title="موافقة واعتماد هذا الجهاز فوراً">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                                <span>موافقة واعتماد</span>
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('employee-attendance.destroy-device', $pDev->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('هل تريد بالتأكيد رفض هذا الطلب وحذفه؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1" title="رفض وحذف الطلب">
+                                                <i class="bi bi-x-circle"></i>
+                                                <span>رفض</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     {{-- SECTION 2: Table of All Authorized Headquarters Devices --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="border: 1px solid #e2e8f0 !important;">
         <div class="card-header bg-white border-0 py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-bottom: 1px solid #f1f5f9 !important;">
@@ -142,7 +231,7 @@
                 </div>
                 <div>
                     <h5 class="fw-bold mb-0 text-dark">قائمة أجهزة المقرات المعتمدة</h5>
-                    <small class="text-muted">إجمالي الأجهزة المعتمدة: {{ $devices->count() }} جهاز</small>
+                    <small class="text-muted">إجمالي الأجهزة المعتمدة والنشطة: {{ $approvedList->count() }} جهاز</small>
                 </div>
             </div>
             <button type="button" onclick="window.location.reload()" class="btn btn-sm btn-light border rounded-pill px-3.5 py-1.5 fw-bold text-muted shadow-xs" title="تحديث القائمة">
@@ -165,7 +254,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($devices as $idx => $dev)
+                    @forelse($approvedList as $idx => $dev)
                         <tr>
                             {{-- # Index --}}
                             <td class="px-3 text-center">

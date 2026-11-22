@@ -306,15 +306,21 @@ final readonly class EmployeeAttendanceService
 
     public function checkInWithAuthorizedDevice(int $userId, string $deviceToken, ?string $ip = null, ?string $userAgent = null): array
     {
-        $device = \App\Models\AttendanceDevice::where('device_token', $deviceToken)
-            ->where('is_active', true)
-            ->first();
+        $device = \App\Models\AttendanceDevice::where('device_token', $deviceToken)->first();
 
         if (!$device) {
             return [
                 'success' => false,
                 'device_authorized' => false,
-                'message' => 'هذا الجهاز غير معتمد حالياً لتسجيل الحضور.',
+                'message' => 'هذا الجهاز غير مسجل لتسجيل الحضور.',
+            ];
+        }
+
+        if (!$device->is_active) {
+            return [
+                'success' => false,
+                'device_pending' => true,
+                'message' => 'طلب اعتماد هذا الكمبيوتر (' . $device->device_name . ') قيد المراجعة والموافقة من الإدارة حالياً.',
             ];
         }
 
