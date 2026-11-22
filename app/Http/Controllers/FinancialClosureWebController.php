@@ -18,6 +18,19 @@ final class FinancialClosureWebController extends Controller
         private FinancialClosureService $financialClosureService
     ) {}
 
+    private function canUserApproveClosure($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasRole(['admin', 'manager', 'super_admin', 'مدير المؤسسة بالكامل', 'حسابات ماليه', 'حسابات', 'fr', 'accountant', 'finance'])
+            || $user->hasPermission('financial_closures.approve')
+            || $user->hasPermission('closures.approve')
+            || $user->hasPermission('تعديل واعتماد الإغلاقات المالية')
+            || in_array((int)$user->id, [2, 6, 8, 50], true);
+    }
+
     public function index(): View
     {
         $closures = $this->financialClosureService->getAllClosures(20);
@@ -36,11 +49,14 @@ final class FinancialClosureWebController extends Controller
 
     public function store(StoreFinancialClosureRequest $request): RedirectResponse
     {
-        $userId = $request->user()?->id;
+        $user   = $request->user();
+        $userId = $user?->id;
         $data   = $request->validated();
         
-        $shouldApproveImmediately = (isset($data['approved']) && $data['approved']) && 
-                                    ($request->user()->hasRole('admin') || $request->user()->hasRole('manager'));
+        $canApprove = $this->canUserApproveClosure($user);
+
+        // الحسابات والإدارة: يتم اعتماد الإغلاق اليومي فوراً ومباشرة
+        $shouldApproveImmediately = $canApprove && (!isset($data['approved']) || (bool)$data['approved']);
 
         $result = $this->financialClosureService->createClosure($data, $userId, $shouldApproveImmediately);
 
@@ -48,15 +64,20 @@ final class FinancialClosureWebController extends Controller
             return redirect()->route('closures.index')->with('success', 'تم إرسال طلب إنشاء الإغلاق المالي للمراجعة');
         }
 
-        return redirect()->route('closures.index')->with('success', 'تم إنشاء الإغلاق المالي بنجاح');
+        return redirect()->route('closures.index')->with('success', 'تم إنشاء واعتماد الإغلاق المالي بنجاح');
     }
 
     public function approve(FinancialClosure $closure): RedirectResponse
     {
-        $this->financialClosureService->approveClosure($closure, (int)auth()->id());
+        $user = auth()->user();
+        if (!$this->canUserApproveClosure($user)) {
+            abort(403, 'غير مصرح لك باعتماد الإغلاق المالي.');
+        }
+
+        $this->financialClosureService->approveClosure($closure, (int)$user->id);
         
         $newState = $closure->fresh()->approved;
-        return redirect()->route('closures.index')->with('success', $newState ? 'تم اعتماد الإغلاق' : 'تم إلغاء الاعتماد');
+        return redirect()->route('closures.index')->with('success', $newState ? 'تم اعتماد الإغلاق المالي بنجاح' : 'تم إلغاء الاعتماد');
     }
 
     public function show(FinancialClosure $closure): View

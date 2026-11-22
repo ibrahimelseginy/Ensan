@@ -32,25 +32,35 @@
         </div>
 
         {{-- Approval Option --}}
-        @if(request()->user() && (request()->user()->hasRole('admin') || request()->user()->hasRole('manager')))
+        @php
+          $u = request()->user();
+          $canApprove = $u && (
+            $u->hasRole(['admin', 'manager', 'super_admin', 'مدير المؤسسة بالكامل', 'حسابات ماليه', 'حسابات', 'fr', 'accountant', 'finance']) ||
+            $u->hasPermission('financial_closures.approve') ||
+            $u->hasPermission('closures.approve') ||
+            $u->hasPermission('تعديل واعتماد الإغلاقات المالية') ||
+            in_array((int)$u->id, [2, 6, 8, 50], true)
+          );
+        @endphp
+        @if($canApprove)
           <div class="row g-3 mt-3">
             <div class="col-12">
-              <label class="form-label fw-bold">الاعتماد</label>
+              <label class="form-label fw-bold">الاعتماد اليومي المالي</label>
               <div class="d-flex gap-3 align-items-center">
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="approved" id="approvedYes" value="1">
+                  <input class="form-check-input" type="radio" name="approved" id="approvedYes" value="1" checked>
                   <label class="form-check-label text-success fw-bold" for="approvedYes">
-                    <i class="bi bi-check-circle me-1"></i> نعم (اعتماد فوري)
+                    <i class="bi bi-check-circle-fill me-1"></i> نعم (اعتماد فوري ومباشر)
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="approved" id="approvedNo" value="0" checked>
-                  <label class="form-check-label text-warning fw-bold" for="approvedNo">
-                    <i class="bi bi-clock me-1"></i> لا (قيد المراجعة)
+                  <input class="form-check-input" type="radio" name="approved" id="approvedNo" value="0">
+                  <label class="form-check-label text-secondary fw-bold" for="approvedNo">
+                    <i class="bi bi-clock me-1"></i> لا (حفظ كمسودة مؤقتة)
                   </label>
                 </div>
               </div>
-              <small class="text-muted">اختر "نعم" لاعتماد الإغلاق فوراً، أو "لا" ليبقى قيد المراجعة.</small>
+              <small class="text-muted">مفعّل افتراضياً لاعتماد الإغلاق المالي فوراً للحسابات والإدارة دون الحاجة لطلب مراجعة.</small>
             </div>
           </div>
         @endif

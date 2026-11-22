@@ -28,7 +28,22 @@ class ChangeRequestService
             $user->hasPermission('change_requests.review')
         );
 
-        $canAutoApprove = $isAdminOrManager || !$forceRequest;
+        $isFinancialModel = in_array($modelType, [
+            \App\Models\FinancialClosure::class,
+            \App\Models\JournalEntry::class,
+            \App\Models\Expense::class,
+            \App\Models\Account::class,
+            \App\Models\TreasuryTransaction::class,
+        ], true);
+
+        $isAccountant = $user && (
+            $user->hasRole(['fr', 'حسابات ماليه', 'حسابات', 'accountant', 'finance']) ||
+            $user->hasPermission('manage_finance') ||
+            $user->hasPermission('financial_closures.approve') ||
+            $user->hasPermission('تعديل واعتماد الإغلاقات المالية')
+        );
+
+        $canAutoApprove = $isAdminOrManager || ($isAccountant && $isFinancialModel) || !$forceRequest;
 
         if ($canAutoApprove) {
             $result = $executor();

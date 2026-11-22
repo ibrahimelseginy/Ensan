@@ -96,7 +96,16 @@
                                 </form>
                             </div>
                             
-                            @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager')))
+                            @php
+                                $canApproveClosures = auth()->check() && (
+                                    auth()->user()->hasRole(['admin', 'manager', 'super_admin', 'مدير المؤسسة بالكامل', 'حسابات ماليه', 'حسابات', 'fr', 'accountant', 'finance']) ||
+                                    auth()->user()->hasPermission('financial_closures.approve') ||
+                                    auth()->user()->hasPermission('closures.approve') ||
+                                    auth()->user()->hasPermission('تعديل واعتماد الإغلاقات المالية') ||
+                                    in_array((int)auth()->id(), [2, 6, 8, 50], true)
+                                );
+                            @endphp
+                            @if($canApproveClosures)
                                 <form method="POST" action="{{ route('closures.approve', $c) }}" class="d-inline">
                                     @csrf
                                     <button class="btn btn-sm {{ $c->approved ? 'btn-outline-warning' : 'btn-success' }} rounded-pill px-3 ms-1 shadow-sm" 

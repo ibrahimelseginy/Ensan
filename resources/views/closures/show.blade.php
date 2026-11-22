@@ -100,7 +100,17 @@
                 <p class="text-muted">بانتظار المراجعة واعتماد المسؤول</p>
             @endif
 
-            @if(request()->user() && (request()->user()->hasRole('admin') || request()->user()->hasRole('manager')))
+            @php
+                $u = request()->user();
+                $canApprove = $u && (
+                    $u->hasRole(['admin', 'manager', 'super_admin', 'مدير المؤسسة بالكامل', 'حسابات ماليه', 'حسابات', 'fr', 'accountant', 'finance']) ||
+                    $u->hasPermission('financial_closures.approve') ||
+                    $u->hasPermission('closures.approve') ||
+                    $u->hasPermission('تعديل واعتماد الإغلاقات المالية') ||
+                    in_array((int)$u->id, [2, 6, 8, 50], true)
+                );
+            @endphp
+            @if($canApprove)
                 <div class="mt-4 w-100">
                     <form method="POST" action="{{ route('closures.approve', $closure) }}">
                         @csrf
