@@ -114,6 +114,22 @@ final class EmployeeAttendanceWebController extends Controller
                 return redirect()->route('login');
             }
 
+            if ($request->filled('device_token') || $request->hasCookie('ensan_device_token')) {
+                $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
+                $result = $this->attendanceService->checkOutWithAuthorizedDevice(
+                    (int) $user->id,
+                    (string) $token,
+                    $request->ip(),
+                    $request->userAgent()
+                );
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json($result, $result['success'] ? 200 : 422);
+                }
+                return $result['success']
+                    ? back()->with('success', $result['message'])
+                    : back()->with('error', $result['message']);
+            }
+
             if ($request->filled('latitude') && $request->filled('longitude')) {
                 $lat   = (float) $request->input('latitude');
                 $lng   = (float) $request->input('longitude');

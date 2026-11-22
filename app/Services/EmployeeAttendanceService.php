@@ -16,17 +16,17 @@ final readonly class EmployeeAttendanceService
     // 1. المقر الرئيسي لمؤسسة إنسان
     public const OFFICE_LAT = 31.1112969;
     public const OFFICE_LNG = 30.9489307;
-    public const ALLOWED_RADIUS_METERS = 10;
+    public const ALLOWED_RADIUS_METERS = 50;
 
     // 2. دار ضيافة إنســـــــان - كفر الشيخ (خاصة بموظفي الدار)
     public const KAFR_GUEST_HOUSE_LAT = 31.1061705;
     public const KAFR_GUEST_HOUSE_LNG = 30.9378786;
-    public const KAFR_GUEST_HOUSE_RADIUS_METERS = 10;
+    public const KAFR_GUEST_HOUSE_RADIUS_METERS = 50;
 
     // 3. دار ضيافة إنســـــــان - طنطا (خاصة بموظفي دار طنطا)
     public const TANTA_GUEST_HOUSE_LAT = 30.8038626;
     public const TANTA_GUEST_HOUSE_LNG = 30.9969359;
-    public const TANTA_GUEST_HOUSE_RADIUS_METERS = 10;
+    public const TANTA_GUEST_HOUSE_RADIUS_METERS = 50;
 
     public function __construct(
         private EmployeeAttendanceRepository $attendanceRepository
@@ -371,6 +371,77 @@ final readonly class EmployeeAttendanceService
             'device' => $device->device_name,
             'location' => $device->location_name,
             'message' => "تم تسجيل حضورك بنجاح من جهاز المقر المعتمد ({$device->device_name} - {$device->location_name}) الساعة " . $cairoNow->format('h:i A'),
+        ];
+    }
+
+    public function checkOutWithAuthorizedDevice(int $userId, string $deviceToken, ?string $ip = null, ?string $userAgent = null): array
+    {
+        $device = \App\Models\AttendanceDevice::where('device_token', $deviceToken)->first();
+
+        if (!$device) {
+            return [
+                'success' => false,
+                'device_authorized' => false,
+                'message' => 'هذا الجهاز غير مسجل لتسجيل الانصراف.',
+            ];
+        }
+
+        if (!$device->is_active) {
+            return [
+                'success' => false,
+                'device_pending' => true,
+                'message' => 'طلب اعتماد هذا الكمبيوتر (' . $device->device_name . ') قيد المراجعة والموافقة من الإدارة حالياً.',
+            ];
+        }
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return ['success' => false, 'message' => 'المستخدم غير موجود.'];
+        }
+
+        $existing = $this->attendanceRepository->findTodayRecord($userId);
+        if (!$existing) {
+            return [
+                'success' => false,
+                'message' => 'لم يتم تسجيل حضورك اليوم حتى الآن.',
+            ];
+        }
+
+        if (!empty($existing->check_out_at)) {
+            return [
+                'success' => true,
+                'already_checked_out' => true,
+                'time' => $existing->check_out_at,
+                'device' => $device->device_name,
+                'location' => $device->location_name,
+                'message' => 'تم تسجيل انصرافك اليوم مسبقاً الساعة ' . $existing->check_out_at,
+            ];
+        }
+
+        $cairoNow = now('Africa/Cairo');
+        $this->attendanceRepository->update($existing, [
+            'check_out_at' => $cairoNow->format('H:i'),
+            'notes'        => ($existing->notes ? $existing->notes . ' | ' : '') . "انصراف من جهاز المقر المعتمد [{$device->device_name} - {$device->location_name}]",
+        ]);
+
+        $device->update([
+            'last_used_at' => now(),
+            'ip_address'   => $ip ?: $device->ip_address,
+            'user_agent'   => $userAgent ?: $device->user_agent,
+        ]);
+
+        $this->notifyDirectorAndAdmins(
+            "تسجيل انصراف: {$user->name}",
+            "سجل الموظف {$user->name} انصرافه الساعة {$cairoNow->format('h:i A')} من جهاز المقر المعتمد ({$device->device_name} - {$device->location_name})."
+        );
+
+        return [
+            'success'     => true,
+            'checked_out' => true,
+            'time'        => $cairoNow->format('H:i'),
+            'device'      => $device->device_name,
+            'location'    => $device->location_name,
+            'message'     => 'تم تسجيل انصرافك بنجاح من جهاز المقر (' . $device->device_name . ') الساعة ' . $cairoNow->format('h:i A'),
         ];
     }
 

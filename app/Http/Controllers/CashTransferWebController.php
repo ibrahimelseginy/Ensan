@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Finance\CashTransfer;
 use App\Models\Finance\CashAccount;
+use App\Models\Finance\FinancialAccount;
 use App\Models\Finance\PaymentInstrument;
 use App\Models\Treasury;
 use App\Models\TreasuryTransaction;
@@ -20,6 +21,37 @@ use Illuminate\Support\Str;
 
 final class CashTransferWebController extends Controller
 {
+    private function getOrCreateCashAccountForTreasury(Treasury $treasury): CashAccount
+    {
+        $cashAccount = CashAccount::where('legacy_treasury_id', $treasury->id)->first();
+        if ($cashAccount) {
+            return $cashAccount;
+        }
+
+        $finAccount = FinancialAccount::firstOrCreate(
+            ['code' => 'TREAS-' . $treasury->id],
+            [
+                'name' => $treasury->name,
+                'classification' => 'asset',
+                'normal_balance' => 'debit',
+                'is_posting' => true,
+                'is_active' => true,
+                'currency' => 'EGP',
+            ]
+        );
+
+        return CashAccount::firstOrCreate(
+            ['legacy_treasury_id' => $treasury->id],
+            [
+                'code' => ($treasury->type === 'bank' ? 'BNK-' : 'CASH-TR-') . $treasury->id,
+                'name' => $treasury->name,
+                'kind' => $treasury->type === 'bank' ? 'bank' : 'cash',
+                'ledger_account_id' => $finAccount->id,
+                'currency' => 'EGP',
+                'is_active' => true,
+            ]
+        );
+    }
     public function index(Request $request): View
     {
         $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
@@ -62,15 +94,8 @@ final class CashTransferWebController extends Controller
             $prefix = $data['transfer_type'] === 'supply' ? 'SUP' : ($data['transfer_type'] === 'bank_deposit' ? 'DEP' : 'TRF');
             $transferNumber = $prefix . '-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
-            $fromCashAccount = CashAccount::firstOrCreate(
-                ['legacy_treasury_id' => $fromTreasury->id],
-                ['code' => 'ACC-' . $fromTreasury->id, 'name' => $fromTreasury->name, 'kind' => 'cash', 'ledger_account_id' => 1, 'currency' => 'EGP', 'is_active' => true]
-            );
-
-            $toCashAccount = CashAccount::firstOrCreate(
-                ['legacy_treasury_id' => $toTreasury->id],
-                ['code' => 'ACC-' . $toTreasury->id, 'name' => $toTreasury->name, 'kind' => $toTreasury->type === 'bank' ? 'bank' : 'cash', 'ledger_account_id' => 1, 'currency' => 'EGP', 'is_active' => true]
-            );
+            $fromCashAccount = $this->getOrCreateCashAccountForTreasury($fromTreasury);
+            $toCashAccount = $this->getOrCreateCashAccountForTreasury($toTreasury);
 
             // Deduct immediately from source
             $fromTreasury->current_balance -= (float) $data['amount'];
@@ -156,10 +181,7 @@ final class CashTransferWebController extends Controller
         }
 
         DB::transaction(function () use ($data, $bankTreasury) {
-            $bankAccount = CashAccount::firstOrCreate(
-                ['legacy_treasury_id' => $bankTreasury->id],
-                ['code' => 'BNK-' . $bankTreasury->id, 'name' => $bankTreasury->name, 'kind' => 'bank', 'ledger_account_id' => 1, 'currency' => 'EGP', 'is_active' => true]
-            );
+            $bankAccount = $this->getOrCreateCashAccountForTreasury($bankTreasury);
 
             // Deduct from bank
             $bankTreasury->current_balance -= (float) $data['amount'];
@@ -229,10 +251,7 @@ final class CashTransferWebController extends Controller
         }
 
         DB::transaction(function () use ($data, $bankTreasury) {
-            $bankAccount = CashAccount::firstOrCreate(
-                ['legacy_treasury_id' => $bankTreasury->id],
-                ['code' => 'BNK-' . $bankTreasury->id, 'name' => $bankTreasury->name, 'kind' => 'bank', 'ledger_account_id' => 1, 'currency' => 'EGP', 'is_active' => true]
-            );
+            $bankAccount = $this->getOrCreateCashAccountForTreasury($bankTreasury);
 
             // Deduct from bank
             $bankTreasury->current_balance -= (float) $data['amount'];

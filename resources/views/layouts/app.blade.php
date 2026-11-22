@@ -3235,7 +3235,7 @@
                   ->first();
               @endphp
               @if($topbarTodayAtt && empty($topbarTodayAtt->check_out_at))
-                <button type="button" onclick="startAttendanceCapture('checkout')" class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف بالصورة">
+                <button type="button" id="topbarCheckoutBtn" onclick="startAttendanceCapture('checkout')" class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(239, 68, 68, 0.12) !important; color: #dc2626 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; white-space: nowrap !important; width: auto !important;" title="تم تسجيل حضورك {{ $topbarTodayAtt->check_in_at }} — اضغط لتسجيل الانصراف">
                   <i class="bi bi-box-arrow-left fs-6"></i>
                   <span class="fw-bold d-none d-sm-inline">تسجيل انصراف</span>
                   <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">انصراف</span>
@@ -3495,6 +3495,45 @@
                         resetGpsBtn();
                       });
                     }
+
+                    window.checkOutWithAuthorizedDeviceToken = function(token) {
+                      if (isMobileDevice) return;
+                      var btn = document.getElementById('topbarCheckoutBtn') || document.getElementById('topbarEnableGpsBtn');
+                      if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ تسجيل الانصراف...</span>';
+                      }
+                      fetch('{{ route('employee-attendance.checkOut') }}', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                          'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ device_token: token })
+                      })
+                      .then(function(r){ return r.json(); })
+                      .then(function(data) {
+                        if (data && data.success) {
+                          showGpsToast('✅ ' + (data.message || 'تم تسجيل انصرافك بنجاح!'), 'success');
+                          setTimeout(function(){ window.location.reload(); }, 1200);
+                        } else {
+                          showGpsToast((data && data.message) ? data.message : 'تعذر تسجيل الانصراف.', 'error');
+                          if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-box-arrow-left fs-6"></i> <span class="fw-bold">تسجيل انصراف</span>';
+                          }
+                        }
+                      })
+                      .catch(function(){
+                        showGpsToast('حدث خطأ في الاتصال بالسيرفر. حاول مجدداً.', 'error');
+                        if (btn) {
+                          btn.disabled = false;
+                          btn.innerHTML = '<i class="bi bi-box-arrow-left fs-6"></i> <span class="fw-bold">تسجيل انصراف</span>';
+                        }
+                      });
+                    };
 
                     function notifyUnauthorizedDevice() {
                       // ممنوع نهائياً على الموبايل - مخصص فقط لأجهزة الكمبيوتر المكتبية
@@ -3817,7 +3856,11 @@
                       // إذا كان المستخدم على جهاز كمبيوتر مكتبي (Windows أو Mac):
                       if (isDesktopOs) {
                         if (authDeviceToken) {
-                          checkInWithAuthorizedDeviceToken(authDeviceToken);
+                          if (attActionType === 'checkout') {
+                            checkOutWithAuthorizedDeviceToken(authDeviceToken);
+                          } else {
+                            checkInWithAuthorizedDeviceToken(authDeviceToken);
+                          }
                           return;
                         } else {
                           if (isTopAdmin) {
