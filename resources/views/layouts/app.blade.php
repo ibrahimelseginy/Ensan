@@ -3255,6 +3255,8 @@
                 </button>
               @endif
 
+              <span id="topbarDeviceActionContainer" class="d-inline-flex align-items-center ms-1"></span>
+
               @php
                 $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
               @endphp
@@ -3421,8 +3423,8 @@
                     }
 
                     var ua = navigator.userAgent || '';
-                    var isDesktopOs = /Windows NT|Macintosh|Linux x86_64/i.test(ua);
-                    var isMobileDevice = !isDesktopOs && (/Android|iPhone|iPad|iPod|Mobile/i.test(ua) || window.innerWidth <= 768);
+                    var isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+                    var isDesktopOs = !isMobileDevice || /Windows NT|Macintosh|Linux x86_64/i.test(ua);
 
                     var getDeviceCookie = function(name) {
                       var match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'));
@@ -3431,31 +3433,31 @@
 
                     var authDeviceToken = localStorage.getItem('ensan_authorized_device_token') || getDeviceCookie('ensan_device_token');
 
-                    // Setup topbar button behavior based on device type
+                    var deviceContainer = document.getElementById('topbarDeviceActionContainer');
+
+                    // Setup dedicated device action buttons in topbar
+                    if (deviceContainer && isDesktopOs) {
+                      if (authDeviceToken) {
+                        deviceContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-xs" title="كمبيوتر مقر معتمد رسمياً">' +
+                          '<i class="bi bi-display-fill text-success"></i> <span class="d-none d-sm-inline">جهاز معتمد</span></span>' +
+                          '<button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-link text-muted p-0 ms-1 d-none d-md-inline" title="إعادة إرسال طلب اعتماد جديد لهذا الجهاز" style="font-size:0.75rem;"><i class="bi bi-arrow-repeat"></i></button>';
+                      } else if (isTopAdmin) {
+                        deviceContainer.innerHTML = '<button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-warning text-dark fw-bold rounded-pill px-2.5 px-sm-3 shadow-sm d-flex align-items-center gap-1" style="background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4);" title="اعتماد هذا الكمبيوتر للمقر"><i class="bi bi-shield-plus text-warning fs-6"></i> <span class="d-none d-sm-inline">اعتماد هذا الكمبيوتر</span><span class="d-inline d-sm-none">اعتماد</span></button>'
+                          + '<button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-2.5 px-sm-3 ms-1 shadow-sm d-flex align-items-center gap-1" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.35);" title="طلب اعتماد هذا الجهاز"><i class="bi bi-display fs-6 text-primary"></i> <span class="d-none d-sm-inline">طلب اعتماد الجهاز</span><span class="d-inline d-sm-none">طلب</span></button>';
+                      } else {
+                        deviceContainer.innerHTML = '<button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-2.5 px-sm-3 shadow-sm d-flex align-items-center gap-1" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.35);" title="طلب اعتماد هذا الكمبيوتر من الإدارة كجهاز مقر رسمي"><i class="bi bi-display fs-6 text-primary"></i> <span class="d-none d-sm-inline">طلب اعتماد هذا الجهاز</span><span class="d-inline d-sm-none">طلب اعتماد</span></button>';
+                      }
+                    }
+
+                    // Setup topbar check-in button behavior based on device type
                     if (gpsBtn && !gpsBtn.disabled) {
-                      if (isDesktopOs) {
-                        if (authDeviceToken) {
-                          gpsBtn.innerHTML = '<i class="bi bi-display fs-6 text-success me-1"></i> <span class="fw-bold d-none d-sm-inline">تسجيل حضور كمبيوتر المقر</span><span class="fw-bold d-inline d-sm-none">حضور</span>';
-                          gpsBtn.style.background = 'rgba(16, 185, 129, 0.14)';
-                          gpsBtn.style.color = '#047857';
-                          gpsBtn.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                          gpsBtn.title = 'كمبيوتر معتمد: اضغط لتسجيل الحضور فوراً دون الحاجة لـ GPS';
-                          gpsBtn.onclick = function() { checkInWithAuthorizedDeviceToken(authDeviceToken); };
-                        } else if (isTopAdmin) {
-                          gpsBtn.innerHTML = '<i class="bi bi-shield-plus fs-6 text-warning me-1"></i> <span class="fw-bold d-none d-sm-inline">اعتماد هذا الكمبيوتر للمقر</span><span class="fw-bold d-inline d-sm-none">اعتماد</span>';
-                          gpsBtn.style.background = 'rgba(245, 158, 11, 0.14)';
-                          gpsBtn.style.color = '#b45309';
-                          gpsBtn.style.borderColor = 'rgba(245, 158, 11, 0.35)';
-                          gpsBtn.title = 'اضغط لاعتماد هذا الكمبيوتر لدار الضيافة / المقر لتسجيل حضور الموظفين تلقائياً';
-                          gpsBtn.onclick = function() { openAuthorizeDeviceModal(); };
-                        } else {
-                          gpsBtn.innerHTML = '<i class="bi bi-display fs-6 text-primary me-1"></i> <span class="fw-bold d-none d-sm-inline">طلب اعتماد هذا الجهاز</span><span class="fw-bold d-inline d-sm-none">اعتماد</span>';
-                          gpsBtn.style.background = 'rgba(37, 99, 235, 0.12)';
-                          gpsBtn.style.color = '#1d4ed8';
-                          gpsBtn.style.borderColor = 'rgba(37, 99, 235, 0.35)';
-                          gpsBtn.title = 'اضغط لإرسال طلب للإدارة لاعتماد هذا الكمبيوتر كجهاز مقر لتسجيل الحضور';
-                          gpsBtn.onclick = function() { openRequestDeviceModal(); };
-                        }
+                      if (isDesktopOs && authDeviceToken) {
+                        gpsBtn.innerHTML = '<i class="bi bi-display fs-6 text-success me-1"></i> <span class="fw-bold d-none d-sm-inline">تسجيل حضور كمبيوتر المقر</span><span class="fw-bold d-inline d-sm-none">حضور</span>';
+                        gpsBtn.style.background = 'rgba(16, 185, 129, 0.14)';
+                        gpsBtn.style.color = '#047857';
+                        gpsBtn.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+                        gpsBtn.title = 'كمبيوتر معتمد: اضغط لتسجيل الحضور فوراً دون الحاجة لـ GPS';
+                        gpsBtn.onclick = function() { checkInWithAuthorizedDeviceToken(authDeviceToken); };
                       }
                     }
 
@@ -4299,6 +4301,24 @@
                     @endif
                   @endif
 
+                  <div class="px-3 py-1.5 small text-muted border-top border-bottom bg-light bg-opacity-50">
+                    <i class="bi bi-display me-1 text-primary"></i> أجهزة بصمة المقرات
+                  </div>
+                  <a href="javascript:void(0)" onclick="openRequestDeviceModal()" class="pmenu-item text-primary fw-semibold">
+                    <i class="bi bi-display"></i>
+                    <span>طلب اعتماد هذا الجهاز</span>
+                  </a>
+                  @if($navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2,8,50], true)))
+                  <a href="javascript:void(0)" onclick="openAuthorizeDeviceModal()" class="pmenu-item text-warning fw-semibold">
+                    <i class="bi bi-shield-plus"></i>
+                    <span>اعتماد هذا الجهاز فوراً</span>
+                  </a>
+                  <a href="{{ route('employee-attendance.devices') }}" class="pmenu-item text-info fw-semibold">
+                    <i class="bi bi-laptop"></i>
+                    <span>إدارة أجهزة بصمة المقرات</span>
+                  </a>
+                  @endif
+
                   <hr class="pmenu-divider">
 
                   <form method="POST" action="{{ route('logout') }}">
@@ -4443,7 +4463,7 @@
   </div>
   @endif
 
-  @if($navUser && !($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2,8,50], true)))
+  @if($navUser)
   {{-- Modal: طلب اعتماد هذا الكمبيوتر كجهاز مقر للموظفين --}}
   <div class="modal fade" id="modalRequestDeviceAuth" tabindex="-1" aria-hidden="true" style="direction: rtl;">
     <div class="modal-dialog modal-dialog-centered">
@@ -4552,6 +4572,12 @@
                 <i class="bi bi-arrow-repeat me-1"></i> إعادة التقاط الصورة
               </button>
             </div>
+          </div>
+
+          <div class="w-100 text-center mt-3 pt-2 border-top">
+            <button type="button" onclick="var m = bootstrap.Modal.getInstance(document.getElementById('modalAttendanceCamera')); if(m) m.hide(); openRequestDeviceModal();" class="btn btn-sm btn-link text-decoration-none fw-bold small text-primary p-0">
+              <i class="bi bi-display me-1"></i> هل تعمل من كمبيوتر المقر؟ اضغط هنا لطلب اعتماده كجهاز رسمي
+            </button>
           </div>
         </div>
         <div class="modal-footer border-0 pt-0 px-3.5 pb-3.5 gap-2">
