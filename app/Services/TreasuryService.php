@@ -232,7 +232,7 @@ final readonly class TreasuryService
         return $transaction;
     }
 
-    public function getMonthlyTrends(): array
+    public function getMonthlyTrends(?array $treasuryIds = null): array
     {
         $labels      = [];
         $inData      = [];
@@ -243,15 +243,22 @@ final readonly class TreasuryService
             $date     = Carbon::now()->subMonths($i);
             $labels[] = $date->translatedFormat('F');
 
-            $monthIn = TreasuryTransaction::whereYear('transaction_date', $date->year)
-                ->whereMonth('transaction_date', $date->month)
-                ->where('type', 'in')
-                ->sum('amount');
+            if ($treasuryIds !== null && empty($treasuryIds)) {
+                $monthIn  = 0.0;
+                $monthOut = 0.0;
+            } else {
+                $monthIn = (float) TreasuryTransaction::whereYear('transaction_date', $date->year)
+                    ->whereMonth('transaction_date', $date->month)
+                    ->where('type', 'in')
+                    ->when($treasuryIds !== null, fn ($q) => $q->whereIn('treasury_id', $treasuryIds))
+                    ->sum('amount');
 
-            $monthOut = TreasuryTransaction::whereYear('transaction_date', $date->year)
-                ->whereMonth('transaction_date', $date->month)
-                ->where('type', 'out')
-                ->sum('amount');
+                $monthOut = (float) TreasuryTransaction::whereYear('transaction_date', $date->year)
+                    ->whereMonth('transaction_date', $date->month)
+                    ->where('type', 'out')
+                    ->when($treasuryIds !== null, fn ($q) => $q->whereIn('treasury_id', $treasuryIds))
+                    ->sum('amount');
+            }
 
             $inData[]      = $monthIn;
             $outData[]     = $monthOut;

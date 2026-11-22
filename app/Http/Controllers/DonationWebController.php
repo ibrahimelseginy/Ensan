@@ -108,7 +108,11 @@ final class DonationWebController extends Controller
             ->orderBy('full_name')
             ->get();
         $receiptTreasuries = Schema::hasTable('treasuries')
-            ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
+            ? \App\Models\Treasury::query()
+                ->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))
+                ->when(($accTrIds = request()->user()?->getAccessibleTreasuryIds()) !== null, fn ($query) => $query->whereIn('id', $accTrIds))
+                ->orderBy('name')
+                ->get()
             : collect();
 
         $allDonors = Donor::query()->orderBy('name')->get(['id', 'name', 'code', 'phone']);
@@ -243,7 +247,11 @@ final class DonationWebController extends Controller
             ->orderBy('full_name')
             ->get();
         $receiptTreasuries = Schema::hasTable('treasuries')
-            ? \App\Models\Treasury::query()->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))->orderBy('name')->get()
+            ? \App\Models\Treasury::query()
+                ->when(Schema::hasColumn('treasuries', 'is_active'), fn ($query) => $query->where('is_active', true))
+                ->when(($accTrIds = request()->user()?->getAccessibleTreasuryIds()) !== null, fn ($query) => $query->whereIn('id', $accTrIds))
+                ->orderBy('name')
+                ->get()
             : collect();
         $receiptCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();
         $receiptGuestHouses = GuestHouse::where('status', 'active')->orderBy('name')->get();
@@ -375,7 +383,10 @@ final class DonationWebController extends Controller
         $warehouses  = Warehouse::when(Schema::hasColumn('warehouses', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         $treasuries  = collect();
         if (Schema::hasTable('treasuries')) {
-            $treasuries = \App\Models\Treasury::when(Schema::hasColumn('treasuries', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
+            $treasuries = \App\Models\Treasury::when(Schema::hasColumn('treasuries', 'is_active'), fn($q) => $q->where('is_active', true))
+                ->when(($accTrIds = request()->user()?->getAccessibleTreasuryIds()) !== null, fn ($q) => $q->whereIn('id', $accTrIds))
+                ->orderBy('name')
+                ->get();
         }
         $items         = \App\Models\Item::when(Schema::hasColumn('items', 'is_active'), fn($q) => $q->where('is_active', true))->orderBy('name')->get();
         $activeCampaigns = \App\Models\Campaign::where('status', 'active')->orderBy('name')->get();

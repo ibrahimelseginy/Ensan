@@ -916,7 +916,7 @@
     </div>
 
     {{-- Combined Treasuries Administrative Highlight Card (بطاقة الإدارة: رصيد جميع خزائن المؤسسة مجمعة) --}}
-    @if(auth()->user()?->hasRole(['admin', 'super_admin']) || auth()->user()?->hasPermission('treasuries.view') || auth()->user()?->hasPermission('finance.view') || ($isAdmin ?? false) || ($isFinance ?? false))
+    @if((auth()->user()?->hasRole(['admin', 'super_admin']) || auth()->user()?->hasPermission('treasuries.view') || auth()->user()?->hasPermission('finance.view') || ($isAdmin ?? false) || ($isFinance ?? false)) && auth()->user()?->getAccessibleTreasuryIds() === null)
     <div class="row g-3 mb-4 animate-slide-up">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden treasuries-admin-card">

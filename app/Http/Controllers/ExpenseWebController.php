@@ -47,7 +47,11 @@ final class ExpenseWebController extends Controller
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
         $workspaces    = Workspace::where('status', '!=', 'maintenance')->orderBy('name')->get();
         $guestHouses   = GuestHouse::orderBy('name')->get();
-        $treasuries    = Treasury::active()->forDepartment('expenses')->get();
+        $authUser      = request()->user();
+        $accIds        = $authUser?->getAccessibleTreasuryIds();
+        $treasuries    = $accIds !== null
+            ? Treasury::active()->whereIn('id', $accIds)->orderBy('name')->get()
+            : Treasury::active()->forDepartment('expenses')->get();
 
         return view('expenses.create', compact('beneficiaries', 'projects', 'campaigns', 'workspaces', 'guestHouses', 'treasuries'));
     }

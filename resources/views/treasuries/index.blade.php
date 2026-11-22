@@ -128,10 +128,12 @@
                 <i class="bi bi-wallet2"></i>
                 <span>العهد المالية</span>
             </a>
+            @if(auth()->user()?->hasPermission('treasuries.create'))
             <a href="{{ route('treasuries.create') }}" class="btn btn-primary rounded-pill px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
                 <i class="bi bi-plus-lg"></i>
                 <span>إضافة خزينة / صندوق</span>
             </a>
+            @endif
         </div>
     </div>
 
@@ -263,11 +265,13 @@
                                                             <i class="bi bi-eye text-primary me-2"></i> تفاصيل الخزينة
                                                         </a>
                                                     </li>
+                                                    @if(auth()->user()?->hasPermission(['treasuries.edit', "treasuries.manage.{$treasury->id}"]))
                                                     <li>
                                                         <a class="dropdown-item py-2" href="{{ route('treasuries.edit', $treasury) }}">
                                                             <i class="bi bi-pencil text-warning me-2"></i> تعديل البيانات
                                                         </a>
                                                     </li>
+                                                    @endif
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li>
                                                         <a class="dropdown-item py-2 text-success" href="#" data-bs-toggle="modal" data-bs-target="#quickSupplyModal" onclick="document.getElementById('quickFromTreasury').value='{{ $treasury->id }}';">
@@ -515,7 +519,8 @@
         </div>
     </div>
 
-    {{-- Bottom Summary Card (ملخص الخزائن الفعلية - Exact Wireframe Implementation) --}}
+    {{-- Bottom Summary Card (ملخص الخزائن الفعلية - للإدارة والمالية الشاملة فقط) --}}
+    @if($isGlobalTreasuryAccess ?? true)
     <div class="summary-overview-box mb-4">
         <h5 class="fw-bold mb-4 text-dark d-flex align-items-center gap-2">
             <i class="bi bi-pie-chart-fill text-primary"></i>
@@ -581,6 +586,7 @@
             </div>
         </div>
     </div>
+    @endif
 
 </div>
 

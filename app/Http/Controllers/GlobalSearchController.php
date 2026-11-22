@@ -508,7 +508,7 @@ final class GlobalSearchController extends Controller
         });
 
         $safeRun(function () use ($cleanQ, &$results) {
-            $treasuriesQuery = Treasury::query();
+            $treasuriesQuery = Treasury::accessibleForUser(request()->user());
             ArabicSearchHelper::applySmartSearch($treasuriesQuery, $cleanQ, ['name', 'location', 'description'], ['code']);
             foreach ($treasuriesQuery->limit(4)->get() as $tr) {
                 $results['donations'][] = [

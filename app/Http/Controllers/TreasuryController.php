@@ -22,6 +22,14 @@ final class TreasuryController extends Controller
         private TreasuryService $treasuryService
     ) {}
 
+    private function authorizeTreasuryAccess(Treasury $treasury): void
+    {
+        $user = auth()->user();
+        if (!$user || !$user->canAccessTreasury((int) $treasury->id)) {
+            abort(403, 'ليس لديك صلاحية للوصول إلى هذه الخزينة.');
+        }
+    }
+
     public function index(): View|RedirectResponse
     {
         if (!Schema::hasTable('treasuries')) {
@@ -96,21 +104,34 @@ final class TreasuryController extends Controller
             return $t->type === Treasury::TYPE_MAIN || str_contains($t->name, 'الحسابات');
         });
 
+        $accessibleTreasuryIds = auth()->user()?->getAccessibleTreasuryIds();
+        $isGlobalTreasuryAccess = ($accessibleTreasuryIds === null);
+
         // Recent transfers and custodies for tabs
         $recentTransfers = collect();
         if (Schema::hasTable('cash_transfers')) {
-            $recentTransfers = \App\Models\Finance\CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver'])
-                ->orderByDesc('id')
-                ->limit(15)
-                ->get();
+            $transferQuery = \App\Models\Finance\CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver']);
+            if ($accessibleTreasuryIds !== null) {
+                $allowedCashAccountIds = \App\Models\Finance\CashAccount::whereIn('legacy_treasury_id', $accessibleTreasuryIds)->pluck('id')->all();
+                $transferQuery->where(function ($q) use ($allowedCashAccountIds) {
+                    $q->whereIn('from_cash_account_id', $allowedCashAccountIds)
+                      ->orWhereIn('to_cash_account_id', $allowedCashAccountIds);
+                });
+            }
+            $recentTransfers = $transferQuery->orderByDesc('id')->limit(15)->get();
         }
 
         $recentCustodies = collect();
         if (Schema::hasTable('custodies')) {
-            $recentCustodies = \App\Models\Finance\Custody::with(['holder', 'project'])
-                ->orderByDesc('id')
-                ->limit(10)
-                ->get();
+            $custodyQuery = \App\Models\Finance\Custody::with(['holder', 'project']);
+            if ($accessibleTreasuryIds !== null) {
+                $allowedCashAccountIds = \App\Models\Finance\CashAccount::whereIn('legacy_treasury_id', $accessibleTreasuryIds)->pluck('id')->all();
+                $custodyQuery->where(function ($q) use ($allowedCashAccountIds) {
+                    $q->whereIn('source_cash_account_id', $allowedCashAccountIds)
+                      ->orWhere('holder_user_id', auth()->id());
+                });
+            }
+            $recentCustodies = $custodyQuery->orderByDesc('id')->limit(10)->get();
         }
 
         $totalBalance     = $totalPhysicalBalance;
@@ -127,7 +148,7 @@ final class TreasuryController extends Controller
                 ->get();
         }
 
-        $monthlyData = $this->treasuryService->getMonthlyTrends();
+        $monthlyData = $this->treasuryService->getMonthlyTrends($accessibleTreasuryIds);
         $insights    = $this->treasuryService->generateInsights($treasuries);
 
         return view('treasuries.index', compact(
@@ -150,7 +171,8 @@ final class TreasuryController extends Controller
             'totalTreasuries',
             'recentTransactions',
             'monthlyData',
-            'insights'
+            'insights',
+            'isGlobalTreasuryAccess'
         ));
     }
 
@@ -173,6 +195,7 @@ final class TreasuryController extends Controller
 
     public function show(Treasury $treasury): View
     {
+        $this->authorizeTreasuryAccess($treasury);
         $treasury->load('manager', 'transactions.createdBy', 'donations');
 
         $stats = [
@@ -197,6 +220,7 @@ final class TreasuryController extends Controller
 
     public function edit(Treasury $treasury): View
     {
+        $this->authorizeTreasuryAccess($treasury);
         $managers    = User::orderBy('name')->get();
         $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
         $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
@@ -206,6 +230,7 @@ final class TreasuryController extends Controller
 
     public function update(UpdateTreasuryRequest $request, Treasury $treasury): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         $data = $request->validated();
 
         $executor = function () use ($treasury, $data) {
@@ -237,6 +262,7 @@ final class TreasuryController extends Controller
 
     public function adjustTotals(\Illuminate\Http\Request $request, Treasury $treasury): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         if ($request->boolean('zero_treasury')) {
             $zeroMode = (string) $request->input('zero_mode', 'balance_only');
             if ($zeroMode === 'clear_all') {
@@ -278,6 +304,7 @@ final class TreasuryController extends Controller
 
     public function updateTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
 
         $validated = $request->validate([
@@ -296,6 +323,7 @@ final class TreasuryController extends Controller
 
     public function deleteTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
 
         $recalculateBalance = $request->boolean('recalculate_balance', true);
@@ -307,6 +335,7 @@ final class TreasuryController extends Controller
 
     public function destroy(Treasury $treasury): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         try {
             $executor = function () use ($treasury) {
                 $this->treasuryService->deleteTreasury($treasury);
@@ -336,6 +365,7 @@ final class TreasuryController extends Controller
 
     public function addTransaction(AddTreasuryTransactionRequest $request, Treasury $treasury): RedirectResponse
     {
+        $this->authorizeTreasuryAccess($treasury);
         $this->treasuryService->addTransaction($treasury, $request->validated(), (int)auth()->id());
 
         return redirect()->route('treasuries.show', $treasury)
@@ -348,8 +378,14 @@ final class TreasuryController extends Controller
             return redirect('/create_treasuries_tables.php');
         }
 
-        $treasuries = $this->treasuryService->getAllTreasuries();
-        
+        $accessibleTreasuryIds = auth()->user()?->getAccessibleTreasuryIds();
+        $treasuries = Treasury::with('manager')
+            ->withCount('transactions')
+            ->accessibleForUser(auth()->user())
+            ->get();
+
+        $treasuryIds = $treasuries->pluck('id')->all();
+
         $stats = [
             'total_balance'            => $treasuries->sum('current_balance'),
             'total_treasuries'         => $treasuries->count(),
@@ -359,22 +395,31 @@ final class TreasuryController extends Controller
             'total_out_today'          => 0,
         ];
 
-        if (Schema::hasTable('treasury_transactions')) {
-            $stats['total_transactions_today'] = \App\Models\TreasuryTransaction::whereDate('transaction_date', Carbon::today())->count();
-            $stats['total_in_today']           = \App\Models\TreasuryTransaction::whereDate('transaction_date', Carbon::today())->where('type', 'in')->sum('amount');
-            $stats['total_out_today']          = \App\Models\TreasuryTransaction::whereDate('transaction_date', Carbon::today())->where('type', 'out')->sum('amount');
+        if (Schema::hasTable('treasury_transactions') && !empty($treasuryIds)) {
+            $stats['total_transactions_today'] = \App\Models\TreasuryTransaction::whereIn('treasury_id', $treasuryIds)
+                ->whereDate('transaction_date', Carbon::today())
+                ->count();
+            $stats['total_in_today'] = \App\Models\TreasuryTransaction::whereIn('treasury_id', $treasuryIds)
+                ->whereDate('transaction_date', Carbon::today())
+                ->where('type', 'in')
+                ->sum('amount');
+            $stats['total_out_today'] = \App\Models\TreasuryTransaction::whereIn('treasury_id', $treasuryIds)
+                ->whereDate('transaction_date', Carbon::today())
+                ->where('type', 'out')
+                ->sum('amount');
         }
 
         $topTreasuries      = $treasuries->sortByDesc('current_balance')->take(5);
         $recentTransactions = collect();
-        if (Schema::hasTable('treasury_transactions')) {
+        if (Schema::hasTable('treasury_transactions') && !empty($treasuryIds)) {
             $recentTransactions = \App\Models\TreasuryTransaction::with(['treasury', 'createdBy'])
+                ->whereIn('treasury_id', $treasuryIds)
                 ->orderByDesc('created_at')
                 ->limit(10)
                 ->get();
         }
 
-        $monthlyData = $this->treasuryService->getMonthlyTrends();
+        $monthlyData = $this->treasuryService->getMonthlyTrends($accessibleTreasuryIds);
         $insights    = $this->treasuryService->generateInsights($treasuries);
 
         return view('treasuries.dashboard', compact(
@@ -397,7 +442,9 @@ final class TreasuryController extends Controller
 
     public function export(): void
     {
-        $treasuries = $this->treasuryService->getAllTreasuries();
+        $treasuries = Treasury::with('manager')
+            ->accessibleForUser(auth()->user())
+            ->get();
         $filename   = 'treasuries_' . date('Y-m-d_H-i-s') . '.csv';
         
         header('Content-Type: text/csv; charset=utf-8');

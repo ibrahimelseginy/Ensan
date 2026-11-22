@@ -77,6 +77,17 @@ final class Treasury extends Model
                 $treasury->opening_balance = (float) $treasury->current_balance - $netTx;
             }
         });
+
+        static::saved(function (self $treasury) {
+            \App\Models\Permission::updateOrCreate(
+                ['key' => "treasuries.manage.{$treasury->id}"],
+                ['name' => "إدارة وفتح خزينة محددة فقط: {$treasury->name}"]
+            );
+        });
+
+        static::deleted(function (self $treasury) {
+            \App\Models\Permission::where('key', "treasuries.manage.{$treasury->id}")->delete();
+        });
     }
 
     // ==========================================
@@ -660,7 +671,7 @@ final class Treasury extends Model
     }
 
     /**
-     * تصفية الخزائن المتاحة للموظف حسب دوره ومكانه (منع ظهور كل الخزائن لكل الموظفين)
+     * تصفية الخزائن المتاحة للموظف حسب صلاحياته المخصصة أو دوره (منع ظهور كل الخزائن لكل الموظفين)
      */
     public function scopeAccessibleForUser($query, ?\App\Models\User $user = null)
     {
@@ -669,33 +680,16 @@ final class Treasury extends Model
             return $query->whereRaw('1 = 0');
         }
 
-        $isGlobalFinanceOrAdmin = $user->email === 'admin@ensan.org'
-            || $user->hasRole(['admin', 'super_admin', 'manager', 'finance', 'accountant', 'financial_manager', 'مدير النظام', 'الحسابات', 'المالية']);
+        $allowedIds = $user->getAccessibleTreasuryIds();
 
-        if ($isGlobalFinanceOrAdmin) {
+        if ($allowedIds === null) {
             return $query;
         }
-
-        $allowedIds = self::where('manager_id', $user->id)->pluck('id')->all();
-
-        // Check if user is a Reception employee
-        if ($user->hasRole(['reception', 'receptionist', 'موظف استقبال', 'الاستقبال']) || $user->hasPermission('reception.view')) {
-            $recIds = self::forReception($user)->pluck('id')->all();
-            $allowedIds = array_merge($allowedIds, $recIds);
-        }
-
-        // Check if user is assigned to specific Guest Houses / Projects
-        $managedGh = \App\Models\GuestHouse::where('manager_user_id', $user->id)->get();
-        foreach ($managedGh as $gh) {
-            $allowedIds = array_merge($allowedIds, self::forGuestHouse($gh)->pluck('id')->all());
-        }
-
-        $allowedIds = array_values(array_unique(array_map('intval', $allowedIds)));
 
         if (!empty($allowedIds)) {
             return $query->whereIn('id', $allowedIds);
         }
 
-        return $query->where('manager_id', $user->id);
+        return $query->whereRaw('1 = 0');
     }
 }

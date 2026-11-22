@@ -85,6 +85,13 @@ final class SecurePermissionMiddleware
                         }
                     } elseif ($resource === 'treasuries') {
                         $allowed = $user->hasPermission(["accounts.{$actionSuffix}", 'manage_finance']);
+                        if (!$allowed && $actionSuffix === 'edit') {
+                            $tr = $request->route('treasury');
+                            $trId = is_object($tr) ? $tr->id : $tr;
+                            if ($trId && $user->hasPermission("treasuries.manage.{$trId}")) {
+                                $allowed = true;
+                            }
+                        }
                     } elseif ($resource === 'leaves' && $actionSuffix === 'edit') {
                         $allowed = $user->hasPermission('leaves.manage');
                     }

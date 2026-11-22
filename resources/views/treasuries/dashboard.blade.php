@@ -16,10 +16,12 @@
                             <p class="mb-0 opacity-8">إدارة شاملة لجميع الخزائن والحركات المالية</p>
                         </div>
                         <div class="col-md-4 text-end">
+                            @if(optional(auth()->user())->hasPermission('treasuries.create'))
                             <a href="{{ route('treasuries.create') }}" class="btn btn-light btn-lg">
                                 <i class="bi bi-plus-circle me-2"></i>
                                 إضافة خزينة جديدة
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -173,10 +175,12 @@
                                             <i class="bi bi-eye me-1"></i>
                                             عرض
                                         </a>
-                                        @if(optional(auth()->user())->hasRole('admin') || optional(auth()->user())->hasRole('manager'))
+                                        @if(optional(auth()->user())->hasPermission(['treasuries.edit', "treasuries.manage.{$treasury->id}"]))
                                         <a href="{{ route('treasuries.edit', $treasury) }}" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        @endif
+                                        @if(optional(auth()->user())->hasPermission('treasuries.delete'))
                                         <form action="{{ route('treasuries.destroy', $treasury) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخزينة؟ لا يمكن حذف الخزائن التي تحتوي على حركات مالية.')">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger">
@@ -191,11 +195,13 @@
                         @empty
                         <div class="col-12 text-center py-5">
                             <i class="bi bi-safe text-muted" style="font-size: 4rem;"></i>
-                            <p class="text-muted mt-3">لا توجد خزائن بعد</p>
+                            <p class="text-muted mt-3">لا توجد خزائن مخصصة لك حالياً</p>
+                            @if(optional(auth()->user())->hasPermission('treasuries.create'))
                             <a href="{{ route('treasuries.create') }}" class="btn btn-primary">
                                 <i class="bi bi-plus-circle me-2"></i>
                                 إضافة خزينة جديدة
                             </a>
+                            @endif
                         </div>
                         @endforelse
                     </div>

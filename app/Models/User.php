@@ -366,6 +366,16 @@ class User extends Authenticatable
             }
         }
 
+        if ($k === 'treasuries.view') {
+            if ($this->cachedPermissions->contains('manage_finance')
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'treasuries.manage.'))) {
+                return true;
+            }
+            if (\App\Models\Treasury::where('manager_id', $this->id)->exists()) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -493,6 +503,60 @@ class User extends Authenticatable
         }
 
         return [];
+    }
+
+    /**
+     * Returns null if user can access ALL treasuries, or an array of specific Treasury IDs.
+     */
+    public function getAccessibleTreasuryIds(): ?array
+    {
+        if ($this->isSuperAdmin() || $this->email === 'admin@ensan.org') {
+            return null;
+        }
+
+        $this->ensurePermissionsLoaded();
+
+        $specificIds = [];
+        foreach ($this->cachedPermissions as $perm) {
+            if (preg_match('/^treasuries\.manage\.(\d+)$/', (string) $perm, $m)) {
+                $specificIds[] = (int) $m[1];
+            }
+        }
+
+        $managedIds = \App\Models\Treasury::where('manager_id', $this->id)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+        $specificIds = array_values(array_unique(array_merge($specificIds, $managedIds)));
+
+        // Specific treasury permissions/assignments ALWAYS take strict precedence over general permissions
+        if (!empty($specificIds)) {
+            return $specificIds;
+        }
+
+        if ($this->hasRole(['admin', 'super_admin', 'manager', 'finance', 'accountant', 'financial_manager', 'مدير النظام', 'الحسابات', 'المالية'])
+            || $this->cachedPermissions->contains('manage_finance')
+            || $this->cachedPermissions->contains('treasuries.view')) {
+            return null;
+        }
+
+        $roleBasedIds = [];
+        if ($this->hasRole(['reception', 'receptionist', 'موظف استقبال', 'الاستقبال']) || $this->cachedPermissions->contains('reception.view')) {
+            $roleBasedIds = array_merge($roleBasedIds, \App\Models\Treasury::forReception($this)->pluck('id')->all());
+        }
+
+        $managedGh = \App\Models\GuestHouse::where('manager_user_id', $this->id)->get();
+        foreach ($managedGh as $gh) {
+            $roleBasedIds = array_merge($roleBasedIds, \App\Models\Treasury::forGuestHouse($gh)->pluck('id')->all());
+        }
+
+        return array_values(array_unique(array_map('intval', $roleBasedIds)));
+    }
+
+    public function canAccessTreasury(int $treasuryId): bool
+    {
+        $ids = $this->getAccessibleTreasuryIds();
+        return $ids === null || in_array($treasuryId, $ids, true);
     }
     public function adjustLeaveBalance($days)
     {
