@@ -3,7 +3,7 @@
 @section('title', 'أجهزة بصمة المقرات المعتمدة - مؤسسة إنسان')
 
 @section('content')
-<div class="container-fluid py-4 px-3 px-md-4" style="max-width: 1400px; direction: rtl;">
+<div class="container-fluid py-4 px-3 px-md-4 px-xl-5" style="max-width: 1650px; direction: rtl;">
 
     {{-- Breadcrumb & Back Action --}}
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
@@ -157,48 +157,71 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="min-width: 900px;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 1050px; width: 100%;">
                     <thead class="bg-light text-muted small text-uppercase" style="border-bottom: 1px solid #fed7aa;">
                         <tr>
-                            <th class="py-3 px-3">اسم الجهاز ومقدم الطلب</th>
-                            <th class="py-3 px-3">المقر المطلوب</th>
-                            <th class="py-3 px-3">عنوان IP والمتصفح</th>
-                            <th class="py-3 px-3">وقت إرسال الطلب</th>
-                            <th class="py-3 px-3 text-center" style="width: 220px;">القرار</th>
+                            <th class="py-3 px-3.5" style="min-width: 260px;">اسم الجهاز ومقدم الطلب</th>
+                            <th class="py-3 px-3" style="min-width: 170px;">المقر المطلوب</th>
+                            <th class="py-3 px-3" style="min-width: 200px;">عنوان IP والمتصفح</th>
+                            <th class="py-3 px-3" style="min-width: 160px;">وقت إرسال الطلب</th>
+                            <th class="py-3 px-3.5 text-center" style="min-width: 230px;">القرار</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($pendingList as $pDev)
+                            @php
+                                $pRawUa = $pDev->user_agent ?: '';
+                                $pBName = 'متصفح';
+                                $pBIcon = 'bi-globe';
+                                if (stripos($pRawUa, 'Edg') !== false) { $pBName = 'Edge'; $pBIcon = 'bi-browser-edge text-primary'; }
+                                elseif (stripos($pRawUa, 'Chrome') !== false) { $pBName = 'Chrome'; $pBIcon = 'bi-browser-chrome text-danger'; }
+                                elseif (stripos($pRawUa, 'Firefox') !== false) { $pBName = 'Firefox'; $pBIcon = 'bi-browser-firefox text-warning'; }
+                                elseif (stripos($pRawUa, 'Safari') !== false) { $pBName = 'Safari'; $pBIcon = 'bi-compass text-info'; }
+
+                                $pOsName = '';
+                                if (stripos($pRawUa, 'Windows') !== false) { $pOsName = 'Windows'; }
+                                elseif (stripos($pRawUa, 'Macintosh') !== false) { $pOsName = 'macOS'; }
+                                elseif (stripos($pRawUa, 'Linux') !== false) { $pOsName = 'Linux'; }
+                            @endphp
                             <tr style="background: rgba(254, 243, 199, 0.15);">
-                                <td class="px-3">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="rounded-3 d-flex align-items-center justify-content-center text-warning shadow-xs" style="width: 38px; height: 38px; min-width: 38px; background: #fef3c7;">
+                                <td class="px-3.5">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="rounded-3 d-flex align-items-center justify-content-center text-warning shadow-xs" style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0; background: #fef3c7;">
                                             <i class="bi bi-display fs-5"></i>
                                         </div>
-                                        <div>
-                                            <div class="fw-bold text-dark">{{ $pDev->device_name }}</div>
-                                            <small class="text-muted font-monospace" style="font-size: 0.72rem;" dir="ltr">token: {{ substr($pDev->device_token, 0, 16) }}...</small>
+                                        <div style="min-width: 0;">
+                                            <div class="fw-bold text-dark fs-6" style="word-break: break-word; line-height: 1.4;">{{ $pDev->device_name }}</div>
+                                            <div class="text-muted font-monospace mt-0.5" style="font-size: 0.72rem;" dir="ltr">
+                                                <span class="badge bg-white text-muted border px-1.5 py-0.5">token: {{ substr($pDev->device_token, 0, 16) }}...</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-3">
-                                    <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.1); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.82rem; padding: 6px 12px;">
+                                    <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.1); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.85rem; padding: 7px 14px; white-space: nowrap;">
                                         <i class="bi bi-geo-alt-fill me-1"></i> {{ $pDev->location_name }}
                                     </span>
                                 </td>
                                 <td class="px-3">
-                                    <div class="font-monospace fw-bold text-dark bg-white px-2 py-0.5 rounded border d-inline-block small" style="font-size: 0.76rem;" dir="ltr">{{ $pDev->ip_address ?: 'غير متوفر' }}</div>
-                                    <div class="text-muted text-truncate" style="max-width: 170px; font-size: 0.7rem;" title="{{ $pDev->user_agent }}">{{ $pDev->user_agent ?: '-' }}</div>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="font-monospace fw-bold text-dark bg-white px-2 py-0.5 rounded border d-inline-block small" style="font-size: 0.78rem; width: fit-content;" dir="ltr">
+                                            {{ $pDev->ip_address ?: 'غير متوفر' }}
+                                        </span>
+                                        <span class="text-secondary small d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;" title="{{ $pRawUa }}">
+                                            <i class="bi {{ $pBIcon }}"></i>
+                                            <span>{{ $pBName }} {{ $pOsName ? '• ' . $pOsName : '' }}</span>
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-3">
-                                    <div class="small fw-bold text-dark">{{ $pDev->created_at ? $pDev->created_at->diffForHumans() : '-' }}</div>
-                                    <div class="text-muted" style="font-size: 0.72rem;" dir="ltr">{{ $pDev->created_at ? $pDev->created_at->format('Y-m-d h:i A') : '' }}</div>
+                                    <div class="small fw-bold text-dark" style="white-space: nowrap;">{{ $pDev->created_at ? $pDev->created_at->diffForHumans() : '-' }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem; white-space: nowrap;" dir="ltr">{{ $pDev->created_at ? $pDev->created_at->format('Y-m-d h:i A') : '' }}</div>
                                 </td>
-                                <td class="px-3 text-center">
-                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                <td class="px-3.5 text-center" style="white-space: nowrap;">
+                                    <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                         <form action="{{ route('employee-attendance.approve-device', $pDev->id) }}" method="POST" class="d-inline m-0">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1.5" title="موافقة واعتماد هذا الجهاز فوراً">
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1.5" style="font-size: 0.8rem; white-space: nowrap;" title="موافقة واعتماد هذا الجهاز فوراً">
                                                 <i class="bi bi-check-circle-fill"></i>
                                                 <span>موافقة واعتماد</span>
                                             </button>
@@ -207,7 +230,7 @@
                                         <form action="{{ route('employee-attendance.destroy-device', $pDev->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('هل تريد بالتأكيد رفض هذا الطلب وحذفه؟')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1" title="رفض وحذف الطلب">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1.5 fw-bold shadow-xs d-inline-flex align-items-center gap-1" style="font-size: 0.8rem; white-space: nowrap;" title="رفض وحذف الطلب">
                                                 <i class="bi bi-x-circle"></i>
                                                 <span>رفض</span>
                                             </button>
@@ -240,21 +263,37 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="min-width: 980px;">
+            <table class="table table-hover align-middle mb-0" style="min-width: 1180px; width: 100%;">
                 <thead class="bg-light text-muted small text-uppercase" style="border-bottom: 1px solid #e2e8f0;">
                     <tr>
                         <th class="py-3 px-3 text-center" style="width: 50px;">#</th>
-                        <th class="py-3 px-3" style="min-width: 230px;">اسم الجهاز</th>
-                        <th class="py-3 px-3" style="min-width: 160px;">المقر / الفرع</th>
-                        <th class="py-3 px-3" style="min-width: 150px;">المعتمد بواسطة</th>
-                        <th class="py-3 px-3" style="min-width: 170px;">عنوان IP والمتصفح</th>
+                        <th class="py-3 px-3.5" style="min-width: 270px;">اسم الجهاز</th>
+                        <th class="py-3 px-3" style="min-width: 170px;">المقر / الفرع</th>
+                        <th class="py-3 px-3" style="min-width: 170px;">المعتمد بواسطة</th>
+                        <th class="py-3 px-3" style="min-width: 200px;">عنوان IP والمتصفح</th>
                         <th class="py-3 px-3" style="min-width: 160px;">آخر استخدام للحضور</th>
-                        <th class="py-3 px-3 text-center" style="min-width: 130px;">الحالة</th>
-                        <th class="py-3 px-3 text-center" style="min-width: 150px;">إجراءات</th>
+                        <th class="py-3 px-3 text-center" style="min-width: 140px;">الحالة</th>
+                        <th class="py-3 px-3.5 text-center" style="min-width: 190px;">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($approvedList as $idx => $dev)
+                        @php
+                            $dRawUa = $dev->user_agent ?: '';
+                            $dBName = 'متصفح';
+                            $dBIcon = 'bi-globe';
+                            if (stripos($dRawUa, 'Edg') !== false) { $dBName = 'Edge'; $dBIcon = 'bi-browser-edge text-primary'; }
+                            elseif (stripos($dRawUa, 'Chrome') !== false) { $dBName = 'Chrome'; $dBIcon = 'bi-browser-chrome text-danger'; }
+                            elseif (stripos($dRawUa, 'Firefox') !== false) { $dBName = 'Firefox'; $dBIcon = 'bi-browser-firefox text-warning'; }
+                            elseif (stripos($dRawUa, 'Safari') !== false) { $dBName = 'Safari'; $dBIcon = 'bi-compass text-info'; }
+
+                            $dOsName = '';
+                            if (stripos($dRawUa, 'Windows') !== false) { $dOsName = 'Windows'; }
+                            elseif (stripos($dRawUa, 'Macintosh') !== false) { $dOsName = 'macOS'; }
+                            elseif (stripos($dRawUa, 'Linux') !== false) { $dOsName = 'Linux'; }
+                            elseif (stripos($dRawUa, 'Android') !== false) { $dOsName = 'Android'; }
+                            elseif (stripos($dRawUa, 'iPhone') !== false) { $dOsName = 'iOS'; }
+                        @endphp
                         <tr>
                             {{-- # Index --}}
                             <td class="px-3 text-center">
@@ -264,15 +303,15 @@
                             </td>
 
                             {{-- Device Name & Token --}}
-                            <td class="px-3">
+                            <td class="px-3.5">
                                 <div class="d-flex align-items-center gap-2.5">
-                                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white shadow-xs" style="width: 38px; height: 38px; min-width: 38px; flex-shrink: 0; background: {{ $dev->is_active ? '#0284c7' : '#94a3b8' }};">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white shadow-xs" style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0; background: {{ $dev->is_active ? '#0284c7' : '#94a3b8' }};">
                                         <i class="bi bi-display fs-5"></i>
                                     </div>
                                     <div style="min-width: 0;">
-                                        <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">{{ $dev->device_name }}</div>
-                                        <div class="text-muted font-monospace" style="font-size: 0.72rem;" dir="ltr">
-                                            token: {{ substr($dev->device_token, 0, 16) }}...
+                                        <div class="fw-bold text-dark fs-6" style="word-break: break-word; line-height: 1.4;">{{ $dev->device_name }}</div>
+                                        <div class="text-muted font-monospace mt-0.5" style="font-size: 0.72rem;" dir="ltr">
+                                            <span class="badge bg-light text-muted border px-1.5 py-0.5">token: {{ substr($dev->device_token, 0, 16) }}...</span>
                                         </div>
                                     </div>
                                 </div>
@@ -280,15 +319,15 @@
 
                             {{-- Location / Branch --}}
                             <td class="px-3">
-                                <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.1); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.82rem; padding: 6px 12px;">
+                                <span class="badge rounded-pill fw-bold" style="background: rgba(14, 165, 233, 0.1); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.25); font-size: 0.85rem; padding: 7px 14px; white-space: nowrap;">
                                     <i class="bi bi-geo-alt-fill me-1"></i> {{ $dev->location_name }}
                                 </span>
                             </td>
 
                             {{-- Authorized By --}}
                             <td class="px-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 30px; height: 30px; min-width: 30px; background: #e0e7ff; font-size: 0.78rem;">
+                                <div class="d-flex align-items-center gap-2" style="white-space: nowrap;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 32px; height: 32px; min-width: 32px; background: #e0e7ff; font-size: 0.8rem;">
                                         {{ mb_substr($dev->authorizedBy?->name ?? 'إ', 0, 1) }}
                                     </div>
                                     <div>
@@ -300,11 +339,14 @@
 
                             {{-- IP Address & User Agent --}}
                             <td class="px-3">
-                                <div class="font-monospace fw-bold text-dark bg-light px-2 py-0.5 rounded border d-inline-block small mb-1" style="font-size: 0.76rem;" dir="ltr">
-                                    {{ $dev->ip_address ?: 'غير متوفر' }}
-                                </div>
-                                <div class="text-muted text-truncate" style="max-width: 160px; font-size: 0.72rem;" title="{{ $dev->user_agent }}">
-                                    {{ $dev->user_agent ?: '-' }}
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="font-monospace fw-bold text-dark bg-light px-2 py-0.5 rounded border d-inline-block small" style="font-size: 0.78rem; width: fit-content;" dir="ltr">
+                                        {{ $dev->ip_address ?: 'غير متوفر' }}
+                                    </span>
+                                    <span class="text-secondary small d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;" title="{{ $dRawUa }}">
+                                        <i class="bi {{ $dBIcon }}"></i>
+                                        <span>{{ $dBName }} {{ $dOsName ? '• ' . $dOsName : '' }}</span>
+                                    </span>
                                 </div>
                             </td>
 
@@ -314,44 +356,44 @@
                                     @php
                                         $lastUsed = \Carbon\Carbon::parse($dev->last_used_at)->locale('ar');
                                     @endphp
-                                    <div class="small fw-bold text-success d-inline-flex align-items-center gap-1">
+                                    <div class="small fw-bold text-success d-inline-flex align-items-center gap-1" style="white-space: nowrap;">
                                         <i class="bi bi-clock-history"></i>
                                         <span>{{ $lastUsed->diffForHumans() }}</span>
                                     </div>
-                                    <div class="text-muted" style="font-size: 0.72rem;" dir="ltr">{{ $lastUsed->format('Y-m-d h:i A') }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem; white-space: nowrap;" dir="ltr">{{ $lastUsed->format('Y-m-d h:i A') }}</div>
                                 @else
-                                    <span class="badge bg-light text-muted border rounded-pill px-2.5 py-1 small">لم يُستخدم بعد</span>
+                                    <span class="badge bg-light text-muted border rounded-pill px-2.5 py-1 small" style="white-space: nowrap;">لم يُستخدم بعد</span>
                                 @endif
                             </td>
 
                             {{-- Status Badge --}}
-                            <td class="px-3 text-center">
+                            <td class="px-3 text-center" style="white-space: nowrap;">
                                 @if($dev->is_active)
-                                    <span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 50px; display: inline-flex; align-items: center; gap: 5px;">
-                                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                                    <span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 50px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
                                         <span>نشط ومعتمد</span>
                                     </span>
                                 @else
-                                    <span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 50px; display: inline-flex; align-items: center; gap: 5px;">
-                                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
+                                    <span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 50px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
                                         <span>معطل مؤقتاً</span>
                                     </span>
                                 @endif
                             </td>
 
                             {{-- Actions --}}
-                            <td class="px-3 text-center">
-                                <div class="d-inline-flex align-items-center gap-1.5">
+                            <td class="px-3.5 text-center" style="white-space: nowrap;">
+                                <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                     {{-- Toggle active form --}}
                                     <form action="{{ route('employee-attendance.toggle-device', $dev->id) }}" method="POST" class="d-inline m-0">
                                         @csrf
                                         @if($dev->is_active)
-                                            <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1" style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-size: 0.76rem; padding: 4px 10px;" title="تعطيل هذا الجهاز مؤقتاً">
+                                            <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5" style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-size: 0.8rem; white-space: nowrap;" title="تعطيل هذا الجهاز مؤقتاً">
                                                 <i class="bi bi-pause-circle-fill"></i>
                                                 <span>تعطيل</span>
                                             </button>
                                         @else
-                                            <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.76rem; padding: 4px 10px;" title="تفعيل هذا الجهاز">
+                                            <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.8rem; white-space: nowrap;" title="تفعيل هذا الجهاز">
                                                 <i class="bi bi-play-circle-fill"></i>
                                                 <span>تفعيل</span>
                                             </button>
@@ -362,7 +404,7 @@
                                     <form action="{{ route('employee-attendance.destroy-device', $dev->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('هل أنت متأكد من إلغاء اعتماد وحذف هذا الجهاز نهائياً؟ لن يتمكن الموظفون من الحضور عبره تلقائياً.')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 0.76rem; padding: 4px 10px;" title="حذف وإلغاء الاعتماد نهائياً">
+                                        <button type="submit" class="btn btn-sm rounded-pill fw-bold shadow-xs d-inline-flex align-items-center gap-1.5 px-3 py-1.5" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 0.8rem; white-space: nowrap;" title="حذف وإلغاء الاعتماد نهائياً">
                                             <i class="bi bi-trash3-fill"></i>
                                             <span>حذف</span>
                                         </button>

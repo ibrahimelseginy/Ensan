@@ -3248,15 +3248,17 @@
                   <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">{{ $tShort }}</span>
                 </span>
               @else
-                @php
-                  $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
-                @endphp
                 <button type="button" id="topbarEnableGpsBtn" onclick="startAttendanceCapture('checkin')" class="btn btn-reports-elite d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3" style="background: rgba(37, 99, 235, 0.12) !important; color: #1d4ed8 !important; border: 1px solid rgba(37, 99, 235, 0.35) !important; white-space: nowrap !important; width: auto !important;" title="اضغط لتسجيل حضورك">
                   <i class="bi bi-geo-alt-fill fs-6"></i>
                   <span class="fw-bold d-none d-sm-inline">تسجيل الحضور</span>
                   <span class="fw-bold d-inline d-sm-none" style="font-size: 0.78rem;">حضور</span>
                 </button>
-                <script>
+              @endif
+
+              @php
+                $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
+              @endphp
+              <script>
                   (function () {
                     const gpsBtn = document.getElementById('topbarEnableGpsBtn');
                     const isTopAdmin = @json($isTopAdminUser);
@@ -3730,10 +3732,12 @@
                       reader.readAsDataURL(file);
                     };
 
-                    window.resetAttendanceCapture = function() {
+                    window.resetAttendanceCapture = function(keepLocation) {
                       attCapturedPhotoBase64 = null;
-                      attCapturedLat = null;
-                      attCapturedLng = null;
+                      if (!keepLocation) {
+                        attCapturedLat = null;
+                        attCapturedLng = null;
+                      }
                       var fileInput = document.getElementById('attCameraFileInput');
                       if (fileInput) fileInput.value = '';
                       var container = document.getElementById('attCameraPreviewContainer');
@@ -3741,19 +3745,20 @@
                       var submitBtn = document.getElementById('btnSubmitAttWithPhoto');
                       if (container) container.classList.add('d-none');
                       if (placeholder) placeholder.classList.remove('d-none');
-                      if (submitBtn) submitBtn.disabled = true;
+                      updateSubmitButtonState();
                     };
 
                     window.acquireMobileLocation = function() {
                       var statusEl = document.getElementById('attCameraGpsStatus');
+                      var helpEl = document.getElementById('attCameraGpsHelp');
 
-                      // 1. استخدام الموقع المخزن بالذاكرة المؤقتة فوراً إن وُجد (< 10 دقائق) لتجنب التأخير على أندرويد
-                      var cachedLat = sessionStorage.getItem('ensan_geo_lat');
-                      var cachedLng = sessionStorage.getItem('ensan_geo_lng');
-                      var cachedTime = sessionStorage.getItem('ensan_geo_time');
-                      var isFresh = cachedLat && cachedLng && cachedTime && ((Date.now() - parseInt(cachedTime, 10)) < 600000);
+                      // 1. استخدام الموقع المخزن بالذاكرة المؤقتة فوراً إن وُجد (< 15 دقيقة) لتجنب أي تأخير على أندرويد
+                      var cachedLat = sessionStorage.getItem('ensan_geo_lat') || localStorage.getItem('ensan_geo_lat');
+                      var cachedLng = sessionStorage.getItem('ensan_geo_lng') || localStorage.getItem('ensan_geo_lng');
+                      var cachedTime = sessionStorage.getItem('ensan_geo_time') || localStorage.getItem('ensan_geo_time');
+                      var isFresh = cachedLat && cachedLng && cachedTime && ((Date.now() - parseInt(cachedTime, 10)) < 900000);
 
-                      if (isFresh && !attCapturedLat) {
+                      if (isFresh) {
                         attCapturedLat = parseFloat(cachedLat);
                         attCapturedLng = parseFloat(cachedLng);
                         if (statusEl) {
@@ -3761,12 +3766,17 @@
                           statusEl.parentElement.style.background = 'rgba(16, 185, 129, 0.12)';
                           statusEl.parentElement.style.color = '#047857';
                         }
+                        if (helpEl) helpEl.classList.add('d-none');
                         updateSubmitButtonState();
-                      } else if (statusEl && !attCapturedLat) {
+                        return;
+                      }
+
+                      if (statusEl && !attCapturedLat) {
                         statusEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ تحديد موقعك عبر الـ GPS...';
                         statusEl.parentElement.style.background = 'rgba(14, 165, 233, 0.12)';
                         statusEl.parentElement.style.color = '#0284c7';
                       }
+                      if (helpEl) helpEl.classList.add('d-none');
 
                       var onSuccess = function(pos) {
                         if (!pos || !pos.coords) return;
@@ -3775,28 +3785,33 @@
                         sessionStorage.setItem('ensan_geo_lat', attCapturedLat);
                         sessionStorage.setItem('ensan_geo_lng', attCapturedLng);
                         sessionStorage.setItem('ensan_geo_time', Date.now().toString());
+                        localStorage.setItem('ensan_geo_lat', attCapturedLat);
+                        localStorage.setItem('ensan_geo_lng', attCapturedLng);
+                        localStorage.setItem('ensan_geo_time', Date.now().toString());
 
                         if (statusEl) {
-                          statusEl.innerHTML = '<i class="bi bi-geo-alt-fill text-success me-1"></i> تم تحديد إحداثيات موقعك بنجاح ✅';
+                          statusEl.innerHTML = '<i class="bi bi-geo-alt-fill text-success me-1"></i> تم تأكيد الموقع بنجاح ✅';
                           statusEl.parentElement.style.background = 'rgba(16, 185, 129, 0.12)';
                           statusEl.parentElement.style.color = '#047857';
                         }
+                        if (helpEl) helpEl.classList.add('d-none');
                         updateSubmitButtonState();
                       };
 
                       var onError = function(err) {
                         if (attCapturedLat && attCapturedLng) {
-                          // يوجد موقع معتمد سابق بالذاكرة، لا داعي لإظهار الخطأ الأحمر
                           return;
                         }
-                        var msg = (err && err.code === 1)
-                          ? 'إذن الموقع محظور بالمتصفح! انقر على القفل 🔒 بأعلى الشاشة بجانب الرابط ➔ فعّل (الموقع) أو اضغط [إعادة ضبط الأذونات].'
-                          : 'تعذر التقاط إشارة GPS. تأكد من تشغيل "الموقع" بهاتفك المحمول.';
+                        var isDenied = (err && err.code === 1);
                         if (statusEl) {
-                          statusEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> ' + msg +
-                            ' <button type="button" onclick="acquireMobileLocation()" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5 ms-1 fw-bold" style="font-size: 0.72rem;">إعادة الفحص 🔄</button>';
+                          statusEl.innerHTML = isDenied
+                            ? '<i class="bi bi-shield-x text-danger me-1"></i> إذن الموقع محظور بالمتصفح'
+                            : '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> تعذر التقاط إشارة GPS';
                           statusEl.parentElement.style.background = 'rgba(239, 68, 68, 0.12)';
                           statusEl.parentElement.style.color = '#dc2626';
+                        }
+                        if (helpEl) {
+                          helpEl.classList.remove('d-none');
                         }
                       };
 
@@ -3805,7 +3820,7 @@
                         return;
                       }
 
-                      // على أندرويد: مزود الشبكة Fused/Network يعطي الموقع الداخلي فوراً دون انتظار القمر الصناعي
+                      // خطوة 1: تقنية التموضع المدمج السريع (Fused Network Location) - سريعة جداً داخل المباني
                       navigator.geolocation.getCurrentPosition(
                         onSuccess,
                         function(firstErr) {
@@ -3813,23 +3828,32 @@
                             onError(firstErr);
                             return;
                           }
+                          // خطوة 2: محاولة بدقة أعلى للأقمار الصناعية بمهلة 20 ثانية
                           navigator.geolocation.getCurrentPosition(
                             onSuccess,
                             onError,
-                            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+                            { enableHighAccuracy: true, timeout: 20000, maximumAge: 600000 }
                           );
                         },
-                        { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
+                        { enableHighAccuracy: false, timeout: 7000, maximumAge: 600000 }
                       );
 
-                      // طلب متوازي بدقة أعلى في الخلفية
-                      try {
-                        navigator.geolocation.getCurrentPosition(
-                          onSuccess,
-                          function() {},
-                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-                        );
-                      } catch(e) {}
+                      // خطوة 3: استماع فوري موازي عبر watchPosition لالتقاط أي إشارة فور توفرها
+                      if (navigator.geolocation.watchPosition) {
+                        try {
+                          var wid = navigator.geolocation.watchPosition(
+                            function(wPos) {
+                              if (wPos && wPos.coords) {
+                                onSuccess(wPos);
+                                try { navigator.geolocation.clearWatch(wid); } catch(e){}
+                              }
+                            },
+                            function() {},
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 }
+                          );
+                          setTimeout(function(){ try { navigator.geolocation.clearWatch(wid); } catch(e){} }, 16000);
+                        } catch(e) {}
+                      }
                     };
 
                     // تجهيز مسبق لإحداثيات الموقع على الهواتف فور فتح النظام لتكون جاهزة بدون انتظار
@@ -3841,21 +3865,70 @@
                               sessionStorage.setItem('ensan_geo_lat', pos.coords.latitude);
                               sessionStorage.setItem('ensan_geo_lng', pos.coords.longitude);
                               sessionStorage.setItem('ensan_geo_time', Date.now().toString());
+                              localStorage.setItem('ensan_geo_lat', pos.coords.latitude);
+                              localStorage.setItem('ensan_geo_lng', pos.coords.longitude);
+                              localStorage.setItem('ensan_geo_time', Date.now().toString());
                             }
                           },
                           function() {},
-                          { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+                          { enableHighAccuracy: false, timeout: 8000, maximumAge: 900000 }
                         );
                       } catch(e) {}
                     }
 
                     window.startAttendanceCapture = function(type) {
                       attActionType = type || 'checkin';
-                      resetAttendanceCapture();
+                      var hasLocation = (attCapturedLat && attCapturedLng) ||
+                                        (sessionStorage.getItem('ensan_geo_lat') && sessionStorage.getItem('ensan_geo_lng')) ||
+                                        (localStorage.getItem('ensan_geo_lat') && localStorage.getItem('ensan_geo_lng'));
+                      resetAttendanceCapture(hasLocation);
 
                       // إذا كان المستخدم على جهاز كمبيوتر مكتبي (Windows أو Mac):
                       if (isDesktopOs) {
                         if (authDeviceToken) {
+                          if (attActionType === 'checkout') {
+                            checkOutWithAuthorizedDeviceToken(authDeviceToken);
+                          } else {
+                            checkInWithAuthorizedDeviceToken(authDeviceToken);
+                          }
+                          return;
+                        } else {
+                          if (isTopAdmin) {
+                            openAuthorizeDeviceModal();
+                          } else {
+                            openRequestDeviceModal();
+                          }
+                          return;
+                        }
+                      }
+
+                      // إذا كان هاتف محمول: فتح نافذة التصوير فوراً والبدء بجلب الموقع بالتوازي
+                      var modalTitle = document.getElementById('attCameraTitle');
+                      var modalSub = document.getElementById('attCameraSubtitle');
+                      var submitText = document.getElementById('btnSubmitAttText');
+                      var headerIcon = document.getElementById('attCameraHeaderIcon');
+
+                      if (attActionType === 'checkout') {
+                        if (modalTitle) modalTitle.textContent = 'توثيق الانصراف بالصورة والموقع';
+                        if (modalSub) modalSub.textContent = 'التقط صورة شخصية داخل المقر لتأكيد الانصراف';
+                        if (submitText) submitText.textContent = 'تأكيد الانصراف مع الصورة';
+                        if (headerIcon) headerIcon.className = 'bi bi-box-arrow-left';
+                      } else {
+                        if (modalTitle) modalTitle.textContent = 'توثيق الحضور بالصورة والموقع';
+                        if (modalSub) modalSub.textContent = 'صورة سيلفي حية من داخل مقر العمل';
+                        if (submitText) submitText.textContent = 'تأكيد الحضور مع الصورة';
+                        if (headerIcon) headerIcon.className = 'bi bi-camera-fill';
+                      }
+
+                      var modalEl = document.getElementById('modalAttendanceCamera');
+                      if (modalEl) {
+                        var m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        m.show();
+                      }
+
+                      // فحص الموقع في الخلفية داخل النافذة
+                      acquireMobileLocation();
+                    };
                           if (attActionType === 'checkout') {
                             checkOutWithAuthorizedDeviceToken(authDeviceToken);
                           } else {
@@ -3972,7 +4045,6 @@
                   })();
                 </script>
               @endif
-            @endif
 
             @if($navUser)
               <button class="btn btn-glass-pill" id="notificationBellBtn" style="overflow: visible !important;"
@@ -4439,9 +4511,26 @@
         </div>
         <div class="modal-body p-3.5 text-center">
           {{-- Location status badge --}}
-          <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill mb-3 shadow-xs" style="background: rgba(16, 185, 129, 0.12); color: #047857; font-size: 0.82rem; font-weight: 700;">
+          <div class="d-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill mb-2 shadow-xs" style="background: rgba(16, 185, 129, 0.12); color: #047857; font-size: 0.82rem; font-weight: 700;">
             <i class="bi bi-geo-alt-fill text-success"></i>
-            <span id="attCameraGpsStatus">تم تأكيد الموقع بنجاح (ضمن 10 أمتار)</span>
+            <span id="attCameraGpsStatus">جارٍ فحص الموقع (GPS)...</span>
+          </div>
+
+          {{-- Helper box if Location is blocked or pending on Android --}}
+          <div id="attCameraGpsHelp" class="d-none text-start p-3 rounded-3 mb-3" style="background: #fef2f2; border: 1px solid #fecaca; font-size: 0.8rem; line-height: 1.6;">
+            <div class="fw-bold text-danger mb-1 d-flex align-items-center gap-1">
+              <i class="bi bi-shield-lock-fill"></i> كيفية تفعيل الموقع في هاتف الأندرويد:
+            </div>
+            <ol class="mb-2 ps-3 text-secondary" style="font-size: 0.78rem;">
+              <li>انقر على القفل 🔒 أو الأيقونة 🎛️ بأعلى الشاشة بجوار الرابط.</li>
+              <li>اختر <strong>الأذونات (Permissions)</strong> ➔ اضغط <strong>الموقع (Location)</strong> واجعله <strong>سماح (Allow)</strong>.</li>
+              <li>اسحب ستارة الهاتف العلوية وتأكد من تشغيل أيقونة <strong>الموقع / GPS</strong>.</li>
+            </ol>
+            <div class="text-center">
+              <button type="button" onclick="acquireMobileLocation()" class="btn btn-sm btn-danger rounded-pill px-3 py-1 fw-bold shadow-xs">
+                <i class="bi bi-arrow-repeat me-1"></i> إعادة فحص الموقع الآن 🔄
+              </button>
+            </div>
           </div>
 
           <input type="file" id="attCameraFileInput" accept="image/*" capture="user" style="display:none;" onchange="handleAttPhotoSelected(event)">
