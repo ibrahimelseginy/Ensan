@@ -45,13 +45,19 @@ final class MobileNotification extends Model
     public function scopeForUser(Builder $query, User $user): Builder
     {
         return $query->where(function (Builder $q) use ($user) {
-            $q->where('target_type', 'all')
-              ->orWhereNull('target_type')
-              ->orWhere('target_user_id', $user->id);
+            // 1. إشعار موجه لهذا الموظف شخصياً بالاسم
+            $q->where('target_user_id', $user->id)
+              // 2. إشعار عام لكافة موظفي المؤسسة (دون تحديد مستخدم خاص)
+              ->orWhere(function (Builder $subAll) {
+                  $subAll->where('target_type', 'all')
+                         ->whereNull('target_user_id');
+              });
 
+            // 3. إشعار موجه لمسمى وظيفي يطابق وظيفة هذا الموظف
             if (!empty($user->job_title)) {
                 $q->orWhere(function (Builder $sub) use ($user) {
                     $sub->where('target_type', 'job_title')
+                        ->whereNull('target_user_id')
                         ->where(function ($subJt) use ($user) {
                             $subJt->where('target_job_title', $user->job_title)
                                   ->orWhere('target_job_title', 'like', '%' . $user->job_title . '%');
@@ -59,9 +65,11 @@ final class MobileNotification extends Model
                 });
             }
 
+            // 4. إشعار موجه لقسم يطابق قسم هذا الموظف
             if (!empty($user->department)) {
                 $q->orWhere(function (Builder $sub) use ($user) {
                     $sub->where('target_type', 'department')
+                        ->whereNull('target_user_id')
                         ->where(function ($subDept) use ($user) {
                             $subDept->where('target_department', $user->department)
                                     ->orWhere('target_department', 'like', '%' . $user->department . '%');
@@ -69,6 +77,7 @@ final class MobileNotification extends Model
                 });
             }
 
+            // 5. إشعار موجه لدور وظيفي يطابق دور هذا الموظف
             $userRoles = method_exists($user, 'roles') ? $user->roles()->pluck('name')->toArray() : [];
             if (!empty($user->role)) {
                 $userRoles[] = $user->role;
@@ -76,6 +85,7 @@ final class MobileNotification extends Model
             if (!empty($userRoles)) {
                 $q->orWhere(function (Builder $sub) use ($userRoles) {
                     $sub->where('target_type', 'role')
+                        ->whereNull('target_user_id')
                         ->whereIn('target_role', array_unique($userRoles));
                 });
             }

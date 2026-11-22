@@ -49,30 +49,70 @@ final class NotificationWebController extends Controller
 
         $rawItems = [];
         $suggestions = [];
-        $isAdmin = $user->hasRole('admin') || $user->hasRole('super_admin');
-        $isManager = $user->hasRole([
-            'manager',
-            'project_manager_2',
-            'project_manager_3',
-            'guest_house_manager_1',
-            'guest_house_manager_2',
-            'social_research_manager',
-        ]);
+        
+        // الصلاحيات الدقيقة وتصنيف الأقسام الوظيفية لمنع تسرب إشعارات أي موظف لموظف آخر
+        $isTopAdmin = $user->hasRole(['admin', 'super_admin']) || in_array((int)$user->id, [2, 8, 50], true);
         $userJobLower = mb_strtolower((string) ($user->job_title . ' ' . $user->department));
-        $isHr = $user->hasRole(['hr', 'hr2'])
-            || str_contains($userJobLower, 'موارد')
+
+        // 1. الموارد البشرية وشؤون الموظفين
+        $isHr = $isTopAdmin 
+            || $user->hasRole(['hr', 'hr2', 'الموارد البشرية']) 
+            || str_contains($userJobLower, 'موارد') 
+            || str_contains($userJobLower, 'شؤون موظفين') 
             || str_contains($userJobLower, 'hr');
 
-        // Helper check closure matching role, permissions, or job title
-        $canAccess = function (string $permission, array $roles = [], array $jobKeywords = []) use ($user, $isAdmin, $isManager): bool {
-            if ($isAdmin || $isManager) return true;
+        // 2. الحسابات والمالية
+        $isFinance = $isTopAdmin 
+            || $user->hasRole(['accountant', 'finance', 'حسابات', 'حسابات ماليه', 'مدير مالية']) 
+            || str_contains($userJobLower, 'حسابات') 
+            || str_contains($userJobLower, 'محاسب') 
+            || str_contains($userJobLower, 'مالي') 
+            || str_contains($userJobLower, 'خزينة');
+
+        // 3. البحث الاجتماعي والحالات والمستفيدين
+        $isSocialResearch = $isTopAdmin 
+            || $user->hasRole(['social_research_manager', 'social_researcher', 'researcher', 'field_researcher', 'باحث اجتماعي', 'باحث ميداني']) 
+            || str_contains($userJobLower, 'باحث') 
+            || str_contains($userJobLower, 'اجتماعي') 
+            || str_contains($userJobLower, 'حالات') 
+            || str_contains($userJobLower, 'رعاية');
+
+        // 4. الاستقبال وخدمة العملاء ورعاية المتبرعين
+        $isReception = $isTopAdmin 
+            || $user->hasRole(['reception', 'receptionist', 'الاستقبال']) 
+            || str_contains($userJobLower, 'استقبال') 
+            || str_contains($userJobLower, 'خدمة عملاء') 
+            || str_contains($userJobLower, 'كفالات') 
+            || str_contains($userJobLower, 'reception');
+
+        // 5. المخازن والمستودعات واللوجستيك
+        $isLogistics = $isTopAdmin 
+            || $user->hasRole(['logistics', 'warehouse', 'أمين المخزن', 'اللوجستيك', 'مخازن']) 
+            || str_contains($userJobLower, 'مخزن') 
+            || str_contains($userJobLower, 'مستودع') 
+            || str_contains($userJobLower, 'لوجستيك');
+
+        // 6. دور الضيافة
+        $isGuestHouse = $isTopAdmin 
+            || $user->hasRole(['guest_house_manager_1', 'guest_house_manager_2', 'مدراء دار الضيافه', 'دار الضيافة']) 
+            || str_contains($userJobLower, 'ضيافة');
+
+        // 7. المشاريع
+        $isProjects = $isTopAdmin 
+            || $user->hasRole(['project_manager_2', 'project_manager_3', 'مدراء المشاريع']) 
+            || str_contains($userJobLower, 'مشروع') 
+            || str_contains($userJobLower, 'زاد') 
+            || str_contains($userJobLower, 'بعثاء');
+
+        // فحص الصلاحيات المرتبط بالوظيفة والقسم (وليس مديراً عاماً لكافة الأقسام)
+        $canAccess = function (string $permission, array $roles = [], array $jobKeywords = []) use ($user, $isTopAdmin, $userJobLower): bool {
+            if ($isTopAdmin) return true;
             if ($permission !== '' && $user->hasPermission($permission)) return true;
             foreach ($roles as $role) {
                 if ($user->hasRole($role)) return true;
             }
-            $userJob = mb_strtolower((string) ($user->job_title . ' ' . $user->department));
             foreach ($jobKeywords as $keyword) {
-                if ($keyword !== '' && str_contains($userJob, mb_strtolower($keyword))) return true;
+                if ($keyword !== '' && str_contains($userJobLower, mb_strtolower($keyword))) return true;
             }
             return false;
         };
@@ -125,9 +165,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 0.5. إشعارات قرارات المساعدات (قبول / رفض / بانتظار المناقشة) — للمدير فقط
+        // 0.5. إشعارات قرارات المساعدات (قبول / رفض / بانتظار المناقشة) — للإدارة العليا فقط
         // ==========================================
-        if ($isAdmin || $user->hasRole('manager')) {
+        if ($isTopAdmin || $user->hasRole(['manager', 'social_research_manager'])) {
             $recentDirectAids = Donation::with('beneficiary:id,full_name')
                 ->whereNotNull('beneficiary_id')
                 ->where('receipt_number', 'like', 'AID-%')
@@ -163,9 +203,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 1. الحالات وطلبات المساعدة (المقبولة والمرفوضة والجديدة)
+        // 1. الحالات وطلبات المساعدة (المقبولة والمرفوضة والجديدة) — للبحث الاجتماعي والإدارة فقط
         // ==========================================
-        if ($canAccess('beneficiaries.view', ['social_researcher', 'researcher', 'field_researcher'], ['باحث', 'رعاية', 'اجتماعي', 'حالات']) || $user->hasPermission('cases.view')) {
+        if ($isSocialResearch) {
             // أ) الحالات المقبولة والمعتمدة حديثاً (لكل حالة إشعار بتوقيتها)
             $recentAcceptedCases = MobileCaseApplication::whereIn('status', ['approved', 'completed'])
                 ->where('updated_at', '>=', now()->subDays(14))
@@ -253,9 +293,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 2. الزيارات الميدانية للموظفين والباحثين
+        // 2. الزيارات الميدانية للموظفين والباحثين — للباحث المكلف حصراً
         // ==========================================
-        if ($canAccess('field_visits.view', ['social_researcher', 'researcher', 'field_researcher']) || $user->hasPermission('visits.view') || $isAdmin) {
+        if ($isSocialResearch) {
             $myDueVisits = FieldVisit::with('caseApplication')
                 ->where('researcher_id', $user->id)
                 ->where('status', 'scheduled')
@@ -287,10 +327,11 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 3. المهام الخاصة بالموظف وفريق العمل (مهام الموظفين / HR / الإدارة)
+        // 3. المهام الخاصة بالموظف وفريق العمل (خاصة بكل موظف بدقة)
         // ==========================================
         $seenTaskIds = [];
 
+        // أ) المهام المسندة لهذا الموظف حصراً
         $myTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
             ->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
@@ -316,8 +357,8 @@ final class NotificationWebController extends Controller
             ];
         }
 
-        // مهام للإشراف والمتابعة (للمديرين والإدارة العليا فقط)
-        if ($isAdmin || $isManager) {
+        // ب) مهام للإشراف والمتابعة: للإدارة العليا أو لمديري الأقسام لما كلفوا به مرؤوسيهم حصراً
+        if ($isTopAdmin) {
             $supervisedTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
                 ->where(function ($q) {
                     $q->where('status', 'under_review')
@@ -339,7 +380,24 @@ final class NotificationWebController extends Controller
                 ->latest('updated_at')
                 ->limit(15)
                 ->get();
+        } elseif ($user->hasRole(['manager', 'social_research_manager', 'guest_house_manager_1', 'guest_house_manager_2', 'project_manager_2', 'project_manager_3']) || str_contains($userJobLower, 'مدير') || str_contains($userJobLower, 'رئيس')) {
+            // المدير يرى حصراً المهام التي كلف بها موظفيه بنفسه
+            $supervisedTasks = Task::with(['assignee:id,name', 'assigner:id,name'])
+                ->where('assigned_by', $user->id)
+                ->where(function ($q) {
+                    $q->where('status', 'under_review')
+                      ->orWhere(function ($sub) {
+                          $sub->where('status', '!=', 'done')
+                              ->whereNotNull('due_date')
+                              ->whereDate('due_date', '<', now()->toDateString());
+                      });
+                })
+                ->when(!empty($seenTaskIds), fn($q) => $q->whereNotIn('id', $seenTaskIds))
+                ->latest('updated_at')
+                ->limit(10)
+                ->get();
         } else {
+            // الموظف العادي لا يرى أي مهام لموظفين آخرين
             $supervisedTasks = collect();
         }
 
@@ -374,7 +432,8 @@ final class NotificationWebController extends Controller
         // ==========================================
         // 4. الموارد البشرية والإجازات وشؤون الموظفين
         // ==========================================
-        if ($canAccess('leaves.view', ['hr']) || $isAdmin) {
+        // طلبات الإجازات المعلقة: للمسؤولين عن الـ HR والإدارة العليا فقط
+        if ($isTopAdmin || $isHr) {
             $pendingLeaves = Leave::with('user')->where('status', 'pending')->latest('created_at')->limit(6)->get();
             foreach ($pendingLeaves as $l) {
                 $uName = $l->user?->name ?? 'موظف';
@@ -396,6 +455,7 @@ final class NotificationWebController extends Controller
             }
         }
 
+        // إشعار قرار الإجازة الخاص بهذا الموظف شخصياً
         $myLeaves = Leave::where('user_id', $user->id)
             ->whereIn('status', ['approved', 'rejected'])
             ->where('updated_at', '>=', now()->subDays(14))
@@ -417,7 +477,7 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 5. تذكير الحضور والانصراف اليومي للموظف
+        // 5. تذكير الحضور والانصراف اليومي للموظف شخصياً
         // ==========================================
         if (now()->hour >= 8 && now()->isWeekday()) {
             $myAttendanceToday = EmployeeAttendance::where('user_id', $user->id)
@@ -441,13 +501,14 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 5.5. إشعارات حضور وانصراف الموظفين (لمدير المؤسسة ومسؤولي الإدارة والـ HR)
+        // 5.5. إشعارات حضور وانصراف الموظفين — لمسؤولي الـ HR والإدارة العليا فقط
         // ==========================================
-        if ($isAdmin || $isManager || $isHr || in_array((int)$user->id, [2, 8, 50], true)) {
+        if ($isTopAdmin || $isHr) {
             $recentAttendances = EmployeeAttendance::with('user')
-                ->where('date', '>=', now()->subDays(3)->toDateString())
+                ->where('date', '>=', now()->subDays(2)->toDateString())
+                ->where('user_id', '!=', $user->id)
                 ->latest('updated_at')
-                ->limit(25)
+                ->limit(15)
                 ->get();
 
             foreach ($recentAttendances as $att) {
@@ -486,9 +547,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 6. Monthly Donation Reminders
+        // 6. Monthly Donation Reminders — لقسم الاستقبال والمالية والإدارة فقط
         // ==========================================
-        if ($canAccess('donors.view', ['reception', 'receptionist'], ['استقبال', 'خدمة عملاء', 'reception']) || $user->hasPermission('donations.view') || $user->hasPermission('donations.create')) {
+        if ($isTopAdmin || $isReception || $isFinance) {
             $monthlyDonationItems = $this->monthlyDonationReminderService->notificationItems();
             
             $isSpecificFilter = ($category === 'monthly_donations');
@@ -546,8 +607,8 @@ final class NotificationWebController extends Controller
         // ==========================================
         // 7. Change Requests (للمدير وللموظف صاحب الطلب)
         // ==========================================
-        // أ) للمدير/الأدمن: طلبات التعديل والموافقة المعلقة
-        if ($canAccess('manage_change_requests')) {
+        // أ) للإدارة العليا ومسؤولي الاعتماد فقط: طلبات التعديل والموافقة المعلقة
+        if ($isTopAdmin || $user->hasPermission('manage_change_requests')) {
             $pendingCRs = ChangeRequest::with('user')->where('status', 'pending')->latest('created_at')->limit(10)->get();
             foreach ($pendingCRs as $cr) {
                 $uName = $cr->user?->name ?? 'مستخدم';
@@ -569,12 +630,11 @@ final class NotificationWebController extends Controller
             }
         }
 
-        // ب) للموظف: إشعار بحالة الطلبات الخاصة به عند الرفض أو الموافقة (يظهر فقط للموظف صاحب الطلب، ولا يظهر للمدير صاحب القرار)
+        // ب) للموظف شخصياً: إشعار بحالة الطلبات الخاصة به عند الرفض أو الموافقة (يظهر فقط للموظف صاحب الطلب)
         $myChangeRequests = ChangeRequest::with(['reviewer', 'subject'])
             ->where('user_id', $user->id)
             ->whereIn('status', ['approved', 'rejected'])
             ->where(function ($q) use ($user) {
-                // استبعاد الحالات التي يكون فيها المراجع هو نفس المستخدم الحالي (المدير لا تظهر له موافقاته الشخصية)
                 $q->whereNull('reviewer_id')
                   ->orWhere('reviewer_id', '!=', $user->id);
             })
@@ -635,9 +695,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 8. Complaints
+        // 8. Complaints — لقسم خدمة العملاء والاستقبال والإدارة فقط
         // ==========================================
-        if ($canAccess('complaints.view')) {
+        if ($isTopAdmin || $isReception || $user->hasPermission('complaints.view')) {
             $openComplaints = Complaint::where('status', 'open')->latest('created_at')->limit(6)->get();
             foreach ($openComplaints as $comp) {
                 $rawItems[] = [
@@ -653,9 +713,9 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 9. Website Contact Messages
+        // 9. Website Contact Messages — لمسؤولي الموقع والاستقبال والإدارة
         // ==========================================
-        if ($canAccess('website.contact_messages.view', ['admin', 'super-admin'])) {
+        if ($isTopAdmin || $isReception || $user->hasPermission('website.contact_messages.view')) {
             $contactMsgs = WebContactMessage::where('read', false)->latest('created_at')->limit(6)->get();
             foreach ($contactMsgs as $msg) {
                 $rawItems[] = [
@@ -674,9 +734,10 @@ final class NotificationWebController extends Controller
         }
 
         // ==========================================
-        // 10. Financial / Payrolls / Inventory system indicators
+        // 10. مؤشرات وتنبيهات مالية ومخزنية متخصصة
         // ==========================================
-        if ($canAccess('expenses.view', ['finance'])) {
+        // تنبيه التدفق المالي: لقسم المالية والحسابات فقط
+        if ($isTopAdmin || $isFinance) {
             try {
                 $now = now();
                 $monthDonationsTotal = (float) Donation::whereBetween('created_at', [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()])->sum('amount');
@@ -698,7 +759,8 @@ final class NotificationWebController extends Controller
             }
         }
 
-        if ($canAccess('payrolls.view', ['hr'])) {
+        // الرواتب غير المسددة: للموارد البشرية فقط
+        if ($isTopAdmin || $isHr) {
             try {
                 $unpaidPayrolls = (int) Payroll::where('month', now()->format('Y-m'))->whereNull('paid_at')->count();
                 if ($unpaidPayrolls > 0) {
@@ -717,7 +779,8 @@ final class NotificationWebController extends Controller
             }
         }
 
-        if ($canAccess('inventory_transactions.view') || $user->hasPermission('items.view') || $user->hasPermission('warehouses.view')) {
+        // تنبيه المخزون المنخفض: لأمناء المخازن واللوجستيك فقط
+        if ($isTopAdmin || $isLogistics) {
             try {
                 if (Schema::hasTable('inventory_transactions')) {
                     $lowStockCount = (int) DB::table('inventory_transactions')
