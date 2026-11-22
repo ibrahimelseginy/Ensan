@@ -13,6 +13,13 @@ final class UpdateVolunteerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('volunteer_hours') && !$this->filled('volunteer_hours')) {
+            $this->merge(['volunteer_hours' => 0]);
+        }
+    }
+
     public function rules(): array
     {
         $volunteerId = $this->route('volunteer')?->id;

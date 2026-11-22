@@ -16,12 +16,18 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::creating(function (User $user): void {
+            if ($user->volunteer_hours === null) {
+                $user->volunteer_hours = 0;
+            }
             if (($user->is_volunteer || $user->role === 'volunteer') && (empty($user->code) || !str_starts_with($user->code, 'V-'))) {
                 $user->code = self::nextVolunteerCode();
             }
         });
 
         static::updating(function (User $user): void {
+            if ($user->volunteer_hours === null) {
+                $user->volunteer_hours = 0;
+            }
             if (($user->is_volunteer || $user->role === 'volunteer') && (empty($user->code) || !str_starts_with($user->code, 'V-'))) {
                 $user->code = self::nextVolunteerCode();
             }

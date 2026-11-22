@@ -13,6 +13,13 @@ final class StoreVolunteerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (!$this->filled('volunteer_hours')) {
+            $this->merge(['volunteer_hours' => 0]);
+        }
+    }
+
     public function rules(): array
     {
         return [

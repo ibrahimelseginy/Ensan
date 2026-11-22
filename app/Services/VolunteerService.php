@@ -57,6 +57,10 @@ final readonly class VolunteerService
             $data['code'] = User::nextVolunteerCode();
         }
 
+        if (!isset($data['volunteer_hours']) || $data['volunteer_hours'] === null || $data['volunteer_hours'] === '') {
+            $data['volunteer_hours'] = 0;
+        }
+
         // Volunteers are data profiles only, not login user accounts
         if (empty($data['email'])) {
             $data['email'] = 'volunteer_' . strtolower(str_replace('-', '_', (string) $data['code'])) . '_' . uniqid() . '@internal.ensan';
@@ -79,6 +83,10 @@ final readonly class VolunteerService
 
     public function updateVolunteer(User $volunteer, array $data, $profilePhoto = null): mixed
     {
+        if (array_key_exists('volunteer_hours', $data) && ($data['volunteer_hours'] === null || $data['volunteer_hours'] === '')) {
+            $data['volunteer_hours'] = 0;
+        }
+
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
