@@ -23,13 +23,18 @@ final readonly class BeneficiaryRepository
         $dateTo         = $filters['date_to'] ?? null;
         $hasPhone       = $filters['has_phone'] ?? null;
         $hasAttachments = $filters['has_attachments'] ?? null;
-        $addressLike    = $filters['address_like'] ?? null;
-        $codeYear       = $filters['code_year'] ?? null;
-        $sort           = $filters['sort'] ?? 'id';
-        $dir            = $filters['dir'] ?? 'desc';
+        $addressLike       = $filters['address_like'] ?? null;
+        $codeYear          = $filters['code_year'] ?? null;
+        $sponsorshipStatus = $filters['sponsorship_status'] ?? null;
+        $sort              = $filters['sort'] ?? 'id';
+        $dir               = $filters['dir'] ?? 'desc';
 
         return Beneficiary::query()
-            ->with(['project', 'campaign', 'creator', 'updater', 'patientProfile', 'familyMembers' => fn ($query) => $query->where('active', true)])
+            ->with([
+                'project', 'campaign', 'creator', 'updater', 'patientProfile',
+                'sponsors:id,name',
+                'familyMembers' => fn ($query) => $query->where('active', true)->with('sponsors:id,name')
+            ])
             ->withCount('attachments')
             ->when($codeYear, function ($qr) use ($codeYear) {
                 $cy = trim((string) $codeYear);
@@ -124,6 +129,18 @@ final readonly class BeneficiaryRepository
                       });
                 });
             })
+            ->when($sponsorshipStatus === 'sponsored', function ($qr) {
+                $qr->where(function ($w) {
+                    $w->has('sponsors')
+                      ->orWhereHas('familyMembers.sponsors');
+                });
+            })
+            ->when($sponsorshipStatus === 'unsponsored', function ($qr) {
+                $qr->where(function ($w) {
+                    $w->doesntHave('sponsors')
+                      ->whereDoesntHave('familyMembers.sponsors');
+                });
+            })
             ->orderBy($sort, $dir)
             ->paginate($perPage)
             ->withQueryString();
@@ -174,6 +191,12 @@ final readonly class BeneficiaryRepository
             'under_review' => Beneficiary::where('status', 'under_review')->count(),
             'accepted'     => Beneficiary::where('status', 'accepted')->count(),
             'rejected'     => Beneficiary::where('status', 'rejected')->count(),
+            'sponsored'    => Beneficiary::where(function ($w) {
+                $w->has('sponsors')->orWhereHas('familyMembers.sponsors');
+            })->count(),
+            'unsponsored'  => Beneficiary::where(function ($w) {
+                $w->doesntHave('sponsors')->whereDoesntHave('familyMembers.sponsors');
+            })->count(),
         ];
     }
 

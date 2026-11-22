@@ -42,7 +42,7 @@ final class BeneficiaryWebController extends Controller
         $filters = $request->only([
             'q', 'code_year', 'status', 'assistance_type', 'project_id', 'campaign_id',
             'guest_house_id', 'sort', 'dir', 'date_from', 'date_to',
-            'has_phone', 'has_attachments', 'address_like'
+            'has_phone', 'has_attachments', 'address_like', 'sponsorship_status'
         ]);
         
         $filters['per_page'] = $perPage;

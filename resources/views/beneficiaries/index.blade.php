@@ -234,21 +234,23 @@
         'under_review' => $under_review ?? 0,
         'accepted'     => $accepted ?? 0,
         'rejected'     => $rejected ?? 0,
+        'sponsored'    => $sponsored ?? 0,
+        'unsponsored'  => $unsponsored ?? 0,
     ];
 @endphp
 
 {{-- Stats Row --}}
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg animate-slide-up animate-delay-1">
-        <a href="{{ route('beneficiaries.index') }}" class="stat-card stat-primary text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-1">
+        <a href="{{ route('beneficiaries.index') }}" class="stat-card stat-primary text-decoration-none d-block h-100">
             <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             <div class="stat-label">إجمالي</div>
             <div class="stat-value">{{ number_format($stats['total']) }}</div>
             <i class="bi bi-people-fill stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg animate-slide-up animate-delay-2">
-        <a href="{{ route('beneficiaries.index', ['status' => 'new']) }}" class="stat-card stat-info text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-2">
+        <a href="{{ route('beneficiaries.index', ['status' => 'new']) }}" class="stat-card stat-info text-decoration-none d-block h-100">
             <div class="stat-icon"><i class="bi bi-plus-circle-fill"></i></div>
             <div class="stat-label">جديد</div>
             <div class="stat-value">{{ number_format($stats['new']) }}</div>
@@ -256,16 +258,8 @@
             <i class="bi bi-plus-circle-fill stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg animate-slide-up animate-delay-3">
-        <a href="{{ route('beneficiaries.index', ['status' => 'under_review']) }}" class="stat-card stat-warning text-decoration-none d-block">
-            <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
-            <div class="stat-label">تحت المراجعة</div>
-            <div class="stat-value">{{ number_format($stats['under_review']) }}</div>
-            <i class="bi bi-hourglass-split stat-bg-icon"></i>
-        </a>
-    </div>
-    <div class="col-6 col-lg animate-slide-up animate-delay-4">
-        <a href="{{ route('beneficiaries.index', ['status' => 'accepted']) }}" class="stat-card stat-success text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-3">
+        <a href="{{ route('beneficiaries.index', ['status' => 'accepted']) }}" class="stat-card stat-success text-decoration-none d-block h-100">
             <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-label">مقبول</div>
             <div class="stat-value">{{ number_format($stats['accepted']) }}</div>
@@ -273,8 +267,26 @@
             <i class="bi bi-check-circle-fill stat-bg-icon"></i>
         </a>
     </div>
-    <div class="col-6 col-lg animate-slide-up animate-delay-5">
-        <a href="{{ route('beneficiaries.index', ['status' => 'rejected']) }}" class="stat-card stat-danger text-decoration-none d-block">
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-4">
+        <a href="{{ route('beneficiaries.index', ['sponsorship_status' => 'sponsored']) }}" class="stat-card text-decoration-none d-block h-100" style="border-right: 4px solid #10b981; background: #ffffff;">
+            <div class="stat-icon" style="color: #059669; background: rgba(16, 185, 129, 0.12);"><i class="bi bi-heart-fill"></i></div>
+            <div class="stat-label" style="color: #047857; font-weight: 700;">مكفولة (لها كافل)</div>
+            <div class="stat-value text-success">{{ number_format($stats['sponsored'] ?? 0) }}</div>
+            <div class="stat-trend up text-success"><i class="bi bi-check-all"></i> كفالة جارية</div>
+            <i class="bi bi-heart-fill stat-bg-icon" style="color: rgba(16, 185, 129, 0.08);"></i>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-5">
+        <a href="{{ route('beneficiaries.index', ['sponsorship_status' => 'unsponsored']) }}" class="stat-card text-decoration-none d-block h-100" style="border-right: 4px solid #f59e0b; background: #ffffff;">
+            <div class="stat-icon" style="color: #d97706; background: rgba(245, 158, 11, 0.12);"><i class="bi bi-exclamation-circle-fill"></i></div>
+            <div class="stat-label" style="color: #b45309; font-weight: 700;">غير مكفولة</div>
+            <div class="stat-value" style="color: #d97706;">{{ number_format($stats['unsponsored'] ?? 0) }}</div>
+            <div class="stat-trend" style="color: #b45309;"><i class="bi bi-hourglass-split"></i> تحتاج كافل</div>
+            <i class="bi bi-exclamation-circle-fill stat-bg-icon" style="color: rgba(245, 158, 11, 0.08);"></i>
+        </a>
+    </div>
+    <div class="col-6 col-md-4 col-xl animate-slide-up animate-delay-6">
+        <a href="{{ route('beneficiaries.index', ['status' => 'rejected']) }}" class="stat-card stat-danger text-decoration-none d-block h-100">
             <div class="stat-icon"><i class="bi bi-x-circle-fill"></i></div>
             <div class="stat-label">مرفوض</div>
             <div class="stat-value">{{ number_format($stats['rejected']) }}</div>
@@ -368,6 +380,21 @@
             </div>
 
             {{-- Row 3 --}}
+            <div class="col-md-3">
+                <label class="form-label fw-bold small text-uppercase text-muted"><i class="bi bi-heart-half text-danger me-1"></i>حالة الكفالة (الكافل)</label>
+                <select name="sponsorship_status" class="form-select border-primary fw-semibold">
+                    <option value="">الكل (مكفول وغير مكفول)</option>
+                    <option value="sponsored" @selected(($sponsorship_status ?? ($sponsorshipStatus ?? '')) === 'sponsored')>✅ مكفولة بالفعل (لها كافل)</option>
+                    <option value="unsponsored" @selected(($sponsorship_status ?? ($sponsorshipStatus ?? '')) === 'unsponsored')>⏳ غير مكفولة (بدون كافل)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold small text-uppercase text-muted">سنة الكود (الدخول)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar-event text-muted"></i></span>
+                    <input type="text" name="code_year" value="{{ $code_year ?? ($codeYear ?? '') }}" class="form-control border-start-0" placeholder="مثال: 26 أو 25" maxlength="4" title="بحث بسنة الدخول من خلال أول رقمين من الكود (مثلاً 26 لسنة 2026)">
+                </div>
+            </div>
             <div class="col-md-2">
                 <label class="form-label fw-bold small text-uppercase text-muted">عدد الصفوف</label>
                 <select name="per_page" class="form-select">
@@ -376,14 +403,7 @@
                     <option value="100" @selected(($perPage ?? 20) == 100)>100</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold small text-uppercase text-muted">سنة الكود (سنة الدخول)</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar-event text-muted"></i></span>
-                    <input type="text" name="code_year" value="{{ $code_year ?? ($codeYear ?? '') }}" class="form-control border-start-0" placeholder="أول رقمين (مثال: 26 أو 25)" maxlength="4" title="بحث بسنة الدخول من خلال أول رقمين من الكود (مثلاً 26 لسنة 2026)">
-                </div>
-            </div>
-            <div class="col-md-7 d-flex align-items-end gap-2">
+            <div class="col-md-5 d-flex align-items-end gap-2">
                 <button class="btn btn-primary flex-fill fw-bold"><i class="bi bi-funnel me-1"></i> تصفية</button>
                 <a class="btn btn-outline-secondary" href="{{ route('beneficiaries.index') }}" title="مسح التصفية"><i class="bi bi-x-lg"></i></a>
                 <button class="btn btn-outline-info" type="button" onclick="openBeneficiariesPrintPreview()" title="معاينة الكشف الرسمي قبل الطباعة"><i class="bi bi-eye me-1"></i> معاينة الكشف</button>
@@ -509,6 +529,22 @@
                   };
                 @endphp
                 <span class="badge bg-{{ $tcls }}">{{ $t_ar }}</span>
+                @php
+                  $hasDirectSponsor = $b->sponsors && $b->sponsors->isNotEmpty();
+                  $hasMemberSponsor = $b->familyMembers && $b->familyMembers->contains(fn($m) => $m->sponsors && $m->sponsors->isNotEmpty());
+                  $isCaseSponsored = $hasDirectSponsor || $hasMemberSponsor;
+                @endphp
+                <div class="mt-1">
+                  @if($isCaseSponsored)
+                    <span class="badge rounded-pill fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.72rem; padding: 2px 7px;" title="حالة مكفولة بالفعل ولها كافل">
+                      <i class="bi bi-heart-fill text-danger me-1"></i> مكفولة (لها كافل)
+                    </span>
+                  @else
+                    <span class="badge rounded-pill fw-bold text-muted" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-size: 0.72rem; padding: 2px 7px;" title="حالة غير مكفولة">
+                      <i class="bi bi-dash-circle me-1"></i> غير مكفولة
+                    </span>
+                  @endif
+                </div>
                 @if($b->collection_method)
                     <div class="small text-muted">{{ $b->collection_method }}</div>
                 @endif
