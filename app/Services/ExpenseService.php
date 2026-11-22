@@ -30,29 +30,38 @@ final readonly class ExpenseService
         return $this->expenseRepository->findById($id);
     }
 
-    public function getFinancialAnalysis(): array
+    public function getFinancialAnalysis(?array $scopedFilters = null): array
     {
         $currentMonth  = now()->month;
         $currentYear   = now()->year;
         $lastMonthDate = now()->subMonth();
         
-        $totalCurrentMonth = (float) Expense::where('status', '!=', 'cancelled')
+        $currentMonthQuery = Expense::where('status', '!=', 'cancelled')
             ->whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
-            ->sum('amount');
+            ->whereYear('created_at', $currentYear);
+        if (!empty($scopedFilters)) {
+            $currentMonthQuery = $this->expenseRepository->applyScopeFilter($currentMonthQuery, $scopedFilters);
+        }
+        $totalCurrentMonth = (float) $currentMonthQuery->sum('amount');
             
-        $totalLastMonth = (float) Expense::where('status', '!=', 'cancelled')
+        $lastMonthQuery = Expense::where('status', '!=', 'cancelled')
             ->whereMonth('created_at', $lastMonthDate->month)
-            ->whereYear('created_at', $lastMonthDate->year)
-            ->sum('amount');
+            ->whereYear('created_at', $lastMonthDate->year);
+        if (!empty($scopedFilters)) {
+            $lastMonthQuery = $this->expenseRepository->applyScopeFilter($lastMonthQuery, $scopedFilters);
+        }
+        $totalLastMonth = (float) $lastMonthQuery->sum('amount');
             
         $growth = 0;
         if ($totalLastMonth > 0) {
             $growth = (($totalCurrentMonth - $totalLastMonth) / $totalLastMonth) * 100;
         }
 
-        $categoryBreakdown = Expense::where('status', '!=', 'cancelled')
-            ->groupBy('type')
+        $catQuery = Expense::where('status', '!=', 'cancelled');
+        if (!empty($scopedFilters)) {
+            $catQuery = $this->expenseRepository->applyScopeFilter($catQuery, $scopedFilters);
+        }
+        $categoryBreakdown = $catQuery->groupBy('type')
             ->selectRaw('type, sum(amount) as total')
             ->get()
             ->pluck('total', 'type');
@@ -60,12 +69,15 @@ final readonly class ExpenseService
         $monthlyComparison = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
+            $mQuery = Expense::where('status', '!=', 'cancelled')
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year);
+            if (!empty($scopedFilters)) {
+                $mQuery = $this->expenseRepository->applyScopeFilter($mQuery, $scopedFilters);
+            }
             $monthlyComparison[] = [
                 'label' => $date->translatedFormat('F'),
-                'total' => (float) Expense::where('status', '!=', 'cancelled')
-                    ->whereMonth('created_at', $date->month)
-                    ->whereYear('created_at', $date->year)
-                    ->sum('amount')
+                'total' => (float) $mQuery->sum('amount')
             ];
         }
 

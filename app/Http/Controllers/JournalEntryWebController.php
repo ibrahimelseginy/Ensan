@@ -20,9 +20,9 @@ final class JournalEntryWebController extends Controller
         private JournalEntryService $journalEntryService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $entries = $this->journalEntryService->getAllEntries(20);
+        $entries = $this->journalEntryService->getAllEntries(20, $request->user());
         return view('journal_entries.index', compact('entries'));
     }
 

@@ -28,16 +28,37 @@ final class ExpenseWebController extends Controller
 
     public function index(Request $request): View
     {
+        $user = $request->user();
         $filters = $request->only(['project_id', 'campaign_id', 'workspace_id', 'guest_house_id', 'start_date', 'end_date', 'type']);
+
+        $accTreasuries = $user?->getAccessibleTreasuryIds();
+        $accGuestHouses = $user?->getAccessibleGuestHouseIds();
+        if ($accTreasuries !== null || $accGuestHouses !== null) {
+            $filters['accessible_treasury_ids'] = $accTreasuries ?? [];
+            $filters['accessible_guest_house_ids'] = $accGuestHouses ?? [];
+            $filters['scoped_user_id'] = $user?->id;
+        }
+
         $expenses = $this->expenseService->getFilteredExpenses($filters, 20);
-        $analysis = $this->expenseService->getFinancialAnalysis();
+        $analysis = $this->expenseService->getFinancialAnalysis($filters);
 
         return view('expenses.index', array_merge(compact('expenses'), $analysis));
     }
 
     public function export(Request $request): StreamedResponse
     {
-        return $this->expenseService->exportToCsv($request->all());
+        $user = $request->user();
+        $filters = $request->all();
+
+        $accTreasuries = $user?->getAccessibleTreasuryIds();
+        $accGuestHouses = $user?->getAccessibleGuestHouseIds();
+        if ($accTreasuries !== null || $accGuestHouses !== null) {
+            $filters['accessible_treasury_ids'] = $accTreasuries ?? [];
+            $filters['accessible_guest_house_ids'] = $accGuestHouses ?? [];
+            $filters['scoped_user_id'] = $user?->id;
+        }
+
+        return $this->expenseService->exportToCsv($filters);
     }
 
     public function create(): View
@@ -46,8 +67,13 @@ final class ExpenseWebController extends Controller
         $projects      = Project::orderBy('name')->get();
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
         $workspaces    = Workspace::where('status', '!=', 'maintenance')->orderBy('name')->get();
-        $guestHouses   = GuestHouse::orderBy('name')->get();
         $authUser      = request()->user();
+
+        $ghIds         = $authUser?->getAccessibleGuestHouseIds();
+        $guestHouses   = $ghIds !== null
+            ? GuestHouse::whereIn('id', $ghIds)->orderBy('name')->get()
+            : GuestHouse::orderBy('name')->get();
+
         $accIds        = $authUser?->getAccessibleTreasuryIds();
         $treasuries    = $accIds !== null
             ? Treasury::active()->whereIn('id', $accIds)->orderBy('name')->get()
@@ -83,7 +109,12 @@ final class ExpenseWebController extends Controller
         $projects      = Project::orderBy('name')->get();
         $campaigns     = Campaign::orderByDesc('season_year')->orderBy('name')->get();
         $workspaces    = Workspace::where('status', '!=', 'maintenance')->orderBy('name')->get();
-        $guestHouses   = GuestHouse::orderBy('name')->get();
+        $authUser      = request()->user();
+
+        $ghIds         = $authUser?->getAccessibleGuestHouseIds();
+        $guestHouses   = $ghIds !== null
+            ? GuestHouse::whereIn('id', $ghIds)->orderBy('name')->get()
+            : GuestHouse::orderBy('name')->get();
 
         return view('expenses.edit', compact('expense', 'beneficiaries', 'projects', 'campaigns', 'workspaces', 'guestHouses'));
     }

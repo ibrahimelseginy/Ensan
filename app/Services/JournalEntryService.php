@@ -17,9 +17,9 @@ final readonly class JournalEntryService
         private JournalEntryRepository $journalEntryRepository
     ) {}
 
-    public function getAllEntries(int $perPage = 20): LengthAwarePaginator
+    public function getAllEntries(int $perPage = 20, ?\App\Models\User $user = null): LengthAwarePaginator
     {
-        return $this->journalEntryRepository->paginateAll($perPage);
+        return $this->journalEntryRepository->paginateAll($perPage, $user);
     }
 
     public function findEntryById(int $id): ?JournalEntry

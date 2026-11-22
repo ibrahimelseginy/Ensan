@@ -54,18 +54,40 @@ final class CashTransferWebController extends Controller
     }
     public function index(Request $request): View
     {
-        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $user = $request->user();
+        $accIds = $user?->getAccessibleTreasuryIds();
 
-        $transfers = CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver', 'approver'])
+        $treasuriesQuery = Treasury::where('is_active', true)->orderBy('name');
+        $transfersQuery = CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver', 'approver'])
+            ->orderByDesc('id');
+        $instrumentsQuery = PaymentInstrument::with(['sourceAccount', 'project', 'creator'])
             ->orderByDesc('id')
-            ->paginate(15);
+            ->limit(10);
 
-        // Cheques and Bank Disbursals
-        $paymentInstruments = PaymentInstrument::with(['sourceAccount', 'project', 'creator'])
-            ->orderByDesc('id')
-            ->limit(10)
-            ->get();
+        if ($accIds !== null) {
+            $treasuriesQuery->whereIn('id', $accIds);
+            $cashAccountIds = CashAccount::whereIn('legacy_treasury_id', $accIds)->pluck('id')->all();
+            $transfersQuery->where(function($q) use ($user, $cashAccountIds) {
+                if (!empty($cashAccountIds)) {
+                    $q->whereIn('from_cash_account_id', $cashAccountIds)
+                      ->orWhereIn('to_cash_account_id', $cashAccountIds);
+                }
+                $q->orWhere('requested_by', $user->id)
+                  ->orWhere('received_by', $user->id);
+            });
+            if (!empty($cashAccountIds)) {
+                $instrumentsQuery->where(function($q) use ($user, $cashAccountIds) {
+                    $q->whereIn('source_cash_account_id', $cashAccountIds)
+                      ->orWhere('created_by', $user->id);
+                });
+            } else {
+                $instrumentsQuery->where('created_by', $user->id);
+            }
+        }
 
+        $treasuries = $treasuriesQuery->get();
+        $transfers = $transfersQuery->paginate(15);
+        $paymentInstruments = $instrumentsQuery->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
         $users = User::orderBy('name')->get(['id', 'name']);
 

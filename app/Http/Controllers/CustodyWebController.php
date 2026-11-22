@@ -22,7 +22,24 @@ final class CustodyWebController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = $request->user();
+        $accTreasuries = $user?->getAccessibleTreasuryIds();
+
         $query = Custody::with(['holder', 'project', 'sourceAccount', 'expenses']);
+
+        if ($accTreasuries !== null) {
+            $cashAccountIds = CashAccount::whereIn('legacy_treasury_id', $accTreasuries)->pluck('id')->all();
+            $scopeFn = function($q) use ($user, $cashAccountIds) {
+                $q->where('holder_user_id', $user->id);
+                if (!empty($cashAccountIds)) {
+                    $q->orWhereIn('source_cash_account_id', $cashAccountIds);
+                }
+            };
+            $query->where($scopeFn);
+            $allCustodies = Custody::where($scopeFn)->get();
+        } else {
+            $allCustodies = Custody::all();
+        }
 
         if ($request->filled('holder_id')) {
             $query->where('holder_user_id', $request->input('holder_id'));
@@ -39,7 +56,6 @@ final class CustodyWebController extends Controller
         $custodies = $query->orderByDesc('issued_on')->orderByDesc('id')->paginate(15);
 
         // Stats
-        $allCustodies = Custody::all();
         $totalIssued = $allCustodies->sum('issued_amount');
         $totalSettled = $allCustodies->sum('settled_amount');
         $totalReturned = $allCustodies->sum('returned_amount');
@@ -81,7 +97,11 @@ final class CustodyWebController extends Controller
         $employees = User::orderBy('name')->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
         $campaigns = Campaign::orderByDesc('id')->get(['id', 'name']);
-        $treasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $authUser = request()->user();
+        $accIds = $authUser?->getAccessibleTreasuryIds();
+        $treasuries = $accIds !== null
+            ? Treasury::where('is_active', true)->whereIn('id', $accIds)->orderBy('name')->get()
+            : Treasury::where('is_active', true)->orderBy('name')->get();
 
         return view('custodies.create', compact('employees', 'projects', 'campaigns', 'treasuries'));
     }
