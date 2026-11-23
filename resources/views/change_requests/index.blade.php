@@ -67,16 +67,38 @@
                         @php
                             $modelName = class_basename($req->model_type);
                             $modelAr = match($modelName) {
+                                'Donor' => 'متبرع',
+                                'Beneficiary' => 'مستفيد / حالة',
+                                'BeneficiaryFamilyMember' => 'فرد أسرة / يتيم',
                                 'Donation' => 'تبرع',
-                                'Delegate' => 'مندوب',
-                                'TravelRoute' => 'خط سير',
-                                'Beneficiary' => 'مستفيد',
-                                'Account' => 'حساب مالي',
-                                'Leave' => 'إجازة',
                                 'Expense' => 'مصروف',
+                                'EmployeeAttendance' => 'حضور وانصراف موظف',
+                                'AttendanceDevice' => 'جهاز معتمد',
+                                'Delegate' => 'مندوب',
+                                'DelegateTrip' => 'مشوار مندوب',
+                                'TravelRoute' => 'خط سير',
+                                'Account' => 'حساب مالي',
+                                'Leave' => 'إجازة / إذن',
                                 'JournalEntry' => 'قيد يومية',
-                                'User' => 'مستخدم',
+                                'User' => 'مستخدم / موظف',
+                                'Role' => 'دور / صلاحيات',
+                                'Task' => 'مهمة',
+                                'Campaign' => 'حملة',
+                                'Project' => 'مشروع',
+                                'Treasury' => 'خزينة',
+                                'TreasuryTransaction' => 'حركة خزينة',
                                 'FinancialClosure' => 'إغلاق مالي',
+                                'Volunteer' => 'متطوع',
+                                'VolunteerAttendance' => 'حضور متطوع',
+                                'VolunteerHour' => 'ساعات تطوع',
+                                'GuestHouse' => 'دار ضيافة',
+                                'GuestHouseBed' => 'سرير دار ضيافة',
+                                'Warehouse' => 'مخزن',
+                                'Supplier' => 'مورد',
+                                'Purchase' => 'مشتريات',
+                                'Item' => 'صنف مخزني',
+                                'Payroll' => 'مسير رواتب',
+                                'FieldVisit' => 'بحث ميداني',
                                 default => $modelName
                             };
 
@@ -120,15 +142,34 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $color }}-subtle text-{{ $color }}">
+                                <span class="badge bg-{{ $color }}-subtle text-{{ $color }} fw-bold px-2 py-1">
                                     {{ $actionText }} {{ $modelAr }}
                                 </span>
                             </td>
                             <td>
+                                @php
+                                    $itemSubjectName = null;
+                                    if ($req->subject) {
+                                        $itemSubjectName = $req->subject->name ?? ($req->subject->full_name ?? ($req->subject->title ?? null));
+                                        if (!$itemSubjectName && in_array($modelName, ['Donation', 'Expense']) && isset($req->subject->amount)) {
+                                            $itemSubjectName = number_format((float)$req->subject->amount, 2) . ' ج.م';
+                                        }
+                                    }
+                                    if (!$itemSubjectName) {
+                                        $rowPayload = is_array($req->payload) ? ($req->payload['data'] ?? $req->payload) : [];
+                                        $itemSubjectName = $rowPayload['name'] ?? ($rowPayload['full_name'] ?? ($rowPayload['title'] ?? null));
+                                        if (!$itemSubjectName && in_array($modelName, ['Donation', 'Expense']) && isset($rowPayload['amount'])) {
+                                            $itemSubjectName = number_format((float)$rowPayload['amount'], 2) . ' ج.م';
+                                        }
+                                    }
+                                @endphp
                                 @if($req->action === 'create')
-                                    <span class="text-muted small">عنصر جديد</span>
+                                    <span class="badge bg-light text-dark border small">{{ $itemSubjectName ?: 'عنصر جديد' }}</span>
                                 @else
-                                    <span class="font-monospace small">ID: {{ $req->model_id }}</span>
+                                    <div class="d-flex flex-column">
+                                        <span class="small fw-semibold text-dark">{{ $itemSubjectName ?: ($modelAr . ' #' . $req->model_id) }}</span>
+                                        <span class="font-monospace text-muted" style="font-size: 10px;">ID: {{ $req->model_id }}</span>
+                                    </div>
                                 @endif
                             </td>
                             <td>
@@ -232,26 +273,38 @@
                                     @php
                                         $modelBasename = class_basename($req->model_type);
                                         $typeLabels = [
-                                            'Beneficiary' => ['label' => 'مستفيد', 'icon' => 'people', 'color' => 'info'],
+                                            'Beneficiary' => ['label' => 'مستفيد / حالة', 'icon' => 'people', 'color' => 'info'],
+                                            'BeneficiaryFamilyMember' => ['label' => 'فرد أسرة / يتيم', 'icon' => 'person-heart', 'color' => 'info'],
                                             'Donation' => ['label' => 'تبرع', 'icon' => 'currency-dollar', 'color' => 'success'],
                                             'Expense' => ['label' => 'مصروف', 'icon' => 'receipt', 'color' => 'danger'],
                                             'Delegate' => ['label' => 'مندوب', 'icon' => 'person-badge', 'color' => 'warning'],
                                             'DelegateTrip' => ['label' => 'مشوار مندوب', 'icon' => 'truck', 'color' => 'info'],
                                             'Campaign' => ['label' => 'حملة', 'icon' => 'megaphone', 'color' => 'primary'],
-                                            'User' => ['label' => 'مستخدم', 'icon' => 'person-circle', 'color' => 'purple'],
+                                            'User' => ['label' => 'مستخدم / موظف', 'icon' => 'person-circle', 'color' => 'purple'],
                                             'Account' => ['label' => 'حساب مالي', 'icon' => 'bank', 'color' => 'secondary'],
                                             'Task' => ['label' => 'مهمة', 'icon' => 'list-task', 'color' => 'primary'],
-                                            'Role' => ['label' => 'دور/صلاحية', 'icon' => 'shield-lock', 'color' => 'warning'],
+                                            'Role' => ['label' => 'دور / صلاحيات', 'icon' => 'shield-lock', 'color' => 'warning'],
                                             'TravelRoute' => ['label' => 'خط سير', 'icon' => 'map', 'color' => 'dark'],
+                                            'Volunteer' => ['label' => 'متطوع', 'icon' => 'hand-thumbs-up', 'color' => 'primary'],
                                             'VolunteerHour' => ['label' => 'ساعات تطوع', 'icon' => 'clock-history', 'color' => 'info'],
                                             'VolunteerAttendance' => ['label' => 'حضور متطوع', 'icon' => 'calendar-check', 'color' => 'success'],
                                             'EmployeeAttendance' => ['label' => 'حضور موظف', 'icon' => 'calendar-date', 'color' => 'success'],
-                                            'Leave' => ['label' => 'إجازة', 'icon' => 'calendar-event', 'color' => 'purple'],
+                                            'AttendanceDevice' => ['label' => 'جهاز حضور معتمد', 'icon' => 'laptop', 'color' => 'primary'],
+                                            'Leave' => ['label' => 'إجازة / إذن', 'icon' => 'calendar-event', 'color' => 'purple'],
                                             'JournalEntry' => ['label' => 'قيد يومية', 'icon' => 'journal-text', 'color' => 'dark'],
                                             'Donor' => ['label' => 'متبرع', 'icon' => 'heart-fill', 'color' => 'danger'],
                                             'Project' => ['label' => 'مشروع', 'icon' => 'briefcase', 'color' => 'primary'],
+                                            'Treasury' => ['label' => 'خزينة', 'icon' => 'safe2-fill', 'color' => 'success'],
+                                            'TreasuryTransaction' => ['label' => 'حركة خزينة', 'icon' => 'cash-stack', 'color' => 'success'],
                                             'FinancialClosure' => ['label' => 'إغلاق مالي', 'icon' => 'file-lock2-fill', 'color' => 'success'],
-                                        ];
+                                            'GuestHouse' => ['label' => 'دار ضيافة', 'icon' => 'house-heart', 'color' => 'info'],
+                                            'GuestHouseBed' => ['label' => 'سرير دار ضيافة', 'icon' => 'hospital', 'color' => 'info'],
+                                            'Warehouse' => ['label' => 'مخزن', 'icon' => 'boxes', 'color' => 'warning'],
+                                            'Supplier' => ['label' => 'مورد', 'icon' => 'building', 'color' => 'secondary'],
+                                            'Purchase' => ['label' => 'مشتريات', 'icon' => 'cart-check', 'color' => 'primary'],
+                                            'Item' => ['label' => 'صنف مخزني', 'icon' => 'box-seam', 'color' => 'secondary'],
+                                            'Payroll' => ['label' => 'مسير رواتب', 'icon' => 'wallet2', 'color' => 'success'],
+                                            'FieldVisit' => ['label' => 'بحث ميداني', 'icon' => 'clipboard2-pulse', 'color' => 'primary'],
                                         $tInfo = $typeLabels[$modelBasename] ?? ['label' => $modelBasename, 'icon' => 'box', 'color' => 'secondary'];
                                         $isCreate = strtolower((string)$req->action) === 'create' || empty($req->model_id);
                                         $isDeleted = !$isCreate && !$req->subject;
@@ -571,6 +624,34 @@
                                                 'gate' => 'البوابة',
                                                 'locked' => 'حالة الإقفال',
                                                 'lines' => 'سطور القيد/العمليات',
+                                                'sync_sponsored_beneficiaries' => 'تحديث كفالات الحالات والأسر',
+                                                'sync_sponsored_family_members' => 'تحديث كفالات الأيتام وأفراد الأسرة',
+                                                'sponsored_beneficiary_ids' => 'الحالات والأسر المكفولة',
+                                                'direct_sponsored_beneficiary_ids' => 'الحالات المكفولة مباشرة',
+                                                'sponsored_family_member_ids' => 'الأيتام وأفراد الأسرة المكفولين',
+                                                'sponsorship_beneficiary_amounts' => 'توزيع مبالغ كفالة الأسر',
+                                                'sponsorship_family_member_amounts' => 'توزيع مبالغ كفالة الأيتام',
+                                                'sponsorship_monthly_amount' => 'إجمالي مبلغ الكفالة الشهري',
+                                                'monthly_sponsorship_amount' => 'مبلغ الكفالة الشهري',
+                                                'sponsored_beneficiary_id' => 'الحالة المكفولة الأساسية',
+                                                'monthly_donation_day' => 'يوم التبرع الشهري',
+                                                'recurring_cycle' => 'دورية التبرع',
+                                                'sponsorship_project_id' => 'مشروع الكفالة المرتبط',
+                                                'sponsorship_type' => 'نوع الكفالة',
+                                                'monthly_allocation_target' => 'وجهة التبرع الشهري',
+                                                'donor_name' => 'اسم المتبرع',
+                                                'donor_phone' => 'هاتف المتبرع',
+                                                'device_name' => 'اسم الجهاز',
+                                                'device_token' => 'معرف الجهاز',
+                                                'ip_address' => 'عنوان IP',
+                                                'user_agent' => 'المتصفح / النظام',
+                                                'is_approved' => 'حالة الاعتماد',
+                                                'late_minutes' => 'دقائق التأخير',
+                                                'is_late' => 'حالة التأخير',
+                                                'delay_text' => 'وصف الحضور / التأخير',
+                                                'rejection_reason' => 'سبب الرفض',
+                                                'review_notes' => 'ملاحظات المراجعة',
+                                                'reviewed_at' => 'تاريخ المراجعة',
                                             ];
 
                                             $valueMaps = [
@@ -587,6 +668,16 @@
                                                 'accepted' => 'مقبول ✅',
                                                 'rejected' => 'مرفوض ❌',
                                                 'monthly' => 'شهري',
+                                                'monthly_sponsor' => 'كافل شهري',
+                                                'individual' => 'فرد',
+                                                'corporate' => 'مؤسسة / شركة',
+                                                'recurring' => 'متكرر',
+                                                'one_time' => 'لمرة واحدة',
+                                                'sponsorship' => 'كفالة أيتام / حالات',
+                                                'sadaqa_jariya' => 'صدقة جارية',
+                                                'general' => 'عام',
+                                                'zakat' => 'زكاة',
+                                                'sadaqa' => 'صدقة',
                                                 'kafala' => 'كفالة',
                                                 'patient' => 'المستفيد نفسه',
                                                 'child' => 'ابن / ابنة',
@@ -624,7 +715,7 @@
                                                 'expense' => 'مصروفات (Expense)',
                                             ];
 
-                                            $fmt = function($k, $v) use ($valueMaps, $permissionsMap, $beneficiariesMap, $sponsorsMap) {
+                                            $fmt = function($k, $v) use ($valueMaps, $permissionsMap, $beneficiariesMap, $familyMembersMap, $sponsorsMap) {
                                                 if (is_null($v) || $v === '') return '<span class="text-muted italic small">فارغ</span>';
 
                                                 if (is_array($v)) {
@@ -637,12 +728,39 @@
                                                         $html .= '</div>';
                                                         return $html;
                                                     }
-                                                    if (in_array($k, ['allocated_beneficiary_ids', 'sponsor_ids'], true)) {
-                                                        $namesMap = $k === 'allocated_beneficiary_ids' ? $beneficiariesMap : $sponsorsMap;
+                                                    if ($k === 'sponsored_family_member_ids') {
+                                                        $html = '<div class="d-flex flex-wrap gap-1 mt-1">';
+                                                        foreach ($v as $fId) {
+                                                            $fName = $familyMembersMap[$fId] ?? ($familyMembersMap[(int)$fId] ?? "#$fId");
+                                                            $html .= '<span class="badge rounded-pill bg-info-subtle text-info border border-info-subtle p-1 px-2" style="font-size: 11px;"><i class="bi bi-person me-1"></i>' . e($fName) . '</span>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
+                                                    if (in_array($k, ['allocated_beneficiary_ids', 'sponsored_beneficiary_ids', 'direct_sponsored_beneficiary_ids', 'sponsor_ids'], true)) {
+                                                        $namesMap = ($k === 'sponsor_ids') ? $sponsorsMap : $beneficiariesMap;
                                                         $html = '<div class="d-flex flex-wrap gap-1 mt-1">';
                                                         foreach ($v as $entityId) {
                                                             $entityName = $namesMap[$entityId] ?? ($namesMap[(int) $entityId] ?? "#$entityId");
-                                                            $html .= '<span class="badge rounded-pill bg-light text-dark border p-1 px-2" style="font-size: 10px;">' . e($entityName) . '</span>';
+                                                            $html .= '<span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle p-1 px-2" style="font-size: 11px;"><i class="bi bi-people me-1"></i>' . e($entityName) . '</span>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
+                                                    if ($k === 'sponsorship_beneficiary_amounts') {
+                                                        $html = '<div class="d-flex flex-column gap-1 mt-1">';
+                                                        foreach ($v as $bId => $amt) {
+                                                            $bName = $beneficiariesMap[$bId] ?? ($beneficiariesMap[(int)$bId] ?? "#$bId");
+                                                            $html .= '<div class="small d-flex align-items-center justify-content-between p-1 px-2 rounded bg-white border"><span class="fw-semibold">' . e($bName) . '</span> <span class="badge bg-success-subtle text-success fw-bold">' . number_format((float)$amt, 2) . ' ج.م</span></div>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
+                                                    if ($k === 'sponsorship_family_member_amounts') {
+                                                        $html = '<div class="d-flex flex-column gap-1 mt-1">';
+                                                        foreach ($v as $fId => $amt) {
+                                                            $fName = $familyMembersMap[$fId] ?? ($familyMembersMap[(int)$fId] ?? "#$fId");
+                                                            $html .= '<div class="small d-flex align-items-center justify-content-between p-1 px-2 rounded bg-white border"><span class="fw-semibold">' . e($fName) . '</span> <span class="badge bg-info-subtle text-info fw-bold">' . number_format((float)$amt, 2) . ' ج.م</span></div>';
                                                         }
                                                         $html .= '</div>';
                                                         return $html;
@@ -665,7 +783,7 @@
 
                                                 if (isset($valueMaps[$v])) return $valueMaps[$v];
                                                 if (str_contains($k, 'id') && is_numeric($v)) return '#' . $v;
-                                                if (in_array($k, ['amount','target_amount','estimated_value','cost','salary','monthly_income','assistance_amount'])) return '<strong>' . number_format((float)$v, 2) . '</strong> <small>ج.م</small>';
+                                                if (in_array($k, ['amount','target_amount','estimated_value','cost','salary','monthly_income','assistance_amount','sponsorship_monthly_amount','monthly_sponsorship_amount'])) return '<strong>' . number_format((float)$v, 2) . '</strong> <small>ج.م</small>';
                                                 if (in_array($k, ['quantity', 'target_families', 'family_members_count', 'sessions_count', 'expected_days'])) return '<strong>' . number_format((float)$v, 0) . '</strong>';
                                                 
                                                 if (is_bool($v)) return $v ? '<span class="badge bg-success-subtle text-success">نعم</span>' : '<span class="badge bg-danger-subtle text-danger">لا</span>';
@@ -679,15 +797,103 @@
                                         @endphp
 
                                         <div class="row g-2">
+                                            @php
+                                                $hasSponsorshipSync = isset($diffData['sync_sponsored_beneficiaries']) || isset($diffData['sync_sponsored_family_members']) || isset($diffData['sponsored_beneficiary_ids']) || isset($diffData['sponsored_family_member_ids']);
+                                                $donorSponsoredBeneficiaries = $payloadData['sponsored_beneficiary_ids'] ?? ($payloadData['direct_sponsored_beneficiary_ids'] ?? []);
+                                                $donorBeneficiaryAmounts = $payloadData['sponsorship_beneficiary_amounts'] ?? [];
+                                                $donorFamilyMembers = $payloadData['sponsored_family_member_ids'] ?? [];
+                                                $donorFamilyAmounts = $payloadData['sponsorship_family_member_amounts'] ?? [];
+                                                $donorMonthlyTotal = $payloadData['sponsorship_monthly_amount'] ?? ($req->subject->sponsorship_monthly_amount ?? null);
+                                            @endphp
+
+                                            @if($hasSponsorshipSync && (!empty($donorSponsoredBeneficiaries) || !empty($donorFamilyMembers) || !empty($donorMonthlyTotal)))
+                                                <div class="col-12 mb-2">
+                                                    <div class="p-3 rounded-4 border border-success border-opacity-40 shadow-sm" style="background: rgba(16, 185, 129, 0.05);">
+                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom border-success border-opacity-20">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="badge bg-success text-white rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                                    <i class="bi bi-heart-fill"></i>
+                                                                </span>
+                                                                <div>
+                                                                    <div class="fw-bold text-success fs-6">تفاصيل كفالات الأيتام والحالات المكفولة المربوطة بالمتبرع</div>
+                                                                    <div class="text-muted small">تم تحديث بيانات الكفالة وتوزيع المبالغ الشهرية للأسر والأيتام:</div>
+                                                                </div>
+                                                            </div>
+                                                            @if($donorMonthlyTotal)
+                                                                <div class="badge bg-success text-white px-3 py-2 fs-6 rounded-pill shadow-xs">
+                                                                    إجمالي الكفالة الشهرية: {{ number_format((float)$donorMonthlyTotal, 2) }} ج.م
+                                                                </div>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="row g-3">
+                                                            @if(!empty($donorSponsoredBeneficiaries))
+                                                                <div class="col-12 col-md-6">
+                                                                    <div class="p-3 rounded-3 bg-white border shadow-2xs h-100">
+                                                                        <div class="small fw-bold text-primary mb-2 d-flex align-items-center justify-content-between">
+                                                                            <span><i class="bi bi-people-fill me-1"></i> الحالات والأسر المكفولة:</span>
+                                                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ count($donorSponsoredBeneficiaries) }} حالات</span>
+                                                                        </div>
+                                                                        <div class="d-flex flex-column gap-1.5">
+                                                                            @foreach($donorSponsoredBeneficiaries as $bId)
+                                                                                @php
+                                                                                    $bName = $beneficiariesMap[$bId] ?? ($beneficiariesMap[(int)$bId] ?? "حالة #$bId");
+                                                                                    $bAmt = $donorBeneficiaryAmounts[$bId] ?? ($donorBeneficiaryAmounts[(string)$bId] ?? null);
+                                                                                @endphp
+                                                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-light border-0 small">
+                                                                                    <span class="fw-semibold text-dark"><i class="bi bi-person-check text-success me-1"></i> {{ $bName }}</span>
+                                                                                    @if($bAmt)
+                                                                                        <span class="badge bg-success-subtle text-success fw-bold">{{ number_format((float)$bAmt, 2) }} ج.م</span>
+                                                                                    @endif
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                            @if(!empty($donorFamilyMembers))
+                                                                <div class="col-12 col-md-6">
+                                                                    <div class="p-3 rounded-3 bg-white border shadow-2xs h-100">
+                                                                        <div class="small fw-bold text-info mb-2 d-flex align-items-center justify-content-between">
+                                                                            <span><i class="bi bi-person-heart me-1"></i> أفراد الأسرة والأيتام المكفولين:</span>
+                                                                            <span class="badge bg-info-subtle text-info border border-info-subtle">{{ count($donorFamilyMembers) }} أيتام/أفراد</span>
+                                                                        </div>
+                                                                        <div class="d-flex flex-column gap-1.5">
+                                                                            @foreach($donorFamilyMembers as $fId)
+                                                                                @php
+                                                                                    $fName = $familyMembersMap[$fId] ?? ($familyMembersMap[(int)$fId] ?? "فرد/يتيم #$fId");
+                                                                                    $fAmt = $donorFamilyAmounts[$fId] ?? ($donorFamilyAmounts[(string)$fId] ?? null);
+                                                                                @endphp
+                                                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-light border-0 small">
+                                                                                    <span class="fw-semibold text-dark"><i class="bi bi-emoji-smile text-info me-1"></i> {{ $fName }}</span>
+                                                                                    @if($fAmt)
+                                                                                        <span class="badge bg-info-subtle text-info fw-bold">{{ number_format((float)$fAmt, 2) }} ج.م</span>
+                                                                                    @endif
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
                                             @if($diffData && $req->action === 'update')
                                                 @foreach($diffData as $key => $dVals)
                                                     @continue(in_array($key, ['password', 'family_members', 'family_members_data']))
+                                                    @continue($hasSponsorshipSync && in_array($key, ['sync_sponsored_beneficiaries', 'sync_sponsored_family_members', 'direct_sponsored_beneficiary_ids']))
                                                     <div class="col-12 col-md-6 col-lg-4">
-                                                        <div class="p-3 rounded-4 border-start border-primary border-4 shadow-sm h-100" style="background: rgba(255,255,255,0.03);">
-                                                            <div class="small fw-bold text-primary mb-2">{{ $labels[$key] ?? $key }}</div>
-                                                            <div class="d-flex align-items-center justify-content-between gap-2 border border-secondary border-opacity-25 bg-black bg-opacity-25 p-2 rounded-3">
-                                                                <div class="text-secondary text-decoration-line-through small flex-fill text-center">{!! $fmt($key, $dVals['from']) !!}</div>
-                                                                <div class="px-2"><i class="bi bi-arrow-left text-primary"></i></div>
+                                                        <div class="p-3 rounded-4 border border-secondary border-opacity-15 shadow-sm h-100 bg-white">
+                                                            <div class="small fw-bold text-primary mb-2 d-flex align-items-center justify-content-between">
+                                                                <span>{{ $labels[$key] ?? $key }}</span>
+                                                                <span class="badge bg-light text-muted border" style="font-size: 9px;">تعديل</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between gap-2 bg-light p-2.5 rounded-3 border">
+                                                                <div class="text-danger text-decoration-line-through small flex-fill text-center opacity-75">{!! $fmt($key, $dVals['from']) !!}</div>
+                                                                <div class="px-2 text-primary fw-bold"><i class="bi bi-arrow-left"></i></div>
                                                                 <div class="fw-bold text-success flex-fill text-center">{!! $fmt($key, $dVals['to']) !!}</div>
                                                             </div>
                                                         </div>
@@ -695,12 +901,12 @@
                                                 @endforeach
                                             @else
                                                 @foreach($payloadData as $key => $val)
-                                                    @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members', 'family_members_data']))
+                                                    @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members', 'family_members_data', 'sync_sponsored_beneficiaries', 'sync_sponsored_family_members']))
                                                     @continue(is_null($val) || $val === '')
                                                     @continue(is_array($val) && empty($val))
                                                     
                                                     <div class="col-6 col-md-4 col-lg-3">
-                                                        <div class="p-3 rounded-4 border border-secondary border-opacity-10 shadow-sm h-100" style="background: rgba(255,255,255,0.03);">
+                                                        <div class="p-3 rounded-4 border border-secondary border-opacity-15 shadow-sm h-100 bg-white">
                                                             <div class="small text-muted mb-1">{{ $labels[$key] ?? $key }}</div>
                                                             <div class="fw-bold text-dark">{!! $fmt($key, $val) !!}</div>
                                                         </div>
@@ -1038,6 +1244,41 @@
 </div>
 
 <script>
+    const arabicModelLabels = {
+        'Donor': 'متبرع',
+        'Beneficiary': 'مستفيد / حالة',
+        'BeneficiaryFamilyMember': 'فرد أسرة / يتيم',
+        'Donation': 'تبرع',
+        'Expense': 'مصروف',
+        'EmployeeAttendance': 'حضور وانصراف موظف',
+        'AttendanceDevice': 'جهاز معتمد',
+        'Delegate': 'مندوب',
+        'DelegateTrip': 'مشوار مندوب',
+        'TravelRoute': 'خط سير',
+        'Account': 'حساب مالي',
+        'Leave': 'إجازة / إذن',
+        'JournalEntry': 'قيد يومية',
+        'User': 'مستخدم / موظف',
+        'Role': 'دور / صلاحيات',
+        'Task': 'مهمة',
+        'Campaign': 'حملة',
+        'Project': 'مشروع',
+        'Treasury': 'خزينة',
+        'TreasuryTransaction': 'حركة خزينة',
+        'FinancialClosure': 'إغلاق مالي',
+        'Volunteer': 'متطوع',
+        'VolunteerAttendance': 'حضور متطوع',
+        'VolunteerHour': 'ساعات تطوع',
+        'GuestHouse': 'دار ضيافة',
+        'GuestHouseBed': 'سرير دار ضيافة',
+        'Warehouse': 'مخزن',
+        'Supplier': 'مورد',
+        'Purchase': 'مشتريات',
+        'Item': 'صنف مخزني',
+        'Payroll': 'مسير رواتب',
+        'FieldVisit': 'بحث ميداني'
+    };
+
     const arabicFieldLabels = {
         'name': 'الاسم',
         'full_name': 'الاسم بالكامل',
@@ -1079,7 +1320,35 @@
         'patient_relationship': 'صلة قرابة المريض',
         'notes_cases': 'تقرير الحالة والتشخيص الطبي',
         'donor_id': 'المتبرع',
-        'receipt_number': 'رقم الإيصال'
+        'receipt_number': 'رقم الإيصال',
+        'sync_sponsored_beneficiaries': 'تحديث كفالات الحالات والأسر',
+        'sync_sponsored_family_members': 'تحديث كفالات الأيتام وأفراد الأسرة',
+        'sponsored_beneficiary_ids': 'الحالات والأسر المكفولة',
+        'direct_sponsored_beneficiary_ids': 'الحالات المكفولة مباشرة',
+        'sponsored_family_member_ids': 'الأيتام وأفراد الأسرة المكفولين',
+        'sponsorship_beneficiary_amounts': 'توزيع مبالغ كفالة الأسر',
+        'sponsorship_family_member_amounts': 'توزيع مبالغ كفالة الأيتام',
+        'sponsorship_monthly_amount': 'إجمالي مبلغ الكفالة الشهري',
+        'monthly_sponsorship_amount': 'مبلغ الكفالة الشهري',
+        'sponsored_beneficiary_id': 'الحالة المكفولة الأساسية',
+        'monthly_donation_day': 'يوم التبرع الشهري',
+        'recurring_cycle': 'دورية التبرع',
+        'sponsorship_project_id': 'مشروع الكفالة المرتبط',
+        'sponsorship_type': 'نوع الكفالة',
+        'monthly_allocation_target': 'وجهة التبرع الشهري',
+        'donor_name': 'اسم المتبرع',
+        'donor_phone': 'هاتف المتبرع',
+        'device_name': 'اسم الجهاز',
+        'device_token': 'معرف الجهاز',
+        'ip_address': 'عنوان IP',
+        'user_agent': 'المتصفح / النظام',
+        'is_approved': 'حالة الاعتماد',
+        'late_minutes': 'دقائق التأخير',
+        'is_late': 'حالة التأخير',
+        'delay_text': 'وصف الحضور / التأخير',
+        'rejection_reason': 'سبب الرفض',
+        'review_notes': 'ملاحظات المراجعة',
+        'reviewed_at': 'تاريخ المراجعة'
     };
 
     const requestsLookup = @json($requestsLookup ?? []);
@@ -1103,7 +1372,8 @@
         const form = document.getElementById('payloadEditForm');
         form.action = req.update_url;
 
-        document.getElementById('payloadEditModalTitle').innerText = `تعديل بيانات طلب ${req.action === 'create' ? 'إضافة' : (req.action === 'update' ? 'تعديل' : req.action)} ${req.model_basename} #${req.id}`;
+        const modelLabel = req.model_label || arabicModelLabels[req.model_basename] || req.model_basename;
+        document.getElementById('payloadEditModalTitle').innerText = `تعديل بيانات طلب ${req.action === 'create' ? 'إضافة' : (req.action === 'update' ? 'تعديل' : req.action)} ${modelLabel} #${req.id}`;
         document.getElementById('payloadEditModalSubtitle').innerText = `مقدم الطلب: ${req.user_name} • الحالة: ${req.status === 'pending' ? 'قيد المراجعة' : (req.status === 'rejected' ? 'مرفوض' : req.status)}`;
 
         // Set Alert Notice
@@ -1137,7 +1407,7 @@
         container.innerHTML = '';
 
         const payload = req.payload || {};
-        const keys = Object.keys(payload).filter(k => !['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members_data'].includes(k));
+        const keys = Object.keys(payload).filter(k => !['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members_data', 'sync_sponsored_beneficiaries', 'sync_sponsored_family_members', 'direct_sponsored_beneficiary_ids'].includes(k));
 
         if (keys.length === 0) {
             container.innerHTML = '<div class="col-12 text-center text-muted py-3">لا توجد حقول إضافية قابلة للتعديل في هذا الطلب.</div>';

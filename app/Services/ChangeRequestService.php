@@ -81,6 +81,12 @@ class ChangeRequestService
                                 'allocated_beneficiary_ids' => method_exists($instance, 'allocatedBeneficiaries')
                                     ? $instance->allocatedBeneficiaries()->pluck('beneficiaries.id')->map(fn ($id) => (int) $id)->all()
                                     : [],
+                                'sponsored_beneficiary_ids', 'direct_sponsored_beneficiary_ids' => method_exists($instance, 'sponsoredBeneficiaries')
+                                    ? $instance->sponsoredBeneficiaries()->pluck('beneficiaries.id')->map(fn ($id) => (int) $id)->all()
+                                    : [],
+                                'sponsored_family_member_ids' => method_exists($instance, 'sponsoredFamilyMembers')
+                                    ? $instance->sponsoredFamilyMembers()->pluck('beneficiary_family_members.id')->map(fn ($id) => (int) $id)->all()
+                                    : [],
                                 'sponsor_ids' => method_exists($instance, 'sponsors')
                                     ? $instance->sponsors()->pluck('donors.id')->map(fn ($id) => (int) $id)->all()
                                     : [],
@@ -102,6 +108,14 @@ class ChangeRequestService
                                 }
                             }
 
+                            continue;
+                        }
+
+                        if (in_array($key, [
+                            '_token', '_method', 'password', 'password_confirmation',
+                            'sync_sponsored_beneficiaries', 'sync_sponsored_family_members',
+                            'edit_action', 'form_context'
+                        ], true)) {
                             continue;
                         }
 

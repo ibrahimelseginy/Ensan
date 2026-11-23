@@ -36,6 +36,7 @@ final class ChangeRequestWebController extends Controller
 
         $permissionsMap = \App\Models\Permission::pluck('name', 'id')->toArray();
         $beneficiariesMap = \App\Models\Beneficiary::pluck('full_name', 'id')->toArray();
+        $familyMembersMap = \App\Models\BeneficiaryFamilyMember::pluck('full_name', 'id')->toArray();
         $sponsorsMap = \App\Models\Donor::pluck('name', 'id')->toArray();
         $currentStatus = $request->status ?? 'all';
 
@@ -110,6 +111,7 @@ final class ChangeRequestWebController extends Controller
                     'id' => $r->id,
                     'model_type' => $r->model_type,
                     'model_basename' => class_basename($r->model_type),
+                    'model_label' => \App\Support\ChangeRequestPresentation::modelInfo($r)['label'],
                     'action' => $r->action,
                     'status' => $r->status,
                     'rejection_reason' => $r->rejection_reason,
@@ -129,6 +131,7 @@ final class ChangeRequestWebController extends Controller
             'requestsLookup',
             'permissionsMap',
             'beneficiariesMap',
+            'familyMembersMap',
             'sponsorsMap',
             'projectsMap',
             'currentStatus',
