@@ -30,6 +30,14 @@ final class TreasuryController extends Controller
         }
     }
 
+    private function authorizeTreasuryManage(Treasury $treasury): void
+    {
+        $user = auth()->user();
+        if (!$user || !$user->canManageTreasury($treasury)) {
+            abort(403, 'ليس لديك صلاحية لإجراء تعديلات أو حركات على هذه الخزينة (صلاحية عرض فقط).');
+        }
+    }
+
     public function index(): View|RedirectResponse
     {
         if (!Schema::hasTable('treasuries')) {
@@ -224,12 +232,14 @@ final class TreasuryController extends Controller
             $accessibleTreasuries->prepend($treasury);
         }
 
-        return view('treasuries.show', compact('treasury', 'stats', 'recentTransactions', 'monthlyData', 'accessibleTreasuries'));
+        $canManage = auth()->user()?->canManageTreasury($treasury) ?? false;
+
+        return view('treasuries.show', compact('treasury', 'stats', 'recentTransactions', 'monthlyData', 'accessibleTreasuries', 'canManage'));
     }
 
     public function edit(Treasury $treasury): View
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         $managers    = User::orderBy('name')->get();
         $guestHouses = \App\Models\GuestHouse::orderBy('name')->get(['id', 'name']);
         $projects    = \App\Models\Project::orderBy('name')->get(['id', 'name']);
@@ -239,7 +249,7 @@ final class TreasuryController extends Controller
 
     public function update(UpdateTreasuryRequest $request, Treasury $treasury): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         $data = $request->validated();
 
         $executor = function () use ($treasury, $data) {
@@ -271,7 +281,7 @@ final class TreasuryController extends Controller
 
     public function adjustTotals(\Illuminate\Http\Request $request, Treasury $treasury): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         if ($request->boolean('zero_treasury')) {
             $zeroMode = (string) $request->input('zero_mode', 'balance_only');
             if ($zeroMode === 'clear_all') {
@@ -313,7 +323,7 @@ final class TreasuryController extends Controller
 
     public function updateTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
 
         $validated = $request->validate([
@@ -332,7 +342,7 @@ final class TreasuryController extends Controller
 
     public function deleteTransaction(\Illuminate\Http\Request $request, Treasury $treasury, \App\Models\TreasuryTransaction $transaction): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         abort_if((int) $transaction->treasury_id !== (int) $treasury->id, 404);
 
         $recalculateBalance = $request->boolean('recalculate_balance', true);
@@ -344,7 +354,7 @@ final class TreasuryController extends Controller
 
     public function destroy(Treasury $treasury): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
+        $this->authorizeTreasuryManage($treasury);
         try {
             $executor = function () use ($treasury) {
                 $this->treasuryService->deleteTreasury($treasury);
@@ -379,7 +389,7 @@ final class TreasuryController extends Controller
             $targetTreasury = Treasury::findOrFail((int)$request->input('treasury_id'));
         }
 
-        $this->authorizeTreasuryAccess($targetTreasury);
+        $this->authorizeTreasuryManage($targetTreasury);
         $this->treasuryService->addTransaction($targetTreasury, $request->validated(), (int)auth()->id());
 
         return redirect()->route('treasuries.show', $targetTreasury)

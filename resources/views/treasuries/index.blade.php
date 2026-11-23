@@ -253,6 +253,9 @@
                                 <div class="fund-card h-100 d-flex flex-column justify-content-between">
                                     {{-- Card Header --}}
                                     <div>
+                                        @php
+                                            $canManageThisTreasury = auth()->user()?->canManageTreasury($treasury) ?? false;
+                                        @endphp
                                         <div class="d-flex justify-content-between align-items-start mb-3">
                                             {{-- Dropdown Menu --}}
                                             <div class="dropdown">
@@ -265,19 +268,19 @@
                                                             <i class="bi bi-eye text-primary me-2"></i> تفاصيل الخزينة
                                                         </a>
                                                     </li>
-                                                    @if(auth()->user()?->hasPermission(['treasuries.edit', "treasuries.manage.{$treasury->id}"]))
+                                                    @if($canManageThisTreasury)
                                                     <li>
                                                         <a class="dropdown-item py-2" href="{{ route('treasuries.edit', $treasury) }}">
                                                             <i class="bi bi-pencil text-warning me-2"></i> تعديل البيانات
                                                         </a>
                                                     </li>
-                                                    @endif
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li>
                                                         <a class="dropdown-item py-2 text-success" href="#" data-bs-toggle="modal" data-bs-target="#quickSupplyModal" onclick="document.getElementById('quickFromTreasury').value='{{ $treasury->id }}';">
                                                             <i class="bi bi-box-arrow-up-right me-2"></i> توريد مالي من هذه الخزينة
                                                         </a>
                                                     </li>
+                                                    @endif
                                                 </ul>
                                             </div>
 
@@ -303,6 +306,11 @@
 
                                         {{-- Badges row --}}
                                         <div class="d-flex flex-wrap gap-1 mb-3">
+                                            @if(!$canManageThisTreasury)
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary rounded-pill px-2.5 py-1">
+                                                    <i class="bi bi-eye me-1"></i> عرض فقط
+                                                </span>
+                                            @endif
                                             @if($treasury->type === 'main' || $treasury->id == 1)
                                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2.5 py-1">افتراضي</span>
                                             @endif

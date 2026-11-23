@@ -419,16 +419,23 @@ final readonly class RoleService
         foreach ($treasuries as $tr) {
             Permission::updateOrCreate(
                 ['key' => "treasuries.manage.{$tr->id}"],
-                ['name' => "إدارة وفتح خزينة محددة فقط: {$tr->name}"]
+                ['name' => "إدارة وتعديل وحركات: {$tr->name}"]
+            );
+            Permission::updateOrCreate(
+                ['key' => "treasuries.view.{$tr->id}"],
+                ['name' => "عرض فقط بدون تعديل أو حذف: {$tr->name}"]
             );
         }
 
         Permission::where('key', 'like', 'treasuries.manage.%')
+            ->orWhere('key', 'like', 'treasuries.view.%')
             ->get()
             ->each(function ($p) use ($validTreasuryIds) {
-                $id = (int) str_replace('treasuries.manage.', '', $p->key);
-                if (!in_array($id, $validTreasuryIds, true)) {
-                    $p->delete();
+                if (preg_match('/^treasuries\.(?:manage|view)\.(\d+)$/', $p->key, $m)) {
+                    $id = (int) $m[1];
+                    if (!in_array($id, $validTreasuryIds, true)) {
+                        $p->delete();
+                    }
                 }
             });
     }
@@ -448,7 +455,7 @@ final readonly class RoleService
             if (preg_match('/^guest_houses\.manage\.\d+$/', $permission->key)) {
                 return $groupLabels['guest_houses_specific'];
             }
-            if (preg_match('/^treasuries\.manage\.\d+$/', $permission->key)) {
+            if (preg_match('/^treasuries\.(?:manage|view)\.\d+$/', $permission->key)) {
                 return $groupLabels['treasuries_specific'];
             }
             if (str_starts_with($permission->key, 'mobile.case_applications.')) {
@@ -475,7 +482,7 @@ final readonly class RoleService
             if (preg_match('/^guest_houses\.manage\.\d+$/', $permission->key)) {
                 return $groupLabels['guest_houses_specific'];
             }
-            if (preg_match('/^treasuries\.manage\.\d+$/', $permission->key)) {
+            if (preg_match('/^treasuries\.(?:manage|view)\.\d+$/', $permission->key)) {
                 return $groupLabels['treasuries_specific'];
             }
             if (str_starts_with($permission->key, 'mobile.case_applications.')) {
@@ -606,7 +613,7 @@ final readonly class RoleService
             'projects_specific'         => '1. تخصيص مشروع محدد للموظف (يرى هذا المشروع فقط)',
             'campaigns_specific'        => '2. تخصيص حملة محددة للموظف (يرى هذه الحملة فقط)',
             'guest_houses_specific'     => '3. تخصيص دار ضيافة محددة للموظف (يرى هذه الدار فقط)',
-            'treasuries_specific'       => '4. تخصيص خزينة محددة للموظف (تفتح خزائنه المخصصة فقط)',
+            'treasuries_specific'       => '4. تخصيص الخزائن للموظف (عرض فقط أو إدارة كاملة لكل خزينة منفصلة)',
             'dashboard'                 => 'لوحة التحكم والمؤشرات',
             'internal_chat'             => 'المحادثات الداخلية',
             'data_import'               => 'استيراد البيانات (Excel Hub)',

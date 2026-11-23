@@ -175,11 +175,10 @@
                                             <i class="bi bi-eye me-1"></i>
                                             عرض
                                         </a>
-                                        @if(optional(auth()->user())->hasPermission(['treasuries.edit', "treasuries.manage.{$treasury->id}"]))
+                                        @if(auth()->user()?->canManageTreasury($treasury))
                                         <a href="{{ route('treasuries.edit', $treasury) }}" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        @endif
                                         @if(optional(auth()->user())->hasPermission('treasuries.delete'))
                                         <form action="{{ route('treasuries.destroy', $treasury) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخزينة؟ لا يمكن حذف الخزائن التي تحتوي على حركات مالية.')">
                                             @csrf @method('DELETE')
@@ -187,6 +186,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                         @endif
                                     </div>
                                 </div>

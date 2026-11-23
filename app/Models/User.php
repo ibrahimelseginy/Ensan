@@ -402,7 +402,7 @@ class User extends Authenticatable
 
         if ($k === 'treasuries.view') {
             if ($this->cachedPermissions->contains('manage_finance')
-                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'treasuries.manage.'))) {
+                || $this->cachedPermissions->contains(fn(string $p) => str_starts_with($p, 'treasuries.manage.') || str_starts_with($p, 'treasuries.view.'))) {
                 return true;
             }
             if (\App\Models\Treasury::where('manager_id', $this->id)->exists()) {
@@ -559,7 +559,7 @@ class User extends Authenticatable
 
         $specificIds = [];
         foreach ($this->cachedPermissions as $perm) {
-            if (preg_match('/^treasuries\.manage\.(\d+)$/', (string) $perm, $m)) {
+            if (preg_match('/^treasuries\.(?:manage|view)\.(\d+)$/', (string) $perm, $m)) {
                 $specificIds[] = (int) $m[1];
             }
         }
@@ -623,6 +623,52 @@ class User extends Authenticatable
     {
         $ids = $this->getAccessibleTreasuryIds();
         return $ids === null || in_array($treasuryId, $ids, true);
+    }
+
+    public function canManageTreasury(int|\App\Models\Treasury $treasury): bool
+    {
+        $treasuryId = $treasury instanceof \App\Models\Treasury ? (int) $treasury->id : (int) $treasury;
+
+        if ($this->isSuperAdmin() || $this->email === 'admin@ensan.org' || in_array((int)$this->id, [2, 8, 50], true) || $this->hasRole(['admin', 'super_admin'])) {
+            return true;
+        }
+
+        $this->ensurePermissionsLoaded();
+
+        $hasSpecificView   = $this->cachedPermissions->contains("treasuries.view.{$treasuryId}");
+        $hasSpecificManage = $this->cachedPermissions->contains("treasuries.manage.{$treasuryId}");
+
+        // If explicitly granted view-only for this treasury, management is strictly denied
+        if ($hasSpecificView && !$hasSpecificManage) {
+            return false;
+        }
+
+        if ($hasSpecificManage) {
+            return true;
+        }
+
+        // Direct manager of this treasury
+        if (\App\Models\Treasury::where('id', $treasuryId)->where('manager_id', $this->id)->exists()) {
+            return true;
+        }
+
+        // If user has specific treasury permissions for OTHER treasuries, they cannot manage this one
+        $hasAnySpecificTreasuryPerm = $this->cachedPermissions->contains(function (string $p) {
+            return str_starts_with($p, 'treasuries.manage.') || str_starts_with($p, 'treasuries.view.');
+        });
+        if ($hasAnySpecificTreasuryPerm) {
+            return false;
+        }
+
+        // General financial management roles/permissions
+        if ($this->hasRole(['general_manager', 'مدير عام', 'مدير مالي عام'])
+            || $this->cachedPermissions->contains('treasuries.edit')
+            || $this->cachedPermissions->contains('manage_finance')
+            || $this->cachedPermissions->contains('treasuries.manage_all')) {
+            return true;
+        }
+
+        return false;
     }
     public function adjustLeaveBalance(int|float $delta): bool
     {

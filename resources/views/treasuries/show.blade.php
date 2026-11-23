@@ -39,14 +39,16 @@
 </style>
 
 <div class="container-fluid py-4 no-print">
+    @php
+        $canManage = $canManage ?? (auth()->user()?->canManageTreasury($treasury) ?? false);
+    @endphp
     <div class="row mb-4">
         <div class="col-md-8">
             <h2><i class="bi bi-safe me-2"></i>{{ $treasury->name }}</h2>
             <p class="text-muted">{{ $treasury->code }}</p>
         </div>
         <div class="col-md-4 text-end">
-            @php $currentUser = request()->user(); @endphp
-            @if($currentUser && ($currentUser->hasRole('admin') || $currentUser->hasRole('manager')))
+            @if($canManage)
             <a href="{{ route('treasuries.edit', $treasury) }}" class="btn btn-warning">
                 <i class="bi bi-pencil me-2"></i>
                 تعديل
@@ -58,6 +60,10 @@
                     حذف
                 </button>
             </form>
+            @else
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 fs-6">
+                <i class="bi bi-eye me-1"></i> صلاحية عرض فقط
+            </span>
             @endif
             <a href="{{ route('treasuries.index') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-right me-2"></i>
@@ -81,9 +87,11 @@
     <div class="row g-3 mb-4 animate-slide-up">
         <div class="col-md-3">
             <div class="summary-panel text-center position-relative h-100">
+                @if($canManage)
                 <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 start-0 m-2 p-1" title="تعديل الرصيد الحالي يدوياً" onclick="openAdjustTotalsModal('balance')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
+                @endif
                 <h6 class="text-muted mb-1 small">إجمالي الرصيد الحالي</h6>
                 <h3 class="text-primary mb-1 fw-bold font-monospace">{{ number_format($treasury->current_balance, 2) }}</h3>
                 <small class="text-muted d-block mb-2">{{ $treasury->currency }}</small>
@@ -113,9 +121,11 @@
         </div>
         <div class="col-md-3">
             <div class="summary-panel text-center position-relative h-100">
+                @if($canManage)
                 <button type="button" class="btn btn-sm btn-link text-success position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الوارد يدوياً" onclick="openAdjustTotalsModal('in')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
+                @endif
                 <h6 class="text-muted mb-2 small">إجمالي الوارد</h6>
                 <h3 class="text-success mb-0 fw-bold font-monospace">{{ number_format($stats['total_in'], 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }}@if((float)$treasury->opening_balance > 0) <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;" title="الرصيد الافتتاحي للخزينة">+ افتتاحي: {{ number_format($treasury->opening_balance, 0) }}</span>@endif</small>
@@ -123,9 +133,11 @@
         </div>
         <div class="col-md-3">
             <div class="summary-panel text-center position-relative h-100">
+                @if($canManage)
                 <button type="button" class="btn btn-sm btn-link text-danger position-absolute top-0 start-0 m-2 p-1" title="تعديل إجمالي الصادر يدوياً" onclick="openAdjustTotalsModal('out')">
                     <i class="bi bi-pencil-square"></i>
                 </button>
+                @endif
                 <h6 class="text-muted mb-2 small">إجمالي الصادر</h6>
                 <h3 class="text-danger mb-0 fw-bold font-monospace">{{ number_format($stats['total_out'], 2) }}</h3>
                 <small class="text-muted">{{ $treasury->currency }} ({{ $stats['total_transactions'] }} حركة)</small>
@@ -140,6 +152,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0 section-title"><i class="bi bi-clock-history me-2"></i>آخر الحركات</h5>
                     <div class="d-flex gap-2 flex-wrap">
+                        @if($canManage)
                         <form action="{{ route('treasuries.adjustTotals', $treasury) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد تصفير الرصيد الحالي لهذه الخزينة يدوياً إلى (0.00 ج.م)؟');">
                             @csrf
                             <input type="hidden" name="zero_treasury" value="1">
@@ -151,6 +164,7 @@
                         <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="openAdjustTotalsModal('in')">
                             <i class="bi bi-sliders me-1"></i> تعديل الصادر والوارد يدوياً
                         </button>
+                        @endif
                         <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="previewTreasuryStatement()">
                             <i class="bi bi-eye me-1"></i> معاينة قبل الطباعة
                         </button>
@@ -224,6 +238,7 @@
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
                                 <td class="text-dark fw-semibold">{{ $transaction->description }}</td>
                                 <td class="text-center">
+                                    @if($canManage)
                                     <div class="d-inline-flex gap-1">
                                         <button
                                             type="button"
@@ -247,6 +262,9 @@
                                             </button>
                                         </form>
                                     </div>
+                                    @else
+                                    <span class="badge bg-light text-muted border" style="font-size: 0.72rem;"><i class="bi bi-lock me-1"></i>عرض فقط</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty
@@ -322,7 +340,11 @@
                             ->first();
                     @endphp
 
-                    @if(isset($pendingRequest))
+                    @if(!$canManage)
+                        <div class="alert alert-light text-secondary border small text-center mb-0">
+                            <i class="bi bi-info-circle me-1"></i> لديك صلاحية <strong>عرض فقط</strong> على هذه الخزينة. لا يمكنك إجراء تعديلات أو إضافة حركات مالية.
+                        </div>
+                    @elseif(isset($pendingRequest))
                         <div class="alert alert-warning mb-0 p-3 border-0 bg-warning bg-opacity-10 text-warning rounded-4 shadow-sm animate-pulse">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <i class="bi bi-hourglass-split fs-5"></i>
@@ -356,6 +378,7 @@
                 </div>
             </div>
 
+            @if($canManage)
             {{-- Add Transaction --}}
             <div class="summary-panel mb-4">
                 <h5 class="fw-bold mb-3 section-title small text-uppercase letter-spacing-1"><i class="bi bi-plus-circle me-2"></i>إضافة حركة مالية</h5>
@@ -399,6 +422,7 @@
                     </button>
                 </form>
             </div>
+            @endif
         </div>
     </div>
 </div>

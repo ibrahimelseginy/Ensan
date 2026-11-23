@@ -84,13 +84,22 @@ final class SecurePermissionMiddleware
                             $allowed = true;
                         }
                     } elseif ($resource === 'treasuries') {
-                        $allowed = $user->hasPermission(["accounts.{$actionSuffix}", 'manage_finance']);
-                        if (!$allowed && $actionSuffix === 'edit') {
-                            $tr = $request->route('treasury');
-                            $trId = is_object($tr) ? $tr->id : $tr;
-                            if ($trId && $user->hasPermission("treasuries.manage.{$trId}")) {
-                                $allowed = true;
+                        $tr = $request->route('treasury');
+                        $trId = is_object($tr) ? $tr->id : $tr;
+                        if ($actionSuffix === 'view') {
+                            if ($trId) {
+                                $allowed = $user->canAccessTreasury((int) $trId);
+                            } else {
+                                $allowed = $user->hasPermission(['treasuries.view', 'accounts.view', 'manage_finance']) || !empty($user->getAccessibleTreasuryIds());
                             }
+                        } elseif (in_array($actionSuffix, ['edit', 'delete'], true)) {
+                            if ($trId) {
+                                $allowed = $user->canManageTreasury((int) $trId);
+                            } else {
+                                $allowed = $user->hasPermission(["treasuries.{$actionSuffix}", "accounts.{$actionSuffix}", 'manage_finance']);
+                            }
+                        } else {
+                            $allowed = $user->hasPermission(["treasuries.{$actionSuffix}", "accounts.{$actionSuffix}", 'manage_finance']);
                         }
                     } elseif ($resource === 'leaves' && $actionSuffix === 'edit') {
                         $allowed = $user->hasPermission('leaves.manage');

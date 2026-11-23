@@ -81,12 +81,19 @@ final class Treasury extends Model
         static::saved(function (self $treasury) {
             \App\Models\Permission::updateOrCreate(
                 ['key' => "treasuries.manage.{$treasury->id}"],
-                ['name' => "إدارة وفتح خزينة محددة فقط: {$treasury->name}"]
+                ['name' => "إدارة وتعديل وحركات: {$treasury->name}"]
+            );
+            \App\Models\Permission::updateOrCreate(
+                ['key' => "treasuries.view.{$treasury->id}"],
+                ['name' => "عرض فقط بدون تعديل أو حذف: {$treasury->name}"]
             );
         });
 
         static::deleted(function (self $treasury) {
-            \App\Models\Permission::where('key', "treasuries.manage.{$treasury->id}")->delete();
+            \App\Models\Permission::whereIn('key', [
+                "treasuries.manage.{$treasury->id}",
+                "treasuries.view.{$treasury->id}"
+            ])->delete();
         });
     }
 
