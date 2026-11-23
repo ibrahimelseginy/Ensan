@@ -222,19 +222,47 @@ class User extends Authenticatable
             $this->load('roles');
         }
 
-        if (is_iterable($key)) {
-            $keys = array_map(fn($k) => strtolower(trim((string) $k)), is_array($key) ? $key : iterator_to_array($key));
-            return $this->roles->contains(function ($role) use ($keys) {
-                return in_array(strtolower((string) $role->key), $keys, true)
-                    || in_array(strtolower((string) $role->name), $keys, true);
+        $checkSingle = function (string $target): bool {
+            $needle = strtolower(trim($target));
+
+            // تحقق شامل ومرن لأدوار الموارد البشرية
+            if (in_array($needle, ['hr', 'hr2', 'hr_manager', 'موارد بشريه', 'الموارد البشرية', 'موارد بشرية'], true)) {
+                $hasHrRole = $this->roles->contains(function ($role) {
+                    $k = strtolower(trim((string) $role->key));
+                    $n = strtolower(trim((string) $role->name));
+                    return in_array($k, ['hr', 'hr2', 'hr_manager'], true)
+                        || str_contains($n, 'موارد')
+                        || str_contains($n, 'بشر');
+                });
+
+                if ($hasHrRole) {
+                    return true;
+                }
+
+                // فحص إضافي بناءً على المسمى الوظيفي والقسم ورقم المعرف
+                return str_contains((string) $this->job_title, 'موارد')
+                    || str_contains((string) $this->job_title, 'HR')
+                    || str_contains((string) $this->job_title, 'hr')
+                    || str_contains((string) $this->department, 'موارد')
+                    || in_array((int) $this->id, [76], true);
+            }
+
+            return $this->roles->contains(function ($role) use ($needle) {
+                return strtolower((string) $role->key) === $needle
+                    || strtolower((string) $role->name) === $needle;
             });
+        };
+
+        if (is_iterable($key)) {
+            foreach ($key as $k) {
+                if ($checkSingle((string) $k)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        $needle = strtolower(trim((string) $key));
-        return $this->roles->contains(function ($role) use ($needle) {
-            return strtolower((string) $role->key) === $needle
-                || strtolower((string) $role->name) === $needle;
-        });
+        return $checkSingle((string) $key);
     }
 
     public function isSuperAdmin(): bool

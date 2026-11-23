@@ -735,8 +735,14 @@ final readonly class EmployeeAttendanceService
     private function notifyDirectorAndAdmins(string $title, string $body, string $category = 'attendance'): void
     {
         try {
-            $adminIds = \App\Models\User::role(['admin', 'super_admin', 'manager'])
-                ->orWhereIn('id', [2, 8, 50])
+            $adminIds = \App\Models\User::whereHas('roles', function ($q) {
+                    $q->whereIn('key', ['admin', 'super_admin', 'manager', 'hr', 'hr2'])
+                      ->orWhereIn('name', ['admin', 'super_admin', 'manager', 'موارد بشريه', 'الموارد البشرية', 'مدير المؤسسة بالكامل']);
+                })
+                ->orWhere('job_title', 'LIKE', '%موارد%')
+                ->orWhere('job_title', 'LIKE', '%HR%')
+                ->orWhere('department', 'LIKE', '%موارد%')
+                ->orWhereIn('id', [2, 8, 50, 76])
                 ->pluck('id')
                 ->unique();
 

@@ -25,7 +25,7 @@ final class VolunteerAttendanceWebController extends Controller
         $user    = $request->user();
         $filters = $request->only(['user_id']);
 
-        if ($user && !$user->hasRole('admin') && !$user->hasRole('manager') && !$user->hasRole('hr')) {
+        if ($user && !$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2', 'موارد بشريه', 'الموارد البشرية']) && !in_array((int)$user->id, [2,8,50,76], true)) {
             $filters['user_id'] = $user->id;
         }
 

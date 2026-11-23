@@ -12,10 +12,17 @@ final readonly class EmployeeAttendanceRepository
 {
     public function paginateFiltered(array $filters, int $perPage = 50): LengthAwarePaginator
     {
-        $userId = $filters['user_id'] ?? null;
+        $userId      = $filters['user_id'] ?? null;
+        $date        = $filters['date'] ?? null;
+        $delayFilter = $filters['delay_filter'] ?? null;
+        $lateOnly    = !empty($filters['late_only']) || $delayFilter === 'late';
+        $onTimeOnly  = $delayFilter === 'on_time';
 
         return EmployeeAttendance::with('user')
             ->when($userId, fn($q) => $q->where('user_id', $userId))
+            ->when($date, fn($q) => $q->where('date', $date))
+            ->when($lateOnly, fn($q) => $q->where('check_in_at', '>', '10:15:00'))
+            ->when($onTimeOnly, fn($q) => $q->where('check_in_at', '<=', '10:15:00'))
             ->orderByDesc('date')
             ->orderByDesc('check_in_at')
             ->paginate($perPage);

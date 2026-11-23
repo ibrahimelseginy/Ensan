@@ -23,16 +23,39 @@ final class EmployeeAttendanceWebController extends Controller
     public function index(Request $request): View
     {
         $user    = $request->user();
-        $filters = $request->only(['user_id']);
+        $filters = $request->only(['user_id', 'date', 'delay_filter']);
 
-        if ($user && !$user->hasRole('admin') && !$user->hasRole('manager') && !$user->hasRole('hr')) {
+        $isHrOrAdmin = $user && (
+            $user->isSuperAdmin()
+            || $user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2', 'موارد بشريه', 'الموارد البشرية'])
+            || in_array((int)$user->id, [2, 8, 50, 76], true)
+        );
+
+        if (!$isHrOrAdmin) {
             $filters['user_id'] = $user->id;
         }
 
         $records     = $this->attendanceService->getFilteredAttendance($filters, 50);
         $todayRecord = $user ? $this->attendanceService->findTodayRecord($user->id) : null;
+        $usersList   = $isHrOrAdmin ? User::where('is_employee', true)->orderBy('name')->get() : collect();
 
-        return view('employee_attendance.index', compact('records', 'todayRecord'));
+        // إحصائيات حضور اليوم
+        $todayStr         = now('Africa/Cairo')->toDateString();
+        $todayAttendances = EmployeeAttendance::where('date', $todayStr)->get();
+        $totalToday       = $todayAttendances->count();
+        $onTimeToday      = $todayAttendances->where('is_late', false)->count();
+        $lateToday        = $todayAttendances->where('is_late', true)->count();
+
+        return view('employee_attendance.index', compact(
+            'records',
+            'todayRecord',
+            'usersList',
+            'isHrOrAdmin',
+            'filters',
+            'totalToday',
+            'onTimeToday',
+            'lateToday'
+        ));
     }
 
     public function checkIn(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
@@ -406,7 +429,7 @@ final class EmployeeAttendanceWebController extends Controller
     public function devices(Request $request): View|\Illuminate\Http\JsonResponse
     {
         $user = $request->user();
-        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2']) && !in_array((int)$user->id, [2,8,50], true))) {
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2', 'موارد بشريه', 'الموارد البشرية']) && !in_array((int)$user->id, [2,8,50,76], true))) {
             abort(403, 'غير مصرح لك بالوصول لإدارة أجهزة بصمة المقرات.');
         }
 

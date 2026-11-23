@@ -44,7 +44,7 @@
                 <i class="bi bi-sign-turn-right-fill me-1"></i> اتجاهات {{ $primaryLocationName }} (Directions)
             </a>
 
-            @if($u && ($u->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$u->id, [2, 8, 50], true)))
+            @if(!empty($isHrOrAdmin))
                 <a href="{{ route('employee-attendance.devices') }}" class="btn btn-sm rounded-pill px-3.5 fw-bold" style="background: rgba(255,255,255,0.22); color: #ffffff; border: 1px solid rgba(255,255,255,0.5);" title="إدارة واعتماد أجهزة الكمبيوتر المكتبية للمقرات">
                     <i class="bi bi-display me-1"></i> أجهزة بصمة المقرات
                 </a>
@@ -70,6 +70,96 @@
     <i class="bi bi-calendar-check-fill hero-icon d-none d-md-block"></i>
 </div>
 
+{{-- بطاقات مؤشرات الحضور والتأخير اليومية --}}
+<div class="row g-3 mb-4 animate-slide-up">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-right: 4px solid #16a34a !important;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small fw-bold text-success">حضور اليوم الإجمالي</span>
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+            <div class="h3 fw-bold text-dark mb-0">{{ $totalToday ?? 0 }} <span class="fs-6 text-muted fw-normal">موظف</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-right: 4px solid #059669 !important;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small fw-bold text-success">في الموعد (قبل 10:15)</span>
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+            <div class="h3 fw-bold text-success mb-0">{{ $onTimeToday ?? 0 }} <span class="fs-6 text-muted fw-normal">منضبط</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-right: 4px solid #ea580c !important;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small fw-bold" style="color: #c2410c;">متأخرون (بعد 10:15)</span>
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="background: #ea580c; width: 32px; height: 32px;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+            <div class="h3 fw-bold mb-0" style="color: #ea580c;">{{ $lateToday ?? 0 }} <span class="fs-6 text-muted fw-normal">متأخر</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-right: 4px solid #64748b !important;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small fw-bold text-secondary">موعد الحضور الرسمي</span>
+                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-alarm-fill"></i>
+                </div>
+            </div>
+            <div class="h3 fw-bold text-dark mb-0">10:15 <span class="fs-6 text-muted fw-normal">صباحاً</span></div>
+            <div class="small text-muted mt-1" style="font-size: 0.72rem;">يُحسب التأخير تلقائياً لأي تسجيل بعد 10:15</div>
+        </div>
+    </div>
+</div>
+
+@if(!empty($isHrOrAdmin))
+{{-- شريط الفلترة والبحث للموارد البشرية والإدارة --}}
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white animate-slide-up">
+    <form method="GET" action="{{ route('employee-attendance.index') }}" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-person me-1"></i>تصفية بالموظف</label>
+            <select name="user_id" class="form-select form-select-sm rounded-pill">
+                <option value="">-- كافة الموظفين --</option>
+                @foreach($usersList ?? [] as $emp)
+                    <option value="{{ $emp->id }}" {{ (string)($filters['user_id'] ?? '') === (string)$emp->id ? 'selected' : '' }}>
+                        {{ $emp->name }} ({{ $emp->job_title ?: 'موظف' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar3 me-1"></i>التاريخ</label>
+            <input type="date" name="date" value="{{ $filters['date'] ?? '' }}" class="form-control form-control-sm rounded-pill">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-funnel me-1"></i>حالة الانضباط والتأخير</label>
+            <select name="delay_filter" class="form-select form-select-sm rounded-pill">
+                <option value="">-- كل الحالات --</option>
+                <option value="late" {{ ($filters['delay_filter'] ?? '') === 'late' ? 'selected' : '' }}>⏰ المتأخرون فقط (بعد 10:15)</option>
+                <option value="on_time" {{ ($filters['delay_filter'] ?? '') === 'on_time' ? 'selected' : '' }}>✅ في الموعد (قبل 10:15)</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 fw-bold">
+                <i class="bi bi-search me-1"></i> بحث
+            </button>
+            @if(!empty($filters['user_id']) || !empty($filters['date']) || !empty($filters['delay_filter']))
+                <a href="{{ route('employee-attendance.index') }}" class="btn btn-light btn-sm rounded-pill text-muted" title="إلغاء الفلتر">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            @endif
+        </div>
+    </form>
+</div>
+@endif
+
 <div class="chart-container animate-slide-up animate-delay-1">
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3 px-4">
              <h5 class="mb-0 fw-bold text-primary">السجل ({{ $records->total() }})</h5>
@@ -89,7 +179,7 @@
                             </th>
                             <th class="py-3 px-4">الموظف</th>
                             <th class="py-3 px-4">التاريخ</th>
-                            <th class="py-3 px-4">وقت الدخول</th>
+                            <th class="py-3 px-4">وقت الدخول والانضباط</th>
                             <th class="py-3 px-3 text-center">صورة الحضور</th>
                             <th class="py-3 px-4">وقت الخروج</th>
                             <th class="py-3 px-3 text-center">صورة الانصراف</th>
@@ -110,12 +200,32 @@
                                             style="width: 35px; height: 35px; font-weight: bold;">
                                             {{ strtoupper(substr($r->user?->name ?? 'U', 0, 1)) }}
                                         </div>
-                                        <span class="fw-medium">{{ $r->user?->name }}</span>
+                                        <div>
+                                            <span class="fw-medium d-block">{{ $r->user?->name }}</span>
+                                            <small class="text-muted" style="font-size: 0.75rem;">{{ $r->user?->job_title ?: 'موظف' }}</small>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-4 text-muted">{{ $r->date->format('Y-m-d') }}</td>
-                                <td class="px-4"><span
-                                        class="badge bg-success-subtle text-success rounded-pill px-3">{{ $r->check_in_at ?? '—' }}</span>
+                                <td class="px-4">
+                                    @if(!empty($r->check_in_at))
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold font-monospace" style="font-size: 0.85rem; width: fit-content;">
+                                                <i class="bi bi-clock me-1 text-primary"></i>{{ substr($r->check_in_at, 0, 5) }}
+                                            </span>
+                                            @if($r->is_late)
+                                                <span class="badge rounded-pill fw-bold" style="background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; font-size: 0.72rem; width: fit-content;" title="تسجيل بعد موعد الدخول الرسمي 10:15 ص">
+                                                    <i class="bi bi-clock-history me-1 text-danger"></i>{{ $r->delay_text }}
+                                                </span>
+                                            @else
+                                                <span class="badge rounded-pill fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; font-size: 0.72rem; width: fit-content;" title="حضور في الموعد المحدد (قبل 10:15 ص)">
+                                                    <i class="bi bi-check2 me-1 text-success"></i>في الموعد
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="badge bg-light text-muted border small" style="font-size: 0.74rem;">—</span>
+                                    @endif
                                 </td>
                                 <td class="px-3 text-center">
                                     @if($r->check_in_photo)
@@ -171,7 +281,7 @@
                                 <td class="px-4 text-end">
                                     <div class="btn-group btn-group-sm" role="group">
                                         {{-- Delete Action --}}
-                                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || $r->user_id == auth()->id()))
+                                        @if(auth()->check() && (!empty($isHrOrAdmin) || $r->user_id == auth()->id()))
                                             <form action="{{ route('employee-attendance.destroy', ['employee_attendance' => $r->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من طلب حذف هذا السجل؟');">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-outline-danger start-radius" title="حذف">
@@ -181,7 +291,7 @@
                                         @endif
 
                                         {{-- Edit Action --}}
-                                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('manager') || $r->user_id == auth()->id()))
+                                        @if(auth()->check() && (!empty($isHrOrAdmin) || $r->user_id == auth()->id()))
                                             <a href="{{ route('employee-attendance.edit', ['employee_attendance' => $r->id]) }}" class="btn btn-outline-primary" title="تعديل">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
@@ -196,7 +306,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="10" class="text-center py-5 text-muted">
                                     <i class="bi bi-calendar-x display-4 mb-3 d-block opacity-50"></i>
                                     لا توجد سجلات حضور حالياً
                                 </td>
