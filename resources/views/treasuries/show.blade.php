@@ -388,9 +388,18 @@
                 <form id="addTransactionForm" action="{{ route('treasuries.addTransaction', $treasury) }}" method="POST">
                     @csrf
                     @php
-                        $treasuryList = $accessibleTreasuries ?? \App\Models\Treasury::accessibleForUser(auth()->user())->where('is_active', true)->orderBy('name')->get();
+                        $authUser = auth()->user();
+                        $treasuryList = $accessibleTreasuries ?? \App\Models\Treasury::accessibleForUser($authUser)->where('is_active', true)->orderBy('name')->get();
                         if ($treasuryList->isEmpty() || !$treasuryList->contains('id', $treasury->id)) {
                             $treasuryList = $treasuryList->prepend($treasury);
+                        }
+
+                        // الخزائن التي يديرها الموظف ومسؤول عنها فقط (الخزنة اللي أنا ماسكها بس)
+                        $manageableTreasuries = $treasuryList->filter(function ($t) use ($authUser) {
+                            return $authUser->canManageTreasury($t);
+                        });
+                        if ($canManage && !$manageableTreasuries->contains('id', $treasury->id)) {
+                            $manageableTreasuries = $manageableTreasuries->prepend($treasury);
                         }
                     @endphp
 
@@ -398,9 +407,9 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary mb-1">نوع الحركة <span class="text-danger">*</span></label>
                         <select name="type" id="txTypeSelect" class="form-select form-select-sm rounded-3 fw-bold" required onchange="onTxTypeChange(this.value)">
-                            <option value="in" selected>🟢 وارد (إيداع نقدي)</option>
-                            <option value="out">🔴 صادر (صرف / سحب نقدي)</option>
-                            <option value="transfer">🔄 تحويل وتوريد بين الخزائن (خصم وتوريد فوري)</option>
+                            <option value="in" selected>🟢 وارد (إيداع نقدي في الخزنة)</option>
+                            <option value="out">🔴 صادر (صرف نقدي من الخزنة)</option>
+                            <option value="transfer">🔄 تحويل وتوريد (خصم من خزنتي وتوريد لخزنة أخرى)</option>
                         </select>
                     </div>
 
@@ -411,7 +420,7 @@
                                 <i class="bi bi-box-arrow-in-down text-success me-1"></i>الخزينة المورّد إليها (المستلمة) <span class="text-danger">*</span>
                             </label>
                             <select name="treasury_id" id="inTargetTreasurySelect" class="form-select form-select-sm rounded-3" onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
-                                @foreach($treasuryList as $t)
+                                @foreach($manageableTreasuries as $t)
                                     <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
                                         {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
@@ -424,13 +433,19 @@
                             </label>
                             <select name="source_treasury_id" id="inSourceTreasurySelect" class="form-select form-select-sm rounded-3" onchange="updateTxSyncNotice()">
                                 <option value="">-- إيداع خارجي / متبرع / بنك / أخرى --</option>
-                                @foreach($treasuryList as $t)
+                                @foreach($manageableTreasuries->where('id', '!=', $treasury->id) as $t)
                                     <option value="{{ $t->id }}" data-name="{{ $t->name }}">
                                         خصم وتوريد من خزينة: {{ $t->name }} (رصيدها: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="x-small text-muted mt-1">اختر إحدى الخزائن إذا كان هذا الوارد محولاً منها ليتم خصمه فوراً وتحديث رصيدها.</div>
+                            <div class="x-small text-muted mt-1">
+                                @if($manageableTreasuries->where('id', '!=', $treasury->id)->isEmpty())
+                                    <span class="text-primary"><i class="bi bi-shield-check me-1"></i>مصدر الإيداع خارجي (لا تظهر إلا الخزائن التي تديرها فقط).</span>
+                                @else
+                                    اختر إحدى الخزائن التي تديرها للخصم المباشر منها أو اتركها إيداع خارجي.
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -438,15 +453,16 @@
                     <div id="txGroupOut" class="tx-mode-group d-none">
                         <div class="mb-2">
                             <label class="form-label small fw-bold text-dark mb-1">
-                                <i class="bi bi-box-arrow-up text-danger me-1"></i>الخزينة المخصوم منها (المصدر) <span class="text-danger">*</span>
+                                <i class="bi bi-box-arrow-up text-danger me-1"></i>يتخصم من خزينة (المصدر) <span class="text-danger">*</span>
                             </label>
                             <select name="treasury_id" id="outSourceTreasurySelect" class="form-select form-select-sm rounded-3" disabled onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
-                                @foreach($treasuryList as $t)
+                                @foreach($manageableTreasuries as $t)
                                     <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
                                         {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="x-small text-muted mt-0.5">الخزائن التي تديرها ومسؤول عنها فقط.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-secondary mb-1">
@@ -454,7 +470,7 @@
                             </label>
                             <select name="destination_treasury_id" id="outDestTreasurySelect" class="form-select form-select-sm rounded-3" onchange="updateTxSyncNotice()">
                                 <option value="">-- صرف خارجي / مصروفات / مساعدات / أخرى --</option>
-                                @foreach($treasuryList as $t)
+                                @foreach($treasuryList->where('id', '!=', $treasury->id) as $t)
                                     <option value="{{ $t->id }}" data-name="{{ $t->name }}">
                                         توريد وإيداع في خزينة: {{ $t->name }} (رصيدها: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
@@ -471,12 +487,13 @@
                                 <i class="bi bi-arrow-up-circle me-1"></i>يتخصم من خزينة (المصدر) <span class="text-danger">*</span>
                             </label>
                             <select name="from_treasury_id" id="transferFromSelect" class="form-select form-select-sm rounded-3" disabled onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
-                                @foreach($treasuryList as $t)
+                                @foreach($manageableTreasuries as $t)
                                     <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
                                         {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="x-small text-muted mt-0.5">الخزائن التي تديرها ومسؤول عنها فقط.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-success mb-1">
@@ -484,8 +501,8 @@
                             </label>
                             <select name="to_treasury_id" id="transferToSelect" class="form-select form-select-sm rounded-3" disabled onchange="updateTxSyncNotice()">
                                 <option value="" disabled selected>-- اختر الخزينة المستلمة للتوريد إليها --</option>
-                                @foreach($treasuryList as $t)
-                                    <option value="{{ $t->id }}" @selected($t->id !== $treasury->id && $loop->iteration === 2) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
+                                @foreach($treasuryList->where('id', '!=', $treasury->id) as $t)
+                                    <option value="{{ $t->id }}" data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
                                         {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
                                     </option>
                                 @endforeach
