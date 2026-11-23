@@ -1602,7 +1602,7 @@ final class DashboardWebController extends Controller
             }
         } else {
             // Check for current user only
-            if ($user->contract_end_date && now()->diffInDays($user->contract_end_date, false) <= 60 && now()->diffInDays($user->contract_end_date, false) >= 0) {
+            if ($user?->contract_end_date && now()->diffInDays($user->contract_end_date, false) <= 60 && now()->diffInDays($user->contract_end_date, false) >= 0) {
                 $daysLeft = (int) now()->diffInDays($user->contract_end_date, false);
                 $notifications[] = [
                     'text' => "تنبيه: عقدك ينتهي قريباً ({$user->contract_end_date->format('Y-m-d')}) - باقي {$daysLeft} يوم",
