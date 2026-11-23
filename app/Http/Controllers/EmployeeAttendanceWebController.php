@@ -275,6 +275,14 @@ final class EmployeeAttendanceWebController extends Controller
             return response()->json(['success' => false, 'message' => 'غير مصرح لك باعتماد الأجهزة.'], 403);
         }
 
+        $ua = $request->userAgent() ?: '';
+        if (preg_match('/Android|iPhone|iPad|iPod|Mobile|BlackBerry|IEMobile|Opera Mini/i', $ua)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عذراً، اعتماد الأجهزة مقتصر فقط على أجهزة الكمبيوتر المكتبية بالمقرات.',
+            ], 422);
+        }
+
         $request->validate([
             'device_name'   => 'required|string|max:100',
             'location_name' => 'required|string|max:100',
@@ -336,6 +344,14 @@ final class EmployeeAttendanceWebController extends Controller
         $user = $request->user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'يرجى تسجيل الدخول أولاً لإرسال طلب الاعتماد.'], 401);
+        }
+
+        $ua = $request->userAgent() ?: '';
+        if (preg_match('/Android|iPhone|iPad|iPod|Mobile|BlackBerry|IEMobile|Opera Mini/i', $ua)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'عذراً، طلب اعتماد الأجهزة مقتصر على أجهزة الكمبيوتر المكتبية بالمقرات ولا يمكن طلب اعتماده للهواتف المحمولة.',
+            ], 422);
         }
 
         // إذا كان الموظف لديه بالفعل جهاز معتمد
