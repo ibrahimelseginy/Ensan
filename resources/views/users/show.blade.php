@@ -162,6 +162,18 @@
                                     {{ $user->join_date ? \Carbon\Carbon::parse($user->join_date)->format('Y-m-d') : '—' }}
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1">الرصيد السنوي للإجازات</label>
+                                <div class="fw-bold fs-5 text-dark">{{ $user->annual_leave_quota ?? 21 }} <span class="fs-6 fw-normal text-muted">يوم</span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1">رصيد الإجازات الحالي المتبقي</label>
+                                <div class="fw-bold fs-5 text-success">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fs-6 font-monospace">
+                                        <i class="bi bi-wallet2 me-1"></i> {{ $user->leave_balance ?? $user->annual_leave_quota ?? 21 }} يوم متبقي
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

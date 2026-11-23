@@ -29,9 +29,15 @@ final class StoreLeaveRequest extends FormRequest
 
     public function rules(): array
     {
+        $user = $this->user();
+        $isManager = $user && $user->hasPermission('leaves.manage');
+        $startDateRule = $isManager ? 'required|date' : 'required|date|after_or_equal:today';
+
         return [
+            'user_id'    => 'nullable|exists:users,id',
+            'status'     => 'nullable|in:pending,approved,rejected',
             'type'       => 'required|in:annual,sick,unpaid,emergency,permission,other',
-            'start_date' => 'required|date|after_or_equal:today',
+            'start_date' => $startDateRule,
             'end_date'   => 'required|date|after_or_equal:start_date',
             'from_time'  => 'nullable|required_if:type,permission|date_format:H:i',
             'to_time'    => 'nullable|required_if:type,permission|date_format:H:i|after:from_time',

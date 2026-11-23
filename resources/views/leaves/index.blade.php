@@ -68,7 +68,12 @@
                                             style="width: 35px; height: 35px; font-weight: bold;">
                                             {{ strtoupper(substr($leave->user?->name ?? 'U', 0, 1)) }}
                                         </div>
-                                        <span class="fw-medium">{{ $leave->user?->name ?? 'مستخدم محذوف' }}</span>
+                                        <div>
+                                            <span class="fw-medium d-block">{{ $leave->user?->name ?? 'مستخدم محذوف' }}</span>
+                                            <small class="text-muted" style="font-size: 0.72rem;">
+                                                الرصيد المتبقي: <strong class="text-primary">{{ $leave->user?->leave_balance ?? $leave->user?->annual_leave_quota ?? 21 }}</strong> / {{ $leave->user?->annual_leave_quota ?? 21 }} يوم
+                                            </small>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-4">
@@ -128,40 +133,56 @@
                                     {{ $leave->approver->name ?? '—' }}
                                 </td>
                                 <td class="px-4 text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
+                                    <div class="d-inline-flex align-items-center gap-1">
                                         @php
                                             $hasPendingRequest = $leave->changeRequests->isNotEmpty();
+                                            $canManage = request()->user()->hasPermission('leaves.manage');
                                         @endphp
 
-                                        {{-- Delete Action --}}
-                                        @if((request()->user()->hasPermission('leaves.manage') || ($leave->user_id == request()->user()->id && $leave->status == 'pending')) && !$hasPendingRequest)
-                                            <form action="{{ route('leaves.destroy', ['leave' => $leave->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ request()->user()->hasPermission('leaves.manage') ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'هل أنت متأكد من طلب إلغاء هذا الطلب؟' }}');">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger start-radius" title="{{ request()->user()->hasPermission('leaves.manage') ? 'حذف' : 'طلب إلغاء' }}">
-                                                    <i class="bi bi-trash"></i>
+                                        {{-- Quick Approve & Quick Reject for HR / Managers --}}
+                                        @if($canManage && $leave->status == 'pending' && !$hasPendingRequest)
+                                            <form action="{{ route('leaves.approve', ['leave' => $leave->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من الموافقة الفورية على طلب إجازة {{ $leave->user?->name }} ({{ $leave->days }} يوم)؟ سيتم خصمها تلقائياً من رصيده الحالي.');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success fw-bold px-2.5 rounded-pill shadow-xs" title="موافقة فورية وخصم من الرصيد">
+                                                    <i class="bi bi-check-lg me-1"></i> موافقة
                                                 </button>
                                             </form>
-                                        @elseif($hasPendingRequest)
-                                             <button class="btn btn-outline-secondary start-radius" disabled title="يوجد طلب معلق">
-                                                <i class="bi bi-hourglass-split"></i>
+                                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-2.5 rounded-pill shadow-xs" onclick="promptReject('{{ route('leaves.reject', ['leave' => $leave->id]) }}')" title="رفض الطلب">
+                                                <i class="bi bi-x-lg me-1"></i> رفض
                                             </button>
                                         @endif
 
-                                        {{-- Edit Action --}}
-                                        @if((request()->user()->hasPermission('leaves.manage') || ($leave->user_id == request()->user()->id && $leave->status == 'pending')) && !$hasPendingRequest)
-                                            <a href="{{ route('leaves.edit', ['leave' => $leave->id]) }}" class="btn btn-outline-primary" title="تعديل">
-                                                <i class="bi bi-pencil"></i>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {{-- Delete Action --}}
+                                            @if(($canManage || ($leave->user_id == request()->user()->id && $leave->status == 'pending')) && !$hasPendingRequest)
+                                                <form action="{{ route('leaves.destroy', ['leave' => $leave->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ $canManage ? 'هل أنت متأكد من حذف هذا الطلب؟' : 'هل أنت متأكد من طلب إلغاء هذا الطلب؟' }}');">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn btn-outline-danger start-radius" title="{{ $canManage ? 'حذف' : 'طلب إلغاء' }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @elseif($hasPendingRequest)
+                                                 <button class="btn btn-outline-secondary start-radius" disabled title="يوجد طلب معلق">
+                                                    <i class="bi bi-hourglass-split"></i>
+                                                </button>
+                                            @endif
+
+                                            {{-- Edit Action --}}
+                                            @if(($canManage || ($leave->user_id == request()->user()->id && $leave->status == 'pending')) && !$hasPendingRequest)
+                                                <a href="{{ route('leaves.edit', ['leave' => $leave->id]) }}" class="btn btn-outline-primary" title="تعديل">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @elseif($hasPendingRequest)
+                                                 <button class="btn btn-outline-secondary" disabled>
+                                                    <i class="bi bi-pencil-slash"></i>
+                                                </button>
+                                            @endif
+
+                                            {{-- View Action --}}
+                                            <a href="{{ route('leaves.show', ['leave' => $leave->id]) }}" class="btn btn-outline-secondary end-radius" title="عرض">
+                                                <i class="bi bi-eye"></i>
                                             </a>
-                                        @elseif($hasPendingRequest)
-                                             <button class="btn btn-outline-secondary" disabled>
-                                                <i class="bi bi-pencil-slash"></i>
-                                            </button>
-                                        @endif
-
-                                        {{-- View Action --}}
-                                        <a href="{{ route('leaves.show', ['leave' => $leave->id]) }}" class="btn btn-outline-secondary end-radius" title="عرض">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -227,17 +248,25 @@
         }
 
         function promptReject(url) {
-            const reason = prompt('سبب الرفض:');
-            if (reason !== null) {
+            const reason = prompt('يرجى كتابة سبب الرفض:');
+            if (reason !== null && reason.trim() !== '') {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = url;
                 form.style.display = 'none';
-                form.innerHTML = `
-                        @csrf @method('PUT')
-                        <input type="hidden" name="status" value="rejected">
-                        <input type="hidden" name="rejection_reason" value="${reason}">
-                    `;
+
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+
+                const reasonInput = document.createElement('input');
+                reasonInput.type = 'hidden';
+                reasonInput.name = 'rejection_reason';
+                reasonInput.value = reason;
+                form.appendChild(reasonInput);
+
                 document.body.appendChild(form);
                 form.submit();
             }

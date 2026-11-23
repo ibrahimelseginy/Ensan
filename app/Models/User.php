@@ -624,9 +624,17 @@ class User extends Authenticatable
         $ids = $this->getAccessibleTreasuryIds();
         return $ids === null || in_array($treasuryId, $ids, true);
     }
-    public function adjustLeaveBalance($days)
+    public function adjustLeaveBalance(int|float $delta): bool
     {
-        $this->leave_balance += $days;
-        return $this->save();
+        $fresh = $this->fresh();
+        $current = $fresh ? $fresh->leave_balance : $this->leave_balance;
+        if ($current === null) {
+            $current = $this->annual_leave_quota ?? 21;
+        }
+
+        $newBalance = max(0, (float) $current + (float) $delta);
+        $this->leave_balance = $newBalance;
+
+        return (bool) self::where('id', $this->id)->update(['leave_balance' => $newBalance]);
     }
 }

@@ -639,6 +639,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('employee-attendance/devices/{id}', [EmployeeAttendanceWebController::class, 'revokeDevice'])->name('employee-attendance.destroy-device');
 
     Route::middleware('permission:employee_attendance.view|employee_attendance.view_own|employee_attendance.create')->group(function () {
+        Route::post('employee-attendance/record-absence', [EmployeeAttendanceWebController::class, 'recordAbsence'])->name('employee-attendance.record-absence');
+        Route::post('employee-attendance/sync-absences', [EmployeeAttendanceWebController::class, 'syncAbsences'])->name('employee-attendance.sync-absences');
         Route::post('employee-attendance/bulk-destroy', [EmployeeAttendanceWebController::class, 'bulkDestroy'])->name('employee-attendance.bulk-destroy');
         Route::resource('employee-attendance', EmployeeAttendanceWebController::class);
     });
@@ -651,6 +653,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('permission:leaves.view|leaves.manage|leaves.create')->group(function () {
+        Route::post('leaves/{leave}/approve', [\App\Http\Controllers\LeaveWebController::class, 'approve'])->name('leaves.approve');
+        Route::post('leaves/{leave}/reject', [\App\Http\Controllers\LeaveWebController::class, 'reject'])->name('leaves.reject');
         Route::post('leaves/bulk-destroy', [\App\Http\Controllers\LeaveWebController::class, 'bulkDestroy'])->name('leaves.bulk-destroy');
         Route::resource('leaves', \App\Http\Controllers\LeaveWebController::class)->parameters(['leaves' => 'leave']);
     });

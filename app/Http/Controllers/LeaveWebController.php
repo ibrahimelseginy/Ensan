@@ -36,7 +36,12 @@ final class LeaveWebController extends Controller
 
     public function create(): View
     {
-        return view('leaves.create');
+        $user = request()->user();
+        $employees = ($user && $user->hasPermission('leaves.manage'))
+            ? User::where('is_employee', true)->orderBy('name')->get()
+            : collect();
+
+        return view('leaves.create', compact('employees'));
     }
 
     public function store(StoreLeaveRequest $request): RedirectResponse
@@ -46,13 +51,62 @@ final class LeaveWebController extends Controller
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
-        $result = $this->leaveService->createLeave($request->validated(), (int)$user->id);
+        $validated = $request->validated();
+        $targetUserId = ($user->hasPermission('leaves.manage') && !empty($validated['user_id']))
+            ? (int) $validated['user_id']
+            : (int) $user->id;
+
+        if ($user->hasPermission('leaves.manage') && !empty($validated['status'])) {
+            if ($validated['status'] === 'approved') {
+                $validated['approved_by'] = $user->id;
+            }
+        } else {
+            $validated['status'] = 'pending';
+        }
+
+        $result = $this->leaveService->createLeave($validated, $targetUserId);
 
         if ($result instanceof ChangeRequest) {
             return redirect()->route('leaves.index')->with('success', 'تم إرسال طلب الإجازة للمراجعة');
         }
 
-        return redirect()->route('leaves.index')->with('success', 'تم تقديم طلب الإجازة بنجاح');
+        return redirect()->route('leaves.index')->with('success', 'تم تسجيل طلب الإجازة بنجاح');
+    }
+
+    public function approve(Leave $leave): RedirectResponse
+    {
+        $user = request()->user();
+        if (!$user || !$user->hasPermission('leaves.manage')) {
+            abort(403, 'غير مصرح لك باعتماد الإجازات');
+        }
+
+        if ($leave->status === 'approved') {
+            return back()->with('info', 'الطلب معتمد بالفعل');
+        }
+
+        $leave->update([
+            'status'      => 'approved',
+            'approved_by' => $user->id,
+        ]);
+
+        return back()->with('success', "تمت الموافقة على طلب إجازة {$leave->user?->name} ({$leave->days} يوم) وخصمها من الرصيد بنجاح.");
+    }
+
+    public function reject(Request $request, Leave $leave): RedirectResponse
+    {
+        $user = request()->user();
+        if (!$user || !$user->hasPermission('leaves.manage')) {
+            abort(403, 'غير مصرح لك برفض الإجازات');
+        }
+
+        $reason = $request->input('rejection_reason') ?: 'تم الرفض بواسطة الموارد البشرية';
+
+        $leave->update([
+            'status'           => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        return back()->with('success', "تم رفض طلب الإجازة بنجاح.");
     }
 
     public function show(Leave $leave): View

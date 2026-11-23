@@ -45,6 +45,7 @@ final class EmployeeAttendanceWebController extends Controller
         $totalToday       = $todayAttendances->count();
         $onTimeToday      = $todayAttendances->where('is_late', false)->count();
         $lateToday        = $todayAttendances->where('is_late', true)->count();
+        $unexcusedAbsences = $isHrOrAdmin ? $this->attendanceService->getUnexcusedAbsenceCandidates() : [];
 
         return view('employee_attendance.index', compact(
             'records',
@@ -54,7 +55,8 @@ final class EmployeeAttendanceWebController extends Controller
             'filters',
             'totalToday',
             'onTimeToday',
-            'lateToday'
+            'lateToday',
+            'unexcusedAbsences'
         ));
     }
 
@@ -561,5 +563,67 @@ final class EmployeeAttendanceWebController extends Controller
         $count = $this->attendanceService->bulkDelete($request->input('ids'));
 
         return back()->with('success', "تم إرسال طلبات الحذف لـ $count من السجلات للموافقة");
+    }
+
+    public function recordAbsence(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2', 'موارد بشريه', 'الموارد البشرية']) && !in_array((int)$user->id, [2,8,50,76], true))) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح لك بتسجيل الغياب.'], 403);
+            }
+            abort(403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'date'    => 'required|date',
+            'reason'  => 'nullable|string|max:255',
+        ]);
+
+        $record = $this->attendanceService->recordAbsence(
+            (int) $request->input('user_id'),
+            (string) $request->input('date'),
+            $request->input('reason')
+        );
+
+        $emp = $record->user;
+        $msg = "تم تسجيل غياب للموظف ({$emp->name}) بتاريخ {$record->date->format('Y-m-d')} وخصم يوم واحد تلقائياً من رصيد إجازاته الحالي (الرصيد المتبقي الآن: {$emp->leave_balance} يوم).";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'       => true,
+                'message'       => $msg,
+                'leave_balance' => $emp->leave_balance,
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    public function syncAbsences(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin', 'hr', 'hr2', 'موارد بشريه', 'الموارد البشرية']) && !in_array((int)$user->id, [2,8,50,76], true))) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+            }
+            abort(403);
+        }
+
+        $start = $request->input('start_date');
+        $end   = $request->input('end_date');
+
+        $count = $this->attendanceService->syncAllUnexcusedAbsences($start, $end);
+
+        $msg = $count > 0
+            ? "تم تسجيل وخصم {$count} يوم غياب تلقائياً من أرصدة إجازات الموظفين بنجاح."
+            : "لا توجد حالات غياب غير مسجلة خلال الفترة المحددة.";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'count' => $count, 'message' => $msg]);
+        }
+
+        return back()->with('success', $msg);
     }
 }

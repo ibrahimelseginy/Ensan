@@ -61,8 +61,17 @@
                 </div>
             @endif
 
+            @if(!empty($isHrOrAdmin))
+                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3.5 fw-bold shadow-xs text-white" data-bs-toggle="modal" data-bs-target="#absenceTrackerModal" title="كشف أيام الغياب والخصم التلقائي من رصيد الإجازات">
+                    <i class="bi bi-person-x-fill me-1"></i> كشف الغياب والخصم التلقائي
+                    @if(!empty($unexcusedAbsences) && count($unexcusedAbsences) > 0)
+                        <span class="badge bg-white text-danger ms-1 fw-bold rounded-pill">{{ count($unexcusedAbsences) }}</span>
+                    @endif
+                </button>
+            @endif
+
             <a href="{{ route('employee-attendance.create') }}" class="btn btn-sm rounded-pill px-4">
-                <i class="bi bi-plus-lg me-1"></i> تسجيل يدوي
+                <i class="bi bi-plus-lg me-1"></i> تسجيل يدوي / غياب
             </a>
         </div>
         <div id="gpsCheckInFeedback" class="mt-2 small fw-bold d-none" style="background: rgba(255,255,255,0.95); color: #0f172a; padding: 8px 14px; border-radius: 12px; display: inline-block;"></div>
@@ -202,13 +211,22 @@
                                         </div>
                                         <div>
                                             <span class="fw-medium d-block">{{ $r->user?->name }}</span>
-                                            <small class="text-muted" style="font-size: 0.75rem;">{{ $r->user?->job_title ?: 'موظف' }}</small>
+                                            <small class="text-muted" style="font-size: 0.72rem;">{{ $r->user?->job_title ?: 'موظف' }} — رصيد الإجازات: <strong class="text-primary">{{ $r->user?->leave_balance ?? $r->user?->annual_leave_quota ?? 21 }}</strong> / {{ $r->user?->annual_leave_quota ?? 21 }} يوم</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 text-muted">{{ $r->date->format('Y-m-d') }}</td>
                                 <td class="px-4">
-                                    @if(!empty($r->check_in_at))
+                                    @if($r->is_absence || str_contains($r->notes ?? '', 'غياب'))
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 fw-bold shadow-xs" style="font-size: 0.82rem; width: fit-content;">
+                                                <i class="bi bi-x-circle-fill me-1"></i> غياب رسمي
+                                            </span>
+                                            <span class="badge rounded-pill fw-bold" style="background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; font-size: 0.72rem; width: fit-content;">
+                                                خصم 1 يوم من الرصيد
+                                            </span>
+                                        </div>
+                                    @elseif(!empty($r->check_in_at))
                                         <div class="d-flex flex-column gap-1">
                                             <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 fw-bold font-monospace" style="font-size: 0.85rem; width: fit-content;">
                                                 <i class="bi bi-clock me-1 text-primary"></i>{{ substr($r->check_in_at, 0, 5) }}
@@ -425,5 +443,95 @@
     <form id="bulk-destroy-form" action="{{ route('employee-attendance.bulk-destroy') }}" method="POST" style="display:none">
         @csrf
     </form>
+
+    {{-- مودال كشف الغياب والخصم التلقائي من رصيد الإجازات --}}
+    @if(!empty($isHrOrAdmin))
+    <div class="modal fade" id="absenceTrackerModal" tabindex="-1" aria-labelledby="absenceTrackerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-danger text-white border-0 py-3 px-4 rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-x-fill fs-4"></i>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="absenceTrackerModalLabel">كشف أيام الغياب والخصم التلقائي من رصيد الإجازات</h5>
+                            <small class="text-white-50">فحص أيام العمل الرسمية غير المسجل بها حضور أو إجازة معتمدة</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border rounded-3 d-flex align-items-center justify-content-between p-3 mb-4">
+                        <div>
+                            <div class="fw-bold text-dark"><i class="bi bi-info-circle text-primary me-1"></i> آلية الخصم التلقائي:</div>
+                            <small class="text-muted">يقوم النظام بفحص أيام العمل الرسمية (الأحد - الخميس). عند اعتماد الغياب، يُخصم يوم واحد (1) فوراً من رصيد إجازات الموظف الحالي.</small>
+                        </div>
+                        @if(!empty($unexcusedAbsences) && count($unexcusedAbsences) > 0)
+                            <form action="{{ route('employee-attendance.sync-absences') }}" method="POST" onsubmit="return confirm('هل أنت متأكد من اعتماد وخصم كافة أيام الغياب ({{ count($unexcusedAbsences) }} يوم) من أرصدة الإجازات؟');">
+                                @csrf
+                                <button type="submit" class="btn btn-danger fw-bold rounded-pill px-3 shadow-xs text-nowrap">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> خصم كافة الغيابات دفعة واحدة
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
+                    @if(!empty($unexcusedAbsences) && count($unexcusedAbsences) > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 border">
+                                <thead class="table-light text-secondary small">
+                                    <tr>
+                                        <th>الموظف</th>
+                                        <th>التاريخ / اليوم</th>
+                                        <th>رصيد الإجازات المتبقي</th>
+                                        <th class="text-end">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($unexcusedAbsences as $abs)
+                                        <tr>
+                                            <td class="fw-bold">
+                                                <div>{{ $abs['user_name'] }}</div>
+                                                <small class="text-muted fw-normal">{{ $abs['job_title'] }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-medium">{{ $abs['date'] }}</div>
+                                                <small class="text-danger fw-bold">{{ $abs['day_name'] }} (غياب غير معتمد)</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace">
+                                                    {{ $abs['leave_balance'] }} / {{ $abs['quota'] }} يوم
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <form action="{{ route('employee-attendance.record-absence') }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من تسجيل غياب {{ $abs['user_name'] }} بتاريخ {{ $abs['date'] }} وخصم يوم من رصيد إجازاته؟');">
+                                                    @csrf
+                                                    <input type="hidden" name="user_id" value="{{ $abs['user_id'] }}">
+                                                    <input type="hidden" name="date" value="{{ $abs['date'] }}">
+                                                    <input type="hidden" name="reason" value="غياب بدون إذن (تم الخصم من رصيد الإجازات)">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-xs">
+                                                        <i class="bi bi-dash-circle me-1"></i> خصم يوم من الرصيد
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle-fill text-success display-4 mb-2 d-block"></i>
+                            <h5 class="fw-bold text-dark mb-1">البيانات متطابقة تماماً!</h5>
+                            <p class="small mb-0">لا توجد أي حالات غياب غير مسجلة أو معلقة للموظفين خلال الفترة الحالية.</p>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4 text-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 @endsection
 

@@ -25,13 +25,45 @@ final class EmployeeAttendance extends Model
         'check_out_lat',
         'check_out_lng',
         'notes',
+        'is_absence',
+        'deducted_from_leave',
         'rating',
         'evaluation_notes',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'is_absence' => 'boolean',
+        'deducted_from_leave' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (EmployeeAttendance $attendance): void {
+            if ($attendance->is_absence && !$attendance->deducted_from_leave) {
+                $attendance->user?->adjustLeaveBalance(-1);
+                $attendance->updateQuietly(['deducted_from_leave' => true]);
+            }
+        });
+
+        static::updated(function (EmployeeAttendance $attendance): void {
+            if ($attendance->isDirty('is_absence')) {
+                if ($attendance->is_absence && !$attendance->deducted_from_leave) {
+                    $attendance->user?->adjustLeaveBalance(-1);
+                    $attendance->updateQuietly(['deducted_from_leave' => true]);
+                } elseif (!$attendance->is_absence && $attendance->deducted_from_leave) {
+                    $attendance->user?->adjustLeaveBalance(1);
+                    $attendance->updateQuietly(['deducted_from_leave' => false]);
+                }
+            }
+        });
+
+        static::deleted(function (EmployeeAttendance $attendance): void {
+            if ($attendance->is_absence && $attendance->deducted_from_leave) {
+                $attendance->user?->adjustLeaveBalance(1);
+            }
+        });
+    }
 
     public function user(): BelongsTo
     {

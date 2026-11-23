@@ -19,6 +19,7 @@ final class UpdateEmployeeAttendanceRequest extends FormRequest
             'date'             => 'nullable|date',
             'check_in_at'      => 'nullable',
             'check_out_at'     => 'nullable',
+            'is_absence'       => 'nullable|boolean',
             'notes'            => 'nullable|string',
             'rating'           => 'nullable|integer|min:1|max:5',
             'evaluation_notes' => 'nullable|string'

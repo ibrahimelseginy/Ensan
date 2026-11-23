@@ -29,6 +29,26 @@
                     <form action="{{ route('leaves.store') }}" method="POST">
                         @csrf
                         <div class="row g-3">
+                            @if(!empty($employees) && $employees->isNotEmpty())
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-person me-1"></i>الموظف صاحب الإجازة <span class="text-danger">*</span></label>
+                                    <select name="user_id" class="form-select" required>
+                                        @foreach($employees as $emp)
+                                            <option value="{{ $emp->id }}" @selected(old('user_id', auth()->id()) == $emp->id)>
+                                                {{ $emp->name }} (الرصيد: {{ $emp->leave_balance ?? $emp->annual_leave_quota ?? 21 }} / {{ $emp->annual_leave_quota ?? 21 }} يوم)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-shield-check me-1"></i>حالة الطلب</label>
+                                    <select name="status" class="form-select">
+                                        <option value="approved" @selected(old('status', 'approved') === 'approved')>مقبول فوراً (خصم تلقائي من الرصيد)</option>
+                                        <option value="pending" @selected(old('status') === 'pending')>معلق (بانتظار المراجعة)</option>
+                                    </select>
+                                </div>
+                            @endif
+
                             <div class="col-md-6">
                                 <label class="form-label">نوع الطلب <span class="text-danger">*</span></label>
                                 <select name="type" id="leaveTypeSelect" class="form-select" required>

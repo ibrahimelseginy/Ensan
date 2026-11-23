@@ -679,7 +679,134 @@ final readonly class EmployeeAttendanceService
 
     public function createAttendance(array $data): EmployeeAttendance
     {
+        if (!empty($data['is_absence']) || (isset($data['notes']) && str_contains($data['notes'], 'غياب'))) {
+            $data['is_absence'] = true;
+        }
+
         return $this->attendanceRepository->create($data);
+    }
+
+    public function recordAbsence(int $userId, string $date, ?string $reason = null): EmployeeAttendance
+    {
+        $existing = EmployeeAttendance::where('user_id', $userId)
+            ->whereDate('date', $date)
+            ->first();
+
+        $notes = $reason ?: 'غياب بدون إذن';
+
+        if ($existing) {
+            $existing->update([
+                'is_absence'       => true,
+                'check_in_at'      => null,
+                'check_out_at'     => null,
+                'notes'            => $notes,
+            ]);
+            return $existing;
+        }
+
+        return EmployeeAttendance::create([
+            'user_id'          => $userId,
+            'date'             => $date,
+            'is_absence'       => true,
+            'check_in_at'      => null,
+            'check_out_at'     => null,
+            'notes'            => $notes,
+        ]);
+    }
+
+    public function getUnexcusedAbsenceCandidates(?string $startDate = null, ?string $endDate = null): array
+    {
+        $start = $startDate ? \Carbon\Carbon::parse($startDate)->startOfDay() : \Carbon\Carbon::now('Africa/Cairo')->startOfMonth();
+        $end = $endDate ? \Carbon\Carbon::parse($endDate)->endOfDay() : \Carbon\Carbon::now('Africa/Cairo')->endOfDay();
+
+        $employees = \App\Models\User::where('is_employee', true)
+            ->where('active', true)
+            ->get();
+
+        $attendances = EmployeeAttendance::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        $approvedLeaves = \App\Models\Leave::where('status', 'approved')
+            ->where('end_date', '>=', $start->toDateString())
+            ->where('start_date', '<=', $end->toDateString())
+            ->get();
+
+        $candidates = [];
+
+        foreach ($employees as $employee) {
+            $empJoinDate = $employee->join_date ? \Carbon\Carbon::parse($employee->join_date) : null;
+            $currentDay = $start->copy();
+
+            while ($currentDay->lte($end)) {
+                if ($currentDay->isFuture()) {
+                    $currentDay->addDay();
+                    continue;
+                }
+
+                // Skip weekends (Friday and Saturday in Egypt)
+                if ($currentDay->dayOfWeek === \Carbon\Carbon::FRIDAY || $currentDay->dayOfWeek === \Carbon\Carbon::SATURDAY) {
+                    $currentDay->addDay();
+                    continue;
+                }
+
+                if ($empJoinDate && $currentDay->lt($empJoinDate)) {
+                    $currentDay->addDay();
+                    continue;
+                }
+
+                $dateStr = $currentDay->toDateString();
+
+                $attRecord = $attendances->first(function ($att) use ($employee, $dateStr) {
+                    return (int) $att->user_id === (int) $employee->id && \Carbon\Carbon::parse($att->date)->toDateString() === $dateStr;
+                });
+
+                if ($attRecord) {
+                    $currentDay->addDay();
+                    continue;
+                }
+
+                $onLeave = false;
+                foreach ($approvedLeaves as $leave) {
+                    if ((int) $leave->user_id === (int) $employee->id) {
+                        $leaveStart = \Carbon\Carbon::parse($leave->start_date);
+                        $leaveEnd = \Carbon\Carbon::parse($leave->end_date);
+                        if ($currentDay->between($leaveStart, $leaveEnd)) {
+                            $onLeave = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$onLeave) {
+                    $candidates[] = [
+                        'user_id'       => $employee->id,
+                        'user_name'     => $employee->name,
+                        'job_title'     => $employee->job_title ?: 'موظف',
+                        'leave_balance' => (float) ($employee->leave_balance ?? $employee->annual_leave_quota ?? 21),
+                        'quota'         => (int) ($employee->annual_leave_quota ?? 21),
+                        'date'          => $dateStr,
+                        'day_name'      => $currentDay->translatedFormat('l'),
+                    ];
+                }
+
+                $currentDay->addDay();
+            }
+        }
+
+        return $candidates;
+    }
+
+    public function syncAllUnexcusedAbsences(?string $startDate = null, ?string $endDate = null): int
+    {
+        $candidates = $this->getUnexcusedAbsenceCandidates($startDate, $endDate);
+        $count = 0;
+
+        foreach ($candidates as $c) {
+            $this->recordAbsence((int) $c['user_id'], (string) $c['date'], 'غياب بدون إذن (خصم تلقائي من رصيد الإجازات)');
+            $count++;
+        }
+
+        return $count;
     }
 
     public function updateAttendance(EmployeeAttendance $attendance, array $data): mixed
