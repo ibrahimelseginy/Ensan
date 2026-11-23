@@ -384,16 +384,85 @@ final class TreasuryController extends Controller
 
     public function addTransaction(AddTreasuryTransactionRequest $request, Treasury $treasury): RedirectResponse
     {
+        $validated = $request->validated();
+        $type = $validated['type'] ?? 'in';
+        $amount = (float) $validated['amount'];
+        $desc = (string) $validated['description'];
+        $date = $validated['transaction_date'];
+
+        // Determine if this is a dual-treasury transfer / supply
+        $fromId = null;
+        $toId = null;
+
+        if ($type === 'transfer') {
+            $fromId = (int) ($request->input('from_treasury_id') ?: $request->input('source_treasury_id'));
+            $toId = (int) ($request->input('to_treasury_id') ?: ($request->input('treasury_id') ?: $treasury->id));
+        } elseif ($type === 'in' && $request->filled('source_treasury_id')) {
+            $fromId = (int) $request->input('source_treasury_id');
+            $toId = (int) ($request->input('treasury_id') ?: $treasury->id);
+        } elseif ($type === 'out' && $request->filled('destination_treasury_id')) {
+            $fromId = (int) ($request->input('treasury_id') ?: $treasury->id);
+            $toId = (int) $request->input('destination_treasury_id');
+        }
+
+        // Execute inter-treasury transfer if both from and to are specified
+        if ($fromId && $toId) {
+            if ($fromId === $toId) {
+                return back()->withInput()->with('error', 'لا يمكن التحويل لنفس الخزينة، يرجى اختيار خزينة أخرى للخصم أو التوريد.');
+            }
+
+            $fromTreasury = Treasury::findOrFail($fromId);
+            $toTreasury = Treasury::findOrFail($toId);
+
+            $this->authorizeTreasuryManage($fromTreasury);
+            $this->authorizeTreasuryManage($toTreasury);
+
+            if ((float) $fromTreasury->current_balance < $amount) {
+                return back()->withInput()->with('error', "رصيد الخزينة المخصوم منها ({$fromTreasury->name}) لا يكفي للتحويل. الرصيد الحالي: " . number_format($fromTreasury->current_balance, 2) . " ج.م");
+            }
+
+            \Illuminate\Support\Facades\DB::transaction(function () use ($fromTreasury, $toTreasury, $amount, $date, $desc, $validated) {
+                // 1. الخصم من الخزينة المصدر (صادر)
+                $fromTreasury->transactions()->create([
+                    'type'             => 'out',
+                    'amount'           => $amount,
+                    'currency'         => $fromTreasury->currency,
+                    'transaction_date' => $date,
+                    'description'      => "تحويل وتوريد صادر إلى ({$toTreasury->name}) - {$desc}",
+                    'created_by'       => auth()->id(),
+                    'reference'        => $validated['reference'] ?? null,
+                ]);
+                $fromTreasury->updateBalance();
+
+                // 2. التوريد والإيداع في الخزينة المستلمة (وارد)
+                $toTreasury->transactions()->create([
+                    'type'             => 'in',
+                    'amount'           => $amount,
+                    'currency'         => $toTreasury->currency,
+                    'transaction_date' => $date,
+                    'description'      => "تحويل وتوريد وارد من ({$fromTreasury->name}) - {$desc}",
+                    'created_by'       => auth()->id(),
+                    'reference'        => $validated['reference'] ?? null,
+                ]);
+                $toTreasury->updateBalance();
+            });
+
+            return redirect()->route('treasuries.show', $treasury)
+                ->with('success', "تم تنفيذ الحركة بنجاح: تم خصم " . number_format($amount, 2) . " ج.م من ({$fromTreasury->name}) وتوريدها إلى ({$toTreasury->name}) وتحديث رصيد الخزنتين بالفعل.");
+        }
+
+        // Single treasury movement
         $targetTreasury = $treasury;
         if ($request->filled('treasury_id') && (int)$request->input('treasury_id') !== (int)$treasury->id) {
             $targetTreasury = Treasury::findOrFail((int)$request->input('treasury_id'));
         }
 
         $this->authorizeTreasuryManage($targetTreasury);
-        $this->treasuryService->addTransaction($targetTreasury, $request->validated(), (int)auth()->id());
+        $this->treasuryService->addTransaction($targetTreasury, $validated, (int)auth()->id());
 
+        $typeLabel = $type === 'in' ? 'إيداع وارد' : 'صرف صادر';
         return redirect()->route('treasuries.show', $targetTreasury)
-            ->with('success', "تم إضافة الحركة بنجاح في ({$targetTreasury->name})");
+            ->with('success', "تم تسجيل حركة ({$typeLabel}) بنجاح في ({$targetTreasury->name}) وتحديث الرصيد الفعلي.");
     }
 
     public function dashboard(): View|RedirectResponse

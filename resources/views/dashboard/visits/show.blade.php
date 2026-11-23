@@ -115,6 +115,7 @@
         </div>
       </div>
       <div class="card-body p-4 bg-light bg-opacity-50">
+        @if(!empty($authorizedForFinalApproval))
         <div class="row g-3">
           <!-- الخيار الأول: قبول واعتماد البحث (مربع أخضر كبير) -->
           <div class="col-md-6">
@@ -154,6 +155,13 @@
             </div>
           </div>
         </div>
+        @else
+        <div class="alert alert-light border border-warning text-center p-4 rounded-4 shadow-2xs mb-0">
+          <i class="bi bi-shield-lock-fill text-warning fs-1 mb-2 d-block"></i>
+          <h6 class="fw-bold text-dark mb-1">صلاحية الاعتماد النهائي للحالات مقيدة</h6>
+          <p class="text-muted small mb-0">تم إنهاء البحث الميداني وهو قيد انتظار اتخاذ القرار النهائي من الإدارة أو الموظف المفوّض بصلاحية <strong>(الاعتماد النهائي للحالات بعد البحث الميداني)</strong>.</p>
+        </div>
+        @endif
       </div>
     </div>
   @elseif($visit->status === 'accepted' || ($visit->beneficiary && $visit->recommendation === 'approved'))

@@ -410,6 +410,22 @@ class User extends Authenticatable
             }
         }
 
+        if ($k === 'beneficiaries.view') {
+            if ($this->cachedPermissions->contains('aid.view')
+                || $this->cachedPermissions->contains('aid.create')
+                || $this->cachedPermissions->contains('aid.approve')
+                || $this->cachedPermissions->contains('aid.delete')
+                || $this->cachedPermissions->contains('visits.final_approval')) {
+                return true;
+            }
+        }
+
+        if ($k === 'visits.view') {
+            if ($this->cachedPermissions->contains('visits.final_approval')) {
+                return true;
+            }
+        }
+
         return false;
     }
 

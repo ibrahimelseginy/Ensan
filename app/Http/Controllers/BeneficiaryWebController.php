@@ -486,6 +486,14 @@ final class BeneficiaryWebController extends Controller
 
     public function recordDirectAid(Request $request, Beneficiary $beneficiary): RedirectResponse
     {
+        $user = auth()->user();
+        $canRecord = $user && (
+            $user->is_admin ||
+            $user->hasRole(['admin', 'super_admin', 'manager']) ||
+            $user->hasPermission(['aid.create', 'beneficiaries.edit'])
+        );
+        abort_unless($canRecord, 403, 'غير مصرح لك بتسجيل المساعدات للحالات (تتطلب صلاحية تسجيل المساعدات أو تعديل الحالات).');
+
         $isCash = ($request->input('aid_type') ?? 'in_kind') === 'cash';
         $validated = $request->validate([
             'aid_type' => 'required|string|in:cash,in_kind,service',
@@ -630,6 +638,14 @@ final class BeneficiaryWebController extends Controller
 
     public function updateAidStatus(Request $request, Beneficiary $beneficiary, Donation $donation): RedirectResponse
     {
+        $user = auth()->user();
+        $canApprove = $user && (
+            $user->is_admin ||
+            $user->hasRole(['admin', 'super_admin', 'manager']) ||
+            $user->hasPermission(['aid.approve', 'beneficiaries.edit'])
+        );
+        abort_unless($canApprove, 403, 'غير مصرح لك باعتماد أو تعديل حالة المساعدات (تتطلب صلاحية اعتماد وصرف المساعدات).');
+
         $request->validate([
             'status' => 'required|in:active,awaiting_discussion,rejected,cancelled',
         ]);
@@ -655,8 +671,8 @@ final class BeneficiaryWebController extends Controller
     public function destroyAid(Request $request, Beneficiary $beneficiary, Donation $donation): RedirectResponse
     {
         $user = $request->user();
-        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !$user->can('beneficiaries.delete') && !$user->can('beneficiaries.edit'))) {
-            abort(403, 'غير مصرح لك بحذف سجل المساعدة.');
+        if (!$user || (!$user->hasRole(['admin', 'manager', 'super_admin']) && !$user->hasPermission(['aid.delete', 'beneficiaries.delete', 'beneficiaries.edit']))) {
+            abort(403, 'غير مصرح لك بحذف سجل المساعدة (تتطلب صلاحية حذف المساعدات).');
         }
 
         if ((int) $donation->beneficiary_id !== (int) $beneficiary->id) {

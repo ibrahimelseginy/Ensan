@@ -431,14 +431,20 @@
               </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
+              @php
+                $authUser = auth()->user();
+                $canCreateAid = $authUser && ($authUser->is_admin || $authUser->hasRole(['admin', 'super_admin', 'manager']) || $authUser->hasPermission(['aid.create', 'beneficiaries.edit']));
+              @endphp
               <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5">
                 <i class="bi bi-plus-circle"></i>
                 <span>إضافة تبرع / كفالة نقدية</span>
               </a>
+              @if($canCreateAid)
               <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#recordDirectAidModal">
                 <i class="bi bi-box-seam"></i>
                 <span>تسجيل مساعدة / كرتونة / خدمة</span>
               </button>
+              @endif
               <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-bold d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#attachSponsorModal">
                 <i class="bi bi-person-heart text-danger"></i>
                 <span>ربط كفيل بالحالة</span>
@@ -839,10 +845,11 @@
                         <div class="d-inline-flex align-items-center gap-1">
                           @php
                             $authUser = auth()->user();
-                            $canManageAid = $authUser && ($authUser->hasRole(['admin', 'manager', 'super_admin']) || $authUser->can('beneficiaries.edit'));
+                            $canApproveAid = $authUser && ($authUser->is_admin || $authUser->hasRole(['admin', 'manager', 'super_admin']) || $authUser->hasPermission(['aid.approve', 'beneficiaries.edit']));
+                            $canDeleteAid = $authUser && ($authUser->is_admin || $authUser->hasRole(['admin', 'manager', 'super_admin']) || $authUser->hasPermission(['aid.delete', 'beneficiaries.delete', 'beneficiaries.edit']));
                           @endphp
 
-                          @if($canManageAid)
+                          @if($canApproveAid)
                             @if($d->status === 'awaiting_discussion' || $d->status === 'pending')
                               <form action="{{ route('beneficiaries.aid-status.update', [$beneficiary, $d]) }}" method="POST" class="d-inline">
                                 @csrf
@@ -887,7 +894,9 @@
                                 </button>
                               </form>
                             @endif
+                          @endif
 
+                          @if($canDeleteAid)
                             {{-- Delete action for aid entries --}}
                             <form action="{{ route('beneficiaries.aid.destroy', [$beneficiary, $d]) }}" method="POST" class="d-inline" onsubmit="return confirm('هل تريد بالتأكيد حذف سجل المساعدة رقم ({{ $d->receipt_number ?: ('#' . $d->id) }})؟ لا يمكن التراجع عن الحذف.');">
                               @csrf
@@ -984,9 +993,11 @@
                 <a href="{{ route('donations.create', ['beneficiary_id' => $beneficiary->id]) }}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
                   <i class="bi bi-plus-lg me-1"></i> إضافة تبرع / كفالة نقدية
                 </a>
+                @if($canCreateAid ?? false)
                 <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#recordDirectAidModal">
                   <i class="bi bi-box-seam me-1"></i> تسجيل مساعدة عينية أو كرتونة
                 </button>
+                @endif
               </div>
             </div>
           @endif

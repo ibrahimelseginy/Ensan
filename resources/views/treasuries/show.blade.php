@@ -381,8 +381,10 @@
 
             @if($canManage)
             {{-- Add Transaction --}}
-            <div class="summary-panel mb-4">
-                <h5 class="fw-bold mb-3 section-title small text-uppercase letter-spacing-1"><i class="bi bi-plus-circle me-2"></i>إضافة حركة مالية</h5>
+            <div class="summary-panel mb-4 shadow-sm border rounded-4 bg-white p-3">
+                <h5 class="fw-bold mb-3 section-title small text-uppercase letter-spacing-1 text-primary">
+                    <i class="bi bi-arrow-left-right me-2"></i>إضافة حركة مالية وتوريد
+                </h5>
                 <form id="addTransactionForm" action="{{ route('treasuries.addTransaction', $treasury) }}" method="POST">
                     @csrf
                     @php
@@ -391,35 +393,130 @@
                             $treasuryList = $treasuryList->prepend($treasury);
                         }
                     @endphp
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-safe me-1"></i>الخزينة <span class="text-danger">*</span></label>
-                        <select name="treasury_id" id="transactionTreasurySelect" class="form-select form-select-sm rounded-3" required onchange="onTreasurySelectChange(this)">
-                            @foreach($treasuryList as $t)
-                                <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-currency="{{ $t->currency }}">
-                                    {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+
+                    {{-- 1. نوع الحركة --}}
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary mb-1">نوع الحركة <span class="text-danger">*</span></label>
-                        <select name="type" class="form-select form-select-sm rounded-3" required>
-                            <option value="in">وارد (إيداع)</option>
-                            <option value="out">صادر (سحب)</option>
+                        <select name="type" id="txTypeSelect" class="form-select form-select-sm rounded-3 fw-bold" required onchange="onTxTypeChange(this.value)">
+                            <option value="in" selected>🟢 وارد (إيداع نقدي)</option>
+                            <option value="out">🔴 صادر (صرف / سحب نقدي)</option>
+                            <option value="transfer">🔄 تحويل وتوريد بين الخزائن (خصم وتوريد فوري)</option>
                         </select>
                     </div>
+
+                    {{-- 2. في حالة الوارد (In) --}}
+                    <div id="txGroupIn" class="tx-mode-group">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-dark mb-1">
+                                <i class="bi bi-box-arrow-in-down text-success me-1"></i>الخزينة المورّد إليها (المستلمة) <span class="text-danger">*</span>
+                            </label>
+                            <select name="treasury_id" id="inTargetTreasurySelect" class="form-select form-select-sm rounded-3" onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
+                                        {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary mb-1">
+                                <i class="bi bi-arrow-up-right text-danger me-1"></i>يتخصم من إيه؟ (مصدر الإيداع)
+                            </label>
+                            <select name="source_treasury_id" id="inSourceTreasurySelect" class="form-select form-select-sm rounded-3" onchange="updateTxSyncNotice()">
+                                <option value="">-- إيداع خارجي / متبرع / بنك / أخرى --</option>
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" data-name="{{ $t->name }}">
+                                        خصم وتوريد من خزينة: {{ $t->name }} (رصيدها: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="x-small text-muted mt-1">اختر إحدى الخزائن إذا كان هذا الوارد محولاً منها ليتم خصمه فوراً وتحديث رصيدها.</div>
+                        </div>
+                    </div>
+
+                    {{-- 3. في حالة الصادر (Out) --}}
+                    <div id="txGroupOut" class="tx-mode-group d-none">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-dark mb-1">
+                                <i class="bi bi-box-arrow-up text-danger me-1"></i>الخزينة المخصوم منها (المصدر) <span class="text-danger">*</span>
+                            </label>
+                            <select name="treasury_id" id="outSourceTreasurySelect" class="form-select form-select-sm rounded-3" disabled onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
+                                        {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary mb-1">
+                                <i class="bi bi-arrow-down-left text-success me-1"></i>يتورد لخزنة إيه؟ (الجهة المستلمة)
+                            </label>
+                            <select name="destination_treasury_id" id="outDestTreasurySelect" class="form-select form-select-sm rounded-3" onchange="updateTxSyncNotice()">
+                                <option value="">-- صرف خارجي / مصروفات / مساعدات / أخرى --</option>
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" data-name="{{ $t->name }}">
+                                        توريد وإيداع في خزينة: {{ $t->name }} (رصيدها: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="x-small text-muted mt-1">اختر إحدى الخزائن لتوريد وإيداع المبلغ فيها مباشرة وتحديث رصيدها بالفعل.</div>
+                        </div>
+                    </div>
+
+                    {{-- 4. في حالة التحويل والتوريد المباشر (Transfer) --}}
+                    <div id="txGroupTransfer" class="tx-mode-group d-none">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-danger mb-1">
+                                <i class="bi bi-arrow-up-circle me-1"></i>يتخصم من خزينة (المصدر) <span class="text-danger">*</span>
+                            </label>
+                            <select name="from_treasury_id" id="transferFromSelect" class="form-select form-select-sm rounded-3" disabled onchange="onTreasurySelectChange(this); updateTxSyncNotice();">
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
+                                        {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-success mb-1">
+                                <i class="bi bi-arrow-down-circle me-1"></i>يتورد لخزينة (المستلم) <span class="text-danger">*</span>
+                            </label>
+                            <select name="to_treasury_id" id="transferToSelect" class="form-select form-select-sm rounded-3" disabled onchange="updateTxSyncNotice()">
+                                <option value="" disabled selected>-- اختر الخزينة المستلمة للتوريد إليها --</option>
+                                @foreach($treasuryList as $t)
+                                    <option value="{{ $t->id }}" @selected($t->id !== $treasury->id && $loop->iteration === 2) data-name="{{ $t->name }}" data-currency="{{ $t->currency }}">
+                                        {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- رسالة توضيحية للتسميع الفوري في الخزنتين --}}
+                    <div id="txSyncNotice" class="alert alert-info py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill text-info flex-shrink-0 fs-6"></i>
+                        <span id="txSyncNoticeText">سيتم تسجيل إيداع نقدي وارد وتحديث رصيد الخزينة فوراً.</span>
+                    </div>
+
+                    {{-- 5. المبلغ والعملة --}}
                     <div class="input-group input-group-sm mb-3">
-                        <input type="number" name="amount" class="form-control rounded-start-3" placeholder="المبلغ" step="0.01" min="0.01" required>
-                        <span class="input-group-text bg-light border-start-0" id="txCurrencyLabel">{{ $treasury->currency }}</span>
+                        <input type="number" name="amount" id="txAmountInput" class="form-control rounded-start-3" placeholder="المبلغ المطلوب" step="0.01" min="0.01" required oninput="updateTxSyncNotice()">
+                        <span class="input-group-text bg-light border-start-0 fw-bold" id="txCurrencyLabel">{{ $treasury->currency }}</span>
                     </div>
+
+                    {{-- 6. وصف الحركة --}}
                     <div class="mb-3">
-                        <textarea name="description" class="form-control form-control-sm rounded-3" placeholder="وصف الحركة..." rows="2" required></textarea>
+                        <textarea name="description" class="form-control form-control-sm rounded-3" placeholder="وصف الحركة / سبب الخصم أو التوريد..." rows="2" required></textarea>
                     </div>
+
+                    {{-- 7. التاريخ --}}
                     <div class="mb-3">
                         <input type="date" name="transaction_date" class="form-control form-control-sm rounded-3" value="{{ date('Y-m-d') }}" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill shadow-sm">
-                        إضافة الحركة بنجاح
+
+                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill shadow-sm fw-bold py-2">
+                        <i class="bi bi-check2-circle me-1"></i> تنفيذ الحركة وتحديث الأرصدة بالفعل
                     </button>
                 </form>
             </div>
@@ -705,11 +802,101 @@
     }
 
     function onTreasurySelectChange(select) {
+        if (!select) return;
         var opt = select.options[select.selectedIndex];
         var curr = opt ? opt.getAttribute('data-currency') : 'EGP';
         var label = document.getElementById('txCurrencyLabel');
         if (label && curr) {
             label.textContent = curr;
+        }
+    }
+
+    function onTxTypeChange(type) {
+        var groupIn = document.getElementById('txGroupIn');
+        var groupOut = document.getElementById('txGroupOut');
+        var groupTransfer = document.getElementById('txGroupTransfer');
+
+        var inTarget = document.getElementById('inTargetTreasurySelect');
+        var inSource = document.getElementById('inSourceTreasurySelect');
+        var outSource = document.getElementById('outSourceTreasurySelect');
+        var outDest = document.getElementById('outDestTreasurySelect');
+        var transferFrom = document.getElementById('transferFromSelect');
+        var transferTo = document.getElementById('transferToSelect');
+
+        if (groupIn) groupIn.classList.add('d-none');
+        if (groupOut) groupOut.classList.add('d-none');
+        if (groupTransfer) groupTransfer.classList.add('d-none');
+
+        if (inTarget) inTarget.disabled = true;
+        if (inSource) inSource.disabled = true;
+        if (outSource) outSource.disabled = true;
+        if (outDest) outDest.disabled = true;
+        if (transferFrom) transferFrom.disabled = true;
+        if (transferTo) transferTo.disabled = true;
+
+        if (type === 'in') {
+            if (groupIn) groupIn.classList.remove('d-none');
+            if (inTarget) { inTarget.disabled = false; onTreasurySelectChange(inTarget); }
+            if (inSource) inSource.disabled = false;
+        } else if (type === 'out') {
+            if (groupOut) groupOut.classList.remove('d-none');
+            if (outSource) { outSource.disabled = false; onTreasurySelectChange(outSource); }
+            if (outDest) outDest.disabled = false;
+        } else if (type === 'transfer') {
+            if (groupTransfer) groupTransfer.classList.remove('d-none');
+            if (transferFrom) { transferFrom.disabled = false; onTreasurySelectChange(transferFrom); }
+            if (transferTo) transferTo.disabled = false;
+        }
+
+        updateTxSyncNotice();
+    }
+
+    function updateTxSyncNotice() {
+        var typeSelect = document.getElementById('txTypeSelect');
+        var noticeEl = document.getElementById('txSyncNotice');
+        var noticeText = document.getElementById('txSyncNoticeText');
+        var amountInput = document.getElementById('txAmountInput');
+        if (!typeSelect || !noticeEl || !noticeText) return;
+
+        var type = typeSelect.value;
+        var amount = amountInput && amountInput.value ? parseFloat(amountInput.value).toLocaleString() : 'المبلغ المكتوب';
+
+        if (type === 'transfer') {
+            var fromSel = document.getElementById('transferFromSelect');
+            var toSel = document.getElementById('transferToSelect');
+            var fromName = fromSel && fromSel.selectedIndex >= 0 ? fromSel.options[fromSel.selectedIndex].getAttribute('data-name') : 'الخزينة المصدر';
+            var toName = toSel && toSel.selectedIndex >= 0 ? toSel.options[toSel.selectedIndex].getAttribute('data-name') : 'الخزينة المستلمة';
+
+            noticeEl.className = 'alert alert-warning py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2 border border-warning';
+            noticeText.innerHTML = `<strong>⚡ تحويل وتوريد مزدوج:</strong> سيتم خصم (${amount}) من <strong>${fromName}</strong> وإيداعها في <strong>${toName}</strong> وتحديث رصيد الخزنتين معاً في نفس اللحظة.`;
+        } else if (type === 'in') {
+            var inTargetSel = document.getElementById('inTargetTreasurySelect');
+            var inSourceSel = document.getElementById('inSourceTreasurySelect');
+            var targetName = inTargetSel && inTargetSel.selectedIndex >= 0 ? inTargetSel.options[inTargetSel.selectedIndex].getAttribute('data-name') : 'هذه الخزينة';
+            var sourceVal = inSourceSel ? inSourceSel.value : '';
+
+            if (sourceVal) {
+                var srcName = inSourceSel.options[inSourceSel.selectedIndex].getAttribute('data-name');
+                noticeEl.className = 'alert alert-warning py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2 border border-warning';
+                noticeText.innerHTML = `<strong>⚡ خصم وتوريد مزدوج:</strong> سيتم خصم (${amount}) من <strong>${srcName}</strong> وتوريدها وإيداعها في <strong>${targetName}</strong> وتحديث رصيد الخزنتين فوراً.`;
+            } else {
+                noticeEl.className = 'alert alert-success py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2 border border-success';
+                noticeText.innerHTML = `<strong>🟢 إيداع وارد مباشر:</strong> سيتم إضافة (${amount}) إلى <strong>${targetName}</strong> وزيادة رصيدها فوراً.`;
+            }
+        } else if (type === 'out') {
+            var outSourceSel = document.getElementById('outSourceTreasurySelect');
+            var outDestSel = document.getElementById('outDestTreasurySelect');
+            var srcName = outSourceSel && outSourceSel.selectedIndex >= 0 ? outSourceSel.options[outSourceSel.selectedIndex].getAttribute('data-name') : 'هذه الخزينة';
+            var destVal = outDestSel ? outDestSel.value : '';
+
+            if (destVal) {
+                var destName = outDestSel.options[outDestSel.selectedIndex].getAttribute('data-name');
+                noticeEl.className = 'alert alert-warning py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2 border border-warning';
+                noticeText.innerHTML = `<strong>⚡ خصم وتوريد مزدوج:</strong> سيتم خصم (${amount}) من <strong>${srcName}</strong> وتوريدها وإيداعها في <strong>${destName}</strong> وتحديث رصيد الخزنتين فوراً.`;
+            } else {
+                noticeEl.className = 'alert alert-danger py-2 px-3 rounded-3 x-small mb-3 d-flex align-items-center gap-2 border border-danger';
+                noticeText.innerHTML = `<strong>🔴 صرف صادر مباشر:</strong> سيتم خصم (${amount}) من <strong>${srcName}</strong> وتخفيض رصيدها فوراً.`;
+            }
         }
     }
 </script>

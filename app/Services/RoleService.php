@@ -87,6 +87,12 @@ final readonly class RoleService
             ['key' => 'beneficiaries.edit', 'name' => 'تعديل بيانات المستفيدين والأسر'],
             ['key' => 'beneficiaries.delete', 'name' => 'حذف المستفيدين'],
 
+            // المساعدات الإنسانية والكفالات للحالات (تسجيل واعتماد وصرف)
+            ['key' => 'aid.view', 'name' => 'عرض سجل المساعدات والكفالات للحالات'],
+            ['key' => 'aid.create', 'name' => 'تسجيل وإضافة مساعدة مباشرة للحالة (نقدية / عينية / علاج)'],
+            ['key' => 'aid.approve', 'name' => 'اعتماد وقبول وصرف المساعدات للحالات (قبول / رفض / مناقشة)'],
+            ['key' => 'aid.delete', 'name' => 'حذف سجلات المساعدات للحالات'],
+
             // الدعم النفسي (بعثاء الأمل)
             ['key' => 'psychological_support.view', 'name' => 'عرض متابعات الدعم النفسي'],
             ['key' => 'psychological_support.create', 'name' => 'إضافة جلسة / متابعة دعم نفسي'],
@@ -246,6 +252,7 @@ final readonly class RoleService
             ['key' => 'visits.create', 'name' => 'إضافة زيارة ميدانية جديدة'],
             ['key' => 'visits.edit', 'name' => 'تعديل تقارير الزيارات الميدانية'],
             ['key' => 'visits.delete', 'name' => 'حذف الزيارات الميدانية'],
+            ['key' => 'visits.final_approval', 'name' => 'الاعتماد النهائي للحالات بعد البحث الميداني (قبول وإلحاق بمشروع أو رفض)'],
 
             // التعاونات والشراكات والخدمات المتخصصة
             ['key' => 'collaborations.view', 'name' => 'عرض دليل التعاونات والشراكات'],
@@ -339,6 +346,7 @@ final readonly class RoleService
             ['key' => 'mobile.volunteer_requests.delete', 'name' => 'حذف طلب تطوع (تطبيق الموبايل)'],
             // التقديمات والبحث المبدئي (طلبات الحالات)
             ['key' => 'mobile.case_applications.view', 'name' => 'عرض قسم التقديمات والبحث المبدئي (طلبات الحالات / زاد / مدرار / بعثاء الأمل)'],
+            ['key' => 'mobile.case_applications.manage', 'name' => 'مراجعة وتحديث حالة طلبات التقديم والبحث المبدئي (قبول / رفض / تحويل للبحث)'],
             ['key' => 'mobile.case_applications.delete', 'name' => 'حذف طلب تقديم حالة مستحقة (قسم التقديمات)'],
             ['key' => 'mobile.bookings.view', 'name' => 'عرض طلبات حجز الغرف والمساحات (تطبيق الموبايل)'],
             ['key' => 'mobile.bookings.delete', 'name' => 'حذف طلب حجز (تطبيق الموبايل)'],
@@ -620,6 +628,7 @@ final readonly class RoleService
             'donors'                    => 'المتبرعون والكفلاء',
             'donations'                 => 'التبرعات والإيصالات',
             'beneficiaries'             => 'المستفيدون والأسر',
+            'aid'                       => 'المساعدات الإنسانية والكفالات للحالات (تسجيل واعتماد وصرف)',
             'case_applications'         => 'التقديمات والبحث المبدئي (5 خدمات)',
             'psychological_support'     => 'الدعم النفسي (بعثاء الأمل)',
             'projects'                  => 'المشاريع (صلاحيات عامة)',
