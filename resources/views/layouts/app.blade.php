@@ -3261,11 +3261,21 @@
               @php
                 $isTopAdminUser = $navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2, 8, 50], true));
                 $isAttendanceEmployeeUser = $navUser && $navUser->is_employee && !$navUser->is_volunteer;
+                $navUserApprovedDevice = \App\Models\AttendanceDevice::where('user_id', $navUser->id)->where('is_active', true)->first();
+                $navUserHasApprovedDevice = !empty($navUserApprovedDevice);
+                $todayAttRecord = $topbarTodayAtt ?? null;
+                $isAlreadyCheckedInToday = !empty($todayAttRecord) && !empty($todayAttRecord->check_in_at);
+                $isAlreadyCheckedOutToday = !empty($todayAttRecord) && !empty($todayAttRecord->check_out_at);
               @endphp
               <script>
                   (function () {
                     const gpsBtn = document.getElementById('topbarEnableGpsBtn');
                     const isTopAdmin = @json($isTopAdminUser);
+                    const userHasApprovedDevice = @json($navUserHasApprovedDevice);
+                    const userApprovedDeviceToken = @json($navUserApprovedDevice ? $navUserApprovedDevice->device_token : null);
+                    const userApprovedDeviceName = @json($navUserApprovedDevice ? $navUserApprovedDevice->device_name : '');
+                    const isAlreadyCheckedInToday = @json($isAlreadyCheckedInToday);
+                    const isAlreadyCheckedOutToday = @json($isAlreadyCheckedOutToday);
 
                     // Responsive Toast notification
                     window.showGpsToast = function(msg, type) {
@@ -3435,14 +3445,37 @@
 
                     var authDeviceToken = localStorage.getItem('ensan_authorized_device_token') || getDeviceCookie('ensan_device_token');
 
+                    var isThisDeviceApprovedForUser = false;
+                    if (userHasApprovedDevice && authDeviceToken && userApprovedDeviceToken && authDeviceToken === userApprovedDeviceToken) {
+                      isThisDeviceApprovedForUser = true;
+                    } else if (authDeviceToken && isTopAdmin) {
+                      isThisDeviceApprovedForUser = true;
+                    }
+
+                    // مزامنة التوكن في الكوكيز والـ localStorage في حال اعتماده
+                    if (isThisDeviceApprovedForUser && userApprovedDeviceToken) {
+                      if (!localStorage.getItem('ensan_authorized_device_token')) {
+                        localStorage.setItem('ensan_authorized_device_token', userApprovedDeviceToken);
+                      }
+                      if (!getDeviceCookie('ensan_device_token')) {
+                        var exp = new Date(Date.now() + (5 * 365 * 24 * 60 * 60 * 1000)).toUTCString();
+                        document.cookie = 'ensan_device_token=' + encodeURIComponent(userApprovedDeviceToken) + '; expires=' + exp + '; path=/; SameSite=Lax';
+                      }
+                      authDeviceToken = userApprovedDeviceToken;
+                    }
+
                     var deviceContainer = document.getElementById('topbarDeviceActionContainer');
 
-                    // Setup dedicated device action buttons in topbar
+                    // إعداد أزرار وحالة الجهاز في الشريط العلوي
                     if (deviceContainer) {
-                      if (authDeviceToken) {
-                        deviceContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-xs" title="كمبيوتر مقر معتمد رسمياً">' +
-                          '<i class="bi bi-display-fill text-success"></i> <span class="d-none d-sm-inline">جهاز معتمد</span></span>' +
-                          '<button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-link text-muted p-0 ms-1 d-none d-md-inline" title="إعادة إرسال طلب اعتماد جديد لهذا الجهاز" style="font-size:0.75rem;"><i class="bi bi-arrow-repeat"></i></button>';
+                      if (isThisDeviceApprovedForUser) {
+                        // الجهاز معتمد رسمياً: إظهار شارة جهاز معتمد فقط دون أي أزرار أو تنبيهات
+                        deviceContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-xs" title="كمبيوتر مقر معتمد رسمياً: ' + (userApprovedDeviceName || '') + '">' +
+                          '<i class="bi bi-display-fill text-success"></i> <span class="d-none d-sm-inline">جهاز معتمد</span></span>';
+                      } else if (userHasApprovedDevice) {
+                        // الموظف لديه جهاز معتمد بالفعل ولكن فتح من جهاز آخر
+                        deviceContainer.innerHTML = '<span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1 shadow-xs" title="هذا الجهاز غير معتمد لهذا الحساب (جهازك المعتمد: ' + (userApprovedDeviceName || '') + ')">' +
+                          '<i class="bi bi-laptop text-secondary"></i> <span class="d-none d-sm-inline">جهاز غير معتمد</span></span>';
                       } else if (isTopAdmin) {
                         deviceContainer.innerHTML = '<button type="button" onclick="openAuthorizeDeviceModal()" class="btn btn-sm btn-outline-warning text-dark fw-bold rounded-pill px-2.5 px-sm-3 shadow-sm d-flex align-items-center gap-1" style="background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4);" title="اعتماد هذا الكمبيوتر للمقر"><i class="bi bi-shield-plus text-warning fs-6"></i> <span class="d-none d-sm-inline">اعتماد هذا الكمبيوتر</span><span class="d-inline d-sm-none">اعتماد</span></button>'
                           + '<button type="button" onclick="openRequestDeviceModal()" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-2.5 px-sm-3 ms-1 shadow-sm d-flex align-items-center gap-1" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.35);" title="طلب اعتماد هذا الجهاز"><i class="bi bi-display fs-6 text-primary"></i> <span class="d-none d-sm-inline">طلب اعتماد الجهاز</span><span class="d-inline d-sm-none">طلب</span></button>';
@@ -3451,23 +3484,46 @@
                       }
                     }
 
-                    // Setup topbar check-in button behavior based on device type
+                    // إعداد سلوك زر الحضور في الشريط العلوي
                     if (gpsBtn && !gpsBtn.disabled) {
-                      if (isDesktopOs && authDeviceToken) {
+                      if (userHasApprovedDevice && !isThisDeviceApprovedForUser && !isTopAdmin) {
+                        gpsBtn.onclick = function() {
+                          showGpsToast('❌ هناك جهاز آخر معتمد لهذا الحساب (' + userApprovedDeviceName + ') وليس هذا الجهاز. لا يمكنك تسجيل الحضور إلا من جهازك المعتمد فقط.', 'error');
+                        };
+                      } else if (isDesktopOs && isThisDeviceApprovedForUser) {
                         gpsBtn.innerHTML = '<i class="bi bi-display fs-6 text-success me-1"></i> <span class="fw-bold d-none d-sm-inline">تسجيل حضور كمبيوتر المقر</span><span class="fw-bold d-inline d-sm-none">حضور</span>';
                         gpsBtn.style.background = 'rgba(16, 185, 129, 0.14)';
                         gpsBtn.style.color = '#047857';
                         gpsBtn.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-                        gpsBtn.title = 'كمبيوتر معتمد: اضغط لتسجيل الحضور فوراً دون الحاجة لـ GPS';
+                        gpsBtn.title = 'كمبيوتر معتمد: يتم تسجيل الحضور تلقائياً فور فتح النظام أو اضغط للتسجيل الفوري';
                         gpsBtn.onclick = function() { checkInWithAuthorizedDeviceToken(authDeviceToken); };
                       }
                     }
 
-                    function checkInWithAuthorizedDeviceToken(token) {
+                    // =========================================================
+                    // 1. تسجيل الحضور التلقائي فور فتح النظام للأجهزة المعتمدة
+                    // =========================================================
+                    if (isDesktopOs && !isMobileDevice && isThisDeviceApprovedForUser && !isAlreadyCheckedInToday) {
+                      var todayDateStr = (new Date()).toISOString().slice(0, 10);
+                      var autoAttKey = 'ensan_auto_att_{{ $navUser->id }}_' + todayDateStr;
+                      if (!sessionStorage.getItem(autoAttKey)) {
+                        sessionStorage.setItem(autoAttKey, '1');
+                        // تنفيذ تسجيل الحضور التلقائي فوراً في الخلفية
+                        setTimeout(function() {
+                          checkInWithAuthorizedDeviceToken(authDeviceToken, true);
+                        }, 600);
+                      }
+                    }
+
+                    function checkInWithAuthorizedDeviceToken(token, isAuto) {
                       if (isMobileDevice) return; // ممنوع الاعتماد التلقائي على الموبايل نهائياً
+                      if (userHasApprovedDevice && !isThisDeviceApprovedForUser && !isTopAdmin) {
+                        showGpsToast('❌ هناك جهاز آخر معتمد لهذا الحساب (' + userApprovedDeviceName + ') وليس هذا الجهاز. لا يمكنك تسجيل الحضور إلا من جهازك المعتمد فقط.', 'error');
+                        return;
+                      }
                       if (gpsBtn) {
                         gpsBtn.disabled = true;
-                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">جارٍ تسجيل الحضور...</span>';
+                        gpsBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> <span class="fw-bold">' + (isAuto ? 'جارٍ تسجيل الحضور التلقائي...' : 'جارٍ تسجيل الحضور...') + '</span>';
                       }
                       fetch('{{ route('employee-attendance.device-auto-checkin') }}', {
                         method: 'POST',
@@ -3482,18 +3538,25 @@
                       .then(function(r){ return r.json(); })
                       .then(function(data) {
                         if (data && data.success && data.checked_in) {
-                          showGpsToast('✅ مرحباً بك! تم تسجيل حضورك تلقائياً من جهاز المقر المعتمد (' + (data.device || '') + ' - ' + (data.location || '') + ') الساعة ' + (data.time || ''), 'success');
-                          setTimeout(function(){ window.location.reload(); }, 1200);
+                          var welcomeMsg = isAuto
+                            ? '✅ مرحباً بك! تم تسجيل حضورك اليوم تلقائياً فور فتح النظام من جهازك المعتمد (' + (data.device || '') + ') الساعة ' + (data.time || '')
+                            : '✅ تم تسجيل حضورك بنجاح من جهاز المقر المعتمد (' + (data.device || '') + ') الساعة ' + (data.time || '');
+                          showGpsToast(welcomeMsg, 'success');
+                          setTimeout(function(){ window.location.reload(); }, 1500);
                         } else if (data && data.already_checked_in) {
+                          resetGpsBtn();
+                        } else if (data && data.device_mismatch) {
+                          showGpsToast('❌ ' + (data.message || 'هناك جهاز آخر معتمد لهذا الحساب وليس هذا الجهاز.'), 'error');
                           resetGpsBtn();
                         } else if (data && data.device_pending) {
                           showGpsToast('⏳ ' + (data.message || 'طلب اعتماد هذا الكمبيوتر قيد المراجعة والموافقة من الإدارة حالياً.'), 'warning');
                           resetGpsBtn();
                         } else if (data && data.device_authorized === false) {
                           localStorage.removeItem('ensan_authorized_device_token');
-                          if (!isMobileDevice) notifyUnauthorizedDevice();
+                          if (!isMobileDevice && !userHasApprovedDevice) notifyUnauthorizedDevice();
                           resetGpsBtn();
                         } else {
+                          if (data && data.message) showGpsToast(data.message, 'warning');
                           resetGpsBtn();
                         }
                       })
@@ -3504,6 +3567,10 @@
 
                     window.checkOutWithAuthorizedDeviceToken = function(token) {
                       if (isMobileDevice) return;
+                      if (userHasApprovedDevice && !isThisDeviceApprovedForUser && !isTopAdmin) {
+                        showGpsToast('❌ هناك جهاز آخر معتمد لهذا الحساب (' + userApprovedDeviceName + ') وليس هذا الجهاز. لا يمكنك تسجيل الانصراف إلا من جهازك المعتمد فقط.', 'error');
+                        return;
+                      }
                       var btn = document.getElementById('topbarCheckoutBtn') || document.getElementById('topbarEnableGpsBtn');
                       if (btn) {
                         btn.disabled = true;
@@ -3544,6 +3611,8 @@
                     function notifyUnauthorizedDevice() {
                       // ممنوع نهائياً على الموبايل - مخصص فقط لأجهزة الكمبيوتر المكتبية
                       if (isMobileDevice) return;
+                      // لا يظهر مطلقاً إذا كان الموظف لديه بالفعل جهاز معتمد أو الجهاز الحالي معتمد
+                      if (isThisDeviceApprovedForUser || userHasApprovedDevice) return;
                       var key = 'ensan_unauth_dev_notify_{{ $navUser->id }}_' + (new Date()).toISOString().slice(0,10);
                       if (!sessionStorage.getItem(key)) {
                         sessionStorage.setItem(key, '1');
@@ -4281,6 +4350,7 @@
                     @endif
                   @endif
 
+                  @if(!$navUserHasApprovedDevice)
                   <div class="px-3 py-1.5 small text-muted border-top border-bottom bg-light bg-opacity-50">
                     <i class="bi bi-display me-1 text-primary"></i> أجهزة بصمة المقرات
                   </div>
@@ -4288,6 +4358,11 @@
                     <i class="bi bi-display"></i>
                     <span>طلب اعتماد هذا الجهاز</span>
                   </a>
+                  @else
+                  <div class="px-3 py-1.5 small text-success border-top border-bottom bg-success bg-opacity-10 d-flex align-items-center gap-1">
+                    <i class="bi bi-shield-check text-success"></i> <span class="fw-semibold">جهازك المعتمد: {{ $navUserApprovedDevice->device_name }}</span>
+                  </div>
+                  @endif
                   @if($navUser && ($navUser->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$navUser->id, [2,8,50], true)))
                   <a href="javascript:void(0)" onclick="openAuthorizeDeviceModal()" class="pmenu-item text-warning fw-semibold">
                     <i class="bi bi-shield-plus"></i>
@@ -4554,11 +4629,13 @@
             </div>
           </div>
 
+          @if(!$navUserHasApprovedDevice)
           <div class="w-100 text-center mt-3 pt-2 border-top">
             <button type="button" onclick="var m = bootstrap.Modal.getInstance(document.getElementById('modalAttendanceCamera')); if(m) m.hide(); openRequestDeviceModal();" class="btn btn-sm btn-link text-decoration-none fw-bold small text-primary p-0">
               <i class="bi bi-display me-1"></i> هل تعمل من كمبيوتر المقر؟ اضغط هنا لطلب اعتماده كجهاز رسمي
             </button>
           </div>
+          @endif
         </div>
         <div class="modal-footer border-0 pt-0 px-3.5 pb-3.5 gap-2">
           <button type="button" class="btn btn-light rounded-pill px-3.5 fw-bold" data-bs-dismiss="modal" onclick="resetAttendanceCapture()">إلغاء</button>

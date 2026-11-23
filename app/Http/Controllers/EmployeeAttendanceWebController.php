@@ -46,6 +46,28 @@ final class EmployeeAttendanceWebController extends Controller
                 return redirect()->route('login');
             }
 
+            // تحقق من ملكية الجهاز المعتمد للموظف
+            $userApprovedDevice = \App\Models\AttendanceDevice::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
+
+            $isTopAdmin = $user->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$user->id, [2, 8, 50], true);
+
+            if ($userApprovedDevice && !$isTopAdmin) {
+                $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
+                if (!$token || $token !== $userApprovedDevice->device_token) {
+                    $msg = "هناك جهاز آخر معتمد لهذا الحساب ({$userApprovedDevice->device_name}) وليس هذا الجهاز. لا يمكنك تسجيل الحضور إلا من جهازك المعتمد فقط.";
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'device_mismatch' => true,
+                            'message' => $msg,
+                        ], 422);
+                    }
+                    return back()->with('error', $msg);
+                }
+            }
+
             if ($request->filled('device_token') || $request->hasCookie('ensan_device_token')) {
                 $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
                 $result = $this->attendanceService->checkInWithAuthorizedDevice(
@@ -114,6 +136,28 @@ final class EmployeeAttendanceWebController extends Controller
                 return redirect()->route('login');
             }
 
+            // تحقق من ملكية الجهاز المعتمد للموظف
+            $userApprovedDevice = \App\Models\AttendanceDevice::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->first();
+
+            $isTopAdmin = $user->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$user->id, [2, 8, 50], true);
+
+            if ($userApprovedDevice && !$isTopAdmin) {
+                $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
+                if (!$token || $token !== $userApprovedDevice->device_token) {
+                    $msg = "هناك جهاز آخر معتمد لهذا الحساب ({$userApprovedDevice->device_name}) وليس هذا الجهاز. لا يمكنك تسجيل الانصراف إلا من جهازك المعتمد فقط.";
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'device_mismatch' => true,
+                            'message' => $msg,
+                        ], 422);
+                    }
+                    return back()->with('error', $msg);
+                }
+            }
+
             if ($request->filled('device_token') || $request->hasCookie('ensan_device_token')) {
                 $token = $request->input('device_token') ?: $request->cookie('ensan_device_token');
                 $result = $this->attendanceService->checkOutWithAuthorizedDevice(
@@ -174,6 +218,23 @@ final class EmployeeAttendanceWebController extends Controller
             ]);
         }
 
+        // تحقق من مطابقة الجهاز المعتمد للموظف
+        $userApprovedDevice = \App\Models\AttendanceDevice::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        $isTopAdmin = $user->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$user->id, [2, 8, 50], true);
+
+        if ($userApprovedDevice && !$isTopAdmin) {
+            if ($token !== $userApprovedDevice->device_token) {
+                return response()->json([
+                    'success' => false,
+                    'device_mismatch' => true,
+                    'message' => "هناك جهاز آخر معتمد لهذا الحساب ({$userApprovedDevice->device_name}) وليس هذا الجهاز. لا يمكنك تسجيل الحضور إلا من جهازك المعتمد فقط.",
+                ], 422);
+            }
+        }
+
         $result = $this->attendanceService->checkInWithAuthorizedDevice(
             (int) $user->id,
             (string) $token,
@@ -195,15 +256,19 @@ final class EmployeeAttendanceWebController extends Controller
             'device_name'   => 'required|string|max:100',
             'location_name' => 'required|string|max:100',
             'guest_house_id'=> 'nullable|integer',
+            'user_id'       => 'nullable|exists:users,id',
         ]);
 
         $token = bin2hex(random_bytes(32));
+
+        $targetUserId = $request->input('user_id') ?: $user->id;
 
         $device = \App\Models\AttendanceDevice::create([
             'device_token'          => $token,
             'device_name'           => $request->input('device_name'),
             'location_name'         => $request->input('location_name'),
             'guest_house_id'        => $request->input('guest_house_id'),
+            'user_id'               => $targetUserId,
             'authorized_by_user_id' => $user->id,
             'ip_address'            => $request->ip(),
             'user_agent'            => $request->userAgent(),
@@ -236,7 +301,7 @@ final class EmployeeAttendanceWebController extends Controller
             return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
         }
 
-        $devices = \App\Models\AttendanceDevice::with(['authorizedBy:id,name', 'guestHouse:id,name'])
+        $devices = \App\Models\AttendanceDevice::with(['authorizedBy:id,name', 'guestHouse:id,name', 'user:id,name'])
             ->orderBy('id', 'desc')
             ->get();
 
@@ -248,6 +313,20 @@ final class EmployeeAttendanceWebController extends Controller
         $user = $request->user();
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'يرجى تسجيل الدخول أولاً لإرسال طلب الاعتماد.'], 401);
+        }
+
+        // إذا كان الموظف لديه بالفعل جهاز معتمد
+        $existingActiveDevice = \App\Models\AttendanceDevice::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        $isTopAdmin = $user->hasRole(['admin', 'manager', 'super_admin']) || in_array((int)$user->id, [2, 8, 50], true);
+
+        if ($existingActiveDevice && !$isTopAdmin) {
+            return response()->json([
+                'success' => false,
+                'message' => "لديك بالفعل جهاز معتمد لهذا الحساب ({$existingActiveDevice->device_name}). لا يمكن طلب اعتماد جهاز إضافي.",
+            ], 422);
         }
 
         $request->validate([
@@ -263,6 +342,7 @@ final class EmployeeAttendanceWebController extends Controller
             'device_name'           => $request->input('device_name') . ' (طلب: ' . $user->name . ')',
             'location_name'         => $request->input('location_name'),
             'guest_house_id'        => $request->input('guest_house_id'),
+            'user_id'               => $user->id,
             'authorized_by_user_id' => null,
             'ip_address'            => $request->ip(),
             'user_agent'            => $request->userAgent(),

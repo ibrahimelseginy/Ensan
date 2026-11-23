@@ -14,6 +14,7 @@ class AttendanceDevice extends Model
         'device_name',
         'location_name',
         'guest_house_id',
+        'user_id',
         'authorized_by_user_id',
         'ip_address',
         'user_agent',
@@ -25,6 +26,11 @@ class AttendanceDevice extends Model
         'is_active' => 'boolean',
         'last_used_at' => 'datetime',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function guestHouse(): BelongsTo
     {

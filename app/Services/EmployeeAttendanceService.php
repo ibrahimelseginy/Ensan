@@ -329,6 +329,18 @@ final readonly class EmployeeAttendanceService
             return ['success' => false, 'message' => 'المستخدم غير موجود.'];
         }
 
+        $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
+            || in_array((int) $user->id, [2, 8, 50], true);
+
+        // تحقق من تخصيص الجهاز للموظف
+        if ($device->user_id && (int) $device->user_id !== (int) $userId && !$isAdminOrManager) {
+            return [
+                'success' => false,
+                'device_mismatch' => true,
+                'message' => 'هذا الجهاز معتمد لموظف آخر، ولا يمكن تسجيل الحضور منه لهذا الحساب.',
+            ];
+        }
+
         $existing = $this->attendanceRepository->findTodayRecord($userId);
         if ($existing) {
             $device->update([
@@ -397,6 +409,18 @@ final readonly class EmployeeAttendanceService
         $user = \App\Models\User::find($userId);
         if (!$user) {
             return ['success' => false, 'message' => 'المستخدم غير موجود.'];
+        }
+
+        $isAdminOrManager = $user->hasRole(['admin', 'manager', 'super_admin'])
+            || in_array((int) $user->id, [2, 8, 50], true);
+
+        // تحقق من تخصيص الجهاز للموظف
+        if ($device->user_id && (int) $device->user_id !== (int) $userId && !$isAdminOrManager) {
+            return [
+                'success' => false,
+                'device_mismatch' => true,
+                'message' => 'هذا الجهاز معتمد لموظف آخر، ولا يمكن تسجيل الانصراف منه لهذا الحساب.',
+            ];
         }
 
         $existing = $this->attendanceRepository->findTodayRecord($userId);
