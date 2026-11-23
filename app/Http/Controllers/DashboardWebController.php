@@ -446,13 +446,13 @@ final class DashboardWebController extends Controller
             // AI Insights
             $insights = [];
             if ($avgRating > 4.5) {
-                $insights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'أداء الفريق ممتاز هذا الشهر بمتوسط تقييم ' . number_format($avgRating, 1)];
+                $insights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'أداء الفريق ممتاز هذا الشهر بمتوسط تقييم ' . number_format((float) $avgRating, 1)];
             } elseif ($avgRating < 3 && $ratedTasksCount > 5) {
                 $insights[] = ['type' => 'warning', 'icon' => 'exclamation-triangle', 'message' => 'انخفاض في مستوى الأداء العام، يرجى مراجعة التقييمات.'];
             }
 
             if ($attendanceRate < 70 && $totalEmployees > 5) {
-                $insights[] = ['type' => 'danger', 'icon' => 'person-x', 'message' => 'معدل الحضور منخفض (' . number_format($attendanceRate, 0) . '%)، يرجى التحقق من سجلات الغياب.'];
+                $insights[] = ['type' => 'danger', 'icon' => 'person-x', 'message' => 'معدل الحضور منخفض (' . number_format((float) $attendanceRate, 0) . '%)، يرجى التحقق من سجلات الغياب.'];
             }
 
             if (count($salaryTrendData) >= 2 && end($salaryTrendData) > prev($salaryTrendData) * 1.2 && prev($salaryTrendData) > 0) {
@@ -584,9 +584,9 @@ final class DashboardWebController extends Controller
                     $ghInsights[] = ['type' => 'info', 'icon' => 'house', 'message' => 'يوجد سعة متاحة! نسبة الإشغال ' . $occupancyRate . '% فقط'];
                 }
                 if ($netBalance > 0) {
-                    $ghInsights[] = ['type' => 'success', 'icon' => 'graph-up-arrow', 'message' => 'الدار تحقق فائضاً مالياً بقيمة ' . number_format($netBalance) . ' ج.م'];
+                    $ghInsights[] = ['type' => 'success', 'icon' => 'graph-up-arrow', 'message' => 'الدار تحقق فائضاً مالياً بقيمة ' . number_format((float) $netBalance) . ' ج.م'];
                 } elseif ($netBalance < 0) {
-                    $ghInsights[] = ['type' => 'danger', 'icon' => 'exclamation-triangle', 'message' => 'تنبيه! عجز مالي بقيمة ' . number_format(abs($netBalance)) . ' ج.م'];
+                    $ghInsights[] = ['type' => 'danger', 'icon' => 'exclamation-triangle', 'message' => 'تنبيه! عجز مالي بقيمة ' . number_format((float) abs((float) $netBalance)) . ' ج.م'];
                 }
                 if ($beneficiariesThisMonth > 5) {
                     $ghInsights[] = ['type' => 'success', 'icon' => 'people', 'message' => 'تم استقبال ' . $beneficiariesThisMonth . ' ضيف جديد هذا الشهر'];
@@ -735,7 +735,7 @@ final class DashboardWebController extends Controller
                     $campaignInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'ممتاز! تجاوزت الحملة 50,000 ج.م في التبرعات'];
                 }
                 if ($donationsThisMonth > 0) {
-                    $campaignInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تم استلام ' . number_format($donationsThisMonth) . ' ج.م تبرعات هذا الشهر'];
+                    $campaignInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تم استلام ' . number_format((float) $donationsThisMonth) . ' ج.م تبرعات هذا الشهر'];
                 }
                 if ($beneficiariesThisMonth > 10) {
                     $campaignInsights[] = ['type' => 'success', 'icon' => 'people', 'message' => 'تم خدمة ' . $beneficiariesThisMonth . ' مستفيد هذا الشهر'];
@@ -893,7 +893,7 @@ final class DashboardWebController extends Controller
                 $warehouseInsights[] = ['type' => 'info', 'icon' => 'graph-up', 'message' => 'نشاط مرتفع! ' . $transactionsThisMonth . ' عملية هذا الشهر'];
             }
             if ($totalStockValue > 100000) {
-                $warehouseInsights[] = ['type' => 'success', 'icon' => 'cash-stack', 'message' => 'قيمة المخزون: ' . number_format($totalStockValue) . ' ج.م'];
+                $warehouseInsights[] = ['type' => 'success', 'icon' => 'cash-stack', 'message' => 'قيمة المخزون: ' . number_format((float) $totalStockValue) . ' ج.م'];
             }
 
             $warehouseManagerDashboardData = [
@@ -942,8 +942,8 @@ final class DashboardWebController extends Controller
             $tripsInProgress = \App\Models\DelegateTrip::where('status', 'in_progress')->count();
 
             // Cost Stats
-            $totalTripsCost = \App\Models\DelegateTrip::sum('cost');
-            $tripsCostThisMonth = \App\Models\DelegateTrip::whereMonth('date', $currentMonth)
+            $totalTripsCost = (float) \App\Models\DelegateTrip::sum('cost');
+            $tripsCostThisMonth = (float) \App\Models\DelegateTrip::whereMonth('date', $currentMonth)
                 ->whereYear('date', $currentYear)
                 ->sum('cost');
 
@@ -953,7 +953,7 @@ final class DashboardWebController extends Controller
 
             // Donations via Delegates
             $delegateDonations = \App\Models\Donation::whereNotNull('delegate_id')->count();
-            $delegateDonationsAmount = \App\Models\Donation::whereNotNull('delegate_id')->sum('amount');
+            $delegateDonationsAmount = (float) \App\Models\Donation::whereNotNull('delegate_id')->sum('amount');
 
             // Monthly Trend (Last 6 Months)
             $trendLabels = [];
@@ -965,7 +965,7 @@ final class DashboardWebController extends Controller
                 $tripsTrendData[] = \App\Models\DelegateTrip::whereMonth('date', $date->month)
                     ->whereYear('date', $date->year)
                     ->count();
-                $costTrendData[] = \App\Models\DelegateTrip::whereMonth('date', $date->month)
+                $costTrendData[] = (float) \App\Models\DelegateTrip::whereMonth('date', $date->month)
                     ->whereYear('date', $date->year)
                     ->sum('cost');
             }
@@ -990,7 +990,7 @@ final class DashboardWebController extends Controller
                 $logisticsInsights[] = ['type' => 'success', 'icon' => 'graph-up', 'message' => 'نشاط مرتفع! ' . $tripsThisMonth . ' رحلة هذا الشهر'];
             }
             if ($tripsCostThisMonth > 0) {
-                $logisticsInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تكلفة الرحلات: ' . number_format($tripsCostThisMonth) . ' ج.م هذا الشهر'];
+                $logisticsInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تكلفة الرحلات: ' . number_format((float) $tripsCostThisMonth) . ' ج.م هذا الشهر'];
             }
             if ($delegateDonations > 0) {
                 $logisticsInsights[] = ['type' => 'success', 'icon' => 'gift', 'message' => $delegateDonations . ' تبرع تم جمعه عبر المندوبين'];
@@ -1095,9 +1095,9 @@ final class DashboardWebController extends Controller
             // AI Insights
             $pmInsights = [];
             if ($netBalance > 0) {
-                $pmInsights[] = ['type' => 'success', 'icon' => 'graph-up-arrow', 'message' => 'المشروع يحقق فائضاً مالياً بقيمة ' . number_format($netBalance) . ' ج.م'];
+                $pmInsights[] = ['type' => 'success', 'icon' => 'graph-up-arrow', 'message' => 'المشروع يحقق فائضاً مالياً بقيمة ' . number_format((float) $netBalance) . ' ج.م'];
             } elseif ($netBalance < 0) {
-                $pmInsights[] = ['type' => 'danger', 'icon' => 'exclamation-triangle', 'message' => 'تنبيه! المشروع يعاني من عجز مالي بقيمة ' . number_format(abs($netBalance)) . ' ج.م'];
+                $pmInsights[] = ['type' => 'danger', 'icon' => 'exclamation-triangle', 'message' => 'تنبيه! المشروع يعاني من عجز مالي بقيمة ' . number_format((float) abs((float) $netBalance)) . ' ج.م'];
             }
             if ($tasksCompletionRate >= 80) {
                 $pmInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'معدل إنجاز ممتاز! ' . $tasksCompletionRate . '% من المهام مكتملة'];
@@ -1105,7 +1105,7 @@ final class DashboardWebController extends Controller
                 $pmInsights[] = ['type' => 'warning', 'icon' => 'hourglass-split', 'message' => 'يوجد ' . $tasksPending . ' مهمة معلقة تحتاج متابعة'];
             }
             if ($projectDonationsThisMonth > 0) {
-                $pmInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تم استلام ' . number_format($projectDonationsThisMonth) . ' ج.م تبرعات هذا الشهر'];
+                $pmInsights[] = ['type' => 'info', 'icon' => 'cash-stack', 'message' => 'تم استلام ' . number_format((float) $projectDonationsThisMonth) . ' ج.م تبرعات هذا الشهر'];
             }
             if ($beneficiariesThisMonth > 5) {
                 $pmInsights[] = ['type' => 'info', 'icon' => 'people', 'message' => 'تم تسجيل ' . $beneficiariesThisMonth . ' مستفيد جديد هذا الشهر'];
@@ -1301,7 +1301,7 @@ final class DashboardWebController extends Controller
 
             // Performance Insight
             if ($avgRating >= 4.5 && $ratedTasksCount >= 3) {
-                $frInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'أداء متميز! متوسط تقييمك ' . number_format($avgRating, 1) . ' نجوم'];
+                $frInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'أداء متميز! متوسط تقييمك ' . number_format((float) $avgRating, 1) . ' نجوم'];
             } elseif ($avgRating < 3 && $ratedTasksCount >= 3) {
                 $frInsights[] = ['type' => 'warning', 'icon' => 'exclamation-triangle', 'message' => 'يحتاج التقييم للتحسين. راجع ملاحظات المهام المكتملة.'];
             }
@@ -1515,13 +1515,13 @@ final class DashboardWebController extends Controller
             // AI Insights
             $volInsights = [];
             if ($totalHours >= 100) {
-                $volInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'تهانينا! وصلت إلى ' . number_format($totalHours) . ' ساعة تطوعية'];
+                $volInsights[] = ['type' => 'success', 'icon' => 'trophy', 'message' => 'تهانينا! وصلت إلى ' . number_format((float) $totalHours) . ' ساعة تطوعية'];
             }
             if ($hoursThisMonth >= 20) {
                 $volInsights[] = ['type' => 'success', 'icon' => 'star', 'message' => 'أداء متميز! ' . $hoursThisMonth . ' ساعة هذا الشهر'];
             }
             if ($avgRating >= 4.5 && $tasksCompleted >= 3) {
-                $volInsights[] = ['type' => 'success', 'icon' => 'award', 'message' => 'تقييم ممتاز بمتوسط ' . number_format($avgRating, 1) . ' نجوم'];
+                $volInsights[] = ['type' => 'success', 'icon' => 'award', 'message' => 'تقييم ممتاز بمتوسط ' . number_format((float) $avgRating, 1) . ' نجوم'];
             }
             if ($tasksPending > 5) {
                 $volInsights[] = ['type' => 'warning', 'icon' => 'hourglass-split', 'message' => 'لديك ' . $tasksPending . ' مهمة معلقة'];
