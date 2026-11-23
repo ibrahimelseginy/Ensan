@@ -74,9 +74,17 @@ final class CustodyWebController extends Controller
             Custody::STATUS_SETTLED_PENDING_RETURN,
         ])->sum(fn ($c) => $c->remaining_to_return);
 
-        $employees = User::where('is_employee', true)->orderBy('name')->get();
-        if ($employees->isEmpty()) {
-            $employees = User::orderBy('name')->get();
+        if ($accTreasuries !== null) {
+            $visibleHolderIds = $allCustodies->pluck('holder_user_id')->unique()->filter()->all();
+            if (!in_array((int)$user->id, $visibleHolderIds, true)) {
+                $visibleHolderIds[] = (int)$user->id;
+            }
+            $employees = User::whereIn('id', $visibleHolderIds)->orderBy('name')->get();
+        } else {
+            $employees = User::where('is_employee', true)->orderBy('name')->get();
+            if ($employees->isEmpty()) {
+                $employees = User::orderBy('name')->get();
+            }
         }
         $projects = Project::orderBy('name')->get(['id', 'name']);
 
@@ -117,6 +125,12 @@ final class CustodyWebController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'purpose' => 'required|string|max:1000',
         ]);
+
+        $authUser = request()->user();
+        $accIds = $authUser?->getAccessibleTreasuryIds();
+        if ($accIds !== null && !in_array((int) $data['treasury_id'], $accIds, true)) {
+            return back()->withInput()->with('error', 'غير مصرح لك بصرف عهدة من هذه الخزينة.');
+        }
 
         $treasury = Treasury::findOrFail($data['treasury_id']);
 
@@ -256,6 +270,12 @@ final class CustodyWebController extends Controller
             'returned_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
+
+        $authUser = request()->user();
+        $accIds = $authUser?->getAccessibleTreasuryIds();
+        if ($accIds !== null && !in_array((int) $data['treasury_id'], $accIds, true)) {
+            return back()->withInput()->with('error', 'غير مصرح لك بتسوية العهدة على هذه الخزينة.');
+        }
 
         $treasury = Treasury::findOrFail($data['treasury_id']);
 

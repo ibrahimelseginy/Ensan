@@ -39,6 +39,7 @@
                 <i class="bi bi-box-arrow-in-left"></i>
                 <span>تسجيل طلب توريد نقدية</span>
             </button>
+            @if(auth()->user()?->isSuperAdmin() || in_array((int)auth()->id(), [2, 8, 50], true) || auth()->user()?->hasRole(['admin', 'super_admin', 'حسابات ماليه', 'مدير المؤسسة بالكامل']) || auth()->user()?->hasPermission(['treasuries.edit', 'treasuries.manage.13']))
             <button type="button" class="btn btn-info text-white rounded-pill px-3 py-2 d-flex align-items-center gap-1.5 shadow-sm" data-bs-toggle="modal" data-bs-target="#chequeModal">
                 <i class="bi bi-credit-card-2-front"></i>
                 <span>صرف شيك بنكي</span>
@@ -47,6 +48,7 @@
                 <i class="bi bi-bank"></i>
                 <span>تحويل بنكي مباشر (كفالات أيتام)</span>
             </button>
+            @endif
         </div>
     </div>
 
@@ -204,7 +206,7 @@
                         <label class="form-label fw-bold small">الخزينة الموردة (المصدر) <span class="text-danger">*</span></label>
                         <select name="from_treasury_id" class="form-select rounded-3" required>
                             <option value="">-- اختر الخزينة الموردة --</option>
-                            @foreach($treasuries as $t)
+                            @foreach($fromTreasuries ?? $treasuries as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} ج.م)</option>
                             @endforeach
                         </select>
@@ -214,7 +216,7 @@
                         <label class="form-label fw-bold small">الخزينة المستلمة (الهدف) <span class="text-danger">*</span></label>
                         <select name="to_treasury_id" class="form-select rounded-3" required>
                             <option value="">-- اختر الخزينة المستلمة --</option>
-                            @foreach($treasuries as $t)
+                            @foreach($toTreasuries ?? $treasuries as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                             @endforeach
                         </select>
@@ -286,7 +288,7 @@
                         <div class="col-6">
                             <label class="form-label fw-bold small">حساب البنك المسحوب عليه <span class="text-danger">*</span></label>
                             <select name="bank_treasury_id" class="form-select rounded-3" required>
-                                @foreach($treasuries as $t)
+                                @foreach($bankTreasuries ?? $treasuries as $t)
                                     <option value="{{ $t->id }}">{{ $t->name }} ({{ number_format($t->current_balance, 2) }} ج.م)</option>
                                 @endforeach
                             </select>
@@ -309,7 +311,7 @@
                         <label class="form-label fw-bold small">الخزينة المستلمة للسيولة</label>
                         <select name="target_treasury_id" class="form-select rounded-3">
                             <option value="">-- اختر الخزينة المستلمة --</option>
-                            @foreach($treasuries as $t)
+                            @foreach($toTreasuries ?? $treasuries as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                             @endforeach
                         </select>
@@ -403,7 +405,7 @@
                         <div class="col-6">
                             <label class="form-label fw-bold small">حساب البنك المنفذ <span class="text-danger">*</span></label>
                             <select name="bank_treasury_id" class="form-select rounded-3" required>
-                                @foreach($treasuries as $t)
+                                @foreach($bankTreasuries ?? $treasuries as $t)
                                     <option value="{{ $t->id }}">{{ $t->name }} ({{ number_format($t->current_balance, 2) }} ج.م)</option>
                                 @endforeach
                             </select>

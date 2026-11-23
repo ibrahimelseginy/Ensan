@@ -57,7 +57,18 @@ final class CashTransferWebController extends Controller
         $user = $request->user();
         $accIds = $user?->getAccessibleTreasuryIds();
 
-        $treasuriesQuery = Treasury::where('is_active', true)->orderBy('name');
+        $allActiveTreasuries = Treasury::where('is_active', true)->orderBy('name')->get();
+        $fromTreasuries = ($accIds !== null)
+            ? $allActiveTreasuries->whereIn('id', $accIds)->values()
+            : $allActiveTreasuries;
+        $toTreasuries = $allActiveTreasuries;
+        $bankTreasuries = ($accIds !== null)
+            ? $allActiveTreasuries->where('type', 'bank')->whereIn('id', $accIds)->values()
+            : $allActiveTreasuries->where('type', 'bank')->values();
+        if ($bankTreasuries->isEmpty() && ($accIds === null || $user->hasRole(['admin', 'super_admin', 'مدير المؤسسة بالكامل']))) {
+            $bankTreasuries = $allActiveTreasuries->where('type', 'bank')->values();
+        }
+
         $transfersQuery = CashTransfer::with(['fromAccount', 'toAccount', 'requester', 'receiver', 'approver'])
             ->orderByDesc('id');
         $instrumentsQuery = PaymentInstrument::with(['sourceAccount', 'project', 'creator'])
@@ -65,7 +76,6 @@ final class CashTransferWebController extends Controller
             ->limit(10);
 
         if ($accIds !== null) {
-            $treasuriesQuery->whereIn('id', $accIds);
             $cashAccountIds = CashAccount::whereIn('legacy_treasury_id', $accIds)->pluck('id')->all();
             $transfersQuery->where(function($q) use ($user, $cashAccountIds) {
                 if (!empty($cashAccountIds)) {
@@ -85,13 +95,13 @@ final class CashTransferWebController extends Controller
             }
         }
 
-        $treasuries = $treasuriesQuery->get();
+        $treasuries = $fromTreasuries;
         $transfers = $transfersQuery->paginate(15);
         $paymentInstruments = $instrumentsQuery->get();
         $projects = Project::orderBy('name')->get(['id', 'name']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('transfers.index', compact('transfers', 'treasuries', 'paymentInstruments', 'projects', 'users'));
+        return view('transfers.index', compact('transfers', 'treasuries', 'fromTreasuries', 'toTreasuries', 'bankTreasuries', 'paymentInstruments', 'projects', 'users'));
     }
 
     public function storeSupply(Request $request): RedirectResponse
@@ -104,6 +114,12 @@ final class CashTransferWebController extends Controller
             'reference' => 'nullable|string|max:191',
             'note' => 'nullable|string|max:1000',
         ]);
+
+        $user = $request->user();
+        $accIds = $user?->getAccessibleTreasuryIds();
+        if ($accIds !== null && !in_array((int) $data['from_treasury_id'], $accIds, true)) {
+            return back()->withInput()->with('error', 'غير مصرح لك بالتحويل أو التوريد من هذه الخزينة.');
+        }
 
         $fromTreasury = Treasury::findOrFail($data['from_treasury_id']);
         $toTreasury = Treasury::findOrFail($data['to_treasury_id']);
@@ -153,6 +169,15 @@ final class CashTransferWebController extends Controller
     {
         if ($transfer->status !== 'submitted') {
             return back()->with('error', 'التحويل تم تأكيده أو إلغاؤه مسبقاً.');
+        }
+
+        $user = $request->user();
+        $accIds = $user?->getAccessibleTreasuryIds();
+        if ($accIds !== null) {
+            $toAccount = CashAccount::find($transfer->to_cash_account_id);
+            if ($toAccount && $toAccount->legacy_treasury_id && !in_array((int) $toAccount->legacy_treasury_id, $accIds, true)) {
+                return back()->with('error', 'غير مصرح لك بتأكيد استلام هذا التحويل، التأكيد متاح فقط لأمين الخزينة المستلمة أو الإدارة.');
+            }
         }
 
         DB::transaction(function () use ($transfer) {
