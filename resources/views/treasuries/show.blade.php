@@ -359,9 +359,26 @@
             {{-- Add Transaction --}}
             <div class="summary-panel mb-4">
                 <h5 class="fw-bold mb-3 section-title small text-uppercase letter-spacing-1"><i class="bi bi-plus-circle me-2"></i>إضافة حركة مالية</h5>
-                <form action="{{ route('treasuries.addTransaction', $treasury) }}" method="POST">
+                <form id="addTransactionForm" action="{{ route('treasuries.addTransaction', $treasury) }}" method="POST">
                     @csrf
+                    @php
+                        $treasuryList = $accessibleTreasuries ?? \App\Models\Treasury::accessibleForUser(auth()->user())->where('is_active', true)->orderBy('name')->get();
+                        if ($treasuryList->isEmpty() || !$treasuryList->contains('id', $treasury->id)) {
+                            $treasuryList = $treasuryList->prepend($treasury);
+                        }
+                    @endphp
                     <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-safe me-1"></i>الخزينة <span class="text-danger">*</span></label>
+                        <select name="treasury_id" id="transactionTreasurySelect" class="form-select form-select-sm rounded-3" required onchange="onTreasurySelectChange(this)">
+                            @foreach($treasuryList as $t)
+                                <option value="{{ $t->id }}" @selected($t->id === $treasury->id) data-currency="{{ $t->currency }}">
+                                    {{ $t->name }} (الرصيد: {{ number_format($t->current_balance, 2) }} {{ $t->currency }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">نوع الحركة <span class="text-danger">*</span></label>
                         <select name="type" class="form-select form-select-sm rounded-3" required>
                             <option value="in">وارد (إيداع)</option>
                             <option value="out">صادر (سحب)</option>
@@ -369,7 +386,7 @@
                     </div>
                     <div class="input-group input-group-sm mb-3">
                         <input type="number" name="amount" class="form-control rounded-start-3" placeholder="المبلغ" step="0.01" min="0.01" required>
-                        <span class="input-group-text bg-light border-start-0">{{ $treasury->currency }}</span>
+                        <span class="input-group-text bg-light border-start-0" id="txCurrencyLabel">{{ $treasury->currency }}</span>
                     </div>
                     <div class="mb-3">
                         <textarea name="description" class="form-control form-control-sm rounded-3" placeholder="وصف الحركة..." rows="2" required></textarea>
@@ -659,6 +676,15 @@
             }, 250);
         } else {
             window.print();
+        }
+    }
+
+    function onTreasurySelectChange(select) {
+        var opt = select.options[select.selectedIndex];
+        var curr = opt ? opt.getAttribute('data-currency') : 'EGP';
+        var label = document.getElementById('txCurrencyLabel');
+        if (label && curr) {
+            label.textContent = curr;
         }
     }
 </script>

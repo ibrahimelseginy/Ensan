@@ -16,6 +16,7 @@ final class AddTreasuryTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'treasury_id'      => 'nullable|exists:treasuries,id',
             'type'             => 'required|in:in,out',
             'amount'           => 'required|numeric|min:0.01',
             'description'      => 'required|string',

@@ -215,7 +215,16 @@ final class TreasuryController extends Controller
 
         $monthlyData = $this->treasuryService->getTreasuryMonthlyData($treasury->id);
 
-        return view('treasuries.show', compact('treasury', 'stats', 'recentTransactions', 'monthlyData'));
+        $accessibleTreasuries = Treasury::accessibleForUser(auth()->user())
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        if (!$accessibleTreasuries->contains('id', $treasury->id)) {
+            $accessibleTreasuries->prepend($treasury);
+        }
+
+        return view('treasuries.show', compact('treasury', 'stats', 'recentTransactions', 'monthlyData', 'accessibleTreasuries'));
     }
 
     public function edit(Treasury $treasury): View
@@ -365,11 +374,16 @@ final class TreasuryController extends Controller
 
     public function addTransaction(AddTreasuryTransactionRequest $request, Treasury $treasury): RedirectResponse
     {
-        $this->authorizeTreasuryAccess($treasury);
-        $this->treasuryService->addTransaction($treasury, $request->validated(), (int)auth()->id());
+        $targetTreasury = $treasury;
+        if ($request->filled('treasury_id') && (int)$request->input('treasury_id') !== (int)$treasury->id) {
+            $targetTreasury = Treasury::findOrFail((int)$request->input('treasury_id'));
+        }
 
-        return redirect()->route('treasuries.show', $treasury)
-            ->with('success', 'تم إضافة الحركة بنجاح');
+        $this->authorizeTreasuryAccess($targetTreasury);
+        $this->treasuryService->addTransaction($targetTreasury, $request->validated(), (int)auth()->id());
+
+        return redirect()->route('treasuries.show', $targetTreasury)
+            ->with('success', "تم إضافة الحركة بنجاح في ({$targetTreasury->name})");
     }
 
     public function dashboard(): View|RedirectResponse
