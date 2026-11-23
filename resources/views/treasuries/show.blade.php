@@ -40,7 +40,8 @@
 
 <div class="container-fluid py-4 no-print">
     @php
-        $canManage = $canManage ?? (auth()->user()?->canManageTreasury($treasury) ?? false);
+        $currentUser = auth()->user();
+        $canManage = $canManage ?? ($currentUser?->canManageTreasury($treasury) ?? false);
     @endphp
     <div class="row mb-4">
         <div class="col-md-8">
@@ -325,8 +326,8 @@
             <div class="glass-card mb-4 p-4 border-0 shadow-sm" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important;">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h6 class="fw-bold mb-0 section-title text-white opacity-75"><i class="bi bi-lightning me-2"></i>إجراءات سريعة</h6>
-                    @if($currentUser && ($currentUser->hasRole('admin') || $currentUser->hasRole('manager')))
-                        <a href="{{ route('change-requests.index') }}" class="btn btn-sm btn-link text-white text-decoration-none opacity-50 hover-opacity-100 p-0">
+                    @php $cu = $currentUser ?? auth()->user(); @endphp
+                    @if($cu && ($cu->hasRole('admin') || $cu->hasRole('manager')))<a href="{{ route('change-requests.index') }}" class="btn btn-sm btn-link text-white text-decoration-none opacity-50 hover-opacity-100 p-0">
                             <i class="bi bi-shield-check fs-5"></i>
                         </a>
                     @endif
