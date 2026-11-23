@@ -118,7 +118,7 @@
                 </button>
                 <h6 class="text-muted mb-2 small">إجمالي الوارد</h6>
                 <h3 class="text-success mb-0 fw-bold font-monospace">{{ number_format($stats['total_in'], 2) }}</h3>
-                <small class="text-muted">{{ $treasury->currency }}</small>
+                <small class="text-muted">{{ $treasury->currency }}@if((float)$treasury->opening_balance > 0) <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;" title="الرصيد الافتتاحي للخزينة">+ افتتاحي: {{ number_format($treasury->opening_balance, 0) }}</span>@endif</small>
             </div>
         </div>
         <div class="col-md-3">

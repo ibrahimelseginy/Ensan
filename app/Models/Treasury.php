@@ -307,9 +307,15 @@ final class Treasury extends Model
             $custodyBalance = 0.0;
             $donationsBalance = 0.0;
         } else {
-            // الحفاظ على أولوية رصيد العهدة الفعلي وعدم طمسه بالتبرعات التاريخية
-            $custodyBalance = min($current, round($custodyBalance, 2));
-            $donationsBalance = max(0.0, round($current - $custodyBalance, 2));
+            $computedSum = round($custodyBalance + $donationsBalance, 2);
+            if (abs($computedSum - $current) < 0.01) {
+                $custodyBalance = round($custodyBalance, 2);
+                $donationsBalance = round($donationsBalance, 2);
+            } else {
+                // حماية أموال التبرعات الفعلية (أموال أمانة مقيدة) أولاً، والمتبقي هو رصيد العهدة
+                $donationsBalance = min($current, max(0.0, round($donationsBalance, 2)));
+                $custodyBalance = max(0.0, round($current - $donationsBalance, 2));
+            }
         }
 
         return [
