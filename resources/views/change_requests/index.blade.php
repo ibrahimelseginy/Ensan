@@ -305,6 +305,7 @@
                                             'Item' => ['label' => 'صنف مخزني', 'icon' => 'box-seam', 'color' => 'secondary'],
                                             'Payroll' => ['label' => 'مسير رواتب', 'icon' => 'wallet2', 'color' => 'success'],
                                             'FieldVisit' => ['label' => 'بحث ميداني', 'icon' => 'clipboard2-pulse', 'color' => 'primary'],
+                                        ];
                                         $tInfo = $typeLabels[$modelBasename] ?? ['label' => $modelBasename, 'icon' => 'box', 'color' => 'secondary'];
                                         $isCreate = strtolower((string)$req->action) === 'create' || empty($req->model_id);
                                         $isDeleted = !$isCreate && !$req->subject;
