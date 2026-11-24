@@ -58,7 +58,8 @@ final class Treasury extends Model
         'project_id',
         'campaign_id',
         'delegate_id',
-        'branch_id'
+        'branch_id',
+        'linked_treasury_id'
     ];
 
     protected $casts = [

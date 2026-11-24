@@ -183,6 +183,8 @@
                                 <th>طريقة الدفع / القناة</th>
                                 <th>المبلغ</th>
                                 <th>الوصف</th>
+                                <th>المسجل بواسطة</th>
+                                <th>المصدر / الجهة</th>
                                 <th class="text-center" style="width: 110px;">إجراءات</th>
                             </tr>
                         </thead>
@@ -237,7 +239,29 @@
                                     @endif
                                 </td>
                                 <td class="fw-bold font-monospace">{{ number_format($transaction->amount, 2) }} {{ $treasury->currency }}</td>
-                                <td class="text-dark fw-semibold">{{ $transaction->description }}</td>
+                                <td class="text-dark">
+                                    <div class="fw-semibold">{{ $transaction->description }}</div>
+                                    @if($transaction->donation_id)
+                                        <div class="mt-1">
+                                            <a href="{{ route('donations.show', $transaction->donation_id) }}" target="_blank" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 text-decoration-none">
+                                                <i class="bi bi-receipt me-1"></i> إيصال تبرع #{{ $transaction->donation_id }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ $transaction->registrar_name }}</div>
+                                    @if($transaction->registrar_title)
+                                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 small" style="font-size: 0.7rem;">
+                                            {{ $transaction->registrar_title }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill fw-semibold" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.74rem; padding: 4px 8px;">
+                                        <i class="bi bi-geo-alt-fill me-1"></i> {{ $transaction->source_label }}
+                                    </span>
+                                </td>
                                 <td class="text-center">
                                     @if($canManage)
                                     <div class="d-inline-flex gap-1">
@@ -270,7 +294,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-5">
+                                <td colspan="8" class="text-center text-muted py-5">
                                     <i class="bi bi-folder-x fa-3x mb-3 d-block opacity-25"></i>
                                     لا توجد حركات مالية متاحة حالياً
                                 </td>

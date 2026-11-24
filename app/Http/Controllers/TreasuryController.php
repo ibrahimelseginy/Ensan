@@ -215,10 +215,10 @@ final class TreasuryController extends Controller
         ];
 
         $recentTransactions = $treasury->transactions()
-            ->with('createdBy', 'donation')
+            ->with(['createdBy.roles', 'donation.guestHouse', 'donation.project', 'donation.user.roles'])
             ->orderByDesc('transaction_date')
             ->orderByDesc('created_at')
-            ->limit(20)
+            ->limit(30)
             ->get();
 
         $monthlyData = $this->treasuryService->getTreasuryMonthlyData($treasury->id);
