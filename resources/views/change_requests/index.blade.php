@@ -476,6 +476,14 @@
                                             $labels = [
                                                 'name' => 'الاسم',
                                                 'full_name' => 'الاسم بالكامل',
+                                                'updated_by' => 'المُعدِّل',
+                                                'created_by' => 'المُنشئ',
+                                                'user_id' => 'المستخدم المعني',
+                                                'reviewer_id' => 'المراجع',
+                                                'visa_card_number' => 'رقم كارت الفيزا',
+                                                'case_details' => 'تقرير وتفاصيل الحالة المرضية',
+                                                'family_members' => 'أفراد الأسرة والأيتام',
+                                                'sponsorship_amount' => 'مبلغ الكفالة الشهري',
                                                 'title' => 'العنوان',
                                                 'amount' => 'المبلغ',
                                                 'type' => 'النوع',
@@ -716,7 +724,11 @@
                                                 'expense' => 'مصروفات (Expense)',
                                             ];
 
-                                            $fmt = function($k, $v) use ($valueMaps, $permissionsMap, $beneficiariesMap, $familyMembersMap, $sponsorsMap) {
+                                            $usersMap = $usersMap ?? [];
+                                            $projectsMap = $projectsMap ?? [];
+                                            $treasuriesMap = $treasuriesMap ?? [];
+
+                                            $fmt = function($k, $v) use ($valueMaps, $permissionsMap, $beneficiariesMap, $familyMembersMap, $sponsorsMap, $usersMap, $projectsMap, $treasuriesMap) {
                                                 if (is_null($v) || $v === '') return '<span class="text-muted italic small">فارغ</span>';
 
                                                 if (is_array($v)) {
@@ -766,6 +778,18 @@
                                                         $html .= '</div>';
                                                         return $html;
                                                     }
+                                                    if ($k === 'family_members') {
+                                                        $fms = collect($v)->filter(fn($m) => is_array($m) && !empty(trim((string)($m['full_name'] ?? ''))));
+                                                        if ($fms->isEmpty()) return '<span class="text-muted italic small">لا يوجد أفراد</span>';
+                                                        $html = '<div class="d-flex flex-column gap-1 mt-1">';
+                                                        foreach ($fms as $fm) {
+                                                            $rel = $valueMaps[$fm['relationship'] ?? 'child'] ?? ($fm['relationship'] ?? 'ابن');
+                                                            $amt = !empty($fm['sponsorship_amount']) ? number_format((float)$fm['sponsorship_amount'], 2) . ' ج.م' : null;
+                                                            $html .= '<div class="small p-1 px-2 rounded bg-white border d-flex justify-content-between align-items-center"><span><i class="bi bi-person me-1"></i>' . e($fm['full_name']) . ' <span class="badge bg-light text-secondary border font-monospace">' . e($rel) . '</span></span>' . ($amt ? ' <span class="badge bg-success-subtle text-success fw-bold">' . $amt . '</span>' : '') . '</div>';
+                                                        }
+                                                        $html .= '</div>';
+                                                        return $html;
+                                                    }
                                                     if (in_array($k, ['condition_photos'])) {
                                                         $html = '<div class="d-flex flex-wrap gap-1 mt-1">';
                                                         foreach ($v as $img) {
@@ -780,6 +804,28 @@
                                                 // Handle Passwords & Hashes
                                                 if ($k === 'password' || (is_string($v) && strlen($v) > 50 && str_starts_with($v, '$2y$'))) {
                                                     return '<span class="text-muted small"><i class="bi bi-shield-lock-fill"></i> (بيانات مشفرة)</span>';
+                                                }
+
+                                                // Specific entity lookups
+                                                if (in_array($k, ['user_id', 'updated_by', 'created_by', 'reviewer_id'], true) && is_numeric($v)) {
+                                                    $uName = $usersMap[$v] ?? null;
+                                                    return $uName ? ('<span class="badge bg-secondary-subtle text-dark border"><i class="bi bi-person me-1"></i>' . e($uName) . '</span>') : "#$v";
+                                                }
+                                                if ($k === 'project_id' && is_numeric($v)) {
+                                                    $pName = $projectsMap[$v] ?? null;
+                                                    return $pName ? ('<span class="badge bg-primary-subtle text-primary border"><i class="bi bi-briefcase me-1"></i>' . e($pName) . '</span>') : "#$v";
+                                                }
+                                                if ($k === 'treasury_id' && is_numeric($v)) {
+                                                    $tName = $treasuriesMap[$v] ?? null;
+                                                    return $tName ? ('<span class="badge bg-success-subtle text-success border"><i class="bi bi-safe me-1"></i>' . e($tName) . '</span>') : "#$v";
+                                                }
+                                                if ($k === 'donor_id' && is_numeric($v)) {
+                                                    $dName = $sponsorsMap[$v] ?? null;
+                                                    return $dName ? ('<span class="badge bg-danger-subtle text-danger border"><i class="bi bi-heart me-1"></i>' . e($dName) . '</span>') : "#$v";
+                                                }
+                                                if ($k === 'beneficiary_id' && is_numeric($v)) {
+                                                    $bName = $beneficiariesMap[$v] ?? null;
+                                                    return $bName ? ('<span class="badge bg-info-subtle text-info border"><i class="bi bi-people me-1"></i>' . e($bName) . '</span>') : "#$v";
                                                 }
 
                                                 if (isset($valueMaps[$v])) return $valueMaps[$v];
@@ -882,10 +928,108 @@
                                                 </div>
                                             @endif
 
-                                            @if($diffData && $req->action === 'update')
-                                                @foreach($diffData as $key => $dVals)
-                                                    @continue(in_array($key, ['password', 'family_members', 'family_members_data']))
-                                                    @continue($hasSponsorshipSync && in_array($key, ['sync_sponsored_beneficiaries', 'sync_sponsored_family_members', 'direct_sponsored_beneficiary_ids']))
+                                            @php
+                                                $rawFamilyMembers = $payloadData['family_members'] ?? [];
+                                                $activeFamilyMembers = collect($rawFamilyMembers)->filter(function($m) {
+                                                    return is_array($m) && !empty(trim((string)($m['full_name'] ?? '')));
+                                                })->values();
+
+                                                $visibleDiff = [];
+                                                if ($diffData && $req->action === 'update') {
+                                                    foreach ($diffData as $dKey => $dVals) {
+                                                        if (in_array($dKey, [
+                                                            '_token', '_method', 'password', 'password_confirmation',
+                                                            'created_by', 'updated_by', 'id', 'family_members',
+                                                            'family_members_data', 'edit_action', 'form_context'
+                                                        ], true)) {
+                                                            continue;
+                                                        }
+                                                        if ($hasSponsorshipSync && in_array($dKey, [
+                                                            'sync_sponsored_beneficiaries', 'sync_sponsored_family_members',
+                                                            'direct_sponsored_beneficiary_ids'
+                                                        ], true)) {
+                                                            continue;
+                                                        }
+                                                        $visibleDiff[$dKey] = $dVals;
+                                                    }
+                                                }
+                                            @endphp
+
+                                            {{-- Family Members Section if Present in Payload or Diff --}}
+                                            @if($activeFamilyMembers->isNotEmpty())
+                                                <div class="col-12 mb-3">
+                                                    <div class="p-3 rounded-4 border border-info border-opacity-30 shadow-sm" style="background: rgba(14, 165, 233, 0.04);">
+                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom border-info border-opacity-20">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="badge bg-info text-white rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                                    <i class="bi bi-people-fill"></i>
+                                                                </span>
+                                                                <div>
+                                                                    <div class="fw-bold text-info fs-6">أفراد الأسرة والأيتام المسجلون في الحالة</div>
+                                                                    <div class="text-muted small">إجمالي المسجلين: {{ $activeFamilyMembers->count() }} أفراد / أيتام</div>
+                                                                </div>
+                                                            </div>
+                                                            @php
+                                                                $totalFamilySponsorship = $activeFamilyMembers->sum(fn($m) => (float)($m['sponsorship_amount'] ?? 0));
+                                                            @endphp
+                                                            @if($totalFamilySponsorship > 0)
+                                                                <div class="badge bg-success-subtle text-success border border-success px-3 py-2 fs-6 rounded-pill">
+                                                                    إجمالي كفالة الأيتام: {{ number_format($totalFamilySponsorship, 2) }} ج.م شهرياً
+                                                                </div>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="row g-2">
+                                                            @foreach($activeFamilyMembers as $idx => $fm)
+                                                                @php
+                                                                    $rel = $valueMaps[$fm['relationship'] ?? 'child'] ?? ($fm['relationship'] ?? 'ابن / ابنة');
+                                                                    $fAge = !empty($fm['age']) ? $fm['age'] . ' سنة' : (!empty($fm['birth_date']) ? \Carbon\Carbon::parse($fm['birth_date'])->age . ' سنة' : null);
+                                                                    $fAmount = !empty($fm['sponsorship_amount']) ? (float)$fm['sponsorship_amount'] : 0;
+                                                                @endphp
+                                                                <div class="col-12 col-md-6 col-lg-4">
+                                                                    <div class="p-3 rounded-3 bg-white border shadow-2xs h-100 d-flex flex-column justify-content-between">
+                                                                        <div>
+                                                                            <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
+                                                                                <div class="fw-bold text-dark fs-6">
+                                                                                    <i class="bi bi-person me-1 text-primary"></i>{{ $fm['full_name'] }}
+                                                                                </div>
+                                                                                <span class="badge bg-info-subtle text-info border border-info-subtle small">{{ $rel }}</span>
+                                                                            </div>
+                                                                            <div class="text-muted small mb-2 d-flex flex-wrap gap-2">
+                                                                                @if(!empty($fm['code']))
+                                                                                    <span class="badge bg-light text-secondary border font-monospace">كود: {{ $fm['code'] }}</span>
+                                                                                @endif
+                                                                                @if($fAge)
+                                                                                    <span><i class="bi bi-calendar3 me-1"></i>{{ $fAge }}</span>
+                                                                                @endif
+                                                                                @if(!empty($fm['education_level']))
+                                                                                    <span>• {{ $fm['education_level'] }}</span>
+                                                                                @endif
+                                                                            </div>
+                                                                            @if(!empty($fm['case_details']))
+                                                                                <div class="p-2 rounded bg-danger-subtle text-danger small mb-2 border border-danger-subtle">
+                                                                                    <i class="bi bi-heart-pulse-fill me-1"></i><strong>الحالة/التشخيص:</strong> {{ $fm['case_details'] }}
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                        <div class="pt-2 border-top d-flex align-items-center justify-content-between small">
+                                                                            <span class="text-muted">مبلغ الكفالة:</span>
+                                                                            @if($fAmount > 0)
+                                                                                <span class="badge bg-success text-white fw-bold px-2 py-1">{{ number_format($fAmount, 2) }} ج.م</span>
+                                                                            @else
+                                                                                <span class="text-muted italic">غير محدد</span>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($req->action === 'update' && !empty($visibleDiff))
+                                                @foreach($visibleDiff as $key => $dVals)
                                                     <div class="col-12 col-md-6 col-lg-4">
                                                         <div class="p-3 rounded-4 border border-secondary border-opacity-15 shadow-sm h-100 bg-white">
                                                             <div class="small fw-bold text-primary mb-2 d-flex align-items-center justify-content-between">
@@ -901,11 +1045,34 @@
                                                     </div>
                                                 @endforeach
                                             @else
-                                                @foreach($payloadData as $key => $val)
-                                                    @continue(in_array($key, ['_token', '_method', 'password', 'password_confirmation', 'created_by', 'updated_by', 'id', 'family_members', 'family_members_data', 'sync_sponsored_beneficiaries', 'sync_sponsored_family_members']))
-                                                    @continue(is_null($val) || $val === '')
-                                                    @continue(is_array($val) && empty($val))
-                                                    
+                                                @php
+                                                    $displayFields = collect($payloadData)->filter(function($val, $key) {
+                                                        if (in_array($key, [
+                                                            '_token', '_method', 'password', 'password_confirmation',
+                                                            'created_by', 'updated_by', 'id', 'family_members',
+                                                            'family_members_data', 'sync_sponsored_beneficiaries',
+                                                            'sync_sponsored_family_members', 'edit_action', 'form_context'
+                                                        ], true)) {
+                                                            return false;
+                                                        }
+                                                        if (is_null($val) || $val === '') return false;
+                                                        if (is_array($val) && empty($val)) return false;
+                                                        return true;
+                                                    });
+                                                @endphp
+
+                                                @if($req->action === 'update' && empty($visibleDiff) && $displayFields->isNotEmpty())
+                                                    <div class="col-12 mb-2">
+                                                        <div class="alert alert-info border-0 rounded-3 small mb-0 d-flex align-items-center gap-2">
+                                                            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                                                            <div>
+                                                                <strong>تفاصيل البيانات المسجلة بالطلب:</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                @foreach($displayFields as $key => $val)
                                                     <div class="col-6 col-md-4 col-lg-3">
                                                         <div class="p-3 rounded-4 border border-secondary border-opacity-15 shadow-sm h-100 bg-white">
                                                             <div class="small text-muted mb-1">{{ $labels[$key] ?? $key }}</div>

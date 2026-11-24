@@ -180,7 +180,7 @@ final class ChangeRequestPresentation
         $rows = [];
 
         foreach (self::diff($request) as $key => $values) {
-            if ($key === 'password' || ! is_array($values)) {
+            if ($key === 'password' || ! is_array($values) || self::shouldHide((string) $key, null)) {
                 continue;
             }
 
@@ -203,6 +203,13 @@ final class ChangeRequestPresentation
         return [
             'name' => 'الاسم',
             'full_name' => 'الاسم الكامل',
+            'updated_by' => 'المُعدِّل',
+            'created_by' => 'المُنشئ',
+            'reviewer_id' => 'المراجع',
+            'visa_card_number' => 'رقم كارت الفيزا',
+            'case_details' => 'تقرير وتفاصيل الحالة المرضية',
+            'family_members' => 'أفراد الأسرة والأيتام',
+            'sponsorship_amount' => 'مبلغ الكفالة للطفل',
             'title' => 'العنوان',
             'amount' => 'المبلغ',
             'type' => 'النوع',
@@ -457,6 +464,9 @@ final class ChangeRequestPresentation
             'guest_house_id' => [\App\Models\GuestHouse::class, 'name'],
             'role_id' => [\App\Models\Role::class, 'name'],
             'user_id' => [\App\Models\User::class, 'name'],
+            'updated_by' => [\App\Models\User::class, 'name'],
+            'created_by' => [\App\Models\User::class, 'name'],
+            'reviewer_id' => [\App\Models\User::class, 'name'],
             'beneficiary_id' => [\App\Models\Beneficiary::class, 'full_name'],
             'account_id' => [\App\Models\Account::class, 'name'],
             'parent_id' => [\App\Models\Account::class, 'name'],

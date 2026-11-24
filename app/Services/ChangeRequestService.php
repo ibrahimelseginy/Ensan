@@ -77,6 +77,46 @@ class ChangeRequestService
                     $diff = [];
                     foreach ($payload as $key => $newVal) {
                         if (is_array($newVal)) {
+                            if ($key === 'family_members' && method_exists($instance, 'familyMembers')) {
+                                $existingMembers = $instance->familyMembers->map(function ($m) {
+                                    return [
+                                        'id' => (string) $m->id,
+                                        'full_name' => trim((string) $m->full_name),
+                                        'relationship' => $m->relationship ?? 'child',
+                                        'age' => $m->age !== null ? (string) $m->age : null,
+                                        'birth_date' => optional($m->birth_date)->format('Y-m-d'),
+                                        'code' => $m->code,
+                                        'sponsorship_amount' => $m->sponsorship_amount ? (string) $m->sponsorship_amount : null,
+                                        'case_details' => $m->case_details,
+                                        'education_level' => $m->education_level,
+                                    ];
+                                })->values()->all();
+
+                                $cleanSubmitted = collect($newVal)->filter(function ($m) {
+                                    return is_array($m) && !empty(trim((string) ($m['full_name'] ?? '')));
+                                })->map(function ($m) {
+                                    return [
+                                        'id' => !empty($m['id']) ? (string) $m['id'] : null,
+                                        'full_name' => trim((string) ($m['full_name'] ?? '')),
+                                        'relationship' => $m['relationship'] ?? 'child',
+                                        'age' => isset($m['age']) && $m['age'] !== '' ? (string) $m['age'] : null,
+                                        'birth_date' => !empty($m['birth_date']) ? (string) $m['birth_date'] : null,
+                                        'code' => !empty($m['code']) ? (string) $m['code'] : null,
+                                        'sponsorship_amount' => isset($m['sponsorship_amount']) && $m['sponsorship_amount'] !== '' ? (string) $m['sponsorship_amount'] : null,
+                                        'case_details' => !empty($m['case_details']) ? (string) $m['case_details'] : null,
+                                        'education_level' => !empty($m['education_level']) ? (string) $m['education_level'] : null,
+                                    ];
+                                })->values()->all();
+
+                                if ($existingMembers != $cleanSubmitted) {
+                                    $diff[$key] = [
+                                        'from' => $existingMembers,
+                                        'to' => $cleanSubmitted,
+                                    ];
+                                }
+                                continue;
+                            }
+
                             $oldVal = match ($key) {
                                 'allocated_beneficiary_ids' => method_exists($instance, 'allocatedBeneficiaries')
                                     ? $instance->allocatedBeneficiaries()->pluck('beneficiaries.id')->map(fn ($id) => (int) $id)->all()
@@ -114,7 +154,7 @@ class ChangeRequestService
                         if (in_array($key, [
                             '_token', '_method', 'password', 'password_confirmation',
                             'sync_sponsored_beneficiaries', 'sync_sponsored_family_members',
-                            'edit_action', 'form_context'
+                            'edit_action', 'form_context', 'updated_by', 'created_by'
                         ], true)) {
                             continue;
                         }

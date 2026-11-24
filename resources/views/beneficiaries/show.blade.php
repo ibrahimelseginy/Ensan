@@ -1804,7 +1804,7 @@
                           <tbody>
                             @foreach($diff as $key => $val)
                               @php
-                                if (in_array($key, ['__is_wrapped', 'updated_at', 'created_at', 'id'], true)) continue;
+                                if (in_array($key, ['__is_wrapped', 'updated_at', 'created_at', 'id', 'updated_by', 'created_by'], true)) continue;
                                 $fieldLabel = \App\Support\ChangeRequestPresentation::fieldLabel((string)$key);
                                 $fromVal = is_array($val) && array_key_exists('from', $val) ? $val['from'] : null;
                                 $toVal = is_array($val) && array_key_exists('to', $val) ? $val['to'] : $val;

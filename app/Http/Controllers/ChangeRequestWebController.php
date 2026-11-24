@@ -41,6 +41,8 @@ final class ChangeRequestWebController extends Controller
         $currentStatus = $request->status ?? 'all';
 
         $projectsMap = \App\Models\Project::pluck('name', 'id')->toArray();
+        $usersMap = \App\Models\User::pluck('name', 'id')->toArray();
+        $treasuriesMap = \App\Models\Treasury::pluck('name', 'id')->toArray();
 
         $beneficiaryRequests = $requests->getCollection()
             ->filter(fn($r) => $r->model_type === \App\Models\Beneficiary::class);
@@ -134,6 +136,8 @@ final class ChangeRequestWebController extends Controller
             'familyMembersMap',
             'sponsorsMap',
             'projectsMap',
+            'usersMap',
+            'treasuriesMap',
             'currentStatus',
             'visitsByBeneficiary',
             'visitsByNationalId',
