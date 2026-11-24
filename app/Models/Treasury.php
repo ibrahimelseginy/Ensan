@@ -290,12 +290,10 @@ final class Treasury extends Model
                 if ($isDonationReversal) {
                     $deductDon = min($donationsBalance, $amt);
                     $donationsBalance -= $deductDon;
-                    $custodyBalance = max(0.0, $custodyBalance - ($amt - $deductDon));
                 } else {
-                    // المصروفات والصرف النثري تُخصم من العهدة أولاً، وما زاد يُخصم من التبرعات
-                    $deductCust = min($custodyBalance, $amt);
-                    $custodyBalance -= $deductCust;
-                    $donationsBalance = max(0.0, $donationsBalance - ($amt - $deductCust));
+                    // المصروفات والصادر تُخصم حصراً من العهدة التشغيلية ولا تمس أموال التبرعات إطلاقاً
+                    $custodyBalance -= $amt;
+                    $custodyOut = ($custodyOut ?? 0.0) + $amt;
                 }
             }
 
@@ -320,25 +318,22 @@ final class Treasury extends Model
             }
         }
 
-        $current = max(0.0, (float) $this->current_balance);
-        if ($current <= 0.0) {
+        $current = (float) $this->current_balance;
+
+        // أموال التبرعات مقيدة بالكامل ولا تُمس بالمصروفات التشغيلية
+        $donationsBalance = max(0.0, round($donationsBalance, 2));
+        $custodyBalance = round($custodyBalance, 2);
+
+        // إذا كانت الخزينة مصفّرة بالكامل ولا توجد حركات
+        if (abs($current) < 0.001 && $totalOut == 0.0 && $custodyIn == 0.0 && $donationsIn == 0.0) {
             $custodyBalance = 0.0;
             $donationsBalance = 0.0;
-        } else {
-            $computedSum = round($custodyBalance + $donationsBalance, 2);
-            if (abs($computedSum - $current) < 0.01) {
-                $custodyBalance = round($custodyBalance, 2);
-                $donationsBalance = round($donationsBalance, 2);
-            } else {
-                // حماية أموال التبرعات الفعلية (أموال أمانة مقيدة) أولاً، والمتبقي هو رصيد العهدة
-                $donationsBalance = min($current, max(0.0, round($donationsBalance, 2)));
-                $custodyBalance = max(0.0, round($current - $donationsBalance, 2));
-            }
         }
 
         return [
             'custody_in' => round($custodyIn, 2),
             'donations_in' => round($donationsIn, 2),
+            'custody_out' => round($custodyOut ?? $totalOut, 2),
             'total_out' => round($totalOut, 2),
             'custody_balance' => $custodyBalance,
             'donations_balance' => $donationsBalance,

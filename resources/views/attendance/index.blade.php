@@ -36,12 +36,25 @@
                             @forelse($records as $r)
                                 <tr>
                                     <td class="px-4">
+                                        @php
+                                            $attUser = $r->user;
+                                            $attPhoto = $attUser?->image_url ?: ($attUser?->profile_photo_path ? asset('uploads/' . $attUser->profile_photo_path) : null);
+                                            $attInitial = mb_substr($attUser?->name ?? 'م', 0, 1, 'UTF-8');
+                                        @endphp
                                         <div class="d-flex align-items-center">
-                                            <div class="avatar-initials bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
-                                                style="width: 35px; height: 35px; font-weight: bold;">
-                                                {{ strtoupper(substr($r->user?->name ?? 'U', 0, 1)) }}
+                                            <div class="position-relative me-2 flex-shrink-0" style="width: 35px; height: 35px;">
+                                                @if($attPhoto)
+                                                    <img src="{{ $attPhoto }}" alt="{{ $attUser?->name }}" class="rounded-circle border shadow-xs" style="width: 35px; height: 35px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                    <div class="avatar-initials bg-primary-subtle text-primary rounded-circle d-none align-items-center justify-content-center w-100 h-100 fw-bold">
+                                                        {{ $attInitial }}
+                                                    </div>
+                                                @else
+                                                    <div class="avatar-initials bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center w-100 h-100 fw-bold">
+                                                        {{ $attInitial }}
+                                                    </div>
+                                                @endif
                                             </div>
-                                            <span class="fw-medium">{{ $r->user?->name }}</span>
+                                            <span class="fw-medium text-dark">{{ $attUser?->name }}</span>
                                         </div>
                                     </td>
                                     <td class="px-4 text-secondary">{{ optional($r->date)->format('Y-m-d') }}</td>

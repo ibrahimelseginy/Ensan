@@ -657,20 +657,22 @@
                 </div>
 
                 <div class="mb-2">
-                    <label class="form-label fw-bold text-primary">الرصيد الحالي الصافي</label>
+                    <label class="form-label fw-bold text-primary">الرصيد الحالي الفعلي</label>
                     <div class="input-group">
                         <input type="number" step="0.01" name="current_balance" id="adjustCurrentBalanceInput" class="form-control fw-bold" value="{{ (float) $treasury->current_balance }}" required>
                         <span class="input-group-text text-primary fw-bold">{{ $treasury->currency }}</span>
                     </div>
-                    <small class="text-muted">يمكنك تحديد الرصيد الحالي يدوياً أو الضغط على زر الحساب التلقائي أدناه</small>
+                    <div class="alert alert-info py-2 px-3 small rounded-3 mt-2 mb-0" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-check me-1"></i><strong>مبدأ محاسبي:</strong> المصروفات تُخصم حصراً من رصيد العهدة التشغيلية ولا تمس أموال التبرعات المقيدة.
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="zeroAllTreasuryTotals()">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> تصفير الكل (0.00)
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="zeroAllTreasuryTotals()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> تصفير الكل (0)
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="calcNetBalanceFromInAndOut()">
-                        <i class="bi bi-calculator me-1"></i> حساب الرصيد الصافي = (الوارد - الصادر)
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="calcNetBalanceFromInAndOut()">
+                        <i class="bi bi-calculator me-1"></i> حساب الرصيد الإجمالي (العهدة المتبقية + التبرعات)
                     </button>
                 </div>
             </div>

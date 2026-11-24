@@ -63,15 +63,28 @@
                                     <input type="checkbox" class="form-check-input bulk-item" value="{{ $leave->id }}" onchange="updateBulkUI()">
                                 </td>
                                 <td class="px-4">
+                                    @php
+                                        $lUser = $leave->user;
+                                        $lPhoto = $lUser?->image_url ?: ($lUser?->profile_photo_path ? asset('uploads/' . $lUser->profile_photo_path) : null);
+                                        $lInitial = mb_substr($lUser?->name ?? 'م', 0, 1, 'UTF-8');
+                                    @endphp
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-initials bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
-                                            style="width: 35px; height: 35px; font-weight: bold;">
-                                            {{ strtoupper(substr($leave->user?->name ?? 'U', 0, 1)) }}
+                                        <div class="position-relative me-2 flex-shrink-0" style="width: 38px; height: 38px;">
+                                            @if($lPhoto)
+                                                <img src="{{ $lPhoto }}" alt="{{ $lUser?->name }}" class="rounded-circle border shadow-xs" style="width: 38px; height: 38px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                                                <div class="avatar-initials bg-primary-subtle text-primary rounded-circle d-none align-items-center justify-content-center w-100 h-100 fw-bold fs-6">
+                                                    {{ $lInitial }}
+                                                </div>
+                                            @else
+                                                <div class="avatar-initials bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center w-100 h-100 fw-bold fs-6">
+                                                    {{ $lInitial }}
+                                                </div>
+                                            @endif
                                         </div>
                                         <div>
-                                            <span class="fw-medium d-block">{{ $leave->user?->name ?? 'مستخدم محذوف' }}</span>
+                                            <span class="fw-medium d-block text-dark">{{ $lUser?->name ?? 'مستخدم محذوف' }}</span>
                                             <small class="text-muted" style="font-size: 0.72rem;">
-                                                الرصيد المتبقي: <strong class="text-primary">{{ $leave->user?->leave_balance ?? $leave->user?->annual_leave_quota ?? 21 }}</strong> / {{ $leave->user?->annual_leave_quota ?? 21 }} يوم
+                                                الرصيد المتبقي: <strong class="text-primary">{{ $lUser?->leave_balance ?? $lUser?->annual_leave_quota ?? 21 }}</strong> / {{ $lUser?->annual_leave_quota ?? 21 }} يوم
                                             </small>
                                         </div>
                                     </div>
