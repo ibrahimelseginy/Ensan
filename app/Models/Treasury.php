@@ -142,6 +142,16 @@ final class Treasury extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function linkedTreasury(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'linked_treasury_id');
+    }
+
+    public function linkedSources(): HasMany
+    {
+        return $this->hasMany(self::class, 'linked_treasury_id');
+    }
+
     // ==========================================
     // TYPE HELPERS
     // ==========================================

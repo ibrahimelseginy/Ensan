@@ -27,6 +27,7 @@ final class StoreTreasuryRequest extends FormRequest
             'location'        => 'nullable|string',
             'currency'        => 'required|string|max:10',
             'opening_balance' => 'required|numeric|min:0',
+            'linked_treasury_id' => 'nullable|exists:treasuries,id',
             'is_active'       => 'boolean'
         ];
     }

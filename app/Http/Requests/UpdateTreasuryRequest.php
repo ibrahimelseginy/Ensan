@@ -28,6 +28,7 @@ final class UpdateTreasuryRequest extends FormRequest
             'location'        => 'nullable|string',
             'currency'        => 'required|string|max:10',
             'current_balance' => 'nullable|numeric',
+            'linked_treasury_id' => 'nullable|exists:treasuries,id',
             'total_in'        => 'nullable|numeric|min:0',
             'total_out'       => 'nullable|numeric|min:0',
             'is_active'       => 'boolean'

@@ -341,6 +341,35 @@
                         </div>
                     </div>
                     @endif
+
+                    @if($treasury->linkedTreasury)
+                    <div class="col-12">
+                        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div>
+                                <label class="text-primary small d-block mb-1 fw-bold"><i class="bi bi-link-45deg me-1"></i>الخزينة المرتبطة (تسميع آلي فوري للأرصدة والحركات)</label>
+                                <span class="fw-bold text-dark">{{ $treasury->linkedTreasury->name }} ({{ $treasury->linkedTreasury->code }})</span>
+                            </div>
+                            <a href="{{ route('treasuries.show', $treasury->linkedTreasury) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> عرض الخزينة المرتبطة
+                            </a>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($treasury->linkedSources && $treasury->linkedSources->isNotEmpty())
+                    <div class="col-12">
+                        <div class="p-3 rounded-4 bg-info bg-opacity-10 border border-info border-opacity-25">
+                            <label class="text-info-emphasis small d-block mb-1 fw-bold"><i class="bi bi-arrow-down-left-square me-1"></i>قنوات وخزائن فرعية مرتبطة تسمّع في هذا الحساب:</label>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                @foreach($treasury->linkedSources as $source)
+                                    <a href="{{ route('treasuries.show', $source) }}" class="badge bg-white text-dark border text-decoration-none p-2 shadow-sm rounded-pill">
+                                        <i class="bi bi-wallet2 text-primary me-1"></i> {{ $source->name }} ({{ $source->code }})
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

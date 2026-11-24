@@ -204,7 +204,7 @@ final class TreasuryController extends Controller
     public function show(Treasury $treasury): View
     {
         $this->authorizeTreasuryAccess($treasury);
-        $treasury->load('manager', 'transactions.createdBy', 'donations');
+        $treasury->load('manager', 'donations', 'linkedTreasury', 'linkedSources');
 
         $stats = [
             'total_in'           => $treasury->transactions()->where('type', 'in')->sum('amount'),
