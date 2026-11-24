@@ -78,21 +78,49 @@ final readonly class ProjectService
         $exhibitions       = $project->activities()->where('type', 'exhibition')->orderByDesc('activity_date')->get();
         $exhibitionsRevenue = (float) $project->activities()->where('type', 'exhibition')->sum('revenue');
         $advertisingDays    = $project->activities()->where('type', 'advertising')->orderByDesc('activity_date')->get();
+
+        // الخزائن والعهدة الخاصة بالمشروع
+        $projectTreasuries = \App\Models\Treasury::forProject($project);
+        $projectTreasury = $projectTreasuries->first();
+        $projectTreasuryBalance = (float) $projectTreasuries->sum('current_balance');
+
+        $projectCustodyTotal = 0.0;
+        $projectCustodyRemaining = 0.0;
+        $projectCustodySpent = 0.0;
+
+        foreach ($projectTreasuries as $t) {
+            $bd = $t->balance_breakdown;
+            $projectCustodyTotal += (float) ($bd['custody_in'] ?? 0);
+            $projectCustodyRemaining += (float) ($bd['custody_balance'] ?? 0);
+            $projectCustodySpent += (float) ($bd['custody_out'] ?? 0);
+        }
+
+        // المصروفات تُخصم من العهدة التشغيلية المخصصة للمشروع
+        if ($expensesTotal > 0.0 && $projectCustodySpent < $expensesTotal) {
+            $projectCustodySpent = $expensesTotal;
+            $projectCustodyRemaining = max(0.0, $projectCustodyTotal - $expensesTotal);
+        }
         
         return [
-            'donationsCount'     => $donationsCount,
-            'donationsTotal'     => $donationsTotal,
-            'cashSum'            => $cashSum,
-            'inKindSum'          => $inKindSum,
-            'beneficiariesCount' => $project->beneficiaries()->count(),
-            'expensesCount'      => $expensesCount,
-            'expensesTotal'      => $expensesTotal,
-            'activitiesRevenue'  => $activitiesRevenue,
-            'exhibitions'        => $exhibitions,
-            'exhibitionsRevenue' => $exhibitionsRevenue,
-            'advertisingDays'    => $advertisingDays,
-            'netBalance'         => $donationsTotal - $expensesTotal,
-            'cashPct'            => $donationsTotal > 0 ? (int) round(($cashSum / $donationsTotal) * 100) : 0,
+            'donationsCount'          => $donationsCount,
+            'donationsTotal'          => $donationsTotal,
+            'cashSum'                 => $cashSum,
+            'inKindSum'               => $inKindSum,
+            'beneficiariesCount'      => $project->beneficiaries()->count(),
+            'expensesCount'           => $expensesCount,
+            'expensesTotal'           => $expensesTotal,
+            'activitiesRevenue'       => $activitiesRevenue,
+            'exhibitions'             => $exhibitions,
+            'exhibitionsRevenue'      => $exhibitionsRevenue,
+            'advertisingDays'         => $advertisingDays,
+            'projectTreasury'         => $projectTreasury,
+            'projectTreasuries'       => $projectTreasuries,
+            'projectTreasuryBalance'  => $projectTreasuryBalance,
+            'projectCustodyTotal'     => $projectCustodyTotal,
+            'projectCustodyRemaining' => $projectCustodyRemaining,
+            'projectCustodySpent'     => $projectCustodySpent,
+            'netBalance'              => $projectCustodyRemaining, // صافي العهدة المتبقية للصرف
+            'cashPct'                 => $donationsTotal > 0 ? (int) round(($cashSum / $donationsTotal) * 100) : 0,
         ];
     }
 

@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $fmt = fn($num) => \App\Models\Treasury::formatAmount($num);
+@endphp
 <div class="container-fluid pt-2 pb-4">
     {{-- Hero Section --}}
     <div class="row mb-4">
@@ -42,7 +45,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">إجمالي الرصيد</h6>
-                            <h3 class="mb-0">{{ number_format($stats['total_balance'], 2) }}</h3>
+                            <h3 class="mb-0">{{ $fmt($stats['total_balance']) }}</h3>
                             <small class="text-muted">ج.م</small>
                         </div>
                     </div>
@@ -61,7 +64,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">وارد اليوم</h6>
-                            <h3 class="mb-0">{{ number_format($stats['total_in_today'], 2) }}</h3>
+                            <h3 class="mb-0">{{ $fmt($stats['total_in_today']) }}</h3>
                             <small class="text-muted">ج.م</small>
                         </div>
                     </div>
@@ -80,7 +83,7 @@
                         </div>
                         <div class="flex-grow-1 ms-3">
                             <h6 class="text-muted mb-1">صادر اليوم</h6>
-                            <h3 class="mb-0">{{ number_format($stats['total_out_today'], 2) }}</h3>
+                            <h3 class="mb-0">{{ $fmt($stats['total_out_today']) }}</h3>
                             <small class="text-muted">ج.م</small>
                         </div>
                     </div>
@@ -167,7 +170,7 @@
                                         @endif
                                     </div>
                                     <div class="text-center my-3">
-                                        <h3 class="text-primary mb-0">{{ number_format($treasury->current_balance, 2) }}</h3>
+                                        <h3 class="text-primary mb-0">{{ $fmt($treasury->current_balance) }}</h3>
                                         <small class="text-muted">{{ $treasury->currency }}</small>
                                     </div>
                                     <div class="d-flex gap-2">
@@ -245,7 +248,7 @@
                                             <span class="badge bg-danger">صادر</span>
                                         @endif
                                     </td>
-                                    <td class="fw-bold">{{ number_format($transaction->amount, 2) }} {{ $transaction->currency }}</td>
+                                    <td class="fw-bold">{{ $fmt($transaction->amount) }} {{ $transaction->currency }}</td>
                                     <td>{{ Str::limit($transaction->description, 50) }}</td>
                                 </tr>
                                 @endforeach

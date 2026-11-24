@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'login',
+        ]);
         $middleware->alias([
             'auth' => \App\Http\Middleware\WebAuth::class,
             'api_permission' => \App\Http\Middleware\ApiPermission::class,
@@ -42,5 +45,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'انتهت صلاحية الجلسة، يرجى إعادة المحاولة.'], 419);
+            }
+
+            return redirect()->route('login')
+                ->with('warning', 'انتهت صلاحية جلسة تسجيل الدخول بسبب عدم النشاط لفترة، يرجى المحاولة الآن.');
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'انتهت صلاحية الجلسة، يرجى إعادة المحاولة.'], 419);
+                }
+
+                return redirect()->route('login')
+                    ->with('warning', 'انتهت صلاحية جلسة تسجيل الدخول بسبب عدم النشاط لفترة، يرجى المحاولة الآن.');
+            }
+        });
     })->create();

@@ -371,7 +371,13 @@ final class Treasury extends Model
     {
         $num = (float) $amount;
         $formatted = number_format($num, 2);
-        return rtrim(rtrim($formatted, '0'), '.');
+        if (str_ends_with($formatted, '.00')) {
+            return substr($formatted, 0, -3);
+        }
+        if (str_ends_with($formatted, '0') && str_contains($formatted, '.')) {
+            return substr($formatted, 0, -1);
+        }
+        return $formatted;
     }
 
     // ==========================================

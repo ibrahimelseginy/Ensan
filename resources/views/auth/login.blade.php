@@ -1193,6 +1193,18 @@
         });
       }
     });
+
+    // 5. Auto-reload on page restore from cache (prevents 419 Page Expired)
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+
+    // Keep session alive periodically while login tab is open
+    setInterval(function () {
+      fetch('{{ route("login") }}', { method: 'HEAD', credentials: 'same-origin' }).catch(function () {});
+    }, 10 * 60 * 1000);
   </script>
 </body>
 

@@ -388,65 +388,65 @@
     <div class="text-muted mb-4">{{ $project->description }}</div>
 
     <!-- Metrics Row -->
+    @php
+        $fmt = fn($num) => \App\Models\Treasury::formatAmount($num);
+    @endphp
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-xl-3 col-md-6">
             <div class="gh-metric-card">
                 <div class="gh-metric-icon bg-success bg-opacity-10 text-success">
                     <i class="bi bi-cash-coin"></i>
                 </div>
-                <div class="text-muted small">اجمالي التبرعات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($donationsTotal, 2) }}</h3>
-                <div class="small text-success mt-1">
-                    <i class="bi bi-arrow-up"></i> {{ $donationsCount }} عملية
+                <div class="text-muted small">إجمالي تبرعات المشروع (المجمعة)</div>
+                <h3 class="fw-bold mb-0 text-success">{{ $fmt($donationsTotal) }} <small class="fs-6 text-muted">ج.م</small></h3>
+                <div class="small text-success mt-1 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-arrow-up"></i> {{ $donationsCount }} عملية تبرع</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;" title="التبرعات المقيدة لصالح المشروع عبر منافذ الاستقبال والبنوك">مجمعة بالجمعية</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl-3 col-md-6">
             <div class="gh-metric-card">
-                <div class="gh-metric-icon bg-warning bg-opacity-10 text-warning">
-                    <i class="bi bi-graph-up-arrow"></i>
+                <div class="gh-metric-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-safe"></i>
                 </div>
-                <div class="text-muted small">إيرادات الأنشطة</div>
-                <h3 class="fw-bold mb-0">{{ number_format($activitiesRevenue, 2) }}</h3>
-                <div class="small text-warning mt-1">
-                    من المعارض والدعاية
+                <div class="text-muted small">رصيد خزينة المشروع (المتاح بالخزينة)</div>
+                <h3 class="fw-bold mb-0 text-primary">{{ $fmt($projectTreasuryBalance ?? 0) }} <small class="fs-6 text-muted">ج.م</small></h3>
+                <div class="small mt-1 text-truncate">
+                    @if($projectTreasury)
+                        <a href="{{ route('treasuries.show', $projectTreasury) }}" class="text-decoration-none fw-bold text-primary" title="عرض الحركات الفعلية لخزينة المشروع">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>{{ $projectTreasury->name }}
+                        </a>
+                    @else
+                        <span class="text-muted"><i class="bi bi-info-circle me-1"></i>لا توجد خزينة مخصصة</span>
+                    @endif
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl-3 col-md-6">
             <div class="gh-metric-card">
                 <div class="gh-metric-icon bg-danger bg-opacity-10 text-danger">
                     <i class="bi bi-cart"></i>
                 </div>
-                <div class="text-muted small">اجمالي المصروفات</div>
-                <h3 class="fw-bold mb-0">{{ number_format($expensesTotal, 2) }}</h3>
-                <div class="small text-danger mt-1">
-                    <i class="bi bi-arrow-down"></i> {{ $expensesCount }} عملية
+                <div class="text-muted small">إجمالي المصروفات المنفذة</div>
+                <h3 class="fw-bold mb-0 text-danger">{{ $fmt($expensesTotal) }} <small class="fs-6 text-muted">ج.م</small></h3>
+                <div class="small text-danger mt-1 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-arrow-down"></i> {{ $expensesCount }} عملية</span>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;" title="تُصرف وتُخصم من العهدة التشغيلية للمشروع">تُخصم من العهدة</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="gh-metric-card">
-                <div class="gh-metric-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="bi bi-wallet2"></i>
-                </div>
-                <div class="text-muted small">صافي الحسابات</div>
-                <h3 class="fw-bold mb-0 {{ $netBalance >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ number_format($netBalance, 2) }}</h3>
-                <div class="small text-muted mt-1">
-                    الرصيد الحالي
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-xl-3 col-md-6">
             <div class="gh-metric-card">
                 <div class="gh-metric-icon bg-info bg-opacity-10 text-info">
-                    <i class="bi bi-people"></i>
+                    <i class="bi bi-wallet2"></i>
                 </div>
-                <div class="text-muted small">المستفيدون</div>
-                <h3 class="fw-bold mb-0">{{ $beneficiariesCount }}</h3>
+                <div class="text-muted small">صافي العهدة المتبقية للصرف</div>
+                <h3 class="fw-bold mb-0 {{ ($projectCustodyRemaining ?? 0) >= 0 ? 'text-dark' : 'text-danger' }}">
+                    {{ $fmt($projectCustodyRemaining ?? 0) }} <small class="fs-6 text-muted">ج.م</small>
+                </h3>
                 <div class="small text-muted mt-1">
-                    مستفيد مسجل
+                    من إجمالي عهدة مستلمة: <span class="fw-bold text-dark">{{ $fmt($projectCustodyTotal ?? 0) }}</span> ج.م
                 </div>
             </div>
         </div>
@@ -1741,7 +1741,7 @@
                     <div class="card-body">
                         <div class="gh-section-title">
                             <span><i class="bi bi-calendar-week text-info me-2"></i> الأنشطة الأسبوعية</span>
-                            <div class="badge bg-success">إيرادات المعارض: {{ number_format($exhibitionsRevenue, 2) }}</div>
+                            <div class="badge bg-success">إيرادات المعارض: {{ \App\Models\Treasury::formatAmount($exhibitionsRevenue) }} ج.م</div>
                         </div>
 
                         <div class="row g-3 mb-4">
@@ -1765,7 +1765,7 @@
                                                                 {{ $activity->description }}</div>
                                                         </div>
                                                         <div class="text-end">
-                                                            <div class="fw-bold text-success">{{ number_format($activity->revenue, 2) }}
+                                                            <div class="fw-bold text-success">{{ \App\Models\Treasury::formatAmount($activity->revenue) }} ج.م
                                                             </div>
                                                             <form method="POST"
                                                                 action="{{ route('projects.destroyActivity', ['project' => $project->id, 'activity' => $activity->id]) }}"
@@ -1806,7 +1806,7 @@
                                                         </div>
                                                         <div class="text-end">
                                                             @if($activity->revenue > 0)
-                                                                <div class="fw-bold text-success">{{ number_format($activity->revenue, 2) }}
+                                                                <div class="fw-bold text-success">{{ \App\Models\Treasury::formatAmount($activity->revenue) }} ج.م
                                                                 </div>
                                                             @endif
                                                             <form method="POST"

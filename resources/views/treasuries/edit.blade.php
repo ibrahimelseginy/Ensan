@@ -217,7 +217,7 @@
                         </li>
                         <li class="mb-2">
                             <strong>الرصيد الافتتاحي:</strong><br>
-                            {{ number_format($treasury->opening_balance, 2) }} {{ $treasury->currency }}
+                            {{ \App\Models\Treasury::formatAmount($treasury->opening_balance) }} {{ $treasury->currency }}
                         </li>
                     </ul>
                 </div>

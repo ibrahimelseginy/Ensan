@@ -315,7 +315,7 @@ final readonly class TreasuryService
                 $insights[] = [
                     'type'    => 'warning',
                     'icon'    => 'exclamation-triangle',
-                    'message' => "رصيد {$treasury->name} منخفض: " . number_format((float)$treasury->current_balance, 2) . " {$treasury->currency}"
+                    'message' => "رصيد {$treasury->name} منخفض: " . Treasury::formatAmount($treasury->current_balance) . " {$treasury->currency}"
                 ];
             }
 
@@ -323,7 +323,7 @@ final readonly class TreasuryService
                 $insights[] = [
                     'type'    => 'info',
                     'icon'    => 'info-circle',
-                    'message' => "رصيد {$treasury->name} مرتفع: " . number_format((float)$treasury->current_balance, 2) . " {$treasury->currency}"
+                    'message' => "رصيد {$treasury->name} مرتفع: " . Treasury::formatAmount($treasury->current_balance) . " {$treasury->currency}"
                 ];
             }
         }
