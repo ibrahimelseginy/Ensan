@@ -1,4 +1,79 @@
 @extends('layouts.app')
+
+@section('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+<style>
+  .modal .select2-container--bootstrap-5 .select2-selection {
+      min-height: 44px !important;
+      height: 44px !important;
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  }
+  .modal .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+  .modal .select2-container--bootstrap-5.select2-container--open .select2-selection {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+  .modal .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+      color: #1e293b !important;
+      line-height: 42px !important;
+      font-size: 0.95rem !important;
+      direction: rtl !important;
+      text-align: right !important;
+      padding-right: 14px !important;
+      padding-left: 36px !important;
+      width: 100% !important;
+  }
+  .select2-container--bootstrap-5 .select2-dropdown {
+      z-index: 99999 !important;
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 10px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+      direction: rtl !important;
+      text-align: right !important;
+  }
+  .select2-container--bootstrap-5 .select2-search--dropdown {
+      padding: 8px 10px !important;
+      background: #ffffff !important;
+  }
+  .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+      background: #f8fafc !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 8px !important;
+      color: #0f172a !important;
+      padding: 8px 12px !important;
+      font-size: 0.92rem !important;
+      direction: rtl !important;
+      text-align: right !important;
+  }
+  .select2-container--bootstrap-5 .select2-results__option {
+      padding: 9px 14px !important;
+      font-size: 0.9rem !important;
+      color: #1e293b !important;
+      border-radius: 6px !important;
+      margin: 2px 6px !important;
+      direction: rtl !important;
+      text-align: right !important;
+  }
+  .select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+      background: rgba(16, 185, 129, 0.15) !important;
+      color: #047857 !important;
+      font-weight: 600 !important;
+  }
+  .select2-container--bootstrap-5 .select2-results__option[aria-selected="true"] {
+      background: #10b981 !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+  }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid">
   {{-- Page Header --}}
@@ -323,8 +398,8 @@
 
                         <div class="mb-3">
                           <label class="form-label fw-bold text-dark mb-1">اختر الكافل / المتبرع <span class="text-danger">*</span></label>
-                          <select name="donor_id" class="form-select rounded-3" required>
-                            <option value="">-- اختر المتبرع من القائمة --</option>
+                          <select name="donor_id" class="form-select rounded-3 select2-donor" data-placeholder="-- ابحث باسم الكافل أو الكود أو رقم الهاتف --" required>
+                            <option value="">-- ابحث باسم الكافل أو الكود أو رقم الهاتف --</option>
                             @foreach($allDonors ?? [] as $dn)
                               <option value="{{ $dn->id }}" @selected($member->sponsors->contains($dn->id))>
                                 {{ $dn->name }} ({{ $dn->code ?? ('D-'.$dn->id) }}) {{ $dn->phone ? '— '.$dn->phone : '' }}
@@ -2049,6 +2124,41 @@
 @endsection
 
 @section('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $(document).on('shown.bs.modal', '.modal', function() {
+        var $modal = $(this);
+        $modal.find('.select2-donor').each(function() {
+            var $this = $(this);
+            if (!$this.hasClass('select2-hidden-accessible')) {
+                $this.select2({
+                    theme: 'bootstrap-5',
+                    dropdownParent: $modal,
+                    width: '100%',
+                    dir: 'rtl',
+                    placeholder: $this.data('placeholder') || '-- ابحث باسم الكافل أو الكود أو رقم الهاتف --',
+                    allowClear: true,
+                    language: {
+                        noResults: function() { return 'لا توجد نتائج مطابقة للبحث'; },
+                        searching: function() { return 'جاري البحث...'; }
+                    }
+                });
+            }
+        });
+    });
+
+    $(document).on('select2:open', function() {
+        setTimeout(function() {
+            var searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 50);
+    });
+});
+</script>
 <script>
 function openDocUploadModal(docType, docTitle) {
   var select = document.getElementById('modal_doc_type');
@@ -2211,7 +2321,7 @@ function toggleQuickUploadTarget(val) {
           {{-- Donor / Sponsor (Optional) --}}
           <div class="col-md-12">
             <label class="form-label fw-bold small text-dark mb-1">المتبرع أو الكفيل المموّل (اختياري)</label>
-            <select name="donor_id" class="form-select rounded-3">
+            <select name="donor_id" class="form-select rounded-3 select2-donor" data-placeholder="-- فاعل خير / تبرع عام / المؤسسة --">
               <option value="">-- فاعل خير / تبرع عام / المؤسسة --</option>
               @foreach($allDonors as $dn)
                 <option value="{{ $dn->id }}" @selected($beneficiary->sponsors->contains($dn->id))>
@@ -2288,8 +2398,8 @@ function toggleQuickUploadTarget(val) {
 
         <div class="mb-3">
           <label class="form-label fw-bold text-dark mb-1">اختر المتبرع / الكفيل <span class="text-danger">*</span></label>
-          <select name="donor_id" class="form-select rounded-3" required>
-            <option value="">-- اختر المتبرع من القائمة --</option>
+          <select name="donor_id" class="form-select rounded-3 select2-donor" data-placeholder="-- ابحث باسم الكافل أو الكود أو رقم الهاتف --" required>
+            <option value="">-- ابحث باسم الكافل أو الكود أو رقم الهاتف --</option>
             @foreach($allDonors as $dn)
               <option value="{{ $dn->id }}" @selected($beneficiary->sponsors->contains($dn->id))>
                 {{ $dn->name }} ({{ $dn->code ?? ('D-'.$dn->id) }}) {{ $dn->phone ? '— '.$dn->phone : '' }}
