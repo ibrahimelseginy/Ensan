@@ -86,6 +86,9 @@
 @endpush
 
 @section('content')
+@php
+    $fmt = fn($num) => \App\Models\Treasury::formatAmount($num);
+@endphp
 <div class="container-fluid pt-2 pb-4 px-lg-4" style="direction: rtl; text-align: right;">
 
     {{-- Alert Messages --}}
@@ -148,7 +151,7 @@
                         <i class="bi bi-cash-stack fs-6"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ number_format($totalPhysicalBalance, 2) }}</h4>
+                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ $fmt($totalPhysicalBalance) }}</h4>
                 <small class="text-muted" style="font-size: 0.75rem;">ج.م (الرصيد الفعلي للمؤسسة)</small>
             </div>
         </div>
@@ -162,7 +165,7 @@
                         <i class="bi bi-wallet fs-6"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold text-success mb-0 font-monospace">{{ number_format($cashBalance, 2) }}</h4>
+                <h4 class="fw-bold text-success mb-0 font-monospace">{{ $fmt($cashBalance) }}</h4>
                 <small class="text-muted" style="font-size: 0.75rem;">ج.م (الصناديق ودور الضيافة)</small>
             </div>
         </div>
@@ -176,7 +179,7 @@
                         <i class="bi bi-bank fs-6"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold text-primary mb-0 font-monospace">{{ number_format($bankBalance, 2) }}</h4>
+                <h4 class="fw-bold text-primary mb-0 font-monospace">{{ $fmt($bankBalance) }}</h4>
                 <small class="text-muted" style="font-size: 0.75rem;">ج.م (الحسابات البنكية المعتمدة)</small>
             </div>
         </div>
@@ -190,7 +193,7 @@
                         <i class="bi bi-arrow-down-left fs-6"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ number_format($todayIn, 2) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
+                <h4 class="fw-bold text-dark mb-0 font-monospace">{{ $fmt($todayIn) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
                 <small class="text-success" style="font-size: 0.75rem;">واردات وتبرعات اليوم</small>
             </div>
         </div>
@@ -204,7 +207,7 @@
                         <i class="bi bi-arrow-up-right fs-6"></i>
                     </div>
                 </div>
-                <h4 class="fw-bold text-danger mb-0 font-monospace">{{ number_format($todayOut, 2) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
+                <h4 class="fw-bold text-danger mb-0 font-monospace">{{ $fmt($todayOut) }} <small class="text-muted" style="font-size: 0.75rem;">ج.م</small></h4>
                 <small class="text-danger" style="font-size: 0.75rem;">مصروفات ومساعدات اليوم</small>
             </div>
         </div>
@@ -326,7 +329,7 @@
                                         <div class="text-muted small">الرصيد:</div>
                                         <div class="text-end">
                                             <span class="fs-4 fw-bold font-monospace {{ (float)$treasury->current_balance < 0 ? 'text-danger' : 'text-success' }}">
-                                                {{ number_format($treasury->current_balance, 2) }}
+                                                {{ $fmt($treasury->current_balance) }}
                                             </span>
                                             <small class="text-muted ms-1" style="font-size: 0.8rem;">{{ $treasury->currency ?? 'ج.م' }}</small>
                                         </div>
@@ -372,7 +375,7 @@
                                             @endif
                                         </td>
                                         <td class="fw-bold font-monospace {{ $tx->type === 'in' ? 'text-success' : 'text-danger' }}">
-                                            {{ $tx->type === 'in' ? '+' : '-' }}{{ number_format($tx->amount, 2) }} ج.م
+                                            {{ $tx->type === 'in' ? '+' : '-' }}{{ $fmt($tx->amount) }} ج.م
                                         </td>
                                         <td class="small text-muted">{{ $tx->description ?? '—' }}</td>
                                         <td class="small">{{ $tx->createdBy->name ?? 'النظام' }}</td>
@@ -417,7 +420,7 @@
                                         <td class="font-monospace small">{{ $trf->requested_on ? $trf->requested_on->format('Y-m-d') : '—' }}</td>
                                         <td class="fw-semibold">{{ $trf->fromAccount->name ?? '—' }}</td>
                                         <td class="fw-semibold">{{ $trf->toAccount->name ?? '—' }}</td>
-                                        <td class="fw-bold font-monospace text-dark">{{ number_format($trf->amount, 2) }} ج.م</td>
+                                        <td class="fw-bold font-monospace text-dark">{{ $fmt($trf->amount) }} ج.م</td>
                                         <td>
                                             @if($trf->status === 'received')
                                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1">تم الاستلام والمطابقة</span>
@@ -495,9 +498,9 @@
                                             {{ $custody->holder->name ?? '—' }}
                                         </td>
                                         <td class="font-monospace small">{{ $custody->issued_on ? $custody->issued_on->format('Y-m-d') : '—' }}</td>
-                                        <td class="fw-bold font-monospace">{{ number_format($custody->issued_amount, 2) }} ج.م</td>
-                                        <td class="font-monospace text-primary">{{ number_format($custody->settled_amount, 2) }} ج.م</td>
-                                        <td class="font-monospace text-danger fw-bold">{{ number_format($custody->remaining_to_return, 2) }} ج.م</td>
+                                        <td class="fw-bold font-monospace">{{ $fmt($custody->issued_amount) }} ج.م</td>
+                                        <td class="font-monospace text-primary">{{ $fmt($custody->settled_amount) }} ج.م</td>
+                                        <td class="font-monospace text-danger fw-bold">{{ $fmt($custody->remaining_to_return) }} ج.م</td>
                                         <td>
                                             @php $st = $custody->status_meta; @endphp
                                             <span class="badge {{ $st['class'] }} px-2.5 py-1">{{ $st['label'] }}</span>
@@ -586,7 +589,7 @@
         <div class="pt-3 border-top text-center">
             <div class="text-muted small mb-1">إجمالي الأموال الفعلية في المؤسسة:</div>
             <div class="display-6 fw-bold text-success font-monospace mb-1">
-                {{ number_format($totalPhysicalBalance, 2) }} <span class="fs-5">جنيه</span>
+                {{ $fmt($totalPhysicalBalance) }} <span class="fs-5">جنيه</span>
             </div>
             <div class="text-muted small">
                 <i class="bi bi-shield-check text-success me-1"></i>
@@ -633,7 +636,7 @@
                                     </td>
                                     <td class="small">{{ $sub->manager->name ?? 'غير محدد' }}</td>
                                     <td class="fw-bold font-monospace text-success fs-6">
-                                        {{ number_format($sub->current_balance, 2) }} ج.م
+                                        {{ $fmt($sub->current_balance) }} ج.م
                                     </td>
                                     <td>
                                         <a href="{{ route('treasuries.show', $sub) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
@@ -650,7 +653,7 @@
                         <tfoot class="table-light">
                             <tr class="fw-bold">
                                 <td colspan="3" class="text-end">الإجمالي الفرعي:</td>
-                                <td class="text-success font-monospace fs-6">{{ number_format($subTreasuries->sum('current_balance'), 2) }} ج.م</td>
+                                <td class="text-success font-monospace fs-6">{{ $fmt($subTreasuries->sum('current_balance')) }} ج.م</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -683,7 +686,7 @@
                         <select name="from_treasury_id" id="quickFromTreasury" class="form-select rounded-3" required>
                             <option value="">-- اختر الخزينة الموردة --</option>
                             @foreach($physicalTreasuries as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }} (رصيد: {{ number_format($t->current_balance, 2) }} ج.م)</option>
+                                <option value="{{ $t->id }}">{{ $t->name }} (رصيد: {{ $fmt($t->current_balance) }} ج.م)</option>
                             @endforeach
                         </select>
                     </div>

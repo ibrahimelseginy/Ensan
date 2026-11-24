@@ -415,7 +415,7 @@ final class TreasuryController extends Controller
             $toTreasury = Treasury::findOrFail($toId);
 
             $this->authorizeTreasuryManage($fromTreasury);
-            $this->authorizeTreasuryManage($toTreasury);
+            abort_if(!$toTreasury->is_active, 400, 'الخزينة المستلمة غير نشطة ولا يمكن التوريد إليها.');
 
             if ((float) $fromTreasury->current_balance < $amount) {
                 return back()->withInput()->with('error', "رصيد الخزينة المخصوم منها ({$fromTreasury->name}) لا يكفي للتحويل. الرصيد الحالي: " . number_format($fromTreasury->current_balance, 2) . " ج.م");

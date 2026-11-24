@@ -362,6 +362,18 @@ final class Treasury extends Model
         return $this->current_balance >= $amount;
     }
 
+    /**
+     * تنسيق المبالغ المالية مع إزالة الأصفار العشرية الزائدة إذا كان الرقم صحيحاً
+     * مثال: 26,124.00 تصبح 26,124
+     * 26,124.50 تصبح 26,124.5
+     */
+    public static function formatAmount($amount): string
+    {
+        $num = (float) $amount;
+        $formatted = number_format($num, 2);
+        return rtrim(rtrim($formatted, '0'), '.');
+    }
+
     // ==========================================
     // TRANSACTION METHODS
     // ==========================================
